@@ -42,10 +42,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -98,6 +96,9 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -120,11 +121,9 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
-import org.mockito.stubbing.Answer;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ReportAndRegisterEventFallbackImplTest {
@@ -145,6 +144,9 @@ public class ReportAndRegisterEventFallbackImplTest {
             ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER
                     | ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
     private static final String CLICK_EVENT = "click";
+    private static final boolean SHOULD_COUNT_LOG = true;
+    private static final boolean SHOULD_NOT_COUNT_LOG = false;
+
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
     @Spy
@@ -278,14 +280,14 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
+        ReportEventTestCallback callback = callReportEvent(input, SHOULD_COUNT_LOG);
 
         // Verify registerEvent was called with exact parameters.
         verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
         verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm success was logged.
         verify(mAdServicesLoggerMock)
@@ -343,14 +345,14 @@ public class ReportAndRegisterEventFallbackImplTest {
         AnswerSyncCallback<Void> buyerCallback =
                 syncRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
+        ReportEventTestCallback callback = callReportEvent(input, SHOULD_COUNT_LOG);
 
         // Verify registerEvent was called with exact parameters.
         sellerCallback.assertCalled();
         buyerCallback.assertCalled();
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm failure caused by the exception thrown is logged.
         verify(mAdServicesLoggerMock)
@@ -361,8 +363,8 @@ public class ReportAndRegisterEventFallbackImplTest {
                         anyInt());
 
         // Verify the mock server handled only buyer reporting requests with exact paths.
-        assertEquals(
-                BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
+        assertThat(server.takeRequest().getPath())
+                .isEqualTo(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
     }
 
     @Test
@@ -399,14 +401,14 @@ public class ReportAndRegisterEventFallbackImplTest {
         AnswerSyncCallback<Void> buyerCallback =
                 syncRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
+        ReportEventTestCallback callback = callReportEvent(input, SHOULD_COUNT_LOG);
 
         // Verify registerEvent was called with exact parameters.
         sellerCallback.assertCalled();
         buyerCallback.assertCalled();
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm failure caused by the exception thrown is logged.
         verify(mAdServicesLoggerMock)
@@ -464,14 +466,14 @@ public class ReportAndRegisterEventFallbackImplTest {
         AnswerSyncCallback<Void> buyerCallback =
                 syncRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
+        ReportEventTestCallback callback = callReportEvent(input, SHOULD_COUNT_LOG);
 
         // Verify registerEvent was called with exact parameters.
         sellerCallback.assertCalled();
         buyerCallback.assertCalled();
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm failure caused by the exception thrown is logged.
         verify(mAdServicesLoggerMock)
@@ -482,8 +484,8 @@ public class ReportAndRegisterEventFallbackImplTest {
                         anyInt());
 
         // Verify the mock server handled only seller reporting requests with exact paths.
-        assertEquals(
-                SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
+        assertThat(server.takeRequest().getPath())
+                .isEqualTo(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
     }
 
     @Test
@@ -520,14 +522,14 @@ public class ReportAndRegisterEventFallbackImplTest {
                 .when(mMeasurementServiceMock)
                 .registerEvent(eq(reportingUri), any(), any(), anyBoolean(), any(), any(), any());
 
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
+        ReportEventTestCallback callback = callReportEvent(input, SHOULD_COUNT_LOG);
 
         // Verify registerEvent was called with exact parameters.
         sellerCallback.assertCalled();
         buyerCallback.assertCalled();
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm failure caused by the exception thrown is logged.
         verify(mAdServicesLoggerMock)
@@ -570,13 +572,13 @@ public class ReportAndRegisterEventFallbackImplTest {
         // Call report event with input.
         ReportInteractionInput input =
                 mInputBuilder.setReportingDestinations(BUYER_DESTINATION).build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
+        ReportEventTestCallback callback = callReportEvent(input, SHOULD_COUNT_LOG);
 
         // Verify registerEvent was called with exact parameters.
         verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm success was logged.
         verify(mAdServicesLoggerMock)
@@ -587,8 +589,8 @@ public class ReportAndRegisterEventFallbackImplTest {
                         anyInt());
 
         // Verify the mock server handled requests with exact paths.
-        assertEquals(
-                BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
+        assertThat(server.takeRequest().getPath())
+                .isEqualTo(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
     }
 
     @Test
@@ -615,13 +617,13 @@ public class ReportAndRegisterEventFallbackImplTest {
         // Call report event with input.
         ReportInteractionInput input =
                 mInputBuilder.setReportingDestinations(SELLER_DESTINATION).build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
+        ReportEventTestCallback callback = callReportEvent(input, SHOULD_COUNT_LOG);
 
         // Verify registerEvent was called with exact parameters.
         verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm success was logged.
         verify(mAdServicesLoggerMock)
@@ -632,8 +634,8 @@ public class ReportAndRegisterEventFallbackImplTest {
                         anyInt());
 
         // Verify the mock server handled requests with exact paths.
-        assertEquals(
-                SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
+        assertThat(server.takeRequest().getPath())
+                .isEqualTo(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
     }
 
     @Test
@@ -675,13 +677,13 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
+        ReportEventTestCallback callback = callReportEvent(input, SHOULD_COUNT_LOG);
 
         // Verify registerEvent was called with exact parameters.
         verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm success was logged.
         verify(mAdServicesLoggerMock)
@@ -692,7 +694,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                         anyInt());
 
         // Verify the mock server handled requests with exact paths.
-        assertTrue(server.takeRequest().getPath().contains(CLICK_EVENT));
+        assertThat(server.takeRequest().getPath()).contains(CLICK_EVENT);
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
         Mockito.verify(mAdServicesLoggerMock, times(1))
@@ -734,14 +736,14 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
+        ReportEventTestCallback callback = callReportEvent(input, SHOULD_COUNT_LOG);
 
         // Verify registerEvent was never called.
         verify(mMeasurementServiceMock, never())
                 .registerEvent(any(), any(), any(), anyBoolean(), any(), any(), any());
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm success was logged.
         verify(mAdServicesLoggerMock)
@@ -797,11 +799,8 @@ public class ReportAndRegisterEventFallbackImplTest {
                 .registerEvent(any(), any(), any(), anyBoolean(), any(), any(), any());
 
         // Confirm failure was reported to caller.
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_UNAUTHORIZED, callback.mFledgeErrorResponse.getStatusCode());
-        assertEquals(
-                SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE,
-                callback.mFledgeErrorResponse.getErrorMessage());
+        callback.assertErrorReceived(
+                STATUS_UNAUTHORIZED, SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
 
         // Confirm a duplicate log entry does not exist.
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
@@ -852,11 +851,8 @@ public class ReportAndRegisterEventFallbackImplTest {
                 .registerEvent(any(), any(), any(), anyBoolean(), any(), any(), any());
 
         // Confirm failure was reported to caller.
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_BACKGROUND_CALLER, callback.mFledgeErrorResponse.getStatusCode());
-        assertEquals(
-                ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE,
-                callback.mFledgeErrorResponse.getErrorMessage());
+        callback.assertErrorReceived(
+                STATUS_BACKGROUND_CALLER, ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
 
         // Confirm a duplicate log entry does not exist.
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
@@ -910,15 +906,14 @@ public class ReportAndRegisterEventFallbackImplTest {
                         });
 
         // First call should succeed.
-        ReportEventTestCallback callbackFirstCall =
-                callReportEvent(input, /* shouldCountLog= */ true);
+        ReportEventTestCallback callbackFirstCall = callReportEvent(input, SHOULD_COUNT_LOG);
 
         // Verify registerEvent was called with exact parameters.
         verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
         verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
         // Confirm success was reported to caller.
-        assertTrue(callbackFirstCall.mIsSuccess);
+        callbackFirstCall.assertSuccess();
 
         // Confirm success was logged.
         verify(mAdServicesLoggerMock)
@@ -940,13 +935,8 @@ public class ReportAndRegisterEventFallbackImplTest {
         ReportEventTestCallback callbackSubsequentCall = callReportEvent(input);
 
         // Confirm failure was reported to caller.
-        assertFalse(callbackSubsequentCall.mIsSuccess);
-        assertEquals(
-                STATUS_RATE_LIMIT_REACHED,
-                callbackSubsequentCall.mFledgeErrorResponse.getStatusCode());
-        assertEquals(
-                RATE_LIMIT_REACHED_ERROR_MESSAGE,
-                callbackSubsequentCall.mFledgeErrorResponse.getErrorMessage());
+        callbackSubsequentCall.assertErrorReceived(
+                STATUS_RATE_LIMIT_REACHED, RATE_LIMIT_REACHED_ERROR_MESSAGE);
 
         // Confirm a duplicate log entry does not exist.
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
@@ -991,8 +981,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         ReportEventTestCallback callback = callReportEvent(input);
 
         // Confirm failure was reported to caller.
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_CALLER_NOT_ALLOWED, callback.mFledgeErrorResponse.getStatusCode());
+        callback.assertErrorReceived(STATUS_CALLER_NOT_ALLOWED);
 
         // Confirm a duplicate log entry does not exist.
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
@@ -1037,7 +1026,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         ReportEventTestCallback callback = callReportEvent(input);
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm a duplicate log entry does not exist.
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
@@ -1069,8 +1058,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         ReportEventTestCallback callback = callReportEvent(input);
 
         // Confirm failure was reported to caller.
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        callback.assertErrorReceived(STATUS_INVALID_ARGUMENT);
 
         // Confirm failure caused by the input is logged.
         verify(mAdServicesLoggerMock)
@@ -1104,7 +1092,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         ReportEventTestCallback callback = callReportEvent(input, true);
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm success was logged.
         verify(mAdServicesLoggerMock)
@@ -1137,11 +1125,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         ReportEventTestCallback callback = callReportEvent(input, true);
 
         // Confirm failure was reported to caller.
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
-        assertEquals(
-                INTERACTION_DATA_SIZE_MAX_EXCEEDED,
-                callback.mFledgeErrorResponse.getErrorMessage());
+        callback.assertErrorReceived(STATUS_INVALID_ARGUMENT, INTERACTION_DATA_SIZE_MAX_EXCEEDED);
 
         // Confirm failure caused by the input is logged.
         verify(mAdServicesLoggerMock)
@@ -1185,10 +1169,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         ReportEventTestCallback callback = callReportEvent(input, true);
 
         // Confirm failure was reported to caller.
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
-        assertEquals(
-                INTERACTION_KEY_SIZE_MAX_EXCEEDED, callback.mFledgeErrorResponse.getErrorMessage());
+        callback.assertErrorReceived(STATUS_INVALID_ARGUMENT, INTERACTION_KEY_SIZE_MAX_EXCEEDED);
 
         // Confirm failure caused by the input is logged.
         verify(mAdServicesLoggerMock)
@@ -1230,7 +1211,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                 .registerEvent(any(), any(), any(), anyBoolean(), any(), any(), any());
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm success was logged.
         verify(mAdServicesLoggerMock)
@@ -1280,7 +1261,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                 .registerEvent(any(), any(), any(), anyBoolean(), any(), any(), any());
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm success was logged.
         verify(mAdServicesLoggerMock)
@@ -1326,7 +1307,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                 .registerEvent(any(), any(), any(), anyBoolean(), any(), any(), any());
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm success was logged.
         verify(mAdServicesLoggerMock)
@@ -1372,7 +1353,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                 .registerEvent(any(), any(), any(), anyBoolean(), any(), any(), any());
 
         // Confirm success was reported to caller.
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         // Confirm success was logged.
         verify(mAdServicesLoggerMock)
@@ -1417,8 +1398,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         ReportAndRegisterEventFallbackImplTest.ReportEventTestCallback callback =
                 callReportEvent(inputParams, true);
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        callback.assertErrorReceived(STATUS_INVALID_ARGUMENT);
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
@@ -1461,7 +1441,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         ReportAndRegisterEventFallbackImplTest.ReportEventTestCallback callback =
                 callReportEvent(inputParams, true);
 
-        assertTrue(callback.mIsSuccess);
+        callback.assertSuccess();
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
@@ -1585,7 +1565,7 @@ public class ReportAndRegisterEventFallbackImplTest {
 
     private ReportEventTestCallback callReportEvent(ReportInteractionInput inputParams)
             throws Exception {
-        return callReportEvent(inputParams, false);
+        return callReportEvent(inputParams, SHOULD_NOT_COUNT_LOG);
     }
 
     /**
@@ -1593,26 +1573,22 @@ public class ReportAndRegisterEventFallbackImplTest {
      */
     private ReportEventTestCallback callReportEvent(
             ReportInteractionInput inputParams, boolean shouldCountLog) throws Exception {
-        // TODO(b/3413678560): should use AnswerSyncCallback here too, but it doesn't support
-        // more than once call (yet).
+        SyncCallbackSettings settings =
+                SyncCallbackFactory.newSettingsBuilder()
+                        .setExpectedNumberCalls(shouldCountLog ? 2 : 1)
+                        .build();
         // Counted down in callback
-        CountDownLatch resultLatch = new CountDownLatch(shouldCountLog ? 2 : 1);
-
         if (shouldCountLog) {
             // Wait for the logging call, which happens after the callback
-            Answer<Void> countDownAnswer =
-                    unused -> {
-                        resultLatch.countDown();
-                        return null;
-                    };
+            AnswerSyncCallback<Void> countDownAnswer = AnswerSyncCallback.forVoidAnswers(settings);
             doAnswer(countDownAnswer)
                     .when(mAdServicesLoggerMock)
                     .logFledgeApiCallStats(anyInt(), anyString(), anyInt(), anyInt());
         }
 
-        ReportEventTestCallback callback = new ReportEventTestCallback(resultLatch);
+        ReportEventTestCallback callback = new ReportEventTestCallback(settings);
         mEventReporter.reportInteraction(inputParams, callback);
-        resultLatch.await();
+        callback.assertCalled();
 
         return callback;
     }
@@ -1634,25 +1610,44 @@ public class ReportAndRegisterEventFallbackImplTest {
         return callback;
     }
 
-    private static final class ReportEventTestCallback extends ReportInteractionCallback.Stub {
-        private final CountDownLatch mCountDownLatch;
-        boolean mIsSuccess = false;
-        FledgeErrorResponse mFledgeErrorResponse;
+    // TODO(b/337014024): extend FailableOnSuccessyncCallback instead
+    private static final class ReportEventTestCallback
+            extends FailableResultSyncCallback<Boolean, FledgeErrorResponse>
+            implements ReportInteractionCallback {
 
-        ReportEventTestCallback(CountDownLatch countDownLatch) {
-            mCountDownLatch = countDownLatch;
+        ReportEventTestCallback(SyncCallbackSettings settings) {
+            super(settings);
         }
 
         @Override
         public void onSuccess() throws RemoteException {
-            mIsSuccess = true;
-            mCountDownLatch.countDown();
+            injectResult(Boolean.TRUE);
         }
 
         @Override
         public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
-            mFledgeErrorResponse = fledgeErrorResponse;
-            mCountDownLatch.countDown();
+            injectFailure(fledgeErrorResponse);
+        }
+
+        void assertSuccess() throws InterruptedException {
+            assertResultReceived();
+        }
+
+        private void assertErrorReceived(int expectedCode, String expectedMessage)
+                throws InterruptedException {
+            FledgeErrorResponse response = assertErrorReceived(expectedCode);
+            assertWithMessage("error message on %s", response)
+                    .that(response.getErrorMessage())
+                    .isEqualTo(expectedMessage);
+        }
+
+        private FledgeErrorResponse assertErrorReceived(int expectedCode)
+                throws InterruptedException {
+            FledgeErrorResponse response = assertFailureReceived();
+            assertWithMessage("status code on %s", response)
+                    .that(response.getStatusCode())
+                    .isEqualTo(expectedCode);
+            return response;
         }
     }
 

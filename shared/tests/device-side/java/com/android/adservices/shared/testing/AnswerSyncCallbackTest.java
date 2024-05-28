@@ -21,13 +21,19 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 
 import org.junit.Test;
 import org.mockito.Mock;
 
 public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
 
+    private static final String ANSWER = "Luke's Father";
+
     private final IllegalStateException mFailure = new IllegalStateException("D'OH!");
+    private final SyncCallbackSettings mSettingsForTwoCalls =
+            SyncCallbackFactory.newSettingsBuilder().setExpectedNumberCalls(2).build();
 
     @Mock private Voider mDarthVoider;
 
@@ -52,7 +58,7 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
 
     @Test
     public void testForSingleAnswer() throws Exception {
-        AnswerSyncCallback<String> callback = AnswerSyncCallback.forSingleAnswer("Luke's Father");
+        AnswerSyncCallback<String> callback = AnswerSyncCallback.forSingleAnswer(ANSWER);
         expect.withMessage("%%s.isCalled() before call", callback)
                 .that(callback.isCalled())
                 .isFalse();
@@ -63,17 +69,24 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
                 .isFalse();
         String toString = mDarthVoider.toString();
 
-        expect.withMessage("toString()").that(toString).isEqualTo("Luke's Father");
+        expect.withMessage("toString()").that(toString).isEqualTo(ANSWER);
         callback.assertCalled();
         expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
     }
 
+    @Test
+    public void testForMultipleVoidAnswers() throws Exception {
+        forTwoVoidAnswers(AnswerSyncCallback.forMultipleVoidAnswers(2));
+    }
+
+    @Test
+    public void testForVoidAnswers() throws Exception {
+        forTwoVoidAnswers(AnswerSyncCallback.forVoidAnswers(mSettingsForTwoCalls));
+    }
 
     // It's testing doAnswer(), so it needs to call those methods...
     @SuppressWarnings("DirectInvocationOnMock")
-    @Test
-    public void testForMultipleVoidAnswers() throws Exception {
-        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forMultipleVoidAnswers(2);
+    private void forTwoVoidAnswers(AnswerSyncCallback<Void> callback) throws Exception {
         doAnswer(callback).when(mDarthVoider).voidVoid();
         expect.withMessage("%%s.isCalled() before 1st call", callback)
                 .that(callback.isCalled())
@@ -93,26 +106,33 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
                 .isTrue();
     }
 
-    // It's testing doAnswer(), so it needs to call those methods...
-    @SuppressWarnings("DirectInvocationOnMock")
     @Test
     public void testForMultipleAnswers() throws Exception {
-        AnswerSyncCallback<String> callback =
-                AnswerSyncCallback.forMultipleAnswers("Luke's Father", 2);
+        forTwoAnswersTest(AnswerSyncCallback.forMultipleAnswers(ANSWER, 2));
+    }
+
+    @Test
+    public void testForAnswers() throws Exception {
+        forTwoAnswersTest(AnswerSyncCallback.forAnswers(ANSWER, mSettingsForTwoCalls));
+    }
+
+    // It's testing doAnswer(), so it needs to call those methods...
+    @SuppressWarnings("DirectInvocationOnMock")
+    private void forTwoAnswersTest(AnswerSyncCallback<String> callback) throws Exception {
         when(mDarthVoider.toString()).then(callback);
         expect.withMessage("%%s.isCalled() before 1st call", callback)
                 .that(callback.isCalled())
                 .isFalse();
 
         String firstAnswer = mDarthVoider.toString();
-        expect.withMessage("1st toString() result").that(firstAnswer).isEqualTo("Luke's Father");
+        expect.withMessage("1st toString() result").that(firstAnswer).isEqualTo(ANSWER);
         expect.withMessage("%s.isCalled() after first call", callback)
                 .that(callback.isCalled())
                 .isFalse();
 
         String secondAnswer = mDarthVoider.toString();
 
-        expect.withMessage("2nd toString() result").that(secondAnswer).isEqualTo("Luke's Father");
+        expect.withMessage("2nd toString() result").that(secondAnswer).isEqualTo(ANSWER);
         callback.assertCalled();
         expect.withMessage("%s.isCalled() after 2nd call", callback)
                 .that(callback.isCalled())
