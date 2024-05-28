@@ -15,6 +15,8 @@
  */
 package com.android.adservices.tests.appsetid;
 
+import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_SERVICE;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertFalse;
@@ -31,6 +33,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
 import com.android.adservices.shared.common.ServiceUnavailableException;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
@@ -49,6 +52,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@RequiresAndroidServiceAvailable(intentAction = ACTION_APPSETID_PROVIDER_SERVICE)
 public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
