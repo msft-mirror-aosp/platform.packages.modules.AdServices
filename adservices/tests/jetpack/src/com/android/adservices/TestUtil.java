@@ -30,6 +30,7 @@ import androidx.test.core.app.ApplicationProvider;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// TODO(b/299104530): replace device_config usage by AdServicesFlagSetterRule
 public class TestUtil {
     private Instrumentation mInstrumentation;
     private String mTag;
@@ -54,28 +55,28 @@ public class TestUtil {
 
     public void overrideKillSwitches(boolean override) {
         if (override) {
-            runShellCommand("setprop debug.adservices.global_kill_switch " + false);
-            runShellCommand("setprop debug.adservices.topics_kill_switch " + false);
+            runShellCommand("device_config put adservices global_kill_switch " + false);
+            runShellCommand("device_config put adservices topics_kill_switch " + false);
         } else {
-            runShellCommand("setprop debug.adservices.global_kill_switch " + null);
-            runShellCommand("setprop debug.adservices.topics_kill_switch " + null);
+            runShellCommand("device_config put adservices global_kill_switch " + null);
+            runShellCommand("device_config put adservices topics_kill_switch " + null);
         }
     }
 
     public void enableEnrollmentCheck(boolean enable) {
-        runShellCommand("setprop debug.adservices.disable_topics_enrollment_check " + enable);
+        runShellCommand("device_config put adservices disable_topics_enrollment_check " + enable);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
     public void overrideEpochPeriod(long overrideEpochPeriod) {
         runShellCommand(
-                "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
+                "device_config put adservices topics_epoch_job_period_ms " + overrideEpochPeriod);
     }
 
     // Override the Percentage For Random Topic in the test.
     public void overridePercentageForRandomTopic(long overridePercentage) {
         runShellCommand(
-                "setprop debug.adservices.topics_percentage_for_random_topics "
+                "device_config put adservices topics_percentage_for_random_topics "
                         + overridePercentage);
     }
 
@@ -102,17 +103,17 @@ public class TestUtil {
 
     public void overrideAdIdKillSwitch(boolean override) {
         if (override) {
-            runShellCommand("setprop debug.adservices.adid_kill_switch " + false);
+            runShellCommand("device_config put adservices adid_kill_switch " + false);
         } else {
-            runShellCommand("setprop debug.adservices.adid_kill_switch " + null);
+            runShellCommand("device_config put adservices adid_kill_switch " + null);
         }
     }
 
     public void overrideAppSetIdKillSwitch(boolean override) {
         if (override) {
-            runShellCommand("setprop debug.adservices.appsetid_kill_switch " + false);
+            runShellCommand("device_config put adservices appsetid_kill_switch " + false);
         } else {
-            runShellCommand("setprop debug.adservices.appsetid_kill_switch " + null);
+            runShellCommand("device_config put adservices appsetid_kill_switch " + null);
         }
     }
 
@@ -122,34 +123,35 @@ public class TestUtil {
     // PhFlags will use the default value.
     public void overrideMeasurementKillSwitches(boolean isOverride) {
         String overrideString = isOverride ? "false" : "null";
-        runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
-        runShellCommand("setprop debug.adservices.measurement_kill_switch " + overrideString);
+        runShellCommand("device_config put adservices global_kill_switch " + overrideString);
+        runShellCommand("device_config put adservices measurement_kill_switch " + overrideString);
         runShellCommand(
-                "setprop debug.adservices.measurement_api_register_source_kill_switch "
+                "device_config put adservices measurement_api_register_source_kill_switch "
                         + overrideString);
         runShellCommand(
-                "setprop debug.adservices.measurement_api_register_trigger_kill_switch "
+                "device_config put adservices measurement_api_register_trigger_kill_switch "
                         + overrideString);
         runShellCommand(
-                "setprop debug.adservices.measurement_api_register_web_source_kill_switch "
+                "device_config put adservices measurement_api_register_web_source_kill_switch "
                         + overrideString);
         runShellCommand(
-                "setprop debug.adservices.measurement_api_register_web_trigger_kill_switch "
+                "device_config put adservices measurement_api_register_web_trigger_kill_switch "
                         + overrideString);
         runShellCommand(
-                "setprop debug.adservices.measurement_api_delete_registrations_kill_switch "
+                "device_config put adservices measurement_api_delete_registrations_kill_switch "
                         + overrideString);
         runShellCommand(
-                "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
+                "device_config put adservices measurement_api_status_kill_switch "
+                        + overrideString);
     }
 
     // Override the flag to disable Measurement enrollment check. Setting to 1 disables enforcement.
     public void overrideDisableMeasurementEnrollmentCheck(String val) {
-        runShellCommand("setprop debug.adservices.disable_measurement_enrollment_check " + val);
+        runShellCommand("device_config put adservices disable_measurement_enrollment_check " + val);
     }
 
     public void resetOverrideDisableMeasurementEnrollmentCheck() {
-        runShellCommand("setprop debug.adservices.disable_measurement_enrollment_check null");
+        runShellCommand("device_config put adservices disable_measurement_enrollment_check null");
     }
 
     // Force using bundled files instead of using MDD downloaded files. This helps to make the test
@@ -168,24 +170,27 @@ public class TestUtil {
 
     public void overrideFledgeSelectAdsKillSwitch(boolean override) {
         if (override) {
-            runShellCommand("setprop debug.adservices.fledge_select_ads_kill_switch " + false);
+            runShellCommand("device_config put adservices fledge_select_ads_kill_switch " + false);
         } else {
-            runShellCommand("setprop debug.adservices.fledge_select_ads_kill_switch " + null);
+            runShellCommand("device_config put adservices fledge_select_ads_kill_switch " + null);
         }
     }
 
     public void overrideFledgeCustomAudienceServiceKillSwitch(boolean override) {
         if (override) {
             runShellCommand(
-                    "setprop debug.adservices.fledge_custom_audience_service_kill_switch " + false);
+                    "device_config put adservices fledge_custom_audience_service_kill_switch "
+                            + false);
         } else {
             runShellCommand(
-                    "setprop debug.adservices.fledge_custom_audience_service_kill_switch " + null);
+                    "device_config put adservices fledge_custom_audience_service_kill_switch "
+                            + null);
         }
     }
 
     public void overrideSdkRequestPermitsPerSecond(long maxRequests) {
-        runShellCommand("setprop debug.adservices.sdk_request_permits_per_second " + maxRequests);
+        runShellCommand(
+                "device_config put adservices sdk_request_permits_per_second " + maxRequests);
     }
 
     public void disableDeviceConfigSyncForTests(boolean disabled) {

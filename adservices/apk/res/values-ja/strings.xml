@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"このたび、「広告の測定」という広告プライバシーの新しい機能をリリースします。Android では、アプリによる広告の効果測定に役立てるため、広告が表示されたタイミングなどの限定的な情報のみをアプリ間で共有するようになります。"</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"広告プライバシー設定で変更できます。"</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"ユーザーが使用しているアプリから Android に対して広告の効果を測定するための情報が要求されると、Android は限定的な種類のデータの収集のみをアプリに許可します。"</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"広告のプライバシーの新機能"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"個人情報を保護できるようにしつつ、表示される広告をご自身でより細かく選択できます"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"広告のプライバシー機能に関する最新情報"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"個人情報を保護できるようにしつつ、表示される広告をご自身でより細かく選択できます"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android では、パーソナライズド広告を表示する際にアプリが取得できるユーザー情報を制限するため、広告のプライバシー機能を強化しています。"</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"アプリとその広告パートナーも、個人のプライバシーとセキュリティを確保しながら、広告をパーソナライズするためにこのデバイス上の他のアプリでのユーザーのアクティビティを使用できます。"</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"アプリによる広告の提案の詳細"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"限られた種類のデータ（広告が表示された時間帯など）が、広告パフォーマンスの把握のためにアプリ間で共有されます。"</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"広告の測定の詳細"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android では、ユーザーの最近のアプリ使用に基づいて興味 / 関心のあるトピックが記録されます。また、アプリとその広告パートナーも、個人のプライバシーとセキュリティを確保しながら、広告をパーソナライズするためにこのデバイス上の他のアプリでのユーザーのアクティビティを使用できます。"</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"• 使用するアプリでは、アプリのアクティビティに基づいてユーザーの好みが特定される場合もあります。たとえば、料理アプリを定期的に使用している場合、食料品の宅配サービスや関連コンテンツの広告が他のアプリに表示される可能性があります。\n\nこの情報は、広告パートナーが他のアプリで広告をパーソナライズする目的以外で使用できないようアプリで安全に保管することができます。"</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"その後、使用するアプリから、この情報（広告のトピックまたは使用するアプリによる広告の提案）を求められることがあります。"</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"使用するアプリが、広告のパフォーマンスを測定するための情報を Android に求めることがあります。Android は、アプリ間で共有される情報を限定することで、ユーザーのプライバシーを保護できます。"</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"どのようなデータが使用されますか？"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"使用するアプリが、広告のパフォーマンスを測定するための情報を提示するよう Android に求めることがあります。Android では、アプリ間で共有できる情報を制限することにより、ユーザーのプライバシーを保護できるようにしています。"</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"個人情報はどのように保護されますか？"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android では、集約やデータへのノイズ付加などの複数のプライバシー対策を使用してアプリ同士の情報共有を制限し、個人情報を保護できるようにしています。\n\nまた、広告の測定データは定期的にデバイスから削除されます。"</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"アプリでのアクティビティが広告の選定に使用されることがあります。"</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"アプリはこのデータをどのように使用するのですか？"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"この情報は、広告パートナーが他のアプリで広告をパーソナライズする目的以外で使用できないようアプリで安全に保管することができます。たとえば、料理アプリを定期的に使用している場合、食料品の宅配サービスや関連コンテンツの広告が他のアプリに表示される可能性があります。"</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"このデータはどのように管理できますか？"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"特定のアプリでアクティビティが広告パートナーと共有されないようにブロックすることができます。アプリによる広告の提案のリセットと無効化は、プライバシー設定でいつでも可能です。また Android では、このデータを定期的に自動で削除しています。"</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"プライバシーを保護する Android の仕組みの詳細を確認"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"アプリとその広告パートナーは、個人情報のプライバシーとセキュリティを確保しながら、広告をパーソナライズするためにこのデバイス上の他のアプリでのユーザーのアクティビティを使用できます。\n\nたとえば、料理アプリを定期的に使用している場合、食料品の宅配サービスや関連コンテンツの広告が他のアプリに表示される可能性があります。\n\nAndroid ではユーザーのアクティビティを定期的に自動で削除していますが、アプリでこの情報が広告パートナーと共有されないようにユーザーがブロックすることもできます。"</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"アプリとその広告パートナーがユーザーの興味の対象を記憶してエクスペリエンスのパーソナライズを行うのは一般的なことです。この情報は、広告パートナーが他のアプリで広告を表示する目的以外で使用できないようアプリで安全に保管することができます。\n\nユーザーは、アプリでアクティビティ データが広告パートナーと共有されないようにブロックできます。Android では、共有されたアクティビティ データを定期的に自動で削除しています。再度使用したアプリはこのリストに再度表示される可能性があります。\n\n表示される広告がパーソナライズされるかどうかは、この設定、広告トピックの設定、広告 ID の設定、使用しているアプリで広告のパーソナライズが行われたかどうかなど、さまざまな要因の影響を受けます。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"アプリによる広告の提案の詳細を確認"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android では、集約やデータへのノイズ付加などの複数のプライバシー対策を使用してアプリ同士の情報共有を制限し、個人情報を保護できるようにしています。\n\nブラウザにも同様の設定がある場合があります。Android とブラウザの両方で広告の測定が ON の場合、広告主はユーザーが使用しているアプリとアクセスしているサイトの間で広告の効果を測定できることがあります。閲覧履歴は非公開で、デバイスから外部に送信されることはありません。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"広告の測定の詳細を確認"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android は、過去数週間にユーザーが使用したアプリに基づいて興味 / 関心のあるトピックを記録します。\n\nパーソナライズド広告のため、使用するアプリから後で Android に対してトピックが求められることがあります。Android は個人情報とアプリの使用に関する情報を保護する形で最大 3 件のトピックを共有します。\n\nAndroid は定期的にトピックを自動削除します。アプリを引き続き使用すると、トピックはリストに再表示される可能性があります。また、Android にアプリと共有されたくないトピックをブロックすることもできます。\n\n表示される広告がパーソナライズされるかどうかは、この設定、アプリによる広告の提案の設定、広告 ID の設定、使用しているアプリで広告のパーソナライズが行われたかどうかなど、さまざまな要因の影響を受けます。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"広告のトピックの詳細を確認"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"音楽、ニュース、スポーツなど、興味 / 関心のあるトピックを表すカラフルなイラスト"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"円の中に鍵が描かれているカラフルなイラスト"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"9 個の点で四角形が描かれているモノクロの小さなイラスト"</string>

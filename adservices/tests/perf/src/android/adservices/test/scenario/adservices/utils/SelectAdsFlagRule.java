@@ -117,7 +117,8 @@ public class SelectAdsFlagRule implements TestRule {
     }
 
     private static void enableAdservicesApi() {
-        ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices disable_fledge_enrollment_check true");
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
         ShellUtils.runShellCommand(

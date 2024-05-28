@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Biz reklamada yangi maxfiylik funksiyasini ishga tushiryapmiz. Android ilovalarga reklamalar samaradorligini oʻlchashga yordam berish uchun ilovalar oʻrtasida faqat juda cheklangan maʼlumotlarni, masalan, sizga reklama chiqarilgan vaqtni ulashadi."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Reklamada maxfiylik sozlamalarida oʻzgartirishlar kiritishingiz mumkin."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Siz foydalanadigan ilovalar oʻz reklamalari unumdorligini hisoblashda yordam berishi uchun Androiddan maʼlumot soʻrashi mumkin. Android ilovalarga faqat cheklangan turdagi maʼlumotlarni toʻplashga ruxsat beradi."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Reklamalardagi maxfiylikka oid yangi funksiyalar"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Shaxsingizni himoya qilgan holda koʻriladigan reklamalar ustidan koʻproq tanlovga ega boʻling"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Reklamada maxfiylik funksiyalari yangilanishi"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Shaxsingizni himoya qilgan holda koʻriladigan reklamalar ustidan koʻproq tanlovga ega boʻling"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Reklamani moslashda ilovalar uchun shaxsiy axborotlarga ruxsatni cheklash maqsadida Android tizimiga reklamada maxfiylikka oid yangi funksiyalar kiritiladi."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Ilovalar va reklama hamkorlari bu qurilmada oʻrnatilgan boshqa ilovalardagi faoliyatingiz axborotidan shaxsingizni oshkor qilmagan holda reklamani moslashtirish maqsadida foydalanishi mumkin."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Ilova taklif qiladigan reklamalar haqida batafsil"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Ilovalar oʻrtasida reklamalar samaradorligini hisoblash uchun sizga reklama koʻrsatilgan kun vaqti kabi cheklangan turdagi maʼlumotlar taqsimlanadi."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Reklama samaradorligini hisoblash haqida batafsil"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android yaqinda ochilgan ilovalar asosida qiziq mavzularni qayd qiladi. Shuningdek, ilovalar va reklama hamkorlari bu qurilmada oʻrnatilgan boshqa ilovalardagi faoliyatingiz axborotidan shaxsingizni oshkor qilmagan holda reklamani moslashtirish maqsadida foydalanishi mumkin."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Shuningdek, ilovalar ham ulardagi faoliyat asosida qiziqishlarni aniqlashi mumkin. Masalan, oshpazlik ilovalaridan muntazam foydalansangiz, boshqa ilovalarda oziq-ovqat yetkazib berish xizmatlari reklamasi chiqishi mumkin.\n\nIlovalar bu maʼlumotlarni xavfsiz saqlaydi va reklama hamkorlari ulardan faqatgina boshqa ilovalardagi reklamani moslashtirish maqsadida foydalanishi mumkin."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Keyinchalik, siz foydalanadigan ilova reklama mavzularingiz yoki siz foydalangan ilovalar tomonidan taklif qilingan reklamalar kabi maʼlumotlarni soʻrashi mumkin."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Siz foydalanadigan ilovalar oʻz reklamalari unumdorligini hisoblashda yordam berishi uchun Androiddan maʼlumot soʻrashi mumkin. Android ilovalar ulashishi mumkin boʻlgan maʼlumotlarni cheklash orqali maxfiyligingizni himoyalashga yordam beradi."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Qanday maʼlumotlar ishlatiladi?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Siz foydalanadigan ilovalar oʻz reklamalari unumdorligini hisoblashda yordam berishi uchun Android tizimidan maʼlumot soʻrashi mumkin. Android ilovalar ulasha oladigan maʼlumotlarni cheklash orqali maxfiyligingizni himoyalaydi."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Shaxsiy axborotlar qanday himoyalanadi?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android maxfliylikni turli usullar bilan himoyalaydi, jumladan, cheklangan maʼlumotlarni oʻzaro almashinuvchi ilovalarga axborot yuborishda va taqsimlashda axborot shovqini kiritiladi.\n\nReklama samaradorligini hisoblash maʼlumotlari ham qurilmadan muntazam tozalanadi."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Ilova ichidagi faollik tarixingiz reklama tavsiya qilishda ishlatilishi mumkin."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Ilovalar bu axborotdan qanday foydalanadi?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Ilovalar bu maʼlumotlarni xavfsiz saqlaydi va reklama hamkorlari ulardan faqatgina boshqa ilovalardagi reklamani moslashtirish maqsadida foydalanishi mumkin. Masalan, oshpazlik ilovalaridan muntazam foydalansangiz, boshqa ilovalarda oziq-ovqat yetkazib berish xizmatlari reklamasi chiqishi mumkin."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Bu axborotni qanday boshqarish mumkin?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Muayyan ilovalar uchun faollik tarixini reklama beruvchilarga ulashishni taqiqlash mumkin. Maxfiylik sozlamalari orqali istalgan vaqt ilova taklif qiladigan reklamalarni faolsizlantirish yoki sozlamalarini tiklash mumkin. Android ham ilovalar taklif qiladigan reklama maʼlumotlarini muntazam tozalab turadi."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Android tizimida maxfiylik qanday himoyalanishi haqida batafsil"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Ilovalar va reklama hamkorlari bu qurilmada oʻrnatilgan boshqa ilovalardagi faoliyatingiz axborotidan shaxsingizni oshkor qilmagan holda reklamani moslashtirish maqsadida foydalanishi mumkin.\n\nMasalan, oshpazlik ilovalaridan muntazam foydalansangiz, boshqa ilovalarda oziq-ovqat yetkazib berish xizmatlari reklamasi chiqishi mumkin.\n\nAndroid faollik tarixini muntazam avtomatik tozalaydi, lekin muayyan ilovalar uchun bu axborotni reklama hamkorlariga uzatishni mustaqil taqiqlash ham mumkin."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"Xizmatlarni moslashtirish maqsadida ilova va reklama hamkorlari odatda sizga qiziq mavzularni qayd qiladi. Ilovalar bu maʼlumotlarni xavfsiz saqlaydi va reklama hamkorlari ulardan faqatgina boshqa ilovalardagi reklamani moslashtirish maqsadida foydalanishi mumkin.\n\nIlova faollik axborotini reklama hamkoriga uzatishini taqiqlash mumkin. Shuningdek, Android ham bunday maʼlumotlarni muntazam tozalab turadi. Ilovadan foydalanishda davom etsangiz, uning axborotlari roʻyxatga qayta kiritilishi mumkin.\n\nReklamani moslash jarayoni mazkur parametr, reklama mavzulari, reklama identifikatori kabi sozlamalar hamda joriy ilovada reklama moslangani kabi turli omillar asosida amalga oshadi.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Ilova taklif qiladigan reklamalar haqida batafsil"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android maxfliylikni turli usullar bilan himoyalaydi, jumladan, cheklangan maʼlumotlarni oʻzaro almashinuvchi ilovalarga axborot yuborishda va taqsimlashda axborot shovqini kiritiladi.\n\nBrauzerda shu kabi sozlama boʻlishi mumkin. Agar reklama unumdorligini baholash brauzer va Android qurilmasida yoqilgan boʻlsa, kompaniya siz ishlatadigan ilovalar va siz kiradigan saytlarda reklamalar unumdorligini baholashi mumkin. Ochilgan veb-sahifalar tarixi faqat qurilmangizda maxfiy saqlanadi.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Reklama samaradorligini hisoblash haqida batafsil"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android oxirgi haftada ochilgan ilovalar asosida qiziq mavzularni qayd qiladi.\n\nKeyinchalik siz foydalanadigan ilova chiqadigan reklamalarni moslashtirish uchun Androiddan mavzularni soʻrashi mumkin. Android 3 tagacha mavzuni ulashadi, shu bilan birga shaxsingizni va ilovadan foydalanish haqidagi maʼlumotlarni himoya qiladi.\n\nAndroid muntazam ravishda reklama mavzularini tozalab turadi. Ayrim hollarda ilovadan foydalanish vaqtida ular roʻyxatda yana chiqib qolishi mumkin. Yoki ilovalarga ulashilmaydigan mavzularni bloklashingiz mumkin.\n\nReklamani moslashtirish jarayoni mazkur parametr, ilova taklif qiladigan reklama, reklama identifikatori kabi sozlamalar hamda joriy ilovada reklama moslangani kabi turli omillar asosida amalga oshadi.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Reklama mavzulari haqida batafsil"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Musiqa, yangiliklar va sport kabi mavzularni aks ettiruvchi belgilarning rangli tasvir"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Doira ichidagi qulfning rangli tasviri"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Kvadrat shaklidagi toʻqqizta nuqtadan iborat oq va qora rangli kichik tasvir"</string>

@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"We lanceren een nieuwe functie voor advertentieprivacy: advertentiemeting. Android deelt alleen zeer beperkte informatie tussen apps, zoals wanneer een advertentie aan jou is getoond, zodat apps de prestaties van advertenties kunnen meten."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Je kunt wijzigingen aanbrengen in de instellingen voor advertentieprivacy."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Apps die je gebruikt kunnen Android om informatie vragen waarmee ze de prestaties van hun advertenties kunnen meten. Android laat apps alleen beperkte soorten gegevens verzamelen."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Nieuwe functies voor advertentieprivacy"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Krijg meer controle over de advertenties die je te zien krijgt terwijl Android helpt je identiteit te beschermen"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Updates voor de functies voor advertentieprivacy"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Krijg meer controle over de advertenties die je te zien krijgt terwijl Android helpt je identiteit te beschermen"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android breidt de functies voor advertentieprivacy uit om te beperken wat apps over je te weten kunnen komen wanneer ze gepersonaliseerde advertenties aan je tonen."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Apps en hun advertentiepartners kunnen je activiteit in andere apps op dit apparaat gebruiken om advertenties te personaliseren, terwijl je identiteit beveiligd en privé wordt gehouden."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Meer informatie over door apps voorgestelde advertenties"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Beperkte soorten gegevens worden gedeeld tussen apps om inzicht in de prestaties van hun advertenties te krijgen, zoals de tijd waarop een advertentie aan je is getoond."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Meer informatie over advertentiemeting"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android stelt interessante onderwerpen vast op basis van de apps die je recent hebt gebruikt. Ook kunnen apps en hun advertentiepartners je activiteit in andere apps op dit apparaat gebruiken om advertenties te personaliseren, terwijl je identiteit beveiligd en privé wordt gehouden."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Apps die je gebruikt kunnen ook bepalen wat je leuk vindt op basis van je app-activiteit. Als je bijvoorbeeld regelmatig kook-apps gebruikt, zie je misschien advertenties voor bezorgservices voor boodschappen of gerelateerde content in andere apps.\n\nApps kunnen deze informatie beveiligd opslaan zodat die alleen kan worden gebruikt door hun advertentiepartners om advertenties in andere apps te personaliseren."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Later kan een app die je gebruikt vragen om deze informatie: je advertentieonderwerpen of advertenties die zijn voorgesteld door apps die je hebt gebruikt."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Apps die je gebruikt kunnen Android om informatie vragen waarmee ze de prestaties van hun advertenties kunnen meten. Android helpt je privacy te beschermen door de informatie te beperken die apps met elkaar kunnen delen."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Welke gegevens worden gebruikt?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Apps die je gebruikt kunnen Android om informatie vragen zodat ze de prestaties van hun advertenties kunnen meten. Android helpt je privacy te beschermen door te beperken welke informatie apps met elkaar kunnen delen."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Hoe wordt mijn identiteit beschermd?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android gebruikt meerdere privacymaatregelen zoals gegevens verzamelen en ruis aan gegevens toevoegen om de informatie te beperken die apps met elkaar kunnen delen. Zo helpt Android je identiteit te beschermen.\n\nGegevens voor advertentiemeting worden ook regelmatig verwijderd van je apparaat."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Je app-activiteit kan worden gebruikt om advertenties voor te stellen."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Hoe gebruiken apps deze gegevens?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Apps kunnen deze informatie beveiligd opslaan zodat die alleen kan worden gebruikt door hun advertentiepartners om advertenties in andere apps te personaliseren. Als je bijvoorbeeld regelmatig kook-apps gebruikt, zie je misschien advertenties voor bezorgservices voor boodschappen of gerelateerde content in andere apps."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Hoe kan ik deze gegevens beheren?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Je kunt specifieke apps blokkeren zodat ze je activiteit niet kunnen delen met advertentiepartners. Je kunt door apps voorgestelde advertenties op elk moment resetten of uitzetten in je privacyinstellingen. Android verwijdert deze gegevens ook regelmatig automatisch."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Meer informatie over hoe Android helpt je privacy te beschermen"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Apps en hun advertentiepartners kunnen je activiteit in andere apps op dit apparaat gebruiken om advertenties te personaliseren, terwijl je informatie beveiligd en privé wordt gehouden.\n\nAls je bijvoorbeeld regelmatig kook-apps gebruikt, zie je misschien advertenties voor bezorgservices voor boodschappen of gerelateerde content in andere apps.\n\nAndroid verwijdert je activiteit regelmatig automatisch, maar je kunt ook apps blokkeren zodat ze deze informatie niet met hun advertentiepartners kunnen delen."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"Het is normaal dat apps en hun advertentiepartners onthouden waarin je geïnteresseerd bent om zo de functionaliteit te kunnen personaliseren. Apps kunnen deze informatie beveiligd opslaan zodat die alleen kan worden gebruikt door hun advertentiepartners om advertenties in andere apps te tonen.\n\nJe kunt een app blokkeren zodat deze geen activiteitsgegevens kan delen met advertentiepartners. Android verwijdert gedeelde activiteitsgegevens ook regelmatig automatisch, zodat een app die je gebruikt opnieuw op deze lijst kan worden getoond.\n\nOf een advertentie die je ziet, is gepersonaliseerd, hangt af van meerdere factoren, zoals deze instelling, de instelling voor advertentieonderwerpen, de instellingen voor je advertentie-ID en of de app die je gebruikt gepersonaliseerde advertenties toont.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Meer informatie over door apps voorgestelde advertenties"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android gebruikt meerdere privacymaatregelen zoals gegevens verzamelen en ruis aan gegevens toevoegen om de informatie te beperken die apps met elkaar kunnen delen. Zo helpt Android je identiteit te beschermen.\n\nJe browser heeft misschien een vergelijkbare instelling. Als advertentiemeting aanstaat voor zowel Android als je browser, kan een bedrijf misschien de effectiviteit van een advertentie meten tussen de apps die je gebruikt en de sites die je bezoekt. Je browsegeschiedenis wordt privé gehouden op je apparaat.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Meer informatie over advertentiemeting"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android stelt interessante onderwerpen vast op basis van de apps die je in de afgelopen weken hebt gebruikt.\n\nLater kan een app die je gebruikt je onderwerpen opvragen bij Android om zo de advertenties te personaliseren die je te zien krijgt. Android deelt maximaal 3 onderwerpen en beschermt je identiteit en informatie over je app-gebruik.\n\nAndroid verwijdert onderwerpen regelmatig automatisch. Naarmate je apps blijft gebruiken, kan een onderwerp opnieuw in de lijst verschijnen. Je kunt ook onderwerpen blokkeren waarvan je niet wilt dat Android ze deelt met apps.\n\nOf een advertentie die je ziet, is gepersonaliseerd, hangt af van meerdere factoren, zoals deze instelling, de instelling voor door apps voorgestelde advertenties, de instellingen voor je advertentie-ID en of de app die je gebruikt gepersonaliseerde advertenties toont.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Meer informatie over advertentieonderwerpen"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Kleurrijke illustratie van symbolen die interessegebieden voorstellen, zoals muziek, nieuws en sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Kleurrijke illustratie van een slot in een cirkel"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Kleine zwart-witillustratie van 9 stippen die samen een vierkant vormen"</string>

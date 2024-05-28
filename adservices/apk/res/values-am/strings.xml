@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"የማስታወቂያ ልኬት የሚባል አዲስ የማስታወቂያ ግላዊነት ባህሪ እያስጀመርን ነው። Android በመተግበሪያዎች መካከል በጣም የተገደበ መረጃን ብቻ ያጋራል፣ ለምሳሌ የማስታወቂያዎችን አፈጻጸም ለመለካት መተግበሪያዎችን ለማገዝ አንድ ማስታወቂያ ለእርስዎ ሲታይ።"</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"እርስዎ በማስታወቂያ ግላዊነት ቅንብሮች ውስጥ ለውጦችን ማድረግ ይችላሉ።"</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"እርስዎ የሚጠቀሙባቸው መተግበሪያዎች የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት እንዲያግዛቸው መረጃ Androidን መጠየቅ ይችላሉ። Android መተግበሪያዎች የተገደቡ የውሂብ ዓይነቶችን ብቻ እንዲሰበስቡ ያደርጋል።"</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"አዲስ የማስታወቂያ ግላዊነት ባህሪያት"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"ማንነትዎን ለመጠበቅ በማገዝ ላይ ሳሉ በሚያዩዋቸው ማስታወቂያዎች ላይ ተጨማሪ አማራጭ ያግኙ"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"የእርስዎ የማስታወቂያዎች የግላዊነት ባህሪያት ዝማኔዎች"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"ማንነትዎን ለመጠበቅ በማገዝ ላይ ሳሉ በሚያዩዋቸው ማስታወቂያዎች ላይ ተጨማሪ አማራጭ ያግኙ"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android መተግበሪያዎች ግላዊነት የተላበሱ ማስታወቂያዎችን ሲያሳዩ ስለ እርስዎ ምን ማወቅ እንደሚችሉ ለመገደብ የማስታወቂያ ግላዊነት ባህሪያትን እየዘረጋ ነው።"</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"መተግበሪያዎች እና የማስታወቂያ አጋሮቻቸው የእርስዎን ማንነት የግል እና ደህንነቱ የተጠበቀ አድርጎ በማቆየት ላይ እያገዙ ሳለ ማስታወቂያዎችን ግላዊ ለማድረግ በዚህ መሣሪያ ላይ ባሉ ሌሎች መተግበሪያዎች ላይ እንቅስቃሴዎን መጠቀም ይችላሉ።"</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"ስለ በመተግበሪያ የተጠቆሙ ማስታወቂያዎች ተጨማሪ"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"እንደ ማስታወቂያ ለእርስዎ የታየበት የቀኑ ጊዜ ያሉ የተገደቡ የውሂብ ዓይነቶች የማስታወቂያዎቻቸውን አፈጻጸም ለመረዳት በመተግበሪያዎች መካከል ይጋራሉ።"</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"ስለ የማስታወቂያ ልኬት ተጨማሪ"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android በቅርብ በተጠቀሙት መተግበሪያ ላይ በመመሥረት የዝንባሌ ርዕሶች ያስተውላል። እንዲሁም መተግበሪያዎች እና የማስታወቂያ አጋራቸው የእርስዎን ማንነት የግል እና ደህንነቱ የተጠበቀ አድርጎ መቆየት ላይ እያገዙ ሳለ ማስታወቂያዎችን ግላዊ ለማድረግ በዚህ መሣሪያ ላይ ሌሎች መተግበሪያዎች ላይ እንቅስቃሴዎን መጠቀም ይችላሉ።"</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  እንዲሁም እርስዎ የሚጠቀሟቸው መተግበሪያዎች በመተግበሪያ እንቅስቃሴዎ ላይ በመመስረ እርስዎ የሚወዱትን ማወቅ ይችላሉ። ለምሳሌ፣ በመደበኛው የምግብ ማዘጋጃ መተግበሪያዎችን የሚጠቀሙ ከሆነ ሌሎች መተግበሪያዎች ውስጥ የሸቀጣ ሸቀጥ ማድረስ አገልግሎቶች ወይም የተዛማጅ ይዘት ማስታወቂያዎችን ሊመለከቱ ይችላሉ።\n\nሌሎች መተግበሪያዎች ላይ ማስታወቂያን ግላዊ ለማድረግ በማስታወቂያ አጋሮቻቸው ብቻ ጥቅም ላይ እንዲውል መተግበሪያዎች ይህን መረጃ ደህንነቱን ጠብቀው ማከማቸት ይቻላሉ።"</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"በኋላ፣ የሚጠቀሙበት መተግበሪያ ይህን መረጃ ሊጠይቅ ይችላል – የእርስዎን የማስታወቂያ ርዕሶች ወይም በተጠቀሟቸው መተግበሪያዎች የተጠቆሙ ማስታወቂያዎችን።"</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"እርስዎ የሚጠቀሙባቸው መተግበሪያዎች የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት እንዲያግዛቸው መረጃ Androidን መጠየቅ ይችላሉ። Android መተግበሪያዎች እርስበርስ ማጋራት የሚችሉትን መረጃ በመገደብ ግላዊነትዎን ለመጠበቅ ያግዛል።"</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"ምን ውሂብ ጥቅም ላይ ይውላል?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"እርስዎ የሚጠቀሙባቸው መተግበሪያዎች የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት የሚያግዛቸውን መረጃ Androidን መጠየቅ ይችላሉ። Android መተግበሪያዎች እርስ በርስ የሚያጋሩትን መረጃ በመገደብ ግላዊነትዎን በመጠበቅ ያግዛል።"</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"የእኔ ማንነት እንዴት ይጠበቃል?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android መተግበሪያዎች እርስ በርስ ሊጋሩ የሚችሉትን መረጃ ለመገደብ እና ማንነትዎን ለመጠበቅ እንዲያግዘው እንደ ማሰባሰብ እና ትርጉም አልባ ውሂብn መሰብሰብ ያሉ ብዙ የግላዊነት ልኬቶችን ይጠቀማል።\n\nእንዲሁም የማስታወቂያ ልኬት ውሂብ ከመሣሪያዎ ላይ በመደበኛነት ይሰረዛል።"</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"የመተግበሪያ እንቅስቃሴዎ ማስታወቂያዎችን ለመጠቆም ጥቅም ላይ መዋል ይችላል።"</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"መተግበሪያዎች ይህን ውሂብ እንዴት ይጠቀማሉ?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"መተግበሪያዎች በሌሎች መተግበሪያዎች ላይ ማስታወቂያዎችን ግላዊ ለማድረግ በማስታወቂያ አጋሮቻቸው ብቻ ጥቅም ላይ መዋል እንዲችሉ ይህን መረጃ ደህንነቱ በተጠበቀ መልኩ ማከማቸት ይችላሉ። ለምሳሌ፣ በመደበኛው የምግብ ማዘጋጃ መተግበሪያዎችን የሚጠቀሙ ከሆነ ሌሎች መተግበሪያዎች ውስጥ የሸቀጣ ሸቀጥ ማድረስ አገልግሎቶች ወይም የተዛማጅ ይዘት ማስታወቂያዎችን ሊመለከቱ ይችላሉ።"</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"ይህን ውሂብ እንዴት ማስተዳደር እችላለሁ?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"የተወሰኑ የመተግበሪያዎች እንቅስቃሴዎን ከማስታወቂያ አጋሮች ጋር ከማጋራት ማገድ ይችላሉ። በመተግበሪያ የተጠቆሙ ማስታወቂያዎችን በማንኛውም ጊዜ የግላዊነት ቅንብሮችዎ ውስጥ ዳግም ማስጀመር ወይም ማጥፋት ይችላሉ። እንዲሁም Android ይህን ውሂብ በመደበኛነት በራስ-ሰር ይሰርዛል።"</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Android እንዴት የእርስዎን ግላዊነት ለመጠበቅ እንደሚያግዝ የበለጠ ይወቁ"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"መተግበሪያዎች እና የማስታወቂያ አጋሮቻቸው አሁንም ስለ እርስዎ መረጃ ሚስጥራዊ እና ደህንነቱ እንደተጠበቀ አድርገው ማስታወቂያዎችን ግላዊ ለማድረግ በዚህ መሣሪያ ላይ ባሉ በሌሎች መተግበሪያዎች ላይ የእርስዎን እንቅስቃሴ መጠቀም ይችላሉ።\n\nለምሳሌ በመደበኛነት የማብሰያ መተግበሪያዎችን የሚጠቀሙ ከሆነ፣ የግሮሰሪ ማድረስ አገልግሎቶች ማስታወቂያዎችን ወይም ተዛማጅ ይዘቶችን በሌሎች መተግበሪያዎች ላይ ሊመለከቱ ይችላሉ።\n\nAndroid በመደበኛነት እንቅስቃሴዎን በራስ ሰር ይሰርዘዋል ነገር ግን መተግበሪያዎች ይህን መረጃ ለማስታወቂያ አጋሮቻቸው እንዳያጋሩ ማገድም ይችላሉ።"</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"መተግበሪያዎች እና የማስታወቂያ አጋሮቻቸው የእርስዎን ተሞክሮ ግላዊ ለማድረግ እርስዎ ዝንባሌ ያሉዎት ነገሮችን ማስታወስ የተለመደ ነው። መተግበሪያዎች በሌሎች መተግበሪያዎች ላይ ማስታወቂያዎችን ለማሳየት በማስታወቂያ አጋሮቻቸው ብቻ ጥቅም ላይ መዋል እንዲችሉ ይህን መረጃ ደህንነቱ በተጠበቀ መልኩ ማከማቸት ይችላሉ።\n\nመተግበሪያን የእንቅስቃሴ ውሂብዎን ከማስታወቂያ አጋሮች ጋር እንዳያጋራ ማገድ ይችላሉ። እንዲሁም Android የተጋራ የእንቅስቃሴ ውሂብን በመደበኝነት በራስ ሰር ይሰርዛል ስለዚህ እንደገና የሚጠቀሙበት መተግበሪያ በዚህ ዝርዝር ላይ እንደገና ሊታይ ይችላል።\n\nየሚመለከቱት ማስታወቂያ ግላዊነት የተላበሰ ስለመሆኑ በብዙ ሁኔታዎች ላይ የተወሰነ ሊሆን ይችላል ለምሳሌ እንደዚህ ቅንብር፣ የማስታወቂያ ርዕሶች ቅንብር፣ የማስታወቂያ መታወቂያ ቅንብሮችዎ እና በሚጠቀሙበት መተግበሪያ ግላዊነትን የተላበሱ ማስታወቂያዎች።\n\n"<a href="https://support.google.com/android?p=ad_privacy">"ስለ በመተግበሪያ የተጠቆሙ ማስታወቂያዎች የበለጠ ይወቁ።"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android መተግበሪያዎች እርስ በርስ ሊጋሩ የሚችሉትን መረጃ ለመገደብ እና ማንነትዎን ለመጠበቅ እንዲያግዘው እንደ ማሰባሰብ እና ትርጉም አልባ ውሂብn መሰብሰብ ያሉ ብዙ የግላዊነት ልኬቶችን ይጠቀማል።\n\nአሳሽዎ ተመሳሳይ ቅንብር ሊኖረው ይችላል። የማስታወቂያ ልኬት ለሁለቱም ለAndroid እና ለአሳሽዎ የሚበራ ከሆነ አንድ ኩባንያ በሚጠቀሟቸው መተግበሪያዎች እና በሚጎበኟቸው ጣቢያዎች መካከል የአንድ ማስታወቂያ ውጤታማነትን መለካት ይችል ይሆናል። የአሰሳ ታሪክዎ በመሣሪያዎ ላይ የግል ሆኖ ይቆያል።\n\n"<a href="https://support.google.com/android?p=ad_privacy">"ስለ የማስታወቂያ ልኬት የበለጠ ይወቁ"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"እርስዎ ባለፉት ጥቂት ሳምንታት ውስጥ በተጠቀሟቸው መተግበሪያዎች መሠረት የዝንባሌ ርዕሶችን ያስተውላል።\n\nበኋላ ላይ፣ እርስዎ የሚጠቀሙት አንድ መተግበሪያ እርስዎ የሚያዩትን ማስታወቂያ ግላዊ ለማድረግ Androidን የእርስዎን ርዕሶች መጠየቅ ይችላል። Android የእርስዎን ማንነት እና ስለመተግበሪያ አጠቃቀምዎ ያለ መረጃን ጥበቃ በማድረግ ላይ ሳለ እስከ 3 ርዕሶች የሚደርሱ ያጋራል።\n\nAndroid ርዕሶችን በመደበኛነት በራስ-ሰር ይሰርዛል። መተግበሪያዎችን መጠቀምዎን ሲቀጥሉ በዝርዝሩ ላይ ርዕስ እንደገና ሊታይ ይችላል። ወይም Android ከመተግበሪያዎች ጋር እንዳያጋራ የሚፈልጓቸውን ርዕሶች ማገድ ይችላሉ።\n\nየሚመለከቱት ማስታወቂያ ግላዊነት የተላበሰ ስለመሆኑ በብዙ ሁኔታዎች ላይ የተወሰነ ሊሆን ይችላል ለምሳሌ እንደዚህ ቅንብር፣ በመተግበሪያ የተጠቆሙ ማስታወቂያዎች ቅንብሩ፣ የማስታወቂያ መታወቂያ ቅንብሮችዎ፣ እና በሚጠቀሙበት መተግበሪያ ግላዊነትን የተላበሱ ማስታወቂያዎች።\n\n"<a href="https://support.google.com/android?p=ad_privacy">"ስለ የማስታወቂያ ርዕሶች የበለጠ ይወቁ"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"እንደ ሙዚቃ፣ ዜና እና ስፖርት ያሉ የዝንባሌ ርዕሶችን የሚወክሉ በቀለም የተሞሉ የሥዕላዊ ማብራሪያ ምልክቶች"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"በክበብ ውስጥ ያለ በቀለም የተሞላ ቁልፍ ሥዕላዊ ማብራሪያ"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"ኩብ የሚፈጥሩ የዘጠኝ ነጥቦች ትንሽ ጥቁር እና ነጭ ሥዕላዊ ማብራሪያ"</string>

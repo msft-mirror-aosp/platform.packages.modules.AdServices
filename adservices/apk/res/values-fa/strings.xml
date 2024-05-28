@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"درحال راه‌اندازی ویژگی جدیدی برای حریم خصوصی آگهی هستیم به نام «سنجش آگهی». Android اطلاعات بسیار محدودی را بین برنامه‌ها هم‌رسانی می‌کند (برای مثال زمانی‌که یک آگهی به شما نشان داده می‌شود) تا به برنامه‌ها کمک کند عملکرد آگهی‌ها را بسنجند."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"می‌توانید تغییرات موردنظرتان را در تنظیمات حریم خصوصی آگهی اعمال کنید."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"برنامه‌هایی که استفاده می‌کنید ممکن است اطلاعاتی از Android درخواست کنند تا بتوانند عملکرد آگهی‌هایشان را بسنجند. Android به برنامه‌ها اجازه می‌دهد فقط انواع محدودی از داده‌ها را جمع‌آوری کنند."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"ویژگی‌های جدید حریم خصوصی آگهی"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"برای آگهی‌هایی که می‌بینید گزینه‌های بیشتری دریافت کنید و درعین‌حال به محافظت از هویتتان کمک کنید"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"به‌روزرسانی ویژگی‌های حریم خصوصی آگهی‌ها"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"برای آگهی‌هایی که می‌بینید گزینه‌های بیشتری دریافت کنید و درعین‌حال به محافظت از هویتتان کمک کنید"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"‫Android درحال توسعه ویژگی‌های حریم خصوصی آگهی‌ها است تا اطلاعاتی را که برنامه‌ها هنگام نمایش آگهی‌های شخصی‌سازی‌شده می‌توانند درباره شما یاد بگیرند محدود کند."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"برنامه‌ها و شرکای تبلیغاتی آن‌ها می‌توانند از فعالیت شما در دیگر برنامه‌های موجود در این دستگاه برای شخصی‌سازی کردن آگهی‌ها استفاده کنند و درعین‌حال هویت شما را به‌صورت خصوصی و ایمن حفظ کنند."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"اطلاعات بیشتر درباره آگهی‌های پیشنهادی برنامه"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"انواع محدودی از داده‌ها بین برنامه‌ها هم‌رسانی می‌شود تا برنامه‌ها از عملکرد آگهی‌هایشان مطلع شوند؛ مثلاً زمانی از روز که آگهی به شما نشان داده شده است."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"اطلاعات بیشتر درباره سنجش آگهی‌ها"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"‏Android براساس برنامه‌هایی که اخیراً از آن‌ها استفاده کرده‌اید به موضوع‌های موردعلاقه‌تان پی می‌برد. به‌علاوه، برنامه‌ها و شرکای تبلیغاتی آن‌ها می‌توانند از فعالیت شما در دیگر برنامه‌های موجود در این دستگاه برای شخصی‌سازی کردن آگهی‌ها استفاده کنند و درعین‌حال هویت شما را به‌صورت خصوصی و ایمن حفظ کنند."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  همچنین برنامه‌هایی که استفاده می‌کنید می‌توانند براساس فعالیت برنامه شما تشخیص دهند چه چیزهایی را دوست دارید. برای مثال، اگر به‌طور مکرر از برنامه‌های آشپزی استفاده می‌کنید، ممکن است آگهی‌هایی درباره ارسال خواروبار یا محتوای مرتبط در برنامه‌های دیگر ببینید.\n\nبرنامه‌ها می‌توانند این اطلاعات را به‌طور ایمن ذخیره کنند تا فقط شرکای تبلیغاتی آن‌ها بتوانند از این اطلاعات برای شخصی‌سازی کردن آگهی‌ها در برنامه‌های دیگر استفاده کنند."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"بعداً، برنامه‌ای که از آن استفاده می‌کنید می‌تواند این اطلاعات را درخواست کند که می‌تواند شامل موضوع‌های آگهی شما یا آگهی‌های پیشنهادی برنامه‌های مورداستفاده‌تان باشد."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"برنامه‌هایی که استفاده می‌کنید ممکن است اطلاعاتی از Android درخواست کنند تا بتوانند عملکرد آگهی‌هایشان را بسنجند. ‏Android با محدود کردن اطلاعاتی که برنامه‌ها می‌توانند با یکدیگر هم‌رسانی کنند، به محافظت از حریم خصوصی شما کمک می‌کند."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"از چه داده‌هایی استفاده می‌شود؟"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"برنامه‌هایی که استفاده می‌کنید می‌توانند اطلاعاتی از Android درخواست کنند که به آن‌ها کمک می‌کند عملکرد آگهی‌هایشان را بسنجند. Android با محدود کردن اطلاعاتی که برنامه‌ها می‌توانند با یکدیگر هم‌رسانی کنند به محافظت از حریم خصوصی شما کمک می‌کند."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"چگونه از هویت من محافظت می‌شود؟"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"‫Android از اقدامات حافظ حریم خصوصی متعددی مثل انبوهش و شلوغ‌سازی داده‌ها استفاده می‌کند تا اطلاعاتی را که برنامه‌ها می‌توانند با یکدیگر هم‌رسانی کنند محدود کند و به محافظت از هویت شما کمک کند.\n\nهمچنین داده‌های سنجش آگهی‌ها به‌طور مرتب از دستگاهتان حذف می‌شود."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"از فعالیت شما در برنامه‌ها می‌توان برای پیشنهاد آگهی استفاده کرد."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"برنامه‌ها چگونه از این داده‌ها استفاده می‌کنند؟"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"برنامه‌ها می‌توانند این اطلاعات را به‌طور ایمن ذخیره کنند تا فقط شرکای تبلیغاتی آن‌ها بتوانند از این اطلاعات برای شخصی‌سازی کردن آگهی‌ها در برنامه‌های دیگر استفاده کنند. برای مثال، اگر به‌طور مکرر از برنامه‌های آشپزی استفاده کنید، ممکن است آگهی‌هایی درباره ارسال خواروبار یا محتوای مرتبط در برنامه‌های دیگر ببینید."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"چگونه می‌توانم این داده‌ها را مدیریت کنم؟"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"می‌توانید برنامه‌های خاصی را مسدود کنید تا نتوانند فعالیت شما را با شرکای تبلیغاتی هم‌رسانی کنند. هرزمان بخواهید در تنظیمات حریم خصوصی می‌توانید داده‌ها را بازنشانی کنید یا آگهی‌های پیشنهادی برنامه‌ها را خاموش کنید. ‫Android نیز مرتباً این داده‌ها را به‌طور خودکار حذف می‌کند."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"ببینید Android چگونه به محافظت از حریم خصوصی شما کمک می‌کند"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"برنامه‌ها و شرکای تبلیغاتی آن‌ها می‌توانند از فعالیت شما در دیگر برنامه‌های موجود در این دستگاه برای شخصی‌سازی کردن آگهی‌ها استفاده کنند و درعین‌حال اطلاعات شما را به‌صورت خصوصی و ایمن حفظ کنند.\n\nبرای مثال، اگر به‌طور مکرر از برنامه‌های آشپزی استفاده کنید، ممکن است آگهی‌هایی درباره ارسال خواروبار یا محتوای مرتبط در برنامه‌های دیگر ببینید.\n\n‫Android مرتباً فعالیت شما را به‌طور خودکار حذف می‌کند، اما شما نیز می‌توانید برنامه‌ها را مسدود کنید تا نتوانند این اطلاعات را با شرکای تبلیغاتی خود هم‌رسانی کنند."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"برنامه‌ها و شرکای تبلیغاتی آن‌ها معمولاً علایق شما را به‌خاطر می‌سپارند تا تجربه شما را شخصی‌سازی کنند. برنامه‌ها می‌توانند این اطلاعات را به‌طور ایمن ذخیره کنند تا فقط شرکای تبلیغاتی آن‌ها بتوانند از این اطلاعات برای نمایش آگهی در برنامه‌های دیگر استفاده کنند.\n\nمی‌توانید برنامه خاصی را مسدود کنید تا نتواند داده‌های فعالیت شما را با شرکای تبلیغاتی هم‌رسانی کند. همچنین Android مرتباً داده‌های فعالیت هم‌رسانی‌شده را به‌طور خودکار حذف می‌کند، بنابراین برنامه‌ای که مجدداً استفاده می‌کنید ممکن است دوباره در این فهرست ظاهر شود.\n\nشخصی‌سازی شدن آگهی‌هایی که می‌بینید می‌تواند به عوامل زیادی بستگی داشته باشد، مثل همین تنظیم، انتخاب موضوع‌های آگهی، تنظیمات شناسه تبلیغاتی شما، و اینکه برنامه مورداستفاده‌تان آگهی‌ها را شخصی‌سازی کرده است یا نه.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"درباره آگهی‌ها پیشنهادی برنامه بیشتر بدانید"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"‫Android از اقدامات حافظ حریم خصوصی متعددی مثل انبوهش و شلوغ‌سازی داده‌ها استفاده می‌کند تا اطلاعاتی را که برنامه‌ها می‌توانند با یکدیگر هم‌رسانی کنند محدود کند و به محافظت از هویت شما کمک کند.\n\nممکن است مرورگر شما تنظیم مشابهی داشته باشد. اگر سنجش آگهی هم برای Android و هم برای مرورگر روشن باشد، ممکن است شرکتی بتواند اثربخشی یک آگهی را بین برنامه‌هایی که استفاده می‌کنید و سایت‌هایی که بازدید می‌کنید بسنجد. سابقه مرورتان به‌صورت خصوصی در دستگاهتان نگهداری می‌شود.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"درباره سنجش آگهی‌ها بیشتر بدانید"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"‫Android موضوع‌های موردعلاقه‌تان را براساس برنامه‌هایی که در چند هفته گذشته استفاده کرده‌اید مدنظر می‌گیرد.\n\nبعداً، یکی از برنامه‌هایی که استفاده می‌کنید می‌تواند برای شخصی کردن آگهی‌هایی که می‌بینید موضوع‌های شما را از Android درخواست کند. ‫Android ضمن محافظت از هویت و اطلاعات مربوط به استفاده شما از برنامه، حداکثر ۳ موضوع را هم‌رسانی می‌کند.\n\n‫Android مرتباً موضوع‌ها را به‌طور خودکار حذف می‌کند. با ادامه استفاده از برنامه‌ها، ممکن است موضوعی دوباره در فهرست ظاهر شود. یا می‌توانید موضوع‌هایی را که نمی‌خواهید Android با برنامه‌ها هم‌رسانی کند مسدود کنید.\n\nشخصی‌سازی شدن آگهی‌هایی که می‌بینید بستگی به عوامل زیادی دارد، مثل همین تنظیم، تنظیم آگهی‌های پیشنهادی برنامه، تنظیمات شناسه تبلیغاتی شما، و اینکه برنامه مورداستفاده‌تان آگهی‌ها را شخصی‌سازی کرده است یا نه.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"درباره موضوع‌های آگهی بیشتر بدانید"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"تصویر رنگارنگ نمادهایی که علایقی مثل موسیقی، اخبار، و ورزش را نشان می‌دهند"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"تصویر رنگارنگ قفلی درون دایره"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"تصویر سیاه‌وسفید کوچکی از نه نقطه که یک مربع را شکل داده‌اند"</string>

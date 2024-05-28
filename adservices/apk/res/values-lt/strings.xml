@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Pristatome naują skelbimų privatumo funkciją, vadinamą skelbimų vertinimu. „Android“ su programomis bendrina tik labai ribotą informaciją, pvz., kada skelbimas jums buvo parodytas, kad padėtų programoms įvertinti skelbimų našumą."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Pakeitimus galite atlikti su skelbimais susijusio privatumo nustatymuose."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Naudojamos programos gali prašyti „Android“ informacijos, kad galėtų lengviau įvertinti savo skelbimų našumą. „Android“ leidžia programoms rinkti tik tam tikrų tipų duomenis."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Naujos su skelbimais susijusio privatumo funkcijos"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Gaukite daugiau galimybių pasirinkti norimus matyti skelbimus kartu padėdami apsaugoti savo tapatybę"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Su skelbimais susijusio privatumo funkcijų atnaujinimai"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Gaukite daugiau galimybių pasirinkti norimus matyti skelbimus kartu padėdami apsaugoti savo tapatybę"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"„Android“ plečia su skelbimais susijusio privatumo funkcijas ir apriboja, ką programos gali apie jus sužinoti, rodydamos jums suasmenintus skelbimus."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Programos ir jų reklamavimo partneriai gali naudoti jūsų veiklos duomenis kitose programose šiame įrenginyje, kad galėtų suasmeninti skelbimus, kartu užtikrinant jūsų tapatybės privatumą ir saugą."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Daugiau apie programų siūlomus skelbimus"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Naudojant skelbimų vertinimo funkciją, tam tikrų tipų duomenys bendrinami su programomis, siekiant suprasti jų skelbimų našumą, pvz., dienos laikas, kada skelbimas buvo jums rodomas."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Daugiau apie skelbimų vertinimą"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"„Android“ pažymi jus dominančias temas pagal neseniai naudotas programas. Be to, programos ir jų reklamavimo partneriai gali naudoti jūsų veiklos duomenis kitose programose šiame įrenginyje, kad galėtų suasmeninti skelbimus, kartu užtikrinant jūsų tapatybės privatumą ir saugą."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Naudojamos programos taip pat gali nustatyti, ką mėgstate, pagal jūsų programų veiklą. Pavyzdžiui, jei nuolat naudojate maisto gaminimo programas, kitose programose galite matyti maisto prekių pristatymo paslaugų skelbimų ar susijusio turinio.\n\nProgramos gali patikimai saugoti šią informaciją, kad ją naudotų tik jų reklamavimo partneriai siekdami suasmeninti skelbimus savo programose."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Vėliau naudojamoje programoje gali būti prašoma šios informacijos: skelbimų temų arba naudojamų programų siūlomų skelbimų."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Naudojamos programos gali prašyti „Android“ informacijos, kad galėtų lengviau įvertinti savo skelbimų našumą. „Android“ padeda apsaugoti jūsų privatumą ribodama programų bendrinamą informaciją."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Kokie duomenys naudojami?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Naudojamos programos gali prašyti „Android“ informacijos, kad galėtų lengviau įvertinti savo skelbimų našumą. „Android“ padeda apsaugoti jūsų privatumą ribodama programų bendrinamą informaciją."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Kaip saugoma mano tapatybė?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"„Android“ naudoja įvairias privatumo užtikrinimo priemones, pvz., kaupia ir grynina duomenis, siekdama apriboti informaciją, kurią programos gali bendrinti tarpusavyje, ir apsaugoti jūsų tapatybę.\n\nBe to, skelbimų vertinimo duomenys nuolat ištrinami iš jūsų įrenginio."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Jūsų programų veikla gali būti naudojama siūlant skelbimus."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Kaip programos naudoja šiuos duomenis?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Programos gali patikimai saugoti šią informaciją, kad ją naudotų tik jų reklamavimo partneriai siekdami suasmeninti skelbimus savo programose. Pavyzdžiui, jei nuolat naudojate maisto gaminimo programas, kitose programose galite matyti maisto prekių pristatymo paslaugų skelbimų ar susijusio turinio."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Kaip galiu valdyti šiuos duomenis?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Galite užblokuoti tam tikras programas, kad jos nebendrintų jūsų veiklos su reklamavimo partneriais. Galite bet kada iš naujo nustatyti arba išjungti programų siūlomus skelbimus privatumo nustatymuose. Be to, „Android“ reguliariai ištrina šiuos duomenis."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Sužinokite daugiau apie tai, kaip „Android“ padeda apsaugoti jūsų privatumą"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Programos ir jų reklamavimo partneriai gali naudoti jūsų veiklos duomenis kitose programose šiame įrenginyje, kad galėtų suasmeninti skelbimus, kartu užtikrinant informacijos apie jus privatumą ir saugą.\n\nPavyzdžiui, jei nuolat naudojate maisto gaminimo programas, kitose programose galite matyti maisto prekių pristatymo paslaugų skelbimų ar susijusio turinio.\n\n„Android“ reguliariai automatiškai ištrina jūsų veiklą, bet taip pat galite užblokuoti programas, kad jos nebendrintų šios informacijos su savo reklamavimo partneriais."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"Programoms ir jų reklamavimo partneriams įprasta įsiminti jus dominančius dalykus, kad galėtų suasmeninti jūsų patirtį. Programos gali patikimai saugoti šią informaciją, kad ją naudotų tik jų reklamavimo partneriai siekdami rodyti skelbimus savo programose.\n\nGalite užblokuoti tam tikrą programą, kad nebendrintų veiklos duomenų su reklamavimo partneriais. Be to, „Android“ reguliariai automatiškai ištrina bendrintus veiklos duomenis, kad jūsų naudojama programa vėl galėtų būti rodoma šiame sąraše.\n\nAr rodomas skelbimas yra suasmenintas, gali priklausyti nuo daugelio veiksnių, pvz., šio nustatymo, skelbimų temų nustatymo, reklamavimo ID nustatymų ir nuo to, ar naudojama programa suasmenina skelbimus.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Sužinokite daugiau apie programų siūlomus skelbimus"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"„Android“ naudoja įvairias privatumo užtikrinimo priemones, pvz., kaupia ir grynina duomenis, siekdama apriboti informaciją, kurią programos gali bendrinti tarpusavyje, ir apsaugoti jūsų tapatybę.\n\nNaršyklėje gali būti naudojamas panašus nustatymas. Jei skelbimų vertinimo funkcija įjungta sistemoje „Android“ ir naršyklėje, įmonei gali būti suteikiama galimybė įvertinti skelbimo efektyvumą jūsų naudojamose programose ir svetainėse, kuriose lankotės. Jūsų naršymo istorija saugoma privačiai įrenginyje.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Sužinokite daugiau apie skelbimų vertinimą"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"„Android“ pažymi jus dominančias temas pagal per kelias pastarąsias savaites naudotas programas.\n\nVėliau programa, kurią naudojate, gali prašyti „Android“ jūsų temų, kad galėtų suasmeninti jums rodomus skelbimus. „Android“ bendrina iki trijų temų ir apsaugo jūsų tapatybę bei informaciją apie programų naudojimą.\n\n„Android“ reguliariai automatiškai ištrina temas. Ir toliau naudojant programas, tema gali būti vėl įtraukta į sąrašą. Arba galite užblokuoti konkrečias temas, jei nenorite, kad „Android“ jas bendrintų su programomis.\n\nAr rodomas skelbimas yra suasmenintas, gali priklausyti nuo daugelio veiksnių, pvz., šio nustatymo, programų siūlomų skelbimų nustatymo, reklamavimo ID nustatymų ir nuo to, ar naudojama programa suasmenina skelbimus.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Sužinokite daugiau apie skelbimų temas"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Spalvota simbolių, vaizduojančių dominančias temas, pvz., muziką, naujienas ir sportą, iliustracija"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Spalvota užrakto apskritimo viduryje iliustracija"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Nedidelė nespalvota devynių taškų, sudarančių kvadratą, iliustracija"</string>

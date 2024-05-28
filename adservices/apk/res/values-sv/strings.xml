@@ -220,67 +220,44 @@
     <string name="settingsUI_topics_switch_title" msgid="6138535622464144001">"Tillåt annonsämnen"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="1855691597262481021">"Annonsämnen du har blockerat"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="1580902912944562790">"Återställ alla annonsämnen"</string>
-    <string name="settingsU_topics_view_footer" msgid="1030678323154113993">"Android registrerar ämnen du är intresserad av baserat på vilka appar du har använt de senaste veckorna.\n\nSenare kan en app du använder fråga Android om dina ämnen för att anpassa annonserna som visas. Android delar upp till tre ämnen, samtidigt som din identitet och information om din appanvändning skyddas.\n\nAndroid raderar automatiskt ämnen regelbundet. När du använder appar kan ett ämne dyka upp på listan igen. Du kan också blockera ämnen som du inte vill att Android ska dela med appar.\n\nEn annons som du ser i en app kan vara anpassad – det beror på den här inställningen, inställningen för annonsämnen, dina inställningar för reklam-id och huruvida appen du använder anpassar annonser."</string>
+    <string name="settingsU_topics_view_footer" msgid="1030678323154113993">"Android registrerar ämnen du är intresserad av baserat på vilka appar du har använt de senaste veckorna.\n\nSenare kan en app du använder fråga Android om dina ämnen för att anpassa annonserna som visas. Android delar upp till tre ämnen, samtidigt som din identitet och information om din appanvändning skyddas.\n\nAndroid raderar automatiskt ämnen regelbundet. När du använder appar kan ett ämne dyka upp på listan igen. Du kan också blockera ämnen som du inte vill att Android ska dela med appar.\n\nEn annons som du ser i en app kan vara anpassad – det beror på den här inställningen, inställningen för annonsämnen, dina inställningar för annonserings-id och huruvida appen du använder anpassar annonser."</string>
     <string name="settingsUI_apps_switch_title" msgid="4459742127173310507">"Tillåt annonsförslag från appar"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="4376440601964010807">"Appar som du använder kan bedöma vad du gillar och sedan föreslå annonser i andra appar.\n\nDu kan blockera appar från att ge förslag. Android raderar data om annonsförslag automatiskt och regelbundet.\n\nÄven om den här funktionen kan aktiveras kanske du inte ser en lista över appar förrän funktionen är helt tillgänglig och den börjar användas i appar."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="3403673196085504304">"Appar du har blockerat"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="8096477193202146197">"Återställ föreslagen data från appar"</string>
-    <string name="settingsUI_apps_view_footer" msgid="5502656868680626279">"Det är vanligt att appar du använder kommer ihåg vad du är intresserad av för att anpassa din upplevelse. Appar kan även lagra information om dina ämnen med Android.\n\nOm du till exempel använder en app om maratonträning kan appen göra bedömningen att du är intresserad av löparskor. Om du senare använder en annan app kan den appen visa en annons för löparskor utifrån den första appens förslag.\n\nAndroid raderar föreslagen data från appar automatiskt och regelbundet. Om du använder en app på nytt kan den dyka upp på listan igen. Du kan även blockera en app från att föreslå annonser för dig.\n\nEn annons som du ser i en app kan vara anpassad – det beror på den här inställningen, inställningen för annonsämnen, dina inställningar för reklam-id och huruvida appen du använder anpassar annonser."</string>
+    <string name="settingsUI_apps_view_footer" msgid="5502656868680626279">"Det är vanligt att appar du använder kommer ihåg vad du är intresserad av för att anpassa din upplevelse. Appar kan även lagra information om dina ämnen med Android.\n\nOm du till exempel använder en app om maratonträning kan appen göra bedömningen att du är intresserad av löparskor. Om du senare använder en annan app kan den appen visa en annons för löparskor utifrån den första appens förslag.\n\nAndroid raderar föreslagen data från appar automatiskt och regelbundet. Om du använder en app på nytt kan den dyka upp på listan igen. Du kan även blockera en app från att föreslå annonser för dig.\n\nEn annons som du ser i en app kan vara anpassad – det beror på den här inställningen, inställningen för annonsämnen, dina inställningar för annonserings-id och huruvida appen du använder anpassar annonser."</string>
     <string name="notificationUI_u18_notification_title" msgid="3039567502781358382">"Ny funktion för annonsintegritet är nu tillgänglig"</string>
     <string name="notificationUI_u18_notification_content" msgid="782224580271117368">"Endast väldigt begränsad information delas mellan appar i syfte att mäta annonsresultat"</string>
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Vi lanserar en ny funktion för annonsintegritet som kallas annonsmätning. Android delar endast väldigt begränsad information mellan appar, till exempel när en annons visades för dig, så att appar kan mäta annonsers resultat."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Du kan göra ändringar i inställningarna för annonsintegritet."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Appar du använder kan be Android om information för att hjälpa dem att mäta annonsernas resultat. Android tillåter endast att appar samlar in begränsade typer av data."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Nya funktioner för annonsintegritet"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Få större kontroll över vilka annonser du ser och skydda din identitet"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Uppdateringar av funktionerna för annonsintegritet"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Få större kontroll över vilka annonser du ser och skydda din identitet"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android utökar funktionerna för annonsintegritet till att begränsa vilken information appar kan få om dig när de visar anpassade annonser."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Appar och apparnas annonseringspartners kan använda din aktivitet på andra appar på den här enheten för att anpassa annonser samtidigt som din identitet förblir privat och säker."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Mer om föreslagna annonser i appar"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Begränsade typer av data delas mellan appar för att tolka annonsernas resultat, till exempel vilken tidpunkt en annons visades för dig."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Mer om annonsmätning"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"Android registrerar ämnen du är intresserad av baserat på appar du nyligen har använt. Dessutom kan appar och deras annonseringspartners använda din aktivitet på andra appar på den här enheten för att anpassa annonser samtidigt som din identitet förblir privat och säker."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Appar som du använder kan också bedöma vad du gillar baserat på hur du använder dem. Om du till exempel regelbundet använder matlagningsappar kan du se annonser för livsmedelsleveranser eller relaterat innehåll i andra appar.\n\nAppar kan lagra den här informationen på ett säkert sätt så att den endast kan användas av deras annonseringspartners för att anpassa annonser på andra appar."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Senare kan en app du använder be om denna information – antingen dina annonsämnen eller annonser som föreslås av appar du har använt."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Appar du använder kan be Android om information för att hjälpa dem att mäta annonsernas resultat. Android hjälper till att skydda din integritet genom att begränsa informationen som appar kan dela med varandra."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Vilken data används?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Appar du använder kan be Android om information som hjälper dem att mäta annonsernas resultat. Android hjälper till att skydda din integritet genom att begränsa informationen som appar kan dela med varandra."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Hur skyddas min identitet?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android vidtar flera integritetsåtgärder, som att sammanställa och lägga till brus i data för att begränsa informationen som appar kan dela med varandra och för att skydda din integritet.\n\nAnnonsmätningsdata raderas även regelbundet från din enhet."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Din appaktivitet kan användas för att föreslå annonser."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Hur använder appar den här datan?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Appar kan lagra den här informationen på ett säkert sätt så att den endast kan användas av apparnas annonseringspartners för att anpassa annonser på andra appar. Om du till exempel regelbundet använder matlagningsappar kan du se annonser för livsmedelsleveranser eller relaterat innehåll i andra appar."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Hur kan jag använda den här datan?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Du kan blockera specifika appar från att dela din aktivitet med annonseringspartners. Du kan återställa eller inaktivera föreslagna annonser i appar när som helst i integritetsinställningarna. Android raderar även den här datan automatiskt och regelbundet."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Läs mer om hur Android skyddar din integritet"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Appar och apparnas annonseringspartners kan använda din aktivitet på andra appar på den här enheten för att anpassa annonser samtidigt som din identitet förblir privat och säker.\n\nOm du till exempel regelbundet använder matlagningsappar kan du se annonser för livsmedelsleveranser eller relaterat innehåll i andra appar.\n\nAndroid raderar din aktivitet automatiskt och regelbundet, men du kan även blockera appar från att dela den här informationen med apparnas annonseringspartners."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"Det är vanligt att appar och apparnas annonseringspartners lagrar information om vad du är intresserad av för att anpassa din upplevelse. Appar kan lagra den här informationen på ett säkert sätt så att den endast kan användas av apparnas annonseringspartners för att visa annonser på andra appar.\n\nDu kan blockera en app från att dela din aktivitetsdata med annonseringspartners. Android raderar även delad aktivitetsdata automatiskt och regelbundet så en app som du använder igen kan dyka upp igen på den här listan.\n\nHuruvida en annons du ser är anpassad eller inte kan bero på många faktorer, bland annat den här inställningen, inställningen för annonsämnen, inställningen för annonserings-id och om appen du använder anpassar annonser eller inte.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Läs mer om föreslagna annonser i appar"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android vidtar flera integritetsåtgärder, som att sammanställa och lägga till brus i data, för att begränsa informationen som appar kan dela med varandra och för att skydda din integritet.\n\nDin webbläsare kan ha en liknande inställning Om annonsmätning är aktiverat för både Android och webbläsaren kan ett företag mäta en annons effektivitet baserat på appar du använder och webbplatser du besöker. Din webbhistorik hålls privat på din enhet.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Läs mer om annonsmätning"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android registrerar ämnen du är intresserad av baserat på vilka appar du har använt de senaste veckorna.\n\nSenare kan en app du använder fråga Android om dina ämnen för att anpassa annonserna som visas. Android delar upp till tre ämnen, samtidigt som din identitet och information om din appanvändning skyddas.\n\nAndroid raderar ämnen automatiskt och regelbundet. När du använder appar kan ett ämne dyka upp på listan igen. Du kan också blockera ämnen som du inte vill att Android ska dela med appar.\n\nHuruvida en annons du ser är anpassad eller inte kan bero på många faktorer, bland annat den här inställningen, inställningen för föreslagna annonser i appar, inställningen för annonserings-id och om appen du använder anpassar annonser eller inte.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Läs mer om annonsämnen"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Färgglad illustration av symboler som representerar intressanta ämnen som musik, nyheter och sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Färgglad illustration av ett lås inuti en cirkel"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Liten, svartvit illustration av nio punkter som bildar en kvadrat"</string>

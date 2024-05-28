@@ -30,9 +30,6 @@ import java.util.Objects;
  * Rule used to properly set AdService flags - it will take care of permissions, restoring values at
  * the end, setting {@link android.provider.DeviceConfig} or {@link android.os.SystemProperties},
  * etc...
- *
- * <p>Most methods set {@link android.provider.DeviceConfig} flags, although some sets {@link
- * android.os.SystemProperties} instead - those are typically suffixed with {@code forTests}
  */
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let your   //
@@ -114,26 +111,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
         return setFlag(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, value);
     }
 
-    /** Overrides the system property that defines the percentage for random topic. */
-    public T setTopicsPercentageForRandomTopicForTests(long value) {
-        return setSystemProperty(FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);
-    }
-
-    /** Overrides the system property used to disable topics enrollment check. */
-    public T setDisableTopicsEnrollmentCheckForTests(boolean value) {
-        return setSystemProperty(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
-    }
-
-    /** Overrides the system property used to set ConsentManager notification debug mode keys. */
-    public T setConsentNotifiedDebugMode(boolean value) {
-        return setSystemProperty(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE, value);
-    }
-
-    /** Overrides the system property used to set ConsentManager debug mode keys. */
-    public T setConsentManagerDebugMode(boolean value) {
-        return setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
-    }
-
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getEnableBackCompat()}.
      */
@@ -188,35 +165,12 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     /**
      * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getAdIdKillSwitchForTests()}.
-     */
-    public T setAdIdKillSwitchForTests(boolean value) {
-        return setSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
-    }
-
-    /**
-     * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMddBackgroundTaskKillSwitch()}.
      */
     public T setMddBackgroundTaskKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
 
-    /**
-     * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getEnforceForegroundStatusForTopics()}.
-     */
-    public T setTopicsEnforceForeground(boolean value) {
-        return setFlag(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS, value);
-    }
-
-    /**
-     * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getTopicsDisableDirectAppCalls()}.
-     */
-    public T setTopicsDisableDirectAppCall(boolean value) {
-        return setFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //

@@ -231,56 +231,33 @@
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"Sethula isakhi esisha sobumfihlo besikhangiso esibizwa ngokuthi yisilinganiso sesikhangiso. I-Android yabelana kuphela ngolwazi olukhawulelwe kakhulu phakathi kwama-app, njengokuthi uma isikhangiso siboniswa kuwe, ukusiza ama-app ukulinganisa ukusebenza kwezikhangiso."</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"Ungenza izinguquko kumasethingi obumfihlo wesikhangiso."</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"Ama-app owasebenzisayo angacela i-Android ulwazi oluzowasiza ukuthi alinganisele ukusebenza kwezikhangiso zawo. I-Android ivumela ama-app ukuthi aqoqe kuphela izinhlobo ezikhawulelwe zedatha."</string>
-    <!-- no translation found for notificationUI_pas_notification_title (1802264465856796661) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_notification_content (4707569137808653882) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_title (3602324501055294805) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_re_notification_content (4205599804842406411) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body_main (4373572260264270651) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body1 (850989038991219454) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text1 (8981025972348568991) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_body2 (8458057494531462690) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_expand_button_text2 (2852531029825598040) -->
-    <skip />
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"Izakhi ezintsha zobumfihlo besikhangiso"</string>
+    <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"Thola ukukhetha okwengeziwe phezu kwezikhangiso ozibonayo kuyilapho usiza ukuvikela ubuwena"</string>
+    <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"Izibuyekezo ezakhini zakho eziyimfihlo zesikhangiso"</string>
+    <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"Thola ukukhetha okwengeziwe phezu kwezikhangiso ozibonayo kuyilapho usiza ukuvikela ubuwena"</string>
+    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"I-Android inweba izakhi eziyimfihlo zesikhangiso ukuze zikhawulele lokho ama-app angakufunda ngawe uma ekubonisa izikhangiso eziqondaniswe nomuntu siqu."</string>
+    <string name="notificationUI_pas_body1" msgid="850989038991219454">"Ama-app nozakwethu bawo bokukhangisa bangasebenzisa umsebenzi wakho kuwo wonke amanye ama-app kule divayisi ukuqondanisa izikhangiso nomuntu siqu kuyilapho esiza ukugcina ubuwena bugodliwe futhi buvikelekile."</string>
+    <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"Okuningi mayelana nezikhangiso zeziphakamiso ze-app"</string>
+    <string name="notificationUI_pas_body2" msgid="8458057494531462690">"Ngokulinganisela isikhangiso, izinhlobo ezikhawulelwe zedatha zabiwa phakathi kwama-app ukuze kulinganiswe ukusebenza kwezikhangiso zazo, njengesikhathi sosuku owaboniswa ngaso isikhangiso."</string>
+    <string name="notificationUI_pas_expand_button_text2" msgid="2852531029825598040">"Okwengeziwe mayelana nesilinganiso sesikhangiso"</string>
     <string name="notificationUI_pas_combined_body_2" msgid="2127790402199502013">"I-Android iyaziqaphela izihloko ongaba nentshisekelo kuzo ngokusekelwe kuma-app osanda kuwasebenzisa. Futhi, ama-app nozakwethu bawo bokukhangisa bangasebenzisa umsebenzi wakho kuwo wonke amanye ama-app kule divayisi ukwenza izikhangiso eziqondene nomuntu siqu kuyilapho esiza ukugcina ubuwena bugodliwe futhi buvikelekile."</string>
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  Ama-app owasebenzisayo angase futhi anqume ukuthi yini oyithandayo ngokusekelwe kumsebenzi wakho we-app. Isibonelo, uma usebenzisa ama-app okupheka njalo, ungase ubone izikhangiso zamasevisi okudilivwa kwegrosa noma okuqukethwe okuhlobene kwamanye amanye ama-app\n\nAma-app angalugcina ngokuphephile lolu lwazi ukuze lusetshenziswe ozakwabo bokukhangisa kuphela ukwenza izikhangiso eziqondene nomuntu siqu kwamanye ama-app."</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"Kamuva, i-app oyisebenzisayo ingacela lolu lwazi – kungaba yizihloko zesikhangiso sakho noma izikhangiso eziphakanyiswe ama-app owasebenzisile."</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"Ama-app owasebenzisayo angacela i-Android ulwazi oluzowasiza ukuthi alinganisele ukusebenza kwezikhangiso zawo. I-Android isiza ngokuvikela ubumfihlo bakho ngokukhawulela ulwazi ama-app angabelana ngalo wodwa."</string>
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (2518548652511929388) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body1 (6437950797184418065) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (1369612937107473791) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_msmt_body2 (6096311192720552724) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body1 (5276341884020030212) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (6921646926839023847) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body2 (7216401746885174244) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (140629612535108432) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_app_body3 (6455200181055776674) -->
-    <skip />
-    <!-- no translation found for notificationUI_pas_leanr_more_link (8029331460965381868) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_body_text (4229629051979290546) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_apps_view_footer (272934340041202862) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_msmt_view_footer (1547779101661050529) -->
-    <skip />
-    <!-- no translation found for settingsUI_pas_topics_view_footer (4765854921394271217) -->
-    <skip />
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"Iyiphi idatha esetshenziswayo?"</string>
+    <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"Ama-app owasebenzisayo angacela i-Android ulwazi olusiza ukuba alinganisele ukusebenza kwezikhangiso zawo. I-Android ivikela ubumfihlo bakho ngokukhawulela i-app yolwazi engabelana ngawo wodwa."</string>
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"Ubunikazi bami buvikelwa kanjani?"</string>
+    <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"I-Android isebenzisa izindlela eziningi zobumfihlo ezifana nokuhlukanisa kanye nedatha enomsindo ukuze ikhawulele ama-app olwazi engabelana ngawo wodwa futhi isize ukuvikela ubuwena.\n\nIdatha yokulinganisa isikhangiso nayo isulwa njalo kudivayisi yakho."</string>
+    <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"Umsebenzi wakho we-app ungasetshenziswa ukuphakamisa izikhangiso."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"Ingabe ama-app ayisebenzisa kanjani le datha?"</string>
+    <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"Ama-app angagcina ngokuphephile lolu lwazi ukuze asetshenziswe ozakwethu bokukhangisa kuphela ukuqondanisa izikhangiso nomuntu siqu kwamanye ama-app. Ngokwesibonelo, uma usebenzisa njalo ama-app wokupheka, ungase ubone izikhangiso zamasevisi okudilivwa kwegrosa noma okuqukethwe okuhlobene kwamanye ama-app."</string>
+    <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"Indlela yokuphatha le datha?"</string>
+    <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"Ungavimba am-app athile ekwabelaneni ngomsebenzi wakho nozakwethu bokukhangisa. Ungasetha kabusha noma uvale izikhangiso zeziphakamiso ze-app noma kunini kumasethingi wakho obumfihlo. I-Android iphinda isule ngokuzenzekela le datha njalo."</string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"Funda kabanzi mayelana nendlela i-Android esiza ngayo ukuvikela ubumfihlo bakho"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"Ama-app nozakwethu bawo bezokukhangisa bangasebenzisa umsebenzi wakho kuwo wonke amanye ama-app kule divayisi ukuqondanisa izikhangiso nomuntu siqu kuyilapho zisagcina ulwazi olumayelana nawe lugodliwe futhi luvikelekile.\n\nNgokwesibonelo, uma usebenzisa njalo ama-pp wokupheka, ungase ubone izikhangiso zamasevisi okudilivwa kwegrosa noma okuqukethwe okuhlobene kwamanye ama-app.\n\nI-Android isusa ngokuzenzekela umsebenzi wakho njalo, kodwa futhi ungavimbela ama-app ekwabelaneni ngalolu lwazi nozakwethu bawo bezokukhangisa."</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"Kuvamile ukuthi ama-app nozakwethu bawo bokukhangisa bakhumbule izinto onentshisekelo kuzo ukuze benze ukuzizwisa kube ngokwakho. Ama-app angagcina ngokuphephile lolu lwazi ukuze lusetshenziswe ozakwethu bokukhangisa kuphela ukubonisa izikhangiso kwamanye ama-app.\n\nUngavimba i-app ekwabelaneni ngedatha yomsebenzi wakho nozakwethu bokukhangisa. I-Android iphinda isuse ngokuzenzekela idatha yomsebenzi owabiwe njalo, ukuze i-app oyisebenzisayo futhi iphinde ivele kulolu hlu.\n\nUkuthi isikhangiso osibonayo siqondaniswe nomuntu siqu kungancika ezintweni eziningi ezifana naleli sethingi, amasethingi ezihloko zesikhangiso, amasethingi wakho we-ID yokukhangisa, nokuthi ingabe i-app oyisebenzisayo iqondanisa izikhangiso nomuntu siqu.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Funda kabanzi mayelana nezikhangiso zeziphakamiso ze-app"</a></string>
+    <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"I-Android isebenzisa izindlela eziningi zobumfihlo ezifana nokuhlanganisa nedatha enomsindo ukuze ikhawulele ama-app wolwazi angabelana ngalo wodwa futhi asize ukuvikela ubuwena.\n\nIbhrawuza yakho ingase ibe nesethingi elifanayo. Uma ukulinganisela isikhangiso kuvulelwe kokubili i-Android nebhrawuza yakho, inkampani ingase ikwazi ukulinganisela ukusebenza kahle kwesikhangiso phakathi kwama-app owasebenzisayo namasayithi owavakashelayo. Umlando wakho wokuphequlula ugcinwa uyimfihlo kudivayisi yakho.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Funda kabanzi mayelana nesilinganiso sesikhangiso"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"I-Android iphawula izihloko onentshisekelo kuzo ngokusekelwe kuma-app owasebenzise kula maviki ambalwa adlule.\n\nKamuva, i-app oyisebenzisayo ingacela i-Android ukuthi izihloko zakho ziqondanise nomuntu siqu izikhangiso ozibonayo. I-Android yabelana ngezihloko ezifika kwezingu-3 kuyilapho ivikela ubuwena kanye nolwazi olumayelana nokusetshenziswa kwe-app.\n\nI-Android isusa ngokuzenzekela izihloko njalo. Njengoba uqhubeka usebenzisa ama-app, isihloko singase sivele ohlwini. Noma ungavimba izihloko ongafuni ukuthi i-Android izabe nama-app.\n\nUkuthi isikhangiso osibonayo siqondaniswe nomuntu siqu kungancika ezintweni eziningi ezifana naleli sethingi, isethingi lezikhangiso zeziphakamiso ze-app, amasethingi we-ID yokukhangisa, kanye nokuthi i-app isebenzisa izikhangiso eziqondaniswe nomuntu siqu.\n\n"<a href="https://support.google.com/android?p=ad_privacy">"Funda kabanzi mayelana nezihloko zesikhangiso"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"Umfanekiso omibalabala wezimpawu ezimele izihloko ozithakaselayo njengomculo, izindaba, nezemidlalo"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"Umfanekiso omibalabala wesikhiya esingaphakathi kwendilinga"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"Umfanekiso omncane omnyama nomhlophe wamachashazi ayisishiyagalolunye akha isikwele"</string>

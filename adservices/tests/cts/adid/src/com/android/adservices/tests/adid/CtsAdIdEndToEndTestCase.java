@@ -15,6 +15,7 @@
  */
 package com.android.adservices.tests.adid;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
@@ -27,7 +28,7 @@ abstract class CtsAdIdEndToEndTestCase extends AdServicesCtsTestCase {
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
         return AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                .setAdIdKillSwitchForTests(false)
+                .setFlag(KEY_ADID_KILL_SWITCH, false)
                 .setFlag(KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT, true)
                 .setFlag(KEY_ADID_REQUEST_PERMITS_PER_SECOND, 25.0)
                 .setFlag(KEY_AD_ID_API_APP_BLOCK_LIST, "")

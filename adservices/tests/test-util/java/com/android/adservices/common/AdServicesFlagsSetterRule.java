@@ -16,6 +16,10 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.DeviceSideDeviceConfigHelper.callWithDeviceConfigPermissions;
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
@@ -29,6 +33,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
 import android.os.Build;
 
@@ -69,11 +74,11 @@ public final class AdServicesFlagsSetterRule
         return withAllLogcatTags()
                 .setGlobalKillSwitch(false)
                 .setTopicsKillSwitch(false)
-                .setAdIdKillSwitchForTests(false)
-                .setSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
-                .setSystemProperty(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false)
-                .setSystemProperty(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, true);
+                .setFlag(KEY_ADID_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, true);
     }
 
     // TODO(b/297085722): pass clearFlags() on forGlobalKillSwitchDisabledTests() by default?
@@ -89,18 +94,18 @@ public final class AdServicesFlagsSetterRule
                 .setCompatModeFlags()
                 .setMsmtApiAppAllowList(packageName)
                 .setMsmtWebContextClientAllowList(packageName)
-                .setConsentManagerDebugMode(true)
-                .setConsentNotifiedDebugMode(true)
-                .setSystemProperty(KEY_GLOBAL_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
+                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                .setSystemProperty(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true)
+                .setFlag(KEY_GLOBAL_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
                 .setFlag(KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES, false)
-                .setAdIdKillSwitchForTests(false);
+                .setFlag(KEY_ADID_KILL_SWITCH, false);
     }
 
     /** Factory method for Topics CB tests */
@@ -109,10 +114,10 @@ public final class AdServicesFlagsSetterRule
         return forGlobalKillSwitchDisabledTests()
                 .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
                 .setTopicsKillSwitch(false)
-                .setConsentManagerDebugMode(true)
-                .setDisableTopicsEnrollmentCheckForTests(true)
+                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                 .setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, epochPeriodMs)
-                .setTopicsPercentageForRandomTopicForTests(pctRandomTopic)
+                .setFlag(KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, pctRandomTopic)
                 .setCompatModeFlags();
     }
 
