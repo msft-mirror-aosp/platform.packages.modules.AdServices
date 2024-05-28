@@ -43,7 +43,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
-import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.javascriptengine.IsolateStartupParameters;
@@ -172,11 +171,11 @@ public class JSScriptEngineTest {
         try {
             staticMockSessionLocal =
                     ExtendedMockito.mockitoSession()
-                            .spyStatic(WebView.class)
+                            .spyStatic(JavaScriptSandbox.class)
                             .strictness(Strictness.LENIENT)
                             .initMocks(this)
                             .startMocking();
-            ExtendedMockito.doReturn(null).when(WebView::getCurrentWebViewPackage);
+            ExtendedMockito.doReturn(false).when(JavaScriptSandbox::isSupported);
 
             ThrowingRunnable getFutureInstance =
                     () ->
@@ -202,11 +201,11 @@ public class JSScriptEngineTest {
         try {
             staticMockSessionLocal =
                     ExtendedMockito.mockitoSession()
-                            .spyStatic(WebView.class)
+                            .spyStatic(JavaScriptSandbox.class)
                             .strictness(Strictness.LENIENT)
                             .initMocks(this)
                             .startMocking();
-            ExtendedMockito.doReturn(null).when(WebView::getCurrentWebViewPackage);
+            ExtendedMockito.doReturn(false).when(JavaScriptSandbox::isSupported);
 
             ThrowingRunnable getFutureInstance =
                     () ->
