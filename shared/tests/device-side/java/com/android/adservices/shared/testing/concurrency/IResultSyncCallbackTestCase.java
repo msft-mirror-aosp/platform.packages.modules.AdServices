@@ -26,7 +26,7 @@ import org.junit.Test;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Base test for classes that extend ResultTestSyncCallback. */
-abstract class ResultTestSyncCallbackTestCase<T, R extends ResultTestSyncCallback<T>>
+abstract class IResultSyncCallbackTestCase<T, R extends IResultSyncCallback<T>>
         extends SharedExtendedMockitoTestCase {
 
     protected static final long INJECTION_TIMEOUT_MS = 200;

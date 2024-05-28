@@ -29,7 +29,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 
-public final class AbstractTestSyncCallbackTest extends SharedExtendedMockitoTestCase {
+public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCase {
 
     @Test
     @SpyStatic(Log.class)

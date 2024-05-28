@@ -37,7 +37,7 @@ import java.util.Objects;
  * @param <T> type of the object received on success.
  * @param <F> type of the object received on failure.
  */
-public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<T> {
+public class FailableResultSyncCallback<T, F> implements IResultSyncCallback<T> {
 
     @VisibleForTesting
     public static final String INJECT_RESULT_OR_FAILURE = "injectResult() or injectFailure()";
