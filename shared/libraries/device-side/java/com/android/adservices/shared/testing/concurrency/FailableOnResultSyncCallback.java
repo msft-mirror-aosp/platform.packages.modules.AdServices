@@ -15,16 +15,31 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-/** Simplest implementation of a {@code SyncCallback} for tests. */
-public final class SimpleSyncCallback extends AbstractTestSyncCallback {
+/**
+ * {@link ResultSyncCallback} for implementation of binder stub interfaces that have {@code
+ * onResult()} and {@code onFailure} methods.
+ *
+ * @param <T> type of the result.
+ * @param <F> type of the failure.
+ */
+public abstract class FailableOnResultSyncCallback<T, F> extends FailableResultSyncCallback<T, F>
+        implements OnResultTestSyncCallback<T> {
 
-    /** Default constructor. */
-    public SimpleSyncCallback() {
-        this(SyncCallbackFactory.newSettingsBuilder().build());
+    protected FailableOnResultSyncCallback() {
+        super();
     }
 
-    /** Customizable constructor. */
-    public SimpleSyncCallback(SyncCallbackSettings settings) {
+    protected FailableOnResultSyncCallback(SyncCallbackSettings settings) {
         super(settings);
+    }
+
+    @Override
+    public final void onResult(T result) {
+        injectResult(result);
+    }
+
+    /** Injects the failure. */
+    public final void onFailure(F failure) {
+        injectFailure(failure);
     }
 }

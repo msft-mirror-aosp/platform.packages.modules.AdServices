@@ -15,12 +15,8 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
-
-import org.junit.Test;
-
 public final class OnResultSyncCallbackTest
-        extends ResultTestSyncCallbackTestCase<String, OnResultSyncCallback<String>> {
+        extends OnResultTestSyncCallbackTestCase<String, OnResultSyncCallback<String>> {
 
     @Override
     protected String newResult() {
@@ -29,37 +25,6 @@ public final class OnResultSyncCallbackTest
 
     @Override
     protected OnResultSyncCallback<String> newCallback(SyncCallbackSettings settings) {
-        return new ConcreteOnResultSyncCallback(settings);
-    }
-
-    @Test
-    public void testOnResult() throws Exception {
-        expect.withMessage("%s.isCalled() before onResult()", mCallback)
-                .that(mCallback.isCalled())
-                .isFalse();
-        expect.withMessage("%s.getResult() before onResult()", mCallback)
-                .that(mCallback.getResult())
-                .isNull();
-        expect.withMessage("toString() before onResult()")
-                .that(mCallback.toString())
-                .contains("(no result yet)");
-        String injectedResult = newResult();
-
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.onResult(injectedResult));
-        String receivedResult = mCallback.assertResultReceived();
-
-        expect.withMessage("%s.assertResultReceived()", mCallback)
-                .that(receivedResult)
-                .isSameInstanceAs(injectedResult);
-        expect.withMessage("%s.isCalled() after onResult()", mCallback)
-                .that(mCallback.isCalled())
-                .isTrue();
-    }
-
-    public static final class ConcreteOnResultSyncCallback extends OnResultSyncCallback<String> {
-
-        public ConcreteOnResultSyncCallback(SyncCallbackSettings settings) {
-            super(settings);
-        }
+        return new OnResultSyncCallback<String>(settings) {};
     }
 }

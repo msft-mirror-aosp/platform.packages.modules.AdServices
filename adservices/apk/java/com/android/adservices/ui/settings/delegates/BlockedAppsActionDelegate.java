@@ -92,10 +92,6 @@ public class BlockedAppsActionDelegate {
      * AdServicesSettingsBlockedAppsFragment} to handle user actions.
      */
     public void initBlockedAppsFragment() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_ga_title);
-        } else {
-            mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_title);
-        }
+        mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_ga_title);
     }
 }

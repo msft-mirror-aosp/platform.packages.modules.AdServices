@@ -50,7 +50,7 @@ public class SdkSandboxNextTest {
     }
 
     @Test
-    @RequiresFlagsEnabled(Flags.FLAG_SELINUX_SDK_SANDBOX_INPUT_SELECTOR)
+    @RequiresFlagsEnabled(Flags.FLAG_SELINUX_INPUT_SELECTOR)
     public void testSdkSandboxNextDomain() {
         assertThat(SELinux.getContext()).contains("u:r:sdk_sandbox_next");
     }

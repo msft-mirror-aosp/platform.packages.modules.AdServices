@@ -55,14 +55,12 @@ public class BlockedTopicsActivityActionDelegate extends BaseActionDelegate {
 
     @Override
     public void initBeta() {
-        mActivity.setTitle(R.string.settingsUI_blocked_topics_title);
-        configureSharedElements(/* isGA */ false);
     }
 
     @Override
     public void initGA() {
         mActivity.setTitle(R.string.settingsUI_blocked_topics_ga_title);
-        configureSharedElements(/* isGA */ true);
+        configureSharedElements();
     }
 
     @Override
@@ -76,10 +74,10 @@ public class BlockedTopicsActivityActionDelegate extends BaseActionDelegate {
         initGA();
     }
 
-    private void configureSharedElements(Boolean isGA) {
+    private void configureSharedElements() {
         // no blocked topics message
         configureElement(
-                isGA ? R.id.no_blocked_topics_ga_message : R.id.no_blocked_topics_message,
+                R.id.no_blocked_topics_ga_message,
                 mBlockedTopicsViewModel.getBlockedTopics(),
                 controls ->
                         list ->

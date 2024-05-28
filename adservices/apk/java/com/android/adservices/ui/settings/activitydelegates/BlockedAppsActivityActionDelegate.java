@@ -55,14 +55,12 @@ public class BlockedAppsActivityActionDelegate extends BaseActionDelegate {
 
     @Override
     public void initBeta() {
-        mActivity.setTitle(R.string.settingsUI_blocked_apps_title);
-        configureSharedElements(/* isGA */ false);
     }
 
     @Override
     public void initGA() {
         mActivity.setTitle(R.string.settingsUI_blocked_apps_ga_title);
-        configureSharedElements(/* isGA */ true);
+        configureSharedElements();
     }
 
     @Override
@@ -76,10 +74,10 @@ public class BlockedAppsActivityActionDelegate extends BaseActionDelegate {
         initGA();
     }
 
-    private void configureSharedElements(Boolean isGA) {
+    private void configureSharedElements() {
         // no blocked apps message
         configureElement(
-                isGA ? R.id.no_blocked_apps_ga_message : R.id.no_blocked_apps_message,
+                R.id.no_blocked_apps_ga_message,
                 mBlockedAppsViewModel.getBlockedApps(),
                 controls ->
                         list ->

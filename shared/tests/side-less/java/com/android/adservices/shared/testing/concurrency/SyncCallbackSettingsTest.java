@@ -29,7 +29,7 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
 
     @Test
     public void testDefaultBuilder() {
-        SyncCallbackSettings settings = SyncCallbackSettings.newDefaultSettings();
+        SyncCallbackSettings settings = SyncCallbackFactory.newDefaultSettings();
         assertWithMessage("1st call").that(settings).isNotNull();
 
         expect.withMessage("getExpectedNumberCalls()")
@@ -50,14 +50,14 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
         expect.withMessage("toString()").that(toString).contains("failIfCalledOnMainThread=true");
 
         // Should always return a new instance
-        SyncCallbackSettings settings2 = SyncCallbackSettings.newDefaultSettings();
+        SyncCallbackSettings settings2 = SyncCallbackFactory.newDefaultSettings();
         assertWithMessage("2nd call()").that(settings2).isNotSameInstanceAs(settings);
     }
 
     @Test
     public void testCustomBuilder() {
         SyncCallbackSettings settings =
-                new SyncCallbackSettings.Builder()
+                SyncCallbackFactory.newSettingsBuilder()
                         .setExpectedNumberCalls(42)
                         .setMaxTimeoutMs(108)
                         .setFailIfCalledOnMainThread(false)
@@ -79,7 +79,7 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
 
     @Test
     public void testBuildeReturnsUniqueObjects() {
-        SyncCallbackSettings.Builder builder = new SyncCallbackSettings.Builder();
+        SyncCallbackSettings.Builder builder = SyncCallbackFactory.newSettingsBuilder();
 
         SyncCallbackSettings settings1 = builder.build();
         SyncCallbackSettings settings2 = builder.build();
@@ -89,7 +89,7 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
 
     @Test
     public void testInvalidBuilderArgs() {
-        SyncCallbackSettings.Builder builder = new SyncCallbackSettings.Builder();
+        SyncCallbackSettings.Builder builder = SyncCallbackFactory.newSettingsBuilder();
 
         assertThrows(IllegalArgumentException.class, () -> builder.setExpectedNumberCalls(0));
         assertThrows(IllegalArgumentException.class, () -> builder.setExpectedNumberCalls(-1));

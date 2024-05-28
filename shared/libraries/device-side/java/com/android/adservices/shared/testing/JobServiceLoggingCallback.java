@@ -19,6 +19,7 @@ package com.android.adservices.shared.testing;
 import android.app.job.JobService;
 
 import com.android.adservices.shared.testing.concurrency.AbstractTestSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 
 /**
@@ -31,7 +32,7 @@ import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 public final class JobServiceLoggingCallback extends AbstractTestSyncCallback {
 
     public JobServiceLoggingCallback() {
-        this(SyncCallbackSettings.newDefaultSettings());
+        this(SyncCallbackFactory.newDefaultSettings());
     }
 
     public JobServiceLoggingCallback(SyncCallbackSettings settings) {

@@ -31,9 +31,8 @@ import com.google.errorprone.annotations.FormatString;
 import java.util.Locale;
 import java.util.Objects;
 
-// TODO(b/337014024): make it final once once classes that were using SyncCallback are refactored?
 /**
- * {@link SyncCallback} use to return an object (result) or a failure.
+ * {@code SyncCallback} use to return an object (result) or a failure.
  *
  * @param <T> type of the object received on success.
  * @param <F> type of the object received on failure.
@@ -50,7 +49,7 @@ public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<
     private final ResultSyncCallback<ResultOrFailure<T, F>> mCallback;
 
     public FailableResultSyncCallback() {
-        this(new SyncCallbackSettings.Builder().build());
+        this(SyncCallbackFactory.newSettingsBuilder().build());
     }
 
     public FailableResultSyncCallback(SyncCallbackSettings settings) {
@@ -115,7 +114,7 @@ public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<
     }
 
     @Override
-    public SyncCallbackSettings getSettings() {
+    public final SyncCallbackSettings getSettings() {
         return mCallback.getSettings();
     }
 

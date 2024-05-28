@@ -15,8 +15,10 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import java.util.function.Supplier;
+
 /**
- * Defines the settings and some other internal state of a {@link SyncCallback}.
+ * Defines the settings and some other internal state of a {@code SyncCallback}.
  *
  * <p><b>Note: </b>the internal state includes the current invocations, so normally each callback
  * should have its own settings (for example, it should not be used as a static variable with some
@@ -31,16 +33,13 @@ public final class SyncCallbackSettings {
     private final int mExpectedNumberCalls;
     private final long mMaxTimeoutMs;
     private final boolean mFailIfCalledOnMainThread;
-
-    /** Factory method to get a settings object with default values. */
-    public static SyncCallbackSettings newDefaultSettings() {
-        return new SyncCallbackSettings.Builder().build();
-    }
+    private final Supplier<Boolean> mIsMainThreadSupplier;
 
     private SyncCallbackSettings(Builder builder) {
         mExpectedNumberCalls = builder.mExpectedNumberCalls;
         mMaxTimeoutMs = builder.mMaxTimeoutMs;
         mFailIfCalledOnMainThread = builder.mFailIfCalledOnMainThread;
+        mIsMainThreadSupplier = builder.mIsMainThreadSupplier;
     }
 
     /** Gets the expected number of calls this callback should receive before it's done. */
@@ -56,6 +55,12 @@ public final class SyncCallbackSettings {
     /** Checks whether the callback should fail if called from the main thread. */
     public boolean isFailIfCalledOnMainThread() {
         return mFailIfCalledOnMainThread;
+    }
+
+    // TODO(b/337014024): add unit test to check this logic (currently it's indirectly checked by
+    // AbstractTestSyncCallbackTest, but it will be refactored)
+    public boolean isMainThread() {
+        return mIsMainThreadSupplier.get();
     }
 
     @Override
@@ -75,6 +80,12 @@ public final class SyncCallbackSettings {
         private int mExpectedNumberCalls = 1;
         private long mMaxTimeoutMs = DEFAULT_TIMEOUT_MS;
         private boolean mFailIfCalledOnMainThread = true;
+        private final Supplier<Boolean> mIsMainThreadSupplier;
+
+        // Package protected so it's only called by SyncCallbackFactory
+        Builder(Supplier<Boolean> isMainThreadSupplier) {
+            mIsMainThreadSupplier = isMainThreadSupplier;
+        }
 
         /** See {@link SyncCallbackSettings#getExpectedNumberCalls()}. */
         public Builder setExpectedNumberCalls(int value) {

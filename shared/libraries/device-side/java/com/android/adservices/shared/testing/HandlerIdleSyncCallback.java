@@ -20,7 +20,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
-import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.util.Preconditions;
 
 /**
@@ -36,7 +36,7 @@ import com.android.adservices.shared.util.Preconditions;
 public final class HandlerIdleSyncCallback extends ResultSyncCallback<Object> {
 
     public HandlerIdleSyncCallback() {
-        super(new SyncCallbackSettings.Builder().setFailIfCalledOnMainThread(false).build());
+        super(SyncCallbackFactory.newSettingsBuilder().setFailIfCalledOnMainThread(false).build());
 
         Looper looper = Looper.getMainLooper();
         Preconditions.checkState(looper != null, "No main looper");

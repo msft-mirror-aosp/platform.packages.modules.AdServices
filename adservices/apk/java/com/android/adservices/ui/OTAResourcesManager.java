@@ -57,7 +57,7 @@ import java.util.concurrent.ExecutionException;
 @RequiresApi(Build.VERSION_CODES.S)
 public class OTAResourcesManager {
     // this value needs to be updated if bundled resources are updated
-    private static final long BUNDLED_RESOURCES_VERSION = 2092;
+    private static final long BUNDLED_RESOURCES_VERSION = 4265;
     private static final long NO_OTA_RESOURCES_VERSION = -1;
     private static final String FILE_GROUP_NAME = "ui-ota-strings";
     public static final String DOWNLOADED_OTA_FILE_ID = "resources.arsc";

@@ -50,6 +50,9 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
     private static final String MSG_WAIT_WITH_TIMEOUT_CALLED_RETURNING =
             "waitCalled(" + LONGER_TIMEOUT_MS + ", " + MILLISECONDS + ") returning";
 
+    private final SyncCallbackSettings.Builder mSettingsBuilder =
+            new SyncCallbackSettings.Builder(() -> Boolean.FALSE);
+
     private final ConcreteSyncCallback mSingleCallback = new ConcreteSyncCallback();
 
     @Test
@@ -214,10 +217,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
     @Test
     public void testToString_containsSettings() {
         SyncCallbackSettings settings =
-                new SyncCallbackSettings.Builder()
-                        .setExpectedNumberCalls(42)
-                        .setMaxTimeoutMs(108)
-                        .build();
+                mSettingsBuilder.setExpectedNumberCalls(42).setMaxTimeoutMs(108).build();
         ConcreteSyncCallback callback = new ConcreteSyncCallback(settings);
 
         expect.withMessage("toString()").that(callback.toString()).contains(settings.toString());
@@ -247,7 +247,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
     @Test
     public void testCustomizeToString() {
         AbstractSyncCallback callback =
-                new AbstractSyncCallback(new SyncCallbackSettings.Builder().build()) {
+                new AbstractSyncCallback(mSettingsBuilder.build()) {
                     protected void customizeToString(StringBuilder string) {
                         string.append("I AM GROOT");
                     }
@@ -323,10 +323,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
         }
 
         private ConcreteSyncCallback(int numberOfExpectedCalls) {
-            this(
-                    new SyncCallbackSettings.Builder()
-                            .setExpectedNumberCalls(numberOfExpectedCalls)
-                            .build());
+            this(mSettingsBuilder.setExpectedNumberCalls(numberOfExpectedCalls).build());
         }
 
         private ConcreteSyncCallback(SyncCallbackSettings settings) {

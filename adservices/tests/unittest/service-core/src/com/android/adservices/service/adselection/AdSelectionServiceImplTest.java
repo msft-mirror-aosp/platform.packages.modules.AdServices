@@ -104,8 +104,8 @@ import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.Process;
 import android.os.RemoteException;
-import android.webkit.WebView;
 
+import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
@@ -340,7 +340,7 @@ public class AdSelectionServiceImplTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(JSScriptEngine.class)
-                        .spyStatic(WebView.class)
+                        .spyStatic(JavaScriptSandbox.class)
                         .mockStatic(ConsentManager.class)
                         .mockStatic(FlagsFactory.class)
                         .mockStatic(MeasurementImpl.class)
@@ -8968,10 +8968,13 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpression_webViewNotInstalled_failsGracefully() throws Exception {
         // A null package means WebView is not installed
-        doReturn(null).when(WebView::getCurrentWebViewPackage);
+        doReturn(false).when(JavaScriptSandbox::isSupported);
+        int jsScriptEngineShutdownTimeoutInSeconds = 1;
 
         // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-        JSScriptEngine.getInstance(CONTEXT, LoggerFactory.getFledgeLogger()).shutdown();
+        JSScriptEngine.getInstance(CONTEXT, LoggerFactory.getFledgeLogger())
+                .shutdown()
+                .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
 
         try {
             Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
@@ -9097,7 +9100,9 @@ public class AdSelectionServiceImplTest {
                             anyInt());
         } finally {
             // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-            JSScriptEngine.getInstance(CONTEXT, LoggerFactory.getFledgeLogger()).shutdown();
+            JSScriptEngine.getInstance(CONTEXT, LoggerFactory.getFledgeLogger())
+                    .shutdown()
+                    .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
         }
     }
 

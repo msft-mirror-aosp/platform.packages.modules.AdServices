@@ -31,7 +31,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
 import com.android.adservices.ui.settings.delegates.BlockedTopicsActionDelegate;
 import com.android.adservices.ui.settings.viewadatpors.TopicsListViewAdapter;
@@ -79,22 +78,14 @@ public class AdServicesSettingsBlockedTopicsFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
 
-        View noBlockedTopicsMessage = rootView.findViewById(R.id.no_blocked_topics_message);
         View noBlockedTopicsGaMessage = rootView.findViewById(R.id.no_blocked_topics_ga_message);
         viewModel
                 .getBlockedTopics()
                 .observe(
                         getViewLifecycleOwner(),
                         blockedTopicsList -> {
-                            if (!FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-                                noBlockedTopicsGaMessage.setVisibility(View.GONE);
-                                noBlockedTopicsMessage.setVisibility(
-                                        blockedTopicsList.isEmpty() ? View.VISIBLE : View.GONE);
-                            } else {
-                                noBlockedTopicsMessage.setVisibility(View.GONE);
-                                noBlockedTopicsGaMessage.setVisibility(
-                                        blockedTopicsList.isEmpty() ? View.VISIBLE : View.GONE);
-                            }
+                            noBlockedTopicsGaMessage.setVisibility(
+                                    blockedTopicsList.isEmpty() ? View.VISIBLE : View.GONE);
                             adapter.notifyDataSetChanged();
                         });
     }

@@ -21,7 +21,8 @@ package com.android.adservices.shared.testing.concurrency;
  *
  * @param <T> type of the result.
  */
-public abstract class OnResultSyncCallback<T> extends ResultSyncCallback<T> {
+public abstract class OnResultSyncCallback<T> extends ResultSyncCallback<T>
+        implements OnResultTestSyncCallback<T> {
 
     protected OnResultSyncCallback() {
         super();
@@ -31,7 +32,7 @@ public abstract class OnResultSyncCallback<T> extends ResultSyncCallback<T> {
         super(settings);
     }
 
-    /** Injects the result. */
+    @Override
     public final void onResult(T result) {
         injectResult(result);
     }

@@ -107,7 +107,7 @@ public final class AbstractTestSyncCallbackTest extends SharedExtendedMockitoTes
     public void testSetCalled_calledOnMainThread_pass() throws Exception {
         ConcreteTestSyncCallback callback =
                 new ConcreteTestSyncCallback(
-                        new SyncCallbackSettings.Builder()
+                        SyncCallbackFactory.newSettingsBuilder()
                                 .setFailIfCalledOnMainThread(false)
                                 .build());
         expect.withMessage("toString()")
@@ -158,7 +158,7 @@ public final class AbstractTestSyncCallbackTest extends SharedExtendedMockitoTes
 
     private static final class ConcreteTestSyncCallback extends AbstractTestSyncCallback {
         ConcreteTestSyncCallback() {
-            this(new SyncCallbackSettings.Builder().build());
+            this(SyncCallbackFactory.newSettingsBuilder().build());
         }
 
         ConcreteTestSyncCallback(SyncCallbackSettings settings) {

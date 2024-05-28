@@ -132,8 +132,8 @@ import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.Process;
 import android.os.RemoteException;
-import android.webkit.WebView;
 
+import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
@@ -355,7 +355,7 @@ public class OnDeviceAdSelectionRunnerTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
-                        .spyStatic(WebView.class)
+                        .spyStatic(JavaScriptSandbox.class)
                         .mockStatic(com.android.adservices.shared.util.Clock.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)

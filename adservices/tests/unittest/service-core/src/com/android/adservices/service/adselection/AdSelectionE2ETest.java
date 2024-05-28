@@ -105,8 +105,8 @@ import android.os.LimitExceededException;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
-import android.webkit.WebView;
 
+import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
@@ -197,6 +197,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This test the actual flow of Ad Selection internal flow without any mocking. The dependencies in
@@ -206,7 +207,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 // injecting mocked flags everywhere is annoying and non-trivial for static methods
 @RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
-@SpyStatic(WebView.class)
+@SpyStatic(JavaScriptSandbox.class)
 public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -7779,10 +7780,13 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testRunAdSelection_webViewNotInstalled_failsGracefully() throws Exception {
         // A null package means WebView is not installed
-        doReturn(null).when(WebView::getCurrentWebViewPackage);
+        doReturn(false).when(JavaScriptSandbox::isSupported);
+        int jsScriptEngineShutdownTimeoutInSeconds = 1;
 
         // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-        JSScriptEngine.getInstance(mSpyContext, LoggerFactory.getFledgeLogger()).shutdown();
+        JSScriptEngine.getInstance(mSpyContext, LoggerFactory.getFledgeLogger())
+                .shutdown()
+                .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
 
         try {
             // Create a new local service impl so that the WebView stub takes effect
@@ -7862,7 +7866,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             geq((int) BINDER_ELAPSED_TIME_MS));
         } finally {
             // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-            JSScriptEngine.getInstance(mSpyContext, LoggerFactory.getFledgeLogger()).shutdown();
+            JSScriptEngine.getInstance(mSpyContext, LoggerFactory.getFledgeLogger())
+                    .shutdown()
+                    .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
         }
     }
 

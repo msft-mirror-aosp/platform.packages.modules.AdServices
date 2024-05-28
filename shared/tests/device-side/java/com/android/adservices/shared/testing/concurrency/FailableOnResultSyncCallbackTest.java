@@ -15,16 +15,23 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-/** Simplest implementation of a {@code SyncCallback} for tests. */
-public final class SimpleSyncCallback extends AbstractTestSyncCallback {
+public final class FailableOnResultSyncCallbackTest
+        extends OnFailableResultSyncCallbackTestCase<
+                String, Exception, FailableOnResultSyncCallback<String, Exception>> {
 
-    /** Default constructor. */
-    public SimpleSyncCallback() {
-        this(SyncCallbackFactory.newSettingsBuilder().build());
+    @Override
+    protected FailableOnResultSyncCallback<String, Exception> newCallback(
+            SyncCallbackSettings settings) {
+        return new FailableOnResultSyncCallback<>(settings) {};
     }
 
-    /** Customizable constructor. */
-    public SimpleSyncCallback(SyncCallbackSettings settings) {
-        super(settings);
+    @Override
+    protected String newResult() {
+        return "It's not a failure, it's a feature-" + getNextUniqueId();
+    }
+
+    @Override
+    protected Exception newFailure() {
+        return new Exception("D'OH: " + getNextUniqueId() + "!");
     }
 }
