@@ -36,11 +36,11 @@ import androidx.test.filters.FlakyTest;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.common.ServiceUnavailableException;
-import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.tests.topics.utils.TopicsTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
@@ -97,9 +97,6 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     private static final String INCORRECT_TAXONOMY_VERSION_MESSAGE =
             "Incorrect taxonomy version detected. Please repo sync, build and install the new"
                     + " apex.";
-
-    private static final String ACTION_RECORD_TOPICS_COMPLETE =
-            "android.adservices.debug.RECORD_TOPICS_COMPLETE";
 
     @Before
     public void setup() throws Exception {
@@ -186,7 +183,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk5 receives no topic.
-        GetTopicsResponse sdk5Result = getTopicsSync(advertisingTopicsClient5);
+        GetTopicsResponse sdk5Result =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient5);
 
         assertThat(sdk5Result.getTopics()).isEmpty();
 
@@ -251,7 +249,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .setUseGetMethodToCreateManagerInstance(useGetMethodToCreateManager)
                         .build();
 
-        GetTopicsResponse sdk1Result = getTopicsSync(advertisingTopicsClient1);
+        GetTopicsResponse sdk1Result =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient1);
 
         assertThat(sdk1Result.getTopics()).isEmpty();
 
@@ -336,7 +335,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk3 receives no topic.
-        GetTopicsResponse sdk3Result = getTopicsSync(advertisingTopicsClient3);
+        GetTopicsResponse sdk3Result =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient3);
 
         assertThat(sdk3Result.getTopics()).isEmpty();
 
@@ -416,7 +416,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk4 receives no topic.
-        GetTopicsResponse sdk4Result = getTopicsSync(advertisingTopicsClient4);
+        GetTopicsResponse sdk4Result =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient4);
 
         assertThat(sdk4Result.getTopics()).isEmpty();
 
@@ -488,7 +489,8 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk6 receives no topic.
-        GetTopicsResponse sdk6Result = getTopicsSync(advertisingTopicsClient6);
+        GetTopicsResponse sdk6Result =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient6);
 
         assertThat(sdk6Result.getTopics()).isEmpty();
 
@@ -556,15 +558,5 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
-    }
-
-    private GetTopicsResponse getTopicsSync(AdvertisingTopicsClient advertisingTopicsClient)
-            throws Exception {
-        BroadcastReceiverSyncCallback receiverSyncCallback =
-                new BroadcastReceiverSyncCallback(sContext);
-        receiverSyncCallback.prepare(ACTION_RECORD_TOPICS_COMPLETE);
-        GetTopicsResponse sdkResult = advertisingTopicsClient.getTopics().get();
-        receiverSyncCallback.assertResultReceived();
-        return sdkResult;
     }
 }
