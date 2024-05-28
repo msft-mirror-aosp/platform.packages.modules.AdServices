@@ -24,7 +24,7 @@ package com.android.adservices.shared.testing.concurrency;
  *
  * @param <T> type of the result.
  */
-public interface OnResultTestSyncCallback<T> extends ResultTestSyncCallback<T> {
+public interface OnResultTestSyncCallback<T> extends IResultSyncCallback<T> {
 
     /** Injects the result. */
     void onResult(T result);

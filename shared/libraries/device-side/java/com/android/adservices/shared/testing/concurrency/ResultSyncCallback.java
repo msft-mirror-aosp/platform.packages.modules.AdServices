@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @param <T> type of the result.
  */
 public class ResultSyncCallback<T> extends AbstractTestSyncCallback
-        implements ResultTestSyncCallback<T> {
+        implements IResultSyncCallback<T> {
 
     private final AtomicReference<Optional<T>> mResult = new AtomicReference<>();
 

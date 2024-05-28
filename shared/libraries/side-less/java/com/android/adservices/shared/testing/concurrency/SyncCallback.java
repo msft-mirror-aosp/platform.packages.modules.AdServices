@@ -22,7 +22,7 @@ import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
 /** Base interface for all testing-related sync callbacks. */
-public interface TestSyncCallback extends Identifiable {
+public interface SyncCallback extends Identifiable {
 
     /**
      * Asserts the callback was called or throw if it times out - the timeout value is defined by

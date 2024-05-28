@@ -23,9 +23,12 @@ import com.google.errorprone.annotations.FormatString;
 
 import java.util.concurrent.TimeUnit;
 
-/** Base class for all test-related, side-agnostic sync callback implementations . */
+/**
+ * @deprecated - TODO (b/337014024) merge with AbstractSyncCallback)
+ */
+@Deprecated
 public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallback
-        implements TestSyncCallback {
+        implements SyncCallback {
 
     private final Logger mLogger;
 

@@ -16,7 +16,7 @@
 package com.android.adservices.shared.testing.concurrency;
 
 public final class ResultSyncCallbackTest
-        extends ResultTestSyncCallbackTestCase<Object, ResultSyncCallback<Object>> {
+        extends IResultSyncCallbackTestCase<Object, ResultSyncCallback<Object>> {
 
     @Override
     protected Object newResult() {

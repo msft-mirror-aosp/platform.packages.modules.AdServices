@@ -34,7 +34,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
+// TODO(b/337014024): merge with AbstractSyncCallbackTest
+public final class SidelessTestSyncCallbackTest extends SharedSidelessTestCase {
 
     private static final AtomicInteger sThreadId = new AtomicInteger();
 
