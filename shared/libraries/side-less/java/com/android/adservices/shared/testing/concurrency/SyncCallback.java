@@ -33,6 +33,9 @@ public interface SyncCallback extends Identifiable {
     /** Returns whether the callback was called (at least) the expected number of times. */
     boolean isCalled();
 
+    /** Returns the total number of calls to the callback. */
+    int getNumberActualCalls();
+
     /** Gets the callback settings. */
     SyncCallbackSettings getSettings();
 

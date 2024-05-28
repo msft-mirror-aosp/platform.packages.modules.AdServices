@@ -36,6 +36,8 @@ public abstract class AbstractSyncCallback {
 
     private final String mId = String.valueOf(sIdGenerator.incrementAndGet());
 
+    private final AtomicInteger mNumberCalls = new AtomicInteger();
+
     /** Default constructor. */
     public AbstractSyncCallback(SyncCallbackSettings settings) {
         mSettings = Objects.requireNonNull(settings, "settings cannot be null");
@@ -98,6 +100,7 @@ public abstract class AbstractSyncCallback {
         try {
             mSettings.countDown();
         } finally {
+            mNumberCalls.incrementAndGet();
             logV("setCalled() returning");
         }
     }
@@ -138,6 +141,10 @@ public abstract class AbstractSyncCallback {
     /** Returns whether the callback was called (at least) the expected number of times. */
     public final boolean isCalled() {
         return mSettings.isCalled();
+    }
+
+    final int getNumberCalls() {
+        return mNumberCalls.get();
     }
 
     /**
