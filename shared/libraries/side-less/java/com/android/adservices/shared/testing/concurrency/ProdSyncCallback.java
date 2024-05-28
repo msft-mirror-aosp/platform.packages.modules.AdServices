@@ -24,8 +24,12 @@ import java.util.concurrent.TimeUnit;
  *
  * <p><b>Note: </b>it doesn't specifies how many times the callback is expected to be called, that's
  * up to the implementation.
+ *
+ * @deprecated TestSyncCallback doesn't need it anymore (and TestSyncCallback itself will be renamed
+ *     to SyncCallback)
  */
-public interface SyncCallback {
+@Deprecated
+public interface ProdSyncCallback {
 
     /**
      * Indicates the callback was called, so it unblocks {@link #waitCalled()} / {@link
