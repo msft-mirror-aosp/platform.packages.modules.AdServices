@@ -35,7 +35,7 @@ import androidx.test.filters.FlakyTest;
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.tests.topics.utils.TopicsTestHelper;
+import com.android.adservices.topics.TopicsTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
