@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 // NOTE: this class is basically an abstraction of CountdownLatch and doesn't have any testing
 // specific characteristics, so it could be used on production code as well.
 /** Base implementation for {@code SyncCallback}. */
-public abstract class AbstractSyncCallback implements SyncCallback {
+public abstract class AbstractSyncCallback {
 
     /** Tag used on {@code logcat} calls. */
     public static final String LOG_TAG = "SyncCallback";
@@ -89,7 +89,10 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     }
 
     // NOTE: not final because test version might disable it
-    @Override
+    /**
+     * Indicates the callback was called, so it unblocks {@link #waitCalled()} / {@link
+     * #waitCalled(long, TimeUnit)}.
+     */
     public void setCalled() {
         logD("setCalled() called");
         try {
@@ -100,7 +103,11 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     }
 
     // NOTE: not final because test version might disable it
-    @Override
+    /**
+     * Wait (indefinitely) until all calls to {@link #setCalled()} were made.
+     *
+     * @throws InterruptedException if thread was interrupted while waiting.
+     */
     public void waitCalled() throws InterruptedException {
         logD("waitCalled() called");
         try {
@@ -111,7 +118,12 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     }
 
     // NOTE: not final because test version might set timeout on constructor
-    @Override
+    /**
+     * Wait (up to given time) until all calls to {@link #setCalled()} were made.
+     *
+     * @throws InterruptedException if thread was interrupted while waiting.
+     * @throws IllegalStateException if not called before it timed out.
+     */
     public void waitCalled(long timeout, TimeUnit unit) throws InterruptedException {
         logD("waitCalled(%d, %s) called", timeout, unit);
         try {
@@ -123,7 +135,7 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         }
     }
 
-    @Override
+    /** Returns whether the callback was called (at least) the expected number of times. */
     public final boolean isCalled() {
         return mSettings.isCalled();
     }
