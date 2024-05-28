@@ -16,24 +16,30 @@
 package com.android.adservices.shared.testing.concurrency;
 
 /**
- * {@link ResultSyncCallback} for implementation of binder stub interfaces that have a {@code
- * onResult()} method.
+ * {@link ResultSyncCallback} for implementation of binder stub interfaces that have {@code
+ * onResult()} and {@code onFailure} methods.
  *
  * @param <T> type of the result.
+ * @param <F> type of the failure.
  */
-public abstract class OnResultSyncCallback<T> extends ResultSyncCallback<T>
+public abstract class FailableOnResultSyncCallback<T, F> extends FailableResultSyncCallback<T, F>
         implements OnResultTestSyncCallback<T> {
 
-    protected OnResultSyncCallback() {
+    protected FailableOnResultSyncCallback() {
         super();
     }
 
-    protected OnResultSyncCallback(SyncCallbackSettings settings) {
+    protected FailableOnResultSyncCallback(SyncCallbackSettings settings) {
         super(settings);
     }
 
     @Override
     public final void onResult(T result) {
         injectResult(result);
+    }
+
+    /** Injects the failure. */
+    public final void onFailure(F failure) {
+        injectFailure(failure);
     }
 }

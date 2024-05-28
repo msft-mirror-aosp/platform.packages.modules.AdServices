@@ -20,7 +20,6 @@ import android.os.IBinder;
 
 import androidx.annotation.Nullable;
 
-// TODO(b/337014024): get rid of this and use AbstractResultSyncCallback instead
 /**
  * Abstraction for {@code ResultSyncCallback} and {@code FailableResultSyncCallback}.
  *
