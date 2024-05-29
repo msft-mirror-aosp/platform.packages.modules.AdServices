@@ -17,6 +17,7 @@
 package com.android.adservices.shared.testing;
 
 import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
+import static com.android.internal.util.Preconditions.checkArgument;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -114,6 +115,9 @@ public final class BroadcastReceiverSyncCallback {
         private final ResultSyncCallback<Intent> mSyncCallback;
 
         ResultBroadcastReceiver(SyncCallbackSettings settings) {
+            checkArgument(
+                    !settings.isFailIfCalledOnMainThread(),
+                    "Cannot use a SyncCallbackSettings that fails if called on main thread");
             mSyncCallback = new ResultSyncCallback<>(settings);
         }
 
