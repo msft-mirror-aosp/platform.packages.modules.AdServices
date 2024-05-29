@@ -29,6 +29,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 
+// TODO(b/337014024): merge with SyncCallbackTestCase
 public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCase {
 
     @Test
