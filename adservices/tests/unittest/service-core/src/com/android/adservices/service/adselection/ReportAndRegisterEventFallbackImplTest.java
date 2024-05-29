@@ -96,8 +96,8 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
+import com.android.adservices.shared.testing.AnswerSyncCallback;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -171,6 +171,9 @@ public class ReportAndRegisterEventFallbackImplTest {
             mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
     private final long mMaxRegisteredAdBeaconsPerDestination =
             mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
+
+    private final IllegalStateException mRuntimeException =
+            new IllegalStateException("Exception for test!");
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
@@ -311,7 +314,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         ListenableFuture<Void> failedFuture =
                 Futures.submit(
                         () -> {
-                            throw new IllegalStateException("Exception for test!");
+                            throw mRuntimeException;
                         },
                         mLightweightExecutorService);
         doReturn(failedFuture)
@@ -335,9 +338,9 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        SimpleSyncCallback sellerCallback =
+        AnswerSyncCallback<Void> sellerCallback =
                 syncRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
-        SimpleSyncCallback buyerCallback =
+        AnswerSyncCallback<Void> buyerCallback =
                 syncRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
         ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
@@ -388,15 +391,12 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        SimpleSyncCallback sellerCallback = new SimpleSyncCallback();
-        doAnswer(
-                        invocation -> {
-                            sellerCallback.setCalled();
-                            throw new IllegalStateException("Exception for test!");
-                        })
+        AnswerSyncCallback<Void> sellerCallback =
+                AnswerSyncCallback.forSingleFailure(Void.class, mRuntimeException);
+        doAnswer(sellerCallback)
                 .when(mMeasurementServiceMock)
                 .registerEvent(eq(reportingUri), any(), any(), anyBoolean(), any(), any(), any());
-        SimpleSyncCallback buyerCallback =
+        AnswerSyncCallback<Void> buyerCallback =
                 syncRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
         ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
@@ -435,7 +435,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         ListenableFuture<Void> failedFuture =
                 Futures.submit(
                         () -> {
-                            throw new IllegalStateException("Exception for test!");
+                            throw mRuntimeException;
                         },
                         mLightweightExecutorService);
         doReturn(failedFuture)
@@ -459,9 +459,9 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        SimpleSyncCallback sellerCallback =
+        AnswerSyncCallback<Void> sellerCallback =
                 syncRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
-        SimpleSyncCallback buyerCallback =
+        AnswerSyncCallback<Void> buyerCallback =
                 syncRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
         ReportEventTestCallback callback = callReportEvent(input, /* shouldCountLog= */ true);
@@ -512,15 +512,11 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
-        SimpleSyncCallback sellerCallback =
+        AnswerSyncCallback<Void> sellerCallback =
                 syncRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
-        SimpleSyncCallback buyerCallback =
-                syncRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
-        doAnswer(
-                        invocation -> {
-                            buyerCallback.setCalled();
-                            throw new IllegalStateException("Exception for test!");
-                        })
+        AnswerSyncCallback<Void> buyerCallback =
+                AnswerSyncCallback.forSingleFailure(Void.class, mRuntimeException);
+        doAnswer(buyerCallback)
                 .when(mMeasurementServiceMock)
                 .registerEvent(eq(reportingUri), any(), any(), anyBoolean(), any(), any(), any());
 
@@ -1597,6 +1593,8 @@ public class ReportAndRegisterEventFallbackImplTest {
      */
     private ReportEventTestCallback callReportEvent(
             ReportInteractionInput inputParams, boolean shouldCountLog) throws Exception {
+        // TODO(b/3413678560): should use AnswerSyncCallback here too, but it doesn't support
+        // more than once call (yet).
         // Counted down in callback
         CountDownLatch resultLatch = new CountDownLatch(shouldCountLog ? 2 : 1);
 
@@ -1620,14 +1618,9 @@ public class ReportAndRegisterEventFallbackImplTest {
     }
 
     // Use a SyncCallback to block until register event happens.
-    private SimpleSyncCallback syncRegisterEvent(String path, ReportInteractionInput input) {
-        SimpleSyncCallback callback = new SimpleSyncCallback();
-
-        doAnswer(
-                        invocation -> {
-                            callback.setCalled();
-                            return null;
-                        })
+    private AnswerSyncCallback<Void> syncRegisterEvent(String path, ReportInteractionInput input) {
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback)
                 .when(mMeasurementServiceMock)
                 .registerEvent(
                         mMockWebServerRule.uriForPath(path),
@@ -1641,7 +1634,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         return callback;
     }
 
-    static class ReportEventTestCallback extends ReportInteractionCallback.Stub {
+    private static final class ReportEventTestCallback extends ReportInteractionCallback.Stub {
         private final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
