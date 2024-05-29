@@ -156,6 +156,11 @@ public class FailableResultSyncCallback<T, F> implements IResultSyncCallback<T> 
     }
 
     @Override
+    public final void setCalled() {
+        throw new UnsupportedOperationException("should call injectResult() instead");
+    }
+
+    @Override
     public final String getId() {
         return mCallback.getId();
     }

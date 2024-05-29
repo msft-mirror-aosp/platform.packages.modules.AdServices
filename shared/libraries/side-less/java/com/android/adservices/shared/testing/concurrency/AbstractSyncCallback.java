@@ -22,10 +22,8 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * @deprecated - TODO(b/337014024) merge with AbstractSidelessTestSyncCallback)
- */
-@Deprecated
+// TODO(b/337014024) merge with AbstractSidelessTestSyncCallback / implement SyncCallback
+// (then update javadoc)
 public abstract class AbstractSyncCallback {
 
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
@@ -50,6 +48,11 @@ public abstract class AbstractSyncCallback {
     /** Gets a unique id identifying the callback - used for logging / debugging purposes. */
     public final String getId() {
         return mId;
+    }
+
+    /** Gets the callback settings. */
+    public final SyncCallbackSettings getSettings() {
+        return mSettings;
     }
 
     // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
@@ -95,10 +98,10 @@ public abstract class AbstractSyncCallback {
      */
     public void setCalled() {
         logD("setCalled() called");
+        mNumberCalls.incrementAndGet();
         try {
             mSettings.countDown();
         } finally {
-            mNumberCalls.incrementAndGet();
             logV("setCalled() returning");
         }
     }
@@ -141,7 +144,8 @@ public abstract class AbstractSyncCallback {
         return mSettings.isCalled();
     }
 
-    final int getNumberCalls() {
+    /** Gets the total number of calls so far. */
+    public int getNumberActualCalls() {
         return mNumberCalls.get();
     }
 
@@ -150,7 +154,13 @@ public abstract class AbstractSyncCallback {
      * without the enclosing {@code [class: ]} part.
      */
     public final StringBuilder appendInfo(StringBuilder string) {
-        Objects.requireNonNull(string).append("id=").append(mId).append(", ").append(mSettings);
+        Objects.requireNonNull(string)
+                .append("id=")
+                .append(mId)
+                .append(", ")
+                .append(mSettings)
+                .append(", numberActualCalls=")
+                .append(mNumberCalls.get());
         customizeToString(string);
         return string;
     }

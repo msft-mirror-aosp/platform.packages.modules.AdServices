@@ -50,8 +50,6 @@ abstract class IResultSyncCallbackTestCase<T, R extends IResultSyncCallback<T>>
      * Gets a unique id.
      *
      * <p>Useful to make sure {@link #newResult()} return unique objects.
-     *
-     * @return
      */
     protected int getNextUniqueId() {
         return sNextId.incrementAndGet();
