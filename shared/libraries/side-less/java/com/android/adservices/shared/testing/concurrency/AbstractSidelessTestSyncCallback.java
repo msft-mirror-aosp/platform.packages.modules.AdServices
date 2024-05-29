@@ -63,6 +63,11 @@ public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallb
         postAssertCalled();
     }
 
+    @Override
+    public final int getNumberActualCalls() {
+        return getNumberCalls();
+    }
+
     @FormatMethod
     @Override
     public final void logE(@FormatString String msgFmt, Object... msgArgs) {

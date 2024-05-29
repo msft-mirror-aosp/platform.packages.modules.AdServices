@@ -113,6 +113,12 @@ public class FailableResultSyncCallback<T, F> implements IResultSyncCallback<T> 
         return mCallback.isCalled();
     }
 
+    // TODO(b/337014024): make sure it's unit tested
+    @Override
+    public int getNumberActualCalls() {
+        return mCallback.getNumberActualCalls();
+    }
+
     @Override
     public final SyncCallbackSettings getSettings() {
         return mCallback.getSettings();
