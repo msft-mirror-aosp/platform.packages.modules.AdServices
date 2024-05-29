@@ -22,9 +22,10 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// NOTE: this class is basically an abstraction of CountdownLatch and doesn't have any testing
-// specific characteristics, so it could be used on production code as well.
-/** Base implementation for {@code SyncCallback}. */
+/**
+ * @deprecated - TODO(b/337014024) merge with AbstractSidelessTestSyncCallback)
+ */
+@Deprecated
 public abstract class AbstractSyncCallback {
 
     private static final AtomicInteger sIdGenerator = new AtomicInteger();

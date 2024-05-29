@@ -156,7 +156,7 @@ public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCas
         expect.withMessage("toString()").that(toString).contains("internalFailure=null");
     }
 
-    private static final class ConcreteTestSyncCallback extends AbstractTestSyncCallback {
+    private static final class ConcreteTestSyncCallback extends DeviceSideSyncCallback {
         ConcreteTestSyncCallback() {
             this(SyncCallbackFactory.newSettingsBuilder().build());
         }

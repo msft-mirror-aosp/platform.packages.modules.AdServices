@@ -22,7 +22,7 @@ import com.google.errorprone.annotations.FormatString;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @deprecated - TODO (b/337014024) merge with AbstractSyncCallback)
+ * @deprecated - TODO(b/337014024) merge with AbstractSyncCallback)
  */
 @Deprecated
 public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallback

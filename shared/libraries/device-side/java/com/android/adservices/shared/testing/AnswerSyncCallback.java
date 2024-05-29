@@ -18,7 +18,7 @@ package com.android.adservices.shared.testing;
 
 import android.util.Log;
 
-import com.android.adservices.shared.testing.concurrency.AbstractTestSyncCallback;
+import com.android.adservices.shared.testing.concurrency.DeviceSideSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 
@@ -30,7 +30,7 @@ import org.mockito.stubbing.Answer;
  *
  * @param <T> return type of the method being "answered".
  */
-public final class AnswerSyncCallback<T> extends AbstractTestSyncCallback implements Answer<T> {
+public final class AnswerSyncCallback<T> extends DeviceSideSyncCallback implements Answer<T> {
 
     private static final String TAG = AnswerSyncCallback.class.getSimpleName();
 

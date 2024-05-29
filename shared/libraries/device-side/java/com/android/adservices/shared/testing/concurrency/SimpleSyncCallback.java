@@ -16,7 +16,7 @@
 package com.android.adservices.shared.testing.concurrency;
 
 /** Simplest implementation of a {@code SyncCallback} for tests. */
-public final class SimpleSyncCallback extends AbstractTestSyncCallback {
+public final class SimpleSyncCallback extends DeviceSideSyncCallback {
 
     /** Default constructor. */
     public SimpleSyncCallback() {
