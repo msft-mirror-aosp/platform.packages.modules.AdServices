@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import com.android.adservices.shared.testing.Nullable;
+
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
@@ -24,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 // TODO(b/337014024) merge with AbstractSidelessTestSyncCallback / implement SyncCallback
 // (then update javadoc)
-public abstract class AbstractSyncCallback {
+public abstract class AbstractSyncCallback implements SyncCallback {
 
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
 
@@ -45,12 +47,12 @@ public abstract class AbstractSyncCallback {
      */
     protected void customizeToString(StringBuilder string) {}
 
-    /** Gets a unique id identifying the callback - used for logging / debugging purposes. */
+    @Override
     public final String getId() {
         return mId;
     }
 
-    /** Gets the callback settings. */
+    @Override
     public final SyncCallbackSettings getSettings() {
         return mSettings;
     }
@@ -91,19 +93,55 @@ public abstract class AbstractSyncCallback {
         // TODO(b/280460130): use side-less Logger so it's not empty
     }
 
+    /**
+     * Should be overridden by callbacks that don't support {@link #assertCalled()}.
+     *
+     * @return name of the alternative method(s)
+     */
+    @Nullable
+    protected String getSetCalledAlternatives() {
+        return null;
+    }
+
+    @Override
+    public final boolean supportsSetCalled() {
+        return getSetCalledAlternatives() == null;
+    }
+
+    @Override
+    public final void setCalled() {
+        logD("setCalled() called");
+        String alternative = getSetCalledAlternatives();
+        if (alternative != null) {
+            throw new UnsupportedOperationException("Should call " + alternative + " instead!");
+        }
+        internalSetCalled();
+    }
+
+    // TODO(b/337014024): make it final somehow?
     // NOTE: not final because test version might disable it
     /**
-     * Indicates the callback was called, so it unblocks {@link #waitCalled()} / {@link
-     * #waitCalled(long, TimeUnit)}.
+     * Real implementation of {@code setCalled()}, should be called by subclasses that don't support
+     * it.
      */
-    public void setCalled() {
-        logD("setCalled() called");
+    protected void internalSetCalled() {
         mNumberCalls.incrementAndGet();
         try {
             mSettings.countDown();
         } finally {
             logV("setCalled() returning");
         }
+    }
+
+    // TODO(b/337014024): get rid of this?
+    /** Called by {@link #assertCalled()} so subclasses can fail it if needed. */
+    protected void postAssertCalled() {}
+
+    // NOTE: not final because test version might disable it
+    @Override
+    public void assertCalled() throws InterruptedException {
+        waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
+        postAssertCalled();
     }
 
     // NOTE: not final because test version might disable it
@@ -139,12 +177,12 @@ public abstract class AbstractSyncCallback {
         }
     }
 
-    /** Returns whether the callback was called (at least) the expected number of times. */
+    @Override
     public final boolean isCalled() {
         return mSettings.isCalled();
     }
 
-    /** Gets the total number of calls so far. */
+    @Override
     public int getNumberActualCalls() {
         return mNumberCalls.get();
     }

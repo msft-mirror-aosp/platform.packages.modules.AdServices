@@ -114,7 +114,7 @@ public final class AnswerSyncCallback<T> extends DeviceSideSyncCallback implemen
 
     @Override
     public T answer(InvocationOnMock invocation) throws Throwable {
-        super.setCalled();
+        super.internalSetCalled();
         if (mFailure != null) {
             Log.v(TAG, "Throwing '" + mFailure + "' on " + invocation);
             throw mFailure;
@@ -124,7 +124,7 @@ public final class AnswerSyncCallback<T> extends DeviceSideSyncCallback implemen
     }
 
     @Override
-    public void setCalled() {
-        throw new UnsupportedOperationException("should only be called by the Answer itself");
+    protected String getSetCalledAlternatives() {
+        return "should only be called by the Answer itself";
     }
 }

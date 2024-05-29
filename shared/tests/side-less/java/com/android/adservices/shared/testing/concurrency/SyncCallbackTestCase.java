@@ -25,6 +25,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import com.android.adservices.shared.meta_testing.FakeLogger;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
+import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -36,7 +37,6 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
     private static final Supplier<Boolean> IS_MAIN_THREAD_SUPPLIER = () -> Boolean.FALSE;
 
-    // TODO(b/337014024): remove it from IResultSyncCallbackTestCase
     protected static final long INJECTION_TIMEOUT_MS = 200;
     protected static final long CALLBACK_TIMEOUT_MS = INJECTION_TIMEOUT_MS + 400;
 
@@ -83,6 +83,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     @Test
     public final void testAssertCalled() throws Exception {
         CB callback = newCallback(mDefaultSettings);
+        assumeCallbackSupportsSetCalled(callback);
 
         // Check state before
         expectIsCalledAndNumberCalls(callback, "before setCalled()", false, 0);
@@ -104,6 +105,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     @Test
     public final void testAssertCalled_neverCalled() throws Exception {
         CB callback = newCallback(mDefaultSettings);
+        assumeCallbackSupportsSetCalled(callback);
 
         var thrown =
                 assertThrows(SyncCallbackTimeoutException.class, () -> callback.assertCalled());
@@ -119,6 +121,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     @Test
     public final void testAssertCalled_interrupted() throws Exception {
         CB callback = newCallback(mDefaultSettings);
+        assumeCallbackSupportsSetCalled(callback);
         ArrayBlockingQueue<Throwable> actualFailureQueue = new ArrayBlockingQueue<>(1);
 
         // Must run it in another thread so it can be interrupted
@@ -149,6 +152,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
                         .setExpectedNumberCalls(2)
                         .build();
         CB callback = newCallback(settings);
+        assumeCallbackSupportsSetCalled(callback);
 
         // 1st call
         runAsync(INJECTION_TIMEOUT_MS, () -> callback.setCalled());
@@ -177,6 +181,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
                         .build();
         CB callback1 = newCallback(settings);
         CB callback2 = newCallback(settings);
+        assumeCallbackSupportsSetCalled(callback1);
 
         // 1st call on 1st callback
         runAsync(INJECTION_TIMEOUT_MS, () -> callback1.setCalled());
@@ -231,6 +236,18 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
                 .contains("numberActualCalls=" + callback.getNumberActualCalls());
         expect.withMessage("toString()").that(toString).contains(mDefaultSettings.toString());
         expect.withMessage("toString()").that(toString).endsWith("]");
+    }
+
+    // TODO(b/337014024): still missing
+    // - test log
+    // - test runs on main thread
+
+    /** Ignore the test if the callback supports {@code assertCalled()}. */
+    protected final void assumeCallbackSupportsSetCalled(CB callback) {
+        if (!callback.supportsSetCalled()) {
+            assertThrows(UnsupportedOperationException.class, () -> callback.setCalled());
+            throw new AssumptionViolatedException("Callback doesn't support setCalled()");
+        }
     }
 
     /** Helper method to assert the value of {@code isCalled()}. */
