@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adid;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PROVIDER_SERVICE_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
@@ -184,7 +184,7 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
         mAdIdCacheManager.getAdId(PACKAGE_NAME, DUMMY_CALLER_UID, callback);
 
         int result = future.get();
-        assertThat(result).isEqualTo(STATUS_INTERNAL_ERROR);
+        assertThat(result).isEqualTo(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
         verifyErrorLogUtilErrorWithAnyException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_AD_ID_PROVIDER_NOT_AVAILABLE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);

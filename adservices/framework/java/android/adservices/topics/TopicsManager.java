@@ -37,7 +37,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 
 import java.util.ArrayList;
 import java.util.List;

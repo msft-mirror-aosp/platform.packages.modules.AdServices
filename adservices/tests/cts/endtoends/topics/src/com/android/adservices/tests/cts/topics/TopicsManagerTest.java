@@ -35,7 +35,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.FlagsConstants;
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
@@ -391,13 +391,13 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier_usingGetMethodToCreateManager()
             throws Exception {
-        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
+        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager= */ true);
     }
 
     @Test
     @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier() throws Exception {
-        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ false);
+        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager= */ false);
     }
 
     private void testTopicsManager_runPrecomputedClassifier(boolean useGetMethodToCreateManager)
@@ -457,14 +457,14 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     public void testTopicsManager_runPrecomputedClassifier_encryptedTopics_usingGetManager()
             throws Exception {
         testTopicsManager_runPrecomputedClassifier_encryptedTopics(
-                /* useGetMethodToCreateManager = */ true);
+                /* useGetMethodToCreateManager= */ true);
     }
 
     @Test
     @FlakyTest(bugId = 290122696)
     public void testTopicsManager_runPrecomputedClassifier_encryptedTopics() throws Exception {
         testTopicsManager_runPrecomputedClassifier_encryptedTopics(
-                /* useGetMethodToCreateManager = */ false);
+                /* useGetMethodToCreateManager= */ false);
     }
 
     private void testTopicsManager_runPrecomputedClassifier_encryptedTopics(

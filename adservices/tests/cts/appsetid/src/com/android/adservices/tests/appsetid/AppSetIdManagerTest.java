@@ -34,7 +34,7 @@ import androidx.annotation.NonNull;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.compatibility.common.util.ConnectivityUtils;
