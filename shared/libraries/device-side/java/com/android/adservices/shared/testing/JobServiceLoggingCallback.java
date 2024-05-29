@@ -18,7 +18,7 @@ package com.android.adservices.shared.testing;
 
 import android.app.job.JobService;
 
-import com.android.adservices.shared.testing.concurrency.AbstractTestSyncCallback;
+import com.android.adservices.shared.testing.concurrency.DeviceSideSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 
@@ -29,7 +29,7 @@ import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
  * In order to make the test result deterministic, use this callback to help wait for the completion
  * of such logging methods.
  */
-public final class JobServiceLoggingCallback extends AbstractTestSyncCallback {
+public final class JobServiceLoggingCallback extends DeviceSideSyncCallback {
 
     public JobServiceLoggingCallback() {
         this(SyncCallbackFactory.newDefaultSettings());

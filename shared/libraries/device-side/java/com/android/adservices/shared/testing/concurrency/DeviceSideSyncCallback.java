@@ -24,13 +24,14 @@ import androidx.annotation.Nullable;
 import java.util.Objects;
 
 /** Base class for device-side sync callbacks for testing. */
-public abstract class AbstractTestSyncCallback extends AbstractSidelessTestSyncCallback {
+public abstract class DeviceSideSyncCallback extends AbstractSidelessTestSyncCallback {
 
     @Nullable private RuntimeException mInternalFailure;
 
+    // TODO(b/337014024): must abstract SystemClock and IBinder so it can be moved to sideless
     private final long mEpoch = SystemClock.elapsedRealtime();
 
-    protected AbstractTestSyncCallback(SyncCallbackSettings settings) {
+    protected DeviceSideSyncCallback(SyncCallbackSettings settings) {
         super(settings);
     }
 
