@@ -16,7 +16,7 @@
 
 package com.android.adservices.shared.testing;
 
-import static com.android.adservices.shared.testing.concurrency.AbstractSyncCallback.LOG_TAG;
+import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
 import static com.android.adservices.shared.util.Preconditions.checkState;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 

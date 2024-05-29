@@ -15,8 +15,17 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import com.android.adservices.shared.testing.Identifiable;
+import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
 
+import com.android.adservices.shared.testing.Identifiable;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.Nullable;
+
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,6 +52,7 @@ public final class SyncCallbackSettings implements Identifiable {
     private final long mMaxTimeoutMs;
     private final boolean mFailIfCalledOnMainThread;
     private final Supplier<Boolean> mIsMainThreadSupplier;
+    private final Logger mLogger;
 
     private SyncCallbackSettings(Builder builder) {
         mExpectedNumberCalls = builder.mExpectedNumberCalls;
@@ -50,6 +60,7 @@ public final class SyncCallbackSettings implements Identifiable {
         mMaxTimeoutMs = builder.mMaxTimeoutMs;
         mFailIfCalledOnMainThread = builder.mFailIfCalledOnMainThread;
         mIsMainThreadSupplier = builder.mIsMainThreadSupplier;
+        mLogger = new Logger(builder.mRealLogger, LOG_TAG);
     }
 
     /** Gets the expected number of calls this callback should receive before it's done. */
@@ -89,28 +100,57 @@ public final class SyncCallbackSettings implements Identifiable {
                 + ", failIfCalledOnMainThread="
                 + mFailIfCalledOnMainThread
                 + ", missingCalls="
-                + mLatch.getCount()
-                + "]";
+                + mLatch.getCount();
     }
 
-    // NOTE: methods below are indirectly unit tested by the callback test - testing them on
-    // SyncCallbackSettings would be an overkill (they're not public anyways)
+    Logger getLogger() {
+        return mLogger;
+    }
+
+    // NOTE: log of methods below are indirectly unit tested by the callback test - testing it again
+    // on SyncCallbackSettings would be an overkill (they're not public anyways), so
+    // SyncCallbackSettings just asserts that they're properly logged.
 
     void countDown() {
-        mLatch.countDown();
+        logD("countDown() called");
+        try {
+            mLatch.countDown();
+        } finally {
+            logV("leaving countDown()");
+        }
     }
 
-    // TODO(b/337014024): remove (should only use version with timeout);
+    /**
+     * @deprecated - TODO(b/337014024): merge with other)
+     */
+    @Deprecated
     void await() throws InterruptedException {
         mLatch.await();
     }
 
     boolean await(long timeout, TimeUnit unit) throws InterruptedException {
-        return mLatch.await(timeout, unit);
+        logD("await() called");
+        try {
+            return mLatch.await(timeout, unit);
+        } finally {
+            logV("leaving await()");
+        }
     }
 
     boolean isCalled() {
         return mLatch.getCount() == 0;
+    }
+
+    @FormatMethod
+    private void logD(@FormatString String msgFmt, @Nullable Object... msgArgs) {
+        String realMessage = String.format(msgFmt, msgArgs);
+        mLogger.d("[settingsId#%s]: %s", getId(), realMessage);
+    }
+
+    @FormatMethod
+    private void logV(@FormatString String msgFmt, @Nullable Object... msgArgs) {
+        String realMessage = String.format(msgFmt, msgArgs);
+        mLogger.v("[SyncCallbackSettings: %s]: %s", toString(), realMessage);
     }
 
     /** Bob the Builder! */
@@ -120,10 +160,14 @@ public final class SyncCallbackSettings implements Identifiable {
         private long mMaxTimeoutMs = DEFAULT_TIMEOUT_MS;
         private boolean mFailIfCalledOnMainThread = true;
         private final Supplier<Boolean> mIsMainThreadSupplier;
+        private final RealLogger mRealLogger;
 
-        // Package protected so it's only called by SyncCallbackFactory
-        Builder(Supplier<Boolean> isMainThreadSupplier) {
-            mIsMainThreadSupplier = isMainThreadSupplier;
+        // Package protected so it's only called by SyncCallbackFactory and unit tests
+        Builder(RealLogger realLogger, Supplier<Boolean> isMainThreadSupplier) {
+            mRealLogger = Objects.requireNonNull(realLogger, "realLogger cannot be null");
+            mIsMainThreadSupplier =
+                    Objects.requireNonNull(
+                            isMainThreadSupplier, "isMainThreadSupplier cannot be null");
         }
 
         /** See {@link SyncCallbackSettings#getExpectedNumberCalls()}. */

@@ -20,7 +20,6 @@ import android.os.SystemClock;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.shared.testing.AndroidLogger;
 
 import java.util.Objects;
 
@@ -32,7 +31,7 @@ public abstract class AbstractTestSyncCallback extends AbstractSidelessTestSyncC
     private final long mEpoch = SystemClock.elapsedRealtime();
 
     protected AbstractTestSyncCallback(SyncCallbackSettings settings) {
-        super(AndroidLogger.getInstance(), settings);
+        super(settings);
     }
 
     @Override

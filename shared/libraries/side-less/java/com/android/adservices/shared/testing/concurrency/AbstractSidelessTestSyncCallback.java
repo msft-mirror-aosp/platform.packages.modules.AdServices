@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import com.android.adservices.shared.testing.Logger;
-import com.android.adservices.shared.testing.Logger.RealLogger;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -30,13 +28,9 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallback
         implements SyncCallback {
 
-    private final Logger mLogger;
-
     /** Default constructor. */
-    protected AbstractSidelessTestSyncCallback(
-            RealLogger realLogger, SyncCallbackSettings settings) {
+    protected AbstractSidelessTestSyncCallback(SyncCallbackSettings settings) {
         super(settings);
-        mLogger = new Logger(realLogger, LOG_TAG);
     }
 
     @Override
@@ -71,19 +65,19 @@ public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallb
     @FormatMethod
     @Override
     public final void logE(@FormatString String msgFmt, Object... msgArgs) {
-        mLogger.e("%s: %s", toString(), String.format(msgFmt, msgArgs));
+        mSettings.getLogger().e("%s: %s", toString(), String.format(msgFmt, msgArgs));
     }
 
     @FormatMethod
     @Override
     public final void logD(@FormatString String msgFmt, Object... msgArgs) {
-        mLogger.d("[%s]: %s", getId(), String.format(msgFmt, msgArgs));
+        mSettings.getLogger().d("[%s]: %s", getId(), String.format(msgFmt, msgArgs));
     }
 
     @FormatMethod
     @Override
     public final void logV(@FormatString String msgFmt, Object... msgArgs) {
-        mLogger.v("%s: %s", toString(), String.format(msgFmt, msgArgs));
+        mSettings.getLogger().v("%s: %s", toString(), String.format(msgFmt, msgArgs));
     }
 
     @Override
