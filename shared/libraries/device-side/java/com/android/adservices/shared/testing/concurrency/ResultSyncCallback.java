@@ -16,6 +16,7 @@
 package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Nullable;
+import com.android.internal.util.Preconditions;
 
 import com.google.common.base.Optional;
 
@@ -37,6 +38,9 @@ public class ResultSyncCallback<T> extends DeviceSideSyncCallback
 
     public ResultSyncCallback(SyncCallbackSettings settings) {
         super(settings);
+        Preconditions.checkArgument(
+                !settings.isFailIfCalledOnMainThread(),
+                "Cannot use a SyncCallbackSettings that fails if called on main thread");
     }
 
     /**
