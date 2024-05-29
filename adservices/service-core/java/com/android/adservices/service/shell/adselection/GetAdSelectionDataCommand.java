@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class GetAdSelectionDataCommand extends AbstractShellCommand {
-    @VisibleForTesting public static final String CMD = "get_ad_selection_data";
+    @VisibleForTesting public static final String CMD = "get-ad-selection-data";
 
     public static final String HELP =
             AdSelectionShellCommandFactory.COMMAND_PREFIX

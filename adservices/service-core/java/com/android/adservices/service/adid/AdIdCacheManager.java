@@ -17,6 +17,7 @@
 package com.android.adservices.service.adid;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PROVIDER_SERVICE_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
@@ -176,7 +177,7 @@ public final class AdIdCacheManager {
                         @Override
                         public void onError(String errorMessage) {
                             try {
-                                callback.onError(STATUS_INTERNAL_ERROR);
+                                callback.onError(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
 
                                 LogUtil.e("Get AdId Error Message from Provider: %s", errorMessage);
                                 ErrorLogUtil.e(

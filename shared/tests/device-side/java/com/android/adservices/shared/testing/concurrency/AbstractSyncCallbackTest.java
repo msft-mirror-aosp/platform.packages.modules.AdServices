@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.concurrency.AbstractSyncCallback.LOG_TAG;
+import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
 import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
 
 import static org.junit.Assert.assertThrows;
@@ -29,7 +29,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 
-public final class AbstractTestSyncCallbackTest extends SharedExtendedMockitoTestCase {
+public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCase {
 
     @Test
     @SpyStatic(Log.class)
@@ -156,7 +156,7 @@ public final class AbstractTestSyncCallbackTest extends SharedExtendedMockitoTes
         expect.withMessage("toString()").that(toString).contains("internalFailure=null");
     }
 
-    private static final class ConcreteTestSyncCallback extends AbstractTestSyncCallback {
+    private static final class ConcreteTestSyncCallback extends DeviceSideSyncCallback {
         ConcreteTestSyncCallback() {
             this(SyncCallbackFactory.newSettingsBuilder().build());
         }

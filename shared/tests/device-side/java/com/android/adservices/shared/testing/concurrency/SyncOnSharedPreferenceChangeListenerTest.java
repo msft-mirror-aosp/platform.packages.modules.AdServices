@@ -18,7 +18,7 @@ package com.android.adservices.shared.testing.concurrency;
 import org.junit.Test;
 
 public final class SyncOnSharedPreferenceChangeListenerTest
-        extends ResultTestSyncCallbackTestCase<String, SyncOnSharedPreferenceChangeListener> {
+        extends IResultSyncCallbackTestCase<String, SyncOnSharedPreferenceChangeListener> {
 
     @Override
     protected String newResult() {

@@ -26,9 +26,8 @@
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name" value="SdkSandboxPerfScenarioTests.apk"/>
-        <option name="test-file-name" value="SdkSandboxCodeProvider.apk"/>
-        <option name="test-file-name" value="SdkSandboxMediateeProvider.apk"/>
-        <option name="test-file-name" value="SdkSandboxClient.apk"/>
+        <option name="test-file-name" value="EmptySdkProviderApp.apk"/>
+        <option name="test-file-name" value="SdkSandboxCujClient.apk"/>
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
@@ -50,7 +49,12 @@
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="android.sdksandbox.test.scenario"/>
         <option name="runner" value="androidx.test.runner.AndroidJUnitRunner" />
-        <option name="class" value="android.sdksandbox.test.scenario.sampleclient.LoadSdkMicrobenchmark,android.sdksandbox.test.scenario.sampleclient.RemoteRenderAdMicrobenchmark" />
+        <option name="class" value="android.sdksandbox.test.scenario.testapp.OpenAppMicrobenchmark" />
+
+        <option name="instrumentation-arg" key="client-app-package-name"
+            value="android.sdksandbox.test.scenario.cujclient" />
+        <option name="instrumentation-arg" key="client-app-activity-name"
+            value="android.sdksandbox.test.scenario.cujclient.LoadEmptySdkActivity" />
 
         <!-- Listener for collecting the traces and waiting for the device to stabilize. -->
         <option name="device-listeners" value="android.device.collectors.PerfettoListener" />

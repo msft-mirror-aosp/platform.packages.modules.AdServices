@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.concurrency.AbstractSyncCallback.LOG_TAG;
+import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
 import static com.android.adservices.shared.util.Preconditions.checkState;
 
 import android.os.IBinder;
@@ -37,7 +37,7 @@ import java.util.Objects;
  * @param <T> type of the object received on success.
  * @param <F> type of the object received on failure.
  */
-public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<T> {
+public class FailableResultSyncCallback<T, F> implements IResultSyncCallback<T> {
 
     @VisibleForTesting
     public static final String INJECT_RESULT_OR_FAILURE = "injectResult() or injectFailure()";
@@ -111,6 +111,12 @@ public class FailableResultSyncCallback<T, F> implements ResultTestSyncCallback<
     @Override
     public final boolean isCalled() {
         return mCallback.isCalled();
+    }
+
+    // TODO(b/337014024): make sure it's unit tested
+    @Override
+    public int getNumberActualCalls() {
+        return mCallback.getNumberActualCalls();
     }
 
     @Override

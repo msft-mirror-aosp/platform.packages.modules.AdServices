@@ -17,6 +17,7 @@
 package com.android.adservices.service.appsetid;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PROVIDER_SERVICE_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_SERVICE;
@@ -159,7 +160,7 @@ public final class AppSetIdWorker {
                                 LogUtil.e(
                                         "Get AppSetId Error Message from Provider: %s",
                                         errorMessage);
-                                callback.onError(STATUS_INTERNAL_ERROR);
+                                callback.onError(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
                             } catch (RemoteException e) {
                                 LogUtil.e(
                                         e,

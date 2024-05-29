@@ -27,7 +27,7 @@ import org.junit.Test;
 /** Base test for classes that extend FailableResultSyncCallback. */
 public abstract class FailableResultSyncCallbackTestCase<
                 T, F, C extends FailableResultSyncCallback<T, F>>
-        extends ResultTestSyncCallbackTestCase<T, C> {
+        extends IResultSyncCallbackTestCase<T, C> {
 
     /** Returns a new failure. */
     protected abstract F newFailure();

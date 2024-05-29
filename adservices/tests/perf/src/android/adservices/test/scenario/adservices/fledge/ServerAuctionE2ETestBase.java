@@ -33,9 +33,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
 
 public abstract class ServerAuctionE2ETestBase {
     protected static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -86,9 +89,15 @@ public abstract class ServerAuctionE2ETestBase {
                         .setSeller(AdTechIdentifier.fromString(seller))
                         .build();
         GetAdSelectionDataOutcome outcome =
-                AD_SELECTION_CLIENT
-                        .getAdSelectionData(request)
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                retryOnCondition(
+                        () ->
+                                AD_SELECTION_CLIENT
+                                        .getAdSelectionData(request)
+                                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS),
+                        matchOnTimeoutExecutionException(),
+                        /* maxRetries= */ 3,
+                        /* retryIntervalMillis= */ 2000L,
+                        "getAdSelectionData");
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
 
@@ -120,31 +129,35 @@ public abstract class ServerAuctionE2ETestBase {
         }
     }
 
-    protected <T> T retryOnException(
+    protected <T> T retryOnCondition(
             Callable<T> callable,
-            Class<? extends Exception> exceptionType,
+            Predicate<Exception> retryCondition,
             int maxRetries,
             long retryIntervalMillis,
             String funcName)
             throws Exception {
 
-        int attempt = 0;
+        int attempt = 1;
         while (attempt <= maxRetries) {
-            Log.w(getTag(), String.format("Retrying %s. Attempt: %d", funcName, attempt));
+            Log.w(getTag(), String.format("Trying %s. Attempt: %d", funcName, attempt));
             try {
                 return callable.call();
             } catch (Exception e) {
-                if (exceptionType.isInstance(e)) {
+                if (retryCondition.test(e)) {
                     attempt++;
                     if (attempt > maxRetries) {
-                        throw e;
+                        throw e; // Rethrow the exception after exceeding retries
                     }
                     Thread.sleep(retryIntervalMillis);
                 } else {
-                    throw e;
+                    throw e; // Rethrow immediately for non-retryable exceptions
                 }
             }
         }
-        return null;
+        return null; // Unreachable in practice, but required for compilation
+    }
+
+    protected Predicate<Exception> matchOnTimeoutExecutionException() {
+        return e -> e instanceof ExecutionException && e.getCause() instanceof TimeoutException;
     }
 }

@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.adservices.shared.common;
+package com.android.adservices.shared.common.exception;
 
-/** Exception class to indicate that AdServices isn't available. */
-public class ServiceUnavailableException extends IllegalStateException {
-
-    public ServiceUnavailableException(String message) {
-        super(message);
+/**
+ * The exception thrown when AdServices calls a Provider Service and the callback is an error from
+ * the Provider Service. For example, a Provider Service in GMS Core.
+ */
+public final class ProviderServiceInternalException extends IllegalStateException {
+    /** Default constructor. */
+    public ProviderServiceInternalException() {
+        super();
     }
 
-    public ServiceUnavailableException() {
-        super();
+    /** Constructor with a customized error message. */
+    public ProviderServiceInternalException(String message) {
+        super(message);
     }
 }

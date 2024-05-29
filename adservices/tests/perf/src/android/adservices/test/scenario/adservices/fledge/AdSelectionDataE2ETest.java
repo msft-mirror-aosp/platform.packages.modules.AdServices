@@ -57,7 +57,6 @@ import org.junit.runners.JUnit4;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Scenario
 @RunWith(JUnit4.class)
@@ -181,12 +180,12 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                         .build();
 
         GetAdSelectionDataOutcome outcome =
-                retryOnException(
+                retryOnCondition(
                         () ->
                                 AD_SELECTION_CLIENT
                                         .getAdSelectionData(request)
                                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS),
-                        TimeoutException.class,
+                        matchOnTimeoutExecutionException(),
                         /* maxRetries= */ 3,
                         /* retryIntervalMillis= */ 2000L,
                         "getAdSelectionData");
@@ -233,12 +232,12 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                         .build();
 
         GetAdSelectionDataOutcome outcome =
-                retryOnException(
+                retryOnCondition(
                         () ->
                                 AD_SELECTION_CLIENT
                                         .getAdSelectionData(request)
                                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS),
-                        TimeoutException.class,
+                        matchOnTimeoutExecutionException(),
                         /* maxRetries= */ 3,
                         /* retryIntervalMillis= */ 2000L,
                         "getAdSelectionData");
@@ -286,12 +285,12 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                         .build();
 
         GetAdSelectionDataOutcome outcome =
-                retryOnException(
+                retryOnCondition(
                         () ->
                                 AD_SELECTION_CLIENT
                                         .getAdSelectionData(request)
                                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS),
-                        TimeoutException.class,
+                        matchOnTimeoutExecutionException(),
                         /* maxRetries= */ 3,
                         /* retryIntervalMillis= */ 2000L,
                         "getAdSelectionData");
@@ -337,12 +336,12 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                         .build();
 
         GetAdSelectionDataOutcome outcome =
-                retryOnException(
+                retryOnCondition(
                         () ->
                                 AD_SELECTION_CLIENT
                                         .getAdSelectionData(request)
                                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS),
-                        TimeoutException.class,
+                        matchOnTimeoutExecutionException(),
                         /* maxRetries= */ 3,
                         /* retryIntervalMillis= */ 2000L,
                         "getAdSelectionData");
@@ -391,12 +390,12 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                         .build();
 
         GetAdSelectionDataOutcome outcome =
-                retryOnException(
+                retryOnCondition(
                         () ->
                                 AD_SELECTION_CLIENT
                                         .getAdSelectionData(request)
                                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS),
-                        TimeoutException.class,
+                        matchOnTimeoutExecutionException(),
                         /* maxRetries= */ 3,
                         /* retryIntervalMillis= */ 2000L,
                         "getAdSelectionData");
@@ -449,12 +448,12 @@ public class AdSelectionDataE2ETest extends ServerAuctionE2ETestBase {
                         .build();
 
         GetAdSelectionDataOutcome outcome =
-                retryOnException(
+                retryOnCondition(
                         () ->
                                 AD_SELECTION_CLIENT
                                         .getAdSelectionData(request)
                                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS),
-                        TimeoutException.class,
+                        matchOnTimeoutExecutionException(),
                         /* maxRetries= */ 3,
                         /* retryIntervalMillis= */ 2000L,
                         "getAdSelectionData");

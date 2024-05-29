@@ -24,16 +24,10 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.delegates.MainActionDelegate;
-import com.android.adservices.ui.settings.viewmodels.MainViewModel;
-import com.android.settingslib.widget.MainSwitchBar;
-
-import java.util.Objects;
 
 /** Fragment for the main view of the AdServices Settings App. */
 // TODO(b/269798827): Enable for R.
@@ -66,28 +60,7 @@ public class AdServicesSettingsMainFragment extends Fragment {
         MainActionDelegate actionDelegate =
                 ((AdServicesSettingsMainActivity) requireActivity()).getActionDelegate();
         actionDelegate.initMainFragment(this);
-        setupViewModel();
-    }
-
-    private void setupViewModel() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            // the entry point of Apps, Topics, Measurement should be visible all the time
-            requireView().findViewById(R.id.privacy_sandbox_controls).setVisibility(View.VISIBLE);
-            return;
-        }
-
-        MainViewModel model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
-        MainSwitchBar mainSwitchBar =
-                Objects.requireNonNull(requireView().findViewById(R.id.main_switch_bar));
-
-        View privacySandboxControls = requireView().findViewById(R.id.privacy_sandbox_controls);
-        model.getConsent()
-                .observe(
-                        getViewLifecycleOwner(),
-                        consentGiven -> {
-                            mainSwitchBar.setChecked(consentGiven);
-                            privacySandboxControls.setVisibility(
-                                    consentGiven ? View.VISIBLE : View.GONE);
-                        });
+        // the entry point of Apps, Topics, Measurement should be visible all the time
+        requireView().findViewById(R.id.privacy_sandbox_controls).setVisibility(View.VISIBLE);
     }
 }

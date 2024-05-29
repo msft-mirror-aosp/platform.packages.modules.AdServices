@@ -35,27 +35,20 @@
                 android:visibility="@integer/adservices_ppapi_title_spacing"
                 android:layout_height="@dimen/adservices_ppapi_title_spacing_height"
                 android:layout_width="match_parent"/>
-            <TextView
-                android:id="@+id/topics_introduction"
-                android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
-                android:text="@string/settingsUI_topics_view_subtitle"
-                style="@style/MainStyle.Body2" />
 
             <TextView
                 android:id="@+id/topics_ga_introduction"
                 android:layout_marginTop="@dimen/adservices_content_three_quarter_padding"
                 android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                 android:text="@string/settingsUI_topics_view_ga_subtitle"
-                style="@style/MainStyle.Body2"
-                android:visibility="gone"/>
+                style="@style/MainStyle.Body2"/>
 
             <com.android.settingslib.widget.MainSwitchBar
                 android:id="@+id/topics_switch_bar"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 android:title="@string/settingsUI_topics_switch_title"
-                android:textDirection="locale"
-                android:visibility="gone"/>
+                android:textDirection="locale"/>
             <LinearLayout
                 android:id="@+id/no_topics_message"
                 android:layout_width="match_parent"
@@ -142,36 +135,12 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/topics_view_footer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
-                    android:paddingBottom="@dimen/adservices_content_2x_padding"
-                    android:orientation="vertical">
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/adservices_content_padding"
-                        android:layout_marginStart="@dimen/adservices_content_one_twelfths_padding"
-                        android:src="@drawable/ic_info_icon"
-                        tools:ignore="ContentDescription" />
-                    <TextView
-                        android:layout_marginStart="0dp"
-                        android:text="@string/settingsUI_topics_view_info_text1"
-                        style="@style/MainStyle.Body1BoldBullet" />
-                    <TextView
-                        android:text="@string/settingsUI_topics_view_info_text2"
-                        style="@style/MainStyle.Body1" />
-                </LinearLayout>
-
-                <LinearLayout
                     android:id="@+id/topics_view_ga_footer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
                     android:paddingBottom="@dimen/adservices_content_2x_padding"
-                    android:orientation="vertical"
-                    android:visibility="gone">
+                    android:orientation="vertical">
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

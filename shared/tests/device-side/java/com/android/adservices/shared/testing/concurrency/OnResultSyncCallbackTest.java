@@ -16,7 +16,7 @@
 package com.android.adservices.shared.testing.concurrency;
 
 public final class OnResultSyncCallbackTest
-        extends OnResultTestSyncCallbackTestCase<String, OnResultSyncCallback<String>> {
+        extends OnResultSyncCallbackTestCase<String, OnResultSyncCallback<String>> {
 
     @Override
     protected String newResult() {

@@ -21,13 +21,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
 
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /** Used to specify expected {@link ErrorLogUtil} calls. */
-// TODO(b/337042949): Support repeatable annotations.
 @Retention(RUNTIME)
 @Target(METHOD)
+@Repeatable(ExpectErrorLogUtilCalls.class)
 public @interface ExpectErrorLogUtilCall {
     /** Default number of times to expect log call. */
     int DEFAULT_TIMES = 1;

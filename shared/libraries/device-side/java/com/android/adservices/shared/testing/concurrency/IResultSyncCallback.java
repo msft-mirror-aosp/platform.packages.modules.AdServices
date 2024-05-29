@@ -26,7 +26,7 @@ import androidx.annotation.Nullable;
  * <p>This is needed because the latter is a "special" case of the former as it can receive either a
  * result OR a failure.
  */
-interface ResultTestSyncCallback<T> extends TestSyncCallback {
+interface IResultSyncCallback<T> extends SyncCallback {
 
     /** Sets the result. */
     void injectResult(@Nullable T result);

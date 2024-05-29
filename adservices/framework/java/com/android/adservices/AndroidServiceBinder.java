@@ -45,7 +45,7 @@ import android.os.Process;
 import android.os.SystemProperties;
 import android.text.TextUtils;
 
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.List;

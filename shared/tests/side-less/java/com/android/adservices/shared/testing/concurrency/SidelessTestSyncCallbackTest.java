@@ -19,6 +19,7 @@ import static org.junit.Assert.assertThrows;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import com.android.adservices.shared.meta_testing.FakeLogger;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
 import com.google.errorprone.annotations.FormatMethod;
@@ -34,7 +35,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
+// TODO(b/337014024): merge with AbstractSyncCallbackTest
+public final class SidelessTestSyncCallbackTest extends SharedSidelessTestCase {
 
     private static final AtomicInteger sThreadId = new AtomicInteger();
 
@@ -51,7 +53,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
             "waitCalled(" + LONGER_TIMEOUT_MS + ", " + MILLISECONDS + ") returning";
 
     private final SyncCallbackSettings.Builder mSettingsBuilder =
-            new SyncCallbackSettings.Builder(() -> Boolean.FALSE);
+            new SyncCallbackSettings.Builder(new FakeLogger(), () -> Boolean.FALSE);
 
     private final ConcreteSyncCallback mSingleCallback = new ConcreteSyncCallback();
 
@@ -277,6 +279,60 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
         // 3rd time is a charm!
         expect.withMessage("%s.isCalled() after call #3", charmCallback)
                 .that(charmCallback.isCalled())
+                .isTrue();
+    }
+
+    @Test
+    public void testSharedSettings_waitOnFirst() throws Exception {
+        SyncCallbackSettings settings =
+                SyncCallbackFactory.newSettingsBuilder().setExpectedNumberCalls(2).build();
+        ConcreteSyncCallback callback1 = new ConcreteSyncCallback(settings);
+        ConcreteSyncCallback callback2 = new ConcreteSyncCallback(settings);
+
+        runLater(SMALLER_TIMEOUT_MS, () -> callback1.setCalled());
+
+        expect.withMessage("callback1.isCalled() after call on callback1")
+                .that(callback1.isCalled())
+                .isFalse();
+        expect.withMessage("callback2.isCalled() after call on callback1")
+                .that(callback2.isCalled())
+                .isFalse();
+
+        runLater(SMALLER_TIMEOUT_MS, () -> callback2.setCalled());
+        callback1.waitCalled(LONGER_TIMEOUT_MS, MILLISECONDS);
+
+        expect.withMessage("callback1.isCalled() after call on callback2")
+                .that(callback1.isCalled())
+                .isTrue();
+        expect.withMessage("callback2.isCalled() after call on callback2")
+                .that(callback2.isCalled())
+                .isTrue();
+    }
+
+    @Test
+    public void testSharedSettings_waitOnSecond() throws Exception {
+        SyncCallbackSettings settings =
+                SyncCallbackFactory.newSettingsBuilder().setExpectedNumberCalls(2).build();
+        ConcreteSyncCallback callback1 = new ConcreteSyncCallback(settings);
+        ConcreteSyncCallback callback2 = new ConcreteSyncCallback(settings);
+
+        runLater(SMALLER_TIMEOUT_MS, () -> callback1.setCalled());
+
+        expect.withMessage("callback1.isCalled() after call on callback1")
+                .that(callback1.isCalled())
+                .isFalse();
+        expect.withMessage("callback2.isCalled() after call on callback1")
+                .that(callback2.isCalled())
+                .isFalse();
+
+        runLater(SMALLER_TIMEOUT_MS, () -> callback2.setCalled());
+        callback2.waitCalled(LONGER_TIMEOUT_MS, MILLISECONDS);
+
+        expect.withMessage("callback1.isCalled() after call on callback2")
+                .that(callback1.isCalled())
+                .isTrue();
+        expect.withMessage("callback2.isCalled() after call on callback2")
+                .that(callback2.isCalled())
                 .isTrue();
     }
 

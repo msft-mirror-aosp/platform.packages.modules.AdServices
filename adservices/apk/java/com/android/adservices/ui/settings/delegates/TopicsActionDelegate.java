@@ -127,21 +127,11 @@ public class TopicsActionDelegate {
      * handle user actions.
      */
     public void initTopicsFragment(AdServicesSettingsTopicsFragment fragment) {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            mTopicsActivity.setTitle(R.string.settingsUI_topics_ga_title);
+        mTopicsActivity.setTitle(R.string.settingsUI_topics_ga_title);
 
-            configureTopicsConsentSwitch(fragment);
+        configureTopicsConsentSwitch(fragment);
 
-            setGaUxLayoutVisibilities(View.VISIBLE);
-            setBetaLayoutVisibilities(View.GONE);
-            setGaUxTopicsViewText();
-        } else {
-            mTopicsActivity.setTitle(R.string.settingsUI_topics_view_title);
-
-            setGaUxLayoutVisibilities(View.GONE);
-            setBetaLayoutVisibilities(View.VISIBLE);
-            setBetaTopicsViewText();
-        }
+        setGaUxTopicsViewText();
         configureBlockedTopicsFragmentButton(fragment);
         configureResetTopicsButton(fragment);
     }
@@ -157,28 +147,8 @@ public class TopicsActionDelegate {
                 .setMovementMethod(LinkMovementMethod.getInstance());
     }
 
-    private void setBetaTopicsViewText() {
-        ((TextView) mTopicsActivity.findViewById(R.id.blocked_topics_button_child))
-                .setText(R.string.settingsUI_blocked_topics_title);
-        ((TextView) mTopicsActivity.findViewById(R.id.reset_topics_button_child))
-                .setText(R.string.settingsUI_reset_topics_title);
-        ((TextView) mTopicsActivity.findViewById(R.id.no_topics_state))
-                .setText(R.string.settingsUI_topics_view_no_topics_text);
-    }
-
-    private void setBetaLayoutVisibilities(int visibility) {
-        mTopicsActivity.findViewById(R.id.topics_introduction).setVisibility(visibility);
-        mTopicsActivity.findViewById(R.id.topics_view_footer).setVisibility(visibility);
-    }
-
-    private void setGaUxLayoutVisibilities(int visibility) {
-        mTopicsActivity.findViewById(R.id.topics_ga_introduction).setVisibility(visibility);
-        mTopicsActivity.findViewById(R.id.topics_view_ga_footer).setVisibility(visibility);
-    }
-
     private void configureTopicsConsentSwitch(AdServicesSettingsTopicsFragment fragment) {
         MainSwitchBar topicsSwitchBar = mTopicsActivity.findViewById(R.id.topics_switch_bar);
-        topicsSwitchBar.setVisibility(View.VISIBLE);
 
         mTopicsViewModel.getTopicsConsent().observe(fragment, topicsSwitchBar::setChecked);
         topicsSwitchBar.setOnClickListener(

@@ -67,6 +67,7 @@ java_sdk_library {
         "android.app.sdksandbox",
         "com.android.sdksandbox",
         "com.android.server.sdksandbox",
+        "com.android.tools.smali.dexlib2",
     ],
     jarjar_rules: "jarjar_rules.txt",
     libs: [
@@ -86,6 +87,7 @@ java_sdk_library {
         "modules-utils-shell-command-handler",
         "sdksandbox-service-proto-lite",
         "sdk_sandbox_flags_lib",
+        "smali-dexlib2-device",
     ],
     defaults: [
         "framework-system-server-module-defaults",

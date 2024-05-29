@@ -36,6 +36,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
@@ -215,6 +216,52 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
 
         expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
         expect.that(exception).hasMessageThat().doesNotContain(RESOLUTION_MESSAGE);
+    }
+
+    @Test
+    public void testContainsUniqueLogInvocations_withEmptyList_returnsTrue() {
+        TestLogVerifier testLogVerifier = new TestLogVerifier(ImmutableSet.of());
+
+        expect.that(testLogVerifier.containsUniqueLogInvocations(ImmutableList.of())).isTrue();
+    }
+
+    @Test
+    public void testContainsUniqueLogInvocations_withIdenticalCallSameTimes_returnsFalse() {
+        TestLogCall logCall1 = new TestLogCall(/* times= */ 1, /* param= */ 1);
+        TestLogCall logCall2 = new TestLogCall(/* times= */ 1, /* param= */ 2);
+        TestLogCall logCall3 = new TestLogCall(/* times= */ 1, /* param= */ 1);
+        TestLogVerifier testLogVerifier = new TestLogVerifier(ImmutableSet.of());
+
+        expect.that(
+                        testLogVerifier.containsUniqueLogInvocations(
+                                ImmutableList.of(logCall1, logCall2, logCall3)))
+                .isFalse();
+    }
+
+    @Test
+    public void testContainsUniqueLogInvocations_withIdenticalCallDifferentTimes_returnsFalse() {
+        TestLogCall logCall1 = new TestLogCall(/* times= */ 1, /* param= */ 1);
+        TestLogCall logCall2 = new TestLogCall(/* times= */ 1, /* param= */ 2);
+        TestLogCall logCall3 = new TestLogCall(/* times= */ 2, /* param= */ 1);
+        TestLogVerifier testLogVerifier = new TestLogVerifier(ImmutableSet.of());
+
+        expect.that(
+                        testLogVerifier.containsUniqueLogInvocations(
+                                ImmutableList.of(logCall1, logCall2, logCall3)))
+                .isFalse();
+    }
+
+    @Test
+    public void testContainsUniqueLogInvocations_withUniqueLogCalls_returnsTrue() {
+        TestLogCall logCall1 = new TestLogCall(/* times= */ 1, /* param= */ 1);
+        TestLogCall logCall2 = new TestLogCall(/* times= */ 1, /* param= */ 2);
+        TestLogCall logCall3 = new TestLogCall(/* times= */ 1, /* param= */ 3);
+        TestLogVerifier testLogVerifier = new TestLogVerifier(ImmutableSet.of());
+
+        expect.that(
+                        testLogVerifier.containsUniqueLogInvocations(
+                                ImmutableList.of(logCall1, logCall2, logCall3)))
+                .isTrue();
     }
 
     // Simple log verifier for testing

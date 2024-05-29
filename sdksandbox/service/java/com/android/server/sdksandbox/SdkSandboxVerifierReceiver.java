@@ -16,6 +16,8 @@
 
 package com.android.server.sdksandbox;
 
+import static com.android.sdksandbox.flags.Flags.sdkSandboxDexVerifier;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -72,12 +74,13 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
     void verifySdkHandler(Context context, Intent intent, Handler handler) {
         int verificationId = intent.getIntExtra(PackageManager.EXTRA_VERIFICATION_ID, -1);
 
-        boolean enforceRestrictions =
-                DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
-                        SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS);
-        if (!enforceRestrictions) {
+        boolean isRestrictionsEnabled =
+                sdkSandboxDexVerifier()
+                        && DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
+                                SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS);
+        if (!isRestrictionsEnabled) {
             context.getPackageManager()
                     .verifyPendingInstall(verificationId, PackageManager.VERIFICATION_ALLOW);
             Log.d(TAG, "Restrictions disabled. Sent VERIFICATION_ALLOW");

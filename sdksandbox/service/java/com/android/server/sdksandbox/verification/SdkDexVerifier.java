@@ -123,15 +123,15 @@ public class SdkDexVerifier {
             return;
         }
 
-        File sdkPathFile = new File(sdkPath);
+        File sdkFile = new File(sdkPath);
 
-        if (!sdkPathFile.exists()) {
+        if (!sdkFile.exists()) {
             callback.onError(new FileNotFoundException("Apk to verify not found: " + sdkPath));
             return;
         }
 
         mDexLoader.queueApkToLoad(
-                sdkPath,
+                sdkFile,
                 packagename,
                 new VerificationHandler() {
                     @Override
@@ -141,7 +141,7 @@ public class SdkDexVerifier {
                     }
 
                     @Override
-                    public void verificationFinishedForPackage(boolean passed) {
+                    public void onVerificationCompleteForPackage(boolean passed) {
                         if (passed) {
                             Log.d(TAG, packagename + " verified.");
                         } else {
@@ -153,8 +153,14 @@ public class SdkDexVerifier {
                                             - mVerificationTimes.remove(packagename);
                             Log.d(TAG, "Verification time (ms): " + verificationTime);
                         }
+                        callback.onResult(null);
 
                         // TODO(b/231441674): cache and log verification result
+                    }
+
+                    @Override
+                    public void onVerificationErrorForPackage(Exception e) {
+                        callback.onError(e);
                     }
                 });
     }

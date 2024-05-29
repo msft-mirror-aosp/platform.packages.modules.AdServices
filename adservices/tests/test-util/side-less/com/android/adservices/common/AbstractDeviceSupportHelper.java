@@ -141,6 +141,15 @@ abstract class AbstractDeviceSupportHelper {
 
     protected abstract boolean isDebuggable();
 
+    /**
+     * Check whether the device has a specific android service.
+     *
+     * @param intentAction the intent action.
+     * @return {@code true} when there is one and only one corresponding android service on the
+     *     device.
+     */
+    protected abstract boolean isAndroidServiceAvailable(String intentAction);
+
     @Nullable
     protected abstract String getAdServicesPackageName();
 

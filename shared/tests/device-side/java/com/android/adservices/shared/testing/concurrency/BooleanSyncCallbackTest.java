@@ -24,7 +24,7 @@ import org.junit.Test;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class BooleanSyncCallbackTest
-        extends ResultTestSyncCallbackTestCase<Boolean, BooleanSyncCallback> {
+        extends IResultSyncCallbackTestCase<Boolean, BooleanSyncCallback> {
 
     private final AtomicInteger mNewResultCall = new AtomicInteger();
 

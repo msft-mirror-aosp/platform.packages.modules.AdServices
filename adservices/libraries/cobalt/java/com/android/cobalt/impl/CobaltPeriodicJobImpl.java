@@ -16,7 +16,6 @@
 
 package com.android.cobalt.impl;
 
-import static com.android.cobalt.collect.ImmutableHelpers.toImmutableMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -47,7 +46,6 @@ import com.google.cobalt.ObservationMetadata;
 import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -58,6 +56,8 @@ import com.google.protobuf.ByteString;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -272,12 +272,13 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
 
     /** Build an envelope from a list of observations, deduplicating by metadata in the process. */
     private Envelope buildEnvelope(ImmutableList<ObservationBatch> observationBatches) {
-        ImmutableMap<ObservationMetadata, List<EncryptedMessage>> byMetadata =
-                observationBatches.stream()
-                        .collect(
-                                toImmutableMap(
-                                        ObservationBatch::getMetaData,
-                                        ObservationBatch::getEncryptedObservationList));
+        Map<ObservationMetadata, List<EncryptedMessage>> byMetadata = new HashMap<>();
+        for (ObservationBatch batch : observationBatches) {
+            ObservationMetadata metadata = batch.getMetaData();
+            List<EncryptedMessage> encryptedMessages = batch.getEncryptedObservationList();
+            byMetadata.computeIfAbsent(metadata, k -> new ArrayList<>()).addAll(encryptedMessages);
+        }
+
         ImmutableList.Builder<ObservationBatch> newObservationBatches = ImmutableList.builder();
         for (Map.Entry<ObservationMetadata, List<EncryptedMessage>> entry : byMetadata.entrySet()) {
             newObservationBatches.add(
