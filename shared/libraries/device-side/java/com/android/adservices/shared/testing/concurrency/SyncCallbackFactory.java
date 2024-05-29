@@ -17,6 +17,8 @@ package com.android.adservices.shared.testing.concurrency;
 
 import android.os.Looper;
 
+import com.android.adservices.shared.testing.AndroidLogger;
+
 /** Factory for device-side, {@code SyncCallback}-related objects. */
 public final class SyncCallbackFactory {
 
@@ -27,7 +29,8 @@ public final class SyncCallbackFactory {
 
     /** Factory method to get a settings builder. */
     public static SyncCallbackSettings.Builder newSettingsBuilder() {
-        return new SyncCallbackSettings.Builder(SyncCallbackFactory::isMainThread);
+        return new SyncCallbackSettings.Builder(
+                AndroidLogger.getInstance(), SyncCallbackFactory::isMainThread);
     }
 
     // TODO(b/337014024): add unit test to check this logic (currently it's indirectly checked by

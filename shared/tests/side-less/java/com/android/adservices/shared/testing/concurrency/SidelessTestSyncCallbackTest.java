@@ -19,6 +19,7 @@ import static org.junit.Assert.assertThrows;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import com.android.adservices.shared.meta_testing.FakeLogger;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
 import com.google.errorprone.annotations.FormatMethod;
@@ -34,7 +35,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
+// TODO(b/337014024): merge with AbstractSyncCallbackTest
+public final class SidelessTestSyncCallbackTest extends SharedSidelessTestCase {
 
     private static final AtomicInteger sThreadId = new AtomicInteger();
 
@@ -51,7 +53,7 @@ public final class AbstractSyncCallbackTest extends SharedSidelessTestCase {
             "waitCalled(" + LONGER_TIMEOUT_MS + ", " + MILLISECONDS + ") returning";
 
     private final SyncCallbackSettings.Builder mSettingsBuilder =
-            new SyncCallbackSettings.Builder(() -> Boolean.FALSE);
+            new SyncCallbackSettings.Builder(new FakeLogger(), () -> Boolean.FALSE);
 
     private final ConcreteSyncCallback mSingleCallback = new ConcreteSyncCallback();
 

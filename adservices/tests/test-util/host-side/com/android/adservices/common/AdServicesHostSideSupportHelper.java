@@ -80,6 +80,12 @@ final class AdServicesHostSideSupportHelper extends AbstractDeviceSupportHelper 
         return "1".equals(call(device -> device.getProperty("ro.debuggable")));
     }
 
+    @Override
+    protected boolean isAndroidServiceAvailable(String intentAction) {
+        throw new UnsupportedOperationException(
+                "This method is unavailable in Host Test. Please implement it if needed.");
+    }
+
     /**
      * Checks that exactly one package name is present out of provided package names and then
      * returns that.

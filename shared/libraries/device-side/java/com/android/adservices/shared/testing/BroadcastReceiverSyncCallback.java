@@ -17,6 +17,7 @@
 package com.android.adservices.shared.testing;
 
 import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
+import static com.android.internal.util.Preconditions.checkArgument;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,6 +27,7 @@ import android.util.Log;
 
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.adservices.shared.util.Preconditions;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -49,7 +51,16 @@ public final class BroadcastReceiverSyncCallback {
     }
 
     public BroadcastReceiverSyncCallback(Context context, long timeoutMs) {
-        this(context, new ResultBroadcastReceiver(timeoutMs));
+        this(
+                context,
+                SyncCallbackFactory.newSettingsBuilder()
+                        .setMaxTimeoutMs(timeoutMs)
+                        .setFailIfCalledOnMainThread(false)
+                        .build());
+    }
+
+    public BroadcastReceiverSyncCallback(Context context, SyncCallbackSettings settings) {
+        this(context, new ResultBroadcastReceiver(settings));
     }
 
     @VisibleForTesting
@@ -103,13 +114,11 @@ public final class BroadcastReceiverSyncCallback {
     static class ResultBroadcastReceiver extends BroadcastReceiver {
         private final ResultSyncCallback<Intent> mSyncCallback;
 
-        ResultBroadcastReceiver(long timeoutMs) {
-            mSyncCallback =
-                    new ResultSyncCallback<>(
-                            SyncCallbackFactory.newSettingsBuilder()
-                                    .setMaxTimeoutMs(timeoutMs)
-                                    .setFailIfCalledOnMainThread(false)
-                                    .build());
+        ResultBroadcastReceiver(SyncCallbackSettings settings) {
+            checkArgument(
+                    !settings.isFailIfCalledOnMainThread(),
+                    "Cannot use a SyncCallbackSettings that fails if called on main thread");
+            mSyncCallback = new ResultSyncCallback<>(settings);
         }
 
         @Override

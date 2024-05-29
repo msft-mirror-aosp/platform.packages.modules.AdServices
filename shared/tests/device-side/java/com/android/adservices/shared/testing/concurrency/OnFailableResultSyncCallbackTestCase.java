@@ -21,7 +21,7 @@ import org.junit.Test;
 
 abstract class OnFailableResultSyncCallbackTestCase<
                 T, F, C extends FailableOnResultSyncCallback<T, F>>
-        extends OnResultTestSyncCallbackTestCase<T, C> {
+        extends OnResultSyncCallbackTestCase<T, C> {
 
     /** Gets a new, unique failure object, preferably with a user-friendly string representation. */
     protected abstract F newFailure();
