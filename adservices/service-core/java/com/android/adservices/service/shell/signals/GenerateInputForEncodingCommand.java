@@ -47,7 +47,7 @@ import java.util.Objects;
 public final class GenerateInputForEncodingCommand extends AbstractShellCommand {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
-    @VisibleForTesting public static final String CMD = "generate_input_for_encoding";
+    @VisibleForTesting public static final String CMD = "generate-input-for-encoding";
 
     public static final String HELP =
             SignalsShellCommandFactory.COMMAND_PREFIX
