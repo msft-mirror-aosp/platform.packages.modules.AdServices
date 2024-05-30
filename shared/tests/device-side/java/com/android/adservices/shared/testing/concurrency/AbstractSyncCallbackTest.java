@@ -27,15 +27,17 @@ import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.testing.LogEntry.Level;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
-// TODO(b/337014024): merge with SyncCallbackTestCase
+// TODO(b/337014024): merge with SyncCallbackTestCase / remove ExtendedMockito
 public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCase {
 
+    @Ignore // TODO(b/337014024): re-add testLog() methods somewhere else
     @Test
     @SpyStatic(Log.class)
     public void testLogV() {
-        ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
+        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
         String tag = LOG_TAG;
         LogInterceptor logInterceptor = mocker.interceptLogV(tag);
 
@@ -49,10 +51,11 @@ public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCas
                 .containsExactly(callback + ": Answer=42");
     }
 
+    @Ignore // TODO(b/337014024): re-add testLog() methods somewhere else
     @Test
     @SpyStatic(Log.class)
     public void testLogD() {
-        ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
+        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
         String tag = LOG_TAG;
         LogInterceptor logInterceptor = mocker.interceptLogD(tag);
 
@@ -66,10 +69,11 @@ public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCas
                 .containsExactly("[" + callback.getId() + "]: Answer=42");
     }
 
+    @Ignore // TODO(b/337014024): re-add testLog() methods somewhere else
     @Test
     @SpyStatic(Log.class)
     public void testLogE() {
-        ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
+        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
         String tag = LOG_TAG;
         LogInterceptor logInterceptor = mocker.interceptLogE(tag);
 
@@ -85,7 +89,7 @@ public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCas
 
     @Test
     public void testSetCalled_calledOnMainThread_fails() throws Exception {
-        ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
+        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
         expect.withMessage("toString()")
                 .that(callback.toString())
                 .contains("failIfCalledOnMainThread=true");
@@ -106,8 +110,8 @@ public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCas
 
     @Test
     public void testSetCalled_calledOnMainThread_pass() throws Exception {
-        ConcreteTestSyncCallback callback =
-                new ConcreteTestSyncCallback(
+        ConcreteDeviceSideyncCallback callback =
+                new ConcreteDeviceSideyncCallback(
                         SyncCallbackFactory.newSettingsBuilder()
                                 .setFailIfCalledOnMainThread(false)
                                 .build());
@@ -122,7 +126,7 @@ public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCas
 
     @Test
     public void testPostAssertCalled_afterSetInternalFailure() throws Exception {
-        ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
+        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
         RuntimeException failure = new RuntimeException("D'OH!");
 
         callback.setInternalFailure(failure);
@@ -134,21 +138,21 @@ public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCas
 
     @Test
     public void testSetInternalFailure_null() throws Exception {
-        ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
+        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
 
         assertThrows(NullPointerException.class, () -> callback.setInternalFailure(null));
     }
 
     @Test
     public void testAsBinder() {
-        ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
+        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
 
         expect.withMessage("asBinder()").that(callback.asBinder()).isNull();
     }
 
     @Test
     public void testToString() {
-        ConcreteTestSyncCallback callback = new ConcreteTestSyncCallback();
+        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
 
         String toString = callback.toString();
 
@@ -157,12 +161,12 @@ public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCas
         expect.withMessage("toString()").that(toString).contains("internalFailure=null");
     }
 
-    private static final class ConcreteTestSyncCallback extends DeviceSideSyncCallback {
-        ConcreteTestSyncCallback() {
+    private static final class ConcreteDeviceSideyncCallback extends DeviceSideSyncCallback {
+        ConcreteDeviceSideyncCallback() {
             this(SyncCallbackFactory.newSettingsBuilder().build());
         }
 
-        ConcreteTestSyncCallback(SyncCallbackSettings settings) {
+        ConcreteDeviceSideyncCallback(SyncCallbackSettings settings) {
             super(settings);
         }
     }

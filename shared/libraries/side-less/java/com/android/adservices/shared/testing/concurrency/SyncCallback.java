@@ -50,6 +50,16 @@ public interface SyncCallback extends Identifiable {
     /** Gets the callback settings. */
     SyncCallbackSettings getSettings();
 
+    /**
+     * Checks if the callback supports calls to {@link #setCalled()}.
+     *
+     * <p>Returns {@code true} by default, but some callbacks don't support it because they provide
+     * a more customized method (like {@code injectResult()}).
+     */
+    default boolean supportsSetCalled() {
+        return true;
+    }
+
     // TODO(b/337014024): move log methods to AbstractSyncCallback instead
 
     /**
