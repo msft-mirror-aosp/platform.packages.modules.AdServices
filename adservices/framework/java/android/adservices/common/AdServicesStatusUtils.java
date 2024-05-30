@@ -301,6 +301,9 @@ public final class AdServicesStatusUtils {
     /** The error message to be returned along with {@link IllegalArgumentException}. */
     public static final String ENCRYPTION_FAILURE_MESSAGE = "Failed to encrypt responses.";
 
+    /** The error message to be returned along with {@link ServiceUnavailableException}. */
+    public static final String SERVICE_UNAVAILABLE_ERROR_MESSAGE = "Service is not available.";
+
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
         return statusCode == STATUS_SUCCESS;
@@ -320,7 +323,7 @@ public final class AdServicesStatusUtils {
             case STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET: // Intentional fallthrough
             case STATUS_USER_CONSENT_REVOKED: // Intentional fallthrough
             case STATUS_JS_SANDBOX_UNAVAILABLE:
-                return new ServiceUnavailableException();
+                return new ServiceUnavailableException(SERVICE_UNAVAILABLE_ERROR_MESSAGE);
             case STATUS_PERMISSION_NOT_REQUESTED:
                 return new SecurityException(
                         SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);

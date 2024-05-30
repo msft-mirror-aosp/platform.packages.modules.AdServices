@@ -15,6 +15,8 @@
  */
 package android.adservices.appsetid;
 
+import static android.adservices.common.AdServicesStatusUtils.SERVICE_UNAVAILABLE_ERROR_MESSAGE;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.SandboxedSdkContextUtils;
@@ -109,7 +111,7 @@ public class AppSetIdManager {
 
             // Throw ServiceUnavailableException and set it to the callback.
             if (service == null) {
-                throw new ServiceUnavailableException();
+                throw new ServiceUnavailableException(SERVICE_UNAVAILABLE_ERROR_MESSAGE);
             }
         } catch (RuntimeException e) {
             LogUtil.e(e, "Failed binding to AppSetId service");
