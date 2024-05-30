@@ -25,6 +25,16 @@ public final class OnResultSyncCallbackTest
 
     @Override
     protected OnResultSyncCallback<String> newCallback(SyncCallbackSettings settings) {
-        return new OnResultSyncCallback<String>(settings) {};
+        return new ConcreteOnResultSyncCallback(settings);
+    }
+
+    private static final class ConcreteOnResultSyncCallback extends OnResultSyncCallback<String> {
+        ConcreteOnResultSyncCallback() {
+            super();
+        }
+
+        ConcreteOnResultSyncCallback(SyncCallbackSettings settings) {
+            super(settings);
+        }
     }
 }
