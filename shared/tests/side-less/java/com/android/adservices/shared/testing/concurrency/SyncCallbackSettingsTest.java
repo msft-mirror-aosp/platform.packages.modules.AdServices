@@ -23,17 +23,10 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.FakeLogger;
-import com.android.adservices.shared.meta_testing.LogEntry;
 import com.android.adservices.shared.testing.Logger;
-import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
-import com.google.common.collect.ImmutableList;
-
 import org.junit.Test;
-
-import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
 
@@ -145,52 +138,6 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
         Logger logger = settings.getLogger();
         expect.withMessage("getLogger()").that(logger).isNotNull();
         expect.withMessage("getLogger().getTag()").that(logger.getTag()).isEqualTo(LOG_TAG);
-    }
-
-    @Test
-    public void testCountDown_logs() {
-        SyncCallbackSettings settings = newDefaultSettings().build();
-
-        settings.countDown();
-
-        ImmutableList<LogEntry> entries = mFakeLogger.getEntries();
-        assertWithMessage("log entries").that(entries).hasSize(2);
-        assertDebug(settings, entries.get(0), "countDown() called");
-        assertVerbose(settings, entries.get(1), "leaving countDown()");
-    }
-
-    @Test
-    public void testAwait_logs() throws Exception {
-        SyncCallbackSettings settings = newDefaultSettings().build();
-
-        settings.await(settings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
-
-        ImmutableList<LogEntry> entries = mFakeLogger.getEntries();
-        assertWithMessage("log entries").that(entries).hasSize(2);
-        assertDebug(settings, entries.get(0), "await() called");
-        assertVerbose(settings, entries.get(1), "leaving await()");
-    }
-
-    private void assertDebug(SyncCallbackSettings settings, LogEntry logEntry, String message) {
-        String expectedMessage =
-                String.format(Locale.ENGLISH, "[settingsId#%s]: %s", settings.getId(), message);
-        assertLogEntry(logEntry, LogLevel.DEBUG, expectedMessage);
-    }
-
-    private void assertVerbose(SyncCallbackSettings settings, LogEntry logEntry, String message) {
-        String expectedMessage =
-                String.format(Locale.ENGLISH, "[SyncCallbackSettings: %s]: %s", settings, message);
-        assertLogEntry(logEntry, LogLevel.VERBOSE, expectedMessage);
-    }
-
-    private void assertLogEntry(LogEntry logEntry, LogLevel expectedLevel, String expectedMessage) {
-        expect.withMessage("logEntry(%s).tag", logEntry).that(logEntry.tag).isEqualTo(LOG_TAG);
-        expect.withMessage("logEntry(%s).level", logEntry)
-                .that(logEntry.level)
-                .isEqualTo(expectedLevel);
-        expect.withMessage("logEntry(%s).message", logEntry)
-                .that(logEntry.message)
-                .isEqualTo(expectedMessage);
     }
 
     private SyncCallbackSettings.Builder newDefaultSettings() {

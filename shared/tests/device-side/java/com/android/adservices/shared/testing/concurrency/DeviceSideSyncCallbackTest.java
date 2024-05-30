@@ -15,76 +15,17 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
 import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
 
 import static org.junit.Assert.assertThrows;
 
-import android.util.Log;
-
-import com.android.adservices.mockito.LogInterceptor;
-import com.android.adservices.shared.SharedExtendedMockitoTestCase;
-import com.android.adservices.shared.testing.LogEntry.Level;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
-
-import org.junit.Ignore;
 import org.junit.Test;
 
-// TODO(b/337014024): merge with SyncCallbackTestCase / remove ExtendedMockito
-public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCase {
+public final class DeviceSideSyncCallbackTest extends SyncCallbackTestCase<DeviceSideSyncCallback> {
 
-    @Ignore // TODO(b/337014024): re-add testLog() methods somewhere else
-    @Test
-    @SpyStatic(Log.class)
-    public void testLogV() {
-        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
-        String tag = LOG_TAG;
-        LogInterceptor logInterceptor = mocker.interceptLogV(tag);
-
-        callback.logV("Answer=%d", 42);
-
-        expect.withMessage("Log.*() calls to tag %s", tag)
-                .that(logInterceptor.getAllEntries(tag))
-                .hasSize(1);
-        expect.withMessage("Log.v() calls to tag %s", tag)
-                .that(logInterceptor.getPlainMessages(tag, Level.VERBOSE))
-                .containsExactly(callback + ": Answer=42");
-    }
-
-    @Ignore // TODO(b/337014024): re-add testLog() methods somewhere else
-    @Test
-    @SpyStatic(Log.class)
-    public void testLogD() {
-        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
-        String tag = LOG_TAG;
-        LogInterceptor logInterceptor = mocker.interceptLogD(tag);
-
-        callback.logD("Answer=%d", 42);
-
-        expect.withMessage("Log.*() calls to tag %s", tag)
-                .that(logInterceptor.getAllEntries(tag))
-                .hasSize(1);
-        expect.withMessage("Log.d() calls to tag %s", tag)
-                .that(logInterceptor.getPlainMessages(tag, Level.DEBUG))
-                .containsExactly("[" + callback.getId() + "]: Answer=42");
-    }
-
-    @Ignore // TODO(b/337014024): re-add testLog() methods somewhere else
-    @Test
-    @SpyStatic(Log.class)
-    public void testLogE() {
-        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
-        String tag = LOG_TAG;
-        LogInterceptor logInterceptor = mocker.interceptLogE(tag);
-
-        callback.logE("Answer=%d", 42);
-
-        expect.withMessage("Log.*() calls to tag %s", tag)
-                .that(logInterceptor.getAllEntries(tag))
-                .hasSize(1);
-        expect.withMessage("Log.e() calls to tag %s", tag)
-                .that(logInterceptor.getPlainMessages(tag, Level.ERROR))
-                .containsExactly(callback + ": Answer=42");
+    @Override
+    protected DeviceSideSyncCallback newCallback(SyncCallbackSettings settings) {
+        return new ConcreteDeviceSideyncCallback(settings);
     }
 
     @Test
@@ -150,8 +91,9 @@ public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCas
         expect.withMessage("asBinder()").that(callback.asBinder()).isNull();
     }
 
+    // TODO(b/337014024): rename to testToString() when superclass doesn't have it
     @Test
-    public void testToString() {
+    public void testToString_containsExtraInfo() {
         ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
 
         String toString = callback.toString();
@@ -162,6 +104,7 @@ public final class AbstractSyncCallbackTest extends SharedExtendedMockitoTestCas
     }
 
     private static final class ConcreteDeviceSideyncCallback extends DeviceSideSyncCallback {
+
         ConcreteDeviceSideyncCallback() {
             this(SyncCallbackFactory.newSettingsBuilder().build());
         }

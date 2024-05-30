@@ -59,7 +59,14 @@ public abstract class DeviceSideSyncCallback extends AbstractSyncCallback {
     public void internalSetCalled() {
         long delta = SystemClock.elapsedRealtime() - mEpoch;
         Thread currentThread = Thread.currentThread();
-        logV("setCalled() called in %d ms on %s", delta, currentThread);
+        if (false) {
+            // TODO(b/337014024): log call below was removed because it would break the log
+            // assertions on SimpleSyncCallbackTest#testAssertCalled
+            // We could try to fix the test, but it would be better to move these extra info (epoch
+            // and thread name) to the superclass, but only if they're really useful (as that info
+            // is kind of already provided by logcat itself)
+            logV("setCalled() called in %d ms on %s", delta, currentThread);
+        }
         if (mSettings.isFailIfCalledOnMainThread() && mSettings.isMainThread()) {
             String errorMsg = "setCalled() called on main thread (" + currentThread + ")";
             logE("%s; assertCalled() will throw an IllegalStateException", errorMsg);

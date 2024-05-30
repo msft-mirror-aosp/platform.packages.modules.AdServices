@@ -15,149 +15,25 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.meta_testing.LogEntry.Subject.logEntry;
-import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
-import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
-
-import static com.google.common.truth.Truth.assertWithMessage;
-
-import static org.junit.Assert.assertThrows;
-
 import com.android.adservices.shared.meta_testing.FakeLogger;
-import com.android.adservices.shared.meta_testing.LogEntry;
-import com.android.adservices.shared.testing.Logger.LogLevel;
-import com.android.adservices.shared.testing.Logger.RealLogger;
-import com.android.adservices.shared.testing.SharedSidelessTestCase;
-
-import com.google.common.collect.ImmutableList;
-
-import org.junit.Test;
-
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 // TODO (b/337014024) merge with AbstractSyncCallbackTest
-public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
+public final class SidelessSyncCallbackTest
+        extends SyncCallbackTestCase<AbstractSidelessTestSyncCallback> {
 
-    private static final AtomicInteger sThreadId = new AtomicInteger();
-    private static final Supplier<Boolean> IS_MAIN_THREAD_SUPPLIER = () -> Boolean.FALSE;
-    private static final long SMALLER_TIMEOUT_MS = DEFAULT_TIMEOUT_MS / 10;
-
-    private final FakeLogger mFakeLogger = new FakeLogger();
-
-    private final ConcreteSidelessTestSyncCallback mCallback =
-            new ConcreteSidelessTestSyncCallback(mFakeLogger);
-
-    @Test
-    public void testGetSettings() {
-        SyncCallbackSettings settings =
-                new SyncCallbackSettings.Builder(mFakeLogger, IS_MAIN_THREAD_SUPPLIER).build();
-        AbstractSidelessTestSyncCallback callback =
-                new AbstractSidelessTestSyncCallback(settings) {};
-
-        expect.withMessage("getSettings()").that(callback.getSettings()).isSameInstanceAs(settings);
-    }
-
-    @Test
-    public void testAssertCalled() throws Exception {
-        expect.withMessage("%s.setCalled() before", mCallback).that(mCallback.isCalled()).isFalse();
-        runLater(SMALLER_TIMEOUT_MS, () -> mCallback.setCalled());
-
-        mCallback.assertCalled();
-        expect.withMessage("%s.setCalled() after", mCallback).that(mCallback.isCalled()).isTrue();
-    }
-
-    @Test
-    public void testAssertCalled_timedOut() throws Exception {
-        expect.withMessage("%s.setCalled() after", mCallback).that(mCallback.isCalled()).isFalse();
-    }
-
-    @Test
-    public void testUnsupportedMethods() throws Exception {
-        assertThrows(UnsupportedOperationException.class, () -> mCallback.waitCalled());
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> mCallback.waitCalled(42, TimeUnit.MILLISECONDS));
-    }
-
-    @Test
-    public void testLogE() throws Exception {
-        mCallback.logE("%d D'OH!s", 42);
-
-        ImmutableList<LogEntry> logEntries = mFakeLogger.getEntries();
-        assertWithMessage("log entries").that(logEntries).hasSize(1);
-        expect.withMessage("logged message")
-                .about(logEntry())
-                .that(logEntries.get(0))
-                .hasLevel(LogLevel.ERROR)
-                .hasTag(LOG_TAG)
-                .hasMessage(mCallback + ": 42 D'OH!s");
-    }
-
-    @Test
-    public void testLogD() throws Exception {
-        mCallback.logD("Dude: %s", "Sweet!");
-
-        ImmutableList<LogEntry> logEntries = mFakeLogger.getEntries();
-        assertWithMessage("log entries").that(logEntries).hasSize(1);
-        expect.withMessage("logged message")
-                .about(logEntry())
-                .that(logEntries.get(0))
-                .hasLevel(LogLevel.DEBUG)
-                .hasTag(LOG_TAG)
-                .hasMessage("[" + mCallback.getId() + "]: Dude: Sweet!");
-    }
-
-    @Test
-    public void testLogV() throws Exception {
-        mCallback.logV("Vuve: %s", "Sddeet!");
-
-        ImmutableList<LogEntry> logEntries = mFakeLogger.getEntries();
-        assertWithMessage("log entries").that(logEntries).hasSize(1);
-        expect.withMessage("logged message")
-                .about(logEntry())
-                .that(logEntries.get(0))
-                .hasLevel(LogLevel.VERBOSE)
-                .hasTag(LOG_TAG)
-                .hasMessage(mCallback + ": Vuve: Sddeet!");
+    @Override
+    protected AbstractSidelessTestSyncCallback newCallback(SyncCallbackSettings settings) {
+        return new ConcreteSidelessTestSyncCallback(settings);
     }
 
     private static final class ConcreteSidelessTestSyncCallback
             extends AbstractSidelessTestSyncCallback {
-        ConcreteSidelessTestSyncCallback(RealLogger realLogger) {
-            super(new SyncCallbackSettings.Builder(realLogger, IS_MAIN_THREAD_SUPPLIER).build());
+        ConcreteSidelessTestSyncCallback() {
+            super(new SyncCallbackSettings.Builder(new FakeLogger(), () -> Boolean.FALSE).build());
         }
-    }
 
-    // TODO(b/285014040): move to ConcurrencyHelper
-    private void runLater(long when, Runnable r) {
-        startNewThread(
-                () -> {
-                    sleep(when, "runLater()");
-                    r.run();
-                });
-    }
-
-    // TODO(b/285014040): move to ConcurrencyHelper
-    private Thread startNewThread(Runnable r) {
-        String threadName = mLog.getTag() + "-runLaterThread-" + sThreadId.incrementAndGet();
-        mLog.d("Starting new thread (%s) to run %s", threadName, r);
-        Thread thread = new Thread(() -> r.run());
-        thread.start();
-        return thread;
-    }
-
-    // TODO(b/285014040): use sleep from super class
-    private void sleep(long durationMs, String msg) {
-        String threadName = Thread.currentThread().getName();
-        try {
-            mLog.d("Napping %d ms on %s. Reason: %s", durationMs, threadName, msg);
-            Thread.sleep(durationMs);
-            mLog.v("Little Suzie (%s) woke up", threadName);
-        } catch (InterruptedException e) {
-            mLog.w(e, "Interrupted while napping for %s", msg);
-            Thread.currentThread().interrupt();
+        ConcreteSidelessTestSyncCallback(SyncCallbackSettings settings) {
+            super(settings);
         }
     }
 }

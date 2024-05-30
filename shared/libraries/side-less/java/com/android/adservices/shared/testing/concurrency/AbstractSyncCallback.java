@@ -20,12 +20,12 @@ import com.android.adservices.shared.testing.Nullable;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// TODO(b/337014024) merge with AbstractSidelessTestSyncCallback / implement SyncCallback
-// (then update javadoc)
+/** Base implementation for all {@code SyncCallback} classes. */
 public abstract class AbstractSyncCallback implements SyncCallback {
 
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
@@ -57,40 +57,37 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         return mSettings;
     }
 
-    // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
+    // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
     /**
-     * Convenience method to log a debug message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
-     * by {@link #toString()}) in the message.
+     * Convenience method to log an error message, it includes the whole {@link #toString()} in the
+     * message.
      */
     @FormatMethod
-    public void logE(@FormatString String msgFmt, Object... msgArgs) {
-        // TODO(b/280460130): use side-less Logger so it's not empty
+    protected final void logE(@FormatString final String msgFmt, @Nullable Object... msgArgs) {
+        String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
+        mSettings.getLogger().e("%s: %s", toString(), msg);
     }
 
-    // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
+    // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
     /**
-     * Convenience method to log a debug message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including the {@link #getId()
-     * id} in the message.
+     * Convenience method to log a debug message, it includes the summarized {@link #toStringLite()}
+     * in the message.
      */
     @FormatMethod
-    public void logD(@FormatString String msgFmt, Object... msgArgs) {
-        // TODO(b/280460130): use side-less Logger so it's not empty
+    protected final void logD(@FormatString final String msgFmt, @Nullable Object... msgArgs) {
+        String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
+        mSettings.getLogger().d("%s: %s", toStringLite(), msg);
     }
 
-    // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
+    // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
     /**
-     * Convenience method to log a verbose message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
-     * by {@link #toString()}) in the message.
+     * Convenience method to log a verbose message, it includes the whole {@link #toString()} in the
+     * message.
      */
     @FormatMethod
-    public void logV(@FormatString String msgFmt, Object... msgArgs) {
-        // TODO(b/280460130): use side-less Logger so it's not empty
+    protected final void logV(@FormatString final String msgFmt, @Nullable Object... msgArgs) {
+        String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
+        mSettings.getLogger().v("%s: %s", toString(), msg);
     }
 
     /**
@@ -116,6 +113,7 @@ public abstract class AbstractSyncCallback implements SyncCallback {
             throw new UnsupportedOperationException("Should call " + alternative + " instead!");
         }
         internalSetCalled();
+        logV("setCalled() returning");
     }
 
     // TODO(b/337014024): make it final somehow?
@@ -125,11 +123,10 @@ public abstract class AbstractSyncCallback implements SyncCallback {
      * it.
      */
     protected void internalSetCalled() {
-        mNumberCalls.incrementAndGet();
         try {
-            mSettings.countDown();
+            mNumberCalls.incrementAndGet();
         } finally {
-            logV("setCalled() returning");
+            mSettings.countDown();
         }
     }
 
@@ -140,10 +137,13 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     // NOTE: not final because test version might disable it
     @Override
     public void assertCalled() throws InterruptedException {
+        logD("assertCalled() called");
         waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
         postAssertCalled();
+        logV("assertCalled() returning");
     }
 
+    // TODO(b/337014024): get rid of this
     // NOTE: not final because test version might disable it
     /**
      * Wait (indefinitely) until all calls to {@link #setCalled()} were made.
@@ -151,14 +151,10 @@ public abstract class AbstractSyncCallback implements SyncCallback {
      * @throws InterruptedException if thread was interrupted while waiting.
      */
     public void waitCalled() throws InterruptedException {
-        logD("waitCalled() called");
-        try {
-            mSettings.await();
-        } finally {
-            logV("waitCalled() returning");
-        }
+        mSettings.await();
     }
 
+    // TODO(b/337014024): get rid of this
     // NOTE: not final because test version might set timeout on constructor
     /**
      * Wait (up to given time) until all calls to {@link #setCalled()} were made.
@@ -167,13 +163,8 @@ public abstract class AbstractSyncCallback implements SyncCallback {
      * @throws IllegalStateException if not called before it timed out.
      */
     public void waitCalled(long timeout, TimeUnit unit) throws InterruptedException {
-        logD("waitCalled(%d, %s) called", timeout, unit);
-        try {
-            if (!mSettings.await(timeout, unit)) {
-                throw new SyncCallbackTimeoutException(toString(), timeout, unit);
-            }
-        } finally {
-            logV("waitCalled(%d, %s) returning", timeout, unit);
+        if (!mSettings.await(timeout, unit)) {
+            throw new SyncCallbackTimeoutException(toString(), timeout, unit);
         }
     }
 
@@ -208,5 +199,10 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         return appendInfo(new StringBuilder("[").append(getClass().getSimpleName()).append(": "))
                 .append(']')
                 .toString();
+    }
+
+    /** Gets a simpler representation of the callback. */
+    public final String toStringLite() {
+        return '[' + getClass().getSimpleName() + "#" + mId + ']';
     }
 }
