@@ -15,12 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
-
-import java.util.concurrent.TimeUnit;
-
 /**
  * @deprecated - TODO(b/337014024) merge with AbstractSyncCallback)
  */
@@ -31,50 +25,5 @@ public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallb
     /** Default constructor. */
     protected AbstractSidelessTestSyncCallback(SyncCallbackSettings settings) {
         super(settings);
-    }
-
-    @Override
-    public final void waitCalled() throws InterruptedException {
-        throwWaitCalledNotSupported();
-    }
-
-    @Override
-    public final void waitCalled(long timeout, TimeUnit unit) throws InterruptedException {
-        throwWaitCalledNotSupported();
-    }
-
-    @Override
-    public final void assertCalled() throws InterruptedException {
-        super.waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
-        postAssertCalled();
-    }
-
-    @FormatMethod
-    @Override
-    public final void logE(@FormatString String msgFmt, Object... msgArgs) {
-        mSettings.getLogger().e("%s: %s", toString(), String.format(msgFmt, msgArgs));
-    }
-
-    @FormatMethod
-    @Override
-    public final void logD(@FormatString String msgFmt, Object... msgArgs) {
-        mSettings.getLogger().d("[%s]: %s", getId(), String.format(msgFmt, msgArgs));
-    }
-
-    @FormatMethod
-    @Override
-    public final void logV(@FormatString String msgFmt, Object... msgArgs) {
-        mSettings.getLogger().v("%s: %s", toString(), String.format(msgFmt, msgArgs));
-    }
-
-    @Override
-    protected void customizeToString(StringBuilder string) {
-        super.customizeToString(string);
-
-        string.append(", logTag=").append(LOG_TAG);
-    }
-
-    private void throwWaitCalledNotSupported() {
-        throw new UnsupportedOperationException("should call assertCalled() instead");
     }
 }

@@ -22,15 +22,11 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import com.android.adservices.shared.meta_testing.FakeLogger;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
 
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -386,52 +382,14 @@ public final class SidelessTestSyncCallbackTest extends SharedSidelessTestCase {
             super(settings);
         }
 
+        // TODO(b/337014024): not really relevant anymore - this whole class will be removed
         public void expectLogCalls(String... messages) {
-            mExpectedLoggedMessages = Arrays.asList(messages);
-            mLog.v("expectLogCalls(): %s", mExpectedLoggedMessages);
-            mLoggedMessagesLatch = new CountDownLatch(messages.length);
+            mLog.v("To Expect or not Expect, that's the question!");
         }
 
-        // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
-        @Override
-        @FormatMethod
-        public void logD(@FormatString final String msgFmt, Object... msgArgs) {
-            log(msgFmt, msgArgs);
-        }
-
-        // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
-        @Override
-        @FormatMethod
-        public void logV(@FormatString final String msgFmt, Object... msgArgs) {
-            log(msgFmt, msgArgs);
-        }
-
-        // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
-        @FormatMethod
-        private void log(@FormatString final String msgFmt, Object... msgArgs) {
-            String message = String.format(Locale.ENGLISH, msgFmt, msgArgs);
-            mActuallogEntries.add(message);
-            if (mLoggedMessagesLatch != null) {
-                mLoggedMessagesLatch.countDown();
-            }
-        }
-
+        // TODO(b/337014024): not really relevant anymore - this whole class will be removed
         public void assertLoggedCalls() throws InterruptedException {
-            if (mLoggedMessagesLatch == null) {
-                mLog.v("asserLoggedCalls(): skipping when mLoggedMessagesLatch is null");
-                return;
-            }
-            if (!mLoggedMessagesLatch.await(LONGER_TIMEOUT_MS * 2, MILLISECONDS)) {
-                throw new IllegalStateException(
-                        "Timed out waiting for "
-                                + mExpectedLoggedMessages
-                                + "; so far received: "
-                                + mActuallogEntries);
-            }
-
-            expect.withMessage("logged messages on %s", this)
-                    .that(mActuallogEntries)
-                    .containsExactlyElementsIn(mExpectedLoggedMessages);
+            mLog.v("To Assert or not Assert, that's the question!");
         }
     }
 }
