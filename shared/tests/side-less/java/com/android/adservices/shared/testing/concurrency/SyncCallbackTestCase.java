@@ -23,11 +23,13 @@ import static org.junit.Assert.assertThrows;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.android.adservices.shared.meta_testing.FakeLogger;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
 import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 
+import java.lang.reflect.Constructor;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -49,6 +51,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
     protected abstract CB newCallback(SyncCallbackSettings settings);
 
+    /** Makes sure subclasses provide distinct callbacks, as some tests rely on that. */
     @Test
     public final void testNewCallback() {
         CB callback1 = newCallback(mDefaultSettings);
@@ -57,6 +60,34 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
         CB callback2 = newCallback(mDefaultSettings);
         expect.withMessage("2nd callback").that(callback2).isNotNull();
         expect.withMessage("2nd callback").that(callback2).isNotSameInstanceAs(callback1);
+    }
+
+    @Test
+    public final void testHasExpectedConstructors() throws Exception {
+        CB callback = newCallback(mDefaultSettings);
+        @SuppressWarnings("unchecked")
+        Class<CB> callbackClass = (Class<CB>) callback.getClass();
+
+        Constructor<CB> defaultConstructor = getConstructor(callbackClass);
+        expect.withMessage("Default constructor (%s)", callbackClass)
+                .that(defaultConstructor)
+                .isNotNull();
+
+        Constructor<CB> settingsConstructor =
+                getConstructor(callbackClass, SyncCallbackSettings.class);
+        expect.withMessage("%s(SyncCallbackSettings) constructor", callbackClass)
+                .that(settingsConstructor)
+                .isNotNull();
+    }
+
+    @Nullable
+    private Constructor<CB> getConstructor(Class<CB> callbackClass, Class<?>... parameterTypes) {
+        try {
+            return callbackClass.getDeclaredConstructor(parameterTypes);
+        } catch (Exception e) {
+            mLog.e("Failed to get constructor for class %s: %s", callbackClass, e);
+            return null;
+        }
     }
 
     @Test
