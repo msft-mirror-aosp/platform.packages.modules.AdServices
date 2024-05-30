@@ -23,7 +23,6 @@ import com.google.errorprone.annotations.FormatString;
 
 import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Base implementation for all {@code SyncCallback} classes. */
@@ -55,7 +54,16 @@ public abstract class AbstractSyncCallback implements SyncCallback {
      * By default is a no-op, but subclasses could override to add additional info to {@code
      * toString()}.
      */
-    protected void customizeToString(StringBuilder string) {}
+    protected void customizeToString(StringBuilder string) {
+        if (mCustomizedToString != null) {
+            string.append(mCustomizedToString);
+            return;
+        }
+        string.append(", ")
+                .append(mSettings)
+                .append(", numberActualCalls=")
+                .append(mNumberCalls.get());
+    }
 
     @Override
     public final String getId() {
@@ -144,39 +152,21 @@ public abstract class AbstractSyncCallback implements SyncCallback {
     /** Called by {@link #assertCalled()} so subclasses can fail it if needed. */
     protected void postAssertCalled() {}
 
+
     // NOTE: not final because test version might disable it
     @Override
     public void assertCalled() throws InterruptedException {
         logD("assertCalled() called");
-        waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
+        try {
+            mSettings.assertCalled(() -> toString());
+        } catch (Exception e) {
+            logE("assertCalled() failed: %s", e);
+            throw e;
+        }
         postAssertCalled();
         logV("assertCalled() returning");
     }
 
-    // TODO(b/337014024): get rid of this
-    // NOTE: not final because test version might disable it
-    /**
-     * Wait (indefinitely) until all calls to {@link #setCalled()} were made.
-     *
-     * @throws InterruptedException if thread was interrupted while waiting.
-     */
-    public void waitCalled() throws InterruptedException {
-        mSettings.await();
-    }
-
-    // TODO(b/337014024): get rid of this
-    // NOTE: not final because test version might set timeout on constructor
-    /**
-     * Wait (up to given time) until all calls to {@link #setCalled()} were made.
-     *
-     * @throws InterruptedException if thread was interrupted while waiting.
-     * @throws IllegalStateException if not called before it timed out.
-     */
-    public void waitCalled(long timeout, TimeUnit unit) throws InterruptedException {
-        if (!mSettings.await(timeout, unit)) {
-            throw new SyncCallbackTimeoutException(toString(), timeout, unit);
-        }
-    }
 
     @Override
     public final boolean isCalled() {
@@ -188,28 +178,15 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         return mNumberCalls.get();
     }
 
-    /**
-     * Helper method that fills the {@code string} with the content of {@link #toString()} but
-     * without the enclosing {@code [class: ]} part.
-     */
-    public final StringBuilder appendInfo(StringBuilder string) {
-        Objects.requireNonNull(string).append("id=").append(mId);
-        if (mCustomizedToString != null) {
-            return string.append(mCustomizedToString);
-        }
-        string.append(", ")
-                .append(mSettings)
-                .append(", numberActualCalls=")
-                .append(mNumberCalls.get());
-        customizeToString(string);
-        return string;
-    }
-
     @Override
     public final String toString() {
-        return appendInfo(new StringBuilder("[").append(getClass().getSimpleName()).append(": "))
-                .append(']')
-                .toString();
+        StringBuilder string =
+                new StringBuilder("[")
+                        .append(getClass().getSimpleName())
+                        .append(": id=")
+                        .append(mId);
+        customizeToString(string);
+        return string.append(']').toString();
     }
 
     /** Gets a simpler representation of the callback. */

@@ -15,10 +15,14 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-public final class SimpleSyncCallbackTest extends IBinderSyncCallbackTestCase<SimpleSyncCallback> {
+import org.junit.Test;
 
-    @Override
-    protected SimpleSyncCallback newCallback(SyncCallbackSettings settings) {
-        return new SimpleSyncCallback(settings);
+abstract class IBinderSyncCallbackTestCase<CB extends IBinderSyncCallback>
+        extends SyncCallbackTestCase<CB> {
+
+    @Test
+    public final void testAsBinder() {
+        var cb = newCallback(mDefaultSettings);
+        expect.withMessage("asBinder()").that(cb.asBinder()).isNull();
     }
 }

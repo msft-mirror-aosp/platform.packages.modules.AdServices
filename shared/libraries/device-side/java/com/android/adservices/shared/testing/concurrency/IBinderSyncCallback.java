@@ -15,15 +15,20 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-/**
- * @deprecated - TODO(b/337014024) merge with AbstractSyncCallback)
- */
-@Deprecated
-public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallback
-        implements SyncCallback {
+import android.os.IBinder;
 
-    /** Default constructor. */
-    protected AbstractSidelessTestSyncCallback(SyncCallbackSettings settings) {
-        super(settings);
+import androidx.annotation.Nullable;
+
+/** Convenience interface for callbacks used to implement binder stubs. */
+public interface IBinderSyncCallback extends SyncCallback {
+
+    /**
+     * Convenience method for callbacks used to implement binder stubs.
+     *
+     * @return {@code null} by default, but subclasses can extend.
+     */
+    @Nullable
+    default IBinder asBinder() {
+        return null;
     }
 }

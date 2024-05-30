@@ -19,7 +19,6 @@ import com.android.adservices.shared.testing.Nullable;
 
 import com.google.common.base.Optional;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -67,8 +66,7 @@ public class ResultSyncCallback<T> extends DeviceSideSyncCallback
      * @return the result
      */
     public final @Nullable T assertResultReceived() throws InterruptedException {
-        waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
-        postAssertCalled();
+        super.assertCalled();
         return getResult();
     }
 

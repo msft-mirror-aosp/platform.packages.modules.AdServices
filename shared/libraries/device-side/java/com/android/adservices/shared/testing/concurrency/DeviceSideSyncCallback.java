@@ -24,7 +24,8 @@ import androidx.annotation.Nullable;
 import java.util.Objects;
 
 /** Base class for device-side sync callbacks for testing. */
-public abstract class DeviceSideSyncCallback extends AbstractSyncCallback {
+public abstract class DeviceSideSyncCallback extends AbstractSyncCallback
+        implements IBinderSyncCallback {
 
     @Nullable private RuntimeException mInternalFailure;
 
@@ -82,12 +83,7 @@ public abstract class DeviceSideSyncCallback extends AbstractSyncCallback {
         }
     }
 
-    /**
-     * Convenience method for callbacks used to implement binder stubs.
-     *
-     * @return {@code null} by default, but subclasses can extend.
-     */
-    @Nullable
+    @Override
     public IBinder asBinder() {
         return null;
     }

@@ -21,7 +21,8 @@ import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 
-public final class DeviceSideSyncCallbackTest extends SyncCallbackTestCase<DeviceSideSyncCallback> {
+public final class DeviceSideSyncCallbackTest
+        extends IBinderSyncCallbackTestCase<DeviceSideSyncCallback> {
 
     @Override
     protected DeviceSideSyncCallback newCallback(SyncCallbackSettings settings) {
@@ -85,15 +86,7 @@ public final class DeviceSideSyncCallbackTest extends SyncCallbackTestCase<Devic
     }
 
     @Test
-    public void testAsBinder() {
-        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
-
-        expect.withMessage("asBinder()").that(callback.asBinder()).isNull();
-    }
-
-    // TODO(b/337014024): rename to testToString() when superclass doesn't have it
-    @Test
-    public void testToString_containsExtraInfo() {
+    public void testToString() {
         ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
 
         String toString = callback.toString();
