@@ -23,70 +23,41 @@ import org.junit.Test;
 import java.util.Objects;
 
 public final class LogCallTest extends SharedUnitTestCase {
-    private final EqualsTester mEqualsTester = new EqualsTester(expect);
-
-    @Test
-    public void testEquals_withNullObject_returnsFalse() {
-        TestLogCall logCall = new TestLogCall(/* times= */ 10, /* val= */ true);
-
-        mEqualsTester.expectObjectsAreNotEqual(logCall, null);
-    }
-
-    @Test
-    public void testEquals_withNonLogCallObject_returnsFalse() {
-        TestLogCall logCall = new TestLogCall(/* times= */ 10, /* val= */ true);
-
-        mEqualsTester.expectObjectsAreNotEqual(logCall, "");
-    }
-
-    @Test
-    public void testEquals_withDifferentInvocationSameTimes_returnsFalse() {
-        TestLogCall logCall1 = new TestLogCall(/* times= */ 10, /* val= */ false);
-        TestLogCall logCall2 = new TestLogCall(/* times= */ 10, /* val= */ true);
-
-        mEqualsTester.expectObjectsAreNotEqual(logCall1, logCall2);
-    }
-
-    @Test
-    public void testEquals_withSameInvocationDifferentTimes_returnsFalse() {
-        TestLogCall logCall1 = new TestLogCall(/* times= */ 10, /* val= */ false);
-        TestLogCall logCall2 = new TestLogCall(/* times= */ 9, /* val= */ false);
-
-        mEqualsTester.expectObjectsAreNotEqual(logCall1, logCall2);
-    }
-
-    @Test
-    public void testEquals_withIdenticalObject_returnsTrue() {
-        TestLogCall logCall1 = new TestLogCall(/* times= */ 10, /* val= */ true);
-
-        mEqualsTester.expectObjectsAreEqual(logCall1, logCall1);
-    }
-
-    @Test
-    public void testEquals_withSameInvocationAndTimes_returnsTrue() {
-        TestLogCall logCall1 = new TestLogCall(/* times= */ 10, /* val= */ true);
-        TestLogCall logCall2 = new TestLogCall(/* times= */ 10, /* val= */ true);
-
-        mEqualsTester.expectObjectsAreEqual(logCall1, logCall2);
-    }
-
     @Test
     public void testToString() {
-        String toStr = new TestLogCall(/* times= */ 2, /* val= */ true).toString();
-        expect.that(toStr).isEqualTo("TestLogCall.log(true), times = 2");
+        String toStr = new TestLogCall(/* val= */ true).toString();
+        expect.that(toStr).isEqualTo("TestLogCall.log(true), times = 1");
+    }
+
+    @Test
+    public void testIsEquivalentInvocation_withEqualsReturningFalse_returnsFalse() {
+        TestLogCall logCall1 = new TestLogCall(/* val= */ true);
+        TestLogCall logCall2 = new TestLogCall(/* val= */ false);
+
+        expect.that(logCall1.isEquivalentInvocation(logCall2)).isFalse();
+        expect.that(logCall2.isEquivalentInvocation(logCall1)).isFalse();
+    }
+
+    @Test
+    public void testIsEquivalentInvocation_withEqualsReturningTrue_returnsTrue() {
+        TestLogCall logCall1 = new TestLogCall(/* val= */ true);
+        TestLogCall logCall2 = new TestLogCall(/* val= */ true);
+
+        expect.that(logCall1.isEquivalentInvocation(logCall2)).isTrue();
+        expect.that(logCall2.isEquivalentInvocation(logCall1)).isTrue();
     }
 
     // Test log call object that mocks a log call to log a boolean
     private static final class TestLogCall extends LogCall {
         private final boolean mVal;
 
-        TestLogCall(int times, boolean val) {
-            super(times);
+        TestLogCall(boolean val) {
+            super();
             mVal = val;
         }
 
         @Override
-        public boolean isIdenticalInvocation(LogCall o) {
+        public boolean equals(Object o) {
             if (!(o instanceof TestLogCall other)) {
                 return false;
             }
