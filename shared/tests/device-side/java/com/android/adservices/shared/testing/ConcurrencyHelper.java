@@ -30,7 +30,12 @@ public final class ConcurrencyHelper {
 
     private static final String TAG = ConcurrencyHelper.class.getSimpleName();
 
-    public static void runAsync(long timeoutMs, Runnable r) {
+    /**
+     * Starts a new thread and runs {@code r} on it after {@code timeoutMs} ms.
+     *
+     * @return the new thread.
+     */
+    public static Thread runAsync(long timeoutMs, Runnable r) {
         Runnable sleepingBeauty =
                 () -> {
                     Log.v(
@@ -46,7 +51,7 @@ public final class ConcurrencyHelper {
                     r.run();
                     Log.v(TAG, "Done");
                 };
-        startNewThread(sleepingBeauty);
+        return startNewThread(sleepingBeauty);
     }
 
     public static void runOnMainThread(Runnable r) {
