@@ -21,11 +21,19 @@ import com.android.adservices.shared.testing.Nullable;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
+import java.util.concurrent.TimeUnit;
+
 /** Base interface for all testing-related sync callbacks. */
 public interface SyncCallback extends Identifiable {
 
     /** Tag used on {@code logcat} calls. */
     String LOG_TAG = "SyncCallback";
+
+    /**
+     * Indicates the callback was called, so it unblocks {@link #waitCalled()} / {@link
+     * #waitCalled(long, TimeUnit)}.
+     */
+    void setCalled();
 
     /**
      * Asserts the callback was called or throw if it times out - the timeout value is defined by
@@ -36,11 +44,23 @@ public interface SyncCallback extends Identifiable {
     /** Returns whether the callback was called (at least) the expected number of times. */
     boolean isCalled();
 
-    /** Returns the total number of calls to the callback. */
+    /** Gets the total number of calls so far. */
     int getNumberActualCalls();
 
     /** Gets the callback settings. */
     SyncCallbackSettings getSettings();
+
+    /**
+     * Checks if the callback supports calls to {@link #setCalled()}.
+     *
+     * <p>Returns {@code true} by default, but some callbacks don't support it because they provide
+     * a more customized method (like {@code injectResult()}).
+     */
+    default boolean supportsSetCalled() {
+        return true;
+    }
+
+    // TODO(b/337014024): move log methods to AbstractSyncCallback instead
 
     /**
      * Convenience method to log a debug message.

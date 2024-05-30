@@ -392,20 +392,23 @@ public final class SidelessTestSyncCallbackTest extends SharedSidelessTestCase {
             mLoggedMessagesLatch = new CountDownLatch(messages.length);
         }
 
+        // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
         @Override
         @FormatMethod
-        public void logD(@FormatString String msgFmt, Object... msgArgs) {
+        public void logD(@FormatString final String msgFmt, Object... msgArgs) {
             log(msgFmt, msgArgs);
         }
 
+        // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
         @Override
         @FormatMethod
-        public void logV(@FormatString String msgFmt, Object... msgArgs) {
+        public void logV(@FormatString final String msgFmt, Object... msgArgs) {
             log(msgFmt, msgArgs);
         }
 
+        // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
         @FormatMethod
-        private void log(@FormatString String msgFmt, Object... msgArgs) {
+        private void log(@FormatString final String msgFmt, Object... msgArgs) {
             String message = String.format(Locale.ENGLISH, msgFmt, msgArgs);
             mActuallogEntries.add(message);
             if (mLoggedMessagesLatch != null) {

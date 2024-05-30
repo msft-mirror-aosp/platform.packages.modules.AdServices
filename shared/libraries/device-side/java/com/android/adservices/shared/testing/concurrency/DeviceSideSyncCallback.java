@@ -24,7 +24,7 @@ import androidx.annotation.Nullable;
 import java.util.Objects;
 
 /** Base class for device-side sync callbacks for testing. */
-public abstract class DeviceSideSyncCallback extends AbstractSidelessTestSyncCallback {
+public abstract class DeviceSideSyncCallback extends AbstractSyncCallback {
 
     @Nullable private RuntimeException mInternalFailure;
 
@@ -56,7 +56,7 @@ public abstract class DeviceSideSyncCallback extends AbstractSidelessTestSyncCal
     }
 
     @Override
-    public void setCalled() {
+    public void internalSetCalled() {
         long delta = SystemClock.elapsedRealtime() - mEpoch;
         Thread currentThread = Thread.currentThread();
         logV("setCalled() called in %d ms on %s", delta, currentThread);
@@ -65,7 +65,7 @@ public abstract class DeviceSideSyncCallback extends AbstractSidelessTestSyncCal
             logE("%s; assertCalled() will throw an IllegalStateException", errorMsg);
             mInternalFailure = new CalledOnMainThreadException(errorMsg);
         }
-        super.setCalled();
+        super.internalSetCalled();
     }
 
     @Override

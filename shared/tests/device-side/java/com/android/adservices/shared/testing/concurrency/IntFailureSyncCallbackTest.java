@@ -34,7 +34,7 @@ public final class IntFailureSyncCallbackTest
 
     @Override
     protected IntFailureSyncCallback<String> newCallback(SyncCallbackSettings settings) {
-        return new IntFailureSyncCallback<>(settings) {};
+        return new ConcreteIntFailureSyncCallback(settings);
     }
 
     @Override
@@ -83,5 +83,16 @@ public final class IntFailureSyncCallbackTest
                 .that(thrown)
                 .hasMessageThat()
                 .isEqualTo("Expected code 108, but it failed with code 42");
+    }
+
+    private static final class ConcreteIntFailureSyncCallback
+            extends IntFailureSyncCallback<String> {
+        ConcreteIntFailureSyncCallback() {
+            super();
+        }
+
+        ConcreteIntFailureSyncCallback(SyncCallbackSettings settings) {
+            super(settings);
+        }
     }
 }
