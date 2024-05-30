@@ -27,7 +27,6 @@ java_defaults {
         "truth",
         "adservices-clients",
         "adservices-test-utility",
-        "adservices-topics-cts-test-util",
         "framework-adservices-lib",
     ],
     libs: [
