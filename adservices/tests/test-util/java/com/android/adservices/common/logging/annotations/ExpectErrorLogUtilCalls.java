@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.adservices.shared.testing;
+package com.android.adservices.common.logging.annotations;
 
-import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
-import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/**
- * Custom {@code SyncCallback} implementation that doesn't expect an exception to be thrown and
- * injects a {@code boolean}
- */
-public final class BooleanSyncCallback extends ResultSyncCallback<Boolean> {
+import com.android.adservices.common.logging.ErrorLogUtilCall;
 
-    public BooleanSyncCallback() {
-        super();
-    }
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-    public BooleanSyncCallback(SyncCallbackSettings settings) {
-        super(settings);
-    }
+/** Container annotation for wrapping multiple invocation variants of {@link ErrorLogUtilCall}. */
+@Retention(RUNTIME)
+@Target(METHOD)
+public @interface ExpectErrorLogUtilCalls {
+    /** Expected {@link ErrorLogUtilCall} invocations. */
+    ExpectErrorLogUtilCall[] value();
 }

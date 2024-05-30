@@ -19,29 +19,25 @@ import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Base test for classes that extend ResultTestSyncCallback. */
-abstract class IResultSyncCallbackTestCase<T, R extends IResultSyncCallback<T>>
-        extends SharedExtendedMockitoTestCase {
-
-    protected static final long INJECTION_TIMEOUT_MS = 200;
-    protected static final long CALLBACK_TIMEOUT_MS = INJECTION_TIMEOUT_MS + 400;
+abstract class IResultSyncCallbackTestCase<T, CB extends IResultSyncCallback<T>>
+        extends SyncCallbackTestCase<CB> {
 
     private static final AtomicInteger sNextId = new AtomicInteger();
 
-    protected final R mCallback =
+    protected final CB mCallback =
             newCallback(
                     SyncCallbackFactory.newSettingsBuilder()
                             .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
                             .build());
 
     /** Gets a new instance of the callback class being test. */
-    protected abstract R newCallback(SyncCallbackSettings settings);
+    protected abstract CB newCallback(SyncCallbackSettings settings);
 
     /** Gets a new, unique result object, preferably with a user-friendly string representation. */
     protected abstract T newResult();
@@ -50,23 +46,9 @@ abstract class IResultSyncCallbackTestCase<T, R extends IResultSyncCallback<T>>
      * Gets a unique id.
      *
      * <p>Useful to make sure {@link #newResult()} return unique objects.
-     *
-     * @return
      */
     protected int getNextUniqueId() {
         return sNextId.incrementAndGet();
-    }
-
-    @Test
-    public final void testNewCallback() {
-        SyncCallbackSettings settings = SyncCallbackFactory.newDefaultSettings();
-
-        R callback1 = newCallback(settings);
-        expect.withMessage("1st callback").that(callback1).isNotNull();
-
-        R callback2 = newCallback(settings);
-        expect.withMessage("2nd callback").that(callback2).isNotNull();
-        expect.withMessage("2nd callback").that(callback2).isNotSameInstanceAs(callback1);
     }
 
     @Test
@@ -77,21 +59,6 @@ abstract class IResultSyncCallbackTestCase<T, R extends IResultSyncCallback<T>>
         T result2 = newResult();
         expect.withMessage("2nd result").that(result2).isNotNull();
         expect.withMessage("2nd result").that(result2).isNotSameInstanceAs(result1);
-    }
-
-    @Test
-    public final void testGetSettings() throws Exception {
-        expect.withMessage("%s.getSettings()", mCallback).that(mCallback.getSettings()).isNotNull();
-    }
-
-    @Test
-    public final void testGetId() throws Exception {
-        String id1 = mCallback.getId();
-        expect.withMessage("%s.getId()", mCallback).that(id1).isNotEmpty();
-
-        R callback2 = newCallback(SyncCallbackFactory.newSettingsBuilder().build());
-        String id2 = callback2.getId();
-        expect.withMessage("getId() from 2nd callback (%s)", callback2).that(id2).isNotEqualTo(id1);
     }
 
     @Test

@@ -1,4 +1,4 @@
-// Copyright (C) 2023 The Android Open Source Project
+// Copyright (C) 2024 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,28 +13,17 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-java_library {
-    name: "adservices-collectors-helper-test",
-    defaults: ["tradefed_errorprone_defaults"],
-
-    srcs: ["src/**/*.java"],
-
-    static_libs: [
-        "androidx.test.runner",
-        "junit",
-        "mockito-target",
-        "adservices-collectors-helper",
-        "truth",
-        "androidx.test.ext.junit",
-        "mockito-target-minus-junit4",
-    ],
-
-    sdk_version: "test_current",
-
-    lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
-    },
+android_test_helper_app {
+    name: "SdkSandboxCujClient",
+    defaults: ["platform_app_defaults"],
+    platform_apis: true,
+    srcs: ["cujclient/src/**/*.java"],
+    manifest: "cujclient/AndroidManifest.xml",
+    test_suites: ["general-tests"],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
 }
