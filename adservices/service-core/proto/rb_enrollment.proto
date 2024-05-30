@@ -34,7 +34,7 @@ enum PrivacySandboxApi {
   PRIVACY_SANDBOX_API_SHARED_STORAGE = 5;
   PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS = 6;
 }
-// LINT.ThenChange(/adservices/service-core/java/com/android/adservices/service/enrollment/EnrollmentData.java:enrolledApiToEnum)
+// LINT.ThenChange(/adservices/service-core/java/com/android/adservices/service/enrollment/EnrollmentData.java:EnrollmentApiEnumStringMap)
 
 // A single Adtech enrollment entry.
 message RbEnrollment {

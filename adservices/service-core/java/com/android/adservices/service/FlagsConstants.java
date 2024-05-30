@@ -1108,6 +1108,9 @@ public final class FlagsConstants {
             "enrollment_enable_limited_logging";
     public static final String KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED =
             "enrollment_api_based_schema_enabled";
+    public static final String KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL =
+            "mdd_enrollment_manifest_file_url";
+    public static final String KEY_ENROLLMENT_PROTO_FILE_ENABLED = "enrollment_proto_file_enabled";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =

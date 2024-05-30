@@ -43,6 +43,9 @@ import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.encryptionkey.EncryptionKeyFetcher;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
+import com.android.adservices.service.proto.PrivacySandboxApi;
+import com.android.adservices.service.proto.RbEnrollment;
+import com.android.adservices.service.proto.RbEnrollmentList;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
@@ -81,7 +84,10 @@ public class EnrollmentDataDownloadManager {
     private final EncryptionKeyFetcher mEncryptionKeyFetcher;
 
     private static final String GROUP_NAME = "adtech_enrollment_data";
+    private static final String PROTO_GROUP_NAME = "adtech_enrollment_proto_data";
     private static final String DOWNLOADED_ENROLLMENT_DATA_FILE_ID = "adtech_enrollment_data.csv";
+    private static final String DOWNLOADED_ENROLLMENT_DATA_PROTO_FILE_ID =
+            "rb_prod_enrollment.binarypb";
     private static final String ENROLLMENT_FILE_READ_STATUS_SHARED_PREFERENCES =
             "enrollment_data_read_status";
 
@@ -135,9 +141,26 @@ public class EnrollmentDataDownloadManager {
      */
     public ListenableFuture<DownloadStatus> readAndInsertEnrollmentDataFromMdd() {
         LogUtil.d("Reading MDD data from file.");
-        Pair<ClientFile, String> FileGroupAndBuildIdPair = getEnrollmentDataFile();
-        if (FileGroupAndBuildIdPair == null || FileGroupAndBuildIdPair.first == null) {
-            return Futures.immediateFuture(DownloadStatus.NO_FILE_AVAILABLE);
+        boolean protoFileFound = false;
+        Pair<ClientFile, String> FileGroupAndBuildIdPair = null;
+        if (mFlags.getEnrollmentProtoFileEnabled()) {
+            Pair<ClientFile, String> FileProtoGroupAndBuildIdPair =
+                    getEnrollmentDataFile(/* getProto= */ true);
+            if (FileProtoGroupAndBuildIdPair == null
+                    || FileProtoGroupAndBuildIdPair.first == null) {
+                // TODO (b/280579966): Add CEL Logging
+                LogUtil.d("Proto flag enabled, but no proto file found.");
+            } else {
+                protoFileFound = true;
+                FileGroupAndBuildIdPair = FileProtoGroupAndBuildIdPair;
+            }
+        }
+
+        if (!protoFileFound) {
+            FileGroupAndBuildIdPair = getEnrollmentDataFile(/* getProto= */ false);
+            if (FileGroupAndBuildIdPair == null || FileGroupAndBuildIdPair.first == null) {
+                return Futures.immediateFuture(DownloadStatus.NO_FILE_AVAILABLE);
+            }
         }
 
         ClientFile enrollmentDataFile = FileGroupAndBuildIdPair.first;
@@ -152,8 +175,15 @@ public class EnrollmentDataDownloadManager {
             return Futures.immediateFuture(DownloadStatus.SKIP);
         }
         boolean shouldTrimEnrollmentData = mFlags.getEnrollmentMddRecordDeletionEnabled();
-        Optional<List<EnrollmentData>> enrollmentDataList =
-                processDownloadedFile(enrollmentDataFile, shouldTrimEnrollmentData);
+        Optional<List<EnrollmentData>> enrollmentDataList;
+        if (protoFileFound) {
+            enrollmentDataList =
+                    processDownloadedProtoFile(enrollmentDataFile, shouldTrimEnrollmentData);
+        } else {
+            enrollmentDataList =
+                    processDownloadedFile(enrollmentDataFile, shouldTrimEnrollmentData);
+        }
+
         if (enrollmentDataList.isPresent()) {
             SharedPreferences.Editor editor = sharedPrefs.edit();
             editor.clear().putBoolean(fileGroupBuildId, true);
@@ -271,6 +301,56 @@ public class EnrollmentDataDownloadManager {
         }
     }
 
+    private Optional<List<EnrollmentData>> processDownloadedProtoFile(
+            ClientFile enrollmentDataFile, boolean trimTable) {
+        LogUtil.d("Inserting MDD data from proto file into DB.");
+        try {
+            InputStream inputStream =
+                    mFileStorage.open(
+                            Uri.parse(enrollmentDataFile.getFileUri()), ReadStreamOpener.create());
+
+            EnrollmentDao enrollmentDao = EnrollmentDao.getInstance();
+            List<EnrollmentData> newEnrollments = new ArrayList<>();
+
+            RbEnrollmentList rbProdEnrollmentList =
+                    RbEnrollmentList.newBuilder().build().parseFrom(inputStream);
+            // Parses proto file into EnrollmentData list.
+            for (RbEnrollment rbEnrollment : rbProdEnrollmentList.getEntryList()) {
+                String enrollmentId = rbEnrollment.getEnrollmentId();
+                LogUtil.d("Adding enrollmentId - %s", enrollmentId);
+                EnrollmentData enrollmentData =
+                        new EnrollmentData.Builder()
+                                .setEnrollmentId(enrollmentId)
+                                .setEnrolledAPIs(
+                                        enrolledApiEnumListToString(
+                                                rbEnrollment.getEnrolledApisList()))
+                                .setEnrolledSite(rbEnrollment.getEnrolledSite())
+                                .setSdkNames(rbEnrollment.getSdkNamesList())
+                                .build();
+                newEnrollments.add(enrollmentData);
+            }
+            if (newEnrollments.isEmpty()) {
+                LogUtil.e("No new enrollments found.");
+                return Optional.empty();
+            }
+            if (trimTable) {
+                enrollmentDao.overwriteData(newEnrollments);
+                return Optional.of(newEnrollments);
+            }
+            for (EnrollmentData enrollmentData : newEnrollments) {
+                enrollmentDao.insert(enrollmentData);
+            }
+            return Optional.of(newEnrollments);
+        } catch (IOException e) {
+            LogUtil.e("Failed to parse proto file");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            return Optional.empty();
+        }
+    }
+
     public enum DownloadStatus {
         SUCCESS,
         NO_FILE_AVAILABLE,
@@ -280,9 +360,11 @@ public class EnrollmentDataDownloadManager {
         SKIP;
     }
 
-    private Pair<ClientFile, String> getEnrollmentDataFile() {
+    private Pair<ClientFile, String> getEnrollmentDataFile(boolean getProto) {
+        String groupName = getProto ? PROTO_GROUP_NAME : GROUP_NAME;
+
         GetFileGroupRequest getFileGroupRequest =
-                GetFileGroupRequest.newBuilder().setGroupName(GROUP_NAME).build();
+                GetFileGroupRequest.newBuilder().setGroupName(groupName).build();
         try {
             ListenableFuture<ClientFileGroup> fileGroupFuture =
                     mMobileDataDownload.getFileGroup(getFileGroupRequest);
@@ -296,9 +378,14 @@ public class EnrollmentDataDownloadManager {
             commitFileGroupDataToSharedPref(fileGroup);
             String fileGroupBuildId = String.valueOf(fileGroup.getBuildId());
             ClientFile enrollmentDataFile = null;
+            String targetFileId =
+                    getProto
+                            ? DOWNLOADED_ENROLLMENT_DATA_PROTO_FILE_ID
+                            : DOWNLOADED_ENROLLMENT_DATA_FILE_ID;
             for (ClientFile file : fileGroup.getFileList()) {
-                if (file.getFileId().equals(DOWNLOADED_ENROLLMENT_DATA_FILE_ID)) {
+                if (file.getFileId().equals(targetFileId)) {
                     enrollmentDataFile = file;
+                    break;
                 }
             }
             return Pair.create(enrollmentDataFile, fileGroupBuildId);
@@ -329,5 +416,17 @@ public class EnrollmentDataDownloadManager {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         }
+    }
+
+    private static String enrolledApiEnumListToString(List<PrivacySandboxApi> enrolledAPIList) {
+        StringBuilder enrolledAPIs = new StringBuilder();
+        for (PrivacySandboxApi enrolledAPI : enrolledAPIList) {
+            enrolledAPIs
+                    .append(
+                            EnrollmentData.ENROLLMENT_API_ENUM_STRING_MAP.getOrDefault(
+                                    enrolledAPI, /* defaultValue= */ "PRIVACY_SANDBOX_API_UNKNOWN"))
+                    .append(" ");
+        }
+        return enrolledAPIs.toString().stripTrailing();
     }
 }
