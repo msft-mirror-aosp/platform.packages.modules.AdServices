@@ -40,6 +40,7 @@ public final class AbstractSyncCallbackTest extends SyncCallbackTestCase<Abstrac
                 .that(toString)
                 .contains("numberActualCalls=" + cb.getNumberActualCalls());
         expect.withMessage("toString()").that(toString).contains(mDefaultSettings.toString());
+        expect.withMessage("toString()").that(toString).contains("onAssertCalledException=null");
         expect.withMessage("toString()").that(toString).endsWith("]");
     }
 

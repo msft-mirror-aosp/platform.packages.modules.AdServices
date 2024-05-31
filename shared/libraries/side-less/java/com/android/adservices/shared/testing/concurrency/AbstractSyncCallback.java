@@ -38,6 +38,9 @@ public abstract class AbstractSyncCallback implements SyncCallback {
 
     @Nullable private String mCustomizedToString;
 
+    // Used to fail assertCalled() if something bad happened before
+    @Nullable private RuntimeException mOnAssertCalledException;
+
     /** Default constructor. */
     public AbstractSyncCallback(SyncCallbackSettings settings) {
         mSettings = Objects.requireNonNull(settings, "settings cannot be null");
@@ -123,24 +126,31 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         return getSetCalledAlternatives() == null;
     }
 
+    protected void setOnAssertCalledException(@Nullable RuntimeException exception) {
+        mOnAssertCalledException = exception;
+    }
+
     @Override
     public final void setCalled() {
-        logD("setCalled() called");
+        logD("setCalled() called on %s", Thread.currentThread().getName());
         String alternative = getSetCalledAlternatives();
         if (alternative != null) {
             throw new UnsupportedOperationException("Should call " + alternative + " instead!");
+        }
+        if (mSettings.isFailIfCalledOnMainThread() && mSettings.isMainThread()) {
+            String errorMsg =
+                    "setCalled() called on main thread (" + Thread.currentThread().getName() + ")";
+            setOnAssertCalledException(new CalledOnMainThreadException(errorMsg));
         }
         logV("setCalled() returning");
         internalSetCalled();
     }
 
-    // TODO(b/337014024): make it final somehow?
-    // NOTE: not final because test version might disable it
     /**
      * Real implementation of {@code setCalled()}, should be called by subclasses that don't support
      * it.
      */
-    protected void internalSetCalled() {
+    protected final void internalSetCalled() {
         try {
             mNumberCalls.incrementAndGet();
         } finally {
@@ -148,25 +158,23 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         }
     }
 
-    // TODO(b/337014024): get rid of this?
-    /** Called by {@link #assertCalled()} so subclasses can fail it if needed. */
-    protected void postAssertCalled() {}
-
-
+    // TODO(b/337014024): make it final somehow?
     // NOTE: not final because test version might disable it
     @Override
     public void assertCalled() throws InterruptedException {
-        logD("assertCalled() called");
+        logD("assertCalled() called on %s", Thread.currentThread().getName());
         try {
             mSettings.assertCalled(() -> toString());
         } catch (Exception e) {
             logE("assertCalled() failed: %s", e);
             throw e;
         }
-        postAssertCalled();
+        if (mOnAssertCalledException != null) {
+            logE("assertCalled() failed: %s", mOnAssertCalledException);
+            throw mOnAssertCalledException;
+        }
         logV("assertCalled() returning");
     }
-
 
     @Override
     public final boolean isCalled() {
@@ -184,7 +192,9 @@ public abstract class AbstractSyncCallback implements SyncCallback {
                 new StringBuilder("[")
                         .append(getClass().getSimpleName())
                         .append(": id=")
-                        .append(mId);
+                        .append(mId)
+                        .append(", onAssertCalledException=")
+                        .append(mOnAssertCalledException);
         customizeToString(string);
         return string.append(']').toString();
     }

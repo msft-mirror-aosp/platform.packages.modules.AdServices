@@ -26,12 +26,15 @@ public final class DeviceSideSyncCallbackTest
 
     @Override
     protected DeviceSideSyncCallback newCallback(SyncCallbackSettings settings) {
-        return new ConcreteDeviceSideyncCallback(settings);
+        return new ConcreteDeviceSideySncCallback(settings);
     }
 
+    // Note: SyncCallbackTestCase already tests what happens when called on main thread, but it's
+    // not the "real" main thread, as it's emulated by the SyncCallbackSettings supplier
     @Test
     public void testSetCalled_calledOnMainThread_fails() throws Exception {
-        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
+        ConcreteDeviceSideySncCallback callback =
+                new ConcreteDeviceSideySncCallback(SyncCallbackFactory.newDefaultSettings());
         expect.withMessage("toString()")
                 .that(callback.toString())
                 .contains("failIfCalledOnMainThread=true");
@@ -41,19 +44,21 @@ public final class DeviceSideSyncCallbackTest
         CalledOnMainThreadException thrown =
                 assertThrows(CalledOnMainThreadException.class, () -> callback.assertCalled());
 
-        expect.withMessage("thrownn")
+        expect.withMessage("thrown")
                 .that(thrown)
                 .hasMessageThat()
                 .contains("setCalled() called on main thread");
         expect.withMessage("toString() after thrown")
                 .that(callback.toString())
-                .contains("internalFailure=" + thrown);
+                .contains("onAssertCalledException=" + thrown);
     }
 
+    // Note: SyncCallbackTestCase already tests what happens when called on main thread, but it's
+    // not the "real" main thread, as it's emulated by the SyncCallbackSettings supplier
     @Test
     public void testSetCalled_calledOnMainThread_pass() throws Exception {
-        ConcreteDeviceSideyncCallback callback =
-                new ConcreteDeviceSideyncCallback(
+        ConcreteDeviceSideySncCallback callback =
+                new ConcreteDeviceSideySncCallback(
                         SyncCallbackFactory.newSettingsBuilder()
                                 .setFailIfCalledOnMainThread(false)
                                 .build());
@@ -66,43 +71,13 @@ public final class DeviceSideSyncCallbackTest
         callback.assertCalled();
     }
 
-    @Test
-    public void testPostAssertCalled_afterSetInternalFailure() throws Exception {
-        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
-        RuntimeException failure = new RuntimeException("D'OH!");
+    private static final class ConcreteDeviceSideySncCallback extends DeviceSideSyncCallback {
 
-        callback.setInternalFailure(failure);
-        RuntimeException thrown =
-                assertThrows(RuntimeException.class, () -> callback.postAssertCalled());
-
-        expect.withMessage("exception").that(thrown).isSameInstanceAs(failure);
-    }
-
-    @Test
-    public void testSetInternalFailure_null() throws Exception {
-        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
-
-        assertThrows(NullPointerException.class, () -> callback.setInternalFailure(null));
-    }
-
-    @Test
-    public void testToString() {
-        ConcreteDeviceSideyncCallback callback = new ConcreteDeviceSideyncCallback();
-
-        String toString = callback.toString();
-
-        // Asserts only relevant info that were not already asserted in other tests
-        expect.withMessage("toString()").that(toString).contains("epoch=");
-        expect.withMessage("toString()").that(toString).contains("internalFailure=null");
-    }
-
-    private static final class ConcreteDeviceSideyncCallback extends DeviceSideSyncCallback {
-
-        ConcreteDeviceSideyncCallback() {
+        ConcreteDeviceSideySncCallback() {
             this(SyncCallbackFactory.newSettingsBuilder().build());
         }
 
-        ConcreteDeviceSideyncCallback(SyncCallbackSettings settings) {
+        ConcreteDeviceSideySncCallback(SyncCallbackSettings settings) {
             super(settings);
         }
     }

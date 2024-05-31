@@ -21,6 +21,7 @@ import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG
 
 import static org.junit.Assert.assertThrows;
 
+import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.android.adservices.shared.meta_testing.FakeLogger;
@@ -127,16 +128,16 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
         // Check state before
         expectIsCalledAndNumberCalls(callback, "before setCalled()", false, 0);
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> callback.setCalled());
+        Thread t = runAsync(INJECTION_TIMEOUT_MS, () -> callback.setCalled());
         callback.assertCalled();
 
         // Check state after
         expectIsCalledAndNumberCalls(callback, "after setCalled()", true, 1);
 
         expectLoggedCalls(
-                log.d("setCalled() called"),
+                log.d("setCalled() called on " + t.getName()),
                 log.v("setCalled() returning"),
-                log.d("assertCalled() called"),
+                log.d("assertCalled() called on " + currentThread().getName()),
                 log.v("assertCalled() returning"));
 
         // Further calls - make sure number actual calls keeps increasing
@@ -163,7 +164,8 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
         expectIsCalledAndNumberCalls(callback, "after setCalled()", false, 0);
         expectLoggedCalls(
-                log.d("assertCalled() called"), log.e("assertCalled() failed: " + thrown));
+                log.d("assertCalled() called on " + currentThread().getName()),
+                log.e("assertCalled() failed: " + thrown));
     }
 
     @Test
@@ -192,7 +194,8 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
         expectIsCalledAndNumberCalls(callback, "after interrupted", false, 0);
         expectLoggedCalls(
-                log.d("assertCalled() called"), log.e("assertCalled() failed: " + thrown));
+                log.d("assertCalled() called on " + thread.getName()),
+                log.e("assertCalled() failed: " + thrown));
     }
 
     @Test
@@ -323,8 +326,44 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
         expectIsCalledAndNumberCalls(callback2, "after 3rd call on 2nd callback", true, 3);
     }
 
-    // TODO(b/337014024): still missing
-    // - test runs on main thread
+    @Test
+    public final void testAssertCalled_failsWhenCalledOnMainThread() throws Exception {
+        SyncCallbackSettings settings =
+                new SyncCallbackSettings.Builder(mFakeLogger, () -> Boolean.TRUE)
+                        .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
+                        .setFailIfCalledOnMainThread(true)
+                        .build();
+
+        // TODO(b/337014024): will need to provide a new method to let the subclass create a
+        // SyncCallbackSettings and then check if the settings support failing on main thread, then
+        // ignore if they don't (which would be the case on BroadcastReceiverSyncCallbackTest, but
+        // that class currently doesn't extend this one).
+        var callback = newCallback(settings);
+        assumeCallbackSupportsSetCalled(callback);
+        var log = new LogChecker(callback);
+
+        // setCalled() passes...
+        // NOTE: not really the main thread, as it's emulated
+        Thread mainThread = runAsync(INJECTION_TIMEOUT_MS, () -> callback.setCalled());
+
+        // ...but then assertCalled() should fails
+        var thrown = assertThrows(CalledOnMainThreadException.class, () -> callback.assertCalled());
+        expect.withMessage("thrown")
+                .that(thrown)
+                .hasMessageThat()
+                .contains("setCalled() called on main thread (" + mainThread.getName() + ")");
+        expect.withMessage("toString() after thrown")
+                .that(callback.toString())
+                .contains("onAssertCalledException=" + thrown);
+
+        expectIsCalledAndNumberCalls(callback, "after setCalled()", true, 1);
+
+        expectLoggedCalls(
+                log.d("setCalled() called on " + mainThread.getName()),
+                        log.v("setCalled() returning"),
+                log.d("assertCalled() called on " + currentThread().getName()),
+                        log.e("assertCalled() failed: " + thrown));
+    }
 
     /** Ignore the test if the callback supports {@code assertCalled()}. */
     protected final void assumeCallbackSupportsSetCalled(SyncCallback callback) {
