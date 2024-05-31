@@ -125,6 +125,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     public final void testAssertCalled() throws Exception {
         var cb = asAbstractSyncCallBack(newCallback(mDefaultSettings));
         assumeCallbackSupportsSetCalled(cb);
+        var log = new LogChecker(cb);
 
         // Check state before
         expectIsCalledAndNumberCalls(cb, "before setCalled()", false, 0);
@@ -135,10 +136,10 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
         // Check state after
         expectIsCalledAndNumberCalls(cb, "after setCalled()", true, 1);
         expectLoggedCalls(
-                d(cb, "setCalled() called"),
-                v(cb, "setCalled() returning"),
-                d(cb, "assertCalled() called"),
-                v(cb, "assertCalled() returning"));
+                log.d("setCalled() called"),
+                log.v("setCalled() returning"),
+                log.d("assertCalled() called"),
+                log.v("assertCalled() returning"));
 
         // Further calls - make sure number actual calls keeps increasing
         // (don't need to call on bg because it's already called)
@@ -152,6 +153,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     public final void testAssertCalled_neverCalled() throws Exception {
         var cb = asAbstractSyncCallBack(newCallback(mDefaultSettings));
         assumeCallbackSupportsSetCalled(cb);
+        var log = new LogChecker(cb);
 
         var thrown = assertThrows(SyncCallbackTimeoutException.class, () -> cb.assertCalled());
 
@@ -161,13 +163,14 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
         expect.withMessage("e.getUnit()()").that(thrown.getUnit()).isEqualTo(TimeUnit.MILLISECONDS);
 
         expectIsCalledAndNumberCalls(cb, "after setCalled()", false, 0);
-        expectLoggedCalls(d(cb, "assertCalled() called"));
+        expectLoggedCalls(log.d("assertCalled() called"));
     }
 
     @Test
     public final void testAssertCalled_interrupted() throws Exception {
         var cb = asAbstractSyncCallBack(newCallback(mDefaultSettings));
         assumeCallbackSupportsSetCalled(cb);
+        var log = new LogChecker(cb);
         ArrayBlockingQueue<Throwable> actualFailureQueue = new ArrayBlockingQueue<>(1);
 
         // Must run it in another thread so it can be interrupted
@@ -188,7 +191,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
                 .isInstanceOf(InterruptedException.class);
 
         expectIsCalledAndNumberCalls(cb, "after interrupted", false, 0);
-        expectLoggedCalls(d(cb, "assertCalled() called"));
+        expectLoggedCalls(log.d("assertCalled() called"));
     }
 
     @Test
@@ -300,28 +303,31 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     @Test
     public final void testLogE() {
         var cb = asAbstractSyncCallBack(newCallback(mDefaultSettings));
+        var log = new LogChecker(cb);
 
         cb.logE("Danger, %s %s!", "Will", "Robinson");
 
-        expectLoggedCalls(e(cb, "Danger, Will Robinson!"));
+        expectLoggedCalls(log.e("Danger, Will Robinson!"));
     }
 
     @Test
     public final void testLogD() {
         var cb = asAbstractSyncCallBack(newCallback(mDefaultSettings));
+        var log = new LogChecker(cb);
 
         cb.logD("Danger, %s %s!", "Will", "Robinson");
 
-        expectLoggedCalls(d(cb, "Danger, Will Robinson!"));
+        expectLoggedCalls(log.d("Danger, Will Robinson!"));
     }
 
     @Test
     public final void testLogV() {
         var cb = asAbstractSyncCallBack(newCallback(mDefaultSettings));
+        var log = new LogChecker(cb);
 
         cb.logV("Danger, %s %s!", "Will", "Robinson");
 
-        expectLoggedCalls(v(cb, "Danger, Will Robinson!"));
+        expectLoggedCalls(log.v("Danger, Will Robinson!"));
     }
 
     // TODO(b/337014024): still missing
@@ -373,27 +379,35 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     }
 
     /**
-     * Creates an error {@link LogEntry} with the expected message (which will include the expected
-     * callback info).
+     * Helper class used to to assert calls to the callback {@code logX()} methods.
+     *
+     * <p><b>NOTE: </b>must be called BEFORE the callback is used, as it will change what's returned
+     * by {@code toString()}.
      */
-    public static final LogEntry e(AbstractSyncCallback callback, String expectedMessage) {
-        return new LogEntry(LogLevel.ERROR, LOG_TAG, callback + ": " + expectedMessage);
-    }
+    protected static final class LogChecker {
 
-    /**
-     * Creates a debug {@link LogEntry} with the expected message (which will include the expected
-     * callback info).
-     */
-    public static final LogEntry d(AbstractSyncCallback callback, String expectedMessage) {
-        return new LogEntry(
-                LogLevel.DEBUG, LOG_TAG, callback.toStringLite() + ": " + expectedMessage);
-    }
+        public final AbstractSyncCallback callback;
 
-    /**
-     * Creates a verbose {@link LogEntry} with the expected message (which will include the expected
-     * callback info).
-     */
-    public static final LogEntry v(AbstractSyncCallback callback, String expectedMessage) {
-        return new LogEntry(LogLevel.VERBOSE, LOG_TAG, callback + ": " + expectedMessage);
+        public LogChecker(SyncCallback callback) {
+            if (!(callback instanceof AbstractSyncCallback)) {
+                throw new IllegalArgumentException(
+                        "Not an instance of AbstractSyncCallback: " + callback);
+            }
+            this.callback = AbstractSyncCallback.class.cast(callback);
+            this.callback.setCustomizedToString(", IGNORING_VOLATILE_FIELDS");
+        }
+
+        public LogEntry e(String expectedMessage) {
+            return new LogEntry(LogLevel.ERROR, LOG_TAG, callback + ": " + expectedMessage);
+        }
+
+        public LogEntry d(String expectedMessage) {
+            return new LogEntry(
+                    LogLevel.DEBUG, LOG_TAG, callback.toStringLite() + ": " + expectedMessage);
+        }
+
+        public LogEntry v(String expectedMessage) {
+            return new LogEntry(LogLevel.VERBOSE, LOG_TAG, callback + ": " + expectedMessage);
+        }
     }
 }

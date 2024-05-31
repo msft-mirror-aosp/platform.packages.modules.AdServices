@@ -17,6 +17,7 @@ package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
@@ -36,9 +37,18 @@ public abstract class AbstractSyncCallback implements SyncCallback {
 
     private final AtomicInteger mNumberCalls = new AtomicInteger();
 
+    @Nullable private String mCustomizedToString;
+
     /** Default constructor. */
     public AbstractSyncCallback(SyncCallbackSettings settings) {
         mSettings = Objects.requireNonNull(settings, "settings cannot be null");
+    }
+
+    // Hack to avoid assertion failures when checking logged messages, as the number of calls could
+    // be changed - should only be called by SyncCallbackTestCase.LogChecker
+    @VisibleForTesting
+    void setCustomizedToString(String string) {
+        mCustomizedToString = Objects.requireNonNull(string);
     }
 
     /**
@@ -112,8 +122,8 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         if (alternative != null) {
             throw new UnsupportedOperationException("Should call " + alternative + " instead!");
         }
-        internalSetCalled();
         logV("setCalled() returning");
+        internalSetCalled();
     }
 
     // TODO(b/337014024): make it final somehow?
@@ -183,10 +193,11 @@ public abstract class AbstractSyncCallback implements SyncCallback {
      * without the enclosing {@code [class: ]} part.
      */
     public final StringBuilder appendInfo(StringBuilder string) {
-        Objects.requireNonNull(string)
-                .append("id=")
-                .append(mId)
-                .append(", ")
+        Objects.requireNonNull(string).append("id=").append(mId);
+        if (mCustomizedToString != null) {
+            return string.append(mCustomizedToString);
+        }
+        string.append(", ")
                 .append(mSettings)
                 .append(", numberActualCalls=")
                 .append(mNumberCalls.get());
