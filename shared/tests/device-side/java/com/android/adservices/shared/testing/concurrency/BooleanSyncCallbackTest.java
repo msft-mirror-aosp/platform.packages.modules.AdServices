@@ -30,7 +30,7 @@ public final class BooleanSyncCallbackTest
 
     @Override
     protected BooleanSyncCallback newCallback(SyncCallbackSettings settings) {
-        return new BooleanSyncCallback();
+        return new BooleanSyncCallback(settings);
     }
 
     @Override

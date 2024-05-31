@@ -462,6 +462,17 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getSpeOnAsyncRegistrationFallbackJobEnabled);
     }
 
+    @Test
+    public void testGetMddEnrollmentManifestFileUrl() {
+        testFlag("getMddEnrollmentManifestFileUrl()", "", Flags::getMddEnrollmentManifestFileUrl);
+    }
+
+    @Test
+    public void testGetEnrollmentProtoFileEnabled() {
+        testFeatureFlag(
+                "DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED", Flags::getEnrollmentProtoFileEnabled);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //
@@ -702,8 +713,15 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 .isEqualTo(defaultValue);
     }
 
+    private void testFlag(
+            String getterName, String defaultValue, Flaginator<Flags, String> flaginator) {
+        expect.withMessage("%s", getterName)
+                .that(flaginator.getFlagValue(mFlags))
+                .isEqualTo(defaultValue);
+    }
+
     /**
-     * @deprecated TODO(b/324077542) - remove once all kill-switches have been converted
+     * @deprecated TODO(b / 324077542) - remove once all kill-switches have been converted
      */
     @Deprecated
     private void testKillSwitchBeingConvertedAndGuardedByGlobalKillSwitch(

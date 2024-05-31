@@ -103,6 +103,7 @@ import static com.android.adservices.service.stats.RunAdSelectionProcessReported
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.RUN_AD_SELECTION_RESULT_CODE;
 import static com.android.adservices.service.stats.UpdateCustomAudienceProcessReportedStatsTest.DATA_SIZE_OF_ADS_IN_BYTES;
 import static com.android.adservices.service.stats.UpdateCustomAudienceProcessReportedStatsTest.NUM_OF_ADS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -130,6 +131,7 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.shared.testing.AnswerSyncCallback;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -159,7 +161,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testLogFledgeApiCallStatsWithAppPackageNameLogging() {
+    public void testLogFledgeApiCallStatsWithAppPackageNameLogging() throws InterruptedException {
         mockAppNameApiErrorLogger();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
@@ -167,17 +169,21 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         int resultCode = STATUS_SUCCESS;
         int latencyMs = 10;
 
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback)
+                .when(mMockAppNameApiErrorLogger)
+                .logErrorOccurrence(
+                        appPackageName,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        STATUS_SUCCESS);
+
         adServicesLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
 
         // Verify method logging app package name is called.
         verify(mStatsdLoggerMock)
                 .logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
 
-        verify(mMockAppNameApiErrorLogger)
-                .logErrorOccurrence(
-                        appPackageName,
-                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
-                        STATUS_SUCCESS);
+        callback.assertCalled();
     }
 
     @Test
@@ -464,13 +470,19 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testLogApiCallStats() {
+    public void testLogApiCallStats() throws InterruptedException {
         String packageName = "com.android.test";
         String sdkName = "com.android.container";
         int latency = 100;
 
         mocker.mockGetFlags(mMockFlags);
         mockAppNameApiErrorLogger();
+
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback)
+                .when(mMockAppNameApiErrorLogger)
+                .logErrorOccurrence(
+                        packageName, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, STATUS_SUCCESS);
 
         ApiCallStats stats =
                 new ApiCallStats.Builder()
@@ -497,9 +509,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getLatencyMillisecond()).isEqualTo(latency);
         expect.that(loggedStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
 
-        verify(mMockAppNameApiErrorLogger)
-                .logErrorOccurrence(
-                        packageName, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, STATUS_SUCCESS);
+        callback.assertCalled();
     }
 
     @Test

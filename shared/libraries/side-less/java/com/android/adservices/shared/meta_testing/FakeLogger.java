@@ -69,6 +69,9 @@ public final class FakeLogger implements RealLogger {
             @FormatString String msgFmt,
             @Nullable Object... msgArgs) {
         String message = String.format(msgFmt, msgArgs);
-        mEntries.add(new LogEntry(level, tag, throwable, message));
+        LogEntry logEntry = new LogEntry(level, tag, throwable, message);
+
+        System.out.printf("FakeLogger: %s\n", logEntry);
+        mEntries.add(logEntry);
     }
 }

@@ -71,6 +71,7 @@ android_library {
         "adservices-shared-util", // For checkState method uses varargs.
         // TODO(b/281577492): should use modules-utils-extended-mockito-rule instead
         "modules-utils-testable-device-config",
+        "adservices-clients",
     ],
     apex_available: [
         "com.android.adservices",

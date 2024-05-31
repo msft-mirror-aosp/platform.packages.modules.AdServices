@@ -37,7 +37,8 @@ import java.util.Objects;
  * @param <T> type of the object received on success.
  * @param <F> type of the object received on failure.
  */
-public class FailableResultSyncCallback<T, F> implements IResultSyncCallback<T> {
+public class FailableResultSyncCallback<T, F> extends AbstractSyncCallback
+        implements IResultSyncCallback<T> {
 
     @VisibleForTesting
     public static final String INJECT_RESULT_OR_FAILURE = "injectResult() or injectFailure()";
@@ -53,7 +54,14 @@ public class FailableResultSyncCallback<T, F> implements IResultSyncCallback<T> 
     }
 
     public FailableResultSyncCallback(SyncCallbackSettings settings) {
+        super(settings);
+
         mCallback = new ResultSyncCallback<>(settings);
+    }
+
+    @Override
+    protected final String getSetCalledAlternatives() {
+        return "injectResult() or injectFailure()";
     }
 
     /**
@@ -109,22 +117,6 @@ public class FailableResultSyncCallback<T, F> implements IResultSyncCallback<T> 
     }
 
     @Override
-    public final boolean isCalled() {
-        return mCallback.isCalled();
-    }
-
-    // TODO(b/337014024): make sure it's unit tested
-    @Override
-    public int getNumberActualCalls() {
-        return mCallback.getNumberActualCalls();
-    }
-
-    @Override
-    public final SyncCallbackSettings getSettings() {
-        return mCallback.getSettings();
-    }
-
-    @Override
     public final void injectResult(T result) {
         mCallback.injectResult(
                 new ResultOrFailure<>(/* isResult= */ true, result, /* failure= */ null));
@@ -153,11 +145,6 @@ public class FailableResultSyncCallback<T, F> implements IResultSyncCallback<T> 
                     getResultOrValue(e.getPreviousValue()),
                     getResultOrValue(e.getNewValue()));
         }
-    }
-
-    @Override
-    public final String getId() {
-        return mCallback.getId();
     }
 
     @FormatMethod
@@ -190,17 +177,15 @@ public class FailableResultSyncCallback<T, F> implements IResultSyncCallback<T> 
     }
 
     @Override
-    public final String toString() {
-        StringBuilder string =
-                mCallback.appendInfo(
-                        new StringBuilder("[").append(getClass().getSimpleName()).append(": "));
+    protected void customizeToString(StringBuilder string) {
+        super.customizeToString(string);
         if (!isCalled()) {
             // "(no result yet)" is already added by mCallback
             string.append(" (no failure yet)");
         }
         // NOTE: ideally we should replace the result=... by failure=... (when there is a failure),
         // but that would be hard to implement - and realistically, who cares?
-        return string.append(']').toString();
+        mCallback.customizeToString(string);
     }
 
     private static final class ResultOrFailure<T, F> {

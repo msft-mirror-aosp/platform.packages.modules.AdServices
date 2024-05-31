@@ -292,6 +292,9 @@
       "name": "CtsMediaProjectionTestCases"
     },
     {
+      "name": "CtsOpenGLTestCases"
+    },
+    {
       "name": "CtsOsTestCases"
     },
     {

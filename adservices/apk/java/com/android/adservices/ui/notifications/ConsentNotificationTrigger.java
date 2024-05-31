@@ -25,6 +25,7 @@ import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTER
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.ui.UxUtil.isUxStatesReady;
 import static com.android.adservices.ui.ganotifications.ConsentNotificationPasFragment.IS_RENOTIFY_KEY;
+import static com.android.adservices.ui.ganotifications.ConsentNotificationPasFragment.IS_STRICT_CONSENT_BEHAVIOR;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -146,7 +147,8 @@ public class ConsentNotificationTrigger {
             switch (UxUtil.getUx(context)) {
                 case GA_UX:
                     if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)) {
-                        notification = getPasConsentNotification(context, consentManager);
+                        notification =
+                                getPasConsentNotification(context, consentManager, isEuDevice);
                         break;
                     }
                     notification = getGaV2ConsentNotification(context, isEuDevice);
@@ -346,10 +348,13 @@ public class ConsentNotificationTrigger {
     }
 
     private static Notification getPasConsentNotification(
-            @NonNull Context context, ConsentManager consentManager) {
+            @NonNull Context context, ConsentManager consentManager, boolean isEuDevice) {
         boolean isRenotify = isFledgeOrMsmtEnabled(consentManager);
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
         intent.putExtra(IS_RENOTIFY_KEY, isRenotify);
+        // isEuDevice argument here includes AdId disabled ROW users, which cannot be obtained
+        // within the notification activity from DeviceRegionProvider.
+        intent.putExtra(IS_STRICT_CONSENT_BEHAVIOR, isEuDevice);
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(

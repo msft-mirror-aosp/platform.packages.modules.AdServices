@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.adservices.shared.testing;
+package com.android.adservices.service.shell.adselection;
 
-import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
-import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
+public class MockAuctionResultArgs {
+    static final int FIRST_ARG_FOR_PARSING = 2;
 
-/**
- * Custom {@code SyncCallback} implementation that doesn't expect an exception to be thrown and
- * injects a {@code boolean}
- */
-public final class BooleanSyncCallback extends ResultSyncCallback<Boolean> {
+    public static final String AUCTION_RESULT = "--auction-result";
 
-    public BooleanSyncCallback() {
-        super();
-    }
-
-    public BooleanSyncCallback(SyncCallbackSettings settings) {
-        super(settings);
+    private MockAuctionResultArgs() {
+        throw new UnsupportedOperationException();
     }
 }

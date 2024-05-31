@@ -20,8 +20,8 @@ import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
 import org.junit.Test;
 
 abstract class OnFailableResultSyncCallbackTestCase<
-                T, F, C extends FailableOnResultSyncCallback<T, F>>
-        extends OnResultSyncCallbackTestCase<T, C> {
+                R, F, CB extends FailableOnResultSyncCallback<R, F>>
+        extends OnResultSyncCallbackTestCase<R, CB> {
 
     /** Gets a new, unique failure object, preferably with a user-friendly string representation. */
     protected abstract F newFailure();

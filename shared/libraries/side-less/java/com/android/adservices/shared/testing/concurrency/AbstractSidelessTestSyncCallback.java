@@ -34,11 +34,6 @@ public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallb
     }
 
     @Override
-    public SyncCallbackSettings getSettings() {
-        return mSettings;
-    }
-
-    @Override
     public final void waitCalled() throws InterruptedException {
         throwWaitCalledNotSupported();
     }
@@ -48,18 +43,10 @@ public abstract class AbstractSidelessTestSyncCallback extends AbstractSyncCallb
         throwWaitCalledNotSupported();
     }
 
-    /** Called by {@link #assertCalled()} so subclasses can fail it if needed. */
-    protected void postAssertCalled() {}
-
     @Override
     public final void assertCalled() throws InterruptedException {
         super.waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
         postAssertCalled();
-    }
-
-    @Override
-    public final int getNumberActualCalls() {
-        return getNumberCalls();
     }
 
     @FormatMethod

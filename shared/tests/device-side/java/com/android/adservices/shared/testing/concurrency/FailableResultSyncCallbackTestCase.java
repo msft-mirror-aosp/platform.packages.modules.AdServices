@@ -23,11 +23,11 @@ import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 
-// TODO(b/342448771): make it package protected (must move some cubclass to this package first)
+// TODO(b/342448771): make it package protected (must move some subclass to this package first)
 /** Base test for classes that extend FailableResultSyncCallback. */
 public abstract class FailableResultSyncCallbackTestCase<
-                T, F, C extends FailableResultSyncCallback<T, F>>
-        extends IResultSyncCallbackTestCase<T, C> {
+                R, F, CB extends FailableResultSyncCallback<R, F>>
+        extends IResultSyncCallbackTestCase<R, CB> {
 
     /** Returns a new failure. */
     protected abstract F newFailure();
@@ -211,16 +211,5 @@ public abstract class FailableResultSyncCallbackTestCase<
                 .that(thrown)
                 .hasMessageThat()
                 .isEqualTo(String.format(MSG_WRONG_ERROR_RECEIVED, subFailureClass, failure));
-    }
-
-    @Test
-    public final void testToString() {
-        String toString = mCallback.toString();
-
-        expect.withMessage("toString()")
-                .that(toString)
-                .startsWith("[" + mCallback.getClass().getSimpleName() + ": ");
-        expect.withMessage("toString()").that(toString).contains(mCallback.getId());
-        expect.withMessage("toString()").that(toString).endsWith("]");
     }
 }

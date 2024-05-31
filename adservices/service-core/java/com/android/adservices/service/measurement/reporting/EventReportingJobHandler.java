@@ -25,9 +25,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventReport;
@@ -244,6 +247,9 @@ public class EventReportingJobHandler {
                                         dao.markEventReportStatus(
                                                 eventReportId, EventReport.Status.DELIVERED);
                                     }
+                                    if (mFlags.getMeasurementEnableReinstallReattribution()) {
+                                        updateAppReportHistory(eventReport, dao);
+                                    }
                                 });
 
                 if (success) {
@@ -309,6 +315,26 @@ public class EventReportingJobHandler {
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         }
+    }
+
+    private void updateAppReportHistory(EventReport eventReport, IMeasurementDao dao)
+            throws DatastoreException {
+        Pair<List<Uri>, List<Uri>> destinations =
+                dao.getSourceDestinations(eventReport.getSourceId());
+        List<Uri> webDestinations = destinations.first;
+        List<Uri> appDestinations = destinations.second;
+        if (appDestinations.isEmpty()
+                || !eventReport.getAttributionDestinations().contains(appDestinations.get(0))) {
+            return;
+        }
+        if (!webDestinations.isEmpty()
+                && dao.getSource(eventReport.getSourceId()).hasCoarseEventReportDestinations()) {
+            return;
+        }
+        dao.insertOrUpdateAppReportHistory(
+                appDestinations.get(0),
+                eventReport.getRegistrationOrigin(),
+                System.currentTimeMillis());
     }
 
     /**

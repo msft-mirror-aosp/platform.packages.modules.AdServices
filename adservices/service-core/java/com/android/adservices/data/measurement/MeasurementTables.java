@@ -49,6 +49,7 @@ public final class MeasurementTables {
         MeasurementTables.DebugReportContract.TABLE,
         MeasurementTables.XnaIgnoredSourcesContract.TABLE,
         KeyValueDataContract.TABLE,
+        AppReportHistoryContract.TABLE,
     };
 
     public static final String[] V6_TABLES = {
@@ -299,6 +300,14 @@ public final class MeasurementTables {
         String DATA_TYPE = "data_type";
         String KEY = "_key"; // Avoid collision with SQLite keyword 'key'
         String VALUE = "value";
+    }
+
+    /** Contract for app report history for reinstall reattribution. */
+    public interface AppReportHistoryContract {
+        String TABLE = MSMT_TABLE_PREFIX + "app_report_history";
+        String REGISTRATION_ORIGIN = "registration_origin";
+        String APP_DESTINATION = "app_destination";
+        String LAST_REPORT_DELIVERED_TIME = "last_report_delivered_time";
     }
 
     public static final String CREATE_TABLE_ASYNC_REGISTRATION_V6 =
@@ -1229,6 +1238,26 @@ public final class MeasurementTables {
                 + "("
                 + XnaIgnoredSourcesContract.ENROLLMENT_ID
                 + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + AppReportHistoryContract.TABLE
+                + "_lrdt "
+                + "ON "
+                + AppReportHistoryContract.TABLE
+                + "("
+                + AppReportHistoryContract.LAST_REPORT_DELIVERED_TIME
+                + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + AppReportHistoryContract.TABLE
+                + "_ro_ad "
+                + "ON "
+                + AppReportHistoryContract.TABLE
+                + "("
+                + AppReportHistoryContract.REGISTRATION_ORIGIN
+                + ", "
+                + AppReportHistoryContract.APP_DESTINATION
+                + ")",
     };
 
     public static final String[] CREATE_INDEXES_V6 = {
@@ -1315,6 +1344,22 @@ public final class MeasurementTables {
                 + ")"
     };
 
+    public static final String CREATE_TABLE_APP_REPORT_HISTORY_LATEST =
+            "CREATE TABLE "
+                    + AppReportHistoryContract.TABLE
+                    + " ("
+                    + AppReportHistoryContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + AppReportHistoryContract.APP_DESTINATION
+                    + " TEXT, "
+                    + AppReportHistoryContract.LAST_REPORT_DELIVERED_TIME
+                    + " INTEGER, "
+                    + "PRIMARY KEY("
+                    + AppReportHistoryContract.REGISTRATION_ORIGIN
+                    + ", "
+                    + AppReportHistoryContract.APP_DESTINATION
+                    + "))";
+
     // Consolidated list of create statements for all tables.
     public static final List<String> CREATE_STATEMENTS =
             Collections.unmodifiableList(
@@ -1330,7 +1375,8 @@ public final class MeasurementTables {
                             CREATE_TABLE_ASYNC_REGISTRATION_LATEST,
                             CREATE_TABLE_DEBUG_REPORT_LATEST,
                             CREATE_TABLE_XNA_IGNORED_SOURCES_LATEST,
-                            CREATE_TABLE_KEY_VALUE_STORE_LATEST));
+                            CREATE_TABLE_KEY_VALUE_STORE_LATEST,
+                            CREATE_TABLE_APP_REPORT_HISTORY_LATEST));
 
     // Consolidated list of create statements for all tables at version 6.
     public static final List<String> CREATE_STATEMENTS_V6 =

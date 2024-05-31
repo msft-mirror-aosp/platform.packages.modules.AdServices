@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.tests.topics.utils;
+package com.android.adservices.topics;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;

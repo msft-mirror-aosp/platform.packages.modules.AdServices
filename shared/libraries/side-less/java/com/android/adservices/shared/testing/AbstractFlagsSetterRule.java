@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.testing;
 
+import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
+
 import com.android.adservices.shared.testing.DeviceConfigHelper.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
@@ -393,6 +395,15 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
      */
     public final T setLogcatTag(String tag, LogLevel level) {
         setOrCacheLogtagSystemProperty(tag, level.name());
+        return getThis();
+    }
+
+    // TODO(b/331781012): add all of them
+    // TODO(b/331781012): create @SetInfraLogcatTags as well
+    /** Sets the {@code logcat} tags for the (shared) infra classes. */
+    public final T setInfraLogcatTags() {
+        // TODO(b/331781012): create a String[] constants somewhere and iterate over it
+        setLogcatTag(LOG_TAG, LogLevel.VERBOSE);
         return getThis();
     }
 

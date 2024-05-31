@@ -125,6 +125,9 @@ public class NoOpLoggerImpl implements AdServicesLogger {
             int mErrorCause) {}
 
     @Override
+    public void logEnrollmentTransactionStats(AdServicesEnrollmentTransactionStats stats) {}
+
+    @Override
     public void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats) {}
 
     @Override

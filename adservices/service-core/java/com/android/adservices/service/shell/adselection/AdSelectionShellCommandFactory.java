@@ -71,7 +71,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
         Set<ShellCommand> allCommands =
                 ImmutableSet.of(
                         new ConsentedDebugShellCommand(consentedDebugConfigurationDao),
-                        new GetAdSelectionDataCommand(buyerInputGenerator));
+                        new GetAdSelectionDataCommand(buyerInputGenerator),
+                        new MockAuctionResultCommand());
         mAllCommandsMap =
                 allCommands.stream()
                         .collect(
@@ -135,7 +136,7 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                 }
                 return command;
             }
-            case GetAdSelectionDataCommand.CMD -> {
+            case GetAdSelectionDataCommand.CMD, MockAuctionResultCommand.CMD -> {
                 if (!mIsAdSelectionCliEnabled) {
                     return new NoOpShellCommand(
                             cmd, command.getMetricsLoggerCommand(), KEY_AD_SELECTION_CLI_ENABLED);

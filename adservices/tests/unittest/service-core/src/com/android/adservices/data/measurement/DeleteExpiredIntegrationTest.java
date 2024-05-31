@@ -63,6 +63,6 @@ public class DeleteExpiredIntegrationTest extends AbstractDbIntegrationTest {
         AdServicesErrorLogger errorLogger = Mockito.mock(AdServicesErrorLogger.class);
         new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), errorLogger)
                 .runInTransaction(
-                        dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
+                        dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit, null));
     }
 }

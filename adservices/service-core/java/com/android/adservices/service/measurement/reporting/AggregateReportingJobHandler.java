@@ -26,9 +26,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.exception.CryptoException;
@@ -266,6 +269,9 @@ public class AggregateReportingJobHandler {
                                                 aggregateReportId,
                                                 AggregateReport.Status.DELIVERED);
                                     }
+                                    if (mFlags.getMeasurementEnableReinstallReattribution()) {
+                                        updateAppReportHistory(aggregateReport, dao);
+                                    }
                                 });
 
                 if (success) {
@@ -344,6 +350,22 @@ public class AggregateReportingJobHandler {
             }
             return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         }
+    }
+
+    private void updateAppReportHistory(AggregateReport aggregateReport, IMeasurementDao dao)
+            throws DatastoreException {
+        Pair<List<Uri>, List<Uri>> destinations =
+                dao.getSourceDestinations(aggregateReport.getSourceId());
+        List<Uri> appDestinations = destinations.second;
+        if (appDestinations.isEmpty()
+                || !appDestinations.get(0).equals(aggregateReport.getAttributionDestination())
+                || aggregateReport.isFakeReport()) {
+            return;
+        }
+        dao.insertOrUpdateAppReportHistory(
+                appDestinations.get(0),
+                aggregateReport.getRegistrationOrigin(),
+                System.currentTimeMillis());
     }
 
     /** Creates the JSON payload for the POST request from the AggregateReport. */

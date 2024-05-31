@@ -448,7 +448,10 @@ public interface IMeasurementDao {
     void insertAttribution(@NonNull Attribution attribution) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords(long earliestValidInsertion, int registrationRetryLimit)
+    void deleteExpiredRecords(
+            long earliestValidInsertion,
+            int registrationRetryLimit,
+            @Nullable Long earliestValidAppReportInsertion)
             throws DatastoreException;
 
     /**
@@ -754,6 +757,22 @@ public interface IMeasurementDao {
      * @throws DatastoreException when SQLite issue occurs
      */
     long countDistinctDebugAdIdsUsedByEnrollment(@NonNull String enrollmentId)
+            throws DatastoreException;
+
+    /**
+     * Inserts an entry of app report history with enrollment ID into the {@link
+     * MeasurementTables.AppReportHistoryContract#TABLE}. It means that event / aggregate reports
+     * for the given app destination have been delivered to the registration origin.
+     *
+     * @param appDestination app destination
+     * @param registrationOrigin source registration origin
+     * @param lastReportDeliveredTimestamp last deliver time for the report
+     * @throws DatastoreException when SQLite issue occurs.
+     */
+    void insertOrUpdateAppReportHistory(
+            @NonNull Uri appDestination,
+            @NonNull Uri registrationOrigin,
+            long lastReportDeliveredTimestamp)
             throws DatastoreException;
 
     /**

@@ -352,6 +352,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      */
     @Deprecated
     public T setDefaultLogcatTags() {
+        setInfraLogcatTags();
         setLogcatTag(LOGCAT_TAG_ADSERVICES, LogLevel.VERBOSE);
         setLogcatTag(LOGCAT_TAG_SHARED, LogLevel.VERBOSE);
         setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LogLevel.VERBOSE);

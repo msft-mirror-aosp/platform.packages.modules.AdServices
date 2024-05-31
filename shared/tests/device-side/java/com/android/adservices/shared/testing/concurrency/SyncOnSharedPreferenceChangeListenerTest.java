@@ -27,7 +27,7 @@ public final class SyncOnSharedPreferenceChangeListenerTest
 
     @Override
     protected SyncOnSharedPreferenceChangeListener newCallback(SyncCallbackSettings settings) {
-        return new SyncOnSharedPreferenceChangeListener();
+        return new SyncOnSharedPreferenceChangeListener(settings);
     }
 
     @Test

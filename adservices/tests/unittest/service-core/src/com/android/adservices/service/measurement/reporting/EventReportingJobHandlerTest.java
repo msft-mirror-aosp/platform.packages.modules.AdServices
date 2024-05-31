@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -49,6 +51,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -81,9 +85,14 @@ public class EventReportingJobHandlerTest {
     private static final Uri REPORTING_ORIGIN = WebUtil.validUri("https://subdomain.example.test");
     private static final List<Uri> ATTRIBUTION_DESTINATIONS = List.of(
             Uri.parse("https://destination.test"));
-
+    private static final Uri DEFAULT_WEB_DESTINATION =
+            WebUtil.validUri("https://def-web-destination.test");
+    private static final Uri ALT_WEB_DESTINATION =
+            WebUtil.validUri("https://alt-web-destination.test");
+    private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app_destination.test");
     private static final String SOURCE_REGISTRANT = "android-app://com.registrant";
-
+    private static final String ENROLLMENT_ID = "enrollment-id";
+    private static final String SOURCE_ID = "source-id";
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     DatastoreManager mDatastoreManager;
 
@@ -250,6 +259,216 @@ public class EventReportingJobHandlerTest {
                 .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void testSendReportSuccess_reinstallAttributionEnabled_persistsAppReportHistory()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setSourceId(SOURCE_ID)
+                        .setAttributionDestinations(
+                                List.of(
+                                        DEFAULT_WEB_DESTINATION,
+                                        ALT_WEB_DESTINATION,
+                                        APP_DESTINATION))
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
+                        .build()
+                        .toJson();
+
+        Pair<List<Uri>, List<Uri>> destinations =
+                new Pair<>(
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
+                        List.of(APP_DESTINATION));
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(SOURCE_ID)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .build();
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        when(mMeasurementDao.getSourceDestinations(eventReport.getSourceId()))
+                .thenReturn(destinations);
+        when(mMeasurementDao.getSource(eventReport.getSourceId())).thenReturn(source);
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+        verify(mMeasurementDao, times(1))
+                .insertOrUpdateAppReportHistory(
+                        eq(APP_DESTINATION), eq(REPORTING_ORIGIN), anyLong());
+    }
+
+    @Test
+    public void testSendReportSuccess_reinstallAttributionDisabled_doesNotPersistsAppReportHistory()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableReinstallReattribution()).thenReturn(false);
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setSourceId(SOURCE_ID)
+                        .setAttributionDestinations(
+                                List.of(
+                                        DEFAULT_WEB_DESTINATION,
+                                        ALT_WEB_DESTINATION,
+                                        APP_DESTINATION))
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
+                        .build()
+                        .toJson();
+
+        Pair<List<Uri>, List<Uri>> destinations =
+                new Pair<>(
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
+                        List.of(APP_DESTINATION));
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(SOURCE_ID)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .build();
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        when(mMeasurementDao.getSourceDestinations(eventReport.getSourceId()))
+                .thenReturn(destinations);
+        when(mMeasurementDao.getSource(eventReport.getSourceId())).thenReturn(source);
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+        verify(mMeasurementDao, never()).insertOrUpdateAppReportHistory(any(), any(), anyLong());
+    }
+
+    @Test
+    public void testSendReportForPendingReportSuccess_coarseSource_doesNotPersistAppReportHistory()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setSourceId(SOURCE_ID)
+                        .setAttributionDestinations(
+                                List.of(
+                                        DEFAULT_WEB_DESTINATION,
+                                        ALT_WEB_DESTINATION,
+                                        APP_DESTINATION))
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
+                        .build()
+                        .toJson();
+
+        Pair<List<Uri>, List<Uri>> destinations =
+                new Pair<>(
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
+                        List.of(APP_DESTINATION));
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(SOURCE_ID)
+                        .setCoarseEventReportDestinations(true)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .build();
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        when(mMeasurementDao.getSourceDestinations(eventReport.getSourceId()))
+                .thenReturn(destinations);
+        when(mMeasurementDao.getSource(eventReport.getSourceId())).thenReturn(source);
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+        verify(mMeasurementDao, never()).insertOrUpdateAppReportHistory(any(), any(), anyLong());
     }
 
     @Test

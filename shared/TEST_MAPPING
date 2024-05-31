@@ -24,5 +24,10 @@
         }
       ]
     }
+  ],
+  "imports": [
+    {
+      "path": "packages/modules/AdServices/adservices"
+    }
   ]
 }

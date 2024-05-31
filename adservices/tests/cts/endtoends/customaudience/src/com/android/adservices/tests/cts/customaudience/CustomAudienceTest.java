@@ -56,6 +56,7 @@ import com.google.mockwebserver.MockWebServer;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -251,6 +252,7 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
         mMockWebServer.shutdown();
     }
 
+    @Ignore("Flaky test. Bug ID: 342636189")
     @Test
     public void testCustomAudience_dataPurgedForUninstalledApp() throws Exception {
         AdSelectionClient adSelectionClient =
@@ -363,6 +365,7 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
         assertThat(mExpectedAppUninstallBroadcasts).isEmpty();
     }
 
+    @Ignore("Flaky test. Bug ID: 342636189")
     @Test
     public void testCustomAudience_doesNotPersistAfterAppUninstallAndReinstall() throws Exception {
         AdSelectionClient adSelectionClient =

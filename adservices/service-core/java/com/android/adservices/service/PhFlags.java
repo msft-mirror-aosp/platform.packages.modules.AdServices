@@ -33,6 +33,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENCODED_ERROR_CO
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_PROTO_FILE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
@@ -60,6 +61,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_L
 import static com.android.adservices.service.FlagsConstants.KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
@@ -6665,6 +6667,18 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED,
                 DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED);
+    }
+
+    @Override
+    public String getMddEnrollmentManifestFileUrl() {
+        return getDeviceConfigFlag(
+                KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL, MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL);
+    }
+
+    @Override
+    public boolean getEnrollmentProtoFileEnabled() {
+        return getDeviceConfigFlag(
+                KEY_ENROLLMENT_PROTO_FILE_ENABLED, DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers

@@ -5377,7 +5377,7 @@ public class MeasurementDaoTest {
                 mDatastoreManager.runInTransaction(
                         measurementDao ->
                                 measurementDao.deleteExpiredRecords(
-                                        earliestValidInsertion, retryLimit)));
+                                        earliestValidInsertion, retryLimit, null)));
 
         count =
                 DatabaseUtils.queryNumEntries(
@@ -5445,7 +5445,9 @@ public class MeasurementDaoTest {
         int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         assertTrue(
                 mDatastoreManager.runInTransaction(
-                        (dao) -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit)));
+                        (dao) ->
+                                dao.deleteExpiredRecords(
+                                        earliestValidInsertion, retryLimit, null)));
 
         Cursor cursor =
                 db.query(
@@ -5584,7 +5586,8 @@ public class MeasurementDaoTest {
         int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         mDatastoreManager.runInTransaction(
                 measurementDao ->
-                        measurementDao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
+                        measurementDao.deleteExpiredRecords(
+                                earliestValidInsertion, retryLimit, null));
 
         List<ContentValues> deletedReports =
                 List.of(eventReport_expiredSource, eventReport_expiredTrigger);
@@ -5680,7 +5683,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport1));
         mDatastoreManager.runInTransaction((dao) -> dao.insertDebugReport(debugReport2));
 
-        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0, null));
         assertEquals(
                 2,
                 DatabaseUtils.longForQuery(
@@ -5696,7 +5699,7 @@ public class MeasurementDaoTest {
                         dao.incrementAndGetReportingRetryCount(
                                 debugReport1.getId(), DataType.DEBUG_REPORT_RETRY_COUNT));
         // Delete Expired (Record 1)
-        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0, null));
 
         // Assert Record 2 remains.
         assertEquals(
@@ -5781,7 +5784,8 @@ public class MeasurementDaoTest {
         assertTrue(
                 mDatastoreManager.runInTransaction(
                         measurementDao ->
-                                measurementDao.deleteExpiredRecords(earliestValidInsertion, 0)));
+                                measurementDao.deleteExpiredRecords(
+                                        earliestValidInsertion, 0, null)));
 
         // Assert Record 1 remains because not expired and Retry Limiting Off.
         assertEquals(
@@ -5837,7 +5841,7 @@ public class MeasurementDaoTest {
         staleValues.put(MeasurementTables.KeyValueDataContract.VALUE, "1");
         db.insert(MeasurementTables.KeyValueDataContract.TABLE, null, staleValues);
 
-        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0));
+        mDatastoreManager.runInTransaction(dao -> dao.deleteExpiredRecords(0, 0, null));
 
         // Assert Non-Stale record remains.
         assertEquals(

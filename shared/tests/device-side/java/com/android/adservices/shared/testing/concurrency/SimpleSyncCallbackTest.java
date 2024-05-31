@@ -15,74 +15,10 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import com.android.adservices.shared.SharedMockitoTestCase;
+public final class SimpleSyncCallbackTest extends SyncCallbackTestCase<SimpleSyncCallback> {
 
-import org.junit.Test;
-
-public final class SimpleSyncCallbackTest extends SharedMockitoTestCase {
-
-    @Test
-    public void testGetCalled_singleCallback() {
-        SimpleSyncCallback singleCallback = new SimpleSyncCallback();
-        expect.withMessage("%s.isCalled() before setCalled()", singleCallback)
-                .that(singleCallback.isCalled())
-                .isFalse();
-        expect.withMessage("%s.getNumberActualCalls() before setCalled()", singleCallback)
-                .that(singleCallback.getNumberActualCalls())
-                .isEqualTo(0);
-
-        singleCallback.setCalled();
-        expect.withMessage("%s.isCalled() after setCalled()", singleCallback)
-                .that(singleCallback.isCalled())
-                .isTrue();
-        expect.withMessage("%s.getNumberActualCalls() after 1st setCalled()", singleCallback)
-                .that(singleCallback.getNumberActualCalls())
-                .isEqualTo(1);
-
-        singleCallback.setCalled();
-        expect.withMessage("%s.isCalled() after setCalled()", singleCallback)
-                .that(singleCallback.isCalled())
-                .isTrue();
-        expect.withMessage("%s.getNumberActualCalls() after 2nd setCalled()", singleCallback)
-                .that(singleCallback.getNumberActualCalls())
-                .isEqualTo(2);
-    }
-
-    // TODO(b/337014024): move logic to SyncCallbackTestCase
-    @Test
-    public void testGetCalled_multipleCallbacks() {
-        SimpleSyncCallback multiCallback =
-                new SimpleSyncCallback(
-                        SyncCallbackFactory.newSettingsBuilder().setExpectedNumberCalls(2).build());
-        expect.withMessage("%s.isCalled() before 1st setCalled()", multiCallback)
-                .that(multiCallback.isCalled())
-                .isFalse();
-        expect.withMessage("%s.getNumberActualCalls() before 1st setCalled()", multiCallback)
-                .that(multiCallback.getNumberActualCalls())
-                .isEqualTo(0);
-
-        multiCallback.setCalled();
-        expect.withMessage("%s.isCalled() after 1st setCalled()", multiCallback)
-                .that(multiCallback.isCalled())
-                .isFalse();
-        expect.withMessage("%s.getNumberActualCalls() after 1st setCalled()", multiCallback)
-                .that(multiCallback.getNumberActualCalls())
-                .isEqualTo(1);
-
-        multiCallback.setCalled();
-        expect.withMessage("%s.isCalled() after 2nd setCalled()", multiCallback)
-                .that(multiCallback.isCalled())
-                .isTrue();
-        expect.withMessage("%s.getNumberActualCalls() after 2nd setCalled()", multiCallback)
-                .that(multiCallback.getNumberActualCalls())
-                .isEqualTo(2);
-
-        multiCallback.setCalled();
-        expect.withMessage("%s.isCalled() after 3rd setCalled()", multiCallback)
-                .that(multiCallback.isCalled())
-                .isTrue();
-        expect.withMessage("%s.getNumberActualCalls() after 3rd setCalled()", multiCallback)
-                .that(multiCallback.getNumberActualCalls())
-                .isEqualTo(3);
+    @Override
+    protected SimpleSyncCallback newCallback(SyncCallbackSettings settings) {
+        return new SimpleSyncCallback(settings);
     }
 }
