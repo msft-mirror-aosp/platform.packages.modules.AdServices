@@ -21,6 +21,7 @@ import com.android.adservices.shared.testing.Identifiable;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -111,16 +112,12 @@ public final class SyncCallbackSettings implements Identifiable {
         mLatch.countDown();
     }
 
-    /**
-     * @deprecated - TODO(b/337014024): merge with other)
-     */
-    @Deprecated
-    void await() throws InterruptedException {
-        mLatch.await();
-    }
-
-    boolean await(long timeout, TimeUnit unit) throws InterruptedException {
-        return mLatch.await(timeout, unit);
+    void assertCalled(Supplier<String> caller) throws InterruptedException {
+        long timeoutMs = getMaxTimeoutMs();
+        TimeUnit unit = TimeUnit.MILLISECONDS;
+        if (!mLatch.await(timeoutMs, unit)) {
+            throw new SyncCallbackTimeoutException(caller.get(), timeoutMs, unit);
+        }
     }
 
     boolean isCalled() {
@@ -142,6 +139,11 @@ public final class SyncCallbackSettings implements Identifiable {
             mIsMainThreadSupplier =
                     Objects.requireNonNull(
                             isMainThreadSupplier, "isMainThreadSupplier cannot be null");
+        }
+
+        @VisibleForTesting
+        Builder(RealLogger realLogger) {
+            this(realLogger, () -> Boolean.FALSE);
         }
 
         /** See {@link SyncCallbackSettings#getExpectedNumberCalls()}. */
