@@ -51,11 +51,6 @@ public class BlockedAppsActivity extends AdServicesBaseActivity {
     }
 
     @Override
-    public void initBeta() {
-        initActivity();
-    }
-
-    @Override
     public void initGA() {
         initActivity();
     }
