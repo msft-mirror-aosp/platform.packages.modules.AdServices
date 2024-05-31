@@ -88,10 +88,6 @@ public class BlockedTopicsActionDelegate {
      * AdServicesSettingsBlockedTopicsFragment} to handle user actions.
      */
     public void initBlockedTopicsFragment() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_ga_title);
-        } else {
-            mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_title);
-        }
+        mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_ga_title);
     }
 }

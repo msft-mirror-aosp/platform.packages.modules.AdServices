@@ -15,33 +15,30 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import com.android.adservices.shared.testing.Nullable;
+
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// NOTE: this class is basically an abstraction of CountdownLatch and doesn't have any testing
-// specific characteristics, so it could be used on production code as well.
-/** Base implementation for {@link SyncCallback}. */
+// TODO(b/337014024) merge with AbstractSidelessTestSyncCallback / implement SyncCallback
+// (then update javadoc)
 public abstract class AbstractSyncCallback implements SyncCallback {
-
-    /** Tag used on {@code logcat} calls. */
-    public static final String LOG_TAG = "SyncCallback";
 
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
 
     protected final SyncCallbackSettings mSettings;
 
-    private final String mId = getClass().getSimpleName() + '#' + sIdGenerator.incrementAndGet();
-    private final CountDownLatch mLatch;
+    private final String mId = String.valueOf(sIdGenerator.incrementAndGet());
+
+    private final AtomicInteger mNumberCalls = new AtomicInteger();
 
     /** Default constructor. */
     public AbstractSyncCallback(SyncCallbackSettings settings) {
         mSettings = Objects.requireNonNull(settings, "settings cannot be null");
-        mLatch = new CountDownLatch(mSettings.getExpectedNumberCalls());
     }
 
     /**
@@ -50,9 +47,14 @@ public abstract class AbstractSyncCallback implements SyncCallback {
      */
     protected void customizeToString(StringBuilder string) {}
 
-    /** Gets a unique id identifying the callback - used for logging / debugging purposes. */
+    @Override
     public final String getId() {
         return mId;
+    }
+
+    @Override
+    public final SyncCallbackSettings getSettings() {
+        return mSettings;
     }
 
     // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
@@ -91,34 +93,83 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         // TODO(b/280460130): use side-less Logger so it's not empty
     }
 
-    // NOTE: not final because test version might disable it
+    /**
+     * Should be overridden by callbacks that don't support {@link #assertCalled()}.
+     *
+     * @return name of the alternative method(s)
+     */
+    @Nullable
+    protected String getSetCalledAlternatives() {
+        return null;
+    }
+
     @Override
-    public void setCalled() {
+    public final boolean supportsSetCalled() {
+        return getSetCalledAlternatives() == null;
+    }
+
+    @Override
+    public final void setCalled() {
         logD("setCalled() called");
+        String alternative = getSetCalledAlternatives();
+        if (alternative != null) {
+            throw new UnsupportedOperationException("Should call " + alternative + " instead!");
+        }
+        internalSetCalled();
+    }
+
+    // TODO(b/337014024): make it final somehow?
+    // NOTE: not final because test version might disable it
+    /**
+     * Real implementation of {@code setCalled()}, should be called by subclasses that don't support
+     * it.
+     */
+    protected void internalSetCalled() {
+        mNumberCalls.incrementAndGet();
         try {
-            mLatch.countDown();
+            mSettings.countDown();
         } finally {
             logV("setCalled() returning");
         }
     }
 
+    // TODO(b/337014024): get rid of this?
+    /** Called by {@link #assertCalled()} so subclasses can fail it if needed. */
+    protected void postAssertCalled() {}
+
     // NOTE: not final because test version might disable it
     @Override
+    public void assertCalled() throws InterruptedException {
+        waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
+        postAssertCalled();
+    }
+
+    // NOTE: not final because test version might disable it
+    /**
+     * Wait (indefinitely) until all calls to {@link #setCalled()} were made.
+     *
+     * @throws InterruptedException if thread was interrupted while waiting.
+     */
     public void waitCalled() throws InterruptedException {
         logD("waitCalled() called");
         try {
-            mLatch.await();
+            mSettings.await();
         } finally {
             logV("waitCalled() returning");
         }
     }
 
     // NOTE: not final because test version might set timeout on constructor
-    @Override
+    /**
+     * Wait (up to given time) until all calls to {@link #setCalled()} were made.
+     *
+     * @throws InterruptedException if thread was interrupted while waiting.
+     * @throws IllegalStateException if not called before it timed out.
+     */
     public void waitCalled(long timeout, TimeUnit unit) throws InterruptedException {
         logD("waitCalled(%d, %s) called", timeout, unit);
         try {
-            if (!mLatch.await(timeout, unit)) {
+            if (!mSettings.await(timeout, unit)) {
                 throw new SyncCallbackTimeoutException(toString(), timeout, unit);
             }
         } finally {
@@ -128,20 +179,34 @@ public abstract class AbstractSyncCallback implements SyncCallback {
 
     @Override
     public final boolean isCalled() {
-        return mLatch.getCount() == 0;
+        return mSettings.isCalled();
+    }
+
+    @Override
+    public int getNumberActualCalls() {
+        return mNumberCalls.get();
+    }
+
+    /**
+     * Helper method that fills the {@code string} with the content of {@link #toString()} but
+     * without the enclosing {@code [class: ]} part.
+     */
+    public final StringBuilder appendInfo(StringBuilder string) {
+        Objects.requireNonNull(string)
+                .append("id=")
+                .append(mId)
+                .append(", ")
+                .append(mSettings)
+                .append(", numberActualCalls=")
+                .append(mNumberCalls.get());
+        customizeToString(string);
+        return string;
     }
 
     @Override
     public final String toString() {
-        StringBuilder string =
-                new StringBuilder()
-                        .append('[')
-                        .append(mId)
-                        .append(": ")
-                        .append(mSettings)
-                        .append(", missingCalls=")
-                        .append(mLatch.getCount());
-        customizeToString(string);
-        return string.append(']').toString();
+        return appendInfo(new StringBuilder("[").append(getClass().getSimpleName()).append(": "))
+                .append(']')
+                .toString();
     }
 }

@@ -60,6 +60,7 @@ android_library {
         "junit",
     ],
     static_libs: [
+        "auto_value_annotations",
         // TODO(b/338132355): Clean up dependencies for adservices-test-utility.
         "adservices-service-core",
         "adservices-shared-mockito-expectations", // TODO(b/338132355): should not be needed if mocker is split
@@ -70,6 +71,7 @@ android_library {
         "adservices-shared-util", // For checkState method uses varargs.
         // TODO(b/281577492): should use modules-utils-extended-mockito-rule instead
         "modules-utils-testable-device-config",
+        "adservices-clients",
     ],
     apex_available: [
         "com.android.adservices",
@@ -82,6 +84,7 @@ android_library {
     lint: {
         extra_check_modules: ["AdServicesLintChecker"],
     },
+    plugins: ["auto_annotation_plugin"],
 }
 
 android_library {

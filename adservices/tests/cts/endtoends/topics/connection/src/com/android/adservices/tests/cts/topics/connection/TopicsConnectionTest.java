@@ -32,16 +32,14 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.topics.TopicsTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -53,7 +51,7 @@ import java.util.concurrent.Executors;
 
 @RunWith(JUnit4.class)
 @EnableDebugFlag(KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED)
-public final class TopicsConnectionTest {
+public final class TopicsConnectionTest extends AdServicesCtsTestCase {
     private static final String TAG = TopicsConnectionTest.class.getSimpleName();
 
     // The JobId of the Epoch Computation.
@@ -70,17 +68,6 @@ public final class TopicsConnectionTest {
 
     private static final String ADSERVICES_PACKAGE_NAME =
             AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
-
-    private static final String ACTION_RECORD_TOPICS_COMPLETE =
-            "android.adservices.debug.RECORD_TOPICS_COMPLETE";
-
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
 
     @Before
     public void setup() throws Exception {
@@ -123,7 +110,8 @@ public final class TopicsConnectionTest {
         enableGlobalKillSwitch(/* enabled */ false);
 
         // At beginning, Sdk1 receives no topic.
-        GetTopicsResponse sdk1Result = getTopicsSync(advertisingTopicsClient1);
+        GetTopicsResponse sdk1Result =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient1);
 
         assertThat(sdk1Result.getTopics()).isEmpty();
 
@@ -172,15 +160,5 @@ public final class TopicsConnectionTest {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
-    }
-
-    private GetTopicsResponse getTopicsSync(AdvertisingTopicsClient advertisingTopicsClient)
-            throws Exception {
-        BroadcastReceiverSyncCallback receiverSyncCallback =
-                new BroadcastReceiverSyncCallback(sContext);
-        receiverSyncCallback.prepare(ACTION_RECORD_TOPICS_COMPLETE);
-        GetTopicsResponse sdkResult = advertisingTopicsClient.getTopics().get();
-        receiverSyncCallback.assertResultReceived();
-        return sdkResult;
     }
 }

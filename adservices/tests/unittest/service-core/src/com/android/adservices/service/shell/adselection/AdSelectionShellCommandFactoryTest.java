@@ -18,6 +18,7 @@ package com.android.adservices.service.shell.adselection;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
+import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
@@ -32,6 +33,7 @@ import org.mockito.Mock;
 public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCase {
     private static final boolean CONSENTED_DEBUGGING_CLI_ENABLED = true;
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    @Mock private BuyerInputGenerator mBuyerInputGenerator;
 
     private ShellCommandFactory mFactory;
 
@@ -39,7 +41,10 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
     public void setup() {
         mFactory =
                 new AdSelectionShellCommandFactory(
-                        CONSENTED_DEBUGGING_CLI_ENABLED, true, mConsentedDebugConfigurationDao);
+                        CONSENTED_DEBUGGING_CLI_ENABLED,
+                        true,
+                        mConsentedDebugConfigurationDao,
+                        mBuyerInputGenerator);
     }
 
     @Test
@@ -56,7 +61,9 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
 
     @Test
     public void test_consentedDebugCmdDisabled() {
-        mFactory = new AdSelectionShellCommandFactory(false, true, mConsentedDebugConfigurationDao);
+        mFactory =
+                new AdSelectionShellCommandFactory(
+                        false, true, mConsentedDebugConfigurationDao, mBuyerInputGenerator);
         ShellCommand shellCommand = mFactory.getShellCommand(ConsentedDebugShellCommand.CMD);
         Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
@@ -64,7 +71,8 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
     @Test
     public void test_GetAdSelectionDataCmdDisabled() {
         mFactory =
-                new AdSelectionShellCommandFactory(false, false, mConsentedDebugConfigurationDao);
+                new AdSelectionShellCommandFactory(
+                        false, false, mConsentedDebugConfigurationDao, mBuyerInputGenerator);
         ShellCommand shellCommand = mFactory.getShellCommand(GetAdSelectionDataCommand.CMD);
         Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
@@ -89,7 +97,9 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
 
     @Test
     public void test_invalidCmd_consentedDebugCliDisabled() {
-        mFactory = new AdSelectionShellCommandFactory(false, true, mConsentedDebugConfigurationDao);
+        mFactory =
+                new AdSelectionShellCommandFactory(
+                        false, true, mConsentedDebugConfigurationDao, mBuyerInputGenerator);
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
         Truth.assertThat(shellCommand).isNull();
     }
@@ -98,11 +108,16 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
     public void test_getAllCommandsHelp() {
         mFactory =
                 new AdSelectionShellCommandFactory(
-                        CONSENTED_DEBUGGING_CLI_ENABLED, true, mConsentedDebugConfigurationDao);
+                        CONSENTED_DEBUGGING_CLI_ENABLED,
+                        true,
+                        mConsentedDebugConfigurationDao,
+                        mBuyerInputGenerator);
 
         Truth.assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
                 .containsExactlyElementsIn(
                         Sets.newHashSet(
-                                ConsentedDebugShellCommand.HELP, GetAdSelectionDataCommand.HELP));
+                                ConsentedDebugShellCommand.HELP,
+                                GetAdSelectionDataCommand.HELP,
+                                MockAuctionResultCommand.HELP));
     }
 }

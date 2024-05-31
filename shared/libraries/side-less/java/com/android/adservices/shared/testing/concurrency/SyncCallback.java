@@ -15,17 +15,19 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import com.android.adservices.shared.testing.Identifiable;
+import com.android.adservices.shared.testing.Nullable;
+
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
+
 import java.util.concurrent.TimeUnit;
 
-// NOTE: this interface is basically an abstraction of CountdownLatch and doesn't have any testing
-// specific characteristics, so it could be used on production code as well.
-/**
- * Abstraction to block asynchronous operations until they're completed.
- *
- * <p><b>Note: </b>it doesn't specifies how many times the callback is expected to be called, that's
- * up to the implementation.
- */
-public interface SyncCallback {
+/** Base interface for all testing-related sync callbacks. */
+public interface SyncCallback extends Identifiable {
+
+    /** Tag used on {@code logcat} calls. */
+    String LOG_TAG = "SyncCallback";
 
     /**
      * Indicates the callback was called, so it unblocks {@link #waitCalled()} / {@link
@@ -34,21 +36,56 @@ public interface SyncCallback {
     void setCalled();
 
     /**
-     * Wait (indefinitely) until all calls to {@link #setCalled()} were made.
-     *
-     * @throws InterruptedException if thread was interrupted while waiting.
+     * Asserts the callback was called or throw if it times out - the timeout value is defined by
+     * the constructor and can be obtained through {@link #getSettings()}.
      */
-    void waitCalled() throws InterruptedException;
-
-    // TODO(b/337014024); throw specific subclass
-    /**
-     * Wait (up to given time) until all calls to {@link #setCalled()} were made.
-     *
-     * @throws InterruptedException if thread was interrupted while waiting.
-     * @throws IllegalStateException if not called before it timed out.
-     */
-    void waitCalled(long timeout, TimeUnit unit) throws InterruptedException;
+    void assertCalled() throws InterruptedException;
 
     /** Returns whether the callback was called (at least) the expected number of times. */
     boolean isCalled();
+
+    /** Gets the total number of calls so far. */
+    int getNumberActualCalls();
+
+    /** Gets the callback settings. */
+    SyncCallbackSettings getSettings();
+
+    /**
+     * Checks if the callback supports calls to {@link #setCalled()}.
+     *
+     * <p>Returns {@code true} by default, but some callbacks don't support it because they provide
+     * a more customized method (like {@code injectResult()}).
+     */
+    default boolean supportsSetCalled() {
+        return true;
+    }
+
+    // TODO(b/337014024): move log methods to AbstractSyncCallback instead
+
+    /**
+     * Convenience method to log a debug message.
+     *
+     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
+     * by {@link #toString()}) in the message.
+     */
+    @FormatMethod
+    void logE(@FormatString String msgFmt, @Nullable Object... msgArgs);
+
+    /**
+     * Convenience method to log a debug message.
+     *
+     * <p>By default it's a no-op, but subclasses should implement it including the {@link #getId()
+     * id} in the message.
+     */
+    @FormatMethod
+    void logD(@FormatString String msgFmt, @Nullable Object... msgArgs);
+
+    /**
+     * Convenience method to log a verbose message.
+     *
+     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
+     * by {@link #toString()}) in the message.
+     */
+    @FormatMethod
+    void logV(@FormatString String msgFmt, @Nullable Object... msgArgs);
 }

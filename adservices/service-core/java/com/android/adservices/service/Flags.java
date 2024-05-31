@@ -3756,7 +3756,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /** Default maximum sources per publisher */
-    int MEASUREMENT_MAX_SOURCES_PER_PUBLISHER = 1024;
+    int MEASUREMENT_MAX_SOURCES_PER_PUBLISHER = 4096;
 
     /** Returns maximum sources per publisher */
     default int getMeasurementMaxSourcesPerPublisher() {
@@ -5464,6 +5464,26 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the default value of the enablement of adservices business logic migration. */
     default boolean getAdServicesConsentBusinessLogicMigrationEnabled() {
         return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+    }
+
+    /** Enrollment Manifest File URL, used to provide proto file for MDD download. */
+    String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
+
+    /**
+     * @return default Enrollment Manifest File URL
+     */
+    default String getMddEnrollmentManifestFileUrl() {
+        return MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL;
+    }
+
+    /** Feature flag to ramp up use of enrollment proto file. */
+    @FeatureFlag boolean DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED = false;
+
+    /**
+     * @return whether to enable use of enrollment proto file.
+     */
+    default boolean getEnrollmentProtoFileEnabled() {
+        return DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
     }
 
     /** Dump some debug info for the flags */

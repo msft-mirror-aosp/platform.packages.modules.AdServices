@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
@@ -32,6 +33,8 @@ import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledSt
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.concurrent.Executor;
+
 import javax.annotation.concurrent.ThreadSafe;
 
 /** AdServicesLogger that delegate to the appropriate Logger Implementations. */
@@ -39,6 +42,7 @@ import javax.annotation.concurrent.ThreadSafe;
 public final class AdServicesLoggerImpl implements AdServicesLogger {
 
     private static volatile AdServicesLoggerImpl sAdServicesLogger;
+    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final StatsdAdServicesLogger mStatsdAdServicesLogger;
 
     private AdServicesLoggerImpl() {
@@ -224,6 +228,12 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                 mErrorCause);
     }
 
+    /** Logs enrollment transaction stats. */
+    @Override
+    public void logEnrollmentTransactionStats(AdServicesEnrollmentTransactionStats stats) {
+        mStatsdAdServicesLogger.logEnrollmentTransactionStats(stats);
+    }
+
     /** Logs encryption key fetch stats. */
     @Override
     public void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats) {
@@ -399,8 +409,12 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
 
     /** Logs api call error status using {@code CobaltLogger}. */
     private void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
-        AppNameApiErrorLogger appNameApiErrorLogger = AppNameApiErrorLogger.getInstance();
+        sBackgroundExecutor.execute(
+                () -> {
+                    AppNameApiErrorLogger appNameApiErrorLogger =
+                            AppNameApiErrorLogger.getInstance();
 
-        appNameApiErrorLogger.logErrorOccurrence(appPackageName, apiName, errorCode);
+                    appNameApiErrorLogger.logErrorOccurrence(appPackageName, apiName, errorCode);
+                });
     }
 }

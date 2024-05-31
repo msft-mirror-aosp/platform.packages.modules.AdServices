@@ -149,6 +149,9 @@ public interface AdServicesLogger {
             String mQueryParameter,
             int mErrorCause);
 
+    /** Logs enrollment transaction stats. */
+    void logEnrollmentTransactionStats(AdServicesEnrollmentTransactionStats stats);
+
     /** Logs encryption key fetch stats. */
     void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats);
 

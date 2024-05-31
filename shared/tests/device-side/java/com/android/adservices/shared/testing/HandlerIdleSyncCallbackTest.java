@@ -16,8 +16,6 @@
 
 package com.android.adservices.shared.testing;
 
-import static org.junit.Assert.assertThrows;
-
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 
 import org.junit.Test;
@@ -34,20 +32,4 @@ public final class HandlerIdleSyncCallbackTest extends SharedExtendedMockitoTest
         expect.withMessage("isIdle() after called").that(callback.isIdle()).isTrue();
     }
 
-    @Test
-    public void testUnsupportedMethods() throws Exception {
-        HandlerIdleSyncCallback callback = new HandlerIdleSyncCallback();
-
-        assertThrows(
-                UnsupportedOperationException.class, () -> callback.injectResult(new Object()));
-        assertThrows(UnsupportedOperationException.class, () -> callback.assertResultReceived());
-        assertThrows(UnsupportedOperationException.class, () -> callback.getResultReceived());
-
-        assertThrows(UnsupportedOperationException.class, () -> callback.injectError(null));
-        assertThrows(UnsupportedOperationException.class, () -> callback.assertErrorReceived());
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> callback.assertErrorReceived(Void.class));
-        assertThrows(UnsupportedOperationException.class, () -> callback.getErrorReceived());
-    }
 }

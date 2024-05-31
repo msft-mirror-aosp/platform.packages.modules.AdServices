@@ -17,7 +17,7 @@ package com.android.adservices.shared.testing.concurrency;
 
 import static com.android.adservices.shared.meta_testing.LogEntry.Subject.logEntry;
 import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
-import static com.android.adservices.shared.testing.concurrency.AbstractSyncCallback.LOG_TAG;
+import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -35,11 +35,13 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
+// TODO (b/337014024) merge with AbstractSyncCallbackTest
 public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
 
     private static final AtomicInteger sThreadId = new AtomicInteger();
-
+    private static final Supplier<Boolean> IS_MAIN_THREAD_SUPPLIER = () -> Boolean.FALSE;
     private static final long SMALLER_TIMEOUT_MS = DEFAULT_TIMEOUT_MS / 10;
 
     private final FakeLogger mFakeLogger = new FakeLogger();
@@ -49,9 +51,10 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
 
     @Test
     public void testGetSettings() {
-        SyncCallbackSettings settings = new SyncCallbackSettings.Builder().build();
+        SyncCallbackSettings settings =
+                new SyncCallbackSettings.Builder(mFakeLogger, IS_MAIN_THREAD_SUPPLIER).build();
         AbstractSidelessTestSyncCallback callback =
-                new AbstractSidelessTestSyncCallback(mFakeLogger, settings) {};
+                new AbstractSidelessTestSyncCallback(settings) {};
 
         expect.withMessage("getSettings()").that(callback.getSettings()).isSameInstanceAs(settings);
     }
@@ -123,7 +126,7 @@ public final class SidelessSyncCallbackTest extends SharedSidelessTestCase {
     private static final class ConcreteSidelessTestSyncCallback
             extends AbstractSidelessTestSyncCallback {
         ConcreteSidelessTestSyncCallback(RealLogger realLogger) {
-            super(realLogger, new SyncCallbackSettings.Builder().build());
+            super(new SyncCallbackSettings.Builder(realLogger, IS_MAIN_THREAD_SUPPLIER).build());
         }
     }
 

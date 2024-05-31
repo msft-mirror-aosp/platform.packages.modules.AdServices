@@ -15,6 +15,8 @@
  */
 package com.android.adservices;
 
+import static android.adservices.common.AdServicesStatusUtils.SERVICE_UNAVAILABLE_ERROR_MESSAGE;
+
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_EXT_DATA_STORAGE_SERVICE;
@@ -45,7 +47,7 @@ import android.os.Process;
 import android.os.SystemProperties;
 import android.text.TextUtils;
 
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.List;
@@ -187,7 +189,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
         synchronized (mLock) {
             if (mService == null) {
-                throw new ServiceUnavailableException();
+                throw new ServiceUnavailableException(SERVICE_UNAVAILABLE_ERROR_MESSAGE);
             }
             return mService;
         }

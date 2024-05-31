@@ -16,6 +16,8 @@
 
 package com.android.adservices.shell;
 
+import static org.mockito.Mockito.when;
+
 import android.content.Intent;
 import android.os.IBinder;
 
@@ -38,6 +40,8 @@ public final class AdServicesShellCommandServiceTest extends AdServicesExtendedM
 
     @Before
     public void setup() {
+        when(mMockFlags.getFledgeAuctionServerCompressionAlgorithmVersion())
+                .thenReturn(Flags.FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION);
         mocker.mockGetFlags(mMockFlags);
     }
 

@@ -17,8 +17,8 @@
 package com.android.adservices.service.appsetid;
 
 import static android.adservices.appsetid.GetAppSetIdResult.SCOPE_APP;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PROVIDER_SERVICE_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -108,7 +108,9 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
                 });
 
         int result = future.get();
-        expect.withMessage("result of getAppSetId()").that(result).isEqualTo(STATUS_INTERNAL_ERROR);
+        expect.withMessage("result of getAppSetId()")
+                .that(result)
+                .isEqualTo(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
     }
 
     private AppSetIdWorker newAppSetIdWorker(boolean forSuccess) {

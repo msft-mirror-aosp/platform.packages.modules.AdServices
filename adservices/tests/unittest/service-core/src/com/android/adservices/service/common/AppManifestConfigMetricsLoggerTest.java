@@ -59,6 +59,7 @@ import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.shared.testing.common.DumpHelper;
 import com.android.adservices.shared.testing.common.FakeSharedPreferences;
+import com.android.adservices.shared.testing.concurrency.SyncOnSharedPreferenceChangeListener;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;

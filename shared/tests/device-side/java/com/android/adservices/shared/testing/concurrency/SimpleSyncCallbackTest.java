@@ -15,41 +15,10 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import com.android.adservices.shared.SharedExtendedMockitoTestCase;
+public final class SimpleSyncCallbackTest extends SyncCallbackTestCase<SimpleSyncCallback> {
 
-import org.junit.Test;
-
-public final class SimpleSyncCallbackTest extends SharedExtendedMockitoTestCase {
-
-    @Test
-    public void testGetCalled_singleCallback() {
-        SimpleSyncCallback singleCallback = new SimpleSyncCallback();
-
-        expect.withMessage("%s.isCalled() before setCalled()", singleCallback)
-                .that(singleCallback.isCalled())
-                .isFalse();
-        singleCallback.setCalled();
-        expect.withMessage("%s.isCalled() after setCalled()", singleCallback)
-                .that(singleCallback.isCalled())
-                .isTrue();
-    }
-
-    @Test
-    public void testGetCalled_multipleCallbacks() {
-        SimpleSyncCallback multiCallback =
-                new SimpleSyncCallback(
-                        new SyncCallbackSettings.Builder().setExpectedNumberCalls(2).build());
-
-        expect.withMessage("%s.isCalled() before 1st setCalled()", multiCallback)
-                .that(multiCallback.isCalled())
-                .isFalse();
-        multiCallback.setCalled();
-        expect.withMessage("%s.isCalled() after 1st setCalled()", multiCallback)
-                .that(multiCallback.isCalled())
-                .isFalse();
-        multiCallback.setCalled();
-        expect.withMessage("%s.isCalled() after 2nd setCalled()", multiCallback)
-                .that(multiCallback.isCalled())
-                .isTrue();
+    @Override
+    protected SimpleSyncCallback newCallback(SyncCallbackSettings settings) {
+        return new SimpleSyncCallback(settings);
     }
 }

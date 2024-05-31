@@ -28,6 +28,8 @@ import com.android.adservices.shared.testing.AbstractProcessLifeguardRule.Uncaug
 import com.android.adservices.shared.testing.ProcessLifeguardTestSuite.Test1ThrowsInBg;
 import com.android.adservices.shared.testing.ProcessLifeguardTestSuite.Test2RuleCatchesIt;
 import com.android.adservices.shared.testing.ProcessLifeguardTestSuite.Test3MakesSureProcessDidntCrash;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -145,7 +147,7 @@ public final class ProcessLifeguardTestSuite {
         @Test
         public void doIt() throws Exception {
             Log.i(TAG, "Test2RuleCatchesIt: callback=" + sCallback);
-            sCallback.assertReceived();
+            sCallback.assertResultReceived();
             // Need to sleep a little to make sure the rule caught it.
             sleep(NAP_TIME_MS);
             Log.i(TAG, "Test2RuleCatchesIt(): leaving");
@@ -174,10 +176,13 @@ public final class ProcessLifeguardTestSuite {
         Log.i(TAG, "Little Susie woke up");
     }
 
-    private static class MySyncCallback extends SyncCallback<Object, Object> {
+    private static class MySyncCallback extends ResultSyncCallback<Object> {
 
         MySyncCallback() {
-            super(WAITING_TIMEOUT_MS);
+            super(
+                    SyncCallbackFactory.newSettingsBuilder()
+                            .setMaxTimeoutMs(WAITING_TIMEOUT_MS)
+                            .build());
         }
     }
 

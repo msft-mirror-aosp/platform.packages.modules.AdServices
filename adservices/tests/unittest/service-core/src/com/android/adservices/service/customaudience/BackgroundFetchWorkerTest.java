@@ -61,12 +61,14 @@ import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetc
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.customaudience.BackgroundFetchRunner.UpdateResultType;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -637,7 +639,7 @@ public class BackgroundFetchWorkerTest {
     @Test
     public void testRunBackgroundFetchInSequence() throws InterruptedException, ExecutionException {
         int numEligibleCustomAudiences = 16;
-        CountDownLatch completionLatch = new CountDownLatch(numEligibleCustomAudiences / 2);
+        int expectedUpdateCustomAudienceCalls = numEligibleCustomAudiences / 2;
 
         // Mock two lists of custom audiences eligible for update
         DBCustomAudienceBackgroundFetchData.Builder fetchDataBuilder =
@@ -649,7 +651,7 @@ public class BackgroundFetchWorkerTest {
         for (int i = 0; i < numEligibleCustomAudiences; i++) {
             DBCustomAudienceBackgroundFetchData fetchData =
                     fetchDataBuilder.setName("ca" + i).build();
-            if (i < numEligibleCustomAudiences / 2) {
+            if (i < expectedUpdateCustomAudienceCalls) {
                 fetchDataList1.add(fetchData);
             } else {
                 fetchDataList2.add(fetchData);
@@ -660,16 +662,16 @@ public class BackgroundFetchWorkerTest {
         AtomicInteger completionCount = new AtomicInteger(0);
 
         // Return the first list the first time, and the second list in the second call
+        AnswerSyncCallback<FluentFuture<UpdateResultType>> updateCustomAudienceCallback =
+                AnswerSyncCallback.forMultipleAnswers(
+                        FluentFuture.from(immediateFuture(null)),
+                        expectedUpdateCustomAudienceCalls);
+
         doReturn(fetchDataList1)
                 .doReturn(fetchDataList2)
                 .when(mCustomAudienceDaoSpy)
                 .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
-        doAnswer(
-                        unusedInvocation -> {
-                            completionLatch.countDown();
-                            completionCount.getAndIncrement();
-                            return FluentFuture.from(immediateFuture(null));
-                        })
+        doAnswer(updateCustomAudienceCallback)
                 .when(mBackgroundFetchRunnerSpy)
                 .updateCustomAudience(any(), any());
 
@@ -685,7 +687,7 @@ public class BackgroundFetchWorkerTest {
                 .when(mBackgroundFetchExecutionLoggerSpy)
                 .close(anyInt(), anyInt());
 
-        CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
+        SimpleSyncCallback bgfWorkStoppedCallback = new SimpleSyncCallback();
         mExecutorService.execute(
                 () -> {
                     try {
@@ -694,14 +696,14 @@ public class BackgroundFetchWorkerTest {
                         sLogger.e(
                                 exception, "Exception encountered while running background fetch");
                     } finally {
-                        bgfWorkStoppedLatch.countDown();
+                        bgfWorkStoppedCallback.setCalled();
                     }
                 });
 
         // Wait til updates are complete, then try running background fetch again and
         // verify the second run updates more custom audiences successfully
-        completionLatch.await();
-        bgfWorkStoppedLatch.await();
+        updateCustomAudienceCallback.assertCalled();
+        bgfWorkStoppedCallback.assertCalled();
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(1));
         mBackgroundFetchWorker.runBackgroundFetch().get();
 
@@ -716,7 +718,8 @@ public class BackgroundFetchWorkerTest {
                 .deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
-        assertThat(completionCount.get()).isEqualTo(numEligibleCustomAudiences);
+        assertThat(updateCustomAudienceCallback.getNumberActualCalls())
+                .isEqualTo(numEligibleCustomAudiences);
         loggerCloseCallback.assertCalled();
     }
 

@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -165,7 +166,8 @@ public abstract class E2EMockTest extends E2ETest {
                                 })
                         .get());
         mClickVerifier = mock(ClickVerifier.class);
-        mFlags = FlagsFactory.getFlags();
+        mFlags = spy(FlagsFactory.getFlags());
+        doReturn(false).when(mFlags).getEnrollmentEnableLimitedLogging();
         mErrorLogger = mock(AdServicesErrorLogger.class);
         mDatastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
@@ -708,7 +710,7 @@ public abstract class E2EMockTest extends E2ETest {
     private void runDeleteExpiredRecordsJob(long earliestValidInsertion) {
         int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         mDatastoreManager.runInTransaction(
-                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
+                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit, null));
     }
 
     void updateEnrollment(String uri) {

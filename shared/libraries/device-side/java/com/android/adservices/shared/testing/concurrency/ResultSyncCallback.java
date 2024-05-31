@@ -15,27 +15,34 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import androidx.annotation.Nullable;
+import com.android.adservices.shared.testing.Nullable;
 
 import com.google.common.base.Optional;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * {@link SyncCallback} use to return an object (result).
+ * {@code SyncCallback} use to return an object (result).
  *
  * @param <T> type of the result.
  */
-public class ResultSyncCallback<T> extends AbstractTestSyncCallback {
+public class ResultSyncCallback<T> extends DeviceSideSyncCallback
+        implements IResultSyncCallback<T> {
 
     private final AtomicReference<Optional<T>> mResult = new AtomicReference<>();
 
     public ResultSyncCallback() {
-        super(new SyncCallbackSettings.Builder().build());
+        super(SyncCallbackFactory.newSettingsBuilder().build());
     }
 
     public ResultSyncCallback(SyncCallbackSettings settings) {
         super(settings);
+    }
+
+    @Override
+    protected final String getSetCalledAlternatives() {
+        return "injectResult()";
     }
 
     /**
@@ -47,10 +54,10 @@ public class ResultSyncCallback<T> extends AbstractTestSyncCallback {
         logV("Injecting %s (mResult=%s)", result, mResult);
         Optional<T> newResult = Optional.fromNullable(result);
         if (!mResult.compareAndSet(null, newResult)) {
-            throw new IllegalStateException(
-                    "injectResult already called (with " + getResult() + ")");
+            setInternalFailure(
+                    new CallbackAlreadyCalledException("injectResult()", getResult(), result));
         }
-        super.setCalled();
+        super.internalSetCalled();
     }
 
     /**
@@ -60,7 +67,8 @@ public class ResultSyncCallback<T> extends AbstractTestSyncCallback {
      * @return the result
      */
     public final @Nullable T assertResultReceived() throws InterruptedException {
-        assertCalled();
+        waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
+        postAssertCalled();
         return getResult();
     }
 
@@ -74,7 +82,13 @@ public class ResultSyncCallback<T> extends AbstractTestSyncCallback {
     }
 
     @Override
-    public final void setCalled() {
-        throw new UnsupportedOperationException("should call injectResult() instead");
+    protected void customizeToString(StringBuilder string) {
+        super.customizeToString(string);
+
+        if (mResult.get() == null) {
+            string.append(", (no result yet)");
+        } else {
+            string.append(", result=").append(getResult());
+        }
     }
 }

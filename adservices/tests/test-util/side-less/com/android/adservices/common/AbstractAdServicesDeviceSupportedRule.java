@@ -15,6 +15,7 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
 import com.android.adservices.shared.testing.AndroidDevicePropertiesHelper;
 import com.android.adservices.shared.testing.DeviceConditionsViolatedException;
 import com.android.adservices.shared.testing.Logger;
@@ -32,8 +33,10 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 // NOTE: this class is used by device and host side, so it cannot have any Android dependency
@@ -94,6 +97,11 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
     static final String REQUIRES_GO_DEVICE_ASSUMPTION_FAILED_ERROR_MESSAGE =
             "Test annotated with @RequiresGoDevice and device is not a Go device.";
 
+    @VisibleForTesting
+    static final String REQUIRES_ANDROID_SERVICE_ASSUMPTION_FAILED_ERROR_MSG =
+            "Test annotated with @RequiresAndroidServiceAvailable and device doesn't have the"
+                    + " android service %s";
+
     /** Default constructor. */
     public AbstractAdServicesDeviceSupportedRule(
             RealLogger logger, AbstractDeviceSupportHelper deviceSupportHelper) {
@@ -130,6 +138,20 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
         return isGoDevice;
     }
 
+    /**
+     * Check whether the device has a service.
+     *
+     * @return {@code true} when it has and only has one service.
+     */
+    public final boolean isAndroidServiceAvailable(String intentAction) {
+        boolean isAndroidServiceAvailable =
+                mDeviceSupportHelper.isAndroidServiceAvailable(intentAction);
+        mLog.v(
+                "isAndroidServiceAvailable() for Intent action %s: %b",
+                intentAction, isAndroidServiceAvailable);
+        return isAndroidServiceAvailable;
+    }
+
     @Override
     public Statement apply(Statement base, Description description) {
         if (!description.isTest()) {
@@ -150,10 +172,17 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                 ScreenSize requiresScreenDevice = getRequiresScreenDevice(description);
                 RequiresGoDevice requiresGoDevice =
                         description.getAnnotation(RequiresGoDevice.class);
+                RequiresAndroidServiceAvailable requiresAndroidServiceAvailable =
+                        getRequiresAndroidServiceAvailable(description);
+
                 mLog.d(
                         "apply(): testName=%s, isDeviceSupported=%b, isLowRamDevice=%b,"
-                                + " requiresLowRamDevice=%s",
-                        testName, isDeviceSupported, isLowRamDevice, requiresLowRamDevice);
+                                + " requiresLowRamDevice=%s, requiresAndroidServiceAvailable=%s",
+                        testName,
+                        isDeviceSupported,
+                        isLowRamDevice,
+                        requiresLowRamDevice,
+                        requiresAndroidServiceAvailable);
                 List<String> assumptionViolatedReasons = new ArrayList<>();
 
                 if (!isDeviceSupported
@@ -181,6 +210,16 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                                         REQUIRES_SCREEN_SIZE_ASSUMPTION_FAILED_ERROR_MESSAGE,
                                         requiresScreenDevice));
                     }
+                    if (requiresAndroidServiceAvailable != null) {
+                        String intentAction = requiresAndroidServiceAvailable.intentAction();
+                        if (!isAndroidServiceAvailable(intentAction)) {
+                            assumptionViolatedReasons.add(
+                                    String.format(
+                                            Locale.ENGLISH,
+                                            REQUIRES_ANDROID_SERVICE_ASSUMPTION_FAILED_ERROR_MSG,
+                                            intentAction));
+                        }
+                    }
                 }
 
                 // Throw exception in case any of the assumption was violated.
@@ -201,5 +240,30 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
             return requiresLargeScreenDevice.value();
         }
         return null;
+    }
+
+    // Check both class and the method for the annotation RequiresAndroidServiceAvailable, while the
+    // method's annotation prevails.
+    @Nullable
+    private RequiresAndroidServiceAvailable getRequiresAndroidServiceAvailable(
+            Description description) {
+        Annotation[] annotations = description.getTestClass().getAnnotations();
+
+        RequiresAndroidServiceAvailable classAnnotation = null;
+        for (Annotation annotation : annotations) {
+            if (annotation instanceof RequiresAndroidServiceAvailable) {
+                classAnnotation = (RequiresAndroidServiceAvailable) annotation;
+                break;
+            }
+        }
+
+        RequiresAndroidServiceAvailable methodAnnotation =
+                description.getAnnotation(RequiresAndroidServiceAvailable.class);
+
+        if (methodAnnotation == null) {
+            return classAnnotation;
+        }
+
+        return methodAnnotation;
     }
 }
