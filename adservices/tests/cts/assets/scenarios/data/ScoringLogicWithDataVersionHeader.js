@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-function scoreAd(ad, bid, auction_config, seller_signals, trusted_scoring_signals,
-  contextual_signal, custom_audience_scoring_signals) {
-  return {'status': 0, 'score': bid };
+function scoreAd(ad, bid, auction_config, seller_signals,
+  trusted_scoring_signals,
+  contextual_signals, custom_audience_scoring_signals) {
+  //return error if data version does not exist
+  if (contextual_signals.dataVersion === null) {
+    return { 'status': -1 };
+  }
+  return { 'status': 0, 'score': bid };
 }
-function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {
+
+function reportResult(ad_selection_config, render_uri, bid,
+  contextual_signals) {
   // Add the address of your reporting server here
   let reporting_address = '<seller-reporting-uri>';
-  // Register beacons
-  let clickUri = 'https://incorrectDomain.com' + '/sellerInteraction?click';
-  let viewUri = 'https://incorrectDomain.com' + '/sellerInteraction?view';
-  const beacons = {'click': clickUri, 'view': viewUri}
-  registerAdBeacon(beacons)
-  return {'status': 0, 'results': {'signals_for_buyer': '{"signals_for_buyer" : 1}'
-          , 'reporting_uri': reporting_address + '/reportResult?render_uri='
-            + render_uri + '?bid=' + bid } };
-}
+  return {
+    'status': 0, 'results':
+    {
+      'signals_for_buyer': "{'signals_for_buyer': 1}",
+      'reporting_uri': reporting_address + '?dataVersion=' + contextual_signals.dataVersion
+    }
+  };
+};
