@@ -15,7 +15,7 @@
  */
 
 function scoreAd(ad, bid, auction_config, seller_signals, trusted_scoring_signals,
-  contextual_signal, user_signal, custom_audience_scoring_signals) {
+  contextual_signal, custom_audience_scoring_signals) {
   return {'status': 0, 'score': bid };
 }
 function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {

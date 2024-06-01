@@ -1,0 +1,73 @@
+{
+  "mocks": [
+    {
+      "request": {
+        "path": "/bidding"
+      },
+      "response": {
+        "body": "BiddingLogicV2WithDataVersionHeader.js"
+      },
+      "verify_called": true
+    },
+    {
+      "request": {
+        "path": "/scoring"
+      },
+      "response": {
+        "body": "ScoringLogicWithDataVersionHeader.js"
+      },
+      "verify_called": true
+    },
+    {
+      "request": {
+        "path": "/scoring/trusted"
+      },
+      "response": {
+        "body": "ScoringSignals.json",
+        "header": {
+          "x-fledge-scoring-signals-format-version": 2
+        }
+      },
+      "verify_called": true
+    },
+    {
+      "request": {
+        "path": "/bidding/trusted"
+      },
+      "response": {
+        "body": "BiddingSignals.json",
+        "header": {
+          "x-fledge-bidding-signals-format-version": 1
+        }
+      },
+      "verify_called": true
+    },
+    {
+      "request": {
+        "path": "/buyer/reportImpression?dataVersion=1"
+      },
+      "response": {
+        "body": null
+      },
+      "verify_called": true
+    },
+    {
+      "request": {
+        "path": "/seller/reportImpression?dataVersion=2"
+      },
+      "response": {
+        "body": null
+      },
+      "verify_called": true
+    }
+  ],
+  "substitutions": {
+    "<daily-update-uri>": "{base_url_with_prefix}/bidding/daily",
+    "<ad-render-uri-1>": "{base_url_with_prefix}/render_ad/1",
+    "<ad-render-uri-2>": "{base_url_with_prefix}/render_ad/2",
+    "<buyer-trusted-bidding-uri>": "{base_url_with_prefix}/bidding/trusted",
+    "<buyer-reporting-uri>": "{base_url_with_prefix}/buyer/reportImpression",
+    "<seller-trusted-bidding-uri>": "{base_url_with_prefix}/scoring/trusted",
+    "<seller-reporting-uri>": "{base_url_with_prefix}/seller/reportImpression"
+  }
+}

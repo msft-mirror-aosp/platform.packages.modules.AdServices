@@ -183,13 +183,12 @@ public class ScenarioDispatcher extends Dispatcher {
                                 hasQueryParams(mockPath)
                                         ? mockPath
                                         : pathWithoutQueryParams(path)));
-                sLogger.v("serving path at %s (200)", path);
-
-                return maybeApplyFledgeV3Header(
-                        new MockResponse().setBody(body).setResponseCode(200),
-                        request,
-                        mockRequest,
-                        mockResponse);
+                MockResponse response = new MockResponse().setBody(body).setResponseCode(200);
+                for (Map.Entry<String, String> mockHeader : mockResponse.getHeaders().entrySet()) {
+                    response.addHeader(mockHeader.getKey(), mockHeader.getValue());
+                }
+                sLogger.v("serving path at %s with response %s", path, response.toString());
+                return response;
             }
         }
 
@@ -213,23 +212,6 @@ public class ScenarioDispatcher extends Dispatcher {
             sLogger.v(
                     "Recorded path called at %s, latch count is %d/%d.",
                     path, mUniqueCallCount.getCount(), mRequestToMockMap.size());
-        }
-    }
-
-    private MockResponse maybeApplyFledgeV3Header(
-            MockResponse response,
-            RecordedRequest request,
-            Scenario.Request mockRequest,
-            Scenario.Response mockResponse) {
-        if (!Strings.isNullOrEmpty(request.getHeader(X_FLEDGE_BUYER_BIDDING_LOGIC_VERSION))
-                && mockRequest.getHeaders().containsKey(X_FLEDGE_BUYER_BIDDING_LOGIC_VERSION)) {
-            sLogger.v("Setting FLEDGE bidding logic header.");
-            return response.setHeader(
-                    X_FLEDGE_BUYER_BIDDING_LOGIC_VERSION,
-                    mockResponse.getHeaders().get(X_FLEDGE_BUYER_BIDDING_LOGIC_VERSION));
-        } else {
-            sLogger.v("Not setting FLEDGE V3 bidding logic header.");
-            return response;
         }
     }
 
