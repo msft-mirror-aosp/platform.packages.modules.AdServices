@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-public final class SimpleSyncCallbackTest extends SyncCallbackTestCase<SimpleSyncCallback> {
+public final class SimpleSyncCallbackTest extends IBinderSyncCallbackTestCase<SimpleSyncCallback> {
 
     @Override
     protected SimpleSyncCallback newCallback(SyncCallbackSettings settings) {

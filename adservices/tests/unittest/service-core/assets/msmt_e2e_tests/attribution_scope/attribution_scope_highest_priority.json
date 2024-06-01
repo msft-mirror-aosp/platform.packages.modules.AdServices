@@ -8,7 +8,6 @@
       // S1: attribution scopes -> ["1"], destinations -> [D1], priority -> 102
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -45,7 +44,6 @@
       // S2: attribution scopes -> ["1"], destinations -> [D1], priority -> 102
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -82,7 +80,6 @@
       // S3: attribution scopes -> ["1"], destinations -> [D1], priority -> 101
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -122,7 +119,6 @@
       // S2 should be selected to match the attribution scope and has the highest priority.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
