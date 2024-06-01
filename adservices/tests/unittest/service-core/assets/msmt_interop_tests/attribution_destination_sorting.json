@@ -1,31 +1,30 @@
 {
-  "description": "source matching is based on the same destination site",
+  "description": "attribution destinations are sorted in reports",
   "input": {
     "registrations": [
       {
         "timestamp": "0",
         "registration_request": {
           "context_origin": "https://source.test",
-          "attribution_src_url": "https://reporter.test/register-source",
           "Attribution-Reporting-Eligible": "navigation-source"
         },
         "responses": [
           {
             "url": "https://reporter.test/register-source",
+            "debug_permission": true,
             "response": {
               "Attribution-Reporting-Register-Source": {
-                "destination": "https://destination.test",
-                "source_event_id": "123"
+                "destination": ["https://c.test", "https://a.test", "https://b.test"],
+                "debug_reporting": true
               }
             }
           }
         ]
       },
       {
-        "timestamp": "1000",
+        "timestamp": "1",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
-          "context_origin": "https://example.destination.test"
+          "context_origin": "https://b.test"
         },
         "responses": [
           {
@@ -41,29 +40,6 @@
             }
           }
         ]
-      },
-      {
-        "timestamp": "2000",
-        "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
-          "context_origin": "https://another-destination.test"
-        },
-        "responses": [
-          {
-            "url": "https://reporter.test/register-trigger",
-            "debug_permission": true,
-            "response": {
-              "Attribution-Reporting-Register-Trigger": {
-                "debug_reporting": true,
-                "event_trigger_data": [
-                  {
-                    "trigger_data": "6"
-                  }
-                ]
-              }
-            }
-          }
-        ]
       }
     ]
   },
@@ -73,20 +49,22 @@
         "payload": [
           {
             "body": {
-              "attribution_destination": "https://another-destination.test"
+              "attribution_destination": ["https://a.test", "https://b.test", "https://c.test"],
+              "source_event_id": "0",
+              "source_site": "https://source.test"
             },
-            "type": "trigger-no-matching-source"
+            "type": "source-success"
           }
         ],
-        "report_time": "2000",
+        "report_time": "0",
         "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/verbose"
       },
       {
         "payload": {
-          "attribution_destination": "https://destination.test",
+          "attribution_destination": ["https://a.test", "https://b.test", "https://c.test"],
           "randomized_trigger_rate": 0.0024263,
           "scheduled_report_time": "172800",
-          "source_event_id": "123",
+          "source_event_id": "0",
           "source_type": "navigation",
           "trigger_data": "7"
         },

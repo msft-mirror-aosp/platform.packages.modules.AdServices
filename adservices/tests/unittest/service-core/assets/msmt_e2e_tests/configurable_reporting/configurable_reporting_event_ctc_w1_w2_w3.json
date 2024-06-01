@@ -39,7 +39,6 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.1d1.test"
         },
         "responses": [
@@ -63,7 +62,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.1d1.test"
         },
         "responses": [

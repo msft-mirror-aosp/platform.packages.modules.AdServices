@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** Base test for classes that extend ResultTestSyncCallback. */
 abstract class IResultSyncCallbackTestCase<T, CB extends IResultSyncCallback<T>>
-        extends SyncCallbackTestCase<CB> {
+        extends IBinderSyncCallbackTestCase<CB> {
 
     private static final AtomicInteger sNextId = new AtomicInteger();
 
@@ -176,10 +176,5 @@ abstract class IResultSyncCallbackTestCase<T, CB extends IResultSyncCallback<T>>
                 assertThrows(CallbackAlreadyCalledException.class, () -> mCallback.assertCalled());
 
         thrown.assertWith(expect, "injectResult()", null, newResult);
-    }
-
-    @Test
-    public final void testAsBinder() {
-        expect.withMessage("asBinder()").that(mCallback.asBinder()).isNull();
     }
 }

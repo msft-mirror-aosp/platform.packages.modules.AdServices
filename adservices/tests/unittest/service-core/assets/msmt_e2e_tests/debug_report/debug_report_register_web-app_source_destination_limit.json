@@ -74,8 +74,7 @@
       {
         "registration_request": {
           "destination_origin": "android-app://example.2d1.test",
-          "registrant": "example.2d1.test",
-          "attribution_src_url": "https://www.ad-tech1.test"
+          "registrant": "example.2d1.test"
         },
         "responses": [
           {

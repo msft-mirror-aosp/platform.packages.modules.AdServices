@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.actions;
 
+import static com.android.adservices.service.measurement.E2ETest.getFirstUrl;
 import static com.android.adservices.service.measurement.E2ETest.getInputEvent;
 import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
@@ -59,9 +60,7 @@ public final class RegisterSource implements Action {
         RegistrationRequest.Builder registrationRequestBuilder =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
-                                Uri.parse(
-                                        regParamsJson.getString(
-                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)),
+                                Uri.parse(getFirstUrl(obj)),
                                 packageName,
                                 /* sdkPackageName = */ "")
                         .setAdIdValue(regParamsJson.optString(

@@ -8,7 +8,6 @@
       // Source is registered - it has a single destination type.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -42,7 +41,6 @@
       // coarse_event_report_destinations, which increases information gain beyond the limit.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech2.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -77,7 +75,6 @@
       // coarse_event_report_destinations, which stays within the information limit.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech3.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -113,7 +110,6 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [{
@@ -135,7 +131,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech2.test",
           "registrant": "example.2d1.test"
         },
         "responses": [{
@@ -157,7 +152,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech3.test",
           "registrant": "example.2d1.test"
         },
         "responses": [{

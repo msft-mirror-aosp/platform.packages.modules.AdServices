@@ -54,10 +54,6 @@ public class BlockedTopicsActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initBeta() {
-    }
-
-    @Override
     public void initGA() {
         mActivity.setTitle(R.string.settingsUI_blocked_topics_ga_title);
         configureSharedElements();

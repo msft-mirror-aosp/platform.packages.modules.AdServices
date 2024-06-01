@@ -30,7 +30,6 @@ import android.adservices.topics.Topic;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
@@ -86,7 +85,6 @@ public final class TopicsConnectionTest extends AdServicesCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 330741404)
     public void testEnableGlobalKillSwitch() throws Exception {
         // First enable the Global Kill Switch and then connect to the TopicsService.
         // The connection should fail with Exception.

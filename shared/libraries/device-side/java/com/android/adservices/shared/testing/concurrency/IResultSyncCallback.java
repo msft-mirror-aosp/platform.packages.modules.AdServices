@@ -16,8 +16,6 @@
 
 package com.android.adservices.shared.testing.concurrency;
 
-import android.os.IBinder;
-
 import androidx.annotation.Nullable;
 
 /**
@@ -26,7 +24,7 @@ import androidx.annotation.Nullable;
  * <p>This is needed because the latter is a "special" case of the former as it can receive either a
  * result OR a failure.
  */
-interface IResultSyncCallback<T> extends SyncCallback {
+interface IResultSyncCallback<T> extends SyncCallback, IBinderSyncCallback {
 
     /** Sets the result. */
     void injectResult(@Nullable T result);
@@ -46,12 +44,4 @@ interface IResultSyncCallback<T> extends SyncCallback {
      */
     @Nullable
     T getResult();
-
-    /**
-     * Convenience method for callbacks used to implement binder stubs.
-     *
-     * @return {@code null} by default, but subclasses can extend.
-     */
-    @Nullable
-    IBinder asBinder();
 }

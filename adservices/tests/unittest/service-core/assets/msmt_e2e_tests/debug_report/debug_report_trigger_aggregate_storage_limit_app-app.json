@@ -8,7 +8,6 @@
       {
         "timestamp": "1643235573000",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -34,7 +33,6 @@
       {
         "timestamp": "1643321973000",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test",
           "destination_origin": "android-app://example.2d1.test"
         },
@@ -70,7 +68,6 @@
       {
         "timestamp": "1643321973001",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test",
           "destination_origin": "android-app://example.2d1.test"
         },
@@ -170,6 +167,7 @@
       {
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x11",
@@ -190,6 +188,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x11",

@@ -6,7 +6,6 @@
         "timestamp": "1643235573000",
         "registration_request": {
           "source_origin": "https://source.test",
-          "attribution_src_url": "https://source.test/register-source",
           "source_type": "navigation"
         },
         "responses": [{
@@ -27,7 +26,6 @@
       {
         "timestamp": "1643235574000",
         "registration_request": {
-          "attribution_src_url": "https://trigger.test/register-trigger",
           "destination_origin": "https://destination.test"
         },
         "responses": [{

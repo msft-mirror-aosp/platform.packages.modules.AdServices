@@ -103,11 +103,6 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
     }
 
     @Override
-    public void initBeta() {
-        setContentView(R.layout.consent_notification_activity);
-    }
-
-    @Override
     public void initGA() {
         setContentView(R.layout.consent_notification_ga_v2_activity);
     }
@@ -133,11 +128,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
     }
 
     private void initFragment() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            setContentView(R.layout.consent_notification_ga_v2_activity);
-        } else {
-            setContentView(R.layout.consent_notification_activity);
-        }
+        setContentView(R.layout.consent_notification_ga_v2_activity);
     }
 
     /**

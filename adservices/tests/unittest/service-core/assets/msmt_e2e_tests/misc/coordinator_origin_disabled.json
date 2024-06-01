@@ -1,13 +1,12 @@
 {
   "description": "Given two entries \"Attribution-Reporting-Register-Aggregatable-Source\" header, many \"Attribution-Reporting-Register-Aggregatable-Trigger-Data\", generate an aggregate report with two contributions and the value is accumulated for each entry.",
   "phflags_override": {
-    "measurement_aggregation_coordinator_origin": "false",
+    "measurement_aggregation_coordination_origin_enabled": "false",
     "measurement_aggregation_coordinator_origin_list": "https://a.test"
   },
   "input": {
     "sources": [{
       "registration_request": {
-        "attribution_src_url": "https://www.ad-tech1.test",
         "source_type": "navigation",
         "registrant": "example.1s1.test"
       },
@@ -44,7 +43,6 @@
     }],
     "triggers": [{
       "registration_request": {
-        "attribution_src_url": "https://www.ad-tech1.test",
         "registrant": "example.2d1.test"
       },
       "responses": [{
@@ -107,7 +105,7 @@
               "campaignCounts": 32768,
               "geoValue": 1664
             },
-            "aggregation_coordinator_origin": "https://a.test"
+            "aggregation_coordinator_origin": "https://b.test"
           },
           "Location": null,
           "Attribution-Reporting-Redirect": null

@@ -8,7 +8,6 @@
       {
         "registration_request": {
           "registrant": "com.example1",
-          "attribution_src_url": "https://adtech.test",
           "source_type": "event"
         },
         "responses": [
@@ -40,7 +39,6 @@
       {
         "registration_request": {
           "registrant": "com.example3",
-          "attribution_src_url": "https://adtech.test",
           "source_type": "navigation"
         },
         "responses": [
@@ -74,7 +72,6 @@
       {
         "registration_request": {
           "registrant": "com.example1",
-          "attribution_src_url": "https://adtech.test",
           "source_type": "navigation"
         },
         "responses": [
@@ -98,7 +95,6 @@
       {
         "registration_request": {
           "registrant": "com.example1",
-          "attribution_src_url": "https://adtech.test",
           "source_type": "navigation"
         },
         "responses": [
@@ -129,7 +125,6 @@
       // Trigger is registered October 5 and attributed to the source from September 17
       {
         "registration_request": {
-          "attribution_src_url": "https://adtech.test",
           "registrant": "com.example2"
         },
         "responses": [
@@ -159,7 +154,6 @@
       // Trigger is matched with the source from October 23
       {
         "registration_request": {
-          "attribution_src_url": "https://adtech.test",
           "registrant": "com.example4"
         },
         "responses": [

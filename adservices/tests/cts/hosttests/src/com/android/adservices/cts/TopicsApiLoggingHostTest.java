@@ -16,24 +16,23 @@
 
 package com.android.adservices.cts;
 
-import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
 import static com.android.os.adservices.AdservicesExtensionAtoms.AD_SERVICES_API_CALLED_FIELD_NUMBER;
 
 import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertNotNull;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.cts.statsdatom.lib.AtomTestUtils;
 import android.cts.statsdatom.lib.ConfigUtils;
-import android.cts.statsdatom.lib.DeviceUtils;
 import android.cts.statsdatom.lib.ReportUtils;
-import android.platform.test.annotations.FlakyTest;
 
 import com.android.adservices.common.AdServicesHostSideTestCase;
+import com.android.adservices.shared.testing.TestDeviceHelper;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
@@ -68,6 +67,7 @@ import java.util.List;
 @RunWith(DeviceJUnit4ClassRunner.class)
 @SetFlagDisabled(KEY_TOPICS_KILL_SWITCH)
 @SetFlagDisabled(KEY_MDD_BACKGROUND_TASK_KILL_SWITCH)
+@SetFlagDisabled(KEY_ENFORCE_FOREGROUND_STATUS_TOPICS)
 @SetFlagEnabled(KEY_ADSERVICES_ENABLED)
 @SetFlagEnabled(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK)
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
@@ -76,18 +76,9 @@ public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
     private static final String CLASS = "TopicsApiLogActivity";
     private static final String CLASS_NAME = "TARGETING";
     private static final String API_NAME = "GET_TOPICS";
-    private static final String SDK_NAME = "AdservicesCtsSdk";
+    private static final String SDK_NAME = "AdServicesCtsSdk";
     private static final String TARGET_PACKAGE_SUFFIX_TPLUS = "android.adservices.api";
     private static final String TARGET_PACKAGE_SUFFIX_SMINUS = "android.ext.services";
-    private static final int PPAPI_ONLY_SOURCE_OF_TRUTH = 1;
-    private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
-    private static final String TARGET_PACKAGE = "com.google.android.adservices.api";
-    private static final String TARGET_PACKAGE_AOSP = "com.android.adservices.api";
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE =
-            "com.google.android.ext.adservices.api";
-    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP =
-            "com.android.ext.adservices.api";
-    private static final String LOW_RAM_DEVICE_CONFIG = "ro.config.low_ram";
 
     @Rule(order = 10)
     public TestMetrics mMetrics = new TestMetrics();
@@ -113,21 +104,17 @@ public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 305089304)
     public void testGetTopicsLog() throws Exception {
         ITestDevice device = getDevice();
-        assertNotNull("Device not set", device);
+        assertWithMessage("Device not set").that(device).isNotNull();
+
         ExtensionRegistry registry = ExtensionRegistry.newInstance();
         AdservicesExtensionAtoms.registerAllExtensions(registry);
-        boolean enforceForegroundStatus = getEnforceForeground();
-        setEnforceForeground(false);
 
         callTopicsAPI(mTargetPackage, device);
 
         // Fetch a list of happened log events and their data
         List<EventMetricData> data = ReportUtils.getEventMetricDataList(device, registry);
-
-        setEnforceForeground(enforceForegroundStatus);
 
         // We trigger only one event from activity, should only see one event in the list
         assertThat(data).hasSize(1);
@@ -149,30 +136,11 @@ public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
         ConfigUtils.uploadConfig(device, config);
 
         // Run the get topic activity that has logging event on the devices
-        // 4th argument is actionKey and 5th is actionValue, which is the extra data that passed
-        // to the activity via an Intent, we don't need to provide extra values, thus passing
-        // in null here
-        DeviceUtils.runActivity(
-                device, PACKAGE, CLASS, /* actionKey */ null, /* actionValue */ null);
+        TestDeviceHelper.setTestDevice(device);
+        TestDeviceHelper.startActivityWaitUntilCompletion(PACKAGE, CLASS);
 
-        // Wait for activity to finish and logging event to happen
-        Thread.sleep(AtomTestUtils.WAIT_TIME_SHORT);
-    }
-
-    // Set enforce foreground execution.
-    private void setEnforceForeground(boolean enableForegound) throws DeviceNotAvailableException {
-        getDevice()
-                .executeShellCommand(
-                        "device_config put adservices topics_enforce_foreground_status "
-                                + enableForegound);
-    }
-
-    private boolean getEnforceForeground() throws DeviceNotAvailableException {
-        String enforceForegroundStatus =
-                getDevice()
-                        .executeShellCommand(
-                                "device_config get adservices topics_enforce_foreground_status");
-        return enforceForegroundStatus.equals("true\n");
+        // Wait for the logging event to happen.
+        Thread.sleep(AtomTestUtils.WAIT_TIME_LONG);
     }
 
     private String findPackageName(String suffix) throws DeviceNotAvailableException {
@@ -180,12 +148,5 @@ public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
                 .filter(s -> s.endsWith(suffix))
                 .findFirst()
                 .orElse(null);
-    }
-
-    /**
-     * The test is unsupported if the device is configured as a low-RAM device.
-     */
-    private boolean isDeviceSupported() throws DeviceNotAvailableException {
-        return !"true".equals(getDevice().getProperty(LOW_RAM_DEVICE_CONFIG));
     }
 }

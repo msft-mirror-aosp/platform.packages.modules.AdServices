@@ -8,7 +8,6 @@
       // S1: attribution scopes -> ["1"], destinations -> [D1], priority -> 102
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -45,7 +44,6 @@
       // S2: attribution scopes -> ["2"], destinations -> [D1], priority -> 102
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -82,7 +80,6 @@
       // S3: attribution scopes -> ["2", "3"], destinations -> [D1], priority -> 102
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -119,7 +116,6 @@
       // S4: attribution scopes -> ["3"], destinations -> [D1], priority -> 102
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -160,7 +156,6 @@
       // scopes ("2").
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [

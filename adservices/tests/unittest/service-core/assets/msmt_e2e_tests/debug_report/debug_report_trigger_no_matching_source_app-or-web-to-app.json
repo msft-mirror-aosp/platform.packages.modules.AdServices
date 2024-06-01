@@ -5,7 +5,6 @@
       {
         "timestamp": "800000000001",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.1d1.test",
           "destination_origin": "android-app://example.1d1.test"
         },

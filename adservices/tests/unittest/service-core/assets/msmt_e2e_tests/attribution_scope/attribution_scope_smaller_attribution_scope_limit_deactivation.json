@@ -8,7 +8,6 @@
       // S1: attribution scope limit -> 3 destinations -> [D1], priority -> 102
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -48,7 +47,6 @@
       // S1 will be deactivated due to smaller attribution_scope_limit.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -87,7 +85,6 @@
       // S2 will be NOT be deactivated as it has higher attribution_scope_limit.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -127,7 +124,6 @@
       // Given S1 was deactivated, this should match to none.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -200,7 +196,6 @@
       // S3 will be deactivated after losing the attribution.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -272,7 +267,6 @@
       // losing attribution for T2.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [

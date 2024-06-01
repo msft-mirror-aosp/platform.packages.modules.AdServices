@@ -9,7 +9,6 @@
       // Rejected due to information gain too high.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -47,7 +46,6 @@
       // Rejected due to information gain too high.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "event",
           "registrant": "example.1s1.test"
         },
@@ -84,7 +82,6 @@
       // S3: navigation, attribution scopes -> ["1"], destinations -> [D1], priority -> 101
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -121,7 +118,6 @@
       // S4: event, attribution scopes -> ["1"], destinations -> [D2], priority -> 101
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "event",
           "registrant": "example.1s1.test"
         },
@@ -161,7 +157,6 @@
       // S3 should be selected to match the attribution scope and S1 with higher priority was rejected.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -233,7 +228,6 @@
       // S4 should be selected to match the attribution scope and S2 with higher priority was rejected.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d2.test"
         },
         "responses": [

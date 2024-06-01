@@ -3,7 +3,6 @@
   "input": {
     "sources": [{
       "registration_request": {
-        "attribution_src_url": "https://localhost",
         "source_type": "navigation",
         "registrant": "example.1s1.test"
       },
@@ -42,7 +41,6 @@
     }],
     "triggers": [{
       "registration_request": {
-        "attribution_src_url": "https://localhost",
         "registrant": "example.2d1.test"
       },
       "responses": [

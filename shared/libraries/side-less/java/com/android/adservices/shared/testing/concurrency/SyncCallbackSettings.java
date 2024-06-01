@@ -20,10 +20,8 @@ import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG
 import com.android.adservices.shared.testing.Identifiable;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
-import com.android.adservices.shared.testing.Nullable;
 
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -108,49 +106,22 @@ public final class SyncCallbackSettings implements Identifiable {
     }
 
     // NOTE: log of methods below are indirectly unit tested by the callback test - testing it again
-    // on SyncCallbackSettings would be an overkill (they're not public anyways), so
-    // SyncCallbackSettings just asserts that they're properly logged.
+    // on SyncCallbackSettings would be an overkill (they're not public anyways)
 
     void countDown() {
-        logD("countDown() called");
-        try {
-            mLatch.countDown();
-        } finally {
-            logV("leaving countDown()");
-        }
+        mLatch.countDown();
     }
 
-    /**
-     * @deprecated - TODO(b/337014024): merge with other)
-     */
-    @Deprecated
-    void await() throws InterruptedException {
-        mLatch.await();
-    }
-
-    boolean await(long timeout, TimeUnit unit) throws InterruptedException {
-        logD("await() called");
-        try {
-            return mLatch.await(timeout, unit);
-        } finally {
-            logV("leaving await()");
+    void assertCalled(Supplier<String> caller) throws InterruptedException {
+        long timeoutMs = getMaxTimeoutMs();
+        TimeUnit unit = TimeUnit.MILLISECONDS;
+        if (!mLatch.await(timeoutMs, unit)) {
+            throw new SyncCallbackTimeoutException(caller.get(), timeoutMs, unit);
         }
     }
 
     boolean isCalled() {
         return mLatch.getCount() == 0;
-    }
-
-    @FormatMethod
-    private void logD(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        String realMessage = String.format(msgFmt, msgArgs);
-        mLogger.d("[settingsId#%s]: %s", getId(), realMessage);
-    }
-
-    @FormatMethod
-    private void logV(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        String realMessage = String.format(msgFmt, msgArgs);
-        mLogger.v("[SyncCallbackSettings: %s]: %s", toString(), realMessage);
     }
 
     /** Bob the Builder! */
@@ -168,6 +139,11 @@ public final class SyncCallbackSettings implements Identifiable {
             mIsMainThreadSupplier =
                     Objects.requireNonNull(
                             isMainThreadSupplier, "isMainThreadSupplier cannot be null");
+        }
+
+        @VisibleForTesting
+        Builder(RealLogger realLogger) {
+            this(realLogger, () -> Boolean.FALSE);
         }
 
         /** See {@link SyncCallbackSettings#getExpectedNumberCalls()}. */

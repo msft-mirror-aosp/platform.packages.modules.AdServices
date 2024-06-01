@@ -57,10 +57,6 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initBeta() {
-    }
-
-    @Override
     public void initGA() {
         mActivity.setTitle(R.string.settingsUI_main_view_ga_title);
 

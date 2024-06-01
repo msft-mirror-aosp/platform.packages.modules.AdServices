@@ -8,7 +8,6 @@
     "sources": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -51,7 +50,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech2.test",
           "source_type": "navigation",
           "registrant": "example.1s2.test"
         },
@@ -93,7 +91,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech3.test",
           "source_type": "navigation",
           "registrant": "example.1s2.test"
         },
@@ -137,7 +134,6 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech4.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -245,7 +241,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech4.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -361,6 +356,7 @@
         "report_url": "https://www.ad-tech4.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0xb87",
@@ -375,6 +371,7 @@
         "report_url": "https://www.ad-tech4.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x55b",

@@ -86,7 +86,6 @@ public final class TestDeviceHelper {
         return result;
     }
 
-
     /** Gets the device API level. */
     public static int getApiLevel() {
         int apiLevel = call(INativeDevice::getApiLevel);
@@ -114,6 +113,17 @@ public final class TestDeviceHelper {
         assertWithMessage("result of starting %s", intent)
                 .that(startActivityMsg)
                 .doesNotContain("Error: Activity not started, unable to resolve Intent");
+    }
+
+    /**
+     * Starts an activity and ensures that the activity has fully loaded and completed. (By using
+     * the flag {@code -w})
+     *
+     * @param packageName the package name of the app to launch the activity on
+     * @param className the class name of the activity to launch
+     */
+    public static void startActivityWaitUntilCompletion(String packageName, String className) {
+        runShellCommand("am start -W -n %s/.%s", packageName, className);
     }
 
     /** Enable the given component and return the result of the shell command */

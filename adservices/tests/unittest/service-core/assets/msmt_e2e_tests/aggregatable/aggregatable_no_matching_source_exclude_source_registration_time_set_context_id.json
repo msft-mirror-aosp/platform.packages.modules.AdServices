@@ -12,7 +12,6 @@
   "input": {
     "triggers": [{
       "registration_request": {
-        "attribution_src_url": "https://www.ad-tech1.test",
         "registrant": "example.2d1.test"
       },
       "responses": [{
@@ -73,6 +72,7 @@
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
       "payload": {
         "attribution_destination": "android-app://example.2d1.test",
+        "aggregation_coordinator_origin": "https://coordinator.test",
         "histograms": [
           {"key": "0x0", "value": 0}
         ],
