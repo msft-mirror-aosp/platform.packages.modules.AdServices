@@ -39,6 +39,11 @@ public class ResultSyncCallback<T> extends DeviceSideSyncCallback
         super(settings);
     }
 
+    @Override
+    protected final String getSetCalledAlternatives() {
+        return "injectResult()";
+    }
+
     /**
      * Sets the result.
      *
@@ -48,10 +53,10 @@ public class ResultSyncCallback<T> extends DeviceSideSyncCallback
         logV("Injecting %s (mResult=%s)", result, mResult);
         Optional<T> newResult = Optional.fromNullable(result);
         if (!mResult.compareAndSet(null, newResult)) {
-            setInternalFailure(
+            setOnAssertCalledException(
                     new CallbackAlreadyCalledException("injectResult()", getResult(), result));
         }
-        super.setCalled();
+        super.internalSetCalled();
     }
 
     /**
@@ -61,7 +66,7 @@ public class ResultSyncCallback<T> extends DeviceSideSyncCallback
      * @return the result
      */
     public final @Nullable T assertResultReceived() throws InterruptedException {
-        assertCalled();
+        super.assertCalled();
         return getResult();
     }
 
@@ -72,11 +77,6 @@ public class ResultSyncCallback<T> extends DeviceSideSyncCallback
     public final @Nullable T getResult() {
         Optional<T> result = mResult.get();
         return result == null ? null : result.orNull();
-    }
-
-    @Override
-    public final void setCalled() {
-        throw new UnsupportedOperationException("should call injectResult() instead");
     }
 
     @Override

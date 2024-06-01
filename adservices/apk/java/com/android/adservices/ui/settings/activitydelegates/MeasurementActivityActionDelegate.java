@@ -48,12 +48,6 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initBeta() {
-        mActivity.setTitle(R.string.settingsUI_measurement_view_title);
-        configureSharedElements();
-    }
-
-    @Override
     public void initGA() {
         mActivity.setTitle(R.string.settingsUI_measurement_ga_title);
         configureSharedElements();

@@ -18,14 +18,12 @@ package com.android.adservices.shared.testing;
 
 import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.INJECT_RESULT_OR_FAILURE;
 import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
 import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.MSG_WRONG_ERROR_RECEIVED;
 
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.CallbackAlreadyCalledException;
-import com.android.adservices.shared.testing.concurrency.CalledOnMainThreadException;
 import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallbackTestCase;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
@@ -42,11 +40,11 @@ public final class OutcomeReceiverForTestsTest
         extends FailableResultSyncCallbackTestCase<
                 String, Exception, OutcomeReceiverForTests<String>> {
 
-    private static final boolean DONT_FAIL_IF_CALLED_ON_MAIN_THREAD = false;
     private static final String RESULT = "Saul Goodman!";
-    private static final Exception ERROR = new UnsupportedOperationException("D'OH!");
 
     private static final int TIMEOUT_MS = 200;
+
+    private final Exception mError = new UnsupportedOperationException("D'OH!");
 
     @Override
     protected OutcomeReceiverForTests<String> newCallback(SyncCallbackSettings settings) {
@@ -94,38 +92,19 @@ public final class OutcomeReceiverForTestsTest
     @Test
     public void testOnResult_afterOnError() {
         OutcomeReceiverForTests<String> receiver = mCallback;
-        receiver.onError(ERROR);
+        receiver.onError(mError);
         receiver.onResult(RESULT);
 
         CallbackAlreadyCalledException thrown =
                 assertThrows(CallbackAlreadyCalledException.class, () -> receiver.assertCalled());
 
-        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, ERROR, RESULT);
-    }
-
-    @Test
-    public void testOnResult_calledOnMainThread_fails() throws Exception {
-        OutcomeReceiverForTests<String> receiver = newReceiver(TIMEOUT_MS * 3);
-
-        runOnMainThread(() -> receiver.onResult(RESULT));
-
-        assertThrows(CalledOnMainThreadException.class, () -> receiver.assertCalled());
-    }
-
-    @Test
-    public void testOnResult_calledOnMainThread_pass() throws Exception {
-        OutcomeReceiverForTests<String> receiver =
-                newReceiver(TIMEOUT_MS * 3, DONT_FAIL_IF_CALLED_ON_MAIN_THREAD);
-
-        runOnMainThread(() -> receiver.onResult(RESULT));
-
-        assertSuccess(receiver, RESULT);
+        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, mError, RESULT);
     }
 
     @Test
     public void testAssertFailure_nullArg() {
         OutcomeReceiverForTests<String> receiver = mCallback;
-        receiver.onError(ERROR);
+        receiver.onError(mError);
 
         assertThrows(NullPointerException.class, () -> receiver.assertFailure(null));
     }
@@ -134,16 +113,16 @@ public final class OutcomeReceiverForTestsTest
     public void testOnError() throws Exception {
         OutcomeReceiverForTests<String> receiver = newReceiver(TIMEOUT_MS * 3);
 
-        runAsync(TIMEOUT_MS, () -> receiver.onError(ERROR));
+        runAsync(TIMEOUT_MS, () -> receiver.onError(mError));
 
-        assertFailure(receiver, ERROR);
+        assertFailure(receiver, mError);
     }
 
     @Test
     public void testOnError_wrongExceptionClass() throws Exception {
         OutcomeReceiverForTests<String> receiver = newReceiver(TIMEOUT_MS * 3);
 
-        runAsync(TIMEOUT_MS, () -> receiver.onError(ERROR));
+        runAsync(TIMEOUT_MS, () -> receiver.onError(mError));
 
         IllegalStateException exception =
                 assertThrows(
@@ -154,51 +133,32 @@ public final class OutcomeReceiverForTestsTest
                 .hasMessageThat()
                 .isEqualTo(
                         String.format(
-                                MSG_WRONG_ERROR_RECEIVED, NoSuchElementException.class, ERROR));
+                                MSG_WRONG_ERROR_RECEIVED, NoSuchElementException.class, mError));
     }
 
     @Test
     public void testOnError_calledTwice() {
         OutcomeReceiverForTests<String> receiver = mCallback;
-        receiver.onError(ERROR);
+        receiver.onError(mError);
         Exception anotherError = new UnsupportedOperationException("Again?");
         receiver.onError(anotherError);
 
         CallbackAlreadyCalledException thrown =
                 assertThrows(CallbackAlreadyCalledException.class, () -> receiver.assertCalled());
 
-        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, ERROR, anotherError);
+        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, mError, anotherError);
     }
 
     @Test
     public void testOnError_afterOnResult() {
         OutcomeReceiverForTests<String> receiver = mCallback;
         receiver.onResult(RESULT);
-        receiver.onError(ERROR);
+        receiver.onError(mError);
 
         CallbackAlreadyCalledException thrown =
                 assertThrows(CallbackAlreadyCalledException.class, () -> receiver.assertCalled());
 
-        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, RESULT, ERROR);
-    }
-
-    @Test
-    public void testOnError_calledOnMainThread_fails() throws Exception {
-        OutcomeReceiverForTests<String> receiver = newReceiver(TIMEOUT_MS * 3);
-
-        runOnMainThread(() -> receiver.onError(ERROR));
-
-        assertThrows(CalledOnMainThreadException.class, () -> receiver.assertCalled());
-    }
-
-    @Test
-    public void testOnError_calledOnMainThread_pass() throws Exception {
-        OutcomeReceiverForTests<String> receiver =
-                newReceiver(TIMEOUT_MS * 3, DONT_FAIL_IF_CALLED_ON_MAIN_THREAD);
-
-        runOnMainThread(() -> receiver.onError(ERROR));
-
-        assertFailure(receiver, ERROR);
+        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, RESULT, mError);
     }
 
     private static OutcomeReceiverForTests<String> newReceiver(long timeoutMs) {

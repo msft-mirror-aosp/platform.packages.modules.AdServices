@@ -19,8 +19,8 @@ import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
 
 import org.junit.Test;
 
-abstract class OnResultSyncCallbackTestCase<T, C extends OnResultTestSyncCallback<T>>
-        extends IResultSyncCallbackTestCase<T, C> {
+abstract class OnResultSyncCallbackTestCase<R, CB extends OnResultTestSyncCallback<R>>
+        extends IResultSyncCallbackTestCase<R, CB> {
 
     @Test
     public final void testOnResult() throws Exception {
@@ -33,10 +33,10 @@ abstract class OnResultSyncCallbackTestCase<T, C extends OnResultTestSyncCallbac
         expect.withMessage("toString() before onResult()")
                 .that(mCallback.toString())
                 .contains("(no result yet)");
-        T injectedResult = newResult();
+        R injectedResult = newResult();
 
         runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.onResult(injectedResult));
-        T receivedResult = mCallback.assertResultReceived();
+        R receivedResult = mCallback.assertResultReceived();
 
         expect.withMessage("%s.assertResultReceived()", mCallback)
                 .that(receivedResult)
