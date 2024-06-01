@@ -39,24 +39,18 @@ public class ResultSyncCallback<T> extends DeviceSideSyncCallback
         super(settings);
     }
 
-    @Override
-    protected final String getSetCalledAlternatives() {
-        return "injectResult()";
-    }
-
     /**
      * Sets the result.
      *
      * @throws IllegalStateException if it was already called.
      */
     public final void injectResult(@Nullable T result) {
-        logV("Injecting %s (mResult=%s)", result, mResult);
         Optional<T> newResult = Optional.fromNullable(result);
         if (!mResult.compareAndSet(null, newResult)) {
             setOnAssertCalledException(
                     new CallbackAlreadyCalledException("injectResult()", getResult(), result));
         }
-        super.internalSetCalled();
+        super.internalSetCalled("injectResult(" + result + ")");
     }
 
     /**

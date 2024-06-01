@@ -15,16 +15,16 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-/** Simplest implementation of a {@code SyncCallback} for tests. */
-public final class SimpleSyncCallback extends AbstractResultlessSyncCallback {
+import com.android.adservices.shared.testing.Identifiable;
 
-    /** Default constructor. */
-    public SimpleSyncCallback() {
-        this(SyncCallbackFactory.newSettingsBuilder().build());
-    }
+import java.util.concurrent.TimeUnit;
 
-    /** Customizable constructor. */
-    public SimpleSyncCallback(SyncCallbackSettings settings) {
-        super(settings);
-    }
+/** {@code SyncCallaback} that doesn't expect a result. */
+public interface ResultlessSyncCallback extends SyncCallback, Identifiable {
+
+    /**
+     * Indicates the callback was called, so it unblocks {@link #waitCalled()} / {@link
+     * #waitCalled(long, TimeUnit)}.
+     */
+    void setCalled();
 }

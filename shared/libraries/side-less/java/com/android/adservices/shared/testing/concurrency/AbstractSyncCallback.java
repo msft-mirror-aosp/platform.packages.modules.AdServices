@@ -17,16 +17,16 @@ package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Nullable;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Base implementation for all {@code SyncCallback} classes. */
-public abstract class AbstractSyncCallback implements SyncCallback {
+public abstract class AbstractSyncCallback implements SyncCallback, FreezableToString {
 
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
 
@@ -34,9 +34,14 @@ public abstract class AbstractSyncCallback implements SyncCallback {
 
     private final String mId = String.valueOf(sIdGenerator.incrementAndGet());
 
-    private final AtomicInteger mNumberCalls = new AtomicInteger();
+    private final Object mLock = new Object();
 
-    @Nullable private String mCustomizedToString;
+    @GuardedBy("mLock")
+    private int mNumberCalls;
+
+    @GuardedBy("mLock")
+    @Nullable
+    private String mFrozenToString;
 
     // Used to fail assertCalled() if something bad happened before
     @Nullable private RuntimeException mOnAssertCalledException;
@@ -46,11 +51,11 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         mSettings = Objects.requireNonNull(settings, "settings cannot be null");
     }
 
-    // Hack to avoid assertion failures when checking logged messages, as the number of calls could
-    // be changed - should only be called by SyncCallbackTestCase.LogChecker
-    @VisibleForTesting
-    void setCustomizedToString(String string) {
-        mCustomizedToString = Objects.requireNonNull(string);
+    @Override
+    public final void freezeToString() {
+        synchronized (mLock) {
+            mFrozenToString = "FROZEN" + toStringLite();
+        }
     }
 
     /**
@@ -58,14 +63,10 @@ public abstract class AbstractSyncCallback implements SyncCallback {
      * toString()}.
      */
     protected void customizeToString(StringBuilder string) {
-        if (mCustomizedToString != null) {
-            string.append(mCustomizedToString);
-            return;
-        }
         string.append(", ")
                 .append(mSettings)
                 .append(", numberActualCalls=")
-                .append(mNumberCalls.get());
+                .append(getNumberActualCalls());
     }
 
     @Override
@@ -111,51 +112,31 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         mSettings.getLogger().v("%s: %s", toString(), msg);
     }
 
-    /**
-     * Should be overridden by callbacks that don't support {@link #assertCalled()}.
-     *
-     * @return name of the alternative method(s)
-     */
-    @Nullable
-    protected String getSetCalledAlternatives() {
-        return null;
-    }
-
-    @Override
-    public final boolean supportsSetCalled() {
-        return getSetCalledAlternatives() == null;
-    }
-
     protected void setOnAssertCalledException(@Nullable RuntimeException exception) {
         mOnAssertCalledException = exception;
     }
 
-    @Override
-    public final void setCalled() {
-        logD("setCalled() called on %s", Thread.currentThread().getName());
-        String alternative = getSetCalledAlternatives();
-        if (alternative != null) {
-            throw new UnsupportedOperationException("Should call " + alternative + " instead!");
-        }
+    // TODO(b/342448771): make it package protected once classes are moved
+    /**
+     * Real implementation of {@code setCalled()}, should be called by subclass to "unblock" the
+     * callback.
+     */
+    public final void internalSetCalled(String methodName) {
+        logD("%s called on %s", methodName, Thread.currentThread().getName());
         if (mSettings.isFailIfCalledOnMainThread() && mSettings.isMainThread()) {
             String errorMsg =
-                    "setCalled() called on main thread (" + Thread.currentThread().getName() + ")";
+                    methodName
+                            + " called on main thread ("
+                            + Thread.currentThread().getName()
+                            + ")";
             setOnAssertCalledException(new CalledOnMainThreadException(errorMsg));
         }
-        logV("setCalled() returning");
-        internalSetCalled();
-    }
+        logV("%s returning", methodName);
 
-    /**
-     * Real implementation of {@code setCalled()}, should be called by subclasses that don't support
-     * it.
-     */
-    protected final void internalSetCalled() {
-        try {
-            mNumberCalls.incrementAndGet();
-        } finally {
-            mSettings.countDown();
+        synchronized (mLock) {
+            mNumberCalls++;
         }
+        mSettings.countDown();
     }
 
     // TODO(b/337014024): make it final somehow?
@@ -183,11 +164,18 @@ public abstract class AbstractSyncCallback implements SyncCallback {
 
     @Override
     public int getNumberActualCalls() {
-        return mNumberCalls.get();
+        synchronized (mLock) {
+            return mNumberCalls;
+        }
     }
 
     @Override
     public final String toString() {
+        synchronized (mLock) {
+            if (mFrozenToString != null) {
+                return mFrozenToString;
+            }
+        }
         StringBuilder string =
                 new StringBuilder("[")
                         .append(getClass().getSimpleName())

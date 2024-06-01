@@ -53,11 +53,6 @@ public class FailableResultSyncCallback<T, F> extends AbstractSyncCallback
         mCallback = new ResultSyncCallback<>(settings);
     }
 
-    @Override
-    protected final String getSetCalledAlternatives() {
-        return "injectResult() or injectFailure()";
-    }
-
     /**
      * Sets a failure as the outcome of the callback.
      *

@@ -17,6 +17,8 @@ package com.android.adservices.shared.testing.concurrency;
 
 import android.os.IBinder;
 
+// TODO(b/337014024): it might be better to remove this class, or split it in 2 (for result and
+// resultless)
 /** Base class for device-side sync callbacks for testing. */
 public abstract class DeviceSideSyncCallback extends AbstractSyncCallback
         implements IBinderSyncCallback {

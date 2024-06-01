@@ -40,13 +40,6 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
     @Mock private Voider mDarthVoider;
 
     @Test
-    public void testUnsupportedMethods() {
-        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
-
-        assertThrows(UnsupportedOperationException.class, () -> callback.setCalled());
-    }
-
-    @Test
     public void testForSingleVoidAnswer() throws Exception {
         AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
 

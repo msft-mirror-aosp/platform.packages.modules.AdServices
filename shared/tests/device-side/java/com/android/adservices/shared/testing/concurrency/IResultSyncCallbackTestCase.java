@@ -25,7 +25,7 @@ import org.junit.Test;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Base test for classes that extend ResultTestSyncCallback. */
-abstract class IResultSyncCallbackTestCase<T, CB extends IResultSyncCallback<T>>
+abstract class IResultSyncCallbackTestCase<T, CB extends IResultSyncCallback<T> & FreezableToString>
         extends IBinderSyncCallbackTestCase<CB> {
 
     private static final AtomicInteger sNextId = new AtomicInteger();
@@ -47,8 +47,15 @@ abstract class IResultSyncCallbackTestCase<T, CB extends IResultSyncCallback<T>>
      *
      * <p>Useful to make sure {@link #newResult()} return unique objects.
      */
-    protected int getNextUniqueId() {
+    protected final int getNextUniqueId() {
         return sNextId.incrementAndGet();
+    }
+
+    @Override
+    protected String callCallback(CB callback) {
+        T result = newResult();
+        callback.injectResult(result);
+        return "injectResult(" + result + ")";
     }
 
     @Test
