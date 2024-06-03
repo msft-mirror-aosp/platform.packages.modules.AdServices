@@ -80,6 +80,11 @@ java_defaults {
         "-0 .lite",
         "-0 .tflite",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -137,6 +142,11 @@ android_test {
     ],
     test_config: "AndroidTest.JsScriptEngine.xml",
     instrumentation_for: "AdServicesApk",
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -174,6 +184,11 @@ android_test {
     ],
     test_config: "AndroidTestMDD.xml",
     instrumentation_for: "AdServicesApk",
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 java_defaults {
@@ -237,6 +252,11 @@ java_defaults {
         "-0 .lite",
         "-0 .tflite",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -344,6 +364,11 @@ android_test {
     ],
     test_config: "AndroidTest.JsScriptEngine.ExtServices.xml",
     instrumentation_for: "ExtServices-sminus",
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -383,6 +408,12 @@ android_test {
     ],
     test_config: "AndroidTestMDD.ExtServices.xml",
     instrumentation_for: "ExtServices-sminus",
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        baseline_filename: "lint-baseline-adextservices-mdd.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 cc_library_shared {
