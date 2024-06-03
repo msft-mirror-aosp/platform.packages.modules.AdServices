@@ -20,6 +20,8 @@ import static com.android.adservices.shared.testing.ConcurrencyHelper.startNewTh
 import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -47,10 +49,14 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
     protected final FakeLogger mFakeLogger = new FakeLogger();
 
-    protected final SyncCallbackSettings mDefaultSettings =
-            new SyncCallbackSettings.Builder(mFakeLogger)
-                    .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
-                    .build();
+    private final SyncCallbackSettings.Builder mFakeLoggerSettingsBuilder =
+            new SyncCallbackSettings.Builder(mFakeLogger);
+    private final SyncCallbackSettings.Builder mDefaultSettingsBuilder =
+            mFakeLoggerSettingsBuilder
+                    .setFailIfCalledOnMainThread(supportsFailIfCalledOnMainThread())
+                    .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS);
+
+    protected final SyncCallbackSettings mDefaultSettings = mDefaultSettingsBuilder.build();
 
     /**
      * Gets a new callback to be used in the test.
@@ -58,6 +64,17 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
      * <p>Each call should return a different object.
      */
     protected abstract CB newCallback(SyncCallbackSettings settings);
+
+    /**
+     * Checks whether the callback supports being constructor with a {@link SyncCallbackSettings
+     * settings} object that supports {@link SyncCallbackSettings#isFailIfCalledOnMainThread()
+     * failing if called in the main thread}.
+     *
+     * @return {@code true} by default.
+     */
+    protected boolean supportsFailIfCalledOnMainThread() {
+        return true;
+    }
 
     /** Makes sure subclasses provide distinct callbacks, as some tests rely on that. */
     @Test
@@ -86,6 +103,15 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
         expect.withMessage("%s(SyncCallbackSettings) constructor", callbackClass)
                 .that(settingsConstructor)
                 .isNotNull();
+    }
+
+    @Test
+    public final void testConstructor_cannotFailOnMainThread() throws Exception {
+        assumeCannotFailIfCalledOnMainThread();
+        SyncCallbackSettings settings =
+                mFakeLoggerSettingsBuilder.setFailIfCalledOnMainThread(true).build();
+
+        assertThrows(IllegalArgumentException.class, () -> newCallback(settings));
     }
 
     @Nullable
@@ -200,11 +226,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
     @Test
     public final void testAssertCalled_multipleCalls() throws Exception {
-        SyncCallbackSettings settings =
-                new SyncCallbackSettings.Builder(mFakeLogger)
-                        .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
-                        .setExpectedNumberCalls(2)
-                        .build();
+        SyncCallbackSettings settings = mDefaultSettingsBuilder.setExpectedNumberCalls(2).build();
         CB callback = newCallback(settings);
         assumeCallbackSupportsSetCalled(callback);
 
@@ -229,11 +251,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     @Test
     public final void testAssertCalled_multipleCallsFromMultipleCallbacks_firstFinishFirst()
             throws Exception {
-        SyncCallbackSettings settings =
-                new SyncCallbackSettings.Builder(mFakeLogger)
-                        .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
-                        .setExpectedNumberCalls(4)
-                        .build();
+        SyncCallbackSettings settings = mDefaultSettingsBuilder.setExpectedNumberCalls(4).build();
         CB callback1 = newCallback(settings);
         CB callback2 = newCallback(settings);
         assumeCallbackSupportsSetCalled(callback1);
@@ -279,11 +297,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     @Test
     public final void testAssertCalled_multipleCallsFromMultipleCallbacks_secondFinishFirst()
             throws Exception {
-        SyncCallbackSettings settings =
-                new SyncCallbackSettings.Builder(mFakeLogger)
-                        .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
-                        .setExpectedNumberCalls(4)
-                        .build();
+        SyncCallbackSettings settings = mDefaultSettingsBuilder.setExpectedNumberCalls(4).build();
         CB callback1 = newCallback(settings);
         CB callback2 = newCallback(settings);
         assumeCallbackSupportsSetCalled(callback1);
@@ -328,16 +342,13 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
     @Test
     public final void testAssertCalled_failsWhenCalledOnMainThread() throws Exception {
+        assumeCanFailIfCalledOnMainThread();
         SyncCallbackSettings settings =
                 new SyncCallbackSettings.Builder(mFakeLogger, () -> Boolean.TRUE)
                         .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
                         .setFailIfCalledOnMainThread(true)
                         .build();
 
-        // TODO(b/337014024): will need to provide a new method to let the subclass create a
-        // SyncCallbackSettings and then check if the settings support failing on main thread, then
-        // ignore if they don't (which would be the case on BroadcastReceiverSyncCallbackTest, but
-        // that class currently doesn't extend this one).
         var callback = newCallback(settings);
         assumeCallbackSupportsSetCalled(callback);
         var log = new LogChecker(callback);
@@ -364,6 +375,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
                 log.d("assertCalled() called on " + currentThread().getName()),
                         log.e("assertCalled() failed: " + thrown));
     }
+
 
     /** Ignore the test if the callback supports {@code assertCalled()}. */
     protected final void assumeCallbackSupportsSetCalled(SyncCallback callback) {
@@ -396,6 +408,17 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     public final void expectLoggedCalls(@Nullable LogEntry... expectedEntries) {
         ImmutableList<LogEntry> entries = mFakeLogger.getEntries();
         expect.withMessage("log entries").that(entries).containsExactlyElementsIn(expectedEntries);
+    }
+
+    private void assumeCannotFailIfCalledOnMainThread() {
+        assumeFalse(
+                "callback can fail if called on main thread", supportsFailIfCalledOnMainThread());
+    }
+
+    private void assumeCanFailIfCalledOnMainThread() {
+        assumeTrue(
+                "callback cannot fail if called on main thread",
+                supportsFailIfCalledOnMainThread());
     }
 
     /**
