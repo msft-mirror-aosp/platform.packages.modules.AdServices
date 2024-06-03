@@ -17,15 +17,15 @@ package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
+import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// TODO(b/337014024) merge with AbstractSidelessTestSyncCallback / implement SyncCallback
-// (then update javadoc)
+/** Base implementation for all {@code SyncCallback} classes. */
 public abstract class AbstractSyncCallback implements SyncCallback {
 
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
@@ -36,16 +36,37 @@ public abstract class AbstractSyncCallback implements SyncCallback {
 
     private final AtomicInteger mNumberCalls = new AtomicInteger();
 
+    @Nullable private String mCustomizedToString;
+
+    // Used to fail assertCalled() if something bad happened before
+    @Nullable private RuntimeException mOnAssertCalledException;
+
     /** Default constructor. */
     public AbstractSyncCallback(SyncCallbackSettings settings) {
         mSettings = Objects.requireNonNull(settings, "settings cannot be null");
+    }
+
+    // Hack to avoid assertion failures when checking logged messages, as the number of calls could
+    // be changed - should only be called by SyncCallbackTestCase.LogChecker
+    @VisibleForTesting
+    void setCustomizedToString(String string) {
+        mCustomizedToString = Objects.requireNonNull(string);
     }
 
     /**
      * By default is a no-op, but subclasses could override to add additional info to {@code
      * toString()}.
      */
-    protected void customizeToString(StringBuilder string) {}
+    protected void customizeToString(StringBuilder string) {
+        if (mCustomizedToString != null) {
+            string.append(mCustomizedToString);
+            return;
+        }
+        string.append(", ")
+                .append(mSettings)
+                .append(", numberActualCalls=")
+                .append(mNumberCalls.get());
+    }
 
     @Override
     public final String getId() {
@@ -57,40 +78,37 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         return mSettings;
     }
 
-    // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
+    // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
     /**
-     * Convenience method to log a debug message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
-     * by {@link #toString()}) in the message.
+     * Convenience method to log an error message, it includes the whole {@link #toString()} in the
+     * message.
      */
     @FormatMethod
-    public void logE(@FormatString String msgFmt, Object... msgArgs) {
-        // TODO(b/280460130): use side-less Logger so it's not empty
+    protected final void logE(@FormatString final String msgFmt, @Nullable Object... msgArgs) {
+        String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
+        mSettings.getLogger().e("%s: %s", toString(), msg);
     }
 
-    // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
+    // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
     /**
-     * Convenience method to log a debug message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including the {@link #getId()
-     * id} in the message.
+     * Convenience method to log a debug message, it includes the summarized {@link #toStringLite()}
+     * in the message.
      */
     @FormatMethod
-    public void logD(@FormatString String msgFmt, Object... msgArgs) {
-        // TODO(b/280460130): use side-less Logger so it's not empty
+    protected final void logD(@FormatString final String msgFmt, @Nullable Object... msgArgs) {
+        String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
+        mSettings.getLogger().d("%s: %s", toStringLite(), msg);
     }
 
-    // TODO(b/341797803): add @Nullable on msgArgs and @VisibleForTesting(protected)
+    // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
     /**
-     * Convenience method to log a verbose message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
-     * by {@link #toString()}) in the message.
+     * Convenience method to log a verbose message, it includes the whole {@link #toString()} in the
+     * message.
      */
     @FormatMethod
-    public void logV(@FormatString String msgFmt, Object... msgArgs) {
-        // TODO(b/280460130): use side-less Logger so it's not empty
+    protected final void logV(@FormatString final String msgFmt, @Nullable Object... msgArgs) {
+        String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
+        mSettings.getLogger().v("%s: %s", toString(), msg);
     }
 
     /**
@@ -108,73 +126,54 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         return getSetCalledAlternatives() == null;
     }
 
+    protected void setOnAssertCalledException(@Nullable RuntimeException exception) {
+        mOnAssertCalledException = exception;
+    }
+
     @Override
     public final void setCalled() {
-        logD("setCalled() called");
+        logD("setCalled() called on %s", Thread.currentThread().getName());
         String alternative = getSetCalledAlternatives();
         if (alternative != null) {
             throw new UnsupportedOperationException("Should call " + alternative + " instead!");
         }
+        if (mSettings.isFailIfCalledOnMainThread() && mSettings.isMainThread()) {
+            String errorMsg =
+                    "setCalled() called on main thread (" + Thread.currentThread().getName() + ")";
+            setOnAssertCalledException(new CalledOnMainThreadException(errorMsg));
+        }
+        logV("setCalled() returning");
         internalSetCalled();
     }
 
-    // TODO(b/337014024): make it final somehow?
-    // NOTE: not final because test version might disable it
     /**
      * Real implementation of {@code setCalled()}, should be called by subclasses that don't support
      * it.
      */
-    protected void internalSetCalled() {
-        mNumberCalls.incrementAndGet();
+    protected final void internalSetCalled() {
         try {
-            mSettings.countDown();
+            mNumberCalls.incrementAndGet();
         } finally {
-            logV("setCalled() returning");
+            mSettings.countDown();
         }
     }
 
-    // TODO(b/337014024): get rid of this?
-    /** Called by {@link #assertCalled()} so subclasses can fail it if needed. */
-    protected void postAssertCalled() {}
-
+    // TODO(b/337014024): make it final somehow?
     // NOTE: not final because test version might disable it
     @Override
     public void assertCalled() throws InterruptedException {
-        waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
-        postAssertCalled();
-    }
-
-    // NOTE: not final because test version might disable it
-    /**
-     * Wait (indefinitely) until all calls to {@link #setCalled()} were made.
-     *
-     * @throws InterruptedException if thread was interrupted while waiting.
-     */
-    public void waitCalled() throws InterruptedException {
-        logD("waitCalled() called");
+        logD("assertCalled() called on %s", Thread.currentThread().getName());
         try {
-            mSettings.await();
-        } finally {
-            logV("waitCalled() returning");
+            mSettings.assertCalled(() -> toString());
+        } catch (Exception e) {
+            logE("assertCalled() failed: %s", e);
+            throw e;
         }
-    }
-
-    // NOTE: not final because test version might set timeout on constructor
-    /**
-     * Wait (up to given time) until all calls to {@link #setCalled()} were made.
-     *
-     * @throws InterruptedException if thread was interrupted while waiting.
-     * @throws IllegalStateException if not called before it timed out.
-     */
-    public void waitCalled(long timeout, TimeUnit unit) throws InterruptedException {
-        logD("waitCalled(%d, %s) called", timeout, unit);
-        try {
-            if (!mSettings.await(timeout, unit)) {
-                throw new SyncCallbackTimeoutException(toString(), timeout, unit);
-            }
-        } finally {
-            logV("waitCalled(%d, %s) returning", timeout, unit);
+        if (mOnAssertCalledException != null) {
+            logE("assertCalled() failed: %s", mOnAssertCalledException);
+            throw mOnAssertCalledException;
         }
+        logV("assertCalled() returning");
     }
 
     @Override
@@ -187,26 +186,21 @@ public abstract class AbstractSyncCallback implements SyncCallback {
         return mNumberCalls.get();
     }
 
-    /**
-     * Helper method that fills the {@code string} with the content of {@link #toString()} but
-     * without the enclosing {@code [class: ]} part.
-     */
-    public final StringBuilder appendInfo(StringBuilder string) {
-        Objects.requireNonNull(string)
-                .append("id=")
-                .append(mId)
-                .append(", ")
-                .append(mSettings)
-                .append(", numberActualCalls=")
-                .append(mNumberCalls.get());
-        customizeToString(string);
-        return string;
-    }
-
     @Override
     public final String toString() {
-        return appendInfo(new StringBuilder("[").append(getClass().getSimpleName()).append(": "))
-                .append(']')
-                .toString();
+        StringBuilder string =
+                new StringBuilder("[")
+                        .append(getClass().getSimpleName())
+                        .append(": id=")
+                        .append(mId)
+                        .append(", onAssertCalledException=")
+                        .append(mOnAssertCalledException);
+        customizeToString(string);
+        return string.append(']').toString();
+    }
+
+    /** Gets a simpler representation of the callback. */
+    public final String toStringLite() {
+        return '[' + getClass().getSimpleName() + "#" + mId + ']';
     }
 }

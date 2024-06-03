@@ -19,7 +19,6 @@ import com.android.adservices.shared.testing.Nullable;
 
 import com.google.common.base.Optional;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -54,7 +53,7 @@ public class ResultSyncCallback<T> extends DeviceSideSyncCallback
         logV("Injecting %s (mResult=%s)", result, mResult);
         Optional<T> newResult = Optional.fromNullable(result);
         if (!mResult.compareAndSet(null, newResult)) {
-            setInternalFailure(
+            setOnAssertCalledException(
                     new CallbackAlreadyCalledException("injectResult()", getResult(), result));
         }
         super.internalSetCalled();
@@ -67,8 +66,7 @@ public class ResultSyncCallback<T> extends DeviceSideSyncCallback
      * @return the result
      */
     public final @Nullable T assertResultReceived() throws InterruptedException {
-        waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
-        postAssertCalled();
+        super.assertCalled();
         return getResult();
     }
 
