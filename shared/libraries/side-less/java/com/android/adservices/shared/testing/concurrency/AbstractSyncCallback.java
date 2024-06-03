@@ -139,10 +139,8 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
         mSettings.countDown();
     }
 
-    // TODO(b/337014024): make it final somehow?
-    // NOTE: not final because test version might disable it
     @Override
-    public void assertCalled() throws InterruptedException {
+    public final void assertCalled() throws InterruptedException {
         logD("assertCalled() called on %s", Thread.currentThread().getName());
         try {
             mSettings.assertCalled(() -> toString());
