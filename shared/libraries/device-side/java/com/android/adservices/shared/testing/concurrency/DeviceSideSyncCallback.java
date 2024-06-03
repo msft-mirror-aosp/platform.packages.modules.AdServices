@@ -17,6 +17,8 @@ package com.android.adservices.shared.testing.concurrency;
 
 import android.os.IBinder;
 
+import com.google.common.annotations.VisibleForTesting;
+
 // TODO(b/337014024): it might be better to remove this class, or split it in 2 (for result and
 // resultless)
 /** Base class for device-side sync callbacks for testing. */
@@ -25,6 +27,11 @@ public abstract class DeviceSideSyncCallback extends AbstractSyncCallback
 
     protected DeviceSideSyncCallback(SyncCallbackSettings settings) {
         super(settings);
+    }
+
+    @VisibleForTesting
+    DeviceSideSyncCallback(AbstractSyncCallback realCallback, SyncCallbackSettings settings) {
+        super(realCallback, settings);
     }
 
     @Override
