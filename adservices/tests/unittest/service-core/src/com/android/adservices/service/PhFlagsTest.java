@@ -511,10 +511,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_READ_TIMEO
 import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_SHA_CERTS;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST;
@@ -1211,65 +1211,24 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetCobaltLoggingEnabled() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getCobaltLoggingEnabled()).isEqualTo(COBALT_LOGGING_ENABLED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !COBALT_LOGGING_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_COBALT_LOGGING_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getCobaltLoggingEnabled()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetCobaltLoggingEnabled_cobaltLoggingDisabled() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-        setCobaltLoggingEnabled(false);
-
-        assertThat(mPhFlags.getCobaltLoggingEnabled()).isFalse();
-
-        verifyGetBooleanNotCalled(FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED);
+                COBALT_LOGGING_ENABLED,
+                FeatureFlagType.FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH,
+                value -> overrideGlobalKillSwitch(!value),
+                Flags::getCobaltLoggingEnabled);
     }
 
     @Test
     public void testGetAppNameApiErrorCobaltLoggingEnabled() {
-        // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
-        setCobaltLoggingEnabled(true);
 
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled())
-                .isEqualTo(APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetAppNameApiErrorCobaltLoggingEnabled_cobaltLoggingDisabled() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-        setCobaltLoggingEnabled(false);
-
-        // APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED is guarded by COBALT_LOGGING_ENABLED.
-        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled()).isFalse();
-
-        verifyGetBooleanNotCalled(FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
+                APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> setCobaltLoggingEnabled(value),
+                Flags::getAppNameApiErrorCobaltLoggingEnabled);
     }
 
     @Test
@@ -1370,18 +1329,10 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetFledgeAdSelectionContextualAdsMetricsEnabled() {
-        assertThat(mPhFlags.getFledgeAdSelectionContextualAdsMetricsEnabled())
-                .isEqualTo(FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getFledgeAdSelectionContextualAdsMetricsEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED,
+                Flags::getFledgeAdSelectionContextualAdsMetricsEnabled);
     }
 
     @Test
@@ -1410,34 +1361,18 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetFledgeAdFilteringMetricsEnabled() {
-        assertThat(mPhFlags.getFledgeAppInstallFilteringMetricsEnabled())
-                .isEqualTo(FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAppInstallFilteringMetricsEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED,
+                Flags::getFledgeAppInstallFilteringMetricsEnabled);
     }
 
     @Test
     public void testGetFledgeFrequencyCapFilteringMetricsEnabled() {
-        assertThat(mPhFlags.getFledgeFrequencyCapFilteringMetricsEnabled())
-                .isEqualTo(FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeFrequencyCapFilteringMetricsEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED,
+                Flags::getFledgeFrequencyCapFilteringMetricsEnabled);
     }
 
     @Test
