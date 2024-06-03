@@ -1610,7 +1610,8 @@ public class ReportAndRegisterEventFallbackImplTest {
         return callback;
     }
 
-    // TODO(b/337014024): extend FailableOnSuccessyncCallback instead
+    // TODO(b/344677163): there's no result and FailableResultSyncCallback<Void> wouldn't work; if
+    // more tests need something like this, we should create a FailableOnSuccessSyncCallback class.
     private static final class ReportEventTestCallback
             extends FailableResultSyncCallback<Boolean, FledgeErrorResponse>
             implements ReportInteractionCallback {
