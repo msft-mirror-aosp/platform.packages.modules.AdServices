@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 /** KAnon sign join manager class */
 @RequiresApi(Build.VERSION_CODES.S)
 public class KAnonSignJoinManager {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getKAnonLogger();
     private final KAnonCaller mKAnonCaller;
     private final KAnonMessageManager mKAnonMessageManager;
     private final Flags mFlags;
@@ -98,12 +98,21 @@ public class KAnonSignJoinManager {
                         && clientParamsExpiryInstant.isBefore(mClock.instant())) {
                     sLogger.v(
                             "Message found in database but corresponding client parameters have"
-                                + " expired, message should be processed");
+                                    + " expired, message should be processed");
                     shouldProcessRightNow = true;
                 }
             }
         }
-        sLogger.v("shouldProcessRightNow field is : " + shouldProcessRightNow);
+        if (shouldProcessRightNow) {
+            sLogger.v(
+                    "The message will be either signed/joined immediately or persisted to the "
+                            + "database for delayed processing by background job");
+
+        } else {
+            sLogger.v(
+                    "This message has been ignored for processing because it already exists in the"
+                            + " database and the corresponding client params haven't expired");
+        }
         return shouldProcessRightNow;
     }
 
@@ -139,8 +148,10 @@ public class KAnonSignJoinManager {
                 mKAnonMessageManager.persistNewAnonMessageEntities(messageAfterFiltering);
         if (shouldMakeKAnonCallsNow()) {
             sLogger.v("Processing message immediately from persist ad selection result API");
-            mKAnonCaller.signAndJoinMessages(insertedMessages);
+            mKAnonCaller.signAndJoinMessages(
+                    insertedMessages, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         } else {
+            sLogger.v("Message will be picked up later by the background process");
             // TODO(b/326903508): Remove unused loggers. Use callback instead of logger
             // for testing.
             mAdServicesLogger.logKAnonSignJoinStatus();
@@ -159,6 +170,7 @@ public class KAnonSignJoinManager {
             return;
         }
         sLogger.v("Processing " + messageEntities.size() + " messages from database");
-        mKAnonCaller.signAndJoinMessages(messageEntities);
+        mKAnonCaller.signAndJoinMessages(
+                messageEntities, KAnonCaller.KAnonCallerSource.BACKGROUND_JOB);
     }
 }

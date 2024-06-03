@@ -36,6 +36,7 @@ public class StatsdUtil {
     public static final int SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY = 5;
     public static final int
             SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__NOTIFY_SDK_ON_ACTIVITY_CREATION = 9;
+    public static final int SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__TOTAL = 10;
 
     // Values for SandboxActivityEventOccurred.call_result
     public static final int SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS = 1;

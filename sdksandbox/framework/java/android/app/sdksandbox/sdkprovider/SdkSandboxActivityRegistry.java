@@ -17,6 +17,7 @@
 package android.app.sdksandbox.sdkprovider;
 
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -173,6 +174,12 @@ public class SdkSandboxActivityRegistry {
      */
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     public void notifyOnActivityCreation(@NonNull Intent intent, @NonNull Activity activity) {
+        long sandboxActivityInitiationTime = extractActivityInitiationTime(intent);
+        if (sandboxActivityInitiationTime != 0L) {
+            // Remove time sandbox activity was initiated at, to avoid logging the wrong activity
+            // creation time in case of recreation.
+            intent.removeExtra(EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME);
+        }
         synchronized (mMapsLock) {
             long timeEventStarted = mInjector.elapsedRealtime();
             IBinder handlerToken = extractHandlerToken(intent);
@@ -207,6 +214,12 @@ public class SdkSandboxActivityRegistry {
                     timeEventStarted);
             handlerInfo.getHandler().onActivityCreated(activity);
         }
+        if (sandboxActivityInitiationTime != 0L) {
+            logSandboxActivityApiLatency(
+                    StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__TOTAL,
+                    StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                    sandboxActivityInitiationTime);
+        }
     }
 
     /**
@@ -230,9 +243,6 @@ public class SdkSandboxActivityRegistry {
             final HandlerInfo handlerInfo = mTokenToHandlerInfoMap.get(handlerToken);
             if (handlerInfo == null) {
                 return null;
-            }
-            if (!handlerInfo.getSdkContext().isCustomizedSdkContextEnabled()) {
-                throw new IllegalStateException("Customized SDK flag is disabled.");
             }
             return handlerInfo.getContextInfo();
         }
@@ -269,6 +279,13 @@ public class SdkSandboxActivityRegistry {
             return null;
         }
         return intent.getExtras().getBinder(EXTRA_SANDBOXED_ACTIVITY_HANDLER);
+    }
+
+    private long extractActivityInitiationTime(Intent intent) {
+        if (intent == null || intent.getExtras() == null) {
+            return 0L;
+        }
+        return intent.getExtras().getLong(EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME);
     }
 
     private void logSandboxActivityApiLatency(int method, int callResult, long timeEventStarted) {

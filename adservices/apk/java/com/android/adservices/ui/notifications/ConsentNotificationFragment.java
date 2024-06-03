@@ -86,7 +86,7 @@ public class ConsentNotificationFragment extends Fragment {
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity());
         View rootView;
         if (mIsEUDevice) {
             rootView =

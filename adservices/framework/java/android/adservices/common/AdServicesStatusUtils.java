@@ -20,7 +20,8 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.os.LimitExceededException;
 
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ProviderServiceInternalException;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 
 import java.io.IOException;
 import java.io.InvalidObjectException;
@@ -221,10 +222,25 @@ public final class AdServicesStatusUtils {
     public static final int STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION = 25;
 
     /**
-     * The failure reason has not been set. Keep unset failure reason the lowest value of the
-     * failure reasons.
+     * AdServices activity is disabled.
+     *
+     * <p>This error may be considered similar to {@link IllegalStateException}.
      */
-    public static final int FAILURE_REASON_UNSET = 0;
+    public static final int STATUS_ADSERVICES_ACTIVITY_DISABLED = 26;
+
+    /**
+     * Callback is shut down and encountered an error when invoking its methods.
+     *
+     * <p>This error may be considered similar to {@link IllegalStateException}.
+     */
+    public static final int STATUS_CALLBACK_SHUTDOWN = 27;
+
+    /**
+     * The provider service throws an error as the callback when AdServices tries to call it.
+     *
+     * <p>This error may be considered similar to {@link IllegalStateException}.
+     */
+    public static final int STATUS_PROVIDER_SERVICE_INTERNAL_ERROR = 28;
 
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
@@ -255,6 +271,13 @@ public final class AdServicesStatusUtils {
             "Background thread is not allowed to call this service.";
 
     /**
+     * The error message to be returned along with {@link IllegalStateException} when call failed
+     * because AdServices activity is disabled.
+     */
+    public static final String ILLEGAL_STATE_ACTIVITY_DISABLED_ERROR_MESSAGE =
+            "AdServices activity is disabled.";
+
+    /**
      * The error message to be returned along with {@link SecurityException} when call failed
      * because it crosses user boundaries.
      */
@@ -278,6 +301,9 @@ public final class AdServicesStatusUtils {
     /** The error message to be returned along with {@link IllegalArgumentException}. */
     public static final String ENCRYPTION_FAILURE_MESSAGE = "Failed to encrypt responses.";
 
+    /** The error message to be returned along with {@link ServiceUnavailableException}. */
+    public static final String SERVICE_UNAVAILABLE_ERROR_MESSAGE = "Service is not available.";
+
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
         return statusCode == STATUS_SUCCESS;
@@ -297,7 +323,7 @@ public final class AdServicesStatusUtils {
             case STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET: // Intentional fallthrough
             case STATUS_USER_CONSENT_REVOKED: // Intentional fallthrough
             case STATUS_JS_SANDBOX_UNAVAILABLE:
-                return new ServiceUnavailableException();
+                return new ServiceUnavailableException(SERVICE_UNAVAILABLE_ERROR_MESSAGE);
             case STATUS_PERMISSION_NOT_REQUESTED:
                 return new SecurityException(
                         SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
@@ -317,6 +343,8 @@ public final class AdServicesStatusUtils {
                 return new SecurityException(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
             case STATUS_BACKGROUND_CALLER:
                 return new IllegalStateException(ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
+            case STATUS_ADSERVICES_ACTIVITY_DISABLED:
+                return new IllegalStateException(ILLEGAL_STATE_ACTIVITY_DISABLED_ERROR_MESSAGE);
             case STATUS_UNAUTHORIZED:
                 return new SecurityException(
                         SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
@@ -328,6 +356,8 @@ public final class AdServicesStatusUtils {
                 return new InvalidObjectException(INVALID_OBJECT_ERROR_MESSAGE);
             case STATUS_SERVER_RATE_LIMIT_REACHED:
                 return new LimitExceededException(SERVER_RATE_LIMIT_REACHED_ERROR_MESSAGE);
+            case STATUS_PROVIDER_SERVICE_INTERNAL_ERROR:
+                return new ProviderServiceInternalException();
             default:
                 return new IllegalStateException();
         }
@@ -358,6 +388,7 @@ public final class AdServicesStatusUtils {
                 STATUS_KILLSWITCH_ENABLED,
                 STATUS_USER_CONSENT_REVOKED,
                 STATUS_ADSERVICES_DISABLED,
+                STATUS_ADSERVICES_ACTIVITY_DISABLED,
                 STATUS_PERMISSION_NOT_REQUESTED,
                 STATUS_CALLER_NOT_ALLOWED,
                 STATUS_BACKGROUND_CALLER,
@@ -373,21 +404,12 @@ public final class AdServicesStatusUtils {
                 STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND,
                 STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID,
                 STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED,
-                STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION
+                STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
+                STATUS_CALLBACK_SHUTDOWN,
+                STATUS_PROVIDER_SERVICE_INTERNAL_ERROR,
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}
-
-    /**
-     * Failure reason codes that are common across various APIs.
-     *
-     * @hide
-     */
-    @IntDef(
-            prefix = {"FAILURE_REASON_"},
-            value = {FAILURE_REASON_UNSET})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface FailureReason {}
 
     private AdServicesStatusUtils() {
         throw new UnsupportedOperationException();

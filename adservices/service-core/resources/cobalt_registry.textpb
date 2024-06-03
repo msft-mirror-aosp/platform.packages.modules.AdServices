@@ -1968,7 +1968,7 @@ customers {
         reporting_interval: DAYS_1
         system_profile_field: APP_VERSION
         system_profile_selection: REPORT_ALL
-        max_release_stage: DEBUG
+        max_release_stage: DOGFOOD
         privacy_mechanism: DE_IDENTIFICATION
       }
       metric_dimensions {
@@ -2089,6 +2089,26 @@ customers {
           key: 28
           value: "PUT_AD_SERVICES_EXT_DATA"
         }
+        event_codes {
+          key: 29
+          value: "GET_ADSERVICES_COMMON_STATES"
+        }
+        event_codes {
+          key: 30
+          value: "GET_AD_SELECTION_DATA"
+        }
+        event_codes {
+          key: 31
+          value: "PERSIST_AD_SELECTION_RESULT"
+        }
+        event_codes {
+          key: 32
+          value: "UPDATE_SIGNALS"
+        }
+        event_codes {
+          key: 33
+          value: "SCHEDULE_CUSTOM_AUDIENCE_UPDATE"
+        }
       }
       metric_dimensions {
         dimension: "error"
@@ -2171,6 +2191,187 @@ customers {
         event_codes {
           key: 19
           value: "ENCRYPTION_FAILURE"
+        }
+        event_codes {
+          key: 20
+          value: "CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST"
+        }
+        event_codes {
+          key: 21
+          value: "CALLER_NOT_ALLOWED_PACKAGE_BLOCKLISTED"
+        }
+        event_codes {
+          key: 22
+          value: "CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND"
+        }
+        event_codes {
+          key: 23
+          value: "CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID"
+        }
+        event_codes {
+          key: 24
+          value: "CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED"
+        }
+        event_codes {
+          key: 25
+          value: "CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION"
+        }
+        event_codes {
+          key: 26
+          value: "ADSERVICES_ACTIVITY_DISABLED"
+        }
+      }
+      metric_semantics: USAGE_COUNTING
+    }
+    metrics {
+      metric_name: "per_package_registration_status"
+      customer_id: 200004
+      project_id: 2
+      id: 3
+      metric_type: STRING
+      meta_data {
+        expiration_date: "2025/05/01"
+        max_release_stage: GA
+      }
+      reports {
+        report_name: "registration_status_counts"
+        id: 1
+        report_type: STRING_COUNTS
+        reporting_threshold: 1000000
+        privacy_level: NO_ADDED_PRIVACY
+        event_vector_buffer_max: 100
+        string_buffer_max: 50
+        reporting_interval: DAYS_1
+        system_profile_field: APP_VERSION
+        system_profile_field: SYSTEM_VERSION
+        system_profile_selection: REPORT_ALL
+        privacy_mechanism: DE_IDENTIFICATION
+      }
+      reports {
+        report_name: "registration_status_counts_dogfood"
+        id: 2
+        report_type: STRING_COUNTS
+        reporting_threshold: 1
+        privacy_level: NO_ADDED_PRIVACY
+        event_vector_buffer_max: 100
+        string_buffer_max: 50
+        reporting_interval: DAYS_1
+        system_profile_field: APP_VERSION
+        system_profile_field: SYSTEM_VERSION
+        system_profile_selection: REPORT_ALL
+        max_release_stage: DOGFOOD
+        privacy_mechanism: DE_IDENTIFICATION
+      }
+      metric_dimensions {
+        dimension: "surface_type"
+        event_codes {
+          key: 0
+          value: "UNKNOWN"
+        }
+        event_codes {
+          key: 1
+          value: "WEB"
+        }
+        event_codes {
+          key: 2
+          value: "APP"
+        }
+      }
+      metric_dimensions {
+        dimension: "source_or_trigger_type"
+        event_codes {
+          key: 0
+          value: "UNKNOWN_SOURCE_TYPE"
+        }
+        event_codes {
+          key: 1
+          value: "EVENT_SOURCE_TYPE"
+        }
+        event_codes {
+          key: 2
+          value: "NAVIGATION_SOURCE_TYPE"
+        }
+        event_codes {
+          key: 3
+          value: "VIEW_SOURCE_TYPE"
+        }
+        event_codes {
+          key: 4
+          value: "CLICK_SOURCE_TYPE"
+        }
+        event_codes {
+          key: 100
+          value: "TRIGGER"
+        }
+        event_codes {
+          key: 200
+          value: "UNKNOWN"
+        }
+      }
+      metric_dimensions {
+        dimension: "status"
+        event_codes {
+          key: 0
+          value: "UNKNOWN_REGISTRATION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 1
+          value: "PARSING_REGISTRATION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 2
+          value: "NETWORK_REQUEST_REGISTRATION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 3
+          value: "ENROLLMENT_REGISTRATION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 4
+          value: "REDIRECT_REGISTRATION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 5
+          value: "STORAGE_REGISTRATION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 6
+          value: "JOB_RETRY_LIMIT_EXCEEDED_REGISTRATION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 7
+          value: "HEADER_SIZE_LIMIT_EXCEEDED_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 8
+          value: "SERVER_UNAVAILABLE_REGISTRATION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 9
+          value: "INVALID_URL_REGISTRATION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 100
+          value: "SUCCESS"
+        }
+        event_codes {
+          key: 200
+          value: "UNKNOWN_STATUS"
+        }
+      }
+      metric_dimensions {
+        dimension: "region"
+        event_codes {
+          key: 0
+          value: "UNKNOWN"
+        }
+        event_codes {
+          key: 1
+          value: "EEA"
+        }
+        event_codes {
+          key: 2
+          value: "ROW"
         }
       }
       metric_semantics: USAGE_COUNTING

@@ -16,8 +16,13 @@
 
 package com.android.adservices.data.customaudience;
 
+import static android.adservices.common.AdFilters.APP_INSTALL_FIELD_NAME;
+import static android.adservices.common.AdFilters.FREQUENCY_CAP_FIELD_NAME;
+
 import android.adservices.common.AdData;
 import android.adservices.common.AdFilters;
+import android.adservices.common.AppInstallFilters;
+import android.adservices.common.FrequencyCapFilters;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -45,20 +50,26 @@ public class AdDataConversionStrategyFactory {
     private static final String AD_FILTERS_FIELD_NAME = "adFilters";
     private static final String AD_RENDER_ID_FIELD_NAME = "adRenderId";
 
-    private static class FilteringEnabledConversionStrategy
-            implements AdDataOptionalConversionStrategy {
-        public void toJson(@NonNull DBAdData adData, @NonNull JSONObject toReturn)
-                throws JSONException {
+    private static class FrequencyCapConversionImpl
+            implements FrequencyCapFiltersConversionStrategy {
+        @Override
+        public void toJsonAdCounterKeys(DBAdData adData, JSONObject toReturn) throws JSONException {
             if (!adData.getAdCounterKeys().isEmpty()) {
                 JSONArray jsonCounterKeys = new JSONArray(adData.getAdCounterKeys());
                 toReturn.put(AD_COUNTER_KEYS_FIELD_NAME, jsonCounterKeys);
             }
-            if (adData.getAdFilters() != null) {
-                toReturn.put(AD_FILTERS_FIELD_NAME, adData.getAdFilters().toJson());
+        }
+
+        @Override
+        public void toJsonFilters(FrequencyCapFilters frequencyCapFilters, JSONObject toReturn)
+                throws JSONException {
+            if (frequencyCapFilters != null) {
+                toReturn.put(FREQUENCY_CAP_FIELD_NAME, frequencyCapFilters.toJson());
             }
         }
 
-        public void fromJson(@NonNull JSONObject json, @NonNull DBAdData.Builder adDataBuilder)
+        @Override
+        public void fromJsonAdCounterKeys(JSONObject json, DBAdData.Builder adDataBuilder)
                 throws JSONException {
             Set<Integer> adCounterKeys = new HashSet<>();
             if (json.has(AD_COUNTER_KEYS_FIELD_NAME)) {
@@ -67,18 +78,172 @@ public class AdDataConversionStrategyFactory {
                     adCounterKeys.add(counterKeys.getInt(i));
                 }
             }
+            adDataBuilder.setAdCounterKeys(adCounterKeys);
+        }
+
+        @Override
+        public void fromJsonFilters(JSONObject json, AdFilters.Builder builder)
+                throws JSONException {
+            if (json.has(FREQUENCY_CAP_FIELD_NAME)) {
+                builder.setFrequencyCapFilters(
+                        FrequencyCapFilters.fromJson(json.getJSONObject(FREQUENCY_CAP_FIELD_NAME)));
+            }
+        }
+
+        @Override
+        public void fromServiceObjectAdCounterKeys(
+                AdData parcelable, DBAdData.Builder adDataBuilder) {
+            adDataBuilder.setAdCounterKeys(parcelable.getAdCounterKeys());
+        }
+
+        @Override
+        public void fromServiceObjectFilters(AdData parcelable, AdFilters.Builder builder) {
+            builder.setFrequencyCapFilters(parcelable.getAdFilters().getFrequencyCapFilters());
+        }
+    }
+
+    private static class FrequencyCapConversionNoOp
+            implements FrequencyCapFiltersConversionStrategy {
+
+        @Override
+        public void toJsonAdCounterKeys(DBAdData adData, JSONObject toReturn) throws JSONException {
+            sLogger.v("Frequency cap filtering is disabled, so toJSON is a no op");
+        }
+
+        @Override
+        public void toJsonFilters(FrequencyCapFilters frequencyCapFilters, JSONObject toReturn)
+                throws JSONException {
+            sLogger.v("Frequency cap filtering is disabled, so toJSON is a no op");
+        }
+
+        @Override
+        public void fromJsonAdCounterKeys(JSONObject json, DBAdData.Builder adDataBuilder) {
+            sLogger.v("Frequency cap filtering is disabled, so fromJSON is a no op");
+        }
+
+        @Override
+        public void fromJsonFilters(JSONObject json, AdFilters.Builder builder)
+                throws JSONException {
+            sLogger.v("Frequency cap filtering is disabled, so fromJSON is a no op");
+        }
+
+        @Override
+        public void fromServiceObjectAdCounterKeys(
+                AdData parcelable, DBAdData.Builder adDataBuilder) {
+            sLogger.v("Frequency cap filtering is disabled, so fromServiceObject is a no op");
+        }
+
+        @Override
+        public void fromServiceObjectFilters(AdData parcelable, AdFilters.Builder builder) {
+            sLogger.v("Frequency cap filtering is disabled, so fromServiceObject is a no op");
+        }
+    }
+
+    private static class AppInstallConversionImpl implements AppInstallFiltersConversionStrategy {
+
+        @Override
+        public void toJson(AppInstallFilters appInstallFilters, JSONObject toReturn)
+                throws JSONException {
+            if (appInstallFilters != null) {
+                toReturn.put(APP_INSTALL_FIELD_NAME, appInstallFilters.toJson());
+            }
+        }
+
+        @Override
+        public void fromJson(JSONObject json, AdFilters.Builder builder) throws JSONException {
+            if (json.has(APP_INSTALL_FIELD_NAME)) {
+                builder.setAppInstallFilters(
+                        AppInstallFilters.fromJson(json.getJSONObject(APP_INSTALL_FIELD_NAME)));
+            }
+        }
+
+        @Override
+        public void fromServiceObject(AdData parcelable, AdFilters.Builder builder) {
+            builder.setAppInstallFilters(parcelable.getAdFilters().getAppInstallFilters());
+        }
+    }
+
+    private static class AppInstallConversionNoOp implements AppInstallFiltersConversionStrategy {
+        @Override
+        public void toJson(AppInstallFilters appInstallFilters, JSONObject toReturn)
+                throws JSONException {
+            sLogger.v("App install cap filtering is disabled, so toJSON is a no op");
+        }
+
+        @Override
+        public void fromJson(JSONObject json, AdFilters.Builder builder) throws JSONException {
+            sLogger.v("App install filtering is disabled, so fromJSON is a no op");
+        }
+
+        @Override
+        public void fromServiceObject(AdData parcelable, AdFilters.Builder builder) {
+            sLogger.v("App install filtering is disabled, so fromServiceObject is a no op");
+        }
+    }
+
+    private static class FilteringEnabledConversionStrategy
+            implements AdDataOptionalConversionStrategy {
+        private final FrequencyCapFiltersConversionStrategy mFrequencyCapFiltersConversionStrategy;
+        private final AppInstallFiltersConversionStrategy mAppInstallFiltersConversionStrategy;
+
+        FilteringEnabledConversionStrategy(
+                boolean frequencyCapFilteringEnabled, boolean appInstallFilteringEnabled) {
+            if (frequencyCapFilteringEnabled) {
+                mFrequencyCapFiltersConversionStrategy = new FrequencyCapConversionImpl();
+            } else {
+                mFrequencyCapFiltersConversionStrategy = new FrequencyCapConversionNoOp();
+            }
+
+            if (appInstallFilteringEnabled) {
+                mAppInstallFiltersConversionStrategy = new AppInstallConversionImpl();
+            } else {
+                mAppInstallFiltersConversionStrategy = new AppInstallConversionNoOp();
+            }
+        }
+
+        public void toJson(@NonNull DBAdData adData, @NonNull JSONObject toReturn)
+                throws JSONException {
+            mFrequencyCapFiltersConversionStrategy.toJsonAdCounterKeys(adData, toReturn);
+            if (adData.getAdFilters() != null) {
+                JSONObject adFilterWrapper = new JSONObject();
+                mFrequencyCapFiltersConversionStrategy.toJsonFilters(
+                        adData.getAdFilters().getFrequencyCapFilters(), adFilterWrapper);
+                mAppInstallFiltersConversionStrategy.toJson(
+                        adData.getAdFilters().getAppInstallFilters(), adFilterWrapper);
+                toReturn.put(AD_FILTERS_FIELD_NAME, adFilterWrapper);
+            }
+        }
+
+        public void fromJson(@NonNull JSONObject json, @NonNull DBAdData.Builder adDataBuilder)
+                throws JSONException {
+            mFrequencyCapFiltersConversionStrategy.fromJsonAdCounterKeys(json, adDataBuilder);
             AdFilters adFilters = null;
             if (json.has(AD_FILTERS_FIELD_NAME)) {
-                adFilters = AdFilters.fromJson(json.getJSONObject(AD_FILTERS_FIELD_NAME));
+                AdFilters.Builder builder = new AdFilters.Builder();
+                JSONObject adFiltersObject = json.getJSONObject(AD_FILTERS_FIELD_NAME);
+                mFrequencyCapFiltersConversionStrategy.fromJsonFilters(adFiltersObject, builder);
+                mAppInstallFiltersConversionStrategy.fromJson(adFiltersObject, builder);
+                adFilters = builder.build();
             }
-            adDataBuilder.setAdCounterKeys(adCounterKeys).setAdFilters(adFilters);
+            adDataBuilder.setAdFilters(adFilters);
         }
 
         @Override
         public void fromServiceObject(
                 @NonNull AdData parcelable, @NonNull DBAdData.Builder adDataBuilder) {
-            adDataBuilder.setAdCounterKeys(parcelable.getAdCounterKeys());
-            adDataBuilder.setAdFilters(parcelable.getAdFilters());
+            mFrequencyCapFiltersConversionStrategy.fromServiceObjectAdCounterKeys(
+                    parcelable, adDataBuilder);
+            if (parcelable.getAdFilters() != null) {
+                AdFilters adFilters;
+                AdFilters.Builder adFiltersBuilder = new AdFilters.Builder();
+                mAppInstallFiltersConversionStrategy.fromServiceObject(
+                        parcelable, adFiltersBuilder);
+                mFrequencyCapFiltersConversionStrategy.fromServiceObjectFilters(
+                        parcelable, adFiltersBuilder);
+                adFilters = adFiltersBuilder.build();
+                sLogger.v("Final Ad Filters in fromServiceObject: %s", adFilters);
+                adDataBuilder.setAdFilters(adFilters);
+            }
         }
     }
 
@@ -199,20 +364,26 @@ public class AdDataConversionStrategyFactory {
     }
 
     /**
-     * Returns the appropriate AdDataConversionStrategy based whether filtering is enabled
+     * Returns the appropriate AdDataConversionStrategy based whether which kind of filtering is
+     * enabled
      *
-     * @param filteringEnabled Should be true if filtering is enabled.
+     * @param frequencyCapFilteringEnabled denotes if frequency cap filtering is enabled
+     * @param appInstallFilteringEnabled denotes if app install filtering is enabled
      * @return An implementation of AdDataConversionStrategy
      */
     public static AdDataConversionStrategy getAdDataConversionStrategy(
-            boolean filteringEnabled, boolean adRenderIdEnabled) {
+            boolean frequencyCapFilteringEnabled,
+            boolean appInstallFilteringEnabled,
+            boolean adRenderIdEnabled) {
 
         CompositeConversionStrategy result =
                 new CompositeConversionStrategy(new BaseConversionStrategy());
 
-        if (filteringEnabled) {
+        if (frequencyCapFilteringEnabled || appInstallFilteringEnabled) {
             sLogger.v("Adding Filtering Conversion Strategy to Composite Conversion Strategy");
-            result.composeWith(new FilteringEnabledConversionStrategy());
+            result.composeWith(
+                    new FilteringEnabledConversionStrategy(
+                            frequencyCapFilteringEnabled, appInstallFilteringEnabled));
         }
         if (adRenderIdEnabled) {
             sLogger.v("Adding Ad Render Conversion Strategy to Composite Conversion Strategy");

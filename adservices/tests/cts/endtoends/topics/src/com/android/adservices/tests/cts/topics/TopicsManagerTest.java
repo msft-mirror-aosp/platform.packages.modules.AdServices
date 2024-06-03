@@ -16,7 +16,9 @@
 
 package com.android.adservices.tests.cts.topics;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -29,14 +31,14 @@ import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.adservices.topics.TopicsManager;
 
-import androidx.test.filters.FlakyTest;
-
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresLowRamDevice;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.service.FlagsConstants;
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.topics.TopicsTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
@@ -48,7 +50,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-// TODO(b/243062789): Test should not use CountDownLatch or Sleep.
+@EnableDebugFlag(KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED)
 public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
 
     // Test constants for testing encryption
@@ -105,13 +107,13 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
         flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
-        flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        flags.setFlag(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
         // TODO(b/263297331): Handle rollback support for R and S.
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     // @RequiresGlobalKillSwitchDisabled // TODO(b/284971005): re-add when it uses the rule / runner
     public void testTopicsManager_testTopicsKillSwitch() throws Exception {
         // Override Topics kill switch to disable Topics API.
@@ -137,7 +139,6 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_disableDirectAppCalls_testEmptySdkNameRequests()
             throws Exception {
         flags.setFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, true);
@@ -157,7 +158,6 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_testOnDeviceKillSwitch_shouldUsePrecomputedList()
             throws Exception {
         // Override Topics on device classifier kill switch to disable on device classifier.
@@ -177,7 +177,9 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk5 receives no topic.
-        GetTopicsResponse sdk5Result = advertisingTopicsClient5.getTopics().get();
+        GetTopicsResponse sdk5Result =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient5);
+
         assertThat(sdk5Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -213,14 +215,12 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runDefaultClassifier() throws Exception {
         testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ false);
     }
@@ -241,8 +241,9 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .setUseGetMethodToCreateManagerInstance(useGetMethodToCreateManager)
                         .build();
 
-        // At beginning, Sdk1 receives no topic.
-        GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
+        GetTopicsResponse sdk1Result =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient1);
+
         assertThat(sdk1Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -291,14 +292,12 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runOnDeviceClassifier(true);
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runOnDeviceClassifier() throws Exception {
         testTopicsManager_runOnDeviceClassifier(false);
     }
@@ -326,7 +325,9 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk3 receives no topic.
-        GetTopicsResponse sdk3Result = advertisingTopicsClient3.getTopics().get();
+        GetTopicsResponse sdk3Result =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient3);
+
         assertThat(sdk3Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -377,16 +378,14 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier_usingGetMethodToCreateManager()
             throws Exception {
-        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
+        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager= */ true);
     }
 
     @Test
-    @FlakyTest(bugId = 302384321)
     public void testTopicsManager_runPrecomputedClassifier() throws Exception {
-        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ false);
+        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager= */ false);
     }
 
     private void testTopicsManager_runPrecomputedClassifier(boolean useGetMethodToCreateManager)
@@ -405,7 +404,9 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk4 receives no topic.
-        GetTopicsResponse sdk4Result = advertisingTopicsClient4.getTopics().get();
+        GetTopicsResponse sdk4Result =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient4);
+
         assertThat(sdk4Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -440,18 +441,16 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 290122696)
     public void testTopicsManager_runPrecomputedClassifier_encryptedTopics_usingGetManager()
             throws Exception {
         testTopicsManager_runPrecomputedClassifier_encryptedTopics(
-                /* useGetMethodToCreateManager = */ true);
+                /* useGetMethodToCreateManager= */ true);
     }
 
     @Test
-    @FlakyTest(bugId = 290122696)
     public void testTopicsManager_runPrecomputedClassifier_encryptedTopics() throws Exception {
         testTopicsManager_runPrecomputedClassifier_encryptedTopics(
-                /* useGetMethodToCreateManager = */ false);
+                /* useGetMethodToCreateManager= */ false);
     }
 
     private void testTopicsManager_runPrecomputedClassifier_encryptedTopics(
@@ -476,7 +475,9 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
                         .build();
 
         // At beginning, Sdk6 receives no topic.
-        GetTopicsResponse sdk6Result = advertisingTopicsClient6.getTopics().get();
+        GetTopicsResponse sdk6Result =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient6);
+
         assertThat(sdk6Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for

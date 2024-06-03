@@ -39,12 +39,6 @@
         <option name="run-command"
                 value="device_config put adservices appsetid_request_permits_per_second 5.0" />
 
-        <!-- Enable API access without ad_services_config -->
-        <option name="run-command"
-                value="device_config put adservices app_config_returns_enabled_by_detault true" />
-        <option name="teardown-command"
-                value="device_config put adservices app_config_returns_enabled_by_detault false" />
-
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />

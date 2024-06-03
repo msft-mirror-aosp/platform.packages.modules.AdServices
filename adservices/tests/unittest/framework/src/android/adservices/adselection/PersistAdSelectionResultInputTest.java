@@ -18,19 +18,20 @@ package android.adservices.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class PersistAdSelectionResultInputTest {
+@RequiresSdkLevelAtLeastS
+public final class PersistAdSelectionResultInputTest extends AdServicesUnitTestCase {
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final AdTechIdentifier ANOTHER_SELLER = AdSelectionConfigFixture.SELLER_1;
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -38,9 +39,6 @@ public class PersistAdSelectionResultInputTest {
     private static final byte[] AD_SELECTION_RESULT = new byte[] {1, 2, 3, 4};
     private static final byte[] ANOTHER_AD_SELECTION_RESULT = new byte[] {5, 6, 7, 8};
     private static final long AD_SELECTION_ID = 12345;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildPersistAdSelectionResultInput() {
@@ -52,11 +50,11 @@ public class PersistAdSelectionResultInputTest {
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
-        assertThat(persistAdSelectionResultInput.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(persistAdSelectionResultInput.getSeller()).isEqualTo(SELLER);
-        assertThat(persistAdSelectionResultInput.getAdSelectionResult())
+        expect.that(persistAdSelectionResultInput.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(persistAdSelectionResultInput.getSeller()).isEqualTo(SELLER);
+        expect.that(persistAdSelectionResultInput.getAdSelectionResult())
                 .isEqualTo(AD_SELECTION_RESULT);
-        assertThat(persistAdSelectionResultInput.getCallerPackageName())
+        expect.that(persistAdSelectionResultInput.getCallerPackageName())
                 .isEqualTo(CALLER_PACKAGE_NAME);
     }
 
@@ -76,10 +74,10 @@ public class PersistAdSelectionResultInputTest {
         PersistAdSelectionResultInput fromParcel =
                 PersistAdSelectionResultInput.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(fromParcel.getSeller()).isEqualTo(SELLER);
-        assertThat(fromParcel.getAdSelectionResult()).isEqualTo(AD_SELECTION_RESULT);
-        assertThat(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(fromParcel.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(fromParcel.getSeller()).isEqualTo(SELLER);
+        expect.that(fromParcel.getAdSelectionResult()).isEqualTo(AD_SELECTION_RESULT);
+        expect.that(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
     }
 
     @Test
@@ -98,24 +96,23 @@ public class PersistAdSelectionResultInputTest {
         PersistAdSelectionResultInput fromParcel =
                 PersistAdSelectionResultInput.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(fromParcel.getSeller()).isNull();
-        assertThat(fromParcel.getAdSelectionResult()).isNull();
-        assertThat(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(fromParcel.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(fromParcel.getSeller()).isNull();
+        expect.that(fromParcel.getAdSelectionResult()).isNull();
+        expect.that(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
     }
 
     @Test
     public void testFailsToBuildWithUnsetAdSelectionId() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    new PersistAdSelectionResultInput.Builder()
-                            // Not setting AdSelectionId making it null.
-                            .setSeller(SELLER)
-                            .setAdSelectionResult(AD_SELECTION_RESULT)
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            .build();
-                });
+                () ->
+                        new PersistAdSelectionResultInput.Builder()
+                                // Not setting AdSelectionId making it null.
+                                .setSeller(SELLER)
+                                .setAdSelectionResult(AD_SELECTION_RESULT)
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                .build());
     }
 
     @Test
@@ -136,7 +133,8 @@ public class PersistAdSelectionResultInputTest {
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
-        assertThat(obj1).isEqualTo(obj2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(obj1, obj2);
     }
 
     @Test
@@ -157,7 +155,8 @@ public class PersistAdSelectionResultInputTest {
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
-        assertThat(obj1).isNotEqualTo(obj2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreNotEqual(obj1, obj2);
     }
 
     @Test
@@ -170,27 +169,7 @@ public class PersistAdSelectionResultInputTest {
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
-        assertEquals(0, obj.describeContents());
-    }
-
-    @Test
-    public void testEqualPersistAdSelectionResultInputsHaveSameHashCode() {
-        PersistAdSelectionResultInput obj1 =
-                new PersistAdSelectionResultInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setSeller(SELLER)
-                        .setAdSelectionResult(AD_SELECTION_RESULT)
-                        .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .build();
-        PersistAdSelectionResultInput obj2 =
-                new PersistAdSelectionResultInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setSeller(SELLER)
-                        .setAdSelectionResult(AD_SELECTION_RESULT)
-                        .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .build();
-
-        CommonFixture.assertHaveSameHashCode(obj1, obj2);
+        expect.that(obj.describeContents()).isEqualTo(0);
     }
 
     @Test
@@ -244,6 +223,7 @@ public class PersistAdSelectionResultInputTest {
         byte newValue = 5;
         adSelectionResultData[0] = newValue;
         assertThat(persistAdSelectionResultInput.getAdSelectionResult()).isNotNull();
+        assertThat(persistAdSelectionResultInput.getAdSelectionResult()).isNotEmpty();
         assertThat(persistAdSelectionResultInput.getAdSelectionResult()[0])
                 .isEqualTo(originalValue);
     }

@@ -16,7 +16,8 @@
 package android.app.sdksandbox.testutils;
 
 import com.android.adservices.common.AdServicesSupportHelper;
-import com.android.adservices.common.AndroidLogger;
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.modules.utils.build.SdkLevel;
 
 /** See {@link AbstractSdkSandboxDeviceSupportedRule}. */
 public final class SdkSandboxDeviceSupportedRule extends AbstractSdkSandboxDeviceSupportedRule {
@@ -27,8 +28,9 @@ public final class SdkSandboxDeviceSupportedRule extends AbstractSdkSandboxDevic
 
     @Override
     public boolean isSdkSandboxSupportedOnDevice() {
-        boolean isSupported = AdServicesSupportHelper.getInstance().isDeviceSupported();
-        mLog.v("isSdkSandboxSupportedOnDevice(): %b", isSupported);
-        return isSupported;
+        boolean isDeviceSupported = AdServicesSupportHelper.getInstance().isDeviceSupported();
+        boolean isSdkLevelSupported = isDeviceSupported && SdkLevel.isAtLeastU();
+        mLog.v("isSdkSandboxSupportedOnDevice(): %b", isSdkLevelSupported);
+        return isSdkLevelSupported;
     }
 }

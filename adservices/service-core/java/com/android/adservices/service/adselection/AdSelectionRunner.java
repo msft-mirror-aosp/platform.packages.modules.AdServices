@@ -61,11 +61,19 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.kanon.KAnonMessageEntity;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
+import com.android.adservices.service.kanon.KAnonSignJoinManager;
+import com.android.adservices.service.kanon.KAnonUtil;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.stats.AdFilteringLogger;
+import com.android.adservices.service.stats.AdFilteringLoggerFactory;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.SignatureVerificationLogger;
+import com.android.adservices.service.stats.SignatureVerificationLoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -98,7 +106,6 @@ import java.util.stream.Collectors;
  *
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AdSelectionRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -144,12 +151,19 @@ public abstract class AdSelectionRunner {
     @NonNull protected final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
     @NonNull protected final DebugReporting mDebugReporting;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
-    @NonNull private final AdFilterer mAdFilterer;
+    @NonNull private final FrequencyCapAdFilterer mFrequencyCapAdFilterer;
+    @NonNull private final AppInstallAdFilterer mAppInstallAdFilterer;
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     @NonNull private final AdCounterHistogramUpdater mAdCounterHistogramUpdater;
     private final int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     private final boolean mShouldUseUnifiedTables;
+    @NonNull private final KAnonSignJoinFactory mKAnonSignJoinFactory;
+    @NonNull private final SignatureVerificationLogger mSignatureVerificationLogger;
+
+    @NonNull protected final AdFilteringLogger mCustomAudienceFilteringLogger;
+
+    @NonNull protected final AdFilteringLogger mContextualAdsFilteringLogger;
 
     /**
      * @param context service context
@@ -175,12 +189,14 @@ public abstract class AdSelectionRunner {
             @NonNull final Flags flags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
-            @NonNull final AdFilterer adFilterer,
+            @NonNull final FrequencyCapAdFilterer frequencyCapAdFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final DebugReporting debugReporting,
             final int callerUid,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory,
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -191,11 +207,13 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
-        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
         Objects.requireNonNull(adSelectionExecutionLogger);
+        Objects.requireNonNull(kAnonSignJoinFactory);
+        Objects.requireNonNull(appInstallAdFilterer);
 
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
@@ -211,13 +229,22 @@ public abstract class AdSelectionRunner {
         mFlags = flags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
-        mAdFilterer = adFilterer;
+        mFrequencyCapAdFilterer = frequencyCapAdFilterer;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mDebugReporting = debugReporting;
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
+        mKAnonSignJoinFactory = kAnonSignJoinFactory;
+        mAppInstallAdFilterer = appInstallAdFilterer;
+        mSignatureVerificationLogger =
+                new SignatureVerificationLoggerFactory(mAdServicesLogger, mFlags).getInstance();
+        AdFilteringLoggerFactory adFilteringLoggerFactory =
+                new AdFilteringLoggerFactory(mAdServicesLogger, mFlags);
+        mCustomAudienceFilteringLogger =
+                adFilteringLoggerFactory.getCustomAudienceFilteringLogger();
+        mContextualAdsFilteringLogger = adFilteringLoggerFactory.getContextualAdFilteringLogger();
     }
 
     @VisibleForTesting
@@ -236,12 +263,14 @@ public abstract class AdSelectionRunner {
             @NonNull final Flags flags,
             int callerUid,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
-            @NonNull AdFilterer adFilterer,
+            @NonNull FrequencyCapAdFilterer frequencyCapAdFilterer,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final DebugReporting debugReporting,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory,
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -255,10 +284,12 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionExecutionLogger);
-        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(debugReporting);
+        Objects.requireNonNull(kAnonSignJoinFactory);
+        Objects.requireNonNull(appInstallAdFilterer);
 
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
@@ -274,13 +305,22 @@ public abstract class AdSelectionRunner {
         mFlags = flags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
-        mAdFilterer = adFilterer;
+        mFrequencyCapAdFilterer = frequencyCapAdFilterer;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mCallerUid = callerUid;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mDebugReporting = debugReporting;
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
+        mKAnonSignJoinFactory = kAnonSignJoinFactory;
+        mAppInstallAdFilterer = appInstallAdFilterer;
+        mSignatureVerificationLogger =
+                new SignatureVerificationLoggerFactory(mAdServicesLogger, mFlags).getInstance();
+        AdFilteringLoggerFactory adFilteringLoggerFactory =
+                new AdFilteringLoggerFactory(mAdServicesLogger, mFlags);
+        mCustomAudienceFilteringLogger =
+                adFilteringLoggerFactory.getCustomAudienceFilteringLogger();
+        mContextualAdsFilteringLogger = adFilteringLoggerFactory.getContextualAdFilteringLogger();
     }
 
     /**
@@ -350,16 +390,6 @@ public abstract class AdSelectionRunner {
                                     callerAppPackageName,
                                     adSelectionAndOrchestrationResultPair.first,
                                     callback);
-                            if (mDebugReporting.isEnabled()) {
-                                sendDebugReports(
-                                        inputParams.getCallerPackageName(),
-                                        adSelectionAndOrchestrationResultPair.second,
-                                        fullCallback);
-                            } else {
-                                if (Objects.nonNull(fullCallback)) {
-                                    notifyEmptySuccessToCaller(fullCallback);
-                                }
-                            }
                         }
 
                         @Override
@@ -388,10 +418,75 @@ public abstract class AdSelectionRunner {
                         }
                     },
                     mLightweightExecutorService);
+
+            ListenableFuture<Void> debugReportingFuture =
+                    FluentFuture.from(dbAdSelectionFuture)
+                            .transformAsync(
+                                    adSelectionAndOrchestrationResultPair ->
+                                            sendDebugReports(
+                                                    adSelectionAndOrchestrationResultPair.second),
+                                    mLightweightExecutorService);
+
+            ListenableFuture<Void> kAnonSignJoinFuture =
+                    FluentFuture.from(dbAdSelectionFuture)
+                            .transformAsync(
+                                    adSelectionAndOrchestrationResultPair ->
+                                            makeSignJoinCall(
+                                                    adSelectionAndOrchestrationResultPair.first),
+                                    mLightweightExecutorService);
+
+            ListenableFuture<Void> fullCompletedFuture =
+                    Futures.whenAllComplete(kAnonSignJoinFuture, debugReportingFuture)
+                            .call(() -> null, mLightweightExecutorService);
+
+            if (Objects.nonNull(fullCallback)) {
+                Futures.addCallback(
+                        fullCompletedFuture,
+                        new FutureCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void result) {
+                                notifyEmptySuccessToCaller(fullCallback);
+                            }
+
+                            @Override
+                            public void onFailure(Throwable throwable) {
+                                notifyFailureToCaller(
+                                        callerAppPackageName, fullCallback, throwable);
+                            }
+                        },
+                        mLightweightExecutorService);
+            }
         } catch (Throwable t) {
             Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
             sLogger.v("run ad selection fails fast with exception %s.", t.toString());
             notifyFailureToCaller(inputParams.getCallerPackageName(), callback, t);
+        }
+    }
+
+    private ListenableFuture<Void> makeSignJoinCall(DBAdSelection dbAdSelection) {
+        if (mFlags.getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled()) {
+            sLogger.v("Starting kanon sign join process");
+            String winningUrl = dbAdSelection.getWinningAdRenderUri().toString();
+            long adSelectionId = dbAdSelection.getAdSelectionId();
+            return Futures.submitAsync(
+                    () -> {
+                        try {
+                            List<KAnonMessageEntity> messageEntities =
+                                    KAnonUtil.getKAnonEntitiesFromAuctionResult(
+                                            winningUrl, adSelectionId);
+                            KAnonSignJoinManager kAnonSignJoinManager =
+                                    mKAnonSignJoinFactory.getKAnonSignJoinManager();
+                            kAnonSignJoinManager.processNewMessages(messageEntities);
+                        } catch (Throwable t) {
+                            sLogger.e(t, "Error while processing new messages for KAnon");
+                            return Futures.immediateFailedFuture(t);
+                        }
+                        return Futures.immediateVoidFuture();
+                    },
+                    mBackgroundExecutorService);
+        } else {
+            sLogger.v("KAnon sign join feature is disabled");
+            return Futures.immediateVoidFuture();
         }
     }
 
@@ -544,11 +639,12 @@ public abstract class AdSelectionRunner {
         AdSelectionConfig adSelectionConfigInput;
         if (!mFlags.getFledgeAdSelectionContextualAdsEnabled()) {
             // Empty all contextual ads if the feature is disabled
-            sLogger.v("Contextual flow is disabled");
+            sLogger.v("Contextual flow is disabled.");
             adSelectionConfigInput = getAdSelectionConfigWithoutContextualAds(adSelectionConfig);
         } else {
-            sLogger.v("Contextual flow is enabled, filtering contextual ads");
-            adSelectionConfigInput = getAdSelectionConfigFilterContextualAds(adSelectionConfig);
+            sLogger.v("Contextual flow is enabled, filtering contextual ads.");
+            adSelectionConfigInput =
+                    getAdSelectionConfigFilterContextualAds(adSelectionConfig, callerPackageName);
         }
 
         ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
@@ -765,30 +861,47 @@ public abstract class AdSelectionRunner {
     }
 
     private AdSelectionConfig getAdSelectionConfigFilterContextualAds(
-            AdSelectionConfig adSelectionConfig) {
+            AdSelectionConfig adSelectionConfig, String callerPackageName) {
+        logStartContextualAdsFiltering();
         Map<AdTechIdentifier, SignedContextualAds> filteredContextualAdsMap = new HashMap<>();
         sLogger.v("Filtering contextual ads in Ad Selection Config");
-        boolean isEnrollmentCheckEnabled = !mFlags.getDisableFledgeEnrollmentCheck();
-        ProtectedAudienceSignatureManager signatureManager =
-                new ProtectedAudienceSignatureManager(
-                        mEnrollmentDao, mEncryptionKeyDao, isEnrollmentCheckEnabled);
+        ProtectedAudienceSignatureManager signatureManager = getSignatureManager();
         SignedContextualAds filtered;
+        int numOfContextualAdsBeforeFiltering = 0;
+        int numOfContextualAdsAfterFiltering = 0;
+        int numOfContextualAdsRemovedWithZeroAds = 0;
+        int numOfContextualAdsRemovedWithUnverifiedSignatures = 0;
         for (Map.Entry<AdTechIdentifier, SignedContextualAds> entry :
                 adSelectionConfig.getPerBuyerSignedContextualAds().entrySet()) {
-            if (!signatureManager.isVerified(entry.getKey(), entry.getValue())) {
+            if (!signatureManager.isVerified(
+                    entry.getKey(),
+                    adSelectionConfig.getSeller(),
+                    callerPackageName,
+                    entry.getValue())) {
                 sLogger.v(
                         "Contextual ads for buyer: '%s' have an invalid signature and will be"
                                 + " removed from the auction",
                         entry.getKey());
+                numOfContextualAdsRemovedWithUnverifiedSignatures++;
                 continue;
+            } else {
+                sLogger.v("Contextual ads for buyer '%s' is verified", entry.getKey());
             }
+            numOfContextualAdsBeforeFiltering += entry.getValue().getAdsWithBid().size();
+            logStartContextualAdsAppInstallFiltering();
+            filtered = mAppInstallAdFilterer.filterContextualAds(entry.getValue());
+            logEndContextualAdsAppInstallFiltering();
 
-            filtered = mAdFilterer.filterContextualAds(entry.getValue());
+            logStartContextualAdsFcapFiltering();
+            filtered = mFrequencyCapAdFilterer.filterContextualAds(filtered);
+            logEndContextualAdsFcapFiltering();
+            numOfContextualAdsAfterFiltering += filtered.getAdsWithBid().size();
             if (filtered.getAdsWithBid().isEmpty()) {
                 sLogger.v(
                         "All the ads are filtered for a contextual ads for buyer: %s. Contextual"
                                 + " ads object will be removed.",
                         entry.getKey());
+                numOfContextualAdsRemovedWithZeroAds++;
                 continue;
             }
 
@@ -800,10 +913,62 @@ public abstract class AdSelectionRunner {
                     entry.getValue().getAdsWithBid().size(),
                     filteredContextualAdsMap.get(entry.getKey()).getAdsWithBid().size());
         }
+        logEndContextualAdsFiltering(
+                numOfContextualAdsBeforeFiltering,
+                numOfContextualAdsAfterFiltering,
+                numOfContextualAdsRemovedWithUnverifiedSignatures,
+                numOfContextualAdsRemovedWithZeroAds);
         return adSelectionConfig
                 .cloneToBuilder()
                 .setPerBuyerSignedContextualAds(filteredContextualAdsMap)
                 .build();
+    }
+
+    private void logStartContextualAdsFiltering() {
+        mContextualAdsFilteringLogger.setAdFilteringStartTimestamp();
+    }
+
+    private void logStartContextualAdsAppInstallFiltering() {
+        mContextualAdsFilteringLogger.setAppInstallStartTimestamp();
+    }
+
+    private void logEndContextualAdsAppInstallFiltering() {
+        mContextualAdsFilteringLogger.setAppInstallEndTimestamp();
+    }
+
+    private void logStartContextualAdsFcapFiltering() {
+        mContextualAdsFilteringLogger.setFrequencyCapStartTimestamp();
+    }
+
+    private void logEndContextualAdsFcapFiltering() {
+        mContextualAdsFilteringLogger.setFrequencyCapEndTimestamp();
+    }
+
+    private void logEndContextualAdsFiltering(
+            int numOfContextualAdsBeforeFiltering,
+            int numOfContextualAdsAfterFiltering,
+            int numOfContextualAdsRemovedWithUnverifiedSignatures,
+            int numOfContextualAdsRemovedWithZeroAds) {
+        mContextualAdsFilteringLogger.setAdFilteringEndTimestamp();
+        mContextualAdsFilteringLogger.setTotalNumOfContextualAdsBeforeFiltering(
+                numOfContextualAdsBeforeFiltering);
+        mContextualAdsFilteringLogger.setNumOfContextualAdsFiltered(
+                numOfContextualAdsBeforeFiltering - numOfContextualAdsAfterFiltering);
+        mContextualAdsFilteringLogger.setNumOfContextualAdsFilteredOutOfBiddingInvalidSignatures(
+                numOfContextualAdsRemovedWithUnverifiedSignatures);
+        mContextualAdsFilteringLogger.setNumOfContextualAdsFilteredOutOfBiddingNoAds(
+                numOfContextualAdsRemovedWithZeroAds);
+        mContextualAdsFilteringLogger.close();
+    }
+
+    @NonNull
+    private ProtectedAudienceSignatureManager getSignatureManager() {
+        boolean isEnrollmentCheckEnabled = !mFlags.getDisableFledgeEnrollmentCheck();
+        return new ProtectedAudienceSignatureManager(
+                mEnrollmentDao,
+                mEncryptionKeyDao,
+                mSignatureVerificationLogger,
+                isEnrollmentCheckEnabled);
     }
 
     private AdSelectionConfig getAdSelectionConfigWithoutContextualAds(
@@ -815,33 +980,20 @@ public abstract class AdSelectionRunner {
                 .build();
     }
 
-    private void sendDebugReports(
-            @NonNull String callerAppPackageName,
-            AdSelectionOrchestrationResult result,
-            @Nullable AdSelectionCallback callback) {
-        AdScoringOutcome topScoringAd = result.mWinningOutcome;
-        AdScoringOutcome secondScoringAd = result.mSecondHighestScoredOutcome;
-        DebugReportSenderStrategy sender = mDebugReporting.getSenderStrategy();
-        sender.batchEnqueue(
-                DebugReportProcessor.getUrisFromAdAuction(
-                        result.mDebugReports,
-                        PostAuctionSignals.create(topScoringAd, secondScoringAd)));
-        ListenableFuture<Void> future = sender.flush();
-        if (Objects.nonNull(callback)) {
-            Futures.addCallback(
-                    future,
-                    new FutureCallback<Void>() {
-                        @Override
-                        public void onSuccess(Void result) {
-                            notifyEmptySuccessToCaller(callback);
-                        }
-
-                        @Override
-                        public void onFailure(Throwable throwable) {
-                            notifyFailureToCaller(callerAppPackageName, callback, throwable);
-                        }
-                    },
-                    mLightweightExecutorService);
+    private ListenableFuture<Void> sendDebugReports(AdSelectionOrchestrationResult result) {
+        if (mDebugReporting.isEnabled()) {
+            sLogger.v("Debug reporting is enabled");
+            AdScoringOutcome topScoringAd = result.mWinningOutcome;
+            AdScoringOutcome secondScoringAd = result.mSecondHighestScoredOutcome;
+            DebugReportSenderStrategy sender = mDebugReporting.getSenderStrategy();
+            sender.batchEnqueue(
+                    DebugReportProcessor.getUrisFromAdAuction(
+                            result.mDebugReports,
+                            PostAuctionSignals.create(topScoringAd, secondScoringAd)));
+            return sender.flush();
+        } else {
+            sLogger.v("Debug reporting is disabled");
+            return Futures.immediateVoidFuture();
         }
     }
 

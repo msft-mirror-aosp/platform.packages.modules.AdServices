@@ -49,6 +49,7 @@ public class LimitPerfTests extends AbstractSelectAdsLatencyTest {
     private static final String URL_PREFIX = "https://";
     private static final String BUYER = "performance-fledge-static-5jyy5ulagq-uc.a.run.app";
     public static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/simple_logic";
+    public static final String BUYER_BIDDING_SIGNALS_URI_PATH = "/rb/bts";
 
     @Test
     public void test_joinBigCustomAudience() throws Exception {
@@ -159,7 +160,7 @@ public class LimitPerfTests extends AbstractSelectAdsLatencyTest {
      */
     private CustomAudience createBigCustomAudience(String nameStart, int bid) {
         int minUrlSize = URL_PREFIX.length() + BUYER.length();
-        Uri trustedBiddingUri =
+        Uri trustedBiddingUri = CommonFixture.getUri(BUYER, BUYER_BIDDING_SIGNALS_URI_PATH);
                 getValidTrustedBiddingUriByBuyer(AdTechIdentifier.fromString(BUYER));
         return new CustomAudience.Builder()
                 // CA names are limited to 200 bytes
@@ -190,7 +191,7 @@ public class LimitPerfTests extends AbstractSelectAdsLatencyTest {
                                         .setRenderUri(nBitUriFromAdtech(BUYER, minUrlSize))
                                         .setMetadata(
                                                 nBitJsonWithFields(
-                                                        100 - minUrlSize, "\"result\": " + bid))
+                                                        100 - minUrlSize, "\"bid\": " + bid))
                                         .build()))
                 .build();
     }

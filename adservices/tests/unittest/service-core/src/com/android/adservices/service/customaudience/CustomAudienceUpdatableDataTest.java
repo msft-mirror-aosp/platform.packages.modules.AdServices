@@ -33,12 +33,12 @@ import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.JsonFixture;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
@@ -56,6 +56,8 @@ public class CustomAudienceUpdatableDataTest {
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    private static final Flags TEST_FLAGS = new CustomAudienceUpdateableDataTestFlags();
 
     @Test
     public void testBuildUpdatableDataSuccess() throws JSONException {
@@ -99,7 +101,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        FlagsFactory.getFlagsForTest());
+                        TEST_FLAGS);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -310,7 +312,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        FlagsFactory.getFlagsForTest());
+                        TEST_FLAGS);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -325,7 +327,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         "",
-                        FlagsFactory.getFlagsForTest());
+                        TEST_FLAGS);
 
         assertEquals(
                 "Updatable data created with empty string does not match built from response"
@@ -370,7 +372,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        FlagsFactory.getFlagsForTest());
+                        TEST_FLAGS);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -394,7 +396,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponseWithoutHarmlessJunk,
-                        FlagsFactory.getFlagsForTest());
+                        TEST_FLAGS);
 
         // Harmless junk was added to the same response
         final String jsonResponseWithHarmlessJunk =
@@ -408,7 +410,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponseWithHarmlessJunk,
-                        FlagsFactory.getFlagsForTest());
+                        TEST_FLAGS);
 
         assertNotEquals(
                 "Harmless junk was not added to the response JSON",
@@ -453,7 +455,7 @@ public class CustomAudienceUpdatableDataTest {
                             CommonFixture.VALID_BUYER_1,
                             initialUpdateResult,
                             CustomAudienceUpdatableDataFixture.getEmptyJsonResponseString(),
-                            FlagsFactory.getFlagsForTest());
+                            TEST_FLAGS);
             assertEquals(
                     "Incorrect update success when initial result is "
                             + initialUpdateResult.toString(),
@@ -470,7 +472,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         "this (input ,string .is -not real json'",
-                        FlagsFactory.getFlagsForTest());
+                        TEST_FLAGS);
 
         assertNull(updatableData.getUserBiddingSignals());
         assertNull(updatableData.getTrustedBiddingData());
@@ -492,7 +494,12 @@ public class CustomAudienceUpdatableDataTest {
             }
 
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeAppInstallFilteringEnabled() {
                 return true;
             }
         }
@@ -563,7 +570,20 @@ public class CustomAudienceUpdatableDataTest {
         assertFalse(updatableDataFromResponseString.getContainsSuccessfulUpdate());
     }
 
-    static class FlagsWithAuctionServerRequestFlagsSet extends FlagsFactory.TestFlags {
+    static class CustomAudienceUpdateableDataTestFlags extends FakeFlagsFactory.TestFlags {
+        @Override
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAppInstallFilteringEnabled() {
+            return true;
+        }
+    }
+
+    static class FlagsWithAuctionServerRequestFlagsSet
+            extends CustomAudienceUpdateableDataTestFlags {
         private final boolean mAuctionServerRequestFlagsEnabled;
 
         FlagsWithAuctionServerRequestFlagsSet(boolean auctionServerRequestFlagsEnabled) {

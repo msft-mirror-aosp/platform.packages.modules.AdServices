@@ -55,7 +55,7 @@ public class UpdateEncoderEventHandler {
 
     public UpdateEncoderEventHandler(@NonNull Context context) {
         this(
-                ProtectedSignalsDatabase.getInstance(context).getEncoderEndpointsDao(),
+                ProtectedSignalsDatabase.getInstance().getEncoderEndpointsDao(),
                 new EncoderLogicHandler(context));
     }
 

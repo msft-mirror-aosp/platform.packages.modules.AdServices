@@ -16,11 +16,8 @@
 
 package android.adservices.cts;
 
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
-
 import static com.google.common.truth.Truth.assertThat;
 
-import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdFiltersFixture;
 import android.adservices.common.AppInstallFilters;
@@ -31,8 +28,6 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.common.annotations.SetFlagEnabled;
-
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -40,7 +35,6 @@ import java.util.HashSet;
 
 /** Unit tests for {@link AdFilters}. */
 @SmallTest
-@SetFlagEnabled(KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public class AdFiltersTest {
 
     private static final String DIFFERENT_PACKAGE_NAME =
@@ -251,21 +245,25 @@ public class AdFiltersTest {
     public void testToString() {
         final AdFilters originalFilters = AdFiltersFixture.getValidUnhiddenFilters();
 
-        final String expectedString =
-                String.format(
-                        "AdFilters{mFrequencyCapFilters="
-                                + FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS
-                                + getAppInstallString()
-                                + "}");
-        assertThat(originalFilters.toString()).isEqualTo(expectedString);
+        assertThat(originalFilters.toString()).contains("AdFilters{");
+        assertThat(originalFilters.toString())
+                .contains(
+                        "mFrequencyCapFilters="
+                                + FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS);
+        assertThat(originalFilters.toString())
+                .contains(
+                        "mAppInstallFilters=" + AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
     }
 
-    private String getAppInstallString() {
-        String toReturn = "";
-        if (AdDataFixture.APP_INSTALL_ENABLED) {
-            toReturn +=
-                    ", mAppInstallFilters=" + AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS;
-        }
-        return toReturn;
+    @Test
+    public void testAdFiltersDescribeContents() {
+        final AdFilters adFilters =
+                new AdFilters.Builder()
+                        .setFrequencyCapFilters(
+                                FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
+                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                        .build();
+
+        assertThat(adFilters.describeContents()).isEqualTo(0);
     }
 }

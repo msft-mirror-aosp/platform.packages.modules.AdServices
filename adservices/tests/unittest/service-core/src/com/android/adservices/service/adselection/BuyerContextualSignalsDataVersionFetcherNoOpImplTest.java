@@ -26,8 +26,8 @@ import static junit.framework.Assert.assertNull;
 import android.adservices.common.AdSelectionSignals;
 import android.net.Uri;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -82,7 +82,8 @@ public class BuyerContextualSignalsDataVersionFetcherNoOpImplTest {
                 AdSelectionSignals.EMPTY,
                 BUYER_CONTEXTUAL_SIGNALS_DATA_VERSION_FETCHER_NO_OP
                         .getContextualSignalsForGenerateBid(
-                                TRUSTED_BIDDING_DATA, MAP_WITH_DATA_VERSION_HEADER));
+                                TRUSTED_BIDDING_DATA, MAP_WITH_DATA_VERSION_HEADER)
+                        .toAdSelectionSignals());
     }
 
     @Test
@@ -91,7 +92,8 @@ public class BuyerContextualSignalsDataVersionFetcherNoOpImplTest {
                 AdSelectionSignals.EMPTY,
                 BUYER_CONTEXTUAL_SIGNALS_DATA_VERSION_FETCHER_NO_OP
                         .getContextualSignalsForGenerateBid(
-                                TRUSTED_BIDDING_DATA, MAP_WITHOUT_DATA_VERSION_HEADER));
+                                TRUSTED_BIDDING_DATA, MAP_WITHOUT_DATA_VERSION_HEADER)
+                        .toAdSelectionSignals());
     }
 
     @Test

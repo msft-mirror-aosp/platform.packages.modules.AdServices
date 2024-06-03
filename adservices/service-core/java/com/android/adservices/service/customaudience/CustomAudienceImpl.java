@@ -121,19 +121,23 @@ public class CustomAudienceImpl {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(callerPackageName);
         Instant currentTime = mClock.instant();
-
+        sLogger.v("Requested CA to join: %s", customAudience);
         sLogger.v("Validating CA limits");
         mCustomAudienceQuantityChecker.check(customAudience, callerPackageName);
         sLogger.v("Validating CA");
         mCustomAudienceValidator.validate(customAudience);
 
-        boolean adSelectionFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
-        sLogger.v("Ad Selection filtering enabled flag is %s", adSelectionFilteringEnabled);
+        boolean frequencyCapFilteringEnabled = mFlags.getFledgeFrequencyCapFilteringEnabled();
+        sLogger.v("Frequency cap filtering enabled flag is %s", frequencyCapFilteringEnabled);
+        boolean appInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
+        sLogger.v("App install filtering enabled flag is %s", appInstallFilteringEnabled);
         boolean adRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
         sLogger.v("Ad render id enabled flag is %s", adRenderIdEnabled);
         AdDataConversionStrategy dataConversionStrategy =
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                        adSelectionFilteringEnabled, adRenderIdEnabled);
+                        frequencyCapFilteringEnabled,
+                        appInstallFilteringEnabled,
+                        adRenderIdEnabled);
 
         boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
         sLogger.v("Is debuggable custom audience: %b", isDebuggableCustomAudience);
@@ -150,7 +154,7 @@ public class CustomAudienceImpl {
                         isDebuggableCustomAudience,
                         mAuctionServerRequestFlagsEnabled);
 
-        sLogger.v("Inserting CA in the DB");
+        sLogger.v("Inserting CA in the DB: %s", dbCustomAudience);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudience, customAudience.getDailyUpdateUri(), isDebuggableCustomAudience);
     }

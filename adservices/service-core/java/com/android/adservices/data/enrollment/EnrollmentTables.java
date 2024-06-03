@@ -37,6 +37,8 @@ public final class EnrollmentTables {
         String REMARKETING_RESPONSE_BASED_REGISTRATION_URL =
                 "remarketing_response_based_registration_url";
         String ENCRYPTION_KEY_URL = "encryption_key_url";
+        String ENROLLED_SITE = "enrolled_site";
+        String ENROLLED_APIS = "enrolled_apis";
     }
 
     public static final String CREATE_TABLE_ENROLLMENT_DATA_V1 =
@@ -61,12 +63,41 @@ public final class EnrollmentTables {
                     + " TEXT "
                     + ")";
 
+    public static final String CREATE_TABLE_ENROLLMENT_DATA_V2 =
+            "CREATE TABLE "
+                    + EnrollmentDataContract.TABLE
+                    + " ("
+                    + EnrollmentDataContract.ENROLLMENT_ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + EnrollmentDataContract.COMPANY_ID
+                    + " TEXT, "
+                    + EnrollmentDataContract.SDK_NAMES
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_REPORTING_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ENCRYPTION_KEY_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ENROLLED_SITE
+                    + " TEXT, "
+                    + EnrollmentDataContract.ENROLLED_APIS
+                    + " TEXT "
+                    + ")";
+
     // Consolidated list of create statements for all tables.
     public static final List<String> CREATE_STATEMENTS = List.of(CREATE_TABLE_ENROLLMENT_DATA_V1);
 
     // Consolidated list of create statements for all tables.
     public static final List<String> CREATE_STATEMENTS_V1 =
             List.of(CREATE_TABLE_ENROLLMENT_DATA_V1);
+
+    public static final List<String> CREATE_STATEMENTS_V2 =
+            List.of(CREATE_TABLE_ENROLLMENT_DATA_V2);
 
     // Private constructor to prevent instantiation.
     private EnrollmentTables() {}

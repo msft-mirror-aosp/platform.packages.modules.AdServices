@@ -59,13 +59,13 @@
 
         <!-- Force enable enrollment checks for FLEDGE when testing enrollment -->
         <option name="run-command"
-                value="setprop debug.adservices.disable_fledge_enrollment_check false"/>
+                value="device_config put adservices disable_fledge_enrollment_check false"/>
 
         <!-- Increase the allowed API queries per second -->
         <option name="run-command"
-                value="setprop debug.adservices.sdk_request_permits_per_second 1000" />
+                value="device_config put adservices sdk_request_permits_per_second 1000" />
         <option name="teardown-command"
-                value="setprop debug.adservices.sdk_request_permits_per_second 1" />
+                value="device_config put adservices sdk_request_permits_per_second 1" />
 
         <!-- Temporarily enable enrollment seed for testing -->
         <option name="run-command"

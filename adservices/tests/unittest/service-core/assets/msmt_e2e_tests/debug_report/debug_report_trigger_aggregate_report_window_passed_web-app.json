@@ -44,8 +44,7 @@
       // as the aggregatable report window was clamped to one day.
       {
         "registration_request": {
-          "registrant": "com.example.2d1",
-          "attribution_src_url": "https://www.ad-tech1.test"
+          "registrant": "com.example.2d1"
         },
         "responses": [{
           "url": "https://www.ad-tech1.test",
@@ -78,8 +77,7 @@
       // aggregatable report window has passed.
       {
         "registration_request": {
-          "registrant": "com.example.2d1",
-          "attribution_src_url": "https://www.ad-tech1.test"
+          "registrant": "com.example.2d1"
         },
         "responses": [{
           "url": "https://www.ad-tech1.test",
@@ -173,6 +171,7 @@
       {
         "payload": {
           "attribution_destination": "android-app://com.example.2d1",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x11",
@@ -191,6 +190,7 @@
       {
         "payload": {
           "attribution_destination": "android-app://com.example.2d1",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x11",

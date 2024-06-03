@@ -33,22 +33,22 @@
         app:layout_constraintStart_toStartOf="parent" >
         <LinearLayout
             android:layout_height="wrap_content"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:paddingBottom="24dp"
+            android:paddingStart="@dimen/adservices_content_horizontal_padding"
+            android:paddingEnd="@dimen/adservices_content_horizontal_padding"
+            android:paddingBottom="@dimen/adservices_content_padding"
             android:orientation="vertical"
             android:layout_gravity="center_horizontal"
             style="@style/NotificationContainer">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="@dimen/adservices_content_horizontal_two_thirds_padding"
+                android:layout_marginEnd="@dimen/adservices_content_horizontal_two_thirds_padding"
                 android:orientation="vertical">
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="72dp"
+                    android:layout_marginTop="@dimen/adservices_content_3x_padding"
                     android:layout_marginStart="0dp"
                     android:src="@drawable/ic_android_icon"
                     tools:ignore="ContentDescription" />
@@ -61,8 +61,8 @@
                 android:id="@+id/container1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:padding="24dp"
+                android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
+                android:padding="@dimen/adservices_content_padding"
                 android:background="@drawable/ic_rounded_background"
                 android:orientation="vertical"
                 android:animateLayoutChanges="true">
@@ -73,19 +73,19 @@
                     style="@style/MainStyle.H4"
                     android:gravity="center_vertical"
                     android:drawableStart="@drawable/ic_notification_icon_1"
-                    android:drawablePadding="24dp"/>
+                    android:drawablePadding="@dimen/adservices_ic_notification_padding"/>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/adservices_content_half_padding"
                     android:text="@string/notificationUI_container1_body_text_eu"
                     style="@style/MainStyle.Body1" />
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="16dp"
+                    android:layout_height="@dimen/adservices_divider_height"
+                    android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
+                    android:layout_marginBottom="@dimen/adservices_content_two_thirds_padding"
                     android:background="@color/divider_color" />
 
                 <TextView
@@ -125,8 +125,8 @@
                 android:id="@+id/container2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:padding="24dp"
+                android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
+                android:padding="@dimen/adservices_content_padding"
                 android:background="@drawable/ic_rounded_background"
                 android:orientation="vertical">
                 <TextView
@@ -136,9 +136,9 @@
                     style="@style/MainStyle.H4"
                     android:gravity="center_vertical"
                     android:drawableStart="@drawable/ic_notification_icon_2"
-                    android:drawablePadding="24dp"/>
+                    android:drawablePadding="@dimen/adservices_ic_notification_padding"/>
                 <TextView
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/adservices_content_half_padding"
                     android:text="@string/notificationUI_container2_body_text_eu"
                     style="@style/MainStyle.Body1" />
             </LinearLayout>
@@ -155,7 +155,7 @@
         app:layout_constraintStart_toStartOf="parent" >
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="@dimen/adservices_divider_height"
             android:background="@color/divider_color"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

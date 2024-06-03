@@ -89,7 +89,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
         mAppSearchConsentManager =
                 new AppSearchConsentManager(mSpyContext, mAppSearchConsentWorker);
         ApplicationInfo app1 = new ApplicationInfo();
@@ -599,11 +599,6 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
         verify(mAppSearchConsentWorker).setAdIdEnabled(false);
     }
 
-    private void setAdIdEnabledTest(boolean isAdIdEnabled) {
-        mAppSearchConsentManager.setAdIdEnabled(isAdIdEnabled);
-        verify(mAppSearchConsentWorker).setAdIdEnabled(isAdIdEnabled);
-    }
-
     @Test
     public void isAdIdEnabledTest_defaultFalseBit() {
         when(mAppSearchConsentWorker.isAdIdEnabled()).thenReturn(false);
@@ -621,11 +616,6 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     public void setU18AccountTest_falseBit() {
         mAppSearchConsentManager.setU18Account(false);
         verify(mAppSearchConsentWorker).setU18Account(false);
-    }
-
-    private void setU18AccountTest(boolean isU18Account) {
-        mAppSearchConsentManager.setU18Account(isU18Account);
-        verify(mAppSearchConsentWorker).setU18Account(isU18Account);
     }
 
     @Test
@@ -647,11 +637,6 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
         verify(mAppSearchConsentWorker).setEntryPointEnabled(false);
     }
 
-    private void setEntryPointEnabledTest(boolean isEntryPointEnabled) {
-        mAppSearchConsentManager.setEntryPointEnabled(isEntryPointEnabled);
-        verify(mAppSearchConsentWorker).setEntryPointEnabled(isEntryPointEnabled);
-    }
-
     @Test
     public void isEntryPointEnabledTest_defaultFalseBit() {
         when(mAppSearchConsentWorker.isEntryPointEnabled()).thenReturn(false);
@@ -671,11 +656,6 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
         verify(mAppSearchConsentWorker).setAdultAccount(false);
     }
 
-    private void setAdultAccountTest(boolean isAdultAccount) {
-        mAppSearchConsentManager.setAdultAccount(isAdultAccount);
-        verify(mAppSearchConsentWorker).setAdultAccount(isAdultAccount);
-    }
-
     @Test
     public void isAdultAccountTest_defaultFalseBit() {
         when(mAppSearchConsentWorker.isAdultAccount()).thenReturn(false);
@@ -693,11 +673,6 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     public void setU18NotificationDisplayedTest_falseBit() {
         mAppSearchConsentManager.setU18NotificationDisplayed(false);
         verify(mAppSearchConsentWorker).setU18NotificationDisplayed(false);
-    }
-
-    private void setU18NotificationDisplayedTest(boolean wasU18NotificationDisplayed) {
-        mAppSearchConsentManager.setU18NotificationDisplayed(wasU18NotificationDisplayed);
-        verify(mAppSearchConsentWorker).setU18NotificationDisplayed(wasU18NotificationDisplayed);
     }
 
     @Test

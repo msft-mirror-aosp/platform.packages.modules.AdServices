@@ -31,38 +31,17 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
+                android:paddingStart="@dimen/adservices_content_horizontal_padding"
+                android:paddingEnd="@dimen/adservices_content_horizontal_padding"
                 android:orientation="vertical">
-                <TextView
-                    android:id="@+id/above_pic_paragraph"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/settingsUI_main_view_subtitle"
-                    style="@style/MainStyle.Body2" />
-                <ImageView
-                    android:id="@+id/main_view_pic"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:src="@drawable/ic_main_view_image"
-                    tools:ignore="ContentDescription" />
                 <ImageView
                     android:id="@+id/main_view_ga_pic"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/main_view_pic_margin"
                     android:src="@drawable/ic_main_view_ga_image"
-                    android:contentDescription="@string/ic_main_view_ga_image_description"
-                    android:visibility="gone"/>
+                    android:contentDescription="@string/ic_main_view_ga_image_description"/>
             </LinearLayout>
-
-            <com.android.settingslib.widget.MainSwitchBar
-                android:id="@+id/main_switch_bar"
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent"
-                android:title="@string/settingsUI_privacy_sandbox_beta_switch_title"
-                android:focusable="true"
-                android:textDirection="locale" />
 
             <LinearLayout
                 android:id="@+id/privacy_sandbox_controls"
@@ -120,70 +99,17 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/main_view_footer"
+                android:id="@+id/main_view_ga_footer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="24dp"
-                android:paddingBottom="48dp"
+                android:paddingHorizontal="@dimen/adservices_content_horizontal_padding"
+                android:paddingBottom="@dimen/adservices_content_2x_padding"
                 android:orientation="vertical"
                 android:focusable="false">
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginStart="2dp"
-                    android:src="@drawable/ic_info_icon"
-                    tools:ignore="ContentDescription" />
-                <TextView
-                    android:layout_marginTop="18dp"
-                    android:layout_marginStart="0dp"
-                    android:text="@string/settingsUI_main_view_info_text1"
-                    style="@style/MainStyle.Body2BoldBullet" />
-                <TextView
-                    android:layout_marginTop="18dp"
-                    android:text="@string/settingsUI_main_view_info_text2"
-                    style="@style/MainStyle.Body2" />
-                <TextView
-                    android:layout_marginTop="18dp"
-                    android:layout_marginStart="0dp"
-                    android:text="@string/settingsUI_main_view_info_text3"
-                    style="@style/MainStyle.Body2BoldBullet" />
-                <TextView
-                    android:text="@string/settingsUI_main_view_info_text4"
-                    style="@style/MainStyle.Body2BoldBullet" />
-                <TextView
-                    android:text="@string/settingsUI_main_view_info_text5"
-                    style="@style/MainStyle.Body2BulletSubtext" />
-                <TextView
-                    android:text="@string/settingsUI_main_view_info_text6"
-                    style="@style/MainStyle.Body2BoldBullet" />
-                <TextView
-                    android:text="@string/settingsUI_main_view_info_text7"
-                    style="@style/MainStyle.Body2BulletSubtext" />
-                <TextView
-                    android:layout_marginTop="18dp"
-                    android:layout_marginStart="0dp"
-                    android:text="@string/settingsUI_main_view_info_text8"
-                    style="@style/MainStyle.Body2BoldBullet" />
-                <TextView
-                    android:layout_marginTop="18dp"
-                    android:text="@string/settingsUI_main_view_info_text9"
-                    style="@style/MainStyle.Body2" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/main_view_ga_footer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="24dp"
-                android:paddingBottom="48dp"
-                android:orientation="vertical"
-                android:focusable="false"
-                android:visibility="gone">
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />
                 <TextView
@@ -210,7 +136,7 @@
                 <TextView
                     android:id="@+id/main_view_ga_footer_learn_more"
                     android:text="@string/settingsU_main_view_learn_more"
-                    android:paddingTop="8dp"
+                   android:paddingTop="@dimen/adservices_content_one_thirds_padding"
                     style="@style/MainStyle.Body2" />
 
             </LinearLayout>

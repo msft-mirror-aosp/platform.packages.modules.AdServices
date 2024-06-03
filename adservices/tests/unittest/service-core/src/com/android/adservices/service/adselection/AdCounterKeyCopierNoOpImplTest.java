@@ -25,10 +25,10 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.js.JSScriptRecordArgument;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.json.JSONArray;
 import org.json.JSONException;

@@ -32,13 +32,11 @@ import java.util.Map;
 import java.util.Objects;
 
 class ConsentedDebugEnableArgs {
-    @VisibleForTesting
-    public static final String SECRET_DEBUG_TOKEN_ARG_NAME = "--secret_debug_token";
-
-    @VisibleForTesting public static final String EXPIRY_IN_DAYS_ARG_NAME = "--expires_in_days";
+    public static final String SECRET_DEBUG_TOKEN_ARG_NAME = "--secret-debug-token";
+    public static final String EXPIRY_IN_HOURS_ARG_NAME = "--expires-in-hours";
     @VisibleForTesting public static final int SECRET_DEBUG_TOKEN_MIN_LEN = 6;
-    @VisibleForTesting public static final int DEFAULT_EXPIRY_IN_DAYS = 1;
-    @VisibleForTesting public static final int MAX_EXPIRY_IN_DAYS = 30;
+    @VisibleForTesting public static final int DEFAULT_EXPIRY_IN_HOURS = 24;
+    @VisibleForTesting public static final int MAX_EXPIRY_IN_HOURS = 30 * 24;
     private final String mSecretDebugToken;
     private final Instant mExpiryTimestamp;
 
@@ -61,7 +59,7 @@ class ConsentedDebugEnableArgs {
                 + ": "
                 + getSecretDebugToken()
                 + ", "
-                + EXPIRY_IN_DAYS_ARG_NAME.substring(2)
+                + EXPIRY_IN_HOURS_ARG_NAME.substring(2)
                 + ": "
                 + getExpiryTimestamp();
     }
@@ -69,18 +67,18 @@ class ConsentedDebugEnableArgs {
     public static ConsentedDebugEnableArgs parseCliArgs(ImmutableMap<String, String> cliArgs) {
         Log.v(TAG, "Parsing command line arguments: " + cliArgs);
         String secretDebugToken = "";
-        String expiryInDays = String.valueOf(DEFAULT_EXPIRY_IN_DAYS);
+        String expiryInHours = String.valueOf(DEFAULT_EXPIRY_IN_HOURS);
         for (Map.Entry<String, String> mapEntry : cliArgs.entrySet()) {
             String key = mapEntry.getKey();
             String value = mapEntry.getValue();
             switch (key) {
                 case SECRET_DEBUG_TOKEN_ARG_NAME -> secretDebugToken = value;
-                case EXPIRY_IN_DAYS_ARG_NAME -> expiryInDays = value;
+                case EXPIRY_IN_HOURS_ARG_NAME -> expiryInHours = value;
                 default -> throw new IllegalArgumentException("Unknown Argument: " + key);
             }
         }
         return new ConsentedDebugEnableArgs(
-                parseDebugToken(secretDebugToken), parseExpiry(expiryInDays));
+                parseDebugToken(secretDebugToken), parseExpiry(expiryInHours));
     }
 
     private static String parseDebugToken(String secretDebugToken) {
@@ -96,28 +94,28 @@ class ConsentedDebugEnableArgs {
         return secretDebugToken;
     }
 
-    private static Instant parseExpiry(String expiryInDays) {
-        Log.d(TAG, String.format("value %s for arg %s: ", expiryInDays, EXPIRY_IN_DAYS_ARG_NAME));
-        if (expiryInDays == null || expiryInDays.isEmpty()) {
-            return Instant.now().plus(Duration.ofDays(DEFAULT_EXPIRY_IN_DAYS));
+    private static Instant parseExpiry(String expiryInHours) {
+        Log.d(TAG, String.format("value %s for arg %s: ", expiryInHours, EXPIRY_IN_HOURS_ARG_NAME));
+        if (expiryInHours == null || expiryInHours.isEmpty()) {
+            return Instant.now().plus(Duration.ofHours(DEFAULT_EXPIRY_IN_HOURS));
         }
-        int expiryInDaysInt;
+        int expiryInHoursInt;
         try {
-            expiryInDaysInt = Integer.parseInt(expiryInDays);
+            expiryInHoursInt = Integer.parseInt(expiryInHours);
         } catch (NumberFormatException exception) {
             Log.e(
                     TAG,
                     String.format(
                             "Arg value for %s is not a valid number. value: %s",
-                            EXPIRY_IN_DAYS_ARG_NAME, expiryInDays));
+                            EXPIRY_IN_HOURS_ARG_NAME, expiryInHours));
             throw new IllegalArgumentException(
-                    "Arg value for " + EXPIRY_IN_DAYS_ARG_NAME + " should be a positive number");
+                    "Arg value for " + EXPIRY_IN_HOURS_ARG_NAME + " should be a positive number");
         }
         checkArgument(
-                expiryInDaysInt > 0 && expiryInDaysInt <= MAX_EXPIRY_IN_DAYS,
+                expiryInHoursInt > 0 && expiryInHoursInt <= MAX_EXPIRY_IN_HOURS,
                 "`%s` should be greater than 0 and less than %d",
-                EXPIRY_IN_DAYS_ARG_NAME,
-                MAX_EXPIRY_IN_DAYS);
-        return Instant.now().plus(Duration.ofDays(expiryInDaysInt));
+                EXPIRY_IN_HOURS_ARG_NAME,
+                MAX_EXPIRY_IN_HOURS);
+        return Instant.now().plus(Duration.ofHours(expiryInHoursInt));
     }
 }

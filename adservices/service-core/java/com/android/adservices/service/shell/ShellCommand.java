@@ -22,10 +22,21 @@ import java.io.PrintWriter;
 public interface ShellCommand {
 
     /** Runs the shell command and returns the result. */
-    int run(PrintWriter out, PrintWriter err, String[] args);
+    ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args);
 
     /**
      * @return the name of the command.
      */
     String getCommandName();
+
+    /**
+     * @return the metrics identifier of the command defined in {@link
+     *     com.android.adservices.service.stats.AdServicesStatsLog}.
+     */
+    int getMetricsLoggerCommand();
+
+    /**
+     * @return the help instruction for the shell command.
+     */
+    String getCommandHelp();
 }

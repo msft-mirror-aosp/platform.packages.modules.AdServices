@@ -41,8 +41,9 @@ import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -996,18 +997,19 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     private void allowAllPackageNamesAccessToMeasurementApis() {
-        final String packageName = "*";
+        final String packageName = FlagsConstants.ALLOWLIST_ALL;
         flags.setMsmtApiAppAllowList(packageName).setMsmtWebContextClientAllowList(packageName);
     }
 
     private void blockAllPackageNamesAccessToMeasurementApis() {
-        final String packageName = "";
+        final String packageName = FlagsConstants.ALLOWLIST_NONE;
         flags.setMsmtApiAppAllowList(packageName).setMsmtWebContextClientAllowList(packageName);
     }
 
     private void enableGlobalKillSwitch(boolean enabled) {
         if (SdkLevel.isAtLeastT()) {
-            ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + enabled);
+            ShellUtils.runShellCommand(
+                    "device_config put adservices global_kill_switch " + enabled);
         } else {
             ShellUtils.runShellCommand(
                     "device_config put adservices enable_back_compat " + !enabled);
@@ -1015,7 +1017,8 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     private void enableMeasurementKillSwitch(boolean enabled) {
-        ShellUtils.runShellCommand("setprop debug.adservices.measurement_kill_switch " + enabled);
+        ShellUtils.runShellCommand(
+                "device_config put adservices measurement_kill_switch " + enabled);
     }
 
     private boolean registerSourceAndVerifyRateLimitReached(

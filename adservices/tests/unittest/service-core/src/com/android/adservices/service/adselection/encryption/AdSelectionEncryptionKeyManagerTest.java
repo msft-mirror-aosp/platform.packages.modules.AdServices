@@ -24,9 +24,17 @@ import static com.android.adservices.service.adselection.encryption.JoinEncrypti
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.ENCRYPTION_KEY_JOIN_TTL_1SECS;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.RESPONSE_PROPERTIES_CONTENT_TYPE;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AuctionEncryptionKeyFixture;
@@ -35,7 +43,6 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionKey;
@@ -45,6 +52,12 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.service.stats.ServerAuctionKeyFetchCalledStats;
+import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImpl;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
@@ -53,7 +66,9 @@ import com.google.common.util.concurrent.Futures;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -78,6 +93,13 @@ public class AdSelectionEncryptionKeyManagerTest {
     @Spy private Clock mClock = Clock.systemUTC();
     private EncryptionKeyDao mEncryptionKeyDao;
     private Flags mFlags = new AdSelectionEncryptionKeyManagerTestFlags();
+    private AdServicesLogger mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
+    private com.android.adservices.shared.util.Clock mLoggerClock =
+            com.android.adservices.shared.util.Clock.getInstance();
+    private FetchProcessLogger mKeyFetchLogger =
+            Mockito.spy(
+                    new ServerAuctionKeyFetchExecutionLoggerImpl(
+                            mLoggerClock, mAdServicesLoggerSpy));
 
     private ExecutorService mLightweightExecutor;
     private AuctionEncryptionKeyParser mAuctionEncryptionKeyParser =
@@ -105,7 +127,8 @@ public class AdSelectionEncryptionKeyManagerTest {
                         mAuctionEncryptionKeyParser,
                         mJoinEncryptionKeyParser,
                         mMockHttpClient,
-                        mLightweightExecutor);
+                        mLightweightExecutor,
+                        mAdServicesLoggerSpy);
     }
 
     @Test
@@ -248,9 +271,44 @@ public class AdSelectionEncryptionKeyManagerTest {
     }
 
     @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes() {
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes())
+                .containsExactly(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN);
+    }
+
+    @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes_onlyJoinInDb_AuctionKeyIsMissing() {
+        mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_JOIN));
+
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes())
+                .containsExactly(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION);
+    }
+
+    @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes_onlyAuctionInDb_JoinKeyIsMissing() {
+        mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION));
+
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes())
+                .containsExactly(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN);
+    }
+
+    @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes_bothKeysInDB_nothingIsMissing() {
+        mEncryptionKeyDao.insertAllKeys(
+                ImmutableList.of(ENCRYPTION_KEY_AUCTION, ENCRYPTION_KEY_JOIN));
+
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes()).isEmpty();
+    }
+
+    @Test
     public void test_fetchAndPersistAuctionKey_fetchSuccess_returnsLatestActiveAuctionKey()
             throws Exception {
-        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI), DEV_CONTEXT_DISABLED))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(AUCTION_KEY_FETCH_URI)),
+                        eq(DEV_CONTEXT_DISABLED),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
                                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponse()));
@@ -264,10 +322,15 @@ public class AdSelectionEncryptionKeyManagerTest {
                 mKeyManager
                         .fetchPersistAndGetActiveKeyOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
-                                TIMEOUT_MS)
+                                TIMEOUT_MS,
+                                mKeyFetchLogger)
                         .get();
 
         assertThat(actualKey).isNotNull();
+
+        verify(mKeyFetchLogger)
+                .setEncryptionKeySource(SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK);
+        verify(mKeyFetchLogger).setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
     }
 
     @Test
@@ -280,7 +343,8 @@ public class AdSelectionEncryptionKeyManagerTest {
                         .setResponseHeaderKeys(RESPONSE_PROPERTIES_CONTENT_TYPE)
                         .setDevContext(DevContext.createForDevOptionsDisabled())
                         .build();
-        when(mMockHttpClient.performRequestGetResponseInBase64String(fetchKeyRequest))
+        when(mMockHttpClient.performRequestGetResponseInBase64StringWithLogging(
+                        fetchKeyRequest, mKeyFetchLogger))
                 .thenReturn(
                         Futures.immediateFuture(
                                 JoinEncryptionKeyTestUtil.mockJoinKeyFetchResponse()));
@@ -294,10 +358,14 @@ public class AdSelectionEncryptionKeyManagerTest {
                 mKeyManager
                         .fetchPersistAndGetActiveKeyOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN,
-                                TIMEOUT_MS)
+                                TIMEOUT_MS,
+                                mKeyFetchLogger)
                         .get();
 
         assertThat(actualKey).isNotNull();
+
+        verify(mKeyFetchLogger)
+                .setEncryptionKeySource(SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK);
     }
 
     @Test
@@ -305,7 +373,10 @@ public class AdSelectionEncryptionKeyManagerTest {
             throws Exception {
         mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION_TTL_1SECS));
         addDelayToExpireKeys(EXPIRY_TTL_1SEC);
-        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI), DEV_CONTEXT_DISABLED))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(AUCTION_KEY_FETCH_URI)),
+                        eq(DEV_CONTEXT_DISABLED),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
                                 AuctionEncryptionKeyFixture
@@ -319,7 +390,8 @@ public class AdSelectionEncryptionKeyManagerTest {
                         mAuctionEncryptionKeyParser,
                         mJoinEncryptionKeyParser,
                         mMockHttpClient,
-                        mLightweightExecutor);
+                        mLightweightExecutor,
+                        mAdServicesLoggerSpy);
 
         ObliviousHttpKeyConfig actualKeyConfig =
                 mKeyManager
@@ -344,7 +416,10 @@ public class AdSelectionEncryptionKeyManagerTest {
             throws Exception {
         mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION_TTL_1SECS));
         addDelayToExpireKeys(EXPIRY_TTL_1SEC);
-        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI), DEV_CONTEXT_DISABLED))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(AUCTION_KEY_FETCH_URI)),
+                        eq(DEV_CONTEXT_DISABLED),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
                                 AuctionEncryptionKeyFixture
@@ -389,6 +464,39 @@ public class AdSelectionEncryptionKeyManagerTest {
     }
 
     @Test
+    public void test_getLatestOhttpKeyConfigOfType_typeAuction_withLogging() throws Exception {
+        ArgumentCaptor<ServerAuctionKeyFetchCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ServerAuctionKeyFetchCalledStats.class);
+        mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION));
+
+        ObliviousHttpKeyConfig actualKeyConfig =
+                mKeyManager
+                        .getLatestOhttpKeyConfigOfType(
+                                AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                                TIMEOUT_MS,
+                                null)
+                        .get();
+
+        byte[] expectedPublicKey =
+                Base64.getDecoder()
+                        .decode(
+                                ENCRYPTION_KEY_AUCTION
+                                        .getPublicKey()
+                                        .getBytes(StandardCharsets.UTF_8));
+        assertThat(actualKeyConfig.getPublicKey()).isEqualTo(expectedPublicKey);
+
+        verify(mAdServicesLoggerSpy).logServerAuctionKeyFetchCalledStats(argumentCaptor.capture());
+        ServerAuctionKeyFetchCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getSource()).isEqualTo(SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION);
+        assertThat(stats.getEncryptionKeySource())
+                .isEqualTo(SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE);
+        assertThat(stats.getCoordinatorSource())
+                .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+        assertThat(stats.getNetworkStatusCode()).isEqualTo(FIELD_UNSET);
+        assertThat(stats.getNetworkLatencyMillis()).isEqualTo(FIELD_UNSET);
+    }
+
+    @Test
     public void test_getLatestOhttpKeyConfigOfType_withExpiredKey_shouldReturnExpiredKey()
             throws Exception {
         mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION_TTL_1SECS));
@@ -412,12 +520,48 @@ public class AdSelectionEncryptionKeyManagerTest {
     }
 
     @Test
+    public void test_getLatestOhttpKeyConfigOfType_withExpiredKey_withLogging() throws Exception {
+        ArgumentCaptor<ServerAuctionKeyFetchCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ServerAuctionKeyFetchCalledStats.class);
+        mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION_TTL_1SECS));
+        addDelayToExpireKeys(EXPIRY_TTL_1SEC);
+
+        ObliviousHttpKeyConfig actualKeyConfig =
+                mKeyManager
+                        .getLatestOhttpKeyConfigOfType(
+                                AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                                TIMEOUT_MS,
+                                null)
+                        .get();
+
+        byte[] expectedPublicKey =
+                Base64.getDecoder()
+                        .decode(
+                                ENCRYPTION_KEY_AUCTION_TTL_1SECS
+                                        .getPublicKey()
+                                        .getBytes(StandardCharsets.UTF_8));
+        assertThat(actualKeyConfig.getPublicKey()).isEqualTo(expectedPublicKey);
+        verify(mAdServicesLoggerSpy).logServerAuctionKeyFetchCalledStats(argumentCaptor.capture());
+        ServerAuctionKeyFetchCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getSource()).isEqualTo(SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION);
+        assertThat(stats.getEncryptionKeySource())
+                .isEqualTo(SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE);
+        assertThat(stats.getCoordinatorSource())
+                .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+        assertThat(stats.getNetworkStatusCode()).isEqualTo(FIELD_UNSET);
+        assertThat(stats.getNetworkLatencyMillis()).isEqualTo(FIELD_UNSET);
+    }
+
+    @Test
     public void
             test_getLatestActiveOhttpKeyConfig_withExpiredKey_shouldFetchAndPersistAndReturnNewKey()
                     throws Exception {
         mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION_TTL_1SECS));
         addDelayToExpireKeys(EXPIRY_TTL_1SEC);
-        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI), DEV_CONTEXT_DISABLED))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(AUCTION_KEY_FETCH_URI)),
+                        eq(DEV_CONTEXT_DISABLED),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
                                 AuctionEncryptionKeyFixture
@@ -427,7 +571,8 @@ public class AdSelectionEncryptionKeyManagerTest {
                 mKeyManager
                         .getLatestActiveOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
-                                TIMEOUT_MS)
+                                TIMEOUT_MS,
+                                mKeyFetchLogger)
                         .get();
 
         byte[] expectedPublicKey =
@@ -445,7 +590,10 @@ public class AdSelectionEncryptionKeyManagerTest {
             test_getLatestActiveOhttpKeyConfigOfType_withNoKey_shouldFetchPersistAndReturnNewKey()
                     throws Exception {
         addDelayToExpireKeys(EXPIRY_TTL_1SEC);
-        when(mMockHttpClient.fetchPayload(Uri.parse(AUCTION_KEY_FETCH_URI), DEV_CONTEXT_DISABLED))
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(AUCTION_KEY_FETCH_URI)),
+                        eq(DEV_CONTEXT_DISABLED),
+                        any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
                                 AuctionEncryptionKeyFixture
@@ -455,7 +603,8 @@ public class AdSelectionEncryptionKeyManagerTest {
                 mKeyManager
                         .getLatestActiveOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
-                                TIMEOUT_MS)
+                                TIMEOUT_MS,
+                                mKeyFetchLogger)
                         .get();
 
         byte[] expectedPublicKey =
@@ -476,7 +625,8 @@ public class AdSelectionEncryptionKeyManagerTest {
                 mKeyManager
                         .getLatestActiveOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
-                                TIMEOUT_MS)
+                                TIMEOUT_MS,
+                                mKeyFetchLogger)
                         .get();
 
         byte[] expectedPublicKey =
@@ -485,6 +635,7 @@ public class AdSelectionEncryptionKeyManagerTest {
                                 ENCRYPTION_KEY_AUCTION
                                         .getPublicKey()
                                         .getBytes(StandardCharsets.UTF_8));
+        assertThat(actualKeyConfig.getPublicKey()).isEqualTo(expectedPublicKey);
         assertThat(actualKeyConfig.getPublicKey()).isEqualTo(expectedPublicKey);
     }
 
@@ -509,6 +660,11 @@ public class AdSelectionEncryptionKeyManagerTest {
         @Override
         public long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
             return EXPIRY_TTL_1SEC;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
+            return true;
         }
     }
 

@@ -16,10 +16,9 @@
 
 package com.android.adservices.service.stats;
 
-import android.annotation.Nullable;
 
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
@@ -27,8 +26,14 @@ import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusSt
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.VisibleForTesting;
+
+import java.util.concurrent.Executor;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -37,8 +42,8 @@ import javax.annotation.concurrent.ThreadSafe;
 public final class AdServicesLoggerImpl implements AdServicesLogger {
 
     private static volatile AdServicesLoggerImpl sAdServicesLogger;
+    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final StatsdAdServicesLogger mStatsdAdServicesLogger;
-    @Nullable private AppNameApiErrorLogger mAppNameApiErrorLogger;
 
     private AdServicesLoggerImpl() {
         this(StatsdAdServicesLogger.getInstance());
@@ -84,7 +89,6 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs) {
         mStatsdAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, latencyMs);
-        // TODO(b/324155747): Add Cobalt app name api error logging.
     }
 
     @Override
@@ -92,7 +96,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
             int apiName, String appPackageName, int resultCode, int latencyMs) {
         mStatsdAdServicesLogger.logFledgeApiCallStats(
                 apiName, appPackageName, resultCode, latencyMs);
-        // TODO(b/324155747): Add Cobalt app name api error logging.
+
+        cobaltLogAppNameApiError(appPackageName, apiName, resultCode);
     }
 
     @Override
@@ -184,6 +189,16 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats) {
+        mStatsdAdServicesLogger.logMeasurementOdpRegistrations(stats);
+    }
+
+    @Override
+    public void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats) {
+        mStatsdAdServicesLogger.logMeasurementOdpApiCall(stats);
+    }
+
+    @Override
     public void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId) {
         mStatsdAdServicesLogger.logEnrollmentDataStats(mType, mIsSuccessful, mBuildId);
     }
@@ -211,6 +226,12 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                 mEnrollmentRecordCountInTable,
                 mQueryParameter,
                 mErrorCause);
+    }
+
+    /** Logs enrollment transaction stats. */
+    @Override
+    public void logEnrollmentTransactionStats(AdServicesEnrollmentTransactionStats stats) {
+        mStatsdAdServicesLogger.logEnrollmentTransactionStats(stats);
     }
 
     /** Logs encryption key fetch stats. */
@@ -295,18 +316,105 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logServerAuctionBackgroundKeyFetchScheduledStats(
+            ServerAuctionBackgroundKeyFetchScheduledStats stats) {
+        mStatsdAdServicesLogger.logServerAuctionBackgroundKeyFetchScheduledStats(stats);
+    }
+
+    @Override
+    public void logServerAuctionKeyFetchCalledStats(ServerAuctionKeyFetchCalledStats stats) {
+        mStatsdAdServicesLogger.logServerAuctionKeyFetchCalledStats(stats);
+    }
+
+    @Override
     public void logGetAdSelectionDataBuyerInputGeneratedStats(
             GetAdSelectionDataBuyerInputGeneratedStats stats) {
         mStatsdAdServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
     }
 
+    @Override
+    public void logAdFilteringProcessJoinCAReportedStats(
+            AdFilteringProcessJoinCAReportedStats stats) {
+        mStatsdAdServicesLogger.logAdFilteringProcessJoinCAReportedStats(stats);
+    }
+
+    @Override
+    public void logAdFilteringProcessAdSelectionReportedStats(
+            AdFilteringProcessAdSelectionReportedStats stats) {
+        mStatsdAdServicesLogger.logAdFilteringProcessAdSelectionReportedStats(stats);
+    }
+
+    @Override
+    public void logAdCounterHistogramUpdaterReportedStats(
+            AdCounterHistogramUpdaterReportedStats stats) {
+        mStatsdAdServicesLogger.logAdCounterHistogramUpdaterReportedStats(stats);
+    }
+
+    @Override
+    public void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats) {
+        mStatsdAdServicesLogger.logTopicsEncryptionEpochComputationReportedStats(stats);
+    }
+
+    @Override
+    public void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats) {
+        mStatsdAdServicesLogger.logTopicsEncryptionGetTopicsReportedStats(stats);
+    }
+
+    @Override
+    public void logShellCommandStats(ShellCommandStats stats) {
+        mStatsdAdServicesLogger.logShellCommandStats(stats);
+    }
+
+    @Override
+    public void logSignatureVerificationStats(SignatureVerificationStats stats) {
+        mStatsdAdServicesLogger.logSignatureVerificationStats(stats);
+    }
+
+    @Override
+    public void logEncodingJsFetchStats(EncodingFetchStats stats) {
+        mStatsdAdServicesLogger.logEncodingJsFetchStats(stats);
+    }
+
+    @Override
+    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
+        mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
+    }
+
+    @Override
+    public void logEncodingJsExecutionStats(EncodingJsExecutionStats stats) {
+        mStatsdAdServicesLogger.logEncodingJsExecutionStats(stats);
+    }
+
+    @Override
+    public void logEncodingJobRunStats(EncodingJobRunStats stats) {
+        mStatsdAdServicesLogger.logEncodingJobRunStats(stats);
+    }
+
+    @Override
+    public void logPersistAdSelectionResultCalledStats(PersistAdSelectionResultCalledStats stats) {
+        mStatsdAdServicesLogger.logPersistAdSelectionResultCalledStats(stats);
+    }
+
+    @Override
+    public void logSelectAdsFromOutcomesApiCalledStats(SelectAdsFromOutcomesApiCalledStats stats) {
+        mStatsdAdServicesLogger.logSelectAdsFromOutcomesApiCalledStats(stats);
+    }
+
+    @Override
+    public void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats) {
+        mStatsdAdServicesLogger.logReportImpressionApiCalledStats(stats);
+    }
+
     /** Logs api call error status using {@code CobaltLogger}. */
     private void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
-        mAppNameApiErrorLogger =
-                AppNameApiErrorLogger.getInstance(
-                        ApplicationContextSingleton.get(), FlagsFactory.getFlags());
-        if (mAppNameApiErrorLogger != null) {
-            mAppNameApiErrorLogger.logErrorOccurrence(appPackageName, apiName, errorCode);
-        }
+        sBackgroundExecutor.execute(
+                () -> {
+                    AppNameApiErrorLogger appNameApiErrorLogger =
+                            AppNameApiErrorLogger.getInstance();
+
+                    appNameApiErrorLogger.logErrorOccurrence(appPackageName, apiName, errorCode);
+                });
     }
 }

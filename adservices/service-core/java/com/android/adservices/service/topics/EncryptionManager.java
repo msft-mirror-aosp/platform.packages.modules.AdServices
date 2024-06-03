@@ -24,7 +24,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
@@ -59,8 +58,6 @@ public class EncryptionManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
     private static final int ENCAPSULATED_KEY_LENGTH = 32;
-    private static final String TEST_PUBLIC_KEY_BASE64 =
-            "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=";
 
     private static EncryptionManager sSingleton;
 
@@ -82,14 +79,14 @@ public class EncryptionManager {
 
     /** Returns the singleton instance of the {@link EncryptionManager} given a context. */
     @NonNull
-    public static EncryptionManager getInstance(@NonNull Context context) {
+    public static EncryptionManager getInstance() {
         synchronized (EncryptionManager.class) {
             if (sSingleton == null) {
                 sSingleton =
                         new EncryptionManager(
                                 new HpkeEncrypter(),
-                                EnrollmentDao.getInstance(context),
-                                EncryptionKeyDao.getInstance(context),
+                                EnrollmentDao.getInstance(),
+                                EncryptionKeyDao.getInstance(),
                                 FlagsFactory.getFlags());
             }
         }

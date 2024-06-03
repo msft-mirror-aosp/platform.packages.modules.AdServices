@@ -22,13 +22,12 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROU
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 
 import android.provider.DeviceConfig;
@@ -60,11 +59,11 @@ import android.provider.DeviceConfig;
 @Deprecated
 public final class PhFlagsFixture {
 
-    /** Enables test to override the flag enabling ad selection filtering */
-    public static void overrideFledgeAdSelectionFilteringEnabled(boolean value) {
+    /** Enables test to override the flag enabling ad selection with contextual ads */
+    public static void overrideFledgeAdSelectionContextualAdsEnabled(boolean value) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
+                KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED,
                 Boolean.toString(value),
                 false);
     }
@@ -268,15 +267,6 @@ public final class PhFlagsFixture {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_CPC_BILLING_ENABLED,
-                Boolean.toString(value),
-                false);
-    }
-
-    /** Overrides whether the protected signals cleanup runs. */
-    public static void overrideProtectedSignalsCleanupEnabled(boolean value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED,
                 Boolean.toString(value),
                 false);
     }

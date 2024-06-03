@@ -74,7 +74,7 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     private int mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
 
     AdServicesShellCommand(Context context) {
-        this(new Injector(), PhFlags.getInstance(), context);
+        this(new Injector(), FlagsFactory.getFlags(), context);
     }
 
     @VisibleForTesting
@@ -164,7 +164,8 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     }
 
     private String[] handleAdServicesArgs(String[] args) {
-        // Contains all the args except --user, --timeout arg and its value.
+        // Contains all the args except --user, --timeout arg and its value. Currently we only
+        // support --timeout arg and run the command for the current user only.
         List<String> realArgs = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
@@ -172,8 +173,6 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
                 case TIMEOUT_ARG:
                     mTimeoutMillis = parseTimeoutArg(args, ++i);
                     break;
-                    // TODO(b/308009734): Check for --user args in the follow-up cl and change
-                    //  context and bind to the service accordingly.
                 default:
                     realArgs.add(arg);
             }

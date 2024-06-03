@@ -38,7 +38,7 @@
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
         <option
             name="run-command"
-            value="device_config put adservices consent_notification_activity_debug_mode false"/>
+            value="setprop debug.adservices.consent_notification_debug_mode false"/>
         <option
             name="run-command"
             value="device_config put adservices ui_ota_strings_feature_enabled false"/>
@@ -53,7 +53,7 @@
             value="device_config put adservices ga_ux_enabled true"/>
         <option
             name="run-command"
-            value="device_config put adservices consent_notification_debug_mode true"/>
+            value="setprop debug.adservices.consent_notification_debug_mode true"/>
         <option
             name="run-command"
             value="device_config put adservices consent_already_interacted_fix_enable false"/>
@@ -86,6 +86,9 @@
 
     <target_preparer class="com.android.tradefed.targetprep.RebootTargetPreparer">
         <option name="pre-reboot" value="true"/>
+    </target_preparer>
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="am wait-for-broadcast-idle"/>
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">

@@ -2,12 +2,15 @@
   "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate a real aggregate report with two contributions and 30 null aggregate reports",
   "phflags_override": {
     "measurement_null_aggregate_report_enabled": true,
-    "measurement_null_agg_report_rate_incl_source_registration_time": "1.0"
+    "measurement_null_agg_report_rate_incl_source_registration_time": "1.0",
+    // Though set to 1, the path for null agg reports excluding source registration time should
+    // never be reached. This will detect bugs if agg reports excluding source registration time are
+    // created.
+    "measurement_null_agg_report_rate_excl_source_registration_time": "1.0"
   },
   "input": {
     "sources": [{
       "registration_request": {
-        "attribution_src_url": "https://www.ad-tech1.test",
         "source_type": "navigation",
         "registrant": "example.1s1.test"
       },
@@ -44,7 +47,6 @@
     }],
     "triggers": [{
       "registration_request": {
-        "attribution_src_url": "https://www.ad-tech1.test",
         "registrant": "example.2d1.test"
       },
       "responses": [{
@@ -57,6 +59,7 @@
                 "priority": "101"
               }
             ],
+            "debug_key": "8971346783", // should not be present in any agg report
             "aggregatable_trigger_data": [
               {
                 "key_piece": "0x400",
@@ -116,6 +119,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x559",
@@ -134,6 +138,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -148,6 +153,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -162,6 +168,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -176,6 +183,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -190,6 +198,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -204,6 +213,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -218,6 +228,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -232,6 +243,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -246,6 +258,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -260,6 +273,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -274,6 +288,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -288,6 +303,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -302,6 +318,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -316,6 +333,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -330,6 +348,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -344,6 +363,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -358,6 +378,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -372,6 +393,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -386,6 +408,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -400,6 +423,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -414,6 +438,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -428,6 +453,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -442,6 +468,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -456,6 +483,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -470,6 +498,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -484,6 +513,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -498,6 +528,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -512,6 +543,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -526,6 +558,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
@@ -540,6 +573,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app:\/\/example.2d1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",

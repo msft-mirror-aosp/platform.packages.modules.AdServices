@@ -37,7 +37,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -53,7 +53,7 @@ import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
-import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
@@ -86,12 +86,12 @@ import java.util.List;
 @SpyStatic(EventFallbackReportingJobService.class)
 @SpyStatic(DeleteExpiredJobService.class)
 @SpyStatic(DeleteUninstalledJobService.class)
-@SpyStatic(MddJobService.class)
+@SpyStatic(MddJob.class)
 @SpyStatic(EncryptionKeyJobService.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MeasurementImpl.class)
 @SpyStatic(AsyncRegistrationQueueJobService.class)
-@SpyStatic(AsyncRegistrationFallbackJobService.class)
+@SpyStatic(AsyncRegistrationFallbackJob.class)
 @SpyStatic(VerboseDebugReportingFallbackJobService.class)
 @SpyStatic(DebugReportingFallbackJobService.class)
 public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestCase {
@@ -188,9 +188,7 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
     }
 
     private void runWithMocks(
-            boolean killSwitchStatus,
-            boolean consentStatus,
-            TestUtils.RunnableWithThrow execute)
+            boolean killSwitchStatus, boolean consentStatus, TestUtils.RunnableWithThrow execute)
             throws Exception {
         doReturn(!killSwitchStatus).when(mMockFlags).getMeasurementEnabled();
 
@@ -206,7 +204,7 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
                 .when(mMockConsentManager)
                 .getConsent(eq(AdServicesApiType.MEASUREMENTS));
 
-        ExtendedMockito.doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance(any()));
+        ExtendedMockito.doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance());
         doReturn(ENROLLMENT).when(mMockEnrollmentDao).getEnrollmentDataFromMeasurementUrl(any());
         ExtendedMockito.doReturn(mMockMeasurementImpl)
                 .when(() -> MeasurementImpl.getInstance(any()));
@@ -235,17 +233,12 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
                 .when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
         ExtendedMockito.doNothing()
                 .when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doReturn(true)
-                .when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing().when(MddJob::scheduleAllMddJobs);
         ExtendedMockito.doReturn(true)
                 .when(() -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()));
         ExtendedMockito.doNothing()
                 .when(() -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                                        any(), anyBoolean()));
+        ExtendedMockito.doNothing().when(AsyncRegistrationFallbackJob::schedule);
         ExtendedMockito.doNothing()
                 .when(
                         () ->
@@ -282,17 +275,14 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
         ExtendedMockito.verify(
                 () -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
-        ExtendedMockito.verify(
-                () -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), times(timesCalled));
+        ExtendedMockito.verify(MddJob::scheduleAllMddJobs, times(timesCalled));
         ExtendedMockito.verify(
                 () -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
         ExtendedMockito.verify(
                 () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
-        ExtendedMockito.verify(
-                () -> AsyncRegistrationFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
-                times(timesCalled));
+        ExtendedMockito.verify(AsyncRegistrationFallbackJob::schedule, times(timesCalled));
         ExtendedMockito.verify(
                 () -> VerboseDebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));

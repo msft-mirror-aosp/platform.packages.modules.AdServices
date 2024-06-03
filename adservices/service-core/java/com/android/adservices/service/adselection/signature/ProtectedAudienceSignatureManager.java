@@ -25,6 +25,8 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.stats.SignatureVerificationLogger;
+import com.android.adservices.service.stats.SignatureVerificationStats;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -42,6 +44,7 @@ import java.util.stream.Collectors;
  */
 public class ProtectedAudienceSignatureManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    @VisibleForTesting public static final String EMPTY_STRING_FOR_MISSING_ENROLLMENT_ID = "";
 
     /**
      * This P-256 ECDSA key is used to verify signatures if {@link
@@ -69,34 +72,25 @@ public class ProtectedAudienceSignatureManager {
 
     @NonNull private final EnrollmentDao mEnrollmentDao;
     @NonNull private final EncryptionKeyDao mEncryptionKeyDao;
+    @NonNull private final SignatureVerificationLogger mSignatureVerificationLogger;
     private final boolean mIsEnrollmentCheckEnabled;
-
     private final SignatureVerifier mSignatureVerifier;
 
     public ProtectedAudienceSignatureManager(
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull EncryptionKeyDao encryptionKeyDao,
+            @NonNull SignatureVerificationLogger signatureVerificationLogger,
             boolean isEnrollmentCheckEnabled) {
         Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(encryptionKeyDao);
+        Objects.requireNonNull(signatureVerificationLogger);
 
         mEnrollmentDao = enrollmentDao;
         mEncryptionKeyDao = encryptionKeyDao;
+        mSignatureVerificationLogger = signatureVerificationLogger;
         mIsEnrollmentCheckEnabled = isEnrollmentCheckEnabled;
 
-        mSignatureVerifier = new ECDSASignatureVerifier();
-    }
-
-    @VisibleForTesting
-    ProtectedAudienceSignatureManager(
-            @NonNull EnrollmentDao enrollmentDao,
-            @NonNull EncryptionKeyDao encryptionKeyDao,
-            @NonNull SignatureVerifier signatureVerifier) {
-        mEnrollmentDao = enrollmentDao;
-        mEncryptionKeyDao = encryptionKeyDao;
-        mSignatureVerifier = signatureVerifier;
-
-        mIsEnrollmentCheckEnabled = true;
+        mSignatureVerifier = new ECDSASignatureVerifier(mSignatureVerificationLogger);
     }
 
     /**
@@ -107,57 +101,173 @@ public class ProtectedAudienceSignatureManager {
      * @return true if the object is valid else false
      */
     public boolean isVerified(
-            @NonNull AdTechIdentifier buyer, @NonNull SignedContextualAds signedContextualAds) {
+            @NonNull AdTechIdentifier buyer,
+            @NonNull AdTechIdentifier seller,
+            @NonNull String callerPackageName,
+            @NonNull SignedContextualAds signedContextualAds) {
         Objects.requireNonNull(buyer);
+        Objects.requireNonNull(seller);
+        Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(signedContextualAds);
 
-        List<byte[]> publicKeys = fetchPublicKeyForAdTech(buyer);
-        sLogger.v("Received %s keys", publicKeys.size());
-        SignedContextualAdsHashUtil contextualAdsHashUtil;
-        for (byte[] publicKey : publicKeys) {
-            contextualAdsHashUtil = new SignedContextualAdsHashUtil();
-            byte[] serialized = contextualAdsHashUtil.serialize(signedContextualAds);
-            if (mSignatureVerifier.verify(
-                    publicKey, serialized, signedContextualAds.getSignature())) {
+        try {
+            List<byte[]> publicKeys = fetchPublicKeyForAdTech(buyer);
+            sLogger.v("Received %s keys", publicKeys.size());
+
+            byte[] serialized = serializeSignedContextualAds(signedContextualAds);
+            sLogger.v("Serialized contextual ads object");
+
+            logStartSignatureVerification();
+            for (byte[] publicKey : publicKeys) {
+                if (mSignatureVerifier.verify(
+                        publicKey, serialized, signedContextualAds.getSignature())) {
+                    sLogger.v(
+                            "Signature is verified with key: '%s'.",
+                            Base64.getEncoder().encodeToString(publicKey));
+                    endSuccessfulSigningProcess();
+                    return true;
+                } else {
+                    logKeyFailedSignatureVerification();
+                }
                 sLogger.v(
-                        "Signature is verified with key: '%s'.",
+                        "Key '%s' didn't verify the signature. Trying the next key...",
                         Base64.getEncoder().encodeToString(publicKey));
-                return true;
             }
-            sLogger.v(
-                    "Key '%s' didn't verify the signature. Trying the next key...",
-                    Base64.getEncoder().encodeToString(publicKey));
+            sLogger.v("All keys are exhausted and signature is not verified!");
+            endFailedSigningProcess(buyer, seller, callerPackageName);
+            return false;
+        } catch (Exception e) {
+            sLogger.v("Unknown error during signature verification: %s", e);
+            boolean isUnknownError = true;
+            endFailedSigningProcess(buyer, seller, callerPackageName, isUnknownError);
+            return false;
         }
-        sLogger.v("All keys are exhausted and signature is not verified!");
-        return false;
     }
 
     @VisibleForTesting
     List<byte[]> fetchPublicKeyForAdTech(AdTechIdentifier adTech) {
+        logStartKeyFetch();
         Base64.Decoder decoder = Base64.getDecoder();
         if (!mIsEnrollmentCheckEnabled) {
             sLogger.v("Enrollment check is disabled, returning the default key");
-            return Collections.singletonList(decoder.decode(PUBLIC_TEST_KEY_STRING));
+            List<byte[]> toReturn =
+                    Collections.singletonList(decoder.decode(PUBLIC_TEST_KEY_STRING));
+            logSuccessfulKeyFetch(toReturn.size());
+            return toReturn;
         }
 
-        sLogger.v("Fetching EnrollmentData for %s", adTech);
+        try {
+            sLogger.v("Fetching EnrollmentData for %s", adTech);
+            EnrollmentData enrollmentData =
+                    mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
+
+            if (enrollmentData == null || enrollmentData.getEnrollmentId() == null) {
+                sLogger.v("Enrollment data or id is not found for ad tech: %s", adTech);
+                logNoEnrollmentDataForBuyer();
+                logFailedKeyFetch();
+                return Collections.emptyList();
+            }
+
+            sLogger.v("Fetching signature keys for %s", enrollmentData.getEnrollmentId());
+            List<EncryptionKey> encryptionKeys =
+                    mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
+                            enrollmentData.getEnrollmentId(), EncryptionKey.KeyType.SIGNING);
+
+            sLogger.v("Received %s signing key(s)", encryptionKeys.size());
+            List<byte[]> publicKeys =
+                    encryptionKeys.stream()
+                            .sorted(Comparator.comparingLong(EncryptionKey::getExpiration))
+                            .map(key -> decoder.decode(key.getBody()))
+                            .collect(Collectors.toList());
+            logSuccessfulKeyFetch(publicKeys.size());
+            return publicKeys;
+        } catch (Exception e) {
+            logFailedKeyFetch();
+            sLogger.e(e, "Unknown error during key fetch for signature verification");
+            throw e;
+        }
+    }
+
+    private byte[] serializeSignedContextualAds(SignedContextualAds signedContextualAds) {
+        logStartSerialization();
+        byte[] toReturn = new SignedContextualAdsHashUtil().serialize(signedContextualAds);
+        logEndSerialization();
+        return toReturn;
+    }
+
+    private void logStartKeyFetch() {
+        mSignatureVerificationLogger.startKeyFetchForSignatureVerification();
+    }
+
+    private void logFailedKeyFetch() {
+        mSignatureVerificationLogger.endKeyFetchForSignatureVerification();
+        mSignatureVerificationLogger.setNumOfKeysFetched(0);
+    }
+
+    private void logStartSerialization() {
+        mSignatureVerificationLogger.startSerializationForSignatureVerification();
+    }
+
+    private void logEndSerialization() {
+        mSignatureVerificationLogger.endSerializationForSignatureVerification();
+    }
+
+    private void logSuccessfulKeyFetch(int numOfKeysFetched) {
+        mSignatureVerificationLogger.endKeyFetchForSignatureVerification();
+        mSignatureVerificationLogger.setNumOfKeysFetched(numOfKeysFetched);
+        if (numOfKeysFetched == 0) {
+            mSignatureVerificationLogger.setFailureDetailNoKeysFetchedForBuyer();
+        }
+    }
+
+    private void logStartSignatureVerification() {
+        mSignatureVerificationLogger.startSignatureVerification();
+    }
+
+    private void logKeyFailedSignatureVerification() {
+        mSignatureVerificationLogger.addFailureDetailCountOfKeysFailedToVerifySignature();
+    }
+
+    private void logNoEnrollmentDataForBuyer() {
+        mSignatureVerificationLogger.setFailureDetailNoEnrollmentDataForBuyer();
+    }
+
+    private void endFailedSigningProcess(
+            AdTechIdentifier buyer, AdTechIdentifier seller, String callerPackageName) {
+        boolean isKnownError = false;
+        endFailedSigningProcess(buyer, seller, callerPackageName, isKnownError);
+    }
+
+    private void endFailedSigningProcess(
+            AdTechIdentifier buyer,
+            AdTechIdentifier seller,
+            String callerPackageName,
+            boolean isUnknownError) {
+        mSignatureVerificationLogger.endSignatureVerification();
+        mSignatureVerificationLogger.setFailedSignatureBuyerEnrollmentId(
+                resolveEnrollmentIdFromAdTechIdentifier(buyer));
+        mSignatureVerificationLogger.setFailedSignatureSellerEnrollmentId(
+                resolveEnrollmentIdFromAdTechIdentifier(seller));
+        mSignatureVerificationLogger.setFailedSignatureCallerPackageName(callerPackageName);
+        if (isUnknownError) {
+            mSignatureVerificationLogger.setFailureDetailUnknownError();
+        }
+        mSignatureVerificationLogger.close(
+                SignatureVerificationStats.VerificationStatus.VERIFICATION_FAILED.getValue());
+    }
+
+    private void endSuccessfulSigningProcess() {
+        mSignatureVerificationLogger.endSignatureVerification();
+        mSignatureVerificationLogger.close(
+                SignatureVerificationStats.VerificationStatus.VERIFIED.getValue());
+    }
+
+    private String resolveEnrollmentIdFromAdTechIdentifier(AdTechIdentifier adTechIdentifier) {
         EnrollmentData enrollmentData =
-                mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
-
-        if (enrollmentData == null || enrollmentData.getEnrollmentId() == null) {
-            sLogger.v("Enrollment data or id is not found for ad tech: %s", adTech);
-            return Collections.emptyList();
+                mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTechIdentifier);
+        if (Objects.isNull(enrollmentData) || Objects.isNull(enrollmentData.getEnrollmentId())) {
+            return EMPTY_STRING_FOR_MISSING_ENROLLMENT_ID;
         }
-
-        sLogger.v("Fetching signature keys for %s", enrollmentData.getEnrollmentId());
-        List<EncryptionKey> encryptionKeys =
-                mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
-                        enrollmentData.getEnrollmentId(), EncryptionKey.KeyType.SIGNING);
-
-        sLogger.v("Received %s signing key(s)", encryptionKeys.size());
-        return encryptionKeys.stream()
-                .sorted(Comparator.comparingLong(EncryptionKey::getExpiration))
-                .map(key -> decoder.decode(key.getBody()))
-                .collect(Collectors.toList());
+        return enrollmentData.getEnrollmentId();
     }
 }

@@ -53,7 +53,7 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
         if (context.phase == 2) {
             if (!registrationClassFound) {
                 context.report(
-                    issue = ISSUE,
+                    issue = ISSUE_ERROR,
                     location = context.getLocation(ROOM_DATABASE_REGISTRATION_CLASS_NAME),
                     message = DATABASE_REGISTRATION_CLASS_MISSING_ERROR,
                 )
@@ -100,7 +100,7 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
         for (database in databaseList) {
             if (database.qualifiedName !in registeredDatabase) {
                 context.report(
-                    issue = ISSUE,
+                    issue = ISSUE_ERROR,
                     location = context.getNameLocation(declaration),
                     message = DATABASE_NOT_REGISTERED_ERROR.format(database.qualifiedName),
                 )
@@ -123,7 +123,7 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
             )
         if (autoMigrationsAttribute == null) {
             context.report(
-                issue = ISSUE,
+                issue = ISSUE_ERROR,
                 location = context.getNameLocation(databaseAnnotation),
                 message = MISSING_AUTO_MIGRATION_ATTRIBUTE_ERROR,
             )
@@ -134,7 +134,7 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
 
         if (!isAutoMigrationPathComplete(autoMigrations, databaseVersion)) {
             context.report(
-                issue = ISSUE,
+                issue = ISSUE_WARNING,
                 location = context.getNameLocation(databaseAnnotation),
                 message = INCOMPLETE_MIGRATION_PATH_ERROR
             )
@@ -151,7 +151,7 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
                 !(exportSchemaAttribute.let { ConstantEvaluator.evaluate(null, it) } as Boolean)
         ) {
             context.report(
-                issue = ISSUE,
+                issue = ISSUE_ERROR,
                 location = context.getNameLocation(databaseAnnotation),
                 message = SCHEMA_EXPORT_FALSE_ERROR,
             )
@@ -165,7 +165,7 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
             }
         }
         context.report(
-            issue = ISSUE,
+            issue = ISSUE_ERROR,
             location = context.getNameLocation(declaration),
             message = MISSING_DATABASE_ANNOTATION_ERROR,
         )
@@ -184,7 +184,7 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
 
         if (versionInAnnotation == null) {
             context.report(
-                issue = ISSUE,
+                issue = ISSUE_ERROR,
                 location = context.getLocation(databaseAnnotation),
                 message = MISSING_DATABASE_VERSION_ANNOTATION_ATTRIBUTE_ERROR,
             )
@@ -193,7 +193,7 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
 
         if (versionInAnnotation.tryResolveUDeclaration() != versionField) {
             context.report(
-                issue = ISSUE,
+                issue = ISSUE_ERROR,
                 location = context.getLocation(versionInAnnotation),
                 message = FAILED_REF_VERSION_FIELD_IN_ANNOTATION_ERROR,
             )
@@ -218,7 +218,7 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
             }
         }
         context.report(
-            issue = ISSUE,
+            issue = ISSUE_ERROR,
             location = context.getNameLocation(versionField ?: declaration),
             message = MISSING_DATABASE_VERSION_FIELD_ERROR,
         )
@@ -283,7 +283,7 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
             "Class $ROOM_DATABASE_REGISTRATION_CLASS_NAME is required and should contain all DB classes as field."
         const val DATABASE_NOT_REGISTERED_ERROR = "Database class %s is missing from registration."
 
-        val ISSUE =
+        val ISSUE_ERROR =
             Issue.create(
                 id = "RoomDatabaseChange",
                 briefDescription = "Updated Room Database must have migration path and test.",
@@ -292,6 +292,18 @@ class RoomDatabaseMigrationDetector : Detector(), SourceCodeScanner {
                 moreInfo = "documentation/RoomDatabaseMigrationDetector.md",
                 category = Category.COMPLIANCE,
                 severity = Severity.ERROR,
+                implementation =
+                    Implementation(RoomDatabaseMigrationDetector::class.java, Scope.JAVA_FILE_SCOPE)
+            )
+        val ISSUE_WARNING =
+            Issue.create(
+                id = "RoomDatabaseChange",
+                briefDescription = "Updated Room Database must have migration path and test.",
+                explanation =
+                    "Room database update requires migration path configuration and testing.",
+                moreInfo = "documentation/RoomDatabaseMigrationDetector.md",
+                category = Category.COMPLIANCE,
+                severity = Severity.WARNING,
                 implementation =
                     Implementation(RoomDatabaseMigrationDetector::class.java, Scope.JAVA_FILE_SCOPE)
             )

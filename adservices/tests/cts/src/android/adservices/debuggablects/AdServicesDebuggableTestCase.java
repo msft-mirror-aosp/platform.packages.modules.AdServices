@@ -12,7 +12,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ package android.adservices.debuggablects;
+ */
+
+package android.adservices.debuggablects;
+
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -25,6 +29,7 @@ abstract class AdServicesDebuggableTestCase extends AdServicesCtsTestCase {
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
         return AdServicesFlagsSetterRule.forAllApisEnabledTests()
                 .setCompatModeFlags()
-                .setPpapiAppAllowList(sPackageName);
+                .setPpapiAppAllowList(sPackageName)
+                .setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true);
     }
 }

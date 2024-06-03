@@ -62,7 +62,7 @@ public final class GetAdIdParamTest extends AdServicesUnitTestCase {
             parcel.recycle();
         }
 
-        assertThat(GetAdIdParam.CREATOR.newArray(1).length).isEqualTo(1);
+        assertThat(GetAdIdParam.CREATOR.newArray(1)).hasLength(1);
     }
 
     @Test

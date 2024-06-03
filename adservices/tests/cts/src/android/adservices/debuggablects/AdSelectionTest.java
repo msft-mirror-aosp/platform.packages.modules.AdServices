@@ -30,19 +30,19 @@ import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 import android.util.Log;
 
-import androidx.test.filters.FlakyTest;
-
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.MoreExecutors;
@@ -74,10 +74,11 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withBiddingAndScoringLogic_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-default.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHIRTS_CA);
@@ -114,10 +115,11 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withBiddingLogicV3_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-119.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-119.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -139,13 +141,13 @@ public class AdSelectionTest extends FledgeScenarioTest {
      * reporting URI (Remarketing CUJ 160).
      */
     @Test
-    @FlakyTest(bugId = 325344134)
     public void testAdSelection_withAdCostInUrl_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-160.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-160.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
         long adSelectionId;
 
         try {
@@ -168,15 +170,15 @@ public class AdSelectionTest extends FledgeScenarioTest {
     /**
      * Test that buyers can specify an adCost in generateBid that reported (Remarketing CUJ 161).
      */
-    @FlakyTest(bugId = 299871209)
     @Test
     @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     public void testAdSelection_withAdCostInUrl_adCostIsReported() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-161.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-161.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
         long adSelectionId;
 
         try {
@@ -203,10 +205,11 @@ public class AdSelectionTest extends FledgeScenarioTest {
     public void testAdSelection_withFetchCustomAudience_fetchesAndReturnsSuccessfully()
             throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-fetchCA.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-fetchCA.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
         String customAudienceName = "hats";
 
         try {
@@ -217,7 +220,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
                     .fetchAndJoinCustomAudience(
                             new FetchAndJoinCustomAudienceRequest.Builder(
                                             Uri.parse(
-                                                    getServerBaseAddress()
+                                                    dispatcher.getBaseAddressWithPrefix().toString()
                                                             + Scenarios.FETCH_CA_PATH))
                                     .setActivationTime(customAudience.getActivationTime())
                                     .setExpirationTime(customAudience.getExpirationTime())
@@ -244,10 +247,10 @@ public class AdSelectionTest extends FledgeScenarioTest {
     public void testAdSelection_withShortlyExpiringCustomAudience_selectAdsThrowsException()
             throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig config = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-default.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
         CustomAudience customAudience =
                 makeCustomAudience(SHOES_CA)
                         .setExpirationTime(Instant.now().plus(5, ChronoUnit.SECONDS))
@@ -273,15 +276,19 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @Test
     public void testAdSelectionOutcomes_withNoAdSelectionId_throwsException() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-default.json"));
         AdSelectionFromOutcomesConfig config =
                 new AdSelectionFromOutcomesConfig.Builder()
-                        .setSeller(mAdTechIdentifier)
+                        .setSeller(
+                                AdTechIdentifier.fromString(
+                                        dispatcher.getBaseAddressWithPrefix().getHost()))
                         .setAdSelectionIds(List.of())
                         .setSelectionLogicUri(
-                                Uri.parse(getServerBaseAddress() + Scenarios.MEDIATION_LOGIC_PATH))
+                                Uri.parse(
+                                        dispatcher.getBaseAddressWithPrefix()
+                                                + Scenarios.MEDIATION_LOGIC_PATH))
                         .setSelectionSignals(makeAdSelectionSignals())
                         .build();
 
@@ -304,10 +311,11 @@ public class AdSelectionTest extends FledgeScenarioTest {
     public void testAdSelection_withDebugReporting_happyPath() throws Exception {
         assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-164.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-164.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -332,10 +340,11 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withDebugReportingDisabled_doesNotSend() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-165.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-165.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -359,10 +368,11 @@ public class AdSelectionTest extends FledgeScenarioTest {
     public void testAdSelection_withDebugReportingAndRejectReason_happyPath() throws Exception {
         assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-170.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-170.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHOES_CA);
@@ -383,10 +393,10 @@ public class AdSelectionTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withHighLatencyBackend_doesNotWinAuction() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-053.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig config = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-053.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(SHIRTS_CA);
@@ -398,6 +408,38 @@ public class AdSelectionTest extends FledgeScenarioTest {
                                             .selectAds(config)
                                             .get(TIMEOUT, TimeUnit.SECONDS));
             assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
+        } finally {
+            leaveCustomAudience(SHIRTS_CA);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    @Test
+    public void testAdSelection_withInvalidScoringUrl_doesNotWinAuction() throws Exception {
+        // ScenarioDispatcher returns 404 for all paths which are not setup from the json file and
+        // we didn't configure a scoring logic url.
+        ScenarioDispatcher dispatcher =
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-invalid-scoring-logic-url.json"));
+        AdSelectionConfig config = makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
+
+        try {
+            joinCustomAudience(SHIRTS_CA);
+            Exception selectAdsException =
+                    assertThrows(
+                            ExecutionException.class,
+                            () ->
+                                    mAdSelectionClient
+                                            .selectAds(config)
+                                            .get(TIMEOUT, TimeUnit.SECONDS));
+            assertThat(
+                            selectAdsException.getCause() instanceof TimeoutException
+                                    || selectAdsException.getCause()
+                                            instanceof IllegalStateException)
+                    .isTrue();
         } finally {
             leaveCustomAudience(SHIRTS_CA);
         }

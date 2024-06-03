@@ -81,7 +81,8 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     private static final int DEFAULT_PACKAGE_UID = -1;
-    private static boolean sFilteringEnabled;
+    private static boolean sFrequencyCapFilteringEnabled;
+    private static boolean sAppInstallFilteringEnabled;
 
     private static final Object LOCK = new Object();
 
@@ -98,8 +99,10 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private static boolean changeReceiverState(
             @NonNull Context context, @NonNull Flags flags, int state) {
         synchronized (LOCK) {
-            sFilteringEnabled =
-                    BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled);
+            sFrequencyCapFilteringEnabled =
+                    BinderFlagReader.readFlag(flags::getFledgeFrequencyCapFilteringEnabled);
+            sAppInstallFilteringEnabled =
+                    BinderFlagReader.readFlag(flags::getFledgeAppInstallFilteringEnabled);
             try {
                 context.getPackageManager()
                         .setComponentEnabledSetting(
@@ -170,14 +173,14 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
     private void handlePackageFullyRemoved(Context context, Uri packageUri, int packageUid) {
         measurementOnPackageFullyRemoved(context, packageUri);
-        topicsOnPackageFullyRemoved(context, packageUri);
+        topicsOnPackageFullyRemoved(packageUri);
         fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
         consentOnPackageFullyRemoved(context, packageUri, packageUid);
     }
 
     private void handlePackageAdded(Context context, Uri packageUri) {
         measurementOnPackageAdded(context, packageUri);
-        topicsOnPackageAdded(context, packageUri);
+        topicsOnPackageAdded(packageUri);
     }
 
     private void handlePackageDataCleared(Context context, Uri packageUri) {
@@ -240,7 +243,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     }
 
     @VisibleForTesting
-    void topicsOnPackageFullyRemoved(Context context, @NonNull Uri packageUri) {
+    void topicsOnPackageFullyRemoved(@NonNull Uri packageUri) {
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             LogUtil.e("Topics API is disabled");
             return;
@@ -249,14 +252,14 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d(
                 "Handling App Uninstallation in Topics API for package: " + packageUri.toString());
         sBackgroundExecutor.execute(
-                () -> TopicsWorker.getInstance(context).handleAppUninstallation(packageUri));
+                () -> TopicsWorker.getInstance().handleAppUninstallation(packageUri));
     }
 
     @VisibleForTesting
-    void topicsOnPackageAdded(Context context, @NonNull Uri packageUri) {
+    void topicsOnPackageAdded(@NonNull Uri packageUri) {
         LogUtil.d("Package Added for topics API: " + packageUri.toString());
         sBackgroundExecutor.execute(
-                () -> TopicsWorker.getInstance(context).handleAppInstallation(packageUri));
+                () -> TopicsWorker.getInstance().handleAppInstallation(packageUri));
     }
 
     /** Deletes FLEDGE custom audience data belonging to the given application. */
@@ -277,19 +280,21 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                         getCustomAudienceDatabase(context)
                                 .customAudienceDao()
                                 .deleteCustomAudienceDataByOwner(packageUri.toString()));
-        if (sFilteringEnabled) {
-            LogUtil.d("Deleting app install data for package: " + packageUri);
-            sBackgroundExecutor.execute(
-                    () ->
-                            getSharedStorageDatabase(context)
-                                    .appInstallDao()
-                                    .deleteByPackageName(packageUri.toString()));
+        if (sFrequencyCapFilteringEnabled) {
             LogUtil.d("Deleting frequency cap histogram data for package: " + packageUri);
             sBackgroundExecutor.execute(
                     () ->
                             getSharedStorageDatabase(context)
                                     .frequencyCapDao()
                                     .deleteHistogramDataBySourceApp(packageUri.toString()));
+        }
+        if (sAppInstallFilteringEnabled) {
+            LogUtil.d("Deleting app install data for package: " + packageUri);
+            sBackgroundExecutor.execute(
+                    () ->
+                            getSharedStorageDatabase(context)
+                                    .appInstallDao()
+                                    .deleteByPackageName(packageUri.toString()));
         }
     }
 

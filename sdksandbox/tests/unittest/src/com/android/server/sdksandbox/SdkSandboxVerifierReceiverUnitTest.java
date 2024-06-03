@@ -16,6 +16,8 @@
 
 package com.android.server.sdksandbox;
 
+import static com.android.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_DEX_VERIFIER;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +26,9 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.platform.test.annotations.RequiresFlagsEnabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.provider.DeviceConfig;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -32,15 +37,18 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.server.sdksandbox.verifier.SdkDexVerifier;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 
 import java.io.File;
 
 /** Unit tests for {@link SdkSandboxVerifierReceiver}. */
+@RunWith(JUnit4.class)
 public class SdkSandboxVerifierReceiverUnitTest {
 
     private static final Intent VERIFY_INTENT =
@@ -48,12 +56,14 @@ public class SdkSandboxVerifierReceiverUnitTest {
     private static final PackageInfo FAKE_PACKAGE_INFO = new PackageInfo();
     private static final Handler HANDLER = new Handler(Looper.getMainLooper());
 
-    private MockitoSession mStaticMockSession;
     private SdkSandboxVerifierReceiver mVerifierReceiver;
     private Context mSpyContext;
     private PackageManager mSpyPm;
     private SdkDexVerifier mSpyDexVerifier;
     private Handler mSpyHandler;
+
+    @Rule
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     @Before
     public void setup() {
@@ -78,39 +88,49 @@ public class SdkSandboxVerifierReceiverUnitTest {
         Mockito.when(mSpyContext.getPackageManager()).thenReturn(mSpyPm);
         Mockito.when(mSpyPm.getPackageArchiveInfo(Mockito.anyString(), Mockito.anyInt()))
                 .thenReturn(FAKE_PACKAGE_INFO);
-        mStaticMockSession = mockitoSessionBuilder.startMocking();
-    }
-
-    @After
-    public void tearDown() {
-        mStaticMockSession.finishMocking();
     }
 
     @Test
+    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_DEX_VERIFIER)
     public void verifierBroadcastReceived_startsDexParsing() {
-        ExtendedMockito.when(
-                        DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
-                                SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
-                                SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS))
-                .thenReturn(true);
+        MockitoSession staticMockSession = null;
+        try {
+            staticMockSession =
+                    ExtendedMockito.mockitoSession().spyStatic(DeviceConfig.class).startMocking();
+            ExtendedMockito.when(
+                            DeviceConfig.getBoolean(
+                                    DeviceConfig.NAMESPACE_ADSERVICES,
+                                    SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
+                                    SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS))
+                    .thenReturn(true);
 
-        mVerifierReceiver.verifySdkHandler(mSpyContext, VERIFY_INTENT, mSpyHandler);
+            mVerifierReceiver.verifySdkHandler(mSpyContext, VERIFY_INTENT, mSpyHandler);
 
-        Mockito.verify(mSpyHandler, Mockito.times(1)).post(Mockito.any());
+            Mockito.verify(mSpyHandler, Mockito.times(1)).post(Mockito.any());
+        } finally {
+            staticMockSession.finishMocking();
+        }
     }
 
     @Test
+    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_DEX_VERIFIER)
     public void verifierBroadcastReceived_doesNotStartDexParsing() {
-        ExtendedMockito.when(
-                        DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
-                                SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
-                                SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS))
-                .thenReturn(false);
+        MockitoSession staticMockSession = null;
+        try {
+            staticMockSession =
+                    ExtendedMockito.mockitoSession().spyStatic(DeviceConfig.class).startMocking();
+            ExtendedMockito.when(
+                            DeviceConfig.getBoolean(
+                                    DeviceConfig.NAMESPACE_ADSERVICES,
+                                    SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
+                                    SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS))
+                    .thenReturn(false);
 
-        mVerifierReceiver.verifySdkHandler(mSpyContext, VERIFY_INTENT, mSpyHandler);
+            mVerifierReceiver.verifySdkHandler(mSpyContext, VERIFY_INTENT, mSpyHandler);
 
-        Mockito.verify(mSpyHandler, Mockito.times(0)).post(Mockito.any());
+            Mockito.verify(mSpyHandler, Mockito.times(0)).post(Mockito.any());
+        } finally {
+            staticMockSession.finishMocking();
+        }
     }
 }

@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.ui.enrollment.impl;
 
+import static com.android.adservices.service.consent.AdServicesApiType.FLEDGE;
+import static com.android.adservices.service.consent.AdServicesApiType.MEASUREMENTS;
+import static com.android.adservices.service.consent.AdServicesApiType.TOPICS;
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
 
 import android.content.Context;
@@ -76,14 +79,20 @@ public class ConsentNotificationResetChannel implements PrivacySandboxEnrollment
     /** Perform enrollment logic for the reset channel. */
     public void enroll(Context context, ConsentManager consentManager) {
         consentManager.recordUserManualInteractionWithConsent(NO_MANUAL_INTERACTIONS_RECORDED);
+        LogUtil.d("Reset measurement consent bit.");
+        consentManager.disable(context, MEASUREMENTS);
         if (SdkLevel.isAtLeastS()) {
             LogUtil.d("Reset adservice notification bit.");
             consentManager.recordNotificationDisplayed(false);
             consentManager.recordGaUxNotificationDisplayed(false);
+            LogUtil.d("Reset topics and fledge consent bit.");
+            consentManager.disable(context, TOPICS);
+            consentManager.disable(context, FLEDGE);
         }
         if (SdkLevel.isAtLeastT()) {
             LogUtil.d("Reset pas notification bit.");
             consentManager.recordPasNotificationDisplayed(false);
+            consentManager.recordPasNotificationOpened(false);
         }
 
         consentManager.setU18NotificationDisplayed(false);

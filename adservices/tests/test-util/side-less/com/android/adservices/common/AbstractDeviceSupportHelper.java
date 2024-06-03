@@ -15,7 +15,10 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.Nullable;
+import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
 import java.util.Objects;
 
@@ -137,6 +140,18 @@ abstract class AbstractDeviceSupportHelper {
     protected abstract boolean isLargeScreenDeviceByDefault();
 
     protected abstract boolean isDebuggable();
+
+    /**
+     * Check whether the device has a specific android service.
+     *
+     * @param intentAction the intent action.
+     * @return {@code true} when there is one and only one corresponding android service on the
+     *     device.
+     */
+    protected abstract boolean isAndroidServiceAvailable(String intentAction);
+
+    @Nullable
+    protected abstract String getAdServicesPackageName();
 
     private boolean isDeviceSupportedByDefault() {
         return isPhone() && !isGoDevice();

@@ -18,20 +18,27 @@ package com.android.adservices.service.adselection.signature;
 
 import static android.adservices.adselection.SignedContextualAdsFixture.aSignedContextualAds;
 
+import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.EMPTY_STRING_FOR_MISSING_ENROLLMENT_ID;
 import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PUBLIC_TEST_KEY_STRING;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import android.adservices.adselection.SignedContextualAds;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.stats.SignatureVerificationLogger;
+import com.android.adservices.service.stats.SignatureVerificationStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,11 +51,25 @@ import java.security.spec.ECGenParameterSpec;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ProtectedAudienceSignatureManagerTest {
+    private static final SignedContextualAds SIGNED_CONTEXTUAL_ADS = aSignedContextualAds();
+    private static final String BUYER_ENROLLMENT_ID = "buyer-enrollment-id";
+    private static final String SELLER_ENROLLMENT_ID = "seller-enrollment-id";
+    private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
+    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("seller.com");
+    private static final String CALLER_PACKAGE_NAME = "callerPackageName";
+    private static final List<String> SINGLE_KEY =
+            Collections.singletonList(PUBLIC_TEST_KEY_STRING);
+    private static final List<String> MULTIPLE_KEYS =
+            List.of(
+                    generateRandomECPublicKey(),
+                    PUBLIC_TEST_KEY_STRING,
+                    generateRandomECPublicKey());
     @Mock private EnrollmentDao mEnrollmentDaoMock;
     @Mock private EncryptionKeyDao mEncryptionKeyDaoMock;
-    private ProtectedAudienceSignatureManager mNoOpSignatureManager;
+    @Mock private SignatureVerificationLogger mSignatureVerificationLoggerMock;
     private ProtectedAudienceSignatureManager mSignatureManager;
 
     @Rule(order = 0)
@@ -57,126 +78,114 @@ public class ProtectedAudienceSignatureManagerTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        SignatureVerifier noOpSignatureVerifier =
-                new SignatureVerifier() {
-                    @Override
-                    public boolean verify(byte[] publicKey, byte[] data, byte[] signature) {
-                        return true;
-                    }
-                };
-        boolean enrollmentEnabled = false;
+        boolean enrollmentEnabled = true;
         mSignatureManager =
                 new ProtectedAudienceSignatureManager(
-                        mEnrollmentDaoMock, mEncryptionKeyDaoMock, enrollmentEnabled);
-        mNoOpSignatureManager =
-                new ProtectedAudienceSignatureManager(
-                        mEnrollmentDaoMock, mEncryptionKeyDaoMock, noOpSignatureVerifier);
+                        mEnrollmentDaoMock,
+                        mEncryptionKeyDaoMock,
+                        mSignatureVerificationLoggerMock,
+                        enrollmentEnabled);
     }
 
     @Test
     public void testVerifySignature_validSignature_returnTrue() {
-        SignedContextualAds signedContextualAds = aSignedContextualAds();
-        String enrollmentId = "enrollment1";
-        AdTechIdentifier buyer = signedContextualAds.getBuyer();
+        mockKeyStorage(SINGLE_KEY);
 
-        doReturn(new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build())
-                .when(mEnrollmentDaoMock)
-                .getEnrollmentDataForFledgeByAdTechIdentifier(buyer);
-        doReturn(
-                        Collections.singletonList(
-                                new EncryptionKey.Builder()
-                                        .setBody(PUBLIC_TEST_KEY_STRING)
-                                        .build()))
-                .when(mEncryptionKeyDaoMock)
-                .getEncryptionKeyFromEnrollmentIdAndKeyType(
-                        enrollmentId, EncryptionKey.KeyType.SIGNING);
-
-        boolean isVerified = mSignatureManager.isVerified(buyer, signedContextualAds);
+        boolean isVerified =
+                mSignatureManager.isVerified(
+                        BUYER, SELLER, CALLER_PACKAGE_NAME, SIGNED_CONTEXTUAL_ADS);
 
         assertThat(isVerified).isTrue();
+        int expectedNumOfKeysFailedVerifyingSignature = 0;
+        verifyLogSuccessfulSignatureVerification(
+                SINGLE_KEY.size(), expectedNumOfKeysFailedVerifyingSignature);
     }
 
     @Test
     public void testVerifySignature_invalidSignature_returnFalse() {
         byte[] invalidSignature = new byte[] {1, 2, 3};
         SignedContextualAds signedContextualAds =
-                new SignedContextualAds.Builder(aSignedContextualAds())
+                new SignedContextualAds.Builder(SIGNED_CONTEXTUAL_ADS)
                         .setSignature(invalidSignature)
                         .build();
-        String enrollmentId = "enrollment1";
-        AdTechIdentifier buyer = signedContextualAds.getBuyer();
+        mockKeyStorage(SINGLE_KEY);
 
-        doReturn(new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build())
-                .when(mEnrollmentDaoMock)
-                .getEnrollmentDataForFledgeByAdTechIdentifier(buyer);
-        doReturn(
-                        Collections.singletonList(
-                                new EncryptionKey.Builder()
-                                        .setBody(PUBLIC_TEST_KEY_STRING)
-                                        .build()))
-                .when(mEncryptionKeyDaoMock)
-                .getEncryptionKeyFromEnrollmentIdAndKeyType(
-                        enrollmentId, EncryptionKey.KeyType.SIGNING);
-
-        boolean isVerified = mSignatureManager.isVerified(buyer, signedContextualAds);
+        boolean isVerified =
+                mSignatureManager.isVerified(
+                        BUYER, SELLER, CALLER_PACKAGE_NAME, signedContextualAds);
 
         assertThat(isVerified).isFalse();
+        verifyLogFailedSignatureVerification(SINGLE_KEY.size());
     }
 
     @Test
-    public void testMultipleKeys_success() throws Exception {
-        boolean enrollmentEnabled = true;
-        mSignatureManager =
-                new ProtectedAudienceSignatureManager(
-                        mEnrollmentDaoMock, mEncryptionKeyDaoMock, enrollmentEnabled);
-        SignedContextualAds signedContextualAds = aSignedContextualAds();
-        String enrollmentId = "enrollment1";
-        AdTechIdentifier buyer = signedContextualAds.getBuyer();
+    public void testMultipleKeys_success() {
+        mockKeyStorage(MULTIPLE_KEYS);
 
-        doReturn(new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build())
-                .when(mEnrollmentDaoMock)
-                .getEnrollmentDataForFledgeByAdTechIdentifier(buyer);
-        doReturn(
-                        List.of(
-                                new EncryptionKey.Builder()
-                                        .setBody(generateRandomECPublicKey())
-                                        .build(),
-                                new EncryptionKey.Builder().setBody(PUBLIC_TEST_KEY_STRING).build(),
-                                new EncryptionKey.Builder()
-                                        .setBody(generateRandomECPublicKey())
-                                        .build()))
-                .when(mEncryptionKeyDaoMock)
-                .getEncryptionKeyFromEnrollmentIdAndKeyType(
-                        enrollmentId, EncryptionKey.KeyType.SIGNING);
+        boolean isVerified =
+                mSignatureManager.isVerified(
+                        BUYER, SELLER, CALLER_PACKAGE_NAME, SIGNED_CONTEXTUAL_ADS);
 
-        boolean isVerified = mSignatureManager.isVerified(buyer, signedContextualAds);
-
+        int expectedNumOfKeysFailedVerifyingSignature = 1;
         assertThat(isVerified).isTrue();
+        verifyLogSuccessfulSignatureVerification(
+                MULTIPLE_KEYS.size(), expectedNumOfKeysFailedVerifyingSignature);
     }
 
     @Test
-    public void testFetchKeys_validAdTech_success() {
-        AdTechIdentifier adTech = AdTechIdentifier.fromString("example.com");
-        byte[] publicKeyBytes = new byte[] {1, 2, 3, 4, 5};
-        String publicKey = Base64.getEncoder().encodeToString(publicKeyBytes);
-        String enrollmentId = "enrollment1";
+    public void testFetchKeys_adTechNotEnrolled_failsVerification() {
+        doReturn(null).when(mEnrollmentDaoMock).getEnrollmentDataForFledgeByAdTechIdentifier(BUYER);
 
-        doReturn(new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build())
+        boolean isVerified =
+                mSignatureManager.isVerified(
+                        BUYER, SELLER, CALLER_PACKAGE_NAME, SIGNED_CONTEXTUAL_ADS);
+
+        assertThat(isVerified).isFalse();
+        verifyLogFailedSignatureVerificationAdTechNotEnrolled();
+    }
+
+    @Test
+    public void testFetchKeys_adTechEnrollmentIdNull_failsVerification() {
+        doReturn(new EnrollmentData.Builder().build())
                 .when(mEnrollmentDaoMock)
-                .getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
-        doReturn(Collections.singletonList(new EncryptionKey.Builder().setBody(publicKey).build()))
-                .when(mEncryptionKeyDaoMock)
-                .getEncryptionKeyFromEnrollmentIdAndKeyType(
-                        enrollmentId, EncryptionKey.KeyType.SIGNING);
+                .getEnrollmentDataForFledgeByAdTechIdentifier(BUYER);
 
-        List<byte[]> signingKeys = mNoOpSignatureManager.fetchPublicKeyForAdTech(adTech);
+        boolean isVerified =
+                mSignatureManager.isVerified(
+                        BUYER, SELLER, CALLER_PACKAGE_NAME, SIGNED_CONTEXTUAL_ADS);
 
-        assertThat(signingKeys.size()).isEqualTo(1);
-        assertThat(signingKeys.get(0)).isEqualTo(publicKeyBytes);
+        assertThat(isVerified).isFalse();
+        verifyLogFailedSignatureVerificationAdTechNotEnrolled();
     }
 
     @Test
-    public void testFetchKeys_validAdTechMultipleKeysSortedProperly_success() {
+    public void testFetchKeys_adTechHasNoKeys_failsVerification() {
+        mockKeyStorage(Collections.emptyList());
+
+        boolean isVerified =
+                mSignatureManager.isVerified(
+                        BUYER, SELLER, CALLER_PACKAGE_NAME, SIGNED_CONTEXTUAL_ADS);
+
+        assertThat(isVerified).isFalse();
+        verifyLogFailedSignatureVerificationAdTechHasNoKeys();
+    }
+
+    @Test
+    public void testFetchKeys_adTechHasKeyWithWrongFormat_failsVerification() {
+        byte[] keyWithWrongFormat = new byte[] {1, 2, 3};
+        mockKeyStorage(
+                Collections.singletonList(Base64.getEncoder().encodeToString(keyWithWrongFormat)));
+
+        boolean isVerified =
+                mSignatureManager.isVerified(
+                        BUYER, SELLER, CALLER_PACKAGE_NAME, SIGNED_CONTEXTUAL_ADS);
+
+        assertThat(isVerified).isFalse();
+        verifyLogFailedSignatureVerificationAdTechHasKeyWithWrongFormat();
+    }
+
+    @Test
+    public void testFetchKeys_validAdTechMultipleKeys_returnedInAscendingOrderByExpiration() {
         AdTechIdentifier adTech = AdTechIdentifier.fromString("example.com");
         String enrollmentId = "enrollment1";
         EnrollmentData enrollment =
@@ -202,42 +211,186 @@ public class ProtectedAudienceSignatureManagerTest {
                 .getEncryptionKeyFromEnrollmentIdAndKeyType(
                         enrollmentId, EncryptionKey.KeyType.SIGNING);
 
-        List<byte[]> signingKeys = mNoOpSignatureManager.fetchPublicKeyForAdTech(adTech);
+        List<byte[]> signingKeys = mSignatureManager.fetchPublicKeyForAdTech(adTech);
 
         assertThat(signingKeys.size()).isEqualTo(2);
         assertThat(signingKeys.get(0)).isEqualTo(publicKeyBytes1);
         assertThat(signingKeys.get(1)).isEqualTo(publicKeyBytes2);
     }
 
-    @Test
-    public void testFetchKeys_notEnrolledAdTech_returnsEmptyList() {
-        AdTechIdentifier adTech = AdTechIdentifier.fromString("example.com");
-        doReturn(null)
-                .when(mEnrollmentDaoMock)
-                .getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
-
-        List<byte[]> signingKeys = mNoOpSignatureManager.fetchPublicKeyForAdTech(adTech);
-
-        assertThat(signingKeys).isEqualTo(Collections.emptyList());
+    private void verifyLogSuccessfulSignatureVerification(
+            int expectedNumOfKeysFetched, int expectedNumOfKeysFailedVerifyingSignature) {
+        int verified = SignatureVerificationStats.VerificationStatus.VERIFIED.getValue();
+        verify(mSignatureVerificationLoggerMock, times(1)).startKeyFetchForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).endKeyFetchForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .startSerializationForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .endSerializationForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).startSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).endSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setNumOfKeysFetched(expectedNumOfKeysFetched);
+        verify(mSignatureVerificationLoggerMock, times(1)).close(verified);
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .setFailedSignatureBuyerEnrollmentId(anyString());
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .setFailedSignatureSellerEnrollmentId(anyString());
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .setFailedSignatureCallerPackageName(anyString());
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailUnknownError();
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .setFailureDetailNoEnrollmentDataForBuyer();
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailNoKeysFetchedForBuyer();
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailWrongSignatureFormat();
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .addFailureDetailCountOfKeysWithWrongFormat();
+        verify(mSignatureVerificationLoggerMock, times(expectedNumOfKeysFailedVerifyingSignature))
+                .addFailureDetailCountOfKeysFailedToVerifySignature();
     }
 
-    @Test
-    public void testFetchKeys_enrolledAdTechWithNullId_returnsEmptyList() {
-        AdTechIdentifier adTech = AdTechIdentifier.fromString("example.com");
-        doReturn(new EnrollmentData.Builder().build())
-                .when(mEnrollmentDaoMock)
-                .getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
-
-        List<byte[]> signingKeys = mNoOpSignatureManager.fetchPublicKeyForAdTech(adTech);
-
-        assertThat(signingKeys).isEqualTo(Collections.emptyList());
+    private void verifyLogFailedSignatureVerification(int expectedNumOfKeysFetched) {
+        int verified = SignatureVerificationStats.VerificationStatus.VERIFICATION_FAILED.getValue();
+        verify(mSignatureVerificationLoggerMock, times(1)).startKeyFetchForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).endKeyFetchForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .startSerializationForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .endSerializationForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).startSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).endSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setNumOfKeysFetched(expectedNumOfKeysFetched);
+        verify(mSignatureVerificationLoggerMock, times(1)).close(verified);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureBuyerEnrollmentId(BUYER_ENROLLMENT_ID);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureSellerEnrollmentId(SELLER_ENROLLMENT_ID);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureCallerPackageName(CALLER_PACKAGE_NAME);
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailUnknownError();
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .setFailureDetailNoEnrollmentDataForBuyer();
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailNoKeysFetchedForBuyer();
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailWrongSignatureFormat();
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .addFailureDetailCountOfKeysWithWrongFormat();
+        verify(mSignatureVerificationLoggerMock, times(expectedNumOfKeysFetched))
+                .addFailureDetailCountOfKeysFailedToVerifySignature();
     }
 
-    private static String generateRandomECPublicKey() throws Exception {
-        // Initialize the KeyPairGenerator
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
-        keyPairGenerator.initialize(new ECGenParameterSpec("secp256r1"));
-        return Base64.getEncoder()
-                .encodeToString(keyPairGenerator.generateKeyPair().getPublic().getEncoded());
+    private void verifyLogFailedSignatureVerificationAdTechNotEnrolled() {
+        int verified = SignatureVerificationStats.VerificationStatus.VERIFICATION_FAILED.getValue();
+        verify(mSignatureVerificationLoggerMock, times(1)).startKeyFetchForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).endKeyFetchForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .startSerializationForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .endSerializationForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).startSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).endSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).setNumOfKeysFetched(0);
+        verify(mSignatureVerificationLoggerMock, times(1)).close(verified);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureBuyerEnrollmentId(EMPTY_STRING_FOR_MISSING_ENROLLMENT_ID);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureSellerEnrollmentId(EMPTY_STRING_FOR_MISSING_ENROLLMENT_ID);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureCallerPackageName(CALLER_PACKAGE_NAME);
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailUnknownError();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailureDetailNoEnrollmentDataForBuyer();
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailNoKeysFetchedForBuyer();
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailWrongSignatureFormat();
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .addFailureDetailCountOfKeysWithWrongFormat();
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .addFailureDetailCountOfKeysFailedToVerifySignature();
+    }
+
+    private void verifyLogFailedSignatureVerificationAdTechHasNoKeys() {
+        int verified = SignatureVerificationStats.VerificationStatus.VERIFICATION_FAILED.getValue();
+        verify(mSignatureVerificationLoggerMock, times(1)).startKeyFetchForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).endKeyFetchForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .startSerializationForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .endSerializationForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).startSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).endSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).setNumOfKeysFetched(0);
+        verify(mSignatureVerificationLoggerMock, times(1)).close(verified);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureBuyerEnrollmentId(BUYER_ENROLLMENT_ID);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureSellerEnrollmentId(SELLER_ENROLLMENT_ID);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureCallerPackageName(CALLER_PACKAGE_NAME);
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailUnknownError();
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .setFailureDetailNoEnrollmentDataForBuyer();
+        verify(mSignatureVerificationLoggerMock, times(1)).setFailureDetailNoKeysFetchedForBuyer();
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailWrongSignatureFormat();
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .addFailureDetailCountOfKeysWithWrongFormat();
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .addFailureDetailCountOfKeysFailedToVerifySignature();
+    }
+
+    private void verifyLogFailedSignatureVerificationAdTechHasKeyWithWrongFormat() {
+        int verified = SignatureVerificationStats.VerificationStatus.VERIFICATION_FAILED.getValue();
+        verify(mSignatureVerificationLoggerMock, times(1)).startKeyFetchForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).endKeyFetchForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .startSerializationForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .endSerializationForSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).startSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).endSignatureVerification();
+        verify(mSignatureVerificationLoggerMock, times(1)).setNumOfKeysFetched(1);
+        verify(mSignatureVerificationLoggerMock, times(1)).close(verified);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureBuyerEnrollmentId(BUYER_ENROLLMENT_ID);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureSellerEnrollmentId(SELLER_ENROLLMENT_ID);
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .setFailedSignatureCallerPackageName(CALLER_PACKAGE_NAME);
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailUnknownError();
+        verify(mSignatureVerificationLoggerMock, times(0))
+                .setFailureDetailNoEnrollmentDataForBuyer();
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailNoKeysFetchedForBuyer();
+        verify(mSignatureVerificationLoggerMock, times(0)).setFailureDetailWrongSignatureFormat();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .addFailureDetailCountOfKeysWithWrongFormat();
+        verify(mSignatureVerificationLoggerMock, times(1))
+                .addFailureDetailCountOfKeysFailedToVerifySignature();
+    }
+
+    private void mockKeyStorage(List<String> keys) {
+        List<EncryptionKey> encryptionKeys =
+                keys.stream()
+                        .map(key -> new EncryptionKey.Builder().setBody(key).build())
+                        .collect(Collectors.toList());
+        doReturn(new EnrollmentData.Builder().setEnrollmentId(BUYER_ENROLLMENT_ID).build())
+                .when(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByAdTechIdentifier(BUYER);
+        doReturn(new EnrollmentData.Builder().setEnrollmentId(SELLER_ENROLLMENT_ID).build())
+                .when(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByAdTechIdentifier(SELLER);
+        doReturn(encryptionKeys)
+                .when(mEncryptionKeyDaoMock)
+                .getEncryptionKeyFromEnrollmentIdAndKeyType(
+                        BUYER_ENROLLMENT_ID, EncryptionKey.KeyType.SIGNING);
+    }
+
+    private static String generateRandomECPublicKey() {
+        try {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
+            keyPairGenerator.initialize(new ECGenParameterSpec("secp256r1"));
+            return Base64.getEncoder()
+                    .encodeToString(keyPairGenerator.generateKeyPair().getPublic().getEncoded());
+        } catch (Exception e) {
+            throw new IllegalStateException("Random public key generation failed!");
+        }
     }
 }

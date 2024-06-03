@@ -26,7 +26,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -82,6 +82,18 @@ public class AdSelectionDatabaseMigrationTest extends AdServicesUnitTestCase {
 
         // Re-open the database with version 4 and provide MIGRATION_3_4 as the migration process.
         db = helper.runMigrationsAndValidate(TEST_DB, 4, true);
+        validateTableExistsInDatabase(db, adSelectionTable);
+    }
+
+    @Test
+    public void testMigration4To5() throws IOException {
+        String adSelectionTable = "ad_selection";
+
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 4);
+        validateTableExistsInDatabase(db, adSelectionTable);
+
+        // Re-open the database with version 4 and provide MIGRATION_4_5 as the migration process.
+        db = helper.runMigrationsAndValidate(TEST_DB, 5, true);
         validateTableExistsInDatabase(db, adSelectionTable);
     }
 

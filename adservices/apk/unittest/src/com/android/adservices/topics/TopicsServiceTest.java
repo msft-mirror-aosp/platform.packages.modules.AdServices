@@ -20,13 +20,14 @@ import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothi
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.spy;
 
@@ -38,7 +39,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -50,7 +51,7 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.topics.EpochJobService;
+import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -67,8 +68,8 @@ import java.util.function.Supplier;
 @SpyStatic(AdServicesLoggerImpl.class)
 @SpyStatic(MaintenanceJobService.class)
 @SpyStatic(EncryptionKeyJobService.class)
-@SpyStatic(EpochJobService.class)
-@SpyStatic(MddJobService.class)
+@SpyStatic(EpochJob.class)
+@SpyStatic(MddJob.class)
 @SpyStatic(EnrollmentDao.class)
 @SpyStatic(AppImportanceFilter.class)
 @SpyStatic(PackageChangedReceiver.class)
@@ -86,46 +87,38 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
             // Killswitch is off.
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
-            extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
-            ExtendedMockito.doReturn(mMockTopicsWorker)
-                    .when(() -> TopicsWorker.getInstance(any(Context.class)));
+        doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
 
             TopicsService spyTopicsService = spy(new TopicsService());
-            ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
-            doReturn(true).when(mMockAdServicesApiConsent).isGiven();
+        doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(true).when(mMockAdServicesApiConsent).isGiven();
             doReturn(mMockAdServicesApiConsent)
                     .when(mMockConsentManager)
                     .getConsent(AdServicesApiType.TOPICS);
 
-            ExtendedMockito.doReturn(true)
-                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-            ExtendedMockito.doReturn(true)
-                    .when(
-                            () ->
-                                    MaintenanceJobService.scheduleIfNeeded(
-                                            any(Context.class), eq(false)));
-            ExtendedMockito.doReturn(true)
-                    .when(
-                            () ->
-                                    EncryptionKeyJobService.scheduleIfNeeded(
-                                            any(Context.class), eq(false)));
-            ExtendedMockito.doReturn(true)
-                    .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-            ExtendedMockito.doReturn(true)
-                    .when(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        doReturn(true).when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
+        doReturn(true)
+                .when(() -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        doReturn(true)
+                .when(
+                        () ->
+                                EncryptionKeyJobService.scheduleIfNeeded(
+                                        any(Context.class), eq(false)));
+        ExtendedMockito.doNothing().when(EpochJob::schedule);
+        ExtendedMockito.doNothing().when(MddJob::scheduleAllMddJobs);
 
-            ExtendedMockito.doReturn(mMockEnrollmentDao)
-                    .when(() -> EnrollmentDao.getInstance(any(Context.class)));
-            ExtendedMockito.doReturn(mMockAppImportanceFilter)
-                    .when(
-                            () ->
-                                    AppImportanceFilter.create(
-                                            any(Context.class), anyInt(), any(Supplier.class)));
+        doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance());
+        doReturn(mMockAppImportanceFilter)
+                .when(
+                        () ->
+                                AppImportanceFilter.create(
+                                        any(Context.class), anyInt(), any(Supplier.class)));
 
-            spyTopicsService.onCreate();
-            IBinder binder = spyTopicsService.onBind(getIntentForTopicsService());
-            assertNotNull(binder);
+        spyTopicsService.onCreate();
+        IBinder binder = spyTopicsService.onBind(getIntentForTopicsService());
+        assertNotNull(binder);
     }
 
     @Test
@@ -135,7 +128,7 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doNothingOnErrorLogUtilError();
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         TopicsService topicsService = new TopicsService();
         topicsService.onCreate();
@@ -156,47 +149,39 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
             // Killswitch is off.
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
-            extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
-            ExtendedMockito.doReturn(mMockTopicsWorker)
-                    .when(() -> TopicsWorker.getInstance(any(Context.class)));
+        doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
 
             TopicsService spyTopicsService = spy(new TopicsService());
-            ExtendedMockito.doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
-            doReturn(true).when(mMockAdServicesApiConsent).isGiven();
+        doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(true).when(mMockAdServicesApiConsent).isGiven();
             doReturn(mMockAdServicesApiConsent)
                     .when(mMockConsentManager)
                     .getConsent(AdServicesApiType.TOPICS);
 
-            ExtendedMockito.doReturn(true)
-                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-            ExtendedMockito.doReturn(true)
-                    .when(
-                            () ->
-                                    MaintenanceJobService.scheduleIfNeeded(
-                                            any(Context.class), eq(false)));
-            ExtendedMockito.doReturn(true)
-                    .when(
-                            () ->
-                                    EncryptionKeyJobService.scheduleIfNeeded(
-                                            any(Context.class), eq(false)));
-            ExtendedMockito.doReturn(true)
-                    .when(() -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-            ExtendedMockito.doReturn(true)
-                    .when(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        doReturn(true).when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
+        doReturn(true)
+                .when(() -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        doReturn(true)
+                .when(
+                        () ->
+                                EncryptionKeyJobService.scheduleIfNeeded(
+                                        any(Context.class), eq(false)));
+        ExtendedMockito.doNothing().when(EpochJob::schedule);
+        ExtendedMockito.doNothing().when(MddJob::scheduleAllMddJobs);
 
-            ExtendedMockito.doReturn(mMockEnrollmentDao)
-                    .when(() -> EnrollmentDao.getInstance(any(Context.class)));
-            ExtendedMockito.doReturn(mMockAppImportanceFilter)
-                    .when(
-                            () ->
-                                    AppImportanceFilter.create(
-                                            any(Context.class), anyInt(), any(Supplier.class)));
+        doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance());
+        doReturn(mMockAppImportanceFilter)
+                .when(
+                        () ->
+                                AppImportanceFilter.create(
+                                        any(Context.class), anyInt(), any(Supplier.class)));
 
-            spyTopicsService.onCreate();
-            IBinder binder = spyTopicsService.onBind(getIntentForTopicsService());
-            assertNotNull(binder);
-            verifyMethodExecutionOnUserConsentGiven();
+        spyTopicsService.onCreate();
+        IBinder binder = spyTopicsService.onBind(getIntentForTopicsService());
+        assertNotNull(binder);
+        verifyMethodExecutionOnUserConsentGiven();
     }
 
     private Intent getIntentForTopicsService() {
@@ -204,14 +189,10 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     private void verifyMethodExecutionOnUserConsentGiven() {
-        ExtendedMockito.verify(
-                () -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        ExtendedMockito.verify(
-                () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-        ExtendedMockito.verify(
-                () -> EncryptionKeyJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-        ExtendedMockito.verify(
-                () -> EpochJobService.scheduleIfNeeded(any(Context.class), eq(false)));
-        ExtendedMockito.verify(() -> MddJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
+        verify(() -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        verify(() -> EncryptionKeyJobService.scheduleIfNeeded(any(Context.class), eq(false)));
+        verify(EpochJob::schedule);
+        verify(MddJob::scheduleAllMddJobs);
     }
 }

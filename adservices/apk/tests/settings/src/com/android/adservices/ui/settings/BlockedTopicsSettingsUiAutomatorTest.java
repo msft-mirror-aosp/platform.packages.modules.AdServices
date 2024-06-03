@@ -19,6 +19,7 @@ package com.android.adservices.ui.settings;
 import static com.android.adservices.service.FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
@@ -58,7 +59,7 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
                     .setFlag(KEY_CONSENT_SOURCE_OF_TRUTH, 2)
                     .setFlag(KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, 2)
                     .setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true)
-                    .setDisableTopicsEnrollmentCheckForTests(true)
+                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                     .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setCompatModeFlags();

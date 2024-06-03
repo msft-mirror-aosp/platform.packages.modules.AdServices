@@ -16,14 +16,26 @@
 
 package com.android.adservices.service.shell.adselection;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
+
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
+import com.android.adservices.service.adselection.AuctionServerDataCompressorFactory;
+import com.android.adservices.service.adselection.AuctionServerPayloadMetricsStrategyDisabled;
+import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
@@ -32,6 +44,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -40,19 +53,26 @@ import java.util.stream.Collectors;
 
 public class AdSelectionShellCommandFactory implements ShellCommandFactory {
 
-    public static final String COMMAND_PREFIX = "ad_selection";
+    public static final String COMMAND_PREFIX = "ad-selection";
     private final Map<String, ShellCommand> mAllCommandsMap;
     private final boolean mIsConsentedDebugCliEnabled;
+    private final boolean mIsAdSelectionCliEnabled;
 
     @VisibleForTesting
     public AdSelectionShellCommandFactory(
             boolean isConsentedDebugCliEnabled,
-            @NonNull ConsentedDebugConfigurationDao consentedDebugConfigurationDao) {
+            boolean isAdSelectionCliEnabled,
+            ConsentedDebugConfigurationDao consentedDebugConfigurationDao,
+            BuyerInputGenerator buyerInputGenerator) {
         Objects.requireNonNull(consentedDebugConfigurationDao);
 
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
+        mIsAdSelectionCliEnabled = isAdSelectionCliEnabled;
         Set<ShellCommand> allCommands =
-                ImmutableSet.of(new ConsentedDebugShellCommand(consentedDebugConfigurationDao));
+                ImmutableSet.of(
+                        new ConsentedDebugShellCommand(consentedDebugConfigurationDao),
+                        new GetAdSelectionDataCommand(buyerInputGenerator),
+                        new MockAuctionResultCommand());
         mAllCommandsMap =
                 allCommands.stream()
                         .collect(
@@ -63,28 +83,81 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
     /**
      * @return an instance of the {@link AdSelectionShellCommandFactory}.
      */
-    public static AdSelectionShellCommandFactory getInstance(Flags flags, Context context) {
+    public static AdSelectionShellCommandFactory getInstance(
+            DebugFlags debugFlags, Flags flags, Context context) {
+        SharedStorageDatabase sharedStorageDatabase = SharedStorageDatabase.getInstance(context);
+        // TODO(b/342574944): Decide which fields need to be configurable and update.
+        BuyerInputGenerator buyerInputGenerator =
+                new BuyerInputGenerator(
+                        CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                        ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
+                        new FrequencyCapAdFiltererNoOpImpl(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        flags.getFledgeCustomAudienceActiveTimeWindowInMs(),
+                        flags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
+                        flags.getProtectedSignalsPeriodicEncodingEnabled(),
+                        AuctionServerDataCompressorFactory.getDataCompressor(
+                                flags.getFledgeAuctionServerCompressionAlgorithmVersion()),
+                        flags.getFledgeAuctionServerOmitAdsEnabled(),
+                        new AuctionServerPayloadMetricsStrategyDisabled(),
+                        flags,
+                        new AdFilteringFeatureFactory(
+                                        sharedStorageDatabase.appInstallDao(),
+                                        sharedStorageDatabase.frequencyCapDao(),
+                                        flags)
+                                .getAppInstallAdFilterer());
         return new AdSelectionShellCommandFactory(
-                flags.getFledgeConsentedDebuggingCliEnabledStatus(),
-                AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao());
+                debugFlags.getFledgeConsentedDebuggingCliEnabledStatus(),
+                debugFlags.getAdSelectionCommandsEnabled(),
+                AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao(),
+                buyerInputGenerator);
     }
 
+    @SuppressLint("VisibleForTests")
     @Override
     public ShellCommand getShellCommand(String cmd) {
         if (!mAllCommandsMap.containsKey(cmd)) {
             Log.d(
                     AdServicesShellCommandHandler.TAG,
-                    String.format("Invalid command for Custom Audience Shell Factory: %s", cmd));
+                    String.format(
+                            "Invalid command for Ad Selection Command Shell Factory: %s", cmd));
             return null;
         }
-        if (!mIsConsentedDebugCliEnabled) {
-            return new NoOpShellCommand(cmd);
+        ShellCommand command = mAllCommandsMap.get(cmd);
+
+        switch (cmd) {
+            case ConsentedDebugShellCommand.CMD -> {
+                if (!mIsConsentedDebugCliEnabled) {
+                    return new NoOpShellCommand(
+                            cmd,
+                            command.getMetricsLoggerCommand(),
+                            KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED);
+                }
+                return command;
+            }
+            case GetAdSelectionDataCommand.CMD, MockAuctionResultCommand.CMD -> {
+                if (!mIsAdSelectionCliEnabled) {
+                    return new NoOpShellCommand(
+                            cmd, command.getMetricsLoggerCommand(), KEY_AD_SELECTION_CLI_ENABLED);
+                }
+                return command;
+            }
+            default -> {
+                return null;
+            }
         }
-        return mAllCommandsMap.getOrDefault(cmd, null);
     }
 
     @Override
     public String getCommandPrefix() {
         return COMMAND_PREFIX;
+    }
+
+    @Override
+    public List<String> getAllCommandsHelp() {
+        return mAllCommandsMap.values().stream()
+                .map(ShellCommand::getCommandHelp)
+                .collect(Collectors.toList());
     }
 }

@@ -23,10 +23,13 @@ android_library {
     srcs: [
         "java/**/*.java",
     ],
+    exclude_srcs: [
+        "java/**/testing/*.java",
+    ],
     plugins: [
         "androidx.room_room-compiler-plugin",
         "auto_value_plugin",
-        "auto_annotation_plugin"
+        "auto_annotation_plugin",
     ],
     javacflags: [
         "-Aroom.schemaLocation=packages/modules/AdServices/adservices/libraries/cobalt/schemas",
@@ -43,7 +46,37 @@ android_library {
         "guava",
         "libprotobuf-java-lite",
     ],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["RoomDatabaseChange"], // TODO(b/329688645): Add Room DB migration guardrail tests.
+    },
+}
+
+android_library {
+    name: "adservices-cobalt-testing",
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    srcs: [
+        "java/**/testing/*.java",
+    ],
+    libs: [
+        "framework-annotations-lib",
+    ],
+    static_libs: [
+        "adservices-cobalt",
+        "adservices-cobalt-proto-lite",
+        "androidx.annotation_annotation",
+        "guava",
+        "libprotobuf-java-lite",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
     lint: {
         extra_check_modules: ["AdServicesLintChecker"],
         disabled_checks: ["RoomDatabaseChange"], // TODO(b/329688645): Add Room DB migration guardrail tests.
@@ -61,4 +94,3 @@ android_library {
     ],
     manifest: "AndroidManifest.xml",
 }
-

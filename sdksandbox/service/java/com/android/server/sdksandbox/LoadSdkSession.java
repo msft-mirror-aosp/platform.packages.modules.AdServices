@@ -48,7 +48,6 @@ import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkInSandboxCallback;
-import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.sdksandbox.helpers.PackageManagerHelper;
 
 import java.lang.annotation.Retention;
@@ -217,10 +216,14 @@ class LoadSdkSession {
         }
 
         if (service == null) {
+            sandboxLatencyInfo.setSandboxStatus(
+                    SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
+            sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
             handleLoadFailure(
                     new LoadSdkException(
                             SDK_SANDBOX_PROCESS_NOT_AVAILABLE, "Sandbox is not available"),
                     sandboxLatencyInfo);
+            return;
         }
 
         sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
@@ -235,6 +238,8 @@ class LoadSdkSession {
                     mRemoteSdkLink,
                     sandboxLatencyInfo);
         } catch (DeadObjectException e) {
+            sandboxLatencyInfo.setSandboxStatus(
+                    SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
             handleLoadFailure(
                     new LoadSdkException(
                             SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
@@ -655,50 +660,6 @@ class LoadSdkSession {
                             + "has no mapping to the SdkSandboxManager error codes");
             return SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR;
         }
-    }
-
-    private void logLatencyMetricsForCallback(
-            long timeSystemServerReceivedCallFromSandbox,
-            int method,
-            SandboxLatencyInfo sandboxLatencyInfo) {
-        final int appUid = mCallingInfo.getUid();
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                method,
-                sandboxLatencyInfo.getSystemServerToSandboxLatency(),
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX,
-                appUid);
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                method,
-                sandboxLatencyInfo.getSandboxLatency(),
-                sandboxLatencyInfo.isSuccessfulAtSandbox(),
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX,
-                appUid);
-
-        final int latencySdk = sandboxLatencyInfo.getSdkLatency();
-        if (latencySdk != -1) {
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    method,
-                    latencySdk,
-                    sandboxLatencyInfo.isSuccessfulAtSdk(),
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SDK,
-                    appUid);
-        }
-
-        SdkSandboxStatsLog.write(
-                SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                method,
-                /*latency=*/ (int)
-                        (timeSystemServerReceivedCallFromSandbox
-                                - sandboxLatencyInfo.getTimeSandboxCalledSystemServer()),
-                /*success=*/ true,
-                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER,
-                appUid);
     }
 
     private SdkProviderInfo createSdkProviderInfo() throws PackageManager.NameNotFoundException {

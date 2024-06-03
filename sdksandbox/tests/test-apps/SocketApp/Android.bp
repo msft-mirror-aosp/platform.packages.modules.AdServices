@@ -30,3 +30,15 @@ android_test_helper_app {
         "SdkSandboxTestUtils",
     ],
 }
+
+android_test_helper_app {
+    name: "SocketSdkProvider",
+    defaults: ["platform_app_defaults"],
+    certificate: ":sdksandbox-test",
+    manifest: "ProviderManifest.xml",
+    min_sdk_version: "33",
+    target_sdk_version: "34",
+    srcs: [
+        "src/**/SocketSdkProvider.java",
+    ],
+}

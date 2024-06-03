@@ -87,8 +87,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     @Override
-    public void initialize(
-            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled)
+    public void initialize(ISdkToServiceCallback sdkToServiceCallback)
             throws IllegalStateException {
         if (failInitialization) {
             throw new IllegalStateException();

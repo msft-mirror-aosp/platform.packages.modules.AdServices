@@ -22,6 +22,8 @@ import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
 import android.os.RemoteException;
 
+import com.android.adservices.common.WebUtil;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.RegisterSource;
@@ -56,7 +58,7 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * 4b823a4852665b1fba719401c99b56ca8b9b28f1.
+ * 659f682b6482a48ce9ab5e7d3c25e93c24f5054d.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -65,8 +67,7 @@ public class E2EInteropMockTest extends E2EMockTest {
             new HashSet<>(
                     Arrays.asList(
                             TestFormatJsonMapping.TIMESTAMP_KEY,
-                            TestFormatJsonMapping.REPORT_TIME_KEY,
-                            UnparsableRegistrationKeys.TIME));
+                            TestFormatJsonMapping.REPORT_TIME_KEY));
     // The following keys are to JSON fields that should be interpreted in seconds.
     public static final Set<String> TIMESTAMP_KEYS_IN_SECONDS =
             new HashSet<>(
@@ -88,37 +89,40 @@ public class E2EInteropMockTest extends E2EMockTest {
     private static final Map<String, String> sApiConfigPhFlags = Map.ofEntries(
             entry(
                     "rate_limit_max_attributions",
-                    "measurement_max_attribution_per_rate_limit_window"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW),
             entry(
                     "rate_limit_max_attribution_reporting_origins",
-                    "measurement_max_distinct_enrollments_in_attribution"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION),
             entry(
                     "rate_limit_max_source_registration_reporting_origins",
-                    "measurement_max_distinct_reporting_origins_in_source"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE),
             entry(
                     "max_destinations_per_source_site_reporting_site",
-                    "measurement_max_distinct_destinations_in_active_source"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE),
             entry(
                     "max_event_info_gain",
-                    "measurement_flex_api_max_information_gain_event"),
+                    FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT),
             entry(
                     "rate_limit_max_reporting_origins_per_source_reporting_site",
-                    "measurement_max_reporting_origins_per_source_reporting_site_per_window"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW),
             entry(
                     "max_destinations_per_rate_limit_window",
-                    "measurement_max_destinations_per_publisher_per_rate_limit_window"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW),
             entry(
                     "max_destinations_per_rate_limit_window_reporting_site",
-                    "measurement_max_dest_per_publisher_x_enrollment_per_rate_limit_window"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW),
             entry(
                     "max_sources_per_origin",
-                    "measurement_max_sources_per_publisher"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER),
             entry(
                     "max_event_level_reports_per_destination",
-                    "measurement_max_event_reports_per_destination"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION),
             entry(
                     "max_aggregatable_reports_per_destination",
-                    "measurement_max_aggregate_reports_per_destination"));
+                    FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION),
+            entry(
+                    "max_trigger_state_cardinality",
+                    FlagsConstants.KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
 
     private static String preprocessor(String json) {
         // TODO(b/290098169): Cleanup anchorTime when this bug is addressed. Handling cases where
@@ -131,13 +135,26 @@ public class E2EInteropMockTest extends E2EMockTest {
                 START_TIME);
     }
 
-    private static Map<String, String> sPhFlagsForInterop =
-            Map.of(
+    private static Map<String, String> sPhFlagsForInterop = Map.ofEntries(
+            entry(
                     // TODO (b/295382171): remove this after the flag is removed.
-                    "measurement_enable_max_aggregate_reports_per_source", "true",
-                    "measurement_source_registration_time_optional_for_agg_reports_enabled",
-                            "true",
-                    "measurement_flexible_event_reporting_api_enabled", "true");
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                    WebUtil.validUrl("https://coordinator.test")));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -191,7 +208,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
             updateEnrollment(uri);
-            insertSourceOrRecordUnparsable(
+            insertSourceOrAssertUnparsable(
                     sourceRegistration.getPublisher(),
                     sourceRegistration.mTimestamp,
                     uri,
@@ -212,7 +229,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
             updateEnrollment(uri);
-            insertTriggerOrRecordUnparsable(
+            insertTriggerOrAssertUnparsable(
                     triggerRegistration.getDestination(),
                     triggerRegistration.mTimestamp,
                     uri,
@@ -250,7 +267,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         }
     }
 
-    private void insertSourceOrRecordUnparsable(
+    private void insertSourceOrAssertUnparsable(
             String publisher,
             long timestamp,
             String uri,
@@ -293,11 +310,10 @@ public class E2EInteropMockTest extends E2EMockTest {
                                             maybeSource.get(), asyncRegistration, measurementDao)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
-            addUnparsableRegistration(timestamp, UnparsableRegistrationTypes.SOURCE);
         }
     }
 
-    private void insertTriggerOrRecordUnparsable(
+    private void insertTriggerOrAssertUnparsable(
             String destination,
             long timestamp,
             String uri,
@@ -337,15 +353,7 @@ public class E2EInteropMockTest extends E2EMockTest {
                                             maybeTrigger.get(), measurementDao)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
-            addUnparsableRegistration(timestamp, UnparsableRegistrationTypes.TRIGGER);
         }
-    }
-
-    private void addUnparsableRegistration(long time, String type) throws JSONException {
-        mActualOutput.mUnparsableRegistrationObjects.add(
-                new JSONObject()
-                        .put(UnparsableRegistrationKeys.TIME, String.valueOf(time))
-                        .put(UnparsableRegistrationKeys.TYPE, type));
     }
 
     private static Source.SourceType getSourceType(RegistrationRequest request) {

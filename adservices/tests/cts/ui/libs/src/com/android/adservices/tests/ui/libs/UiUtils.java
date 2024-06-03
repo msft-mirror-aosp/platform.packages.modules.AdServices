@@ -19,6 +19,7 @@ import static android.Manifest.permission.POST_NOTIFICATIONS;
 
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABLED;
+import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_NAME;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -63,24 +64,32 @@ public class UiUtils {
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 500;
     public static final int SCROLL_WAIT_TIME = 1000;
 
+    private static final int DEFAULT_BINDER_CONNECTION_TIMEOUT_MS = 10000;
+
     private static final String ANDROID_WIDGET_SCROLLVIEW = "android.widget.ScrollView";
 
     private static void forceSetFlag(String flagName, boolean newFlagValue) throws Exception {
-        String currentFlagValue =
-                ShellUtils.runShellCommand("device_config get adservices " + flagName);
+        String shellCmdGetTemplate;
+        String shellCmdSetTemplate;
+        if (flagName.endsWith("debug_mode")) {
+            shellCmdGetTemplate = "getprop debug.adservices.%s";
+            shellCmdSetTemplate = "setprop debug.adservices.%s %s";
+        } else {
+            shellCmdGetTemplate = "device_config get adservices %s";
+            shellCmdSetTemplate = "device_config put adservices %s %s";
+        }
+        String currentFlagValue = ShellUtils.runShellCommand(shellCmdGetTemplate, flagName);
 
         for (int i = 0; i < 5; i++) {
             if (currentFlagValue.equals(String.valueOf(newFlagValue))) {
                 return;
             }
 
-            ShellUtils.runShellCommand(
-                    String.format("device_config put adservices %s %s", flagName, newFlagValue));
+            ShellUtils.runShellCommand(shellCmdSetTemplate, flagName, newFlagValue);
 
             Thread.sleep(250);
 
-            currentFlagValue =
-                    ShellUtils.runShellCommand("device_config get adservices " + flagName);
+            currentFlagValue = ShellUtils.runShellCommand(shellCmdGetTemplate, flagName);
 
             LogUtil.e(String.format("Flag was not set on iteration %d.", i));
         }
@@ -202,8 +211,7 @@ public class UiUtils {
 
     /** Set flag consent_manager_ota_debug_mode to true in tests */
     public static void setConsentManagerOtaDebugMode() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_manager_ota_debug_mode true");
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_ota_debug_mode true");
     }
 
     /** Set flag consent_manager_debug_mode to false in tests */
@@ -219,6 +227,22 @@ public class UiUtils {
 
     public static void disableNotificationFlowV2() throws Exception {
         forceSetFlag("eu_notif_flow_change_enabled", false);
+    }
+
+    /** set the binder time for cts test */
+    public static void setBinderTimeout() throws Exception {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.binder_timeout %s", DEFAULT_BINDER_CONNECTION_TIMEOUT_MS);
+    }
+
+    /** enable pas */
+    public static void enablePas() throws Exception {
+        forceSetFlag("pas_ux_enabled", true);
+    }
+
+    /** disable pas */
+    public static void disablePas() throws Exception {
+        forceSetFlag("pas_ux_enabled", false);
     }
 
     public static void verifyNotification(
@@ -314,8 +338,7 @@ public class UiUtils {
         ShellUtils.runShellCommand(
                 "device_config put adservices ui_ota_strings_feature_enabled true");
         ShellUtils.runShellCommand("device_config put adservices adservice_enabled true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_debug_mode true");
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_notification_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices mdd_ui_ota_strings_manifest_file_url " + mddURL);
@@ -578,5 +601,10 @@ public class UiUtils {
 
         Boolean response = responseFuture.get();
         assertThat(response).isTrue();
+    }
+
+    /** Returns a [BySelector] of a resource in sysui package. */
+    public static BySelector sysuiResSelector(String resourceId) {
+        return By.pkg(SYSTEM_UI_NAME).res(SYSTEM_UI_NAME, resourceId);
     }
 }

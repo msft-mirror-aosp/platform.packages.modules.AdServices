@@ -32,6 +32,7 @@ import static com.android.adservices.service.adselection.DataVersionFetcher.DATA
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_JAVASCRIPT;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.STOP_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_UNSET;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.SCRIPT_UNSET;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTest.GENERATE_BIDS_END_TIMESTAMP;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTest.GENERATE_BIDS_LATENCY_IN_MS;
@@ -77,7 +78,6 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -97,6 +97,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -124,6 +125,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -393,7 +395,10 @@ public class AdBidGeneratorImplTest {
                 CustomAudienceBiddingInfo.create(
                         mDecisionLogicUri, BUYER_DECISION_LOGIC_JS, mCustomAudienceSignals, null);
 
-        mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+        boolean isolateConsoleMessageInLogsEnabled = true; // Enabling console messages for tests.
+        mIsolateSettings =
+                IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+                        isolateConsoleMessageInLogsEnabled);
 
         mRequestMatcherExactMatch =
                 (actualRequest, expectedRequest) -> actualRequest.equals(expectedRequest);
@@ -401,12 +406,12 @@ public class AdBidGeneratorImplTest {
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime()).thenReturn(START_ELAPSED_TIMESTAMP);
         mRunAdBiddingPerCAExecutionLogger =
                 new RunAdBiddingPerCAExecutionLogger(
-                        mRunAdBiddingPerCAClockMock, mAdServicesLoggerMock);
+                        mRunAdBiddingPerCAClockMock, mAdServicesLoggerMock, mFlags);
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
                                 CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         when(mDebugReporting.isEnabled()).thenReturn(false);
@@ -505,9 +510,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -622,9 +629,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ true);
     }
 
     @Test
@@ -736,9 +745,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -854,9 +865,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ true);
     }
 
     @Test
@@ -957,9 +970,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ true,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -1056,9 +1071,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -1173,9 +1190,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ true,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ true);
     }
 
     @Test
@@ -1269,9 +1288,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -1388,9 +1409,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 customAudienceWithFiltersAndAdCounterKeys.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -1482,9 +1505,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -1595,9 +1620,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -1714,9 +1741,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -1808,9 +1837,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -1909,9 +1940,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 customAudienceWithAdCounterKeys.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -2096,9 +2129,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 0, Collections.emptyList(), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -2223,9 +2258,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 0, Collections.emptyList(), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -2313,9 +2350,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -2401,9 +2440,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -2563,9 +2604,9 @@ public class AdBidGeneratorImplTest {
         assertThat(outException.getMessage()).contains(JSON_EXCEPTION_MESSAGE);
         verifyFailedRunAdBiddingPerCALoggingByGenerateBids(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length,
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
                 AdServicesLoggerUtil.getResultCodeFromException(outException.getCause()));
     }
 
@@ -2633,9 +2674,9 @@ public class AdBidGeneratorImplTest {
         assertThat(outException.getMessage()).contains(JSON_EXCEPTION_MESSAGE);
         verifyFailedRunAdBiddingPerCALoggingByGenerateBids(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 TRUSTED_BIDDING_KEYS.size(),
-                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length,
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes(StandardCharsets.UTF_8).length,
                 AdServicesLoggerUtil.getResultCodeFromException(outException.getCause()));
     }
 
@@ -2764,9 +2805,11 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifySuccessAdBiddingPerCALogging(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 emptyTrustedBiddingKeys.size(),
-                AdSelectionSignals.EMPTY.toString().getBytes().length);
+                AdSelectionSignals.EMPTY.toString().getBytes(StandardCharsets.UTF_8).length,
+                /* runAdBiddingReturnedAdCost */ false,
+                /* generateBidBuyerAdditionalSignalsContainedDataVersion= */ false);
     }
 
     @Test
@@ -2887,7 +2930,7 @@ public class AdBidGeneratorImplTest {
                 mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
         verifyFailedRunAdBiddingPerCALoggingTrustedBiddingSignals(
                 mCustomAudienceWithAds.getAds().size(),
-                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length,
                 mCustomAudienceWithAds.getTrustedBiddingData().getKeys().size(),
                 AdServicesLoggerUtil.getResultCodeFromException(outException.getCause()));
     }
@@ -2977,6 +3020,14 @@ public class AdBidGeneratorImplTest {
                 .isEqualTo(STATUS_UNSET);
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
                 .isEqualTo(STATUS_UNSET);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getRunAdBiddingPerCaReturnedAdCost())
+                .isEqualTo(false);
+        assertThat(
+                        runAdBiddingPerCAProcessReportedStats
+                                .getGenerateBidBuyerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(false);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getGenerateBidJsScriptResultCode())
+                .isEqualTo(JS_RUN_STATUS_UNSET);
     }
 
     private void verifyFailedRunAdBiddingPerCALoggingTrustedBiddingSignals(
@@ -3026,6 +3077,14 @@ public class AdBidGeneratorImplTest {
                 .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - RUN_BIDDING_START_TIMESTAMP));
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
                 .isEqualTo(resultCode);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getRunAdBiddingPerCaReturnedAdCost())
+                .isEqualTo(false);
+        assertThat(
+                        runAdBiddingPerCAProcessReportedStats
+                                .getGenerateBidBuyerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(false);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getGenerateBidJsScriptResultCode())
+                .isEqualTo(JS_RUN_STATUS_UNSET);
     }
 
     private void verifyFailedRunAdBiddingPerCALoggingGetBuyerBiddingJs(
@@ -3070,6 +3129,14 @@ public class AdBidGeneratorImplTest {
                 .isEqualTo(STATUS_UNSET);
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
                 .isEqualTo(STATUS_UNSET);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getRunAdBiddingPerCaReturnedAdCost())
+                .isEqualTo(false);
+        assertThat(
+                        runAdBiddingPerCAProcessReportedStats
+                                .getGenerateBidBuyerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(false);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getGenerateBidJsScriptResultCode())
+                .isEqualTo(JS_RUN_STATUS_UNSET);
     }
 
     private void verifyFailedRunAdBiddingPerCALoggingByGenerateBids(
@@ -3117,6 +3184,12 @@ public class AdBidGeneratorImplTest {
                 .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - RUN_BIDDING_START_TIMESTAMP));
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
                 .isEqualTo(resultCode);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getRunAdBiddingPerCaReturnedAdCost())
+                .isEqualTo(false);
+        assertThat(
+                        runAdBiddingPerCAProcessReportedStats
+                                .getGenerateBidBuyerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(false);
     }
 
     private void verifyFailedRunAdBiddingPerCALoggingTimeoutException(
@@ -3138,7 +3211,9 @@ public class AdBidGeneratorImplTest {
             int numOfAdsForBidding,
             int buyerDecisionLogicScriptSizeInBytes,
             int numOfKeysOfTrustedBiddingSignals,
-            int trustedBiddingSignalsDataSizeInBytes) {
+            int trustedBiddingSignalsDataSizeInBytes,
+            boolean runAdBiddingReturnedAdCost,
+            boolean generateBidBuyerAdditionalSignalsContainedDataVersion) {
         verify(mAdServicesLoggerMock)
                 .logRunAdBiddingPerCAProcessReportedStats(
                         mRunAdBiddingPerCAProcessReportedStatsArgumentCaptor.capture());
@@ -3178,6 +3253,12 @@ public class AdBidGeneratorImplTest {
                 .isEqualTo(RUN_BIDDING_LATENCY_IN_MS);
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
                 .isEqualTo(STATUS_SUCCESS);
+        assertThat(runAdBiddingPerCAProcessReportedStats.getRunAdBiddingPerCaReturnedAdCost())
+                .isEqualTo(runAdBiddingReturnedAdCost);
+        assertThat(
+                        runAdBiddingPerCAProcessReportedStats
+                                .getGenerateBidBuyerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(generateBidBuyerAdditionalSignalsContainedDataVersion);
     }
 
     private ListenableFuture<List<GenerateBidResult>> generateBidsWithDelay(@NonNull Flags flags) {
@@ -3243,6 +3324,21 @@ public class AdBidGeneratorImplTest {
         @Override
         public long getFledgeAdSelectionBiddingLogicJsVersion() {
             return JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3;
+        }
+
+        @Override
+        public boolean getFledgeCpcBillingMetricsEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeDataVersionHeaderMetricsEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeJsScriptResultCodeMetricsEnabled() {
+            return true;
         }
     }
 }

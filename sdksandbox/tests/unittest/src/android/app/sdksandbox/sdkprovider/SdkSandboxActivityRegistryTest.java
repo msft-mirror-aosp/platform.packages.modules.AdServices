@@ -54,8 +54,10 @@ import java.util.List;
 public class SdkSandboxActivityRegistryTest {
 
     private static final String SDK_NAME = "SDK_NAME";
-    private static final long TIME_EVENT_STARTED = 0;
+    private static final long TIME_SANDBOX_ACTIVITY_START_INITIATED = 1;
+    private static final long TIME_EVENT_STARTED = 10;
     private static final long TIME_EVENT_FINISHED = 100;
+    private static final long TIME_SANDBOX_ACTIVITY_CREATION_FINISHED = 101;
     private SdkSandboxActivityRegistry mRegistry;
     private SdkSandboxActivityHandler mHandler;
     private SandboxedSdkContext mSdkContext;
@@ -188,7 +190,11 @@ public class SdkSandboxActivityRegistryTest {
     public void testNotifyOnActivityCreation_CallsStatsd() throws RemoteException {
         IBinder token = mRegistry.register(mSdkContext, mHandler);
         Intent intent = buildSandboxActivityIntent(token);
-        mInjector.setLatencyTimeSeries(List.of(TIME_EVENT_STARTED, TIME_EVENT_FINISHED));
+        mInjector.setLatencyTimeSeries(
+                List.of(
+                        TIME_EVENT_STARTED,
+                        TIME_EVENT_FINISHED,
+                        TIME_SANDBOX_ACTIVITY_CREATION_FINISHED));
 
         new Handler(Looper.getMainLooper())
                 .runWithScissors(
@@ -204,6 +210,60 @@ public class SdkSandboxActivityRegistryTest {
                                 .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__NOTIFY_SDK_ON_ACTIVITY_CREATION,
                         StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
                         (int) (TIME_EVENT_FINISHED - TIME_EVENT_STARTED));
+        Mockito.verify(mServiceCallback)
+                .logSandboxActivityApiLatencyFromSandbox(
+                        StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__TOTAL,
+                        StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                        (int)
+                                (TIME_SANDBOX_ACTIVITY_CREATION_FINISHED
+                                        - TIME_SANDBOX_ACTIVITY_START_INITIATED));
+    }
+
+    @Test
+    public void testNotifyOnActivityCreation_MultipleTimes_CallsStatsd() throws RemoteException {
+        IBinder token = mRegistry.register(mSdkContext, mHandler);
+        Intent intent = buildSandboxActivityIntent(token);
+
+        new Handler(Looper.getMainLooper())
+                .runWithScissors(
+                        () -> {
+                            Activity activity = new Activity();
+                            mRegistry.notifyOnActivityCreation(intent, activity);
+                            mRegistry.notifyOnActivityCreation(intent, activity);
+                        },
+                        1000);
+
+        Mockito.verify(mServiceCallback, Mockito.times(2))
+                .logSandboxActivityApiLatencyFromSandbox(
+                        Mockito.eq(
+                                StatsdUtil
+                                        .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__NOTIFY_SDK_ON_ACTIVITY_CREATION),
+                        Mockito.eq(
+                                StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS),
+                        Mockito.anyInt());
+    }
+
+    @Test
+    public void testNotifyOnActivityCreation_MultipleTimes_CallsStatsdForTotalLatencyOnce()
+            throws RemoteException {
+        IBinder token = mRegistry.register(mSdkContext, mHandler);
+        Intent intent = buildSandboxActivityIntent(token);
+
+        new Handler(Looper.getMainLooper())
+                .runWithScissors(
+                        () -> {
+                            Activity activity = new Activity();
+                            mRegistry.notifyOnActivityCreation(intent, activity);
+                            mRegistry.notifyOnActivityCreation(intent, activity);
+                        },
+                        1000);
+
+        Mockito.verify(mServiceCallback, Mockito.times(1))
+                .logSandboxActivityApiLatencyFromSandbox(
+                        Mockito.eq(StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__TOTAL),
+                        Mockito.eq(
+                                StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS),
+                        Mockito.anyInt());
     }
 
     @Test
@@ -239,6 +299,12 @@ public class SdkSandboxActivityRegistryTest {
                         Mockito.eq(
                                 StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE),
                         Mockito.anyInt());
+        // Total sandbox activity creation latency should only be logged if successful.
+        Mockito.verify(mServiceCallback, Mockito.never())
+                .logSandboxActivityApiLatencyFromSandbox(
+                        Mockito.eq(StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__TOTAL),
+                        Mockito.anyInt(),
+                        Mockito.anyInt());
     }
 
     @Test
@@ -273,6 +339,11 @@ public class SdkSandboxActivityRegistryTest {
                         Mockito.eq(
                                 StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE),
                         Mockito.anyInt());
+        Mockito.verify(mServiceCallback, Mockito.never())
+                .logSandboxActivityApiLatencyFromSandbox(
+                        Mockito.eq(StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__TOTAL),
+                        Mockito.anyInt(),
+                        Mockito.anyInt());
     }
 
     @Test
@@ -305,8 +376,6 @@ public class SdkSandboxActivityRegistryTest {
         final IBinder token = mRegistry.register(mSdkContext, mHandler);
         Intent intent = buildSandboxActivityIntent(token);
 
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
-
         ActivityContextInfo contextInfo = mRegistry.getContextInfo(intent);
 
         assertThat(contextInfo.getContextFlags())
@@ -319,7 +388,6 @@ public class SdkSandboxActivityRegistryTest {
     @Test
     public void testGetActivityContextInfoIsNullForNonRegisteredHandlers() {
         final Intent intent = buildSandboxActivityIntent(new Binder());
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
 
         assertThat(mRegistry.getContextInfo(intent)).isNull();
     }
@@ -346,26 +414,13 @@ public class SdkSandboxActivityRegistryTest {
         assertThat(sdkContext).isNull();
     }
 
-    /**
-     * Ensure that the customized SDK context flag has to be enabled for retrieving the
-     * ActivityContextInfo.
-     */
-    @Test
-    public void testGetActivityContextInfoFailIfCustomizedSdkFlagIsDisabled() {
-        final IBinder token = mRegistry.register(mSdkContext, mHandler);
-        Intent intent = buildSandboxActivityIntent(token);
-
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(false);
-
-        IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> mRegistry.getContextInfo(intent));
-        assertThat(exception.getMessage()).isEqualTo("Customized SDK flag is disabled.");
-    }
-
     private Intent buildSandboxActivityIntent(IBinder token) {
         final Intent intent = new Intent();
         final Bundle extras = new Bundle();
         extras.putBinder("android.app.sdksandbox.extra.SANDBOXED_ACTIVITY_HANDLER", token);
+        extras.putLong(
+                "android.app.sdksandbox.extra.EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME",
+                TIME_SANDBOX_ACTIVITY_START_INITIATED);
         intent.putExtras(extras);
         return intent;
     }

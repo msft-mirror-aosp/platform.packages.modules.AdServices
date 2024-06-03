@@ -18,6 +18,7 @@ package android.app.sdksandbox.hosttestutils;
 
 import com.android.compatibility.common.util.FeatureUtil;
 import com.android.compatibility.common.util.PackageUtil;
+import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
@@ -35,7 +36,12 @@ public class DeviceSupportHostUtils {
     }
 
     public boolean isSdkSandboxSupported() throws DeviceNotAvailableException {
-        return !isWatch() && !isTv() && !isAutomotive() && !isGoDevice();
+        DeviceSdkLevel deviceSdkLevel = new DeviceSdkLevel(mTest.getDevice());
+        return !isWatch()
+                && !isTv()
+                && !isAutomotive()
+                && !isGoDevice()
+                && deviceSdkLevel.isDeviceAtLeastU();
     }
 
     private boolean isWatch() throws DeviceNotAvailableException {

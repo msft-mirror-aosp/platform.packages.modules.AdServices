@@ -47,12 +47,12 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -64,6 +64,7 @@ import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -124,8 +125,9 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                                 mMockCacheManager,
                                 mBlockedTopicsManager,
                                 mMockAppUpdateManager,
-                                FlagsFactory.getFlagsForTest()));
-        doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+                                FakeFlagsFactory.getFlagsForTest()));
+        doReturn(true).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
+        doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
     }
 
@@ -177,8 +179,8 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     private void doNothingForTopics(PackageChangedReceiver receiver) {
-        doNothing().when(receiver).topicsOnPackageFullyRemoved(any(), any());
-        doNothing().when(receiver).topicsOnPackageAdded(any(), any());
+        doNothing().when(receiver).topicsOnPackageFullyRemoved(any());
+        doNothing().when(receiver).topicsOnPackageAdded(any());
     }
 
     private void doNothingForFledge(PackageChangedReceiver receiver) {
@@ -272,24 +274,47 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-        runPackageFullyRemovedForFledgeKillSwitchOff(intent, true);
+        runPackageFullyRemovedForFledgeKillSwitchOff(
+                intent,
+                /* frequencyCapFilteringEnabled =*/ true,
+                /* appInstallFilteringEnabled =*/ true);
     }
 
     @Test
-    public void testReceivePackageFullyRemoved_fledgeKillSwitchOffFilteringDisabled()
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOffFrequencyCapFilteringDisabled()
             throws Exception {
-        doReturn(false).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+        doReturn(false).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-        runPackageFullyRemovedForFledgeKillSwitchOff(intent, false);
+        runPackageFullyRemovedForFledgeKillSwitchOff(
+                intent,
+                /* frequencyCapFilteringEnabled =*/ false,
+                /* appInstallFilteringEnabled =*/ true);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOffAppInstallFilteringDisabled()
+            throws Exception {
+        doReturn(false).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
+        PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForFledgeKillSwitchOff(
+                intent,
+                /* frequencyCapFilteringEnabled =*/ true,
+                /* appInstallFilteringEnabled =*/ false);
     }
 
     @Test
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOff_backCompat() throws Exception {
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-        runPackageFullyRemovedForFledgeKillSwitchOff(intent, true);
+        runPackageFullyRemovedForFledgeKillSwitchOff(
+                intent,
+                /* frequencyCapFilteringEnabled =*/ true,
+                /* appInstallFilteringEnabled =*/ true);
     }
 
     @Test
@@ -474,9 +499,9 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
             when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
-            // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
-            doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(any()));
-            doReturn(epochId).when(mMockEpochManager).getCurrentEpochId();
+        // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
+        doReturn(mSpyTopicsWorker).when(TopicsWorker::getInstance);
+        doReturn(epochId).when(mMockEpochManager).getCurrentEpochId();
 
             // Initialize package receiver meant for Topics
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForTopics();
@@ -565,7 +590,8 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     private void runPackageFullyRemovedForFledgeKillSwitchOff(
-            Intent intent, boolean filteringEnabled) throws Exception {
+            Intent intent, boolean frequencyCapFilteringEnabled, boolean appInstallFilteringEnabled)
+            throws Exception {
             // Kill switch is off; service is enabled
             doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
             doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -612,13 +638,17 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
             // Verify method inside background thread executes
             assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
-            if (filteringEnabled) {
-                assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-                verify(mAppInstallDaoMock).deleteByPackageName(any());
+        if (frequencyCapFilteringEnabled) {
                 assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
                 verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
             } else {
-                verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
+            verifyZeroInteractions(mFrequencyCapDaoMock);
+        }
+        if (appInstallFilteringEnabled) {
+            assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mAppInstallDaoMock).deleteByPackageName(any());
+        } else {
+            verifyZeroInteractions(mAppInstallDaoMock);
             }
     }
 
@@ -700,8 +730,8 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     private void runPackageAddedForTopics(Intent intent) throws Exception {
-            // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
-            doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(eq(sContext)));
+        // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
+        doReturn(mSpyTopicsWorker).when(TopicsWorker::getInstance);
 
             // Track whether the TopicsWorker.handleAppInstallation was ever invoked.
             // Use a CountDownLatch since this invocation happens on a background thread.
@@ -926,7 +956,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     @MockStatic(SdkLevel.class)
     public void testReceive_onT_onExtServices() {
-        extendedMockito.mockIsAtLeastT(true);
+        mocker.mockIsAtLeastT(true);
             Intent intent =
                     createIntentSentByAdServiceSystemService(Intent.ACTION_PACKAGE_FULLY_REMOVED);
             PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
@@ -936,15 +966,15 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                     .getPackageName();
             receiver.onReceive(spyContext, intent);
             verify(receiver, never()).consentOnPackageFullyRemoved(any(), any(), anyInt());
-            verify(receiver, never()).measurementOnPackageFullyRemoved(any(), any());
-            verify(receiver, never()).topicsOnPackageFullyRemoved(any(), any());
-            verify(receiver, never()).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+        verify(receiver, never()).measurementOnPackageFullyRemoved(any(), any());
+        verify(receiver, never()).topicsOnPackageFullyRemoved(any());
+        verify(receiver, never()).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
     }
 
     @Test
     @MockStatic(SdkLevel.class)
     public void testReceive_onS_onExtServices() {
-        extendedMockito.mockIsAtLeastT(false);
+        mocker.mockIsAtLeastT(false);
             Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
             PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
             Context spyContext = Mockito.spy(ApplicationProvider.getApplicationContext());
@@ -953,15 +983,15 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                     .getPackageName();
             receiver.onReceive(spyContext, intent);
             verify(receiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
-            verify(receiver).measurementOnPackageFullyRemoved(any(), any());
-            verify(receiver).topicsOnPackageFullyRemoved(any(), any());
-            verify(receiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+        verify(receiver).measurementOnPackageFullyRemoved(any(), any());
+        verify(receiver).topicsOnPackageFullyRemoved(any());
+        verify(receiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
     }
 
     @Test
     @MockStatic(SdkLevel.class)
     public void testAppConsentDeletion_onR() throws Exception {
-        extendedMockito.mockIsAtLeastS(false);
+        mocker.mockIsAtLeastS(false);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
             Intent intent =

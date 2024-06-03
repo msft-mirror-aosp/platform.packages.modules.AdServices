@@ -16,7 +16,6 @@
 
 package com.android.cobalt.observations;
 
-import static com.android.cobalt.collect.ImmutableHelpers.toImmutableList;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -26,10 +25,11 @@ import com.android.cobalt.data.EventVector;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricDimension;
 import com.google.cobalt.ReportDefinition;
-import com.google.common.collect.ImmutableList;
 
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /** Functions for calculating private indices for privacy-enabled report. */
 final class PrivateIndexCalculations {
@@ -177,9 +177,9 @@ final class PrivateIndexCalculations {
             return eventCode;
         }
         // Otherwise, find the index of eventCode in the sorted list of enumerated event codes.
-        ImmutableList<Integer> dimensionEventCodes = getSortedEnumeratedEventCodes(dimension);
-        for (int i = 0; i < dimensionEventCodes.size(); i++) {
-            if (eventCode == dimensionEventCodes.get(i)) {
+        int[] dimensionEventCodes = getSortedEnumeratedEventCodes(dimension);
+        for (int i = 0; i < dimensionEventCodes.length; i++) {
+            if (eventCode == dimensionEventCodes[i]) {
                 return i;
             }
         }
@@ -188,8 +188,17 @@ final class PrivateIndexCalculations {
                         "event_code %s was not found in the dimension's event codes", eventCode));
     }
 
-    private static ImmutableList<Integer> getSortedEnumeratedEventCodes(MetricDimension dimension) {
-        return dimension.getEventCodesMap().keySet().stream().sorted().collect(toImmutableList());
+    private static int[] getSortedEnumeratedEventCodes(MetricDimension dimension) {
+        Set<Integer> eventCodesSet = dimension.getEventCodesMap().keySet();
+        int[] eventCodes = new int[eventCodesSet.size()];
+
+        int index = 0;
+        for (Integer eventCode : eventCodesSet) {
+            eventCodes[index++] = eventCode;
+        }
+
+        Arrays.sort(eventCodes);
+        return eventCodes;
     }
 
     private static int getNumEventCodes(MetricDimension dimension) {

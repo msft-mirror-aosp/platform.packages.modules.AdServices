@@ -16,11 +16,8 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.AdServicesStatusUtils.FailureReason;
+
 import android.adservices.common.AdServicesStatusUtils.StatusCode;
 
 import java.util.Objects;
@@ -35,7 +32,6 @@ public final class ApiCallStats {
     private int mLatencyMillisecond;
 
     private @StatusCode int mResultCode;
-    private @FailureReason int mFailureReason;
 
     private ApiCallStats() {}
 
@@ -51,8 +47,7 @@ public final class ApiCallStats {
                 && Objects.equals(mAppPackageName, apiCallStats.mAppPackageName)
                 && Objects.equals(mSdkPackageName, apiCallStats.mSdkPackageName)
                 && mLatencyMillisecond == apiCallStats.mLatencyMillisecond
-                && mResultCode == apiCallStats.mResultCode
-                && mFailureReason == apiCallStats.mFailureReason;
+                && mResultCode == apiCallStats.mResultCode;
     }
 
     @Override
@@ -64,8 +59,7 @@ public final class ApiCallStats {
                 mAppPackageName,
                 mSdkPackageName,
                 mLatencyMillisecond,
-                mResultCode,
-                mFailureReason);
+                mResultCode);
     }
 
     public int getCode() {
@@ -96,12 +90,6 @@ public final class ApiCallStats {
         return mResultCode;
     }
 
-    // TODO(b/324488816): failure reason is not currently being used, it might be "folded" into
-    // more status codes.
-    public @FailureReason int getFailureReason() {
-        return mFailureReason;
-    }
-
     @Override
     public String toString() {
         return "ApiCallStats{"
@@ -121,8 +109,6 @@ public final class ApiCallStats {
                 + mLatencyMillisecond
                 + ", mResultCode="
                 + mResultCode
-                + ", mFailureReason="
-                + mFailureReason
                 + '}';
     }
 
@@ -169,22 +155,9 @@ public final class ApiCallStats {
             return this;
         }
 
-        /**
-         * Sets the {@link ApiCallStats#getResultCode()} and {@link
-         * ApiCallStats#getFailureReason()}.
-         */
-        public Builder setResult(Result result) {
-            Objects.requireNonNull(result, "result cannot be null");
-            return setResult(result.getResultCode(), result.getFailureReason());
-        }
-
-        /**
-         * Sets the {@link ApiCallStats#getResultCode()} and {@link
-         * ApiCallStats#getFailureReason()}.
-         */
-        public Builder setResult(@StatusCode int resultCode, @FailureReason int failureReason) {
+        /** See {@link ApiCallStats#getResultCode()}. */
+        public Builder setResultCode(@StatusCode int resultCode) {
             mBuilding.mResultCode = resultCode;
-            mBuilding.mFailureReason = failureReason;
             return this;
         }
 
@@ -197,68 +170,6 @@ public final class ApiCallStats {
                 throw new IllegalStateException("must call setSdkPackageName()");
             }
             return mBuilding;
-        }
-    }
-
-    private static final Result SUCCESS = new Result(STATUS_SUCCESS, FAILURE_REASON_UNSET);
-
-    /** Creates a result for successful calls */
-    public static Result successResult() {
-        return SUCCESS;
-    }
-
-    // TODO(b/324488816): throws IAE (or log warning) on FAILURE_REASON_UNSET
-    // (need to fix all callers first)
-    /** Creates a result for failed calls */
-    public static Result failureResult(
-            @StatusCode int resultCode, @FailureReason int failureReason) {
-        return new Result(resultCode, failureReason);
-    }
-
-    public static final class Result {
-
-        private final @AdServicesStatusUtils.StatusCode int mResultCode;
-        private final @FailureReason int mFailureReason;
-
-        private Result(@StatusCode int resultCode, @FailureReason int failureReason) {
-            mResultCode = resultCode;
-            mFailureReason = failureReason;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof Result)) {
-                return false;
-            }
-            Result result = (Result) obj;
-            return mResultCode == result.mResultCode && mFailureReason == result.mFailureReason;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(mResultCode, mFailureReason);
-        }
-
-        public @StatusCode int getResultCode() {
-            return mResultCode;
-        }
-
-        public @FailureReason int getFailureReason() {
-            return mFailureReason;
-        }
-
-        public boolean isSuccess() {
-            return mResultCode == STATUS_SUCCESS;
-        }
-
-        @Override
-        public String toString() {
-            return "Result{"
-                    + "mResultCode="
-                    + mResultCode
-                    + ", mFailureReason="
-                    + mFailureReason
-                    + '}';
         }
     }
 }

@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.attribution;
 
-import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
@@ -55,41 +54,47 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.JobServiceCallback;
-import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
+import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
+import com.android.adservices.shared.testing.JobServiceCallback;
+import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
-import org.mockito.quality.Strictness;
 
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Unit test for {@link AttributionJobService
  */
-public class AttributionJobServiceTest {
+@SpyStatic(AttributionJobService.class)
+@SpyStatic(DatastoreManagerFactory.class)
+@SpyStatic(DebugReportingJobService.class)
+@SpyStatic(ImmediateAggregateReportingJobService.class)
+@SpyStatic(FlagsFactory.class)
+@MockStatic(ServiceCompatUtils.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTestCase {
     private static final long WAIT_IN_MILLIS = 1_000L;
     private static final long JOB_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
     private static final int MEASUREMENT_ATTRIBUTION_JOB_ID =
             MEASUREMENT_ATTRIBUTION_JOB.getJobId();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
@@ -99,18 +104,6 @@ public class AttributionJobServiceTest {
     private Flags mMockFlags;
     private AdServicesJobServiceLogger mSpyLogger;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(AttributionJobService.class)
-                    .spyStatic(DatastoreManagerFactory.class)
-                    .spyStatic(DebugReportingJobService.class)
-                    .spyStatic(FlagsFactory.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .spyStatic(AdServicesJobServiceLogger.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
-
     @Before
     public void setUp() {
         mSpyService = spy(new AttributionJobService());
@@ -118,7 +111,7 @@ public class AttributionJobServiceTest {
         mMockJobScheduler = mock(JobScheduler.class);
 
         mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(sContext, mMockFlags);
         when(mMockFlags.getMeasurementAttributionJobTriggeringDelayMs()).thenReturn(JOB_DELAY_MS);
     }
 
@@ -180,44 +173,39 @@ public class AttributionJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
                                             AttributionJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
-
+                    ExtendedMockito.doReturn(
+                                    AttributionJobHandler.ProcessingResult
+                                            .SUCCESS_ALL_RECORDS_PROCESSED)
+                            .when(mSpyService)
+                            .processPendingAttributions();
                     ExtendedMockito.doNothing()
                             .when(mSpyLogger)
                             .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
-
                     // Execute
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    callback.assertJobFinished();
 
                     assertTrue(result);
 
-                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
-                            .jobFinished(any(), anyBoolean());
+                    ExtendedMockito.verify(
+                            () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)),
+                            timeout(WAIT_IN_MILLIS).atLeast(1));
 
-                    JobServiceCallback secondCallback = createJobFinishedCallback(mSpyService);
                     // Execute
                     result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-                    secondCallback.assertJobFinished();
 
                     // Validate
                     assertTrue(result);
 
                     // Verify the job ran successfully twice
-                    verify(mMockDatastoreManager, timeout(WAIT_IN_MILLIS).atLeast(2))
-                            .runInTransactionWithResult(any());
-                    verify(mSpyService, timeout(WAIT_IN_MILLIS).atLeast(2))
-                            .jobFinished(any(), anyBoolean());
                     ExtendedMockito.verify(
-                            () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
-                            never());
+                            () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)),
+                            timeout(WAIT_IN_MILLIS).atLeast(2));
                     verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
                 });
     }
@@ -226,7 +214,7 @@ public class AttributionJobServiceTest {
     public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    adServicesExtendedMockitoRule.mockGetFlags(mMockFlags);
+                    mocker.mockGetFlags(mMockFlags);
                     mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
                     onStartJob_shouldDisableJobTrue();
@@ -239,7 +227,7 @@ public class AttributionJobServiceTest {
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
-                    adServicesExtendedMockitoRule.mockGetFlags(mMockFlags);
+                    mocker.mockGetFlags(mMockFlags);
                     mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
 
                     onStartJob_shouldDisableJobTrue();
@@ -327,6 +315,14 @@ public class AttributionJobServiceTest {
                     ExtendedMockito.verify(
                             () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)),
                             timeout(WAIT_IN_MILLIS).times(1));
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)),
+                            timeout(WAIT_IN_MILLIS).times(1));
+                    ExtendedMockito.verify(
+                            () ->
+                                    ImmediateAggregateReportingJobService.scheduleIfNeeded(
+                                            any(), eq(false)),
+                            timeout(WAIT_IN_MILLIS).times(1));
                     verify(mSpyService, never()).scheduleImmediately(any());
                 });
     }
@@ -337,11 +333,8 @@ public class AttributionJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    ExtendedMockito.doNothing()
-                            .when(
-                                    () ->
-                                            AttributionJobService.scheduleIfNeeded(
-                                                    any(), anyBoolean()));
+
+                    doNothing().when(mSpyService).scheduleImmediately(any());
 
                     // Pending records
                     ExtendedMockito.doReturn(
@@ -366,6 +359,15 @@ public class AttributionJobServiceTest {
                             never());
                     verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
                             .scheduleImmediately(any());
+
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)),
+                            timeout(WAIT_IN_MILLIS).times(1));
+                    ExtendedMockito.verify(
+                            () ->
+                                    ImmediateAggregateReportingJobService.scheduleIfNeeded(
+                                            any(), eq(false)),
+                            timeout(WAIT_IN_MILLIS).times(1));
                 });
     }
 
@@ -619,7 +621,7 @@ public class AttributionJobServiceTest {
         // Setup
         enableKillSwitch();
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
 
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -643,7 +645,7 @@ public class AttributionJobServiceTest {
         ExtendedMockito.doNothing()
                 .when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
 
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -668,7 +670,7 @@ public class AttributionJobServiceTest {
                                 ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                         any(Context.class)));
 
-        JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
 
         // Execute
         boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -696,6 +698,11 @@ public class AttributionJobServiceTest {
         ExtendedMockito.doNothing().when(() -> AttributionJobService.schedule(any(), any()));
         ExtendedMockito.doNothing()
                 .when(() -> DebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                ImmediateAggregateReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean()));
         mockGetAdServicesJobServiceLogger(mSpyLogger);
 
         // Execute
@@ -711,18 +718,7 @@ public class AttributionJobServiceTest {
     }
 
     private void toggleKillSwitch(boolean value) {
-        adServicesExtendedMockitoRule.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         when(mMockFlags.getMeasurementJobAttributionKillSwitch()).thenReturn(value);
-    }
-
-    private CountDownLatch createCountDownLatch() {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
-        return countDownLatch;
-    }
-
-    private Object countDown(CountDownLatch countDownLatch) {
-        countDownLatch.countDown();
-        return null;
     }
 }

@@ -98,6 +98,8 @@ public class FakeAdExchangeServer {
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("Accept", "application/json");
         con.setDoOutput(true);
+        Log.d(TAG, "Call to url : " + address);
+
         try (OutputStream os = con.getOutputStream()) {
             byte[] input = jsonInputString.getBytes("utf-8");
             os.write(input, 0, input.length);
@@ -107,18 +109,39 @@ public class FakeAdExchangeServer {
             }
         }
 
-        try (BufferedReader br =
-                new BufferedReader(new InputStreamReader(con.getInputStream(), "utf-8"))) {
-            StringBuilder response = new StringBuilder();
-            String responseLine = null;
+        int responseCode = con.getResponseCode();
+        InputStream stream;
+        if (responseCode >= 200 && responseCode < 300) {
+            stream = con.getInputStream();
+        } else {
+            stream = con.getErrorStream();
+        }
+
+        StringBuilder response = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, "utf-8"))) {
+            String responseLine;
             while ((responseLine = br.readLine()) != null) {
                 response.append(responseLine.trim());
             }
-            if (loggingEnabled) {
-                Log.d(TAG, "Response from B&A : " + response.toString());
-            }
+        }
 
+        if (responseCode >= 200 && responseCode < 300) {
+            if (loggingEnabled) {
+                Log.d(TAG, "Response from server: " + response.toString());
+            }
             return response.toString();
+        } else {
+            int grpcStatusCode = con.getHeaderFieldInt("grpc-status", /* defaultValue= */ -1);
+            String grpcMessage = con.getHeaderField("grpc-message");
+            String errorMessage =
+                    "Server call failed with status code : "
+                            + grpcStatusCode
+                            + " error : "
+                            + grpcMessage;
+            if (loggingEnabled) {
+                Log.d(TAG, errorMessage);
+            }
+            throw new IOException(errorMessage);
         }
     }
 

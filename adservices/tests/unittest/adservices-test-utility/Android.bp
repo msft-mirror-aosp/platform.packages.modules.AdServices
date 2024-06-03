@@ -23,6 +23,10 @@ android_test {
     srcs: [
         "src/**/*.java",
         "side-less/**/*.java",
+        ":adservices-shared-sideless-meta-testing-sources",
+    ],
+    libs: [
+        "framework-adservices-lib", // Needed to test fake ServiceBinder implementations
     ],
     static_libs: [
         "adservices-test-utility",

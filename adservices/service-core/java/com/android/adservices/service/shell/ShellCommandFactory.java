@@ -19,6 +19,8 @@ package com.android.adservices.service.shell;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
+import java.util.List;
+
 /**
  * Base factory to run the shell command.
  *
@@ -39,6 +41,7 @@ public interface ShellCommandFactory {
     @NonNull
     String getCommandPrefix();
 
-    // TODO(b/308009734): Add help command as part of factory which shows help for commands
-    //  implemented in a factory.
+    /** Returns the help instructions for all commands provided by this factory. */
+    @NonNull
+    List<String> getAllCommandsHelp();
 }

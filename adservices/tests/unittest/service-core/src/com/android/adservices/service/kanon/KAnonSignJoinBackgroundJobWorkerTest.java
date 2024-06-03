@@ -41,7 +41,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -121,7 +120,9 @@ public class KAnonSignJoinBackgroundJobWorkerTest {
                 });
         countDownLatch.await();
 
-        verify(mockKanonCaller).signAndJoinMessages(messageEntityList);
+        verify(mockKanonCaller)
+                .signAndJoinMessages(
+                        messageEntityList, KAnonCaller.KAnonCallerSource.BACKGROUND_JOB);
     }
 
     @Test

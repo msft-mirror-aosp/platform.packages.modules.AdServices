@@ -19,8 +19,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.socketapp">
 
-    <application android:name=".SocketApp">
-        <activity android:name="android.app.sdksandbox.testutils.EmptyActivity"
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application>
+        <uses-sdk-library android:name="com.android.socketsdkprovider"
+            android:versionMajor="1"
+            android:certDigest="0B:44:2D:88:FA:A7:B3:AD:23:8D:DE:29:8A:A1:9B:D5:62:03:92:0B:BF:D8:D3:EB:C8:99:33:2C:8E:E1:15:99" />
+        <activity android:name=".SocketApp"
             android:exported="true" />
     </application>
 

@@ -18,6 +18,7 @@ package com.android.adservices.adselection;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
@@ -35,7 +36,7 @@ import android.os.IBinder;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
@@ -48,13 +49,12 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
 /** Unit test for {@link AdSelectionService} */
 @SpyStatic(ConsentManager.class)
 @SpyStatic(AdSelectionServiceImpl.class)
 @SpyStatic(PackageChangedReceiver.class)
-@SpyStatic(MddJobService.class)
+@SpyStatic(MddJob.class)
 @SpyStatic(MaintenanceJobService.class)
 public final class AdSelectionServiceTest extends AdServicesExtendedMockitoTestCase {
     private final Flags mFlagsWithAdSelectionSwitchOnGaUxEnabled =
@@ -79,7 +79,7 @@ public final class AdSelectionServiceTest extends AdServicesExtendedMockitoTestC
 
         verify(mConsentManagerMock, never()).getConsent();
         verify(mConsentManagerMock, never()).getConsent(any());
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
+        verify(MddJob::scheduleAllMddJobs, never());
     }
 
     /**
@@ -96,7 +96,7 @@ public final class AdSelectionServiceTest extends AdServicesExtendedMockitoTestC
                 .getConsent(eq(AdServicesApiType.FLEDGE));
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(MddJob::scheduleAllMddJobs);
         doReturn(true).when(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
 
         AdSelectionService adSelectionServiceSpy =
@@ -112,7 +112,7 @@ public final class AdSelectionServiceTest extends AdServicesExtendedMockitoTestC
         verify(mConsentManagerMock, never()).getConsent();
         verify(mConsentManagerMock).getConsent(eq(AdServicesApiType.FLEDGE));
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        verify(MddJob::scheduleAllMddJobs);
         verify(() -> MaintenanceJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 

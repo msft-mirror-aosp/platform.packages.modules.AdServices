@@ -17,10 +17,12 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
@@ -45,7 +47,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
@@ -58,10 +60,10 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
-import com.android.adservices.service.signals.ProtectedSignal;
-import com.android.adservices.service.signals.ProtectedSignalsFixture;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,31 +74,26 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @SmallTest
-public class AdSelectionScriptEngineTest {
+@RequiresSdkLevelAtLeastS
+public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String TAG = "AdSelectionScriptEngineTest";
 
@@ -106,7 +103,7 @@ public class AdSelectionScriptEngineTest {
             new AdDataArgumentUtil(new AdCounterKeyCopierImpl());
 
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
     private static final String BASE_DOMAIN = "https://www.domain.com/adverts/";
     private static final double BID_1 = 1.1;
     private static final double BID_2 = 2.1;
@@ -198,31 +195,30 @@ public class AdSelectionScriptEngineTest {
                     .setWinningAdBid(AD_BID_3)
                     .setWinningAdRenderUri(AD_RENDER_URI)
                     .build();
-    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
-    IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(1);
+    private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
+    private static final IsolateSettings ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED =
+            IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+                    ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
     private AdSelectionScriptEngine mAdSelectionScriptEngine;
 
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLoggerMock;
     @Mock private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLoggerMock;
-    private RetryStrategy mRetryStrategy;
+    @Mock private SelectAdsFromOutcomesExecutionLogger mSelectAdsFromOutcomesExecutionLoggerMock;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    private RetryStrategy mRetryStrategy;
 
     @Before
     public void setUp() {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         mRetryStrategy = new NoOpRetryStrategyImpl();
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierNoOpImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        false,
-                        mRetryStrategy);
-
+                        false);
         MockitoAnnotations.initMocks(this);
     }
 
@@ -297,7 +293,7 @@ public class AdSelectionScriptEngineTest {
                                         ImmutableList.of(),
                                         AD_DATA_ARGUMENT_UTIL_WITHOUT_COPIER));
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -373,14 +369,12 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidWithAdCostSuccessfulCaseCpcBillingEnabled() throws Exception {
         // Reinit engine with cpc billing enabled
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierNoOpImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        true,
-                        mRetryStrategy);
+                        true);
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -424,14 +418,12 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidWithAdCostDoesNotAddAdCostCpcBillingDisabled() throws Exception {
         // Init engine with false
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierNoOpImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -475,14 +467,12 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidWithOnlyOneAdCostSuccessfulCase() throws Exception {
         // Reinit engine with cpc billing enabled
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierNoOpImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        true,
-                        mRetryStrategy);
+                        true);
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -530,15 +520,12 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testGenerateBidWithCopierSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        false,
-                        mRetryStrategy);
-
+                        false);
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -577,14 +564,12 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testGenerateBidWithCopierWithAdCounterKeysSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
 
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -677,14 +662,12 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testGenerateBidV3WithCopierSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
 
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -740,14 +723,12 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testGenerateBidV3WithCopierWithAdCounterKeysSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
 
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -871,14 +852,12 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testGenerateBidWithCopierBackwardCompatCaseSuccess() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
 
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -922,14 +901,12 @@ public class AdSelectionScriptEngineTest {
     public void testGenerateBidWithCopierWithAdCounterKeysBackwardCompatCaseSuccess()
             throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
 
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
@@ -991,8 +968,7 @@ public class AdSelectionScriptEngineTest {
                                         AdSelectionSignals.EMPTY,
                                         CUSTOM_AUDIENCE_SIGNALS_1));
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
-        Assert.assertTrue(exception.getCause() instanceof JSExecutionException);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -1063,14 +1039,13 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testGenerateBidV3ReturnDebugReportingNoUrl() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
+
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -1125,14 +1100,13 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testGenerateBidV3ReturnDebugReportingNoUrl_WhenDisabled() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
+
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -1191,14 +1165,13 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testGenerateBidV3ReturnDebugReportingNoBadUrl() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
+
         doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -1253,6 +1226,35 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    public void testGenerateBidJsReferenceError() throws Exception {
+        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+
+        Exception exception =
+                Assert.assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                generateBids(
+                                        "function generateBid(ad, auction_signals,"
+                                            + " per_buyer_signals, trusted_bidding_signals,"
+                                            + " contextual_signals, custom_audience_signals) { \n"
+                                            + " if (unknown > 2) return {'status': 0, 'ad': ad };\n"
+                                            + " else return {'status': 0, 'ad': ad, 'bid': 10 };\n"
+                                            + "}",
+                                        AD_DATA_WITH_DOUBLE_RESULT_LIST,
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        CUSTOM_AUDIENCE_SIGNALS_1));
+
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock)
+                .setGenerateBidJsScriptResultCode(JS_RUN_STATUS_JS_REFERENCE_ERROR);
+
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
+    }
+
+    @Test
     public void testScoreAdsSuccessfulCase() throws Exception {
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
@@ -1287,14 +1289,12 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testScoreAdsWithCopierSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
 
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
@@ -1329,14 +1329,12 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testScoreAdsWithCopierWithAdCounterKeysSuccessfulCase() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
                         new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
 
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
@@ -1403,14 +1401,12 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testScoreAdsReturnsDebugReportingUrl() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
-                        new AdCounterKeyCopierNoOpImpl(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
+                        new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -1454,14 +1450,12 @@ public class AdSelectionScriptEngineTest {
     @Test
     public void testScoreAdsReturnsNoDebugReportingUrlWhenDisabled() throws Exception {
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
-                        new AdCounterKeyCopierNoOpImpl(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
+                        new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingScriptDisabledStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
@@ -1507,14 +1501,12 @@ public class AdSelectionScriptEngineTest {
     public void testScoreAdsReturnsDebugReportingSellerRejectReason() throws Exception {
         doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
         mAdSelectionScriptEngine =
-                new AdSelectionScriptEngine(
-                        sContext,
-                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                        () -> mIsolateSettings.getMaxHeapSizeBytes(),
-                        new AdCounterKeyCopierNoOpImpl(),
+                createAdSelectionScriptEngine(
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED,
+                        new AdCounterKeyCopierImpl(),
+                        mRetryStrategy,
                         new DebugReportingEnabledScriptStrategy(),
-                        false,
-                        mRetryStrategy);
+                        false);
         // Logger calls come after the callback is returned
         CountDownLatch loggerLatch = new CountDownLatch(1);
         doAnswer(
@@ -1599,6 +1591,34 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
+    public void testScoreAdsJsReferenceError() throws Exception {
+        doNothing().when(mAdSelectionExecutionLoggerMock).startScoreAds();
+
+        Exception exception =
+                Assert.assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                scoreAds(
+                                        "function scoreAd(ad, bid, auction_config, seller_signals,"
+                                                + " trusted_scoring_signals, contextual_signal,"
+                                                + " user_signal, custom_audience_signal) { \n"
+                                                + "  return {'status': unknown, 'score': bid };\n"
+                                                + "}",
+                                        AD_WITH_BID_LIST,
+                                        anAdSelectionConfig(),
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        AdSelectionSignals.EMPTY,
+                                        CUSTOM_AUDIENCE_SIGNALS_LIST));
+
+        verify(mAdSelectionExecutionLoggerMock).startScoreAds();
+        verify(mAdSelectionExecutionLoggerMock)
+                .setScoreAdJsScriptResultCode(JS_RUN_STATUS_JS_REFERENCE_ERROR);
+
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
+    }
+
+    @Test
     public void testSelectOutcomeWaterfallMediationLogicReturnAdJsSuccess() throws Exception {
         final Long result =
                 selectOutcome(
@@ -1613,6 +1633,9 @@ public class AdSelectionScriptEngineTest {
                         Collections.singletonList(AD_SELECTION_ID_WITH_BID_1),
                         AdSelectionSignals.fromString("{bid_floor: 9}"));
         assertThat(result).isEqualTo(AD_SELECTION_ID_WITH_BID_1.getAdSelectionId());
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock).startExecutionScriptTimestamp();
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock)
+                .endExecutionScriptTimestamp(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
@@ -1630,6 +1653,9 @@ public class AdSelectionScriptEngineTest {
                         Collections.singletonList(AD_SELECTION_ID_WITH_BID_1),
                         AdSelectionSignals.fromString("{bid_floor: 11}"));
         assertThat(result).isNull();
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock).startExecutionScriptTimestamp();
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock)
+                .endExecutionScriptTimestamp(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
@@ -1653,6 +1679,9 @@ public class AdSelectionScriptEngineTest {
                                 AD_SELECTION_ID_WITH_BID_3),
                         AdSelectionSignals.EMPTY);
         assertThat(result).isEqualTo(AD_SELECTION_ID_WITH_BID_3.getAdSelectionId());
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock).startExecutionScriptTimestamp();
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock)
+                .endExecutionScriptTimestamp(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
@@ -1671,6 +1700,9 @@ public class AdSelectionScriptEngineTest {
                                                 AD_SELECTION_ID_WITH_BID_3),
                                         AdSelectionSignals.EMPTY));
         Assert.assertTrue(exception.getCause() instanceof IllegalStateException);
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock).startExecutionScriptTimestamp();
+        verify(mSelectAdsFromOutcomesExecutionLoggerMock)
+                .endExecutionScriptTimestamp(JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR);
     }
 
     @Test
@@ -1686,229 +1718,6 @@ public class AdSelectionScriptEngineTest {
         assertThat(result.status).isEqualTo(0);
         assertThat(((JSONObject) result.results.get(0)).getString("greeting"))
                 .isEqualTo("%shello " + AD_DATA_WITH_DOUBLE_RESULT_1.getRenderUri());
-    }
-
-    @Test
-    public void testEncodeSignals()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        List<String> seeds = List.of("SignalsA", "SignalsB");
-        Map<String, List<ProtectedSignal>> rawSignalsMap =
-                ProtectedSignalsFixture.generateMapOfProtectedSignals(seeds, 20);
-
-        byte[] expectedResult = new byte[] {0x0A, (byte) 0xB1};
-        String encodeSignalsJS =
-                "function encodeSignals(signals, maxSize) {\n"
-                        + "  return {'status': 0, 'results': new Uint8Array([0x0A, 0xB1])};\n"
-                        + "}\n";
-        ListenableFuture<byte[]> jsOutcome =
-                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, rawSignalsMap, 10);
-        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
-
-        assertArrayEquals(
-                "The result expected is the size of keys in the input signals",
-                expectedResult,
-                result);
-    }
-
-    @Test
-    public void testEncodeSignalsSignalsAreRepresentedAsAMapInJS()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
-        rawSignalsMap.put(
-                Base64.getEncoder().encodeToString(new byte[] {0x00}),
-                List.of(
-                        ProtectedSignalsFixture.generateDBProtectedSignal(
-                                "", new byte[] {(byte) 0xA0})));
-
-        rawSignalsMap.put(
-                Base64.getEncoder().encodeToString(new byte[] {0x01}),
-                List.of(
-                        ProtectedSignalsFixture.generateDBProtectedSignal(
-                                "", new byte[] {(byte) 0xA1}),
-                        ProtectedSignalsFixture.generateDBProtectedSignal(
-                                "", new byte[] {(byte) 0xA2})));
-
-        // Assumes keys and values are 1 byte long
-        // Generates an array with the following structure
-        // [signals.size() signal0.key #signal0.values.size() signal0.values[0] signal0.values[2]
-        //                 signal1.key ... ]
-        String encodeSignalsJS =
-                "function encodeSignals(signals, maxSize) {\n"
-                        + "  let result = new Uint8Array(maxSize);\n"
-                        + "  // first entry will contain the total size\n"
-                        + "  let size = 1;\n"
-                        + "  let keys = 0;\n"
-                        + "  \n"
-                        + "  for (const [key, values] of signals.entries()) {\n"
-                        + "    keys++;\n"
-                        + "    // Assuming all data are 1 byte only\n"
-                        + "    console.log(\"key \" + keys + \" is \" + key)\n"
-                        + "    result[size++] = key[0];\n"
-                        + "    result[size++] = values.length;\n"
-                        + "    for(const value of values) {\n"
-                        + "      result[size++] = value.signal_value[0];\n"
-                        + "    }\n"
-                        + "  }\n"
-                        + "  result[0] = keys;\n"
-                        + "  \n"
-                        + "  return { 'status': 0, 'results': result.subarray(0, size)};\n"
-                        + "}\n";
-        ListenableFuture<byte[]> jsOutcome =
-                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, rawSignalsMap, 10);
-        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
-
-        assertEquals(
-                "Encoded result has wrong count of signal keys",
-                (byte) rawSignalsMap.size(),
-                result[0]);
-        int offset = 1;
-        for (int i = 0; i < rawSignalsMap.size(); i++) {
-            byte signalKey = result[offset++];
-            assertTrue(signalKey == 0x00 || signalKey == 0x01);
-            if (signalKey == 0x00) {
-                assertEquals("Wrong signal values length", 0x01, result[offset++]);
-                assertEquals("Wrong signal values", (byte) 0xA0, result[offset++]);
-            } else {
-                assertEquals("Wrong signal values length", 0x02, result[offset++]);
-                assertEquals("Wrong signal values", (byte) 0xA1, result[offset++]);
-                assertEquals("Wrong signal values", (byte) 0xA2, result[offset++]);
-            }
-        }
-    }
-
-    @Test
-    public void testEncodeSignalsSignalsAreRepresentedAsAMapInJS_timestampIsCorrect()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
-        ProtectedSignal signalValue =
-                ProtectedSignalsFixture.generateDBProtectedSignal("", new byte[] {(byte) 0xA0});
-        rawSignalsMap.put(
-                Base64.getEncoder().encodeToString(new byte[] {0x00}), List.of(signalValue));
-
-        String encodeSignalsJS =
-                String.format(
-                        "function encodeSignals(signals, maxSize) {\n"
-                                + "  // returning error if the creation time name of the only "
-                                + "  // signal is correct\n"
-                                + "  if(signals.size != 1) {\n"
-                                + "     return { 'status': 0, 'results': new Uint8Array([1]) };\n"
-                                + "  }\n"
-                                + "  let signalValues = signals.values().next().value;\n"
-                                + "  if(signalValues[0].creation_time == %d) {\n"
-                                + "     return { 'status': 0, 'results': new Uint8Array([0]) };\n"
-                                + "  }\n"
-                                + "  return { 'status': 0, 'results': new Uint8Array([2]) };\n"
-                                + "}\n",
-                        signalValue.getCreationTime().getEpochSecond());
-        ListenableFuture<byte[]> jsOutcome =
-                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, rawSignalsMap, 10);
-        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
-
-        assertArrayEquals(
-                "Expected a single byte response with value 0 to indicate success "
-                        + "in the JS validations",
-                new byte[] {0},
-                result);
-    }
-
-    @Test
-    public void testEncodeSignalsSignalsAreRepresentedAsAMapInJS_packageNameIsCorrect()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
-        ProtectedSignal signalValue =
-                ProtectedSignalsFixture.generateDBProtectedSignal("", new byte[] {(byte) 0xA0});
-        rawSignalsMap.put(
-                Base64.getEncoder().encodeToString(new byte[] {0x00}), List.of(signalValue));
-
-        String encodeSignalsJS =
-                String.format(
-                        "function encodeSignals(signals, maxSize) {\n"
-                                + "  // returning error if the package name of the only signal is"
-                                + "  // correct\n"
-                                + "  if(signals.size != 1) {\n"
-                                + "     return { 'status': 0, 'results': new Uint8Array([1]) };\n"
-                                + "  }\n"
-                                + "  let signalValues = signals.values().next().value;\n"
-                                + "  if(signalValues[0].package_name == '%s') {\n"
-                                + "     return { 'status': 0, 'results': new Uint8Array([0]) };\n"
-                                + "  }\n"
-                                + "  return { 'status': 0, 'results': new Uint8Array([2]) };\n"
-                                + "}\n",
-                        signalValue.getPackageName());
-        ListenableFuture<byte[]> jsOutcome =
-                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, rawSignalsMap, 10);
-        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
-
-        assertArrayEquals(
-                "Expected a single byte response with value 0 to indicate success "
-                        + "in the JS validations",
-                new byte[] {0},
-                result);
-    }
-
-    @Test
-    public void testEncodeEmptySignals()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        String encodeSignalsJS =
-                "function encodeSignals(signals, maxSize) {\n"
-                        + "    return {'status' : 0, 'results' : new Uint8Array()};\n"
-                        + "}\n";
-        ListenableFuture<byte[]> jsOutcome =
-                mAdSelectionScriptEngine.encodeSignals(encodeSignalsJS, Collections.EMPTY_MAP, 10);
-        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
-
-        Assert.assertTrue("The result should have been empty", result.length == 0);
-    }
-
-    @Test
-    public void testHandleEncodingEmptyOutput() {
-        IllegalStateException exception =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> {
-                            mAdSelectionScriptEngine.handleEncodingOutput("");
-                        });
-        assertEquals(
-                "The encoding script either doesn't contain the required function or the"
-                        + " function returned null",
-                exception.getMessage());
-    }
-
-    @Test
-    public void testHandleEncodingOutputFailedStatus() {
-        int status = 1;
-        String result = "unused";
-
-        String encodingScriptOutput =
-                "  {\"status\": " + status + ", \"results\" : \"" + result + "\" }";
-        IllegalStateException exception =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> {
-                            mAdSelectionScriptEngine.handleEncodingOutput(encodingScriptOutput);
-                        });
-        assertEquals(
-                String.format(
-                        "Outcome selection script failed with status '%s' or returned unexpected"
-                                + " result '%s'",
-                        status, result),
-                exception.getMessage());
-    }
-
-    @Test
-    public void testHandleEncodingOutputMissingResult() {
-        int status = 1;
-        String result = "unused";
-
-        String encodingScriptOutput =
-                "  {\"status\": " + status + ", \"bad_result_key\" : \"" + result + "\" }";
-        IllegalStateException exception =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> {
-                            mAdSelectionScriptEngine.handleEncodingOutput(encodingScriptOutput);
-                        });
-        assertEquals("Exception processing result from encoding", exception.getMessage());
     }
 
     private AdSelectionConfig anAdSelectionConfig() {
@@ -2018,7 +1827,10 @@ public class AdSelectionScriptEngineTest {
                 () -> {
                     Log.i(TAG, "Calling selectOutcome");
                     return mAdSelectionScriptEngine.selectOutcome(
-                            jsScript, adSelectionIdWithBidAndRenderUris, selectionSignals);
+                            jsScript,
+                            adSelectionIdWithBidAndRenderUris,
+                            selectionSignals,
+                            mSelectAdsFromOutcomesExecutionLoggerMock);
                 });
     }
 
@@ -2064,7 +1876,7 @@ public class AdSelectionScriptEngineTest {
         CountDownLatch resultLatch = new CountDownLatch(1);
         AtomicReference<ListenableFuture<T>> futureResult = new AtomicReference<>();
         futureResult.set(function.get());
-        futureResult.get().addListener(resultLatch::countDown, mExecutorService);
+        futureResult.get().addListener(resultLatch::countDown, EXECUTOR_SERVICE);
         resultLatch.await();
         return futureResult.get().get();
     }
@@ -2092,6 +1904,23 @@ public class AdSelectionScriptEngineTest {
                 .setMetadata("{\"bid\":" + bidValue + ",\"adCost\":" + adCostValue + "}")
                 .setAdCounterKeys(adCounterKeys)
                 .build();
+    }
+
+    private AdSelectionScriptEngine createAdSelectionScriptEngine(
+            IsolateSettings isolateSettings,
+            AdCounterKeyCopier adCounterKeyCopier,
+            RetryStrategy retryStrategy,
+            DebugReportingScriptStrategy debugReportingScriptStrategy,
+            boolean isCpcBillingEnabled) {
+        return new AdSelectionScriptEngine(
+                sContext,
+                isolateSettings::getEnforceMaxHeapSizeFeature,
+                isolateSettings::getMaxHeapSizeBytes,
+                adCounterKeyCopier,
+                debugReportingScriptStrategy,
+                isCpcBillingEnabled,
+                retryStrategy,
+                isolateSettings::getIsolateConsoleMessageInLogsEnabled);
     }
 
     interface ThrowingSupplier<T> {

@@ -88,7 +88,7 @@ public class ConsentNotificationGaFragment extends Fragment {
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity());
         View rootView;
         if (mIsEUDevice) {
             rootView =
@@ -279,7 +279,7 @@ public class ConsentNotificationGaFragment extends Fragment {
                                         ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }
                     // acknowledge and dismiss
-                    requireActivity().finish();
+                    requireActivity().finishAndRemoveTask();
                 }
             } else {
                 ConsentNotificationActivity.handleAction(

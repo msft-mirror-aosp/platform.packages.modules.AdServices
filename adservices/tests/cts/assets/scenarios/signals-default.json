@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "signalsFirst"
+        "path": "/signalsFirst"
       },
       "response": {
         "body": "ProtectedSignalsFirst.json"
@@ -11,7 +11,7 @@
     },
     {
       "request": {
-        "path": "signalsSecond"
+        "path": "/signalsSecond"
       },
       "response": {
         "body": "ProtectedSignalsSecond.json"

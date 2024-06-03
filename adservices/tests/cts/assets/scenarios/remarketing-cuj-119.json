@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "bidding",
+        "path": "/bidding",
         "header": {
           "x_fledge_buyer_bidding_logic_version": "3"
         }
@@ -17,7 +17,7 @@
     },
     {
       "request": {
-        "path": "scoring"
+        "path": "/scoring"
       },
       "response": {
         "body": "ScoringLogic.js"
@@ -26,7 +26,7 @@
     },
     {
       "request": {
-        "path": "scoring/trusted"
+        "path": "/scoring/trusted"
       },
       "response": {
         "body": "ScoringSignals.json"
@@ -34,7 +34,7 @@
     },
     {
       "request": {
-        "path": "bidding/trusted"
+        "path": "/bidding/trusted"
       },
       "response": {
         "body": "BiddingSignals.json"
@@ -42,11 +42,11 @@
     }
   ],
   "substitutions": {
-    "<daily-update-uri>": "{base_url}/bidding/daily",
-    "<ad-render-uri-1>": "{base_url}/render_ad/1",
-    "<ad-render-uri-2>": "{base_url}/render_ad/2",
-    "<buyer-trusted-bidding-uri>": "{base_url}/bidding/trusted",
-    "<buyer-reporting-uri>": "{base_url}/buyer/reportImpression",
-    "<seller-reporting-uri>": "{base_url}/seller/reportImpression"
+    "<daily-update-uri>": "{base_url_with_prefix}/bidding/daily",
+    "<ad-render-uri-1>": "{base_url_with_prefix}/render_ad/1",
+    "<ad-render-uri-2>": "{base_url_with_prefix}/render_ad/2",
+    "<buyer-trusted-bidding-uri>": "{base_url_with_prefix}/bidding/trusted",
+    "<buyer-reporting-uri>": "{base_url_with_prefix}/buyer/reportImpression",
+    "<seller-reporting-uri>": "{base_url_with_prefix}/seller/reportImpression"
   }
 }

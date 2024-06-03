@@ -24,7 +24,7 @@ import android.os.Parcel;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
@@ -62,7 +62,7 @@ public final class GetAppSetIdResultTest extends AdServicesUnitTestCase {
         expect.that(response.describeContents()).isEqualTo(0);
         expect.that(response.toString()).contains("GetAppSetIdResult{");
 
-        expect.that(GetAppSetIdResult.CREATOR.newArray(1).length).isEqualTo(1);
+        expect.that(GetAppSetIdResult.CREATOR.newArray(1)).hasLength(1);
     }
 
     @Test

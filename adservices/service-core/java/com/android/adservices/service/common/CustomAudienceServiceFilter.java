@@ -36,7 +36,6 @@ import com.android.adservices.service.devapi.DevContext;
 import java.util.Objects;
 
 /** Composite filter for CustomAudienceService request. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

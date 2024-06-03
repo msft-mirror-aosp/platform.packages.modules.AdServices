@@ -21,8 +21,10 @@ import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.tests.cts.topics.appupdate.CtsAdServicesTopicsAppUpdateTestCase.TEST_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.tests.cts.topics.appupdate.CtsAdServicesTopicsAppUpdateTestCase.TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.compatibility.common.util.ShellUtils.runShellCommand;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -33,12 +35,12 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -127,9 +129,13 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
 
     private int mExpectedTopicResponseBroadCastIndex;
     private BroadcastReceiver mTopicsResponseReceiver;
+    private int mUserId;
 
     @Before
     public void setup() throws Exception {
+        mUserId = mContext.getUser().getIdentifier();
+        Log.v(mTag, "Running as user " + mUserId);
+
         // Kill AdServices process so that background jobs don't get skipped due to starting
         // with same params.
         AdservicesTestHelper.killAdservicesProcess(mAdServicesPackageName);
@@ -139,7 +145,8 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
 
         flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
-        flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        flags.setFlag(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
         flags.setFlag(KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, true);
         flags.setFlag(KEY_ENFORCE_FOREGROUND_STATUS_TOPICS, false);
         registerTopicResponseReceiver();
@@ -266,28 +273,27 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
 
     // Install test sample app 1 and verify the installation.
     private void installTestSampleApp() {
-        String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
+        String installMessage =
+                runShellCommand("pm install --user %d -r %s", mUserId, TEST_APK_PATH);
         assertThat(installMessage).contains("Success");
     }
 
     // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
     private void uninstallTestSampleApp() {
-        ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_PKG_NAME);
+        runShellCommand("pm uninstall --user %d %s", mUserId, TEST_PKG_NAME);
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
-        ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + mAdServicesPackageName + " " + EPOCH_JOB_ID);
+        runShellCommand(
+                "cmd jobscheduler run --user %d -f %s %s",
+                mUserId, mAdServicesPackageName, EPOCH_JOB_ID);
     }
 
     // Forces JobScheduler to run the Maintenance job.
     private void forceMaintenanceJob() {
-        ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f"
-                        + " "
-                        + mAdServicesPackageName
-                        + " "
-                        + MAINTENANCE_JOB_ID);
+        runShellCommand(
+                "cmd jobscheduler run --user %d -f %s %s",
+                mUserId, mAdServicesPackageName, MAINTENANCE_JOB_ID);
     }
 }

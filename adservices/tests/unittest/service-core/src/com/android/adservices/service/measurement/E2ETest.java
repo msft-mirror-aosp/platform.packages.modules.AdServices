@@ -42,6 +42,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
@@ -129,10 +130,12 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
 
     interface AggregateReportPayloadKeys {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
         String HISTOGRAMS = "histograms";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String SOURCE_REGISTRATION_TIME = "source_registration_time";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
+        String TRIGGER_CONTEXT_ID = "trigger_context_id";
     }
 
     interface DebugReportPayloadKeys {
@@ -154,16 +157,6 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     interface AggregateHistogramKeys {
         String BUCKET = "key";
         String VALUE = "value";
-    }
-
-    interface UnparsableRegistrationKeys {
-        String TIME = "time";
-        String TYPE = "type";
-    }
-
-    interface UnparsableRegistrationTypes {
-        String SOURCE = "source";
-        String TRIGGER = "trigger";
     }
 
     public interface TestFormatJsonMapping {
@@ -200,8 +193,11 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         String DEBUG_REPORTING_KEY = "debug_reporting";
         String INPUT_EVENT_KEY = "source_type";
         String SOURCE_VIEW_TYPE = "event";
+        String INTEROP_INPUT_EVENT_KEY = "Attribution-Reporting-Eligible";
+        String INTEROP_SOURCE_VIEW_TYPE = "event-source";
+        String SOURCE_REGISTRATION_HEADER = "Attribution-Reporting-Register-Source";
+        String TRIGGER_REGISTRATION_HEADER = "Attribution-Reporting-Register-Trigger";
         String TIMESTAMP_KEY = "timestamp";
-        String UNPARSABLE_REGISTRATIONS_KEY = "unparsable_registrations";
         String REPORTS_OBJECTS_KEY = "reports";
         String EVENT_REPORT_OBJECTS_KEY = "event_level_results";
         String AGGREGATE_REPORT_OBJECTS_KEY = "aggregatable_results";
@@ -285,6 +281,15 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         return false;
     }
 
+    /** Returns the first URL in the list of registration responses. */
+    public static String getFirstUrl(JSONObject registrationObj)
+            throws JSONException {
+        return registrationObj
+                .getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
+                .getJSONObject(0)
+                .getString(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_URL_KEY);
+    }
+
     public static boolean hasArDebugPermission(JSONObject obj) throws JSONException {
         JSONObject urlToResponse =
                 obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
@@ -304,9 +309,16 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                 obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
                         .getJSONObject(0)
                         .getJSONObject(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_RESPONSE_KEY);
-        JSONObject registerSource =
-                headersMapJson.getJSONObject("Attribution-Reporting-Register-Source");
-        return registerSource.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
+        if (headersMapJson.isNull(TestFormatJsonMapping.SOURCE_REGISTRATION_HEADER)) {
+            return false;
+        }
+        Object registerSourceObj =
+                headersMapJson.get(TestFormatJsonMapping.SOURCE_REGISTRATION_HEADER);
+        if (!(registerSourceObj instanceof JSONObject)) {
+            return false;
+        }
+        return ((JSONObject) registerSourceObj).optBoolean(
+                TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
     }
 
     public static boolean hasTriggerDebugReportingPermission(JSONObject obj) throws JSONException {
@@ -314,9 +326,16 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                 obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
                         .getJSONObject(0)
                         .getJSONObject(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_RESPONSE_KEY);
-        JSONObject registerTrigger =
-                headersMapJson.getJSONObject("Attribution-Reporting-Register-Trigger");
-        return registerTrigger.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
+        if (headersMapJson.isNull(TestFormatJsonMapping.TRIGGER_REGISTRATION_HEADER)) {
+            return false;
+        }
+        Object registerTriggerObj =
+                headersMapJson.get(TestFormatJsonMapping.TRIGGER_REGISTRATION_HEADER);
+        if (!(registerTriggerObj instanceof JSONObject)) {
+            return false;
+        }
+        return ((JSONObject)  registerTriggerObj).optBoolean(
+                TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
     }
 
     public static Map<String, List<Map<String, List<String>>>> getUriToResponseHeadersMap(
@@ -504,27 +523,27 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
 
     private static int hashForEventReportObject(OutputType outputType, JSONObject obj) {
         int n = EventReportPayloadKeys.STRINGS.size();
-        int numValuesExcludingN = 4;
+        int numValuesExcludingN = 5;
         Object[] objArray = new Object[n + numValuesExcludingN];
-        // TODO (b/306863121) add time to hash
+        objArray[0] = obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
         String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
-        objArray[0] =
+        objArray[1] =
                 outputType == OutputType.EXPECTED ? url : getReportUrl(ReportType.EVENT, url);
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        objArray[1] = payload.optDouble(EventReportPayloadKeys.DOUBLE, 0);
+        objArray[2] = payload.optDouble(EventReportPayloadKeys.DOUBLE, 0);
         // Try string then JSONArray in order so as to override the string if the array parsing is
         // successful.
-        objArray[2] = null;
+        objArray[3] = null;
         String maybeString = payload.optString(EventReportPayloadKeys.STRING_OR_ARRAY);
         if (maybeString != null) {
-            objArray[2] = maybeString;
+            objArray[3] = maybeString;
         }
         JSONArray maybeArray1 = payload.optJSONArray(EventReportPayloadKeys.STRING_OR_ARRAY);
         if (maybeArray1 != null) {
-            objArray[2] = maybeArray1;
+            objArray[3] = maybeArray1;
         }
         JSONArray maybeArray2 = payload.optJSONArray(EventReportPayloadKeys.ARRAY);
-        objArray[3] = maybeArray2;
+        objArray[4] = maybeArray2;
         for (int i = 0; i < n; i++) {
             objArray[i + numValuesExcludingN] =
                     payload.optString(EventReportPayloadKeys.STRINGS.get(i), "");
@@ -533,31 +552,27 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     }
 
     private static int hashForAggregateReportObject(OutputType outputType, JSONObject obj) {
-        Object[] objArray = new Object[6];
-        // TODO (b/306863121) add time to hash
+        Object[] objArray = new Object[9];
+        objArray[0] = obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
         String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
-        objArray[0] =
+        objArray[1] =
                 outputType == OutputType.EXPECTED ? url : getReportUrl(ReportType.AGGREGATE, url);
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        objArray[1] = payload.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "");
+        objArray[2] = payload.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "");
+        objArray[3] = payload.optString(
+                AggregateReportPayloadKeys.AGGREGATION_COORDINATOR_ORIGIN, "");
         // To compare histograms, we already converted them to an ordered string of value pairs.
-        objArray[2] = getComparableHistograms(
+        objArray[4] = getComparableHistograms(
                 payload.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS));
-        objArray[3] = payload.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "");
-        objArray[4] = payload.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "");
-        objArray[5] = payload.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, "");
-        return Arrays.hashCode(objArray);
-    }
-
-    private static int hashForUnparsableRegistrationObjects(JSONObject obj) {
-        Object[] objArray = new Object[2];
-        objArray[0] = obj.optString(UnparsableRegistrationKeys.TIME, "");
-        objArray[1] = obj.optString(UnparsableRegistrationKeys.TYPE, "");
+        objArray[5] = payload.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "");
+        objArray[6] = payload.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "");
+        objArray[7] = payload.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, "");
+        objArray[8] = payload.optString(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID, "");
         return Arrays.hashCode(objArray);
     }
 
     private static long reportTimeFrom(JSONObject obj) {
-        return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0);
+        return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
     }
 
     // 'obj1' is the expected result, 'obj2' is the actual result.
@@ -653,6 +668,13 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
             log("Aggregate attribution destination mismatch");
             return false;
         }
+        if (!payload1.optString(
+                AggregateReportPayloadKeys.AGGREGATION_COORDINATOR_ORIGIN, "").equals(
+                        payload2.optString(
+                                AggregateReportPayloadKeys.AGGREGATION_COORDINATOR_ORIGIN, ""))) {
+            log("Aggregate aggregation coordinator origin mismatch");
+            return false;
+        }
         if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "")
                 .equals(payload2.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, ""))) {
             log("Source debug key mismatch");
@@ -674,6 +696,11 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                         payload2.optString(
                                 AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, ""))) {
             log("Source registration time mismatch");
+            return false;
+        }
+        if (!payload1.optString(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID, "")
+                .equals(payload2.optString(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID, ""))) {
+            log("Trigger context id mismatch");
             return false;
         }
 
@@ -726,20 +753,6 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         return matchReportTimeAndReportTo(reportType, expected, actual);
     }
 
-    private boolean areEqualUnparsableRegistrationJsons(JSONObject expected, JSONObject actual) {
-        if (!expected.optString(UnparsableRegistrationKeys.TIME, "").equals(
-                actual.optString(UnparsableRegistrationKeys.TIME, ""))) {
-            log("Unparsable registration time mismatch");
-            return false;
-        }
-        if (!expected.optString(UnparsableRegistrationKeys.TYPE, "").equals(
-                actual.optString(UnparsableRegistrationKeys.TYPE, ""))) {
-            log("Unparsable registration type mismatch");
-            return false;
-        }
-        return true;
-    }
-
     private static String getComparableHistograms(@Nullable JSONArray arr) {
         if (arr == null) {
             return "";
@@ -778,12 +791,6 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                 Comparator.comparing(obj -> hashForAggregateReportObject(outputType, obj)));
     }
 
-    private static void sortUnparsableRegistrationObjects(
-            List<JSONObject> unparsableRegistrationObjects) {
-        unparsableRegistrationObjects.sort(
-                Comparator.comparing(obj -> hashForUnparsableRegistrationObjects(obj)));
-    }
-
     private boolean areEqual(ReportObjects expected, ReportObjects actual) throws JSONException {
         if (expected.mEventReportObjects.size() != actual.mEventReportObjects.size()
                 || expected.mAggregateReportObjects.size() != actual.mAggregateReportObjects.size()
@@ -791,9 +798,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                         != actual.mDebugAggregateReportObjects.size()
                 || expected.mDebugEventReportObjects.size()
                         != actual.mDebugEventReportObjects.size()
-                || expected.mDebugReportObjects.size() != actual.mDebugReportObjects.size()
-                || expected.mUnparsableRegistrationObjects.size()
-                        != actual.mUnparsableRegistrationObjects.size()) {
+                || expected.mDebugReportObjects.size() != actual.mDebugReportObjects.size()) {
             log("Report list size mismatch");
             return false;
         }
@@ -842,14 +847,6 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                 return false;
             }
         }
-        for (int i = 0; i < expected.mUnparsableRegistrationObjects.size(); i++) {
-            if (!areEqualUnparsableRegistrationJsons(
-                    expected.mUnparsableRegistrationObjects.get(i),
-                    actual.mUnparsableRegistrationObjects.get(i))) {
-                log("Unparsable registration object mismatch");
-                return false;
-            }
-        }
 
         return true;
     }
@@ -871,9 +868,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                             + "Expected debug aggregate report objects: %s\n\n"
                             + "Actual debug aggregate report objects: %s\n\n"
                             + "Expected debug report objects: %s\n\n"
-                            + "Actual debug report objects: %s\n\n"
-                            + "Expected unparsable registration objects: %s\n\n"
-                            + "Actual unparsable registration objects: %s\n",
+                            + "Actual debug report objects: %s\n",
                         prettify(
                                 expectedOutput.mEventReportObjects,
                                 actualOutput.mEventReportObjects),
@@ -885,9 +880,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                         expectedOutput.mDebugAggregateReportObjects,
                         actualOutput.mDebugAggregateReportObjects,
                         expectedOutput.mDebugReportObjects,
-                        actualOutput.mDebugReportObjects,
-                        expectedOutput.mUnparsableRegistrationObjects,
-                        actualOutput.mUnparsableRegistrationObjects)
+                        actualOutput.mDebugReportObjects)
                 + getDatastoreState();
     }
 
@@ -1035,20 +1028,29 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
 
         for (List<Map<String, List<String>>> responseHeaders : responseHeadersCollection) {
             for (Map<String, List<String>> headersMap : responseHeaders) {
-                if (!headersMap.containsKey("Attribution-Reporting-Register-Source")) {
+                if (!headersMap.containsKey(TestFormatJsonMapping.SOURCE_REGISTRATION_HEADER)) {
                     continue;
                 }
-                String sourceStr = headersMap.get("Attribution-Reporting-Register-Source").get(0);
-                JSONObject sourceJson = new JSONObject(sourceStr);
-                if (sourceJson.has("expiry")) {
-                    expiryTimes.add(sourceJson.getLong("expiry"));
-                } else {
-                    expiryTimes.add(
-                            MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                if (headersMap.get(TestFormatJsonMapping.SOURCE_REGISTRATION_HEADER) == null) {
+                    continue;
                 }
-                if (sourceJson.has("event_report_windows")) {
-                    expiryTimes.addAll(
-                            getFlexEndTimes(sourceJson.getJSONObject("event_report_windows")));
+                try {
+                    String sourceStr = headersMap.get(
+                            TestFormatJsonMapping.SOURCE_REGISTRATION_HEADER).get(0);
+                    JSONObject sourceJson = new JSONObject(sourceStr);
+                    if (sourceJson.has("expiry")) {
+                        expiryTimes.add(sourceJson.getLong("expiry"));
+                    } else {
+                        expiryTimes.add(
+                                MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                    }
+                    if (sourceJson.has("event_report_windows")) {
+                        expiryTimes.addAll(
+                                getFlexEndTimes(sourceJson.getJSONObject("event_report_windows")));
+                    }
+                } catch (JSONException e) {
+                    Log.i(LOG_TAG, String.format("%s is not a valid JSON object.",
+                              TestFormatJsonMapping.SOURCE_REGISTRATION_HEADER));
                 }
             }
         }
@@ -1098,7 +1100,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     }
 
     static String preprocessTestJson(String json) {
-        return json.replaceAll("\\.test(?=[\"\\/])", ".com");
+        return json.replaceAll("\\.test(?=[\"\\/,])", ".com");
     }
 
     /**
@@ -1167,13 +1169,23 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
             // with Ph Flags.
             Map<String, String> apiConfigPhFlags) {
         Map<String, String> phFlagsMap = new HashMap<>();
-        apiConfigPhFlags.keySet().forEach(
-                (key) -> {
-                        if (!apiConfigObj.isNull(key)) {
-                            phFlagsMap.put(apiConfigPhFlags.get(key), apiConfigObj.optString(key));
-                        }
+        apiConfigPhFlags.keySet().forEach((key) -> {
+            if (!apiConfigObj.isNull(key)) {
+                // Interop test configuration uses a single key for both event and aggregate
+                // level attribution limits.
+                if (key.equals("rate_limit_max_attributions")) {
+                    phFlagsMap.put(
+                            FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                            apiConfigObj.optString(key));
+                    phFlagsMap.put(
+                            FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                            apiConfigObj.optString(key));
+                } else {
+                    phFlagsMap.put(apiConfigPhFlags.get(key),
+                            apiConfigObj.optString(key));
                 }
-        );
+            }
+        });
         if (testObj.isNull(TestFormatJsonMapping.PH_FLAGS_OVERRIDE_KEY)) {
             return phFlagsMap;
         }
@@ -1186,7 +1198,8 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
 
     private static boolean isSourceRegistration(JSONObject obj) throws JSONException {
         JSONObject request = obj.getJSONObject(TestFormatJsonMapping.REGISTRATION_REQUEST_KEY);
-        return !request.isNull("source_type");
+        return !request.isNull(TestFormatJsonMapping.INPUT_EVENT_KEY)
+                || !request.isNull(TestFormatJsonMapping.INTEROP_INPUT_EVENT_KEY);
     }
 
     private static void addSourceRegistration(JSONObject sourceObj, List<Action> actions,
@@ -1359,7 +1372,6 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         List<JSONObject> debugEventReportObjects = new ArrayList<>();
         List<JSONObject> debugAggregateReportObjects = new ArrayList<>();
         List<JSONObject> debugReportObjects = new ArrayList<>();
-        List<JSONObject> unparsableRegistrationObjects = new ArrayList<>();
 
         // Interop tests have all report types in one list
         if (!output.isNull(TestFormatJsonMapping.REPORTS_OBJECTS_KEY)) {
@@ -1401,14 +1413,6 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                         aggregateReportObjects.add(obj);
                     }
                 }
-            }
-
-            JSONArray unparsableRegistrationsArray = output.getJSONArray(
-                    TestFormatJsonMapping.UNPARSABLE_REGISTRATIONS_KEY);
-
-            for (int i = 0; i < unparsableRegistrationsArray.length(); i++) {
-                unparsableRegistrationObjects.add(
-                        unparsableRegistrationsArray.getJSONObject(i));
             }
         }
 
@@ -1457,8 +1461,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                 aggregateReportObjects,
                 debugEventReportObjects,
                 debugAggregateReportObjects,
-                debugReportObjects,
-                unparsableRegistrationObjects);
+                debugReportObjects);
     }
 
     /**
@@ -1502,8 +1505,6 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         sortAggregateReportObjects(
                 OutputType.EXPECTED, mExpectedOutput.mDebugAggregateReportObjects);
         sortAggregateReportObjects(OutputType.ACTUAL, mActualOutput.mDebugAggregateReportObjects);
-        sortUnparsableRegistrationObjects(mExpectedOutput.mUnparsableRegistrationObjects);
-        sortUnparsableRegistrationObjects(mActualOutput.mUnparsableRegistrationObjects);
         Assert.assertTrue(getTestFailureMessage(mExpectedOutput, mActualOutput),
                 areEqual(mExpectedOutput, mActualOutput));
     }

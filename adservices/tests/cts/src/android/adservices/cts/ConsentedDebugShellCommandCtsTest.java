@@ -17,16 +17,14 @@
 package android.adservices.cts;
 
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 
 import android.util.Log;
 
-import com.android.adservices.common.AdServicesCtsTestCase;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.adservices.common.annotations.SetFlagEnabled;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.truth.Truth;
 
@@ -35,44 +33,38 @@ import org.junit.Test;
 
 import java.util.UUID;
 
-@SetFlagEnabled(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
-@SetFlagEnabled(KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED)
-@RequiresSdkLevelAtLeastT
-public class ConsentedDebugShellCommandCtsTest extends AdServicesCtsTestCase {
+@EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
+@EnableDebugFlag(KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED)
+@RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
+public final class ConsentedDebugShellCommandCtsTest extends CtsAdServicesDeviceTestCase {
 
     private static final String TAG = "AdServicesShellCmd";
-    private static final String SHELL_COMMAND_PREFIX =
-            "cmd adservices_manager ad_selection consented_debug ";
-    private static final String ENABLE_SHELL_COMMAND_TEMPLATE =
-            SHELL_COMMAND_PREFIX + "enable --secret_debug_token %s --expires_in_days %d";
+    private static final String SHELL_COMMAND_PREFIX = "ad-selection consented-debug ";
     private static final String DISABLE_SHELL_COMMAND_TEMPLATE = SHELL_COMMAND_PREFIX + "disable";
     private static final String VIEW_SHELL_COMMAND_TEMPLATE = SHELL_COMMAND_PREFIX + "view";
+
+    private final AdServicesShellCommandHelper mAdServicesShellCommandHelper =
+            new AdServicesShellCommandHelper();
 
     @Before
     public void setUp() throws Exception {
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                .setFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true)
-                .setFlag(KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED, true)
-                .setCompatModeFlags();
-    }
-
     @Test
-    public void testRun_consentedDebug_happyPath() {
+    public void testRun_consentedDebug_happyPath2() {
         String debugToken = UUID.randomUUID().toString();
-        Log.d(TAG, "running cmd: " + String.format(ENABLE_SHELL_COMMAND_TEMPLATE, debugToken, 2));
-        ShellUtils.runShellCommand(ENABLE_SHELL_COMMAND_TEMPLATE, debugToken, 2);
-        Log.d(TAG, "running cmd: " + String.format(VIEW_SHELL_COMMAND_TEMPLATE));
-        String viewBeforeDisableResponse = ShellUtils.runShellCommand(VIEW_SHELL_COMMAND_TEMPLATE);
+        int expiryInHours = 48;
+        mAdServicesShellCommandHelper.runCommand(
+                "%s enable --secret-debug-token %s --expires-in-hours %d",
+                SHELL_COMMAND_PREFIX, debugToken, expiryInHours);
+        String viewBeforeDisableResponse =
+                mAdServicesShellCommandHelper.runCommand(VIEW_SHELL_COMMAND_TEMPLATE);
         Log.d(TAG, "viewBeforeDisableResponse: " + viewBeforeDisableResponse);
-        Log.d(TAG, "running cmd: " + String.format(DISABLE_SHELL_COMMAND_TEMPLATE));
-        ShellUtils.runShellCommand(DISABLE_SHELL_COMMAND_TEMPLATE);
-        Log.d(TAG, "running cmd: " + String.format(VIEW_SHELL_COMMAND_TEMPLATE));
-        String viewAfterDisableResponse = ShellUtils.runShellCommand(VIEW_SHELL_COMMAND_TEMPLATE);
+
+        mAdServicesShellCommandHelper.runCommand(DISABLE_SHELL_COMMAND_TEMPLATE);
+        String viewAfterDisableResponse =
+                mAdServicesShellCommandHelper.runCommand(VIEW_SHELL_COMMAND_TEMPLATE);
         Log.d(TAG, "viewAfterDisableResponse: " + viewAfterDisableResponse);
 
         Truth.assertThat(viewBeforeDisableResponse).contains(debugToken);

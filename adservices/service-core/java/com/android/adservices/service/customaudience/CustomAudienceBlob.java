@@ -18,6 +18,7 @@ package com.android.adservices.service.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_COUNTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
@@ -152,12 +153,14 @@ public class CustomAudienceBlob {
     private final boolean mAuctionServerRequestFlagsEnabled;
 
     public CustomAudienceBlob(
-            boolean filteringEnabled,
+            boolean frequencyCapFilteringEnabled,
+            boolean appInstallFilteringEnabled,
             boolean adRenderIdEnabled,
             long adRenderIdMaxLength,
             boolean auctionServerRequestFlagsEnabled) {
         mReadFiltersFromJsonStrategy =
-                ReadFiltersFromJsonStrategyFactory.getStrategy(filteringEnabled);
+                ReadFiltersFromJsonStrategyFactory.getStrategy(
+                        frequencyCapFilteringEnabled, appInstallFilteringEnabled);
         mReadAdRenderIdFromJsonStrategy =
                 ReadAdRenderIdFromJsonStrategyFactory.getStrategy(
                         adRenderIdEnabled, adRenderIdMaxLength);
@@ -167,7 +170,7 @@ public class CustomAudienceBlob {
     @VisibleForTesting
     public CustomAudienceBlob() {
         // Filtering enabled by default.
-        this(true, true, 12L, false);
+        this(true, true, true, FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH, false);
     }
 
     /** Update fields of the {@link CustomAudienceBlob} from a {@link JSONObject}. */

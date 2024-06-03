@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableList;
  * interacting with the {@link ConsentManager} that persists and changes the topics data in a
  * storage.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsViewModel extends AndroidViewModel {
 

@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.common.AdTechIdentifier;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Ignore;
 import org.junit.Rule;

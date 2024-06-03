@@ -45,6 +45,7 @@
     </test>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="test-user-token" value="%TEST_USER%"/>
         <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false"/>
         <option name="run-command" value="device_config put adservices topics_kill_switch false"/>
@@ -59,7 +60,7 @@
         <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE"/>
         <!-- Override the flag to disable Topics enrollment check. -->
         <option name="run-command"
-                value="setprop debug.adservices.disable_topics_enrollment_check true"/>
+                value="device_config put adservices disable_topics_enrollment_check true"/>
         <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
         <option name="run-command" value="mkdir -p /data/local/tmp/cts/install"/>
         <!-- Forces using bundled model files. -->
@@ -71,14 +72,14 @@
         <option name="teardown-command"
                 value="setprop debug.adservices.consent_manager_debug_mode false"/>
         <option name="teardown-command"
-                value="setprop debug.adservices.disable_topics_enrollment_check false"/>
+                value="device_config put adservices disable_topics_enrollment_check false"/>
         <option name="teardown-command"
                 value="device_config put adservices classifier_force_use_bundled_files false"/>
 
         <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
         <!-- Uninstall the test app anyway in case failed test skips the uninstallation -->
         <option name="teardown-command"
-                value="pm uninstall --user 0 com.android.adservices.tests.cts.topics.testapp1"/>
+                value="pm uninstall --user %TEST_USER% com.android.adservices.tests.cts.topics.testapp1"/>
         <option name="teardown-command"
                 value="device_config put adservices adservice_system_service_enabled false"/>
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
@@ -86,11 +87,12 @@
 
     <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="test-user-token" value="%TEST_USER%"/>
         <option name="run-command" value="mkdir -p /data/local/tmp/cts/install"/>
         <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
         <!-- Uninstall the test app anyway in case failed test skips the uninstallation -->
         <option name="teardown-command"
-                value="pm uninstall --user 0 com.android.adextservices.tests.cts.topics.testapp1"/>
+                value="pm uninstall --user %TEST_USER% com.android.adextservices.tests.cts.topics.testapp1"/>
     </target_preparer>
 
     <!-- Push compiled APK file of test apps to a local place for installation -->

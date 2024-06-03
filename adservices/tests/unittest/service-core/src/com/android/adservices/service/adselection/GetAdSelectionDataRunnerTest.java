@@ -20,7 +20,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
-import static android.adservices.common.CommonFixture.FIXED_NOW;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
@@ -30,6 +29,9 @@ import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerIm
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.GET_AD_SELECTION_DATA_OVERALL_LATENCY_MS;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.GET_AD_SELECTION_DATA_START_TIMESTAMP;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.sCallerMetadata;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -64,14 +66,10 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.NoFailureSyncCallback;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
-import com.android.adservices.data.adselection.DBConsentedDebugConfiguration;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -81,7 +79,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
@@ -91,6 +89,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ConsentedDebugConfiguration;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -99,11 +98,14 @@ import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.Truth;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
 import com.google.protobuf.ByteString;
 
 import org.junit.After;
@@ -126,11 +128,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -138,6 +140,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     private static final int CALLER_UID = Process.myUid();
+    private static final int E2E_TRACE_COOKIE = 0;
     private static final String CALLER_PACKAGE_NAME = TEST_PACKAGE_NAME;
     private static final ExecutorService BLOCKING_EXECUTOR =
             AdServicesExecutors.getBlockingExecutor();
@@ -151,9 +154,18 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
             Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
     private static final boolean FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED_IN_TEST = true;
+    private static final boolean FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED_IN_TEST = true;
     private static final String ALLOW_LIST_COORDINATORS = "https://example.com";
     private static final int NUM_BUYERS = 2;
 
+    private static final boolean IS_CONSENTED_DEBUG_ENABLED = true;
+    private static final String DEBUG_TOKEN = UUID.randomUUID().toString();
+    private static final ConsentedDebugConfiguration CONSENTED_DEBUG_CONFIGURATION =
+            ConsentedDebugConfiguration.newBuilder()
+                    .setIsConsented(IS_CONSENTED_DEBUG_ENABLED)
+                    .setToken(DEBUG_TOKEN)
+                    .setIsDebugInfoInResponse(false)
+                    .build();
     private Flags mFlags;
     private Context mContext;
     private ExecutorService mLightweightExecutorService;
@@ -166,7 +178,12 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
-    @Spy private AdFilterer mAdFiltererSpy = new AdFiltererNoOpImpl();
+
+    @Spy
+    private FrequencyCapAdFilterer mFrequencyCapAdFiltererSpy =
+            new FrequencyCapAdFiltererNoOpImpl();
+
+    @Spy private AppInstallAdFilterer mAppInstallAdFiltererSpy = new AppInstallAdFiltererNoOpImpl();
     @Mock private Clock mClockMock;
 
     @Mock private AuctionServerDebugReporting mAuctionServerDebugReporting;
@@ -178,12 +195,11 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     private AdsRelevanceExecutionLoggerFactory mAdsRelevanceExecutionLoggerFactory;
     private AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
 
-    private NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback;
+    private ResultSyncCallback<ApiCallStats> logApiCallStatsCallback;
 
     private AdServicesLogger mAdServicesLoggerSpy;
-    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
-    private ConsentedDebugConfigurationGeneratorFactory
-            mConsentedDebugConfigurationGeneratorFactory;
+    @Mock private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
+    @Mock private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -203,7 +219,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
@@ -214,10 +230,6 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
-        mConsentedDebugConfigurationDao =
-                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
-                        .build()
-                        .consentedDebugConfigurationDao();
 
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
@@ -255,14 +267,12 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
-        mConsentedDebugConfigurationGeneratorFactory =
-                new ConsentedDebugConfigurationGeneratorFactory(
-                        false, mConsentedDebugConfigurationDao);
-        mGetAdSelectionDataRunner =
-                initRunner(
-                        mFlags,
-                        mAdsRelevanceExecutionLogger,
-                        mConsentedDebugConfigurationGeneratorFactory);
+        when(mConsentedDebugConfigurationGenerator.getConsentedDebugConfiguration())
+                .thenReturn(Optional.of(CONSENTED_DEBUG_CONFIGURATION));
+        when(mEgressConfigurationGenerator.isUnlimitedEgressEnabledForAuction(
+                        CALLER_PACKAGE_NAME, CALLER_UID))
+                .thenReturn(Futures.immediateFuture(true));
+        mGetAdSelectionDataRunner = initRunner(mFlags, mAdsRelevanceExecutionLogger);
     }
 
     @After
@@ -278,7 +288,6 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong(), any());
-
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock));
 
@@ -309,9 +318,13 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                                 .setCallerPackageName(CALLER_PACKAGE_NAME)
                                 .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
                                 .build());
-        verify(mAdFiltererSpy).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
 
         verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
+        verify(mAuctionServerDebugReporting).isEnabled();
+        verify(mConsentedDebugConfigurationGenerator).getConsentedDebugConfiguration();
+        verify(mEgressConfigurationGenerator)
+                .isUnlimitedEgressEnabledForAuction(CALLER_PACKAGE_NAME, CALLER_UID);
     }
 
     @Test
@@ -343,8 +356,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         mAdsRelevanceExecutionLogger,
                         MultiCloudTestStrategyFactory.getDisabledTestStrategy(
                                 mObliviousHttpEncryptorMock),
-                        new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerSpy),
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerSpy));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -387,7 +399,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                                 .setCallerPackageName(CALLER_PACKAGE_NAME)
                                 .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
                                 .build());
-        verify(mAdFiltererSpy).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
 
         loggingLatch.await();
         // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics
@@ -414,6 +426,223 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         assertThat(apiCalledArgumentCaptor.getValue().getPayloadSizeKb())
                 .isEqualTo(CIPHER_TEXT_BYTES.length / 1000);
         assertThat(apiCalledArgumentCaptor.getValue().getNumBuyers()).isEqualTo(NUM_BUYERS);
+        assertThat(apiCalledArgumentCaptor.getValue().getServerAuctionCoordinatorSource())
+                .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET);
+    }
+
+    @Test
+    public void testRunner_getAdSelectionData_success_MetricsEnabled_withDefaultSourceCoordinator()
+            throws InterruptedException {
+        ArgumentCaptor<GetAdSelectionDataApiCalledStats> apiCalledArgumentCaptor =
+                ArgumentCaptor.forClass(GetAdSelectionDataApiCalledStats.class);
+        ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats>
+                buyerInputGeneratedStatsArgumentCaptor =
+                        ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
+
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
+                .when(mObliviousHttpEncryptorMock)
+                .encryptBytes(any(), anyLong(), anyLong(), any());
+
+        when(mFledgeAuctionServerExecutionLoggerClockMock.elapsedRealtime())
+                .thenReturn(
+                        BINDER_ELAPSED_TIMESTAMP,
+                        GET_AD_SELECTION_DATA_START_TIMESTAMP,
+                        GET_AD_SELECTION_DATA_END_TIMESTAMP);
+        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
+        mAdsRelevanceExecutionLogger =
+                mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
+        mGetAdSelectionDataRunner =
+                initRunner(
+                        mFlags,
+                        mAdsRelevanceExecutionLogger,
+                        MultiCloudTestStrategyFactory.getDisabledTestStrategy(
+                                mObliviousHttpEncryptorMock),
+                        new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
+                                mAdServicesLoggerSpy));
+
+        createAndPersistDBCustomAudiencesWithAdRenderId();
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        // Create a logging latch with count of 3, 2 for buyer input logs and 1 for api logs
+        CountDownLatch loggingLatch = new CountDownLatch(3);
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    loggingLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerSpy)
+                .logGetAdSelectionDataApiCalledStats(any());
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerSpy)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
+
+        Assert.assertTrue(
+                "Call failed with response " + callback.mFledgeErrorResponse, callback.mIsSuccess);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertArrayEquals(
+                CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
+        verify(mObliviousHttpEncryptorMock, times(1))
+                .encryptBytes(any(), anyLong(), anyLong(), any());
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistAdSelectionInitialization(
+                        callback.mGetAdSelectionDataResponse.getAdSelectionId(),
+                        AdSelectionInitialization.builder()
+                                .setSeller(SELLER)
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
+                                .build());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererSpy).filterCustomAudiences(any());
+
+        loggingLatch.await();
+        // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics
+        verify(mAdServicesLoggerSpy, times(2))
+                .logGetAdSelectionDataBuyerInputGeneratedStats(
+                        buyerInputGeneratedStatsArgumentCaptor.capture());
+        List<GetAdSelectionDataBuyerInputGeneratedStats> stats =
+                buyerInputGeneratedStatsArgumentCaptor.getAllValues();
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats1 = stats.get(0);
+        assertThat(stats1.getNumCustomAudiences()).isEqualTo(2);
+        assertThat(stats1.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats2 = stats.get(1);
+        assertThat(stats2.getNumCustomAudiences()).isEqualTo(1);
+        assertThat(stats2.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+
+        verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
+
+        // Verify GetAdSelectionDataApiCalledStats metrics
+        verify(mAdServicesLoggerSpy)
+                .logGetAdSelectionDataApiCalledStats(apiCalledArgumentCaptor.capture());
+        assertThat(apiCalledArgumentCaptor.getValue().getStatusCode()).isEqualTo(STATUS_SUCCESS);
+        assertThat(apiCalledArgumentCaptor.getValue().getPayloadSizeKb())
+                .isEqualTo(CIPHER_TEXT_BYTES.length / 1000);
+        assertThat(apiCalledArgumentCaptor.getValue().getNumBuyers()).isEqualTo(NUM_BUYERS);
+        assertThat(apiCalledArgumentCaptor.getValue().getServerAuctionCoordinatorSource())
+                .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+    }
+
+    @Test
+    public void
+            testRunner_getAdSelectionData_returnsSuccessMetricsEnabled_withApiSourceCoordinator()
+                    throws InterruptedException {
+        mFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(true);
+        ArgumentCaptor<GetAdSelectionDataApiCalledStats> apiCalledArgumentCaptor =
+                ArgumentCaptor.forClass(GetAdSelectionDataApiCalledStats.class);
+        ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats>
+                buyerInputGeneratedStatsArgumentCaptor =
+                        ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
+
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
+                .when(mObliviousHttpEncryptorMock)
+                .encryptBytes(any(), anyLong(), anyLong(), any());
+
+        when(mFledgeAuctionServerExecutionLoggerClockMock.elapsedRealtime())
+                .thenReturn(
+                        BINDER_ELAPSED_TIMESTAMP,
+                        GET_AD_SELECTION_DATA_START_TIMESTAMP,
+                        GET_AD_SELECTION_DATA_END_TIMESTAMP);
+        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
+        mAdsRelevanceExecutionLogger =
+                mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
+        mGetAdSelectionDataRunner =
+                initRunner(
+                        mFlags,
+                        mAdsRelevanceExecutionLogger,
+                        MultiCloudTestStrategyFactory.getEnabledTestStrategy(
+                                mObliviousHttpEncryptorMock, ALLOW_LIST_COORDINATORS),
+                        new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
+                                mAdServicesLoggerSpy));
+
+        createAndPersistDBCustomAudiencesWithAdRenderId();
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setCoordinatorOriginUri(Uri.parse(ALLOW_LIST_COORDINATORS))
+                        .build();
+
+        // Create a logging latch with count of 3, 2 for buyer input logs and 1 for api logs
+        CountDownLatch loggingLatch = new CountDownLatch(3);
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    loggingLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerSpy)
+                .logGetAdSelectionDataApiCalledStats(any());
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerSpy)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
+
+        Assert.assertTrue(
+                "Call failed with response " + callback.mFledgeErrorResponse, callback.mIsSuccess);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertArrayEquals(
+                CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
+        verify(mObliviousHttpEncryptorMock, times(1))
+                .encryptBytes(any(), anyLong(), anyLong(), any());
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistAdSelectionInitialization(
+                        callback.mGetAdSelectionDataResponse.getAdSelectionId(),
+                        AdSelectionInitialization.builder()
+                                .setSeller(SELLER)
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
+                                .build());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererSpy).filterCustomAudiences(any());
+
+        loggingLatch.await();
+        // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics
+        verify(mAdServicesLoggerSpy, times(2))
+                .logGetAdSelectionDataBuyerInputGeneratedStats(
+                        buyerInputGeneratedStatsArgumentCaptor.capture());
+        List<GetAdSelectionDataBuyerInputGeneratedStats> stats =
+                buyerInputGeneratedStatsArgumentCaptor.getAllValues();
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats1 = stats.get(0);
+        assertThat(stats1.getNumCustomAudiences()).isEqualTo(2);
+        assertThat(stats1.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats2 = stats.get(1);
+        assertThat(stats2.getNumCustomAudiences()).isEqualTo(1);
+        assertThat(stats2.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+
+        verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
+
+        // Verify GetAdSelectionDataApiCalledStats metrics
+        verify(mAdServicesLoggerSpy)
+                .logGetAdSelectionDataApiCalledStats(apiCalledArgumentCaptor.capture());
+        assertThat(apiCalledArgumentCaptor.getValue().getStatusCode()).isEqualTo(STATUS_SUCCESS);
+        assertThat(apiCalledArgumentCaptor.getValue().getPayloadSizeKb())
+                .isEqualTo(CIPHER_TEXT_BYTES.length / 1000);
+        assertThat(apiCalledArgumentCaptor.getValue().getNumBuyers()).isEqualTo(NUM_BUYERS);
+        assertThat(apiCalledArgumentCaptor.getValue().getServerAuctionCoordinatorSource())
+                .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_API);
+        verify(mAuctionServerDebugReporting).isEnabled();
+        verify(mConsentedDebugConfigurationGenerator).getConsentedDebugConfiguration();
+        verify(mEgressConfigurationGenerator)
+                .isUnlimitedEgressEnabledForAuction(CALLER_PACKAGE_NAME, CALLER_UID);
     }
 
     @Test
@@ -583,7 +812,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                                 .setCallerPackageName(CALLER_PACKAGE_NAME)
                                 .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
                                 .build());
-        verify(mAdFiltererSpy).filterCustomAudiences(any());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
 
         verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
 
@@ -654,19 +883,14 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 callback.mGetAdSelectionDataResponse.getAdSelectionData().length);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mAdSelectionEntryDaoSpy);
-        verifyZeroInteractions(mAdFiltererSpy);
-
+        verifyZeroInteractions(mFrequencyCapAdFiltererSpy);
     }
 
     @Test
     public void testRunner_revokedUserConsent_returnsRandomResultWithExcessiveSizeFormatterVersion()
             throws InterruptedException, IOException {
         mFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
-        mGetAdSelectionDataRunner =
-                initRunner(
-                        mFlags,
-                        mAdsRelevanceExecutionLogger,
-                        mConsentedDebugConfigurationGeneratorFactory);
+        mGetAdSelectionDataRunner = initRunner(mFlags, mAdsRelevanceExecutionLogger);
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
@@ -697,8 +921,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 callback.mGetAdSelectionDataResponse.getAdSelectionData().length);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mAdSelectionEntryDaoSpy);
-        verifyZeroInteractions(mAdFiltererSpy);
-
+        verifyZeroInteractions(mFrequencyCapAdFiltererSpy);
     }
 
     @Test
@@ -716,7 +939,12 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
         ProtectedAuctionInput result =
                 mGetAdSelectionDataRunner.composeProtectedAuctionInputBytes(
-                        buyerInputs, CALLER_PACKAGE_NAME, adSelectionId, false);
+                        buyerInputs,
+                        CALLER_PACKAGE_NAME,
+                        adSelectionId,
+                        false,
+                        false,
+                        Optional.empty());
 
         Map<String, ByteString> expectedBuyerInput =
                 ImmutableMap.of(
@@ -743,9 +971,68 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         createTestBuyerInputs(),
                         CALLER_PACKAGE_NAME,
                         adSelectionId,
-                        isDebugReportingEnabled);
+                        isDebugReportingEnabled,
+                        false,
+                        Optional.empty());
 
-        Assert.assertEquals(true, result.getEnableDebugReporting());
+        Assert.assertEquals(isDebugReportingEnabled, result.getEnableDebugReporting());
+    }
+
+    @Test
+    public void test_composeProtectedAuctionInput_UnlimitedEgressEnabled() {
+        boolean isUnlimitedEgressEnabled = true;
+        long adSelectionId = 234L;
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
+                mMultiCloudSupportStrategyFlagOff);
+
+        ProtectedAuctionInput result =
+                mGetAdSelectionDataRunner.composeProtectedAuctionInputBytes(
+                        createTestBuyerInputs(),
+                        CALLER_PACKAGE_NAME,
+                        adSelectionId,
+                        false,
+                        isUnlimitedEgressEnabled,
+                        Optional.empty());
+
+        Assert.assertEquals(isUnlimitedEgressEnabled, result.getEnableUnlimitedEgress());
+    }
+
+    @Test
+    public void test_composeProtectedAuctionInput_consentedDebugConfigNotPresent() {
+        byte[] buyer1data = new byte[] {2, 3};
+        byte[] buyer2data = new byte[] {1};
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerInputs =
+                ImmutableMap.of(
+                        BUYER_1,
+                        AuctionServerDataCompressor.CompressedData.create(buyer1data),
+                        BUYER_2,
+                        AuctionServerDataCompressor.CompressedData.create(buyer2data));
+        ConsentedDebugConfiguration expected =
+                ConsentedDebugConfiguration.newBuilder()
+                        .setIsConsented(false)
+                        .setToken("")
+                        .setIsDebugInfoInResponse(false)
+                        .build();
+
+        long adSelectionId = 234L;
+        GetAdSelectionDataRunner getAdSelectionDataRunner =
+                initRunner(
+                        mFlags,
+                        mAdsRelevanceExecutionLogger,
+                        mMultiCloudSupportStrategyFlagOn,
+                        new AuctionServerPayloadMetricsStrategyDisabled());
+        ProtectedAuctionInput result =
+                getAdSelectionDataRunner.composeProtectedAuctionInputBytes(
+                        buyerInputs,
+                        CALLER_PACKAGE_NAME,
+                        adSelectionId,
+                        false,
+                        false,
+                        Optional.empty());
+
+        ConsentedDebugConfiguration actual = result.getConsentedDebugConfig();
+        Truth.assertThat(actual).isEqualTo(expected);
     }
 
     @Test
@@ -760,23 +1047,12 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         AuctionServerDataCompressor.CompressedData.create(buyer2data));
         boolean isConsentedDebugEnabled = true;
         String debugToken = UUID.randomUUID().toString();
-        Instant creationTimestamp = FIXED_NOW;
-        Instant expiryTimestamp = creationTimestamp.plus(Duration.ofDays(1));
-        DBConsentedDebugConfiguration dbConsentedDebugConfiguration =
-                DBConsentedDebugConfiguration.create(
-                        null,
-                        isConsentedDebugEnabled,
-                        debugToken,
-                        creationTimestamp,
-                        expiryTimestamp);
         ConsentedDebugConfiguration expected =
                 ConsentedDebugConfiguration.newBuilder()
                         .setIsConsented(isConsentedDebugEnabled)
                         .setToken(debugToken)
                         .setIsDebugInfoInResponse(false)
                         .build();
-        mConsentedDebugConfigurationDao.persistConsentedDebugConfiguration(
-                dbConsentedDebugConfiguration);
 
         long adSelectionId = 234L;
         GetAdSelectionDataRunner getAdSelectionDataRunner =
@@ -784,12 +1060,15 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdsRelevanceExecutionLogger,
                         mMultiCloudSupportStrategyFlagOn,
-                        new AuctionServerPayloadMetricsStrategyDisabled(),
-                        new ConsentedDebugConfigurationGeneratorFactory(
-                                true, mConsentedDebugConfigurationDao));
+                        new AuctionServerPayloadMetricsStrategyDisabled());
         ProtectedAuctionInput result =
                 getAdSelectionDataRunner.composeProtectedAuctionInputBytes(
-                        buyerInputs, CALLER_PACKAGE_NAME, adSelectionId, false);
+                        buyerInputs,
+                        CALLER_PACKAGE_NAME,
+                        adSelectionId,
+                        false,
+                        false,
+                        Optional.of(expected));
 
         ConsentedDebugConfiguration actual = result.getConsentedDebugConfig();
         Truth.assertThat(actual).isEqualTo(expected);
@@ -819,13 +1098,14 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         GetAdSelectionDataRunner getAdSelectionDataRunner =
                 new GetAdSelectionDataRunner(
                         mContext,
+                        E2E_TRACE_COOKIE,
                         MultiCloudTestStrategyFactory.getDisabledTestStrategy(
                                 mObliviousHttpEncryptorMock),
                         mAdSelectionEntryDaoSpy,
                         mCustomAudienceDao,
                         mEncodedPayloadDao,
                         mAdSelectionServiceFilterMock,
-                        mAdFiltererSpy,
+                        mFrequencyCapAdFiltererSpy,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         BLOCKING_EXECUTOR,
@@ -837,7 +1117,9 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         mAdsRelevanceExecutionLogger,
                         mAdServicesLoggerSpy,
                         new AuctionServerPayloadMetricsStrategyDisabled(),
-                        mConsentedDebugConfigurationGeneratorFactory.create());
+                        mConsentedDebugConfigurationGenerator,
+                        mEgressConfigurationGenerator,
+                        mAppInstallAdFiltererSpy);
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -868,33 +1150,28 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     }
 
     private GetAdSelectionDataRunner initRunner(
-            Flags flags,
-            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
-            ConsentedDebugConfigurationGeneratorFactory
-                    consentedDebugConfigurationGeneratorFactory) {
+            Flags flags, AdsRelevanceExecutionLogger adsRelevanceExecutionLogger) {
         return initRunner(
                 flags,
                 adsRelevanceExecutionLogger,
                 mMultiCloudSupportStrategyFlagOff,
-                new AuctionServerPayloadMetricsStrategyDisabled(),
-                consentedDebugConfigurationGeneratorFactory);
+                new AuctionServerPayloadMetricsStrategyDisabled());
     }
 
     private GetAdSelectionDataRunner initRunner(
             Flags flags,
             AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             MultiCloudSupportStrategy multiCloudSupportStrategy,
-            AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
-            ConsentedDebugConfigurationGeneratorFactory
-                    consentedDebugConfigurationGeneratorFactory) {
+            AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy) {
         return new GetAdSelectionDataRunner(
                 mContext,
+                E2E_TRACE_COOKIE,
                 multiCloudSupportStrategy,
                 mAdSelectionEntryDaoSpy,
                 mCustomAudienceDao,
                 mEncodedPayloadDao,
                 mAdSelectionServiceFilterMock,
-                mAdFiltererSpy,
+                mFrequencyCapAdFiltererSpy,
                 mBackgroundExecutorService,
                 mLightweightExecutorService,
                 BLOCKING_EXECUTOR,
@@ -907,7 +1184,9 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 adsRelevanceExecutionLogger,
                 mAdServicesLoggerSpy,
                 auctionServerPayloadMetricsStrategy,
-                consentedDebugConfigurationGeneratorFactory.create());
+                mConsentedDebugConfigurationGenerator,
+                mEgressConfigurationGenerator,
+                mAppInstallAdFiltererSpy);
     }
 
     private void createAndPersistDBCustomAudiencesWithAdRenderId() {
@@ -956,8 +1235,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         mFlags,
                         mAdsRelevanceExecutionLogger,
                         multiCloudSupportStrategy,
-                        new AuctionServerPayloadMetricsStrategyDisabled(),
-                        mConsentedDebugConfigurationGeneratorFactory);
+                        new AuctionServerPayloadMetricsStrategyDisabled());
     }
 
     private void verifyGetAdSelectionDataApiUsageLog(int resultCode) throws InterruptedException {
@@ -989,6 +1267,11 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         @Override
         public boolean getFledgeAuctionServerApiUsageMetricsEnabled() {
             return FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED_IN_TEST;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
+            return FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED_IN_TEST;
         }
     }
 

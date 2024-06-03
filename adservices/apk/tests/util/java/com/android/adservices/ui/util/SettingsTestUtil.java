@@ -432,8 +432,7 @@ public final class SettingsTestUtil {
     public static void fledgeViewTextPasEnabledTest(UiDevice device) throws RemoteException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices pas_ux_enabled true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_debug_mode true");
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_notification_debug_mode true");
         ShellUtils.runShellCommand(
                 "device_config put adservices is_eea_device_feature_enabled true");
         ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
@@ -447,27 +446,23 @@ public final class SettingsTestUtil {
 
         UiObject2 fledgeToggle = getConsentSwitch(device);
         if (fledgeToggle.isChecked()) {
-            fledgeToggle.click();
-            device.waitForIdle();
+            fledgeToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         }
         assertThat(fledgeToggle.isChecked()).isFalse();
         device.pressBack();
 
         // 2) enable Fledge API
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
-        device.waitForIdle();
 
         fledgeToggle = getConsentSwitch(device);
         assertThat(fledgeToggle.isChecked()).isFalse();
-        fledgeToggle.click();
-        device.waitForIdle();
+        fledgeToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         fledgeToggle = getConsentSwitch(device);
         assertThat(fledgeToggle.isChecked()).isTrue();
         device.pressBack();
 
         // 3) check if Fledge API is enabled
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
-        device.waitForIdle();
         // rotate device to test rotating as well
         device.setOrientationLeft();
         device.setOrientationNatural();

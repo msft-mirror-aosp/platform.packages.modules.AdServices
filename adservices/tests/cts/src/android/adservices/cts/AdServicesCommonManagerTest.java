@@ -18,17 +18,22 @@ package android.adservices.cts;
 
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
+
+import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
+import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.UpdateAdIdRequest;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,21 +41,22 @@ import org.junit.Test;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+@SetPpapiAppAllowList
 public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCase {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    private final AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(sContext);
+    private AdServicesCommonManager mCommonManager;
 
     @Before
-    public void printRelevantFlags() {
+    public void setup() {
+        // Initialize the manager before tests instead of in class member to allow overriding the
+        // binder timeout.
+        mCommonManager = AdServicesCommonManager.get(sContext);
+
         Log.d(
                 mTag,
                 "Relevant flags @Before: "
-                        + KEY_AD_ID_CACHE_ENABLED
-                        + "="
-                        + flags.getFlag(KEY_AD_ID_CACHE_ENABLED)
-                        + ", "
                         + KEY_AD_ID_CACHE_ENABLED
                         + "="
                         + flags.getFlag(KEY_AD_ID_CACHE_ENABLED));
@@ -58,7 +64,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on S+.")
-    @SetFlagDisabled(KEY_ADSERVICES_ENABLED)
+    @SetFlagFalse(KEY_ADSERVICES_ENABLED)
     public void testStatusManagerNotAuthorizedOnSPlus() throws Exception {
         // At beginning, Sdk1 receives a false status.
         OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
@@ -80,7 +86,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @SetFlagDisabled(KEY_ADSERVICES_ENABLED)
+    @SetFlagFalse(KEY_ADSERVICES_ENABLED)
     public void testStatusManagerNotAuthorizedCompat() throws Exception {
         // At beginning, Sdk1 receives a false status.
         AdServicesOutcomeReceiverForTests<Boolean> receiver =
@@ -104,7 +110,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on T")
-    @SetFlagEnabled(KEY_AD_ID_CACHE_ENABLED)
+    @SetFlagTrue(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notAuthorized_sPlus() throws Exception {
         UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
         OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
@@ -116,7 +122,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "uses OutcomeReceiver, which is only available on T")
-    @SetFlagDisabled(KEY_AD_ID_CACHE_ENABLED)
+    @SetFlagFalse(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notEnabled_sPlus() throws Exception {
         UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
 
@@ -127,7 +133,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @SetFlagEnabled(KEY_AD_ID_CACHE_ENABLED)
+    @SetFlagTrue(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notAuthorized_rPlus() throws Exception {
         AdServicesOutcomeReceiverForTests<Boolean> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
@@ -139,7 +145,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @SetFlagDisabled(KEY_AD_ID_CACHE_ENABLED)
+    @SetFlagFalse(KEY_AD_ID_CACHE_ENABLED)
     public void testUpdateAdIdCache_notEnabled_rPlus() throws Exception {
         AdServicesOutcomeReceiverForTests<Boolean> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
@@ -157,7 +163,23 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
                 new UpdateAdIdRequest.Builder(AdId.ZERO_OUT)
                         .setLimitAdTrackingEnabled(true)
                         .build();
+
         mCommonManager.updateAdId(
                 request, CALLBACK_EXECUTOR, new AdServicesOutcomeReceiverForTests<>());
+
+        assertThat(request.getAdId()).isEqualTo(AdId.ZERO_OUT);
+        assertThat(request.isLimitAdTrackingEnabled()).isTrue();
+        assertThat(request.describeContents()).isEqualTo(0);
+    }
+
+    @Test
+    @SetFlagFalse(KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED)
+    public void testGetAdservicesCommonStates_notEnabled_rPlus() throws Exception {
+        AdServicesOutcomeReceiverForTests<AdServicesCommonStatesResponse> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
+
+        mCommonManager.getAdservicesCommonStates(CALLBACK_EXECUTOR, receiver);
+
+        receiver.assertFailure(SecurityException.class);
     }
 }

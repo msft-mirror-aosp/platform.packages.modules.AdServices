@@ -27,7 +27,8 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -115,6 +116,7 @@ public class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestC
 
     @Test
     public void testEquals_Same() {
+        EqualsTester et = new EqualsTester(expect);
         ScheduleCustomAudienceUpdateRequest request1 =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
                                 VALID_UPDATE_URI_1, VALID_DELAY, VALID_PARTIAL_CA_LIST)
@@ -124,11 +126,13 @@ public class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestC
                 new ScheduleCustomAudienceUpdateRequest.Builder(
                                 VALID_UPDATE_URI_1, VALID_DELAY, VALID_PARTIAL_CA_LIST)
                         .build();
-        expectObjectsAreEqual(request2, request1);
+
+        et.expectObjectsAreEqual(request2, request1);
     }
 
     @Test
     public void testEquals_Different() {
+        EqualsTester et = new EqualsTester(expect);
         ScheduleCustomAudienceUpdateRequest request1 =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
                                 VALID_UPDATE_URI_1, VALID_DELAY, VALID_PARTIAL_CA_LIST)
@@ -139,7 +143,7 @@ public class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestC
                                 VALID_UPDATE_URI_1, VALID_DELAY, Collections.emptyList())
                         .build();
 
-        expectObjectsAreNotEqual(request1, request2);
+        et.expectObjectsAreNotEqual(request1, request2);
     }
 
     @Test

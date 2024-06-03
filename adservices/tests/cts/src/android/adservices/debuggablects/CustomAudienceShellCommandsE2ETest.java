@@ -20,9 +20,9 @@ import static android.adservices.debuggablects.CustomAudienceShellCommandHelper.
 import static android.adservices.debuggablects.CustomAudienceSubject.assertThat;
 
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -32,11 +32,16 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.utils.CustomAudienceTestFixture;
 
+import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
+import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.adservices.common.annotations.SetFlagEnabled;
-import com.android.adservices.common.annotations.SetIntegerFlag;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,20 +54,27 @@ import java.util.List;
 
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
-@SetFlagEnabled(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
-@SetFlagEnabled(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
-@RequiresSdkLevelAtLeastT
+@EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
+@EnableDebugFlag(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
+@RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
 public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsTest {
-    private static final String OWNER = "android.adservices.debuggablects";
+    private static final String OWNER = sPackageName;
+    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
+
+    private final AdServicesShellCommandHelper mShellCommandHelper =
+            new AdServicesShellCommandHelper();
+
     private CustomAudience mShirtsCustomAudience;
     private CustomAudience mShoesCustomAudience;
-    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private CustomAudienceTestFixture mCustomAudienceTestFixture;
 
     @Before
     public void setUp() throws Exception {
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        assertForegroundActivityStarted();
+
+        if (sdkLevel.isAtLeastT()) {
+            assertForegroundActivityStarted();
+        }
 
         mCustomAudienceTestFixture = new CustomAudienceTestFixture(sContext);
         mShirtsCustomAudience =
@@ -93,14 +105,12 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
 
         JSONArray customAudiences =
                 runAndParseShellCommandJson(
-                                "cmd adservices_manager %s %s --owner %s --buyer %s",
-                                "custom-audience", "list", OWNER, BUYER.toString())
+                                "custom-audience list --owner %s --buyer %s", OWNER, BUYER)
                         .getJSONArray("custom_audiences");
         mCustomAudienceTestFixture.leaveCustomAudience(mShirtsCustomAudience);
         JSONArray customAudiencesAfterLeaving =
                 runAndParseShellCommandJson(
-                                "cmd adservices_manager %s %s --owner %s --buyer %s",
-                                "custom-audience", "list", OWNER, BUYER.toString())
+                                "custom-audience list --owner %s --buyer %s", OWNER, BUYER)
                         .getJSONArray("custom_audiences");
 
         assertThat(
@@ -130,12 +140,8 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
 
         JSONObject customAudience =
                 runAndParseShellCommandJson(
-                        "cmd adservices_manager %s %s --owner %s --buyer %s --name %s",
-                        "custom-audience",
-                        "view",
-                        OWNER,
-                        BUYER.toString(),
-                        mShirtsCustomAudience.getName());
+                        "custom-audience view --owner %s --buyer %s --name %s",
+                        OWNER, BUYER, mShirtsCustomAudience.getName());
 
         CustomAudience parsedCustomAudience = fromJson(customAudience);
         assertThat(mShirtsCustomAudience).isEqualTo(parsedCustomAudience);
@@ -146,26 +152,18 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
 
     @Test
     public void testRun_refreshCustomAudiences_verifyNoCustomAudienceChanged() {
-        String output =
-                runAndParseShellCommand(
-                        "custom-audience",
-                        "refresh",
-                        OWNER,
-                        BUYER.toString(),
-                        mShirtsCustomAudience.getName());
+        CommandResult commandResult =
+                mShellCommandHelper.runCommandRwe(
+                        "custom-audience refresh --owner %s --buyer %s --name %s",
+                        OWNER, BUYER, mShirtsCustomAudience.getName());
 
-        // Shell command output would be printed to stderr instead, so cannot be captured here.
-        assertThat(output).isEmpty();
+        assertThat(commandResult.getOut()).isEmpty();
+        assertThat(commandResult.getErr()).contains("No custom audience found");
     }
 
-    private static JSONObject runAndParseShellCommandJson(String template, String... commandArgs)
-            throws JSONException {
-        return new JSONObject(ShellUtils.runShellCommand(template, (Object[]) commandArgs));
-    }
-
-    private static String runAndParseShellCommand(String... commandArgs) {
-        return ShellUtils.runShellCommand(
-                "cmd adservices_manager %s %s --owner %s --buyer %s --name %s",
-                (Object[]) commandArgs);
+    @FormatMethod
+    private JSONObject runAndParseShellCommandJson(
+            @FormatString String template, Object... commandArgs) throws JSONException {
+        return new JSONObject(mShellCommandHelper.runCommand(template, commandArgs));
     }
 }

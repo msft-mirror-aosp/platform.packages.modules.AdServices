@@ -7,7 +7,6 @@
         "timestamp": "0",
         "registration_request": {
           "registrant": "com.source",
-          "attribution_src_url": "https://reporter1.test/register-source",
           "source_type": "navigation"
         },
         "responses": [
@@ -27,7 +26,6 @@
         "timestamp": "1",
         "registration_request": {
           "registrant": "com.source",
-          "attribution_src_url": "https://reporter2.test/register-source",
           "source_type": "navigation"
         },
         "responses": [
@@ -47,7 +45,6 @@
       {
         "timestamp": "2",
         "registration_request": {
-          "attribution_src_url": "https://reporter1.test/register-trigger",
           "registrant": "com.destination"
         },
         "responses": [
@@ -71,7 +68,6 @@
       {
         "timestamp": "3",
         "registration_request": {
-          "attribution_src_url": "https://reporter2.test/register-trigger",
           "registrant": "com.destination"
         },
         "responses": [
@@ -96,7 +92,6 @@
       {
         "timestamp": "4",
         "registration_request": {
-          "attribution_src_url": "https://reporter2.test/register-trigger",
           "registrant": "com.destination"
         },
         "responses": [
@@ -119,7 +114,6 @@
     ]
   },
   "output": {
-    "unparsable_registrations": [],
     "reports": [
       {
         "payload": {

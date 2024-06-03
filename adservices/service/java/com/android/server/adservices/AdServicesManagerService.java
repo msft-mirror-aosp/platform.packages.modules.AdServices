@@ -544,6 +544,33 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                                 .wasPasNotificationDisplayed());
     }
 
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordPasNotificationOpened(boolean wasNotificationOpened) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordPasNotificationOpened() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordPasNotificationOpened(wasNotificationOpened);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to Record PAS Notification Opened.");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasPasNotificationOpened() {
+        return executeGetter(
+                /* defaultReturn= */ true,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .wasPasNotificationOpened());
+    }
+
     /** retrieves the default consent of a user. */
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean getDefaultConsent() {
@@ -592,7 +619,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     @Override
-    @RequiresPermission
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public List<String> getKnownAppsWithConsent(@NonNull List<String> installedPackages) {
         return executeGetter(/* defaultReturn= */ List.of(),
                 (userId) -> mUserInstanceManager
@@ -775,7 +802,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     private static boolean isShellCmdEnabled() {
-        return FlagsFactory.getFlags().getAdServicesShellCommandEnabled();
+        return DebugFlags.getInstance().getAdServicesShellCommandEnabled();
     }
 
     @Override

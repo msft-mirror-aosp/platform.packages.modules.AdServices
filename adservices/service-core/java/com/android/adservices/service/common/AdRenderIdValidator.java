@@ -23,6 +23,7 @@ import com.android.adservices.service.Flags;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /** Validate Ad Render Id. */
@@ -56,13 +57,13 @@ public interface AdRenderIdValidator extends Validator<String> {
     @NonNull
     static AdRenderIdValidator createEnabledInstance(long maxLength) {
         return (object, violations) -> {
-            if (object != null && object.getBytes().length > maxLength) {
+            if (object != null && object.getBytes(StandardCharsets.UTF_8).length > maxLength) {
                 violations.add(
                         String.format(
                                 Locale.ENGLISH,
                                 AD_RENDER_ID_TOO_LONG,
                                 maxLength,
-                                object.getBytes().length));
+                                object.getBytes(StandardCharsets.UTF_8).length));
             }
         };
     }

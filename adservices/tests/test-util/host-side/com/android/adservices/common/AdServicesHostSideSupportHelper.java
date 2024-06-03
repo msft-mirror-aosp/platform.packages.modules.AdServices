@@ -15,19 +15,37 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.common.AbstractDeviceSupportHelper.GMS_CORE_PACKAGE;
-import static com.android.adservices.common.AbstractDeviceSupportHelper.PLAY_STORE_PACKAGE;
-import static com.android.adservices.common.TestDeviceHelper.call;
+import static com.android.adservices.shared.testing.TestDeviceHelper.call;
 
+import com.android.adservices.shared.testing.ConsoleLogger;
+import com.android.adservices.shared.testing.HostSideSystemPropertiesHelper;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.compatibility.common.util.PackageUtil;
+
+import com.google.common.collect.ImmutableSet;
+
+import java.util.Arrays;
+import java.util.List;
 
 /** Helper to check if AdServices is supported / enabled in a device. */
 final class AdServicesHostSideSupportHelper extends AbstractDeviceSupportHelper {
 
+    private static final String ADSERVICES_PACKAGE = "com.google.android.adservices.api";
+    private static final String ADSERVICES_PACKAGE_AOSP = "com.android.adservices.api";
+    private static final String EXT_ADSERVICES_PACKAGE = "com.google.android.ext.services";
+    private static final String EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
+
+    private static final ImmutableSet<String> ADSERVICES_PACKAGE_NAMES =
+            ImmutableSet.of(
+                    ADSERVICES_PACKAGE,
+                    ADSERVICES_PACKAGE_AOSP,
+                    EXT_ADSERVICES_PACKAGE,
+                    EXT_ADSERVICES_PACKAGE_AOSP);
+
     private static final AdServicesHostSideSupportHelper sInstance =
             new AdServicesHostSideSupportHelper();
 
-    public static final AdServicesHostSideSupportHelper getInstance() {
+    public static AdServicesHostSideSupportHelper getInstance() {
         return sInstance;
     }
 
@@ -60,6 +78,41 @@ final class AdServicesHostSideSupportHelper extends AbstractDeviceSupportHelper 
     @Override
     protected boolean isDebuggable() {
         return "1".equals(call(device -> device.getProperty("ro.debuggable")));
+    }
+
+    @Override
+    protected boolean isAndroidServiceAvailable(String intentAction) {
+        throw new UnsupportedOperationException(
+                "This method is unavailable in Host Test. Please implement it if needed.");
+    }
+
+    /**
+     * Checks that exactly one package name is present out of provided package names and then
+     * returns that.
+     *
+     * @return the package name if exactly 1 package name present, otherwise {@code null} if 0 or
+     *     multiple package names present.
+     */
+    @Override
+    @Nullable
+    public String getAdServicesPackageName() {
+        List<String> availablePackageNames =
+                call(
+                        device ->
+                                device.getInstalledPackageNames().stream()
+                                        .filter(ADSERVICES_PACKAGE_NAMES::contains)
+                                        .toList());
+        if (availablePackageNames == null || availablePackageNames.isEmpty()) {
+            mLog.d("Failed to find the package name");
+            return null;
+        }
+        if (availablePackageNames.size() > 1) {
+            mLog.d(
+                    "Found multiple package names: %s",
+                    Arrays.toString(availablePackageNames.toArray()));
+            return null;
+        }
+        return availablePackageNames.get(0);
     }
 
     private AdServicesHostSideSupportHelper() {

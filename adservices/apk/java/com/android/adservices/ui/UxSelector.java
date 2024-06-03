@@ -33,7 +33,6 @@ import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollectio
 public interface UxSelector {
     enum EndUserUx {
         UNKNOWN,
-        BETA,
         GA,
         U18,
         RVC,
@@ -48,16 +47,25 @@ public interface UxSelector {
      * @return Ux that end user should see.
      */
     default EndUserUx initWithUx(FragmentActivity fragmentActivity, Context context) {
-        EndUserUx endUserUx = getEndUserUx(context);
+        return initWithUx(context, false);
+    }
+
+    /**
+     * This method will be called in during initialization of class to determine which ux to choose.
+     *
+     * @param context current context.
+     * @param beforePasUxActive if the current activity is before PAS UX is active, so it is part of
+     *     the process of activating PAS UX and should be shown if flag is on.
+     * @return Ux that end user should see.
+     */
+    default EndUserUx initWithUx(Context context, boolean beforePasUxActive) {
+        EndUserUx endUserUx = getEndUserUx(context, beforePasUxActive);
         switch (endUserUx) {
             case U18:
                 initU18();
                 break;
             case GA:
                 initGA();
-                break;
-            case BETA:
-                initBeta();
                 break;
             case RVC:
                 initRvc();
@@ -78,17 +86,27 @@ public interface UxSelector {
      * @return Ux that end user should see.
      */
     default EndUserUx getEndUserUx(Context context) {
+        return getEndUserUx(context, false);
+    }
+
+    /**
+     * Returns the UX that the end user should be seeing currently.
+     *
+     * @param context current Context.
+     * @param beforePasUxActive if the current context is before PAS UX is active.
+     * @return Ux that end user should see.
+     */
+    default EndUserUx getEndUserUx(Context context, boolean beforePasUxActive) {
         switch (UxUtil.getUx(context)) {
             case U18_UX:
                 return EndUserUx.U18;
             case GA_UX:
-                if (UxUtil.pasUxIsActive(/* beforeNotificationShown */ false)) {
-                    // UI views should be updated only once notification is sent (ROW).
+                if (UxUtil.pasUxIsActive(beforePasUxActive)) {
+                    // ROW UI views should be updated only once notification is sent.
+                    // EEA UI views should be updated only once notification is opened.
                     return EndUserUx.GA_WITH_PAS;
                 }
                 return EndUserUx.GA;
-            case BETA_UX:
-                return EndUserUx.BETA;
             case RVC_UX:
                 return EndUserUx.RVC;
             default:
@@ -96,12 +114,6 @@ public interface UxSelector {
                 return EndUserUx.GA;
         }
     }
-
-    /**
-     * This method will be called in {@link #initWithUx} if app is in {@link
-     * PrivacySandboxUxCollection#BETA_UX} mode.
-     */
-    void initBeta();
 
     /**
      * This method will be called in {@link #initWithUx} if app is in {@link

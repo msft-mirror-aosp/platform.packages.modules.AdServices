@@ -15,8 +15,12 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.common.Logger.RealLogger;
-import com.android.adservices.common.NameValuePair.Matcher;
+import com.android.adservices.shared.testing.AbstractRethrowerRule;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.NameValuePair;
+import com.android.adservices.shared.testing.NameValuePair.Matcher;
+import com.android.adservices.shared.testing.Nullable;
+import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;

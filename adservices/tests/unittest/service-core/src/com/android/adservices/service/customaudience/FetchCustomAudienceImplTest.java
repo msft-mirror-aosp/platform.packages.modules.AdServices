@@ -21,6 +21,7 @@ import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED
 import static android.adservices.common.AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
@@ -78,6 +79,7 @@ import static com.android.adservices.service.customaudience.FetchCustomAudienceR
 import static com.android.adservices.service.customaudience.FetchCustomAudienceReader.NAME_KEY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
@@ -107,7 +109,6 @@ import android.os.RemoteException;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -131,6 +132,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -153,6 +155,7 @@ import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
+import org.mockito.stubbing.Answer;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -168,7 +171,7 @@ public class FetchCustomAudienceImplTest {
             AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
     private static final Clock CLOCK = CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -925,6 +928,57 @@ public class FetchCustomAudienceImplTest {
     }
 
     @Test
+    public void testImpl_runNormally_CallbackThrowsException() throws Exception {
+        // Respond with a complete custom audience including the request values as is.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(getFullSuccessfulJsonResponseString(BUYER))));
+
+        FetchCustomAudienceTestCallback callback =
+                callFetchCustomAudienceWithErrorCallback(mInputBuilder.build(), 3);
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertTrue(callback.mIsSuccess);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_CALLBACK_SHUTDOWN),
+                        anyInt());
+    }
+
+    @Test
+    public void testImpl_runWithFailure_CallbackThrowsException() throws Exception {
+
+        // Just want the service to throw an exception so we trigger the failure callback
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        mFetchUri,
+                        VALID_OWNER,
+                        false,
+                        true,
+                        true,
+                        Process.myUid(),
+                        API_NAME,
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
+
+        FetchCustomAudienceTestCallback callback =
+                callFetchCustomAudienceWithErrorCallback(mInputBuilder.build(), 1);
+
+        assertFalse(callback.mIsSuccess);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_CALLBACK_SHUTDOWN),
+                        anyInt());
+    }
+
+    @Test
     public void testImpl_runNormally_completeResponseWithAuctionServerFlagsEnabled()
             throws Exception {
         enableAuctionServerRequestFlags();
@@ -1334,6 +1388,25 @@ public class FetchCustomAudienceImplTest {
         return callback;
     }
 
+    private FetchCustomAudienceTestCallback callFetchCustomAudienceWithErrorCallback(
+            FetchAndJoinCustomAudienceInput input, int numCountDown) throws Exception {
+        CountDownLatch resultLatch = new CountDownLatch(numCountDown);
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    resultLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(anyInt(), any(), anyInt(), anyInt());
+        FetchCustomAudienceTestThrowingCallback callback =
+                new FetchCustomAudienceTestThrowingCallback(resultLatch);
+        mFetchCustomAudienceImpl.doFetchCustomAudience(
+                input, callback, DevContext.createForDevOptionsDisabled());
+        resultLatch.await();
+        return callback;
+    }
+
     private FetchCustomAudienceImpl getImplWithFlags(Flags flags) {
         return new FetchCustomAudienceImpl(
                 flags,
@@ -1351,7 +1424,7 @@ public class FetchCustomAudienceImplTest {
 
     public static class FetchCustomAudienceTestCallback
             extends FetchAndJoinCustomAudienceCallback.Stub {
-        private final CountDownLatch mCountDownLatch;
+        protected final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
 
@@ -1364,7 +1437,7 @@ public class FetchCustomAudienceImplTest {
         }
 
         @Override
-        public void onSuccess() {
+        public void onSuccess() throws RemoteException {
             LoggerFactory.getFledgeLogger()
                     .v("Reporting success to FetchCustomAudienceTestCallback.");
             mIsSuccess = true;
@@ -1380,6 +1453,27 @@ public class FetchCustomAudienceImplTest {
         }
     }
 
+    public static class FetchCustomAudienceTestThrowingCallback
+            extends FetchCustomAudienceTestCallback {
+        public FetchCustomAudienceTestThrowingCallback(CountDownLatch countDownLatch) {
+            super(countDownLatch);
+        }
+
+        @Override
+        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            mFledgeErrorResponse = fledgeErrorResponse;
+            mCountDownLatch.countDown();
+            throw new RemoteException();
+        }
+
+        @Override
+        public void onSuccess() throws RemoteException {
+            mIsSuccess = true;
+            mCountDownLatch.countDown();
+            throw new RemoteException();
+        }
+    }
+
     private static class FetchCustomAudienceFlags implements Flags {
         @Override
         public boolean getFledgeFetchCustomAudienceEnabled() {
@@ -1387,7 +1481,12 @@ public class FetchCustomAudienceImplTest {
         }
 
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAppInstallFilteringEnabled() {
             return true;
         }
     }

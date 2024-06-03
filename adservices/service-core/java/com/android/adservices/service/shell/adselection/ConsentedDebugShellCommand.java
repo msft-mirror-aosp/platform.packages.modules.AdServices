@@ -17,6 +17,13 @@
 package com.android.adservices.service.shell.adselection;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_CONSENTED_DEBUG_DISABLE;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_UNKNOWN;
+import static com.android.adservices.service.stats.ShellCommandStats.Command;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
 import android.util.Log;
 
@@ -27,6 +34,8 @@ import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.DBConsentedDebugConfiguration;
 import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandArgParserHelper;
+import com.android.adservices.service.shell.ShellCommandResult;
+import com.android.adservices.service.stats.ShellCommandStats;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -37,10 +46,11 @@ import org.json.JSONObject;
 import java.io.PrintWriter;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class ConsentedDebugShellCommand extends AbstractShellCommand {
-    @VisibleForTesting public static final String CMD = "consented_debug";
+    @VisibleForTesting public static final String CMD = "consented-debug";
     // SUB COMMANDS
     @VisibleForTesting public static final String ENABLE_SUB_CMD = "enable";
     @VisibleForTesting public static final String DISABLE_SUB_CMD = "disable";
@@ -66,11 +76,10 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
 
     // Output error messages
     @VisibleForTesting
-    public static final String ENABLE_ERROR =
-            "Exception while enabling consented debug configuration.";
+    public static final String ENABLE_ERROR = "Unable to enable consented debug configuration.";
 
     @VisibleForTesting
-    public static final String DISABLE_ERROR = "Exception while disabling consented debugging.";
+    public static final String DISABLE_ERROR = "Unable to disable consented debugging.";
 
     @VisibleForTesting
     public static final String VIEW_ERROR = "Unable to fetch consented debug configuration";
@@ -81,8 +90,8 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
                     + ConsentedDebugEnableArgs.SECRET_DEBUG_TOKEN_ARG_NAME
                     + " <min 6 character length token>"
                     + " "
-                    + ConsentedDebugEnableArgs.EXPIRY_IN_DAYS_ARG_NAME
-                    + " <optional param to set expiry in days>";
+                    + ConsentedDebugEnableArgs.EXPIRY_IN_HOURS_ARG_NAME
+                    + " <optional param to set expiry in hours>";
 
     @VisibleForTesting
     public static final String HELP =
@@ -90,19 +99,29 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
                     + " "
                     + CMD
                     + "\n"
-                    + "\toptions: "
-                    + "\n\t\t"
+                    + "  options:"
+                    + "\n    "
                     + ENABLE_SUB_COMMAND_HELP
-                    + "\n\t\t"
+                    + "\n    "
                     + DISABLE_SUB_CMD
-                    + "\n\t\t"
+                    + "\n    "
                     + VIEW_SUB_CMD
-                    + "\n\t\t"
-                    + HELP_SUB_CMD
-                    + "\n";
+                    + "\n    "
+                    + HELP_SUB_CMD;
 
     private static final int SUB_COMMAND_INDEX = 2;
     private static final int SUB_COMMAND_ARG_INDEX = 3;
+    private static final int CONSENTED_DEBUG_DEFAULT_COMMAND = COMMAND_UNKNOWN;
+    private static final Map<String, Integer> SUB_COMMAND_TO_METRICS_LOGGER_COMMAND_MAP =
+            ImmutableMap.of(
+                    ENABLE_SUB_CMD,
+                    COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE,
+                    DISABLE_SUB_CMD,
+                    COMMAND_AD_SELECTION_CONSENTED_DEBUG_DISABLE,
+                    VIEW_SUB_CMD,
+                    COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW,
+                    HELP_SUB_CMD,
+                    COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP);
     private final ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
 
     ConsentedDebugShellCommand(
@@ -111,47 +130,92 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
     }
 
     @Override
-    public int run(PrintWriter out, PrintWriter err, String[] args) {
+    public int getMetricsLoggerCommand() {
+        return CONSENTED_DEBUG_DEFAULT_COMMAND;
+    }
+
+    @Override
+    public String getCommandHelp() {
+        return HELP;
+    }
+
+    @Override
+    public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
+        String subCommand;
+        ImmutableMap<String, String> cliArgs;
         try {
-            String subCommand = validateAndReturnSubCommand(args);
-            ImmutableMap<String, String> cliArgs =
-                    ShellCommandArgParserHelper.parseCliArguments(args, SUB_COMMAND_ARG_INDEX);
-            String output;
-            switch (subCommand) {
-                case ENABLE_SUB_CMD -> output = runEnableSubCommand(cliArgs);
-                case DISABLE_SUB_CMD -> output = runDisableSubCommand(cliArgs);
-                case VIEW_SUB_CMD -> output = runViewSubCommand(cliArgs);
-                case HELP_SUB_CMD -> output = HELP;
-                default -> throw new IllegalArgumentException("Unknown sub command");
-            }
-            out.print(output);
-            return RESULT_OK;
+            subCommand = validateAndReturnSubCommand(args);
+            cliArgs = ShellCommandArgParserHelper.parseCliArguments(args, SUB_COMMAND_ARG_INDEX);
         } catch (IllegalArgumentException exception) {
-            Log.e(TAG, "IllegalArgumentException while running consented_debug command", exception);
-            return invalidArgsError(HELP, err, args);
-        } catch (RuntimeException exception) {
-            Log.e(TAG, "RuntimeException while running consented_debug command", exception);
-            err.print(exception.getMessage());
-            return RESULT_GENERIC_ERROR;
+            Log.e(TAG, "IllegalArgumentException while running consented-debug command", exception);
+            return invalidArgsError(HELP, err, CONSENTED_DEBUG_DEFAULT_COMMAND, args);
+        }
+        int metricsLoggerCommand =
+                SUB_COMMAND_TO_METRICS_LOGGER_COMMAND_MAP.getOrDefault(
+                        subCommand, CONSENTED_DEBUG_DEFAULT_COMMAND);
+        Log.d(
+                TAG,
+                "metricsLoggerCommand for subCommand "
+                        + subCommand
+                        + " is: "
+                        + metricsLoggerCommand);
+        try {
+            switch (subCommand) {
+                case ENABLE_SUB_CMD -> {
+                    return runEnableSubCommand(out, err, metricsLoggerCommand, cliArgs);
+                }
+                case DISABLE_SUB_CMD -> {
+                    return runDisableSubCommand(out, err, metricsLoggerCommand, cliArgs);
+                }
+                case VIEW_SUB_CMD -> {
+                    return runViewSubCommand(out, err, metricsLoggerCommand, cliArgs);
+                }
+                case HELP_SUB_CMD -> {
+                    out.print(HELP);
+                    return toShellCommandResult(RESULT_SUCCESS, metricsLoggerCommand);
+                }
+                default -> {
+                    return invalidArgsError(HELP, err, CONSENTED_DEBUG_DEFAULT_COMMAND, args);
+                }
+            }
+        } catch (IllegalArgumentException exception) {
+            Log.e(
+                    TAG,
+                    "IllegalArgumentException while running consented-debug sub command. Using"
+                            + " metrics logger as: "
+                            + metricsLoggerCommand,
+                    exception);
+            return invalidArgsError(HELP, err, metricsLoggerCommand, args);
         }
     }
+
+
 
     @Override
     public String getCommandName() {
         return CMD;
     }
-
     private String validateAndReturnSubCommand(String[] args) {
-        // 0th index ad_selection,
-        // 1st index is consented_debugging.
+        // 0th index ad-selection,
+        // 1st index is consented-debug.
         if (args.length <= SUB_COMMAND_INDEX) {
             Log.e(TAG, "Consented Debug Sub Command not found");
             throw new IllegalArgumentException("Consented Debug Sub Command not found");
         }
+        String subCommand = args[SUB_COMMAND_INDEX];
+        if (!SUB_COMMAND_TO_METRICS_LOGGER_COMMAND_MAP.containsKey(subCommand)) {
+            Log.e(TAG, "Consented Debug Sub Command in not valid. Sub command: " + subCommand);
+            throw new IllegalArgumentException(
+                    "Invalid Consented Debug Sub Command: " + subCommand);
+        }
         return args[SUB_COMMAND_INDEX];
     }
 
-    private String runEnableSubCommand(ImmutableMap<String, String> inputArgs) {
+    private ShellCommandResult runEnableSubCommand(
+            PrintWriter out,
+            PrintWriter err,
+            @Command int metricsLoggerCommand,
+            ImmutableMap<String, String> inputArgs) {
         ConsentedDebugEnableArgs consentedDebugEnableArgs =
                 ConsentedDebugEnableArgs.parseCliArgs(inputArgs);
         Log.d(TAG, "Parsed ConsentedDebugEnableArgs: " + consentedDebugEnableArgs);
@@ -165,27 +229,41 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
             mConsentedDebugConfigurationDao.deleteExistingConsentedDebugConfigurationsAndPersist(
                     dbConsentedDebugConfiguration);
             Log.d(TAG, "Persisted consented debug configuration in DB");
-            return ENABLE_SUCCESS;
+            out.print(ENABLE_SUCCESS);
+            return toShellCommandResult(RESULT_SUCCESS, metricsLoggerCommand);
         } catch (Exception exception) {
             Log.e(TAG, "Exception while persisting consented debug configuration in DB", exception);
-            throw new RuntimeException(ENABLE_ERROR, exception);
+            err.print(exception.getMessage() + " " + ENABLE_ERROR);
+            return toShellCommandResult(
+                    ShellCommandStats.RESULT_GENERIC_ERROR, metricsLoggerCommand);
         }
     }
 
-    private String runDisableSubCommand(ImmutableMap<String, String> inputArgs) {
+    private ShellCommandResult runDisableSubCommand(
+            PrintWriter out,
+            PrintWriter err,
+            @Command int metricsLoggerCommand,
+            ImmutableMap<String, String> inputArgs) {
         Preconditions.checkArgument(
                 inputArgs.isEmpty(), "no argument expected for %s", DISABLE_SUB_CMD);
         try {
             mConsentedDebugConfigurationDao.deleteAllConsentedDebugConfigurations();
             Log.d(TAG, "Successfully deleted all consented debug configurations");
-            return DISABLE_SUCCESS;
+            out.print(DISABLE_SUCCESS);
+            return toShellCommandResult(RESULT_SUCCESS, metricsLoggerCommand);
         } catch (Exception exception) {
             Log.e(TAG, "Exception while deleting consented debug configuration DB", exception);
-            throw new RuntimeException(DISABLE_ERROR, exception);
+            err.print(exception.getMessage() + " " + DISABLE_ERROR);
+            return toShellCommandResult(
+                    ShellCommandStats.RESULT_GENERIC_ERROR, metricsLoggerCommand);
         }
     }
 
-    private String runViewSubCommand(ImmutableMap<String, String> inputArgs) {
+    private ShellCommandResult runViewSubCommand(
+            PrintWriter out,
+            PrintWriter err,
+            @Command int metricsLoggerCommand,
+            ImmutableMap<String, String> inputArgs) {
         Preconditions.checkArgument(
                 inputArgs.isEmpty(), "no argument expected for %s", VIEW_SUB_CMD);
         try {
@@ -194,17 +272,21 @@ public class ConsentedDebugShellCommand extends AbstractShellCommand {
                             Instant.now(), 1);
             if (consentedDebugConfigurations == null || consentedDebugConfigurations.isEmpty()) {
                 Log.d(TAG, VIEW_SUCCESS_NO_CONFIGURATION);
-                return VIEW_SUCCESS_NO_CONFIGURATION;
+                out.print(VIEW_SUCCESS_NO_CONFIGURATION);
+                return toShellCommandResult(RESULT_SUCCESS, metricsLoggerCommand);
             }
             String json = convertToJson(consentedDebugConfigurations.get(0));
             Log.d(
                     TAG,
                     String.format(
                             "converted consented debug configuration to JSON. Json: %s", json));
-            return json;
+            out.print(json);
+            return toShellCommandResult(RESULT_SUCCESS, metricsLoggerCommand);
         } catch (Exception exception) {
             Log.e(TAG, "Exception during view consented debug configuration", exception);
-            throw new RuntimeException(VIEW_ERROR, exception);
+            err.print(exception.getMessage() + " " + VIEW_ERROR);
+            return toShellCommandResult(
+                    ShellCommandStats.RESULT_GENERIC_ERROR, metricsLoggerCommand);
         }
     }
 

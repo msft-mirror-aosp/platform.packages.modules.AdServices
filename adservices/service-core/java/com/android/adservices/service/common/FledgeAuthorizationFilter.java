@@ -51,7 +51,6 @@ import java.util.Locale;
 import java.util.Objects;
 
 /** Verify caller of FLEDGE API has the permission of performing certain behaviour. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class FledgeAuthorizationFilter {
 
@@ -93,9 +92,9 @@ public class FledgeAuthorizationFilter {
 
         return new FledgeAuthorizationFilter(
                 context.getPackageManager(),
-                EnrollmentDao.getInstance(context),
+                EnrollmentDao.getInstance(),
                 adServicesLogger,
-                EnrollmentUtil.getInstance(context));
+                EnrollmentUtil.getInstance());
     }
 
     /**

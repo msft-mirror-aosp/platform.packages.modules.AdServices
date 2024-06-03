@@ -38,7 +38,6 @@ import java.util.Locale;
 import java.util.Objects;
 
 /** Validator to validate auction result. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AuctionResultValidator implements Validator<AuctionResult> {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

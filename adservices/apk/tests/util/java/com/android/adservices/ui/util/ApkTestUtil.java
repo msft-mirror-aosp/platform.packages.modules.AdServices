@@ -37,7 +37,6 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.shared.testing.common.FileHelper;
-import com.android.compatibility.common.util.ShellUtils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -198,9 +197,6 @@ public class ApkTestUtil {
 
     /** Launch Privacy Sandbox Setting View with UX extra. */
     public static void launchSettingViewGivenUx(UiDevice device, int launchTimeout, String ux) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
-
         // Launch the setting view.
         Intent intent = new Intent(PRIVACY_SANDBOX_UI);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

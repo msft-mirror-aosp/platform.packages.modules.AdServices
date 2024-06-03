@@ -536,7 +536,7 @@ class AppSearchConsentWorker {
      * S- device, it removes the "ext." substring from the package name.
      */
     public static String getAdServicesPackageName(Context context) {
-        Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
+        Intent serviceIntent = new Intent(AdServicesCommon.ACTION_MEASUREMENT_SERVICE);
         List<ResolveInfo> resolveInfos =
                 context.getPackageManager()
                         .queryIntentServices(

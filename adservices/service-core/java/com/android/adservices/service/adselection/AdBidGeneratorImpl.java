@@ -115,7 +115,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull DebugReporting debugReporting,
             boolean cpcBillingEnabled,
             boolean dataVersionHeaderEnabled,
-            @NonNull RetryStrategy retryStrategy) {
+            @NonNull RetryStrategy retryStrategy,
+            boolean consoleMessageInLogsEnabled) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -144,7 +145,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         mAdCounterKeyCopier,
                         debugReporting.getScriptStrategy(),
                         cpcBillingEnabled,
-                        retryStrategy);
+                        retryStrategy,
+                        () -> consoleMessageInLogsEnabled);
         mJsFetcher =
                 new JsFetcher(
                         backgroundExecutorService,
@@ -236,9 +238,11 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
         DBTrustedBiddingData trustedBiddingData = customAudience.getTrustedBiddingData();
 
-        AdSelectionSignals contextualSignals =
+        BuyerContextualSignals contextualSignals =
                 mBuyerContextualSignalsDataVersionFetcher.getContextualSignalsForGenerateBid(
                         trustedBiddingData, trustedBiddingDataPerBaseUri);
+        runAdBiddingPerCAExecutionLogger.setGenerateBidBuyerAdditionalSignalsContainedDataVersion(
+                contextualSignals.getDataVersion() != null);
 
         long versionRequested = mFlags.getFledgeAdSelectionBiddingLogicJsVersion();
         Map<Integer, Long> jsVersionMap =
@@ -271,7 +275,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     versionRequested,
                                     customAudience,
                                     buyerSignals,
-                                    contextualSignals,
+                                    contextualSignals.toAdSelectionSignals(),
                                     customAudienceSignals,
                                     adSelectionSignals,
                                     trustedBiddingDataPerBaseUri,
@@ -292,6 +296,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                                 candidate);
                                         return null;
                                     }
+                                    AdCost adCost = candidate.first.getAdCost();
                                     CustomAudienceBiddingInfo customAudienceInfo =
                                             CustomAudienceBiddingInfo.create(
                                                     customAudience,
@@ -300,7 +305,9 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                                             .getContextualSignalsForReportWin(
                                                                     trustedBiddingData,
                                                                     trustedBiddingDataPerBaseUri,
-                                                                    candidate.first.getAdCost()));
+                                                                    adCost));
+                                    runAdBiddingPerCAExecutionLogger
+                                            .setRunAdBiddingPerCaReturnedAdCost(adCost != null);
                                     sLogger.v(
                                             "Creating Ad Bidding Outcome for CA: %s",
                                             customAudience.getName());

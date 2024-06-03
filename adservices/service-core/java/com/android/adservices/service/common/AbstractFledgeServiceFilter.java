@@ -39,7 +39,6 @@ import com.android.adservices.service.exception.FilterException;
 import java.util.Objects;
 
 /** Utility class to filter FLEDGE requests. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AbstractFledgeServiceFilter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

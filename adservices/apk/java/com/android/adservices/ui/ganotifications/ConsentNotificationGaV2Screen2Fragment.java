@@ -82,7 +82,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity());
         return inflater.inflate(R.layout.consent_notification_screen_2_ga_v2_eu, container, false);
     }
 
@@ -117,7 +117,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                                 .recordUserManualInteractionWithConsent(
                                         ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }
-                    requireActivity().finish();
+                    requireActivity().finishAndRemoveTask();
                 });
 
         Button rightControlButton =
@@ -224,7 +224,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                             .recordUserManualInteractionWithConsent(
                                     ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                 }
-                requireActivity().finish();
+                requireActivity().finishAndRemoveTask();
             } else {
                 ConsentNotificationActivity.handleAction(
                         LANDING_PAGE_MORE_BUTTON_CLICKED, getContext());

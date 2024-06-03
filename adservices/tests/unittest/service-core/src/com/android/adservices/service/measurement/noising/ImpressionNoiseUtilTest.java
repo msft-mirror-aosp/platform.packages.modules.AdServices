@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.TriggerSpec;
@@ -440,7 +440,7 @@ public class ImpressionNoiseUtilTest {
         Source source = SourceFixture.getMinimalValidSourceBuilder().build();
         TriggerSpecs triggerSpecs = new TriggerSpecs(getValidTriggerSpecArray(), 3, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 }

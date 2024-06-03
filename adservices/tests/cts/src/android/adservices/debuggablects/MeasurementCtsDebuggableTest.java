@@ -179,22 +179,15 @@ public class MeasurementCtsDebuggableTest {
         return value.replaceAll("test", "com");
     }
 
-    private MockWebServerRule createForHttps(int port) {
-        MockWebServerRule mockWebServerRule =
-                MockWebServerRule.forHttps(
-                        sContext, "adservices_untrusted_test_server.p12", "adservices_test");
-        try {
-            mockWebServerRule.reserveServerListeningPort(port);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-        return mockWebServerRule;
+    private MockWebServerRule createForHttps() {
+        return MockWebServerRule.forHttps(
+                sContext, "adservices_untrusted_test_server.p12", "adservices_test");
     }
 
     private MockWebServer startServer(int port, MockResponse... mockResponses) {
         try {
-            final MockWebServerRule serverRule = createForHttps(port);
-            return serverRule.startMockWebServer(List.of(mockResponses));
+            final MockWebServerRule serverRule = createForHttps();
+            return serverRule.startMockWebServer(List.of(mockResponses), port);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -616,8 +609,7 @@ public class MeasurementCtsDebuggableTest {
                 "device_config put adservices global_kill_switch false");
 
         // Override Ad ID kill switch.
-        getUiDevice().executeShellCommand(
-                "setprop debug.adservices.adid_kill_switch false");
+        getUiDevice().executeShellCommand("device_config put adservices adid_kill_switch false");
 
         // Override measurement kill switch.
         getUiDevice().executeShellCommand(
@@ -690,8 +682,7 @@ public class MeasurementCtsDebuggableTest {
                 "device_config put adservices global_kill_switch null");
 
         // Reset Ad ID kill switch.
-        getUiDevice().executeShellCommand(
-                "setprop debug.adservices.adid_kill_switch null");
+        getUiDevice().executeShellCommand("device_config put adservices adid_kill_switch null");
 
         // Reset measurement kill switch.
         getUiDevice().executeShellCommand(
