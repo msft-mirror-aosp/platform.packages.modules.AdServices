@@ -343,6 +343,8 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
             doReportImpression(doSelectAds(config).getAdSelectionId(), config);
             assertThat(dispatcher.getCalledPaths())
                     .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+            assertThat(dispatcher.getCalledPaths())
+                    .containsNoneIn(dispatcher.getVerifyNotCalledPaths());
         } finally {
             leaveCustomAudience(SHOES_CA);
         }
@@ -363,6 +365,8 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
             doReportImpression(doSelectAds(config).getAdSelectionId(), config);
             assertThat(dispatcher.getCalledPaths())
                     .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+            assertThat(dispatcher.getCalledPaths())
+                    .containsNoneIn(dispatcher.getVerifyNotCalledPaths());
         } finally {
             leaveCustomAudience(SHOES_CA);
         }

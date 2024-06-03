@@ -185,6 +185,9 @@ public class ScenarioDispatcher extends Dispatcher {
                                         : pathWithoutQueryParams(path)));
                 MockResponse response = new MockResponse().setBody(body).setResponseCode(200);
                 for (Map.Entry<String, String> mockHeader : mockResponse.getHeaders().entrySet()) {
+                    sLogger.v(
+                            "Adding header %s with value %s",
+                            mockHeader.getKey(), mockHeader.getValue());
                     response.addHeader(mockHeader.getKey(), mockHeader.getValue());
                 }
                 sLogger.v("serving path at %s with response %s", path, response.toString());
