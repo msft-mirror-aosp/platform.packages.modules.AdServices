@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -36,6 +37,7 @@ import android.os.RemoteException;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.HpkeJni;
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -43,6 +45,7 @@ import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -143,8 +146,15 @@ public abstract class E2EMockTest extends E2ETest {
 
     private static Map<String, String> sPhFlags =
             Map.ofEntries(
-                    entry("measurement_enable_configurable_aggregate_report_delay", "true"),
-                    entry("measurement_aggregate_report_delay_config", "0,0"));
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY,
+                            "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
+                            "0,0"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                            WebUtil.validUrl("https://coordinator.test")));
 
     E2EMockTest(
             Collection<Action> actions,
@@ -165,7 +175,8 @@ public abstract class E2EMockTest extends E2ETest {
                                 })
                         .get());
         mClickVerifier = mock(ClickVerifier.class);
-        mFlags = FlagsFactory.getFlags();
+        mFlags = spy(FlagsFactory.getFlags());
+        doReturn(false).when(mFlags).getEnrollmentEnableLimitedLogging();
         mErrorLogger = mock(AdServicesErrorLogger.class);
         mDatastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
@@ -637,6 +648,9 @@ public abstract class E2EMockTest extends E2ETest {
                                 AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION,
                                 sharedInfo.getString("attribution_destination"))
                         .put(
+                                AggregateReportPayloadKeys.AGGREGATION_COORDINATOR_ORIGIN,
+                                data.optString("aggregation_coordinator_origin", ""))
+                        .put(
                                 AggregateReportPayloadKeys.HISTOGRAMS,
                                 getActualAggregateHistograms(decryptedPayload));
         if (!sourceDebugKey.isEmpty()) {
@@ -708,7 +722,7 @@ public abstract class E2EMockTest extends E2ETest {
     private void runDeleteExpiredRecordsJob(long earliestValidInsertion) {
         int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         mDatastoreManager.runInTransaction(
-                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
+                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit, null));
     }
 
     void updateEnrollment(String uri) {

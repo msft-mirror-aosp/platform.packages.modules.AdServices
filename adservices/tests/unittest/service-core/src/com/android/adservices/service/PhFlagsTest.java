@@ -71,6 +71,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_BACK_COMPAT_IN
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
+import static com.android.adservices.service.Flags.DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS;
 import static com.android.adservices.service.Flags.DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
@@ -307,6 +308,7 @@ import static com.android.adservices.service.Flags.IS_U18_UX_DETENTION_CHANNEL_E
 import static com.android.adservices.service.Flags.MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+import static com.android.adservices.service.Flags.MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
@@ -509,10 +511,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_READ_TIMEO
 import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_SHA_CERTS;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST;
@@ -588,6 +590,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_B
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_BLOCKLIST_IDS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_MDD_RECORD_DELETION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_PROTO_FILE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ERROR_CODE_LOGGING_DENY_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT;
@@ -761,6 +764,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MAX_ODP_TRIGGER_
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED;
@@ -1207,65 +1211,24 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetCobaltLoggingEnabled() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getCobaltLoggingEnabled()).isEqualTo(COBALT_LOGGING_ENABLED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !COBALT_LOGGING_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_COBALT_LOGGING_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getCobaltLoggingEnabled()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetCobaltLoggingEnabled_cobaltLoggingDisabled() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-        setCobaltLoggingEnabled(false);
-
-        assertThat(mPhFlags.getCobaltLoggingEnabled()).isFalse();
-
-        verifyGetBooleanNotCalled(FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED);
+                COBALT_LOGGING_ENABLED,
+                FeatureFlagType.FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH,
+                value -> overrideGlobalKillSwitch(!value),
+                Flags::getCobaltLoggingEnabled);
     }
 
     @Test
     public void testGetAppNameApiErrorCobaltLoggingEnabled() {
-        // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
-        setCobaltLoggingEnabled(true);
 
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled())
-                .isEqualTo(APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
-
-        // Now overriding with the value from PH.
-        boolean phOverridingValue = !APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetAppNameApiErrorCobaltLoggingEnabled_cobaltLoggingDisabled() {
-        // Disable global_kill_switch so that this flag can be tested.
-        disableGlobalKillSwitch();
-        setCobaltLoggingEnabled(false);
-
-        // APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED is guarded by COBALT_LOGGING_ENABLED.
-        assertThat(mPhFlags.getAppNameApiErrorCobaltLoggingEnabled()).isFalse();
-
-        verifyGetBooleanNotCalled(FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
+                APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                value -> setCobaltLoggingEnabled(value),
+                Flags::getAppNameApiErrorCobaltLoggingEnabled);
     }
 
     @Test
@@ -1366,18 +1329,10 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetFledgeAdSelectionContextualAdsMetricsEnabled() {
-        assertThat(mPhFlags.getFledgeAdSelectionContextualAdsMetricsEnabled())
-                .isEqualTo(FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED,
-                Boolean.toString(phOverridingValue),
-                false);
-
-        assertThat(mPhFlags.getFledgeAdSelectionContextualAdsMetricsEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED,
+                Flags::getFledgeAdSelectionContextualAdsMetricsEnabled);
     }
 
     @Test
@@ -1406,34 +1361,18 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetFledgeAdFilteringMetricsEnabled() {
-        assertThat(mPhFlags.getFledgeAppInstallFilteringMetricsEnabled())
-                .isEqualTo(FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAppInstallFilteringMetricsEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED,
+                Flags::getFledgeAppInstallFilteringMetricsEnabled);
     }
 
     @Test
     public void testGetFledgeFrequencyCapFilteringMetricsEnabled() {
-        assertThat(mPhFlags.getFledgeFrequencyCapFilteringMetricsEnabled())
-                .isEqualTo(FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED);
-
-        boolean phOverridingValue = !FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeFrequencyCapFilteringMetricsEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED,
+                Flags::getFledgeFrequencyCapFilteringMetricsEnabled);
     }
 
     @Test
@@ -5897,6 +5836,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED,
                 DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED,
                 Flags::getAdServicesConsentBusinessLogicMigrationEnabled);
+    }
+
+    @Test
+    public void testGetMddEnrollmentManifestFileUrl() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL,
+                MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL,
+                Flags::getMddEnrollmentManifestFileUrl);
+    }
+
+    @Test
+    public void testGetEnrollmentProtoFileEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ENROLLMENT_PROTO_FILE_ENABLED,
+                DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED,
+                Flags::getEnrollmentProtoFileEnabled);
     }
 
     private void setMeasurementKillSwitch(boolean value) {

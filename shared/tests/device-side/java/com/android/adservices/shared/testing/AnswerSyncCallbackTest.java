@@ -27,6 +27,8 @@ import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import org.junit.Test;
 import org.mockito.Mock;
 
+// It's testing doAnswer(), so it needs to call those methods...
+@SuppressWarnings("DirectInvocationOnMock")
 public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
 
     private static final String ANSWER = "Luke's Father";
@@ -36,13 +38,6 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
             SyncCallbackFactory.newSettingsBuilder().setExpectedNumberCalls(2).build();
 
     @Mock private Voider mDarthVoider;
-
-    @Test
-    public void testUnsupportedMethods() {
-        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
-
-        assertThrows(UnsupportedOperationException.class, () -> callback.setCalled());
-    }
 
     @Test
     public void testForSingleVoidAnswer() throws Exception {
@@ -84,8 +79,6 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
         forTwoVoidAnswers(AnswerSyncCallback.forVoidAnswers(mSettingsForTwoCalls));
     }
 
-    // It's testing doAnswer(), so it needs to call those methods...
-    @SuppressWarnings("DirectInvocationOnMock")
     private void forTwoVoidAnswers(AnswerSyncCallback<Void> callback) throws Exception {
         doAnswer(callback).when(mDarthVoider).voidVoid();
         expect.withMessage("%%s.isCalled() before 1st call", callback)
@@ -116,8 +109,6 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
         forTwoAnswersTest(AnswerSyncCallback.forAnswers(ANSWER, mSettingsForTwoCalls));
     }
 
-    // It's testing doAnswer(), so it needs to call those methods...
-    @SuppressWarnings("DirectInvocationOnMock")
     private void forTwoAnswersTest(AnswerSyncCallback<String> callback) throws Exception {
         when(mDarthVoider.toString()).then(callback);
         expect.withMessage("%%s.isCalled() before 1st call", callback)
@@ -155,8 +146,6 @@ public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
         expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
     }
 
-    // It's testing doAnswer(), so it needs to call those methods...
-    @SuppressWarnings("DirectInvocationOnMock")
     @Test
     public void testForSingleFailure_nonVoid() throws Exception {
         AnswerSyncCallback<String> callback =

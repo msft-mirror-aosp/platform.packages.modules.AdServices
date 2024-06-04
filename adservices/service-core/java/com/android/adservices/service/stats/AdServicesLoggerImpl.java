@@ -228,6 +228,12 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                 mErrorCause);
     }
 
+    /** Logs enrollment transaction stats. */
+    @Override
+    public void logEnrollmentTransactionStats(AdServicesEnrollmentTransactionStats stats) {
+        mStatsdAdServicesLogger.logEnrollmentTransactionStats(stats);
+    }
+
     /** Logs encryption key fetch stats. */
     @Override
     public void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats) {

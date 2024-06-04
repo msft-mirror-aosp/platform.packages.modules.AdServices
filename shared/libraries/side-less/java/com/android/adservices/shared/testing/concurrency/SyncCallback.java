@@ -16,11 +16,8 @@
 package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Identifiable;
-import com.android.adservices.shared.testing.Nullable;
 
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
-
+// TODO(b/337014024): explain that subclasse must provide a "setCalled" method
 /** Base interface for all testing-related sync callbacks. */
 public interface SyncCallback extends Identifiable {
 
@@ -36,36 +33,9 @@ public interface SyncCallback extends Identifiable {
     /** Returns whether the callback was called (at least) the expected number of times. */
     boolean isCalled();
 
-    /** Returns the total number of calls to the callback. */
+    /** Gets the total number of calls so far. */
     int getNumberActualCalls();
 
     /** Gets the callback settings. */
     SyncCallbackSettings getSettings();
-
-    /**
-     * Convenience method to log a debug message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
-     * by {@link #toString()}) in the message.
-     */
-    @FormatMethod
-    void logE(@FormatString String msgFmt, @Nullable Object... msgArgs);
-
-    /**
-     * Convenience method to log a debug message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including the {@link #getId()
-     * id} in the message.
-     */
-    @FormatMethod
-    void logD(@FormatString String msgFmt, @Nullable Object... msgArgs);
-
-    /**
-     * Convenience method to log a verbose message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
-     * by {@link #toString()}) in the message.
-     */
-    @FormatMethod
-    void logV(@FormatString String msgFmt, @Nullable Object... msgArgs);
 }
