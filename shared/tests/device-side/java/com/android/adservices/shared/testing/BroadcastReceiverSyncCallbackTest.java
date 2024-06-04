@@ -33,6 +33,8 @@ import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 
 import org.junit.Test;
 
+// TODO(b/337014024): should extend SyncCallbackTestCase instead (it might require changing
+// BroadcastReceiverSyncCallback to implement SyncCallback)
 public final class BroadcastReceiverSyncCallbackTest extends SharedMockitoTestCase {
     private static final int TIMEOUT_MS = 200;
     private static final String ACTION = "android.cts.ACTION_1";

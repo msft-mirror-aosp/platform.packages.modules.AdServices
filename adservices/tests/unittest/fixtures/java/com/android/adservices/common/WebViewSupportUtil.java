@@ -82,4 +82,16 @@ public final class WebViewSupportUtil {
                         .isWasmSupported()
                         .get(2, TimeUnit.SECONDS);
     }
+
+    /**
+     * @return a boolean to indicate if Javascript sandbox supports evaluation without transaction
+     *     limits.
+     */
+    public static boolean isEvaluationWithoutTransactionLimitSupportAvailable(Context context)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        return isJSSandboxAvailable(context)
+                && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                        .isLargeTransactionsSupported()
+                        .get(2, TimeUnit.SECONDS);
+    }
 }

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="            LogUtil.e(String.format(&quot;Flag was not set on iteration %d.&quot;, i));"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/ui/libs/src/com/android/adservices/tests/ui/libs/UiUtils.java"
+            line="94"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="                String.format("
+        errorLine2="                ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/ui/libs/src/com/android/adservices/tests/ui/libs/UiUtils.java"
+            line="352"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="InlinedApi"
+        message="Field requires API level 33 (current min is 30): `android.Manifest.permission#POST_NOTIFICATIONS`"
+        errorLine1="                .grantRuntimePermission(&quot;com.android.adservices.api&quot;, POST_NOTIFICATIONS);"
+        errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/ui/libs/src/com/android/adservices/tests/ui/libs/UiUtils.java"
+            line="225"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `enableAdServices`"
+        errorLine1="        mCommonManager.enableAdServices("
+        errorLine2="                       ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/ui/libs/src/com/android/adservices/tests/ui/libs/UiUtils.java"
+            line="581"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                new OutcomeReceiver&lt;>() {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/ui/libs/src/com/android/adservices/tests/ui/libs/UiUtils.java"
+            line="590"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="ExpiredTargetSdkVersion"
+        message="Google Play requires that apps target API level 33 or higher."
+        errorLine1="    &lt;uses-sdk android:minSdkVersion=&quot;30&quot; android:targetSdkVersion=&quot;16&quot;/>"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/ui/libs/adservices-ui-cts-root-test-lib/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_fixer/AndroidManifest.xml"
+            line="19"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="NewAdServicesFile"
+        message="Please use FileCompatUtils to ensure any newly added files have a name that begins with &quot;adservices&quot; or create the files in a subdirectory called &quot;adservices/&quot;"
+        errorLine1="                    new File("
+        errorLine2="                    ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/ui/libs/src/com/android/adservices/tests/ui/libs/UiUtils.java"
+            line="560"
+            column="21"/>
+    </issue>
+
+</issues>

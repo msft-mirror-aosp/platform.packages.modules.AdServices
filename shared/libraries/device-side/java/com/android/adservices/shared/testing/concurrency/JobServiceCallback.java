@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.adservices.shared.testing;
+package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
 import static com.android.adservices.shared.util.Preconditions.checkState;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.Mockito.doAnswer;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.util.Log;
 
-import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.base.Supplier;

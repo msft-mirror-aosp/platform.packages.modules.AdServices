@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="                                String.format("
+        errorLine2="                                ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/CustomAudienceSubject.java"
+            line="71"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="                                String.format("
+        errorLine2="                                ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/CustomAudienceSubject.java"
+            line="87"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="                + String.format(&quot;    wait(\&quot;%d\&quot;);\n&quot;, waitTimeMs);"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/FledgeCtsDebuggableTest.java"
+            line="4836"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="                                String.format("
+        errorLine2="                                ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/MockWebServerRule.java"
+            line="168"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="        return String.format(&quot;%s://localhost:%d&quot;, useHttps() ? &quot;https&quot; : &quot;http&quot;, mPort);"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/MockWebServerRule.java"
+            line="210"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="InlinedApi"
+        message="Field requires API level 33 (current min is 30): `android.content.Context#RECEIVER_EXPORTED`"
+        errorLine1="            mContext.registerReceiver(mReceiver, filter, Context.RECEIVER_EXPORTED);"
+        errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/SimpleActivityBase.java"
+            line="134"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `java.lang.Class#getPackageName`"
+        errorLine1="    private static final String TAG = CustomAudienceTestFixture.class.getPackageName();"
+        errorLine2="                                                                      ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="39"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `org.json.JSONObject#keySet`"
+        errorLine1="        for (String key : substitutions.keySet()) {"
+        errorLine2="                                        ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/ScenarioLoader.java"
+            line="175"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `org.json.JSONObject#keySet`"
+        errorLine1="        for (String key : json.keySet()) {"
+        errorLine2="                               ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/ScenarioLoader.java"
+            line="206"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `java.lang.Class#getPackageName`"
+        errorLine1="                .setClassName(activityClass.getPackageName(), activityClass.getName())"
+        errorLine2="                                            ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/SimpleActivityBase.java"
+            line="68"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());"
+        errorLine2="                                                                  ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/AdSelectionManagerDebuggableTest.java"
+            line="74"
+            column="67"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());"
+        errorLine2="                                                ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/AdSelectionManagerDebuggableTest.java"
+            line="75"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        boolean isDeveloperMode = devContextFilter.isDeveloperMode();"
+        errorLine2="                                                   ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/AdSelectionManagerDebuggableTest.java"
+            line="76"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());"
+        errorLine2="                                                                  ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/CustomAudienceCtsDebuggableTest.java"
+            line="67"
+            column="67"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());"
+        errorLine2="                                                ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/CustomAudienceCtsDebuggableTest.java"
+            line="68"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        boolean isDeveloperMode = devContextFilter.isDeveloperMode();"
+        errorLine2="                                                   ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/CustomAudienceCtsDebuggableTest.java"
+            line="69"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        DevContext mDevContext = DevContextFilter.create(context).createDevContext(Process.myUid());"
+        errorLine2="                                                                  ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/DevContextUtils.java"
+            line="41"
+            column="67"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                devContextFilter.isDebuggable(mDevContext.getCallingAppPackageName());"
+        errorLine2="                                 ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/DevContextUtils.java"
+            line="43"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        boolean isDeveloperMode = devContextFilter.isDeveloperMode();"
+        errorLine2="                                                   ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/DevContextUtils.java"
+            line="44"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mDevContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());"
+        errorLine2="                                                        ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/FledgeCtsDebuggableTest.java"
+            line="502"
+            column="57"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                devContextFilter.isDebuggable(mDevContext.getCallingAppPackageName());"
+        errorLine2="                                 ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/FledgeCtsDebuggableTest.java"
+            line="504"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        boolean isDeveloperMode = devContextFilter.isDeveloperMode();"
+        errorLine2="                                                   ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/FledgeCtsDebuggableTest.java"
+            line="505"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                                AD_SELECTION_PREBUILT_SCHEMA,"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/FledgeCtsDebuggableTest.java"
+            line="1076"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                                AD_SELECTION_USE_CASE,"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/FledgeCtsDebuggableTest.java"
+            line="1077"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                                AD_SELECTION_HIGHEST_BID_WINS,"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/FledgeCtsDebuggableTest.java"
+            line="1078"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                AD_SELECTION_PREBUILT_SCHEMA,"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/FledgeCtsDebuggableTest.java"
+            line="2676"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                AD_SELECTION_PREBUILT_SCHEMA,"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/FledgeCtsDebuggableTest.java"
+            line="2720"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        assertThat(commandResult.getOut()).contains(validateAndSerializeBase64(&quot;AAAAAQ==&quot;));"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/GenerateInputForEncodingShellCommandTest.java"
+            line="123"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        assertThat(commandResult.getOut()).contains(validateAndSerializeBase64(&quot;AAAAAg==&quot;));"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/GenerateInputForEncodingShellCommandTest.java"
+            line="124"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionCode` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/CtsAdExtServicesDebuggableDeviceTestCases/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionName` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/CtsAdExtServicesDebuggableDeviceTestCases/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="HardcodedDebugMode"
+        message="Avoid hardcoding the debug mode; leaving it out allows debug and release builds to automatically assign one"
+        errorLine1="        android:debuggable=&quot;true&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/CtsAdExtServicesDebuggableDeviceTestCases/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="56"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    protected static final Context sContext = ApplicationProvider.getApplicationContext();"
+        errorLine2="              ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="78"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();"
+        errorLine2="            ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="84"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    protected static final Context sContext = ApplicationProvider.getApplicationContext();"
+        errorLine2="              ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/debuggablects/MeasurementCtsDebuggableTest.java"
+            line="68"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        message="Should explicitly set `android:icon`, there is no default"
+        errorLine1="    &lt;application"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/CtsAdExtServicesDebuggableDeviceTestCases/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="54"
+            column="6"/>
+    </issue>
+
+</issues>

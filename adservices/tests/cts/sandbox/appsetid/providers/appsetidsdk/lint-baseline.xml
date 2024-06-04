@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="NewApi"
+        message="Class requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.app.sdksandbox.SandboxedSdkProvider`"
+        errorLine1="public class AppSetIdSdk extends SandboxedSdkProvider {"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/src/com/android/tests/providers/appsetidsdk/AppSetIdSdk.java"
+            line="35"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.app.sdksandbox.SandboxedSdkProvider#getContext`"
+        errorLine1="            AppSetIdManager appSetIdManager = AppSetIdManager.get(getContext());"
+        errorLine2="                                                                  ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/src/com/android/tests/providers/appsetidsdk/AppSetIdSdk.java"
+            line="42"
+            column="67"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 6 of the Ad Services Extensions SDK (current min is 0): `android.adservices.appsetid.AppSetIdManager#get`"
+        errorLine1="            AppSetIdManager appSetIdManager = AppSetIdManager.get(getContext());"
+        errorLine2="                                                              ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/src/com/android/tests/providers/appsetidsdk/AppSetIdSdk.java"
+            line="42"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.appsetid.AppSetIdManager#getAppSetId`"
+        errorLine1="            appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, callback);"
+        errorLine2="                            ~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/src/com/android/tests/providers/appsetidsdk/AppSetIdSdk.java"
+            line="58"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.appsetid.AppSetId#getId`"
+        errorLine1="            if (resultAppSetId.getId() != null) {"
+        errorLine2="                               ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/src/com/android/tests/providers/appsetidsdk/AppSetIdSdk.java"
+            line="62"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.appsetid.AppSetId#getId`"
+        errorLine1="                                + resultAppSetId.getId());"
+        errorLine2="                                                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/src/com/android/tests/providers/appsetidsdk/AppSetIdSdk.java"
+            line="67"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.SandboxedSdk`"
+        errorLine1="                return new SandboxedSdk(new Binder());"
+        errorLine2="                       ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/src/com/android/tests/providers/appsetidsdk/AppSetIdSdk.java"
+            line="68"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="                throw new LoadSdkException(new Exception(&quot;AppSetId failed.&quot;), new Bundle());"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/src/com/android/tests/providers/appsetidsdk/AppSetIdSdk.java"
+            line="72"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="            throw new LoadSdkException(e, new Bundle());"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/src/com/android/tests/providers/appsetidsdk/AppSetIdSdk.java"
+            line="78"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionCode` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; package=&quot;com.android.tests.providers.appsetidsdk&quot;>"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/AppSetIdSdk/android_common/e18b8e8d84cb9f664aa09a397b08c165/manifest_fixer/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionName` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; package=&quot;com.android.tests.providers.appsetidsdk&quot;>"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/AppSetIdSdk/android_common/e18b8e8d84cb9f664aa09a397b08c165/manifest_fixer/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        message="Should explicitly set `android:icon`, there is no default"
+        errorLine1="    &lt;application android:usesNonSdkApi=&quot;true&quot; android:extractNativeLibs=&quot;false&quot;>"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/appsetid/providers/appsetidsdk/AppSetIdSdk/android_common/e18b8e8d84cb9f664aa09a397b08c165/manifest_fixer/AndroidManifest.xml"
+            line="21"
+            column="6"/>
+    </issue>
+
+</issues>

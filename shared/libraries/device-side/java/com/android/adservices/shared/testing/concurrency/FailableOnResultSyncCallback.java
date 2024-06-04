@@ -23,7 +23,7 @@ package com.android.adservices.shared.testing.concurrency;
  * @param <F> type of the failure.
  */
 public abstract class FailableOnResultSyncCallback<T, F> extends FailableResultSyncCallback<T, F>
-        implements OnResultTestSyncCallback<T> {
+        implements IOnResultSyncCallback<T> {
 
     protected FailableOnResultSyncCallback() {
         super();

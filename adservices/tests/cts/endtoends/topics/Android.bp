@@ -50,6 +50,11 @@ android_test {
     min_sdk_version: "Tiramisu",
     manifest: "CtsAdServicesEndToEndTestsManifest.xml",
     test_config: "CtsAdServicesEndToEndTests.xml",
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -65,4 +70,9 @@ android_test {
     max_sdk_version: "32",
     manifest: "CtsAdExtServicesEndToEndTestsManifest.xml",
     test_config: "CtsAdExtServicesEndToEndTests.xml",
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

@@ -55,6 +55,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.RetryStrategyImpl;
@@ -377,7 +378,9 @@ public class JSScriptEngineTest {
     }
 
     @Test
-    public void testCanHandleFailuresFromWebView() {
+    public void testCanHandleFailuresFromWebView() throws Exception {
+        Assume.assumeFalse(
+                WebViewSupportUtil.isEvaluationWithoutTransactionLimitSupportAvailable(sContext));
         // The binder can transfer at most 1MB, this is larger than needed since, once
         // converted into a JS array initialization script will be way over the limits.
         List<JSScriptNumericArgument<Integer>> tooBigForBinder =
@@ -395,7 +398,7 @@ public class JSScriptEngineTest {
                                                 + " return array.length;\n"
                                                 + "}",
                                         ImmutableList.of(arrayArg("array", tooBigForBinder)),
-                                        "test",
+                                        "helloBigArray",
                                         mDefaultIsolateSettings,
                                         mNoOpRetryStrategy));
         assertThat(outerException).hasCauseThat().isInstanceOf(JSExecutionException.class);

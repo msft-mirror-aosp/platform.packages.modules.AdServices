@@ -35,10 +35,15 @@ public final class GetAdSelectionDataRequest {
 
     @Nullable private final Uri mCoordinatorOriginUri;
 
+    @Nullable private final SellerConfiguration mSellerConfiguration;
+
     private GetAdSelectionDataRequest(
-            @Nullable AdTechIdentifier seller, @Nullable Uri coordinatorOriginUri) {
+            @Nullable AdTechIdentifier seller,
+            @Nullable Uri coordinatorOriginUri,
+            @Nullable SellerConfiguration sellerConfiguration) {
         this.mSeller = seller;
         this.mCoordinatorOriginUri = coordinatorOriginUri;
+        this.mSellerConfiguration = sellerConfiguration;
     }
 
     /**
@@ -61,12 +66,25 @@ public final class GetAdSelectionDataRequest {
     }
 
     /**
+     * Returns the seller ad tech's requested payload configuration, set by the calling SDK, to
+     * optimize the payload. If this is null, the service will send all data available.
+     *
+     * @hide
+     */
+    @Nullable
+    public SellerConfiguration getSellerConfiguration() {
+        return mSellerConfiguration;
+    }
+
+    /**
      * Builder for {@link GetAdSelectionDataRequest} objects.
      */
     public static final class Builder {
         @Nullable private AdTechIdentifier mSeller;
 
         @Nullable private Uri mCoordinatorOriginUri;
+
+        @Nullable private SellerConfiguration mSellerConfiguration;
 
         public Builder() {}
 
@@ -100,7 +118,21 @@ public final class GetAdSelectionDataRequest {
          */
         @NonNull
         public GetAdSelectionDataRequest build() {
-            return new GetAdSelectionDataRequest(mSeller, mCoordinatorOriginUri);
+            return new GetAdSelectionDataRequest(
+                    mSeller, mCoordinatorOriginUri, mSellerConfiguration);
+        }
+
+        /**
+         * Sets the {@link SellerConfiguration}. See {@link #getSellerConfiguration()} for more
+         * details.
+         *
+         * @hide
+         */
+        @NonNull
+        public GetAdSelectionDataRequest.Builder setSellerConfiguration(
+                @Nullable SellerConfiguration sellerConfiguration) {
+            this.mSellerConfiguration = sellerConfiguration;
+            return this;
         }
     }
 }

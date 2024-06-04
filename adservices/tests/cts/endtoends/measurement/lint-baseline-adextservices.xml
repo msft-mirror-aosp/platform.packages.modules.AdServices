@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerSource`"
+        errorLine1="        mMeasurementManager.registerSource("
+        errorLine2="                            ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="129"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                new OutcomeReceiver&lt;>() {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="157"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerSource`"
+        errorLine1="        mMeasurementManager.registerSource("
+        errorLine2="                            ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="170"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerSource`"
+        errorLine1="        mMeasurementManager.registerSource("
+        errorLine2="                            ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="268"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerTrigger`"
+        errorLine1="        mMeasurementManager.registerTrigger("
+        errorLine2="                            ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="353"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerWebSource`"
+        errorLine1="        mMeasurementManager.registerWebSource("
+        errorLine2="                            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="451"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerWebTrigger`"
+        errorLine1="        mMeasurementManager.registerWebTrigger("
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="556"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `deleteRegistrations`"
+        errorLine1="        mMeasurementManager.deleteRegistrations("
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="648"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `deleteRegistrations`"
+        errorLine1="        mMeasurementManager.deleteRegistrations("
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="675"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `deleteRegistrations`"
+        errorLine1="        mMeasurementManager.deleteRegistrations("
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="683"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `deleteRegistrations`"
+        errorLine1="        mMeasurementManager.deleteRegistrations("
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="723"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `deleteRegistrations`"
+        errorLine1="        mMeasurementManager.deleteRegistrations("
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="759"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `deleteRegistrations`"
+        errorLine1="        mMeasurementManager.deleteRegistrations("
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="797"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                new OutcomeReceiver&lt;>() {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="832"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `deleteRegistrations`"
+        errorLine1="        manager.deleteRegistrations(request, mExecutorService, callback);"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="852"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMeasurementApiStatus`"
+        errorLine1="            manager.getMeasurementApiStatus("
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="984"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                    new OutcomeReceiver&lt;>() {"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="1037"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerSource`"
+        errorLine1="            manager.registerSource(SOURCE_REGISTRATION_URI, null, CALLBACK_EXECUTOR, osCallback);"
+        errorLine2="                    ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="1051"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                    new OutcomeReceiver&lt;>() {"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="1084"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerWebSource`"
+        errorLine1="            manager.registerWebSource(webSourceRegistrationRequest, CALLBACK_EXECUTOR, osCallback);"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="1098"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                    new OutcomeReceiver&lt;>() {"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="1117"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerTrigger`"
+        errorLine1="            manager.registerTrigger(TRIGGER_REGISTRATION_URI, CALLBACK_EXECUTOR, osCallback);"
+        errorLine2="                    ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="1131"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                    new OutcomeReceiver&lt;>() {"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="1157"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerWebTrigger`"
+        errorLine1="            manager.registerWebTrigger("
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="1171"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                    new OutcomeReceiver&lt;>() {"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="1191"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerSource`"
+        errorLine1="            manager.registerSource(SOURCE_REGISTRATION_URI, null, CALLBACK_EXECUTOR, osCallback);"
+        errorLine2="                    ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/src/com/android/adservices/tests/cts/measurement/MeasurementManagerCtsTest.java"
+            line="1205"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionCode` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/CtsAdExtServicesEndToEndTestMeasurement/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionName` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/CtsAdExtServicesEndToEndTestMeasurement/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        message="Should explicitly set `android:icon`, there is no default"
+        errorLine1="    &lt;application"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/endtoends/measurement/CtsAdExtServicesEndToEndTestMeasurement/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="44"
+            column="6"/>
+    </issue>
+
+</issues>

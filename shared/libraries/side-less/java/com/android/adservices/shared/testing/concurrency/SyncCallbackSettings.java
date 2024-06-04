@@ -76,9 +76,7 @@ public final class SyncCallbackSettings implements Identifiable {
         return mFailIfCalledOnMainThread;
     }
 
-    // TODO(b/337014024): add unit test to check this logic (currently it's indirectly checked by
-    // AbstractTestSyncCallbackTest, but it will be refactored)
-    public boolean isMainThread() {
+    boolean isMainThread() {
         return mIsMainThreadSupplier.get();
     }
 
@@ -122,6 +120,24 @@ public final class SyncCallbackSettings implements Identifiable {
 
     boolean isCalled() {
         return mLatch.getCount() == 0;
+    }
+
+    /**
+     * Checks that the given settings is not configured to {@link
+     * SyncCallbackSettings#isFailIfCalledOnMainThread() fail if called in the main thread}.
+     *
+     * @return same settings
+     * @throws IllegalArgumentException if configured to {@link
+     *     SyncCallbackSettings#isFailIfCalledOnMainThread() fail if called in the main thread}.
+     */
+    public static SyncCallbackSettings checkCanFailOnMainThread(SyncCallbackSettings settings) {
+        if (settings.isFailIfCalledOnMainThread()) {
+            throw new IllegalArgumentException(
+                    "Cannot use a SyncCallbackSettings ("
+                            + settings
+                            + ") that fails if called on main thread");
+        }
+        return settings;
     }
 
     /** Bob the Builder! */

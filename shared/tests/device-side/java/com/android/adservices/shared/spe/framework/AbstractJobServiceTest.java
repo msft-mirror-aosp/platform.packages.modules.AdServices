@@ -54,8 +54,8 @@ import com.android.adservices.shared.proto.ModuleJobPolicy;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
-import com.android.adservices.shared.testing.JobServiceCallback;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
+import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;

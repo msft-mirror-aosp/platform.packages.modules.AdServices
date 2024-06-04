@@ -19,7 +19,7 @@ import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
 
 import org.junit.Test;
 
-abstract class OnResultSyncCallbackTestCase<R, CB extends OnResultTestSyncCallback<R>>
+abstract class OnResultSyncCallbackTestCase<R, CB extends IOnResultSyncCallback<R>>
         extends IResultSyncCallbackTestCase<R, CB> {
 
     @Test

@@ -127,7 +127,7 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
             throws Exception {
         ScenarioDispatcher scenarioDispatcher =
                 mMockWebServerRule.startMockWebServer(scenarioDispatcherFactory);
-        mServerBaseAddress = mMockWebServerRule.getServerBaseAddress();
+        mServerBaseAddress = scenarioDispatcher.getBaseAddressWithPrefix().toString();
         return scenarioDispatcher;
     }
 }

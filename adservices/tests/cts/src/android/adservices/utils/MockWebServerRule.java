@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 
 import android.content.Context;
 import android.net.Uri;
-import android.util.Log;
 
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
@@ -36,12 +35,12 @@ import org.junit.runners.model.Statement;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.ServerSocket;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -53,10 +52,8 @@ import javax.net.ssl.SSLSocketFactory;
 /** Instances of this class are not thread safe. */
 public class MockWebServerRule implements TestRule {
     private static final String TAG = "adservices.fledge";
-    private static final int UNINITIALIZED = -1;
     private final InputStream mCertificateInputStream;
     private final char[] mKeyStorePassword;
-    private int mPort = UNINITIALIZED;
     private MockWebServer mMockWebServer;
 
     private MockWebServerRule(InputStream inputStream, String keyStorePassword) {
@@ -99,11 +96,15 @@ public class MockWebServerRule implements TestRule {
         return Objects.nonNull(mCertificateInputStream);
     }
 
-    public MockWebServer startMockWebServer(List<MockResponse> responses) throws Exception {
-        if (mPort == UNINITIALIZED) {
-            reserveServerListeningPort();
-        }
-
+    /**
+     * Start a {@link MockWebServer} for a given scenario.
+     *
+     * @param responses list of {@link MockResponse} to use.
+     * @param port the port on which the webserver should be started
+     * @return newly constructed {@link MockWebServer}
+     */
+    public MockWebServer startMockWebServer(List<MockResponse> responses, int port)
+            throws Exception {
         mMockWebServer = new MockWebServer();
         if (useHttps()) {
             mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
@@ -111,7 +112,7 @@ public class MockWebServerRule implements TestRule {
         for (MockResponse response : responses) {
             mMockWebServer.enqueue(response);
         }
-        mMockWebServer.play(mPort);
+        mMockWebServer.play(port);
         return mMockWebServer;
     }
 
@@ -127,18 +128,20 @@ public class MockWebServerRule implements TestRule {
         return startMockWebServer(dispatcher);
     }
 
+    /**
+     * Start a {@link MockWebServer} for a given scenario.
+     *
+     * @param dispatcher dispatcher to use.
+     * @return newly constructed {@link MockWebServer}
+     */
     public MockWebServer startMockWebServer(Dispatcher dispatcher) throws Exception {
-        if (mPort == UNINITIALIZED) {
-            reserveServerListeningPort();
-        }
-
         mMockWebServer = new MockWebServer();
         if (useHttps()) {
             mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
         }
         mMockWebServer.setDispatcher(dispatcher);
 
-        mMockWebServer.play(mPort);
+        mMockWebServer.play();
         return mMockWebServer;
     }
 
@@ -154,31 +157,24 @@ public class MockWebServerRule implements TestRule {
     public ScenarioDispatcher startMockWebServer(
             ScenarioDispatcherFactory scenarioDispatcherFactory)
             throws IOException, GeneralSecurityException, JSONException {
-        if (mPort == UNINITIALIZED) {
-            reserveServerListeningPort();
-        }
-
         mMockWebServer = new MockWebServer();
         if (useHttps()) {
             mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
         }
+        mMockWebServer.play();
         ScenarioDispatcher dispatcher =
                 scenarioDispatcherFactory.getDispatcher(
                         new URL(
                                 String.format(
+                                        Locale.ENGLISH,
                                         "%s://localhost:%d",
-                                        useHttps() ? "https" : "http", mPort)));
+                                        useHttps() ? "https" : "http",
+                                        mMockWebServer.getPort())));
         mMockWebServer.setDispatcher(dispatcher);
-
-        mMockWebServer.play(mPort);
         return dispatcher;
     }
 
     public MockWebServer createMockWebServer() throws Exception {
-        if (mPort == UNINITIALIZED) {
-            reserveServerListeningPort();
-        }
-
         mMockWebServer = new MockWebServer();
         if (useHttps()) {
             mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
@@ -187,13 +183,12 @@ public class MockWebServerRule implements TestRule {
     }
 
     public MockWebServer startCreatedMockWebServer(Dispatcher dispatcher) throws Exception {
-        if (mMockWebServer == null || mPort == UNINITIALIZED) {
+        if (mMockWebServer == null) {
             throw new IllegalStateException(
                     "MockWebServer is not created or the port is not reserved.");
         }
         mMockWebServer.setDispatcher(dispatcher);
-
-        mMockWebServer.play(mPort);
+        mMockWebServer.play();
         return mMockWebServer;
     }
 
@@ -205,9 +200,15 @@ public class MockWebServerRule implements TestRule {
         return mMockWebServer;
     }
 
-    /** @return the base address the mock web server will be listening to when started. */
-    public String getServerBaseAddress() {
-        return String.format("%s://localhost:%d", useHttps() ? "https" : "http", mPort);
+    /**
+     * @return the base address the mock web server will be listening to when started.
+     */
+    private String getServerBaseAddress() {
+        return String.format(
+                Locale.ENGLISH,
+                "%s://localhost:%d",
+                useHttps() ? "https" : "http",
+                mMockWebServer.getPort());
     }
 
     /**
@@ -221,34 +222,6 @@ public class MockWebServerRule implements TestRule {
         return Uri.parse(
                 String.format(
                         "%s%s%s", getServerBaseAddress(), path.startsWith("/") ? "" : "/", path));
-    }
-
-    private void reserveServerListeningPort() throws IOException {
-        // Ask the operating system (via magic number 0) to give us a free port. This prevents any
-        // issues where the port has not yet been freed from previous test runs.
-        ServerSocket serverSocket = new ServerSocket(0);
-        serverSocket.setReuseAddress(true);
-        mPort = serverSocket.getLocalPort();
-        Log.d(TAG, "MockWebServer binding to port: " + mPort);
-        serverSocket.close();
-    }
-
-    /**
-     * Provides the ability to define a port before starting the mock web server. Otherwise, if the
-     * port has already been initialized it will throw an {@link IllegalStateException}
-     *
-     * @param port the port to be configured
-     * @throws IOException if port already in used
-     */
-    public void reserveServerListeningPort(int port) throws IOException {
-        if (mPort != UNINITIALIZED) {
-            throw new IllegalStateException("Port has already been initialized");
-        }
-
-        ServerSocket serverSocket = new ServerSocket(port);
-        serverSocket.setReuseAddress(true);
-        mPort = serverSocket.getLocalPort();
-        serverSocket.close();
     }
 
     private SSLSocketFactory getTestingSslSocketFactory()
@@ -328,7 +301,6 @@ public class MockWebServerRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                reserveServerListeningPort();
                 try {
                     base.evaluate();
                 } finally {

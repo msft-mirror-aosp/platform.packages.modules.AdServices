@@ -49,4 +49,26 @@ public final class GetAdSelectionDataRequestTest extends AdServicesUnitTestCase 
         expect.that(request.getSeller()).isEqualTo(SELLER);
         expect.that(request.getCoordinatorOriginUri()).isEqualTo(expectedUri);
     }
+
+    @Test
+    public void testGetAdSelectionDataRequest_sellerConfiguration_success() {
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(SELLER)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
+                        .build();
+
+        expect.that(request.getSeller()).isEqualTo(SELLER);
+        expect.that(request.getSellerConfiguration())
+                .isEqualTo(SellerConfigurationFixture.SELLER_CONFIGURATION);
+    }
+
+    @Test
+    public void testGetAdSelectionDataRequest_withoutSellerConfiguration_success() {
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+
+        expect.that(request.getSeller()).isEqualTo(SELLER);
+        expect.that(request.getSellerConfiguration()).isNull();
+    }
 }
