@@ -83,6 +83,14 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     }
 
     /**
+     * {@code testHasExpectedConstructors} expects that the callback class has 2 constructors; if it
+     * uses a factory approach instead, it should override this method to return {@code true}.
+     */
+    protected boolean usesFactoryApproach() {
+        return false;
+    }
+
+    /**
      * Abstraction to "call" the callback.
      *
      * <p>By default it will call {@code setCalled()}, but should be overridden by subclasses that
@@ -122,6 +130,8 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
     @Test
     public final void testHasExpectedConstructors() throws Exception {
+        assumeFalse("callback uses factory approach", usesFactoryApproach());
+
         CB callback = newFrozenCallback(mDefaultSettings);
         @SuppressWarnings("unchecked")
         Class<CB> callbackClass = (Class<CB>) callback.getClass();
