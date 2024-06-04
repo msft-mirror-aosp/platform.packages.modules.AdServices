@@ -53,7 +53,7 @@ public class FailableResultSyncCallback<R, F> extends AbstractSyncCallback
     public FailableResultSyncCallback(SyncCallbackSettings settings) {
         super(settings);
 
-        mCallback = new ResultSyncCallback<>(settings);
+        mCallback = new ResultSyncCallback<>(this, settings);
     }
 
     /**
@@ -151,6 +151,16 @@ public class FailableResultSyncCallback<R, F> extends AbstractSyncCallback
     public final R assertResultReceived() throws InterruptedException {
         assertCalled();
         return getResult();
+    }
+
+    @Override
+    public final int getNumberActualCalls() {
+        return mCallback.getNumberActualCalls();
+    }
+
+    @Override
+    public final void assertCalled() throws InterruptedException {
+        mCallback.internalAssertCalled();
     }
 
     @Override
