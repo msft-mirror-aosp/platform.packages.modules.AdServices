@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.lint
+package android.adservices.lint.prod
 
 import android.adservices.parser.AndroidManifestParser
 import com.android.tools.lint.detector.api.*

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.lint
+package android.adservices.lint.prod
 
 import com.android.tools.lint.detector.api.*
 import com.intellij.psi.PsiMethod
