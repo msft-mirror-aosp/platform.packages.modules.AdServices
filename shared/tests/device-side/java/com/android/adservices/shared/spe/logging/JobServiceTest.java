@@ -39,6 +39,7 @@ import android.annotation.NonNull;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
@@ -227,6 +228,7 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
 
     /** To test 1) onStopJob() is called as first execution 2) onStopJob w/o retry. */
     @Test
+    @FlakyTest(bugId = 344643516)
     public void testJobExecutionLifeCycle_onStopWithRetryThenOnStopWithoutRetry()
             throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
