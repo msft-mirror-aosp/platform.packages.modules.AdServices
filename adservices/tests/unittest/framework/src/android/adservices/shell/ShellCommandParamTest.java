@@ -22,15 +22,18 @@ import org.junit.Test;
 
 public final class ShellCommandParamTest extends AdServicesUnitTestCase {
 
+    private static final long MAX_COMMAND_DURATION_MILLIS = 3000L;
+
     @Test
     public void testEqualsHashCode() {
         String[] commandArgs = new String[] {"Cmd", "arg"};
-        ShellCommandParam param1 = new ShellCommandParam(commandArgs);
-        ShellCommandParam param2 = new ShellCommandParam(commandArgs);
+        ShellCommandParam param1 = new ShellCommandParam(MAX_COMMAND_DURATION_MILLIS, commandArgs);
+        ShellCommandParam param2 = new ShellCommandParam(MAX_COMMAND_DURATION_MILLIS, commandArgs);
 
         expectEquals(param1, param2);
 
-        ShellCommandParam param3 = new ShellCommandParam(new String[] {"Cmd3", "arg"});
+        ShellCommandParam param3 =
+                new ShellCommandParam(MAX_COMMAND_DURATION_MILLIS, new String[] {"Cmd3", "arg"});
 
         expectNotEquals(param1, param3);
         expectNotEquals(param2, param3);
