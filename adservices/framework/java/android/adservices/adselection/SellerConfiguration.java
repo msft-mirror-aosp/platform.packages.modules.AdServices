@@ -94,6 +94,23 @@ public final class SellerConfiguration implements Parcelable {
                 (targetParcel, sourceSet) -> dest.writeTypedList(new ArrayList<>(sourceSet)));
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof SellerConfiguration) {
+            SellerConfiguration sellerConfiguration = (SellerConfiguration) o;
+            return Objects.equals(
+                            mTargetPayloadSizeBytes, sellerConfiguration.mTargetPayloadSizeBytes)
+                    && Objects.equals(
+                            mPerBuyerConfigurations, sellerConfiguration.mPerBuyerConfigurations);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mTargetPayloadSizeBytes, mPerBuyerConfigurations);
+    }
+
     /**
      * Returns the size of the payload in bytes that the service will return. If there is not enough
      * data to fill up the payload to this limit, the service will fill up the rest of the payload
