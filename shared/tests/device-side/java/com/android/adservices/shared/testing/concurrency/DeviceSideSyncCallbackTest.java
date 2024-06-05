@@ -74,6 +74,7 @@ public final class DeviceSideSyncCallbackTest
     private static final class ConcreteDeviceSideySncCallback extends DeviceSideSyncCallback
             implements ResultlessSyncCallback {
 
+        @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteDeviceSideySncCallback() {
             this(SyncCallbackFactory.newSettingsBuilder().build());
         }
