@@ -17,7 +17,7 @@ package com.android.adservices.shared.testing;
 
 import android.os.OutcomeReceiver;
 
-import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 
 /**
@@ -28,7 +28,7 @@ import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
  *
  * @param <T> type of outcome
  */
-public final class OutcomeReceiverForTests<T> extends FailableResultSyncCallback<T, Exception>
+public final class OutcomeReceiverForTests<T> extends FailableOnResultSyncCallback<T, Exception>
         implements OutcomeReceiver<T, Exception> {
 
     /**
@@ -42,11 +42,6 @@ public final class OutcomeReceiverForTests<T> extends FailableResultSyncCallback
     /** Custom constructor. */
     public OutcomeReceiverForTests(SyncCallbackSettings settings) {
         super(settings);
-    }
-
-    @Override
-    public void onResult(T result) {
-        injectResult(result);
     }
 
     @Override

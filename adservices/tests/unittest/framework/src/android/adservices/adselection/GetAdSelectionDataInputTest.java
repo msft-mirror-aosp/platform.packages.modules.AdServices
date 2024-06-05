@@ -51,6 +51,25 @@ public final class GetAdSelectionDataInputTest extends AdServicesUnitTestCase {
         expect.that(getAdSelectionDataInput.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
         expect.that(getAdSelectionDataInput.getCoordinatorOriginUri())
                 .isEqualTo(COORDINATOR_ORIGIN);
+        expect.that(getAdSelectionDataInput.getSellerConfiguration()).isNull();
+    }
+
+    @Test
+    public void testBuildGetAdSelectionDataInputWithSellerConfiguration() {
+        GetAdSelectionDataInput getAdSelectionDataInput =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
+                        .build();
+
+        expect.that(getAdSelectionDataInput.getSeller()).isEqualTo(SELLER);
+        expect.that(getAdSelectionDataInput.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(getAdSelectionDataInput.getCoordinatorOriginUri())
+                .isEqualTo(COORDINATOR_ORIGIN);
+        expect.that(getAdSelectionDataInput.getSellerConfiguration())
+                .isEqualTo(SellerConfigurationFixture.SELLER_CONFIGURATION);
     }
 
     @Test
@@ -60,6 +79,7 @@ public final class GetAdSelectionDataInputTest extends AdServicesUnitTestCase {
                         .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -70,6 +90,8 @@ public final class GetAdSelectionDataInputTest extends AdServicesUnitTestCase {
         expect.that(fromParcel.getSeller()).isEqualTo(SELLER);
         expect.that(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
         expect.that(fromParcel.getCoordinatorOriginUri()).isEqualTo(COORDINATOR_ORIGIN);
+        expect.that(fromParcel.getSellerConfiguration())
+                .isEqualTo(SellerConfigurationFixture.SELLER_CONFIGURATION);
     }
 
     @Test
@@ -98,6 +120,7 @@ public final class GetAdSelectionDataInputTest extends AdServicesUnitTestCase {
                         .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
                         .build();
 
         GetAdSelectionDataInput obj2 =
@@ -105,6 +128,7 @@ public final class GetAdSelectionDataInputTest extends AdServicesUnitTestCase {
                         .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
                         .build();
 
         EqualsTester et = new EqualsTester(expect);
@@ -118,6 +142,7 @@ public final class GetAdSelectionDataInputTest extends AdServicesUnitTestCase {
                         .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
                         .build();
 
         GetAdSelectionDataInput obj2 =
@@ -125,6 +150,7 @@ public final class GetAdSelectionDataInputTest extends AdServicesUnitTestCase {
                         .setSeller(SELLER)
                         .setCallerPackageName(ANOTHER_CALLER_PACKAGE_NAME)
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
                         .build();
 
         EqualsTester et = new EqualsTester(expect);

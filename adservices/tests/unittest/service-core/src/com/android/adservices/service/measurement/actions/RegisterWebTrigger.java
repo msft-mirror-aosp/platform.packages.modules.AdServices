@@ -48,6 +48,9 @@ public final class RegisterWebTrigger implements Action {
     public RegisterWebTrigger(JSONObject obj) throws JSONException {
         JSONObject regParamsJson =
                 obj.getJSONObject(TestFormatJsonMapping.REGISTRATION_REQUEST_KEY);
+        // We use a specified trigger_params list for registration URLs rather than relying on the
+        // request responses list in the test JSON because some testing consists of having these
+        // params differ from redirect sequences that are elements in the responses list.
         JSONArray triggerParamsArray =
                 regParamsJson.getJSONArray(TestFormatJsonMapping.TRIGGER_PARAMS_REGISTRATIONS_KEY);
 

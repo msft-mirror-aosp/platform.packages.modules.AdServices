@@ -667,6 +667,26 @@ public class JSScriptEngine {
     }
 
     /**
+     * @return a future value indicating if the JS Sandbox installed on the device supports
+     *     evaluation without transaction limits.
+     */
+    public ListenableFuture<Boolean> isLargeTransactionsSupported() {
+        return mJsSandboxProvider
+                .getFutureInstance(mContext)
+                .transform(this::isLargeTransactionsSupported, mExecutorService);
+    }
+
+    private boolean isLargeTransactionsSupported(JavaScriptSandbox javaScriptSandbox) {
+        boolean isLargeTransactionsSupported =
+                javaScriptSandbox.isFeatureSupported(
+                        JavaScriptSandbox.JS_FEATURE_EVALUATE_WITHOUT_TRANSACTION_LIMIT);
+        mLogger.v(
+                "Is evaluate without transaction limit supported? : %b",
+                isLargeTransactionsSupported);
+        return isLargeTransactionsSupported;
+    }
+
+    /**
      * Creates a new isolate. This method handles the case where the `JavaScriptSandbox` process has
      * been terminated by closing this connection. The ongoing call will fail, we won't try to
      * recover it to keep the code simple.
