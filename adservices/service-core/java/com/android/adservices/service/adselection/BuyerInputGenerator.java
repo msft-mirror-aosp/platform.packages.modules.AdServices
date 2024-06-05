@@ -165,19 +165,6 @@ public class BuyerInputGenerator {
         final Map<AdTechIdentifier, BuyerInput.Builder> buyerInputs = new HashMap<>();
         final Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats =
                 new HashMap<>();
-        for (DBCustomAudience dBcustomAudience : dbCustomAudiences) {
-            final AdTechIdentifier buyerName = dBcustomAudience.getBuyer();
-            if (!buyerInputs.containsKey(buyerName)) {
-                buyerInputs.put(buyerName, BuyerInput.newBuilder());
-            }
-            BuyerInput.CustomAudience customAudience =
-                    buildCustomAudienceProtoFrom(dBcustomAudience);
-
-            buyerInputs.get(buyerName).addCustomAudiences(customAudience);
-
-            mAuctionServerPayloadMetricsStrategy.addToBuyerIntermediateStats(
-                    perBuyerStats, dBcustomAudience, customAudience);
-        }
 
         int encodedSignalsCount = 0;
         int encodedSignalsTotalSizeInBytes = 0;
@@ -208,6 +195,20 @@ public class BuyerInputGenerator {
             }
 
             buyerInputs.put(buyerName, builderWithSignals);
+        }
+
+        for (DBCustomAudience dBcustomAudience : dbCustomAudiences) {
+            final AdTechIdentifier buyerName = dBcustomAudience.getBuyer();
+            if (!buyerInputs.containsKey(buyerName)) {
+                buyerInputs.put(buyerName, BuyerInput.newBuilder());
+            }
+            BuyerInput.CustomAudience customAudience =
+                    buildCustomAudienceProtoFrom(dBcustomAudience);
+
+            buyerInputs.get(buyerName).addCustomAudiences(customAudience);
+
+            mAuctionServerPayloadMetricsStrategy.addToBuyerIntermediateStats(
+                    perBuyerStats, dBcustomAudience, customAudience);
         }
 
         // Log per buyer stats if feature is enabled
