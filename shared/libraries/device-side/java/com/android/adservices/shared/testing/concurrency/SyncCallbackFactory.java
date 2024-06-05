@@ -33,8 +33,6 @@ public final class SyncCallbackFactory {
                 AndroidLogger.getInstance(), SyncCallbackFactory::isMainThread);
     }
 
-    // TODO(b/337014024): add unit test to check this logic (currently it's indirectly checked by
-    // AbstractTestSyncCallbackTest, but it will be refactored)
     private static boolean isMainThread() {
         return Looper.getMainLooper() != null && Looper.getMainLooper().isCurrentThread();
     }
