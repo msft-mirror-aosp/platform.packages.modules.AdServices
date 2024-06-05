@@ -17,6 +17,7 @@
 package com.android.adservices.shared.common;
 
 import com.android.adservices.shared.SharedUnitTestCase;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 
 import org.junit.Test;
 

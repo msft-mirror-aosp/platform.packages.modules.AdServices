@@ -9,7 +9,6 @@
     "sources": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -49,7 +48,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech2.test",
           "source_type": "navigation",
           "registrant": "example.1s2.test"
         },
@@ -97,7 +95,6 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -197,6 +194,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "source_site": "android-app://example.1s2.test",
           "histograms": [
             {
@@ -219,6 +217,7 @@
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
       "payload": {
         "attribution_destination": "android-app://example.2d1.test",
+        "aggregation_coordinator_origin": "https://coordinator.test",
         "source_site": "android-app://example.1s2.test",
         "histograms": [
           {"key": "0x559", "value": 32768},
