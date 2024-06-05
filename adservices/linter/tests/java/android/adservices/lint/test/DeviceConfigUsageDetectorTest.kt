@@ -16,8 +16,7 @@
 
 package android.adservices.lint.test
 
-import android.adservices.lint.BackCompatNewFileDetector
-import android.adservices.lint.DeviceConfigUsageDetector
+import android.adservices.lint.common.DeviceConfigUsageDetector
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestLintTask

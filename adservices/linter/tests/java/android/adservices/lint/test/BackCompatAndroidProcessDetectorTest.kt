@@ -16,7 +16,7 @@
 
 package android.adservices.lint.test
 
-import android.adservices.lint.BackCompatAndroidProcessDetector
+import android.adservices.lint.prod.BackCompatAndroidProcessDetector
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.detector.api.Detector

@@ -53,11 +53,9 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
     @VisibleForTesting
     static final int RESULT_SHELL_COMMAND_EXECUTION_TIMED_OUT = Integer.MIN_VALUE;
 
-    private static final long MAX_COMMAND_DURATION_MILLIS = 3000L;
     private final ScheduledThreadPoolExecutor mSchedulingExecutorService;
     private final ListeningExecutorService mExecutorService;
 
-    private final long mMaxCommandDurationMillis;
     private final AdServicesLogger mAdServicesLogger;
     private final ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
@@ -66,8 +64,7 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
             ShellCommandFactorySupplier shellCommandFactorySupplier,
             ListeningExecutorService executorService,
             ScheduledThreadPoolExecutor schedulingExecutorService,
-            AdServicesLogger adServicesLogger,
-            long maxCommandDurationMillis) {
+            AdServicesLogger adServicesLogger) {
         mShellCommandFactorySupplier =
                 Objects.requireNonNull(
                         shellCommandFactorySupplier, "shellCommandFactorySupplier cannot be null");
@@ -75,7 +72,6 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
         mExecutorService = executorService;
         mSchedulingExecutorService = schedulingExecutorService;
         mAdServicesLogger = adServicesLogger;
-        mMaxCommandDurationMillis = maxCommandDurationMillis;
     }
 
     public ShellCommandServiceImpl() {
@@ -83,8 +79,7 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
                 new AdservicesShellCommandFactorySupplier(),
                 AdServicesExecutors.getLightWeightExecutor(),
                 AdServicesExecutors.getScheduler(),
-                AdServicesLoggerImpl.getInstance(),
-                MAX_COMMAND_DURATION_MILLIS);
+                AdServicesLoggerImpl.getInstance());
     }
 
     @Override
@@ -100,11 +95,11 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
                         outPw, errPw, mShellCommandFactorySupplier, mAdServicesLogger);
         FluentFuture.from(mExecutorService.submit(() -> handler.run(param.getCommandArgs())))
                 .withTimeout(
-                        mMaxCommandDurationMillis,
+                        param.getMaxCommandDurationMillis(),
                         TimeUnit.MILLISECONDS,
                         mSchedulingExecutorService)
                 .addCallback(
-                        new FutureCallback<Integer>() {
+                        new FutureCallback<>() {
                             @Override
                             public void onSuccess(Integer resultCode) {
                                 ShellCommandResult response =

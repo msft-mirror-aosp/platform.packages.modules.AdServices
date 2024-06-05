@@ -17,7 +17,7 @@ package com.android.adservices.shared.testing.concurrency;
 
 import org.junit.Test;
 
-abstract class IBinderSyncCallbackTestCase<CB extends IBinderSyncCallback>
+abstract class IBinderSyncCallbackTestCase<CB extends IBinderSyncCallback & FreezableToString>
         extends SyncCallbackTestCase<CB> {
 
     @Test

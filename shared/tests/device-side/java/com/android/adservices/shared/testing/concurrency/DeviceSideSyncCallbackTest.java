@@ -39,7 +39,7 @@ public final class DeviceSideSyncCallbackTest
                 .that(callback.toString())
                 .contains("failIfCalledOnMainThread=true");
 
-        runOnMainThread(() -> callback.setCalled());
+        runOnMainThread(() -> call(callback));
 
         CalledOnMainThreadException thrown =
                 assertThrows(CalledOnMainThreadException.class, () -> callback.assertCalled());
@@ -66,12 +66,13 @@ public final class DeviceSideSyncCallbackTest
                 .that(callback.toString())
                 .contains("failIfCalledOnMainThread=false");
 
-        runOnMainThread(() -> callback.setCalled());
+        runOnMainThread(() -> call(callback));
 
         callback.assertCalled();
     }
 
-    private static final class ConcreteDeviceSideySncCallback extends DeviceSideSyncCallback {
+    private static final class ConcreteDeviceSideySncCallback extends DeviceSideSyncCallback
+            implements ResultlessSyncCallback {
 
         ConcreteDeviceSideySncCallback() {
             this(SyncCallbackFactory.newSettingsBuilder().build());
@@ -79,6 +80,11 @@ public final class DeviceSideSyncCallbackTest
 
         ConcreteDeviceSideySncCallback(SyncCallbackSettings settings) {
             super(settings);
+        }
+
+        @Override
+        public void setCalled() {
+            internalSetCalled("setCalled()");
         }
     }
 }

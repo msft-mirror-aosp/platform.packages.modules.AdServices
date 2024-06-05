@@ -18,16 +18,18 @@ package com.android.adservices.shared.testing.concurrency;
 
 import androidx.annotation.Nullable;
 
+import java.util.List;
+
 /**
  * Abstraction for {@code ResultSyncCallback} and {@code FailableResultSyncCallback}.
  *
  * <p>This is needed because the latter is a "special" case of the former as it can receive either a
  * result OR a failure.
  */
-interface IResultSyncCallback<T> extends SyncCallback, IBinderSyncCallback {
+interface IResultSyncCallback<R> extends SyncCallback, IBinderSyncCallback {
 
     /** Sets the result. */
-    void injectResult(@Nullable T result);
+    void injectResult(@Nullable R result);
 
     /**
      * Asserts that {@link #injectResult(Object)} was called, waiting up to {@link
@@ -36,12 +38,22 @@ interface IResultSyncCallback<T> extends SyncCallback, IBinderSyncCallback {
      * @return the result
      */
     @Nullable
-    T assertResultReceived() throws InterruptedException;
+    R assertResultReceived() throws InterruptedException;
 
     /**
-     * Gets the result returned by {@link #injectResult(Object)} (or {@code null} if it was not
-     * called yet).
+     * Gets the result returned by {@link #injectResult(Object)}.
+     *
+     * <p>NOTE: it returns the result of the first call, which is sufficient for most use cases - if
+     * you're expecting multiple calls, you can get the further ones using {@link #getResults()}.
      */
     @Nullable
-    T getResult();
+    R getResult();
+
+    // NOTE: cannot use Guava's ImmutableList because it doesn't support null elements
+    /**
+     * Gets the result of all calls to {@link #injectResult(Object)}, in order.
+     *
+     * @return immutable list with all results
+     */
+    List<R> getResults();
 }

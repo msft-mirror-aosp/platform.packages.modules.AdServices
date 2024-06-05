@@ -15,16 +15,17 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-/** Simplest implementation of a {@code SyncCallback} for tests. */
-public final class SimpleSyncCallback extends AbstractResultlessSyncCallback {
+import com.android.adservices.shared.testing.Identifiable;
 
-    /** Default constructor. */
-    public SimpleSyncCallback() {
-        this(SyncCallbackFactory.newSettingsBuilder().build());
-    }
+/**
+ * Hack to avoid assertion failures when checking logged messages, as the number of calls could be
+ * changed.
+ */
+interface FreezableToString extends Identifiable {
 
-    /** Customizable constructor. */
-    public SimpleSyncCallback(SyncCallbackSettings settings) {
-        super(settings);
-    }
+    /**
+     * When called, {@code toString()} should return something like {@code
+     * FREOZEN[simpleClassName#id]}.
+     */
+    void freezeToString();
 }

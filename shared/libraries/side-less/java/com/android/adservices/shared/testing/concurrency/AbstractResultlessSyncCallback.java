@@ -15,16 +15,15 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-/** Simplest implementation of a {@code SyncCallback} for tests. */
-public final class SimpleSyncCallback extends AbstractResultlessSyncCallback {
+public abstract class AbstractResultlessSyncCallback extends AbstractSyncCallback
+        implements ResultlessSyncCallback {
 
-    /** Default constructor. */
-    public SimpleSyncCallback() {
-        this(SyncCallbackFactory.newSettingsBuilder().build());
+    public AbstractResultlessSyncCallback(SyncCallbackSettings settings) {
+        super(settings);
     }
 
-    /** Customizable constructor. */
-    public SimpleSyncCallback(SyncCallbackSettings settings) {
-        super(settings);
+    @Override
+    public final void setCalled() {
+        internalSetCalled("setCalled()");
     }
 }
