@@ -187,8 +187,7 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
 
     private final Random mCacheBusterRandom = new Random();
 
-    // TODO (b/337014024): Replace CountDownLatch with SyncCallback once it
-    //                     supports awaiting multiple events before proceeding.
+    // TODO(b/343272481): Replace CountDownLatch with SyncCallback subclasses
     private BroadcastReceiver mJoinedCustomAudienceBroadcastReceiver;
     private CountDownLatch mJoinedCustomAudienceBroadcastLatch;
     private Multiset<String> mExpectedJoinedCustomAudienceBroadcasts;

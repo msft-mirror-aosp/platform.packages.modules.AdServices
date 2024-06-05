@@ -20,24 +20,40 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackTestCase;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.mockito.quality.Strictness;
 
 // It's testing doAnswer(), so it needs to call those methods...
 @SuppressWarnings("DirectInvocationOnMock")
-public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
+public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyncCallback<Void>> {
 
     private static final String ANSWER = "Luke's Father";
+
+    @Rule public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
 
     private final IllegalStateException mFailure = new IllegalStateException("D'OH!");
     private final SyncCallbackSettings mSettingsForTwoCalls =
             SyncCallbackFactory.newSettingsBuilder().setExpectedNumberCalls(2).build();
 
     @Mock private Voider mDarthVoider;
+
+    @Override
+    protected AnswerSyncCallback<Void> newCallback(SyncCallbackSettings settings) {
+        return AnswerSyncCallback.forVoidAnswers(settings);
+    }
+
+    @Override
+    protected boolean usesFactoryApproach() {
+        return true;
+    }
 
     @Test
     public void testForSingleVoidAnswer() throws Exception {

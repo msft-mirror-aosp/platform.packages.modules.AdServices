@@ -199,6 +199,7 @@ public final class PhFlagsTestHelper {
     // TODO(b/330796095): looks like testConsentManagerDebugMode() is the only caller (other than
     // testFeatureFlagGuardedByGlobalKs() from this class), so it should be removed (or made
     // private)
+
     /**
      * Tests the behavior of a feature flag that is guarded by a "generic" guard (typically the
      * global kill switch and a per-API kill switch).
@@ -224,11 +225,27 @@ public final class PhFlagsTestHelper {
      */
     public void testConfigFlag(
             String flagName, String defaultConstantValue, Flaginator<Flags, String> flaginator) {
+        testConfigFlag(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ "new" + defaultConstantValue);
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value and provided overridden
+     * value.
+     */
+    public void testConfigFlag(
+            String flagName,
+            String defaultConstantValue,
+            Flaginator<Flags, String> flaginator,
+            String overriddenValue) {
         testFeatureFlagDefaultOverriddenAndIllegalValue(
                 flagName,
                 defaultConstantValue,
                 flaginator,
-                /* overriddenValue= */ "new" + defaultConstantValue,
+                overriddenValue,
                 /* illegalValue= */ Optional.empty());
     }
 

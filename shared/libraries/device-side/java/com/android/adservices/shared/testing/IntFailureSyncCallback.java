@@ -47,6 +47,8 @@ public abstract class IntFailureSyncCallback<T> extends FailableOnResultSyncCall
         this(SyncCallbackFactory.newSettingsBuilder().setMaxTimeoutMs(timeoutMs).build());
     }
 
+    // NOTE: this method is needed otherwise subclasses that implement a Binder object that
+    // takes an int code wouldn't compile.
     /** Sets the outcome as a failure (of the specific {@code code}. */
     public final void onFailure(int code) {
         super.onFailure(Integer.valueOf(code));

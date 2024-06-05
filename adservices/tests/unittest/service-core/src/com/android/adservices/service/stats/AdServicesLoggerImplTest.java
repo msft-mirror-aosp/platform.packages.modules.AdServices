@@ -161,7 +161,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testLogFledgeApiCallStatsWithAppPackageNameLogging() throws InterruptedException {
+    public void testLogFledgeApiCallStatsWithAppPackageNameLogging() throws Exception {
         mockAppNameApiErrorLogger();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
@@ -179,11 +179,11 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
 
         adServicesLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
 
+        callback.assertCalled();
+
         // Verify method logging app package name is called.
         verify(mStatsdLoggerMock)
                 .logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
-
-        callback.assertCalled();
     }
 
     @Test
@@ -470,7 +470,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testLogApiCallStats() throws InterruptedException {
+    public void testLogApiCallStats() throws Exception {
         String packageName = "com.android.test";
         String sdkName = "com.android.container";
         int latency = 100;
@@ -496,6 +496,8 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .build();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         adServicesLogger.logApiCallStats(stats);
+        callback.assertCalled();
+
         ArgumentCaptor<ApiCallStats> argumentCaptor = ArgumentCaptor.forClass(ApiCallStats.class);
         verify(mStatsdLoggerMock).logApiCallStats(argumentCaptor.capture());
         ApiCallStats loggedStats = argumentCaptor.getValue();
@@ -508,8 +510,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getSdkPackageName()).isEqualTo(sdkName);
         expect.that(loggedStats.getLatencyMillisecond()).isEqualTo(latency);
         expect.that(loggedStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
-
-        callback.assertCalled();
     }
 
     @Test
