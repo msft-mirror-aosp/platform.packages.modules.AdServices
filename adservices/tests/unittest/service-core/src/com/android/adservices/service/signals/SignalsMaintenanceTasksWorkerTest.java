@@ -31,6 +31,7 @@ import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -58,6 +59,9 @@ public class SignalsMaintenanceTasksWorkerTest {
     SignalsMaintenanceTasksWorker mSignalsMaintenanceTasksWorker;
     Instant mNow;
     Instant mExpirationTime;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

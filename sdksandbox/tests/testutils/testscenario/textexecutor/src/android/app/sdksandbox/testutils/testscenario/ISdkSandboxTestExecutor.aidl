@@ -48,6 +48,11 @@ interface ISdkSandboxTestExecutor {
      * Invokes a method from within the SDK.
 
      */
-    oneway void invokeMethod(String methodName, in Bundle params,
+    void invokeMethod(String methodName, in Bundle params,
         in ISdkSandboxResultCallback callback);
+
+    /**
+     * Executed after each test finishes in assertSdkTestRunPasses.
+     */
+    void cleanOnTestFinish();
 }

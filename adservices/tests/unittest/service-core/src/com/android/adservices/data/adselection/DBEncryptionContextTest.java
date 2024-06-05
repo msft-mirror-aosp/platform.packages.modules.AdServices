@@ -23,9 +23,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.io.BaseEncoding;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -44,6 +46,9 @@ public class DBEncryptionContextTest {
             SHARED_SECRET_STRING.getBytes(StandardCharsets.UTF_8);
     private Clock mClock = Clock.systemUTC();
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testBuildEncryptionContext_success() throws Exception {
         ObliviousHttpKeyConfig keyConfig =
@@ -57,6 +62,7 @@ public class DBEncryptionContextTest {
                         .setKeyConfig(keyConfig.serializeKeyConfigToBytes())
                         .setSharedSecret(SHARED_SECRET_BYTES)
                         .setSeed(SEED_BYTES)
+                        .setHasMediaTypeChanged(false)
                         .build();
 
         assertThat(dbEncryptionContext.getContextId()).isEqualTo(CONTEXT_ID_1);

@@ -22,21 +22,22 @@ import android.adservices.shell.IShellCommand;
 import android.adservices.shell.IShellCommandCallback;
 import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.UserHandle;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.ServiceBinder;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BasicShellCommandHandler;
 
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
-
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -56,16 +57,24 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     static final String WRONG_UID_TEMPLATE =
             AD_SERVICES_SYSTEM_SERVICE + " shell cmd is only callable by ADB (called by %d)";
 
-    private static final String CMD_IS_SYSTEM_SERVICE_ENABLED = "is-system-service-enabled";
+    @VisibleForTesting
+    static final String CMD_IS_SYSTEM_SERVICE_ENABLED = "is-system-service-enabled";
+
+    @VisibleForTesting static final String CMD_SHORT_HELP = "-h";
+    @VisibleForTesting static final String CMD_HELP = "help";
+
+    private static final String TIMEOUT_ARG = "--timeout";
+    // Default timeout value to wait for the shell command output when we bind to the adservices
+    // process.
+    private static final int DEFAULT_TIMEOUT_MILLIS = 5_000;
 
     private final Injector mInjector;
     private final Flags mFlags;
     private final Context mContext;
-
-    private static final int DEFAULT_TIMEOUT_MILLIS = 5_000;
+    private int mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
 
     AdServicesShellCommand(Context context) {
-        this(new Injector(), PhFlags.getInstance(), context);
+        this(new Injector(), FlagsFactory.getFlags(), context);
     }
 
     @VisibleForTesting
@@ -78,11 +87,14 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     @Override
     public int onCommand(String cmd) {
         int callingUid = mInjector.getCallingUid();
-        if (callingUid != Process.ROOT_UID && callingUid != Process.SHELL_UID) {
+        if (callingUid != Process.ROOT_UID
+                && callingUid != Process.SHELL_UID
+                && callingUid != Process.SYSTEM_UID) {
             throw new SecurityException(String.format(WRONG_UID_TEMPLATE, callingUid));
         }
-        if (cmd == null || cmd.isEmpty() || cmd.equals("-h") || cmd.equals("help")) {
+        if (cmd == null || cmd.isEmpty() || cmd.equals(CMD_SHORT_HELP) || cmd.equals(CMD_HELP)) {
             onHelp();
+            runAdServicesShellCommand(mContext, new String[] {CMD_HELP});
             return 0;
         }
         switch (cmd) {
@@ -93,19 +105,21 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
                 // If there is no explicit case is there, we assume we want to run the shell command
                 // in the adservices process.
             default:
-                // TODO(b/308009734): Check for --user args in the follow-up cl and change
-                //  context and bind to the service accordingly.
                 return runAdServicesShellCommand(mContext, getAllArgs());
         }
     }
 
     private int runAdServicesShellCommand(Context context, String[] args) {
-        IShellCommand service = mInjector.getShellCommandService(context);
+        // Shell always runs on System User (User 0), if secondary user (Eg. User 10) is running
+        // then change the context to the secondary user.
+        Context curUserContext = getContextForUser(context, ActivityManager.getCurrentUser());
+        IShellCommand service = mInjector.getShellCommandService(curUserContext);
         if (service == null) {
-            getOutPrintWriter().println("Failed to connect to shell command service");
+            getErrPrintWriter().println("Failed to connect to shell command service");
             return -1;
         }
-        ShellCommandParam param = new ShellCommandParam(args);
+        String[] realArgs = handleAdServicesArgs(args);
+        ShellCommandParam param = new ShellCommandParam(realArgs);
         CountDownLatch latch = new CountDownLatch(1);
         AtomicInteger resultCode = new AtomicInteger(-1);
         try {
@@ -118,7 +132,7 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
                                 getOutPrintWriter().println(response.getOut());
                                 resultCode.set(response.getResultCode());
                             } else {
-                                showError("%s", response.getErr());
+                                getErrPrintWriter().println(response.getErr());
                             }
                             latch.countDown();
                         }
@@ -127,28 +141,55 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
             getErrPrintWriter()
                     .printf(
                             "Remote exception occurred while executing %s\n",
-                            Arrays.toString(args));
+                            Arrays.toString(realArgs));
 
             latch.countDown();
         }
 
-        // TODO(b/308009734): make the time out configurable with flags and command line argument.
-        await(latch, DEFAULT_TIMEOUT_MILLIS, getErrPrintWriter());
-
+        try {
+            if (!latch.await(mTimeoutMillis, TimeUnit.MILLISECONDS)) {
+                getErrPrintWriter()
+                        .printf(
+                                "Elapsed time: %d Millisecond. Timeout occurred , failed to "
+                                        + "complete shell command\n",
+                                mTimeoutMillis);
+                return -1;
+            }
+        } catch (InterruptedException e) {
+            getErrPrintWriter().println("Thread interrupted, failed to complete shell command");
+            Thread.currentThread().interrupt();
+            return -1;
+        }
         return resultCode.get();
     }
 
-    private void await(CountDownLatch latch, int timeout, PrintWriter pw) {
-        try {
-            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-                pw.printf(
-                        "Elapsed time: %d Millisecond. Timeout occurred , failed to "
-                                + "complete shell command\n",
-                        timeout);
+    private String[] handleAdServicesArgs(String[] args) {
+        // Contains all the args except --user, --timeout arg and its value.
+        List<String> realArgs = new ArrayList<>();
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            switch (arg) {
+                case TIMEOUT_ARG:
+                    mTimeoutMillis = parseTimeoutArg(args, ++i);
+                    break;
+                    // TODO(b/308009734): Check for --user args in the follow-up cl and change
+                    //  context and bind to the service accordingly.
+                default:
+                    realArgs.add(arg);
             }
-        } catch (InterruptedException e) {
-            pw.println("Thread interrupted, failed to complete shell command");
-            Thread.currentThread().interrupt();
+        }
+        return realArgs.toArray(String[]::new);
+    }
+
+    private int parseTimeoutArg(String[] args, int index) {
+        if (index >= args.length) {
+            throw new IllegalArgumentException("Argument expected after " + args[index - 1]);
+        }
+
+        try {
+            return Integer.parseInt(args[index]);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Bad timeout value: " + args[index]);
         }
     }
 
@@ -164,7 +205,11 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
                     verbose = true;
                     break;
                 default:
-                    return showError("Invalid option: %s", opt);
+                    PrintWriter errPw = getErrPrintWriter();
+                    errPw.printf("Invalid option: %s\n\n", opt);
+                    errPw.print("Syntax: ");
+                    showIsSystemServerEnabledHelpCommand(errPw);
+                    return -1;
             }
         }
 
@@ -192,25 +237,31 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
         showValidCommands(pw);
     }
 
-    @FormatMethod
-    private int showError(@FormatString String fmt, Object... args) {
-        PrintWriter pw = getErrPrintWriter();
-        String error = String.format(fmt, args);
-        pw.printf("%s. Valid commands are: \n", error);
-        showValidCommands(pw);
-        return -1;
-    }
-
-    private static void showValidCommands(PrintWriter pw) {
-        pw.println("help: ");
-        pw.println("    Prints this help text.");
-        pw.println();
+    private static void showIsSystemServerEnabledHelpCommand(PrintWriter pw) {
         pw.println("is-system-service-enabled [-v || --verbose]");
         pw.println(
                 "    Returns a boolean indicating whether the AdServices System Service is"
                         + "enabled.");
         pw.println("    Use [-v || --verbose] to also show the default value");
         pw.println();
+    }
+
+    private static void showHelpCommand(PrintWriter pw) {
+        pw.println("help: ");
+        pw.println("    Prints this help text.");
+        pw.println();
+    }
+
+    private static void showValidCommands(PrintWriter pw) {
+        showHelpCommand(pw);
+        showIsSystemServerEnabledHelpCommand(pw);
+    }
+
+    private Context getContextForUser(Context context, int userId) {
+        if (userId == context.getUser().getIdentifier()) {
+            return context;
+        }
+        return context.createContextAsUser(UserHandle.of(userId), /* flags= */ 0);
     }
 
     // Needed because Binder.getCallingUid() is native and cannot be mocked

@@ -16,7 +16,7 @@
 
 package android.adservices.rootcts;
 
-import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -40,6 +40,7 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     private static final String CA_NAME = "shoes";
     private BackgroundJobHelper mBackgroundJobHelper;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

@@ -21,8 +21,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWIT
 import android.os.SystemProperties;
 import android.provider.DeviceConfig;
 
-import com.android.adservices.common.AndroidLogger;
-import com.android.adservices.common.Logger;
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Logger;
 
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;

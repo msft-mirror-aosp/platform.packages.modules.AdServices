@@ -16,7 +16,14 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType;
+
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
+
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_CA_WINNER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_NO_WINNER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
 
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
@@ -51,13 +58,20 @@ import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.kanon.KAnonMessageEntity;
+import com.android.adservices.service.kanon.KAnonSignJoinFactory;
+import com.android.adservices.service.kanon.KAnonSignJoinManager;
+import com.android.adservices.service.kanon.KAnonUtil;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
@@ -85,7 +99,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /** Runner class for ProcessAdSelectionResultRunner service */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class PersistAdSelectionResultRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -104,6 +117,7 @@ public class PersistAdSelectionResultRunner {
             "buyer interaction reporting uri";
     private static final String SELLER_INTERACTION_REPORTING_URI_FIELD_NAME =
             "seller interaction reporting uri";
+    private static final String SHA256 = "SHA-256";
 
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -127,6 +141,10 @@ public class PersistAdSelectionResultRunner {
 
     @NonNull private AuctionResultValidator mAuctionResultValidator;
 
+
+    @NonNull private final AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
+    @NonNull KAnonSignJoinFactory mKAnonSignJoinFactory;
+
     public PersistAdSelectionResultRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
@@ -143,7 +161,9 @@ public class PersistAdSelectionResultRunner {
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final AuctionResultValidator auctionResultValidator,
             @NonNull final Flags flags,
-            @NonNull final AdServicesLogger adServicesLogger) {
+            @NonNull final AdServicesLogger adServicesLogger,
+            @NonNull final AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
+            @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory) {
         Objects.requireNonNull(obliviousHttpEncryptor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -157,6 +177,8 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(auctionResultValidator);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(adsRelevanceExecutionLogger);
+        Objects.requireNonNull(kAnonSignJoinFactory);
 
         mObliviousHttpEncryptor = obliviousHttpEncryptor;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -174,6 +196,8 @@ public class PersistAdSelectionResultRunner {
         mAuctionResultValidator = auctionResultValidator;
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
+        mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
+        mKAnonSignJoinFactory = kAnonSignJoinFactory;
     }
 
     /** Orchestrates PersistAdSelectionResultRunner process. */
@@ -183,8 +207,10 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
 
-        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+        int apiName =
+                AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
         long adSelectionId = inputParams.getAdSelectionId();
+
         try {
             ListenableFuture<Void> filteredRequest =
                     Futures.submit(
@@ -249,9 +275,35 @@ public class PersistAdSelectionResultRunner {
                         }
                     },
                     mLightweightExecutorService);
+
         } catch (Throwable t) {
             sLogger.v("PersistAdSelectionResult fails fast with exception %s.", t.toString());
             notifyFailureToCaller(t, callback);
+        }
+    }
+
+    private void makeKAnonSignJoin(AuctionResult auctionResult, long adSelectionId) {
+        if (mFlags.getFledgeKAnonSignJoinFeatureAuctionServerEnabled()) {
+            ListenableFuture<Void> signJoinFuture =
+                    Futures.submitAsync(
+                            () -> {
+                                try {
+
+                                    List<KAnonMessageEntity> messageEntities =
+                                            KAnonUtil.getKAnonEntitiesFromAuctionResult(
+                                                    auctionResult.getAdRenderUrl(), adSelectionId);
+                                    KAnonSignJoinManager kAnonSignJoinManager =
+                                            mKAnonSignJoinFactory.getKAnonSignJoinManager();
+                                    kAnonSignJoinManager.processNewMessages(messageEntities);
+                                } catch (Throwable t) {
+                                    sLogger.e("Error while processing new messages for KAnon");
+                                }
+                                return Futures.immediateVoidFuture();
+                            },
+                            mBackgroundExecutorService);
+        } else {
+            sLogger.v("KAnon Sign Join feature is disabled");
+            mAdServicesLogger.logKAnonSignJoinStatus();
         }
     }
 
@@ -272,15 +324,27 @@ public class PersistAdSelectionResultRunner {
                                                 "AuctionResult has an error: %s",
                                                 auctionResult.getError().getMessage());
                                 sLogger.e(err);
+                                logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                                 throw new IllegalArgumentException(err);
                             } else if (auctionResult.getIsChaff()) {
                                 sLogger.v("Result is chaff, truncating persistAdSelectionResult");
+                                logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                             } else if (auctionResult.getAdType() == AuctionResult.AdType.UNKNOWN) {
                                 String err = "AuctionResult type is unknown";
                                 sLogger.e(err);
+                                logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                                 throw new IllegalArgumentException(err);
                             } else {
-                                validateAuctionResult(auctionResult);
+                                makeKAnonSignJoin(auctionResult, adSelectionId);
+                                try {
+                                    validateAuctionResult(auctionResult);
+                                } catch (IllegalArgumentException e) {
+                                    logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
+                                    String err = "Invalid object of Auction Result";
+                                    sLogger.e(err);
+                                    throw new IllegalArgumentException(err);
+                                }
+
                                 DBAdData winningAd = fetchWinningAd(auctionResult);
                                 int persistingCookie =
                                         Tracing.beginAsyncSection(Tracing.PERSIST_AUCTION_RESULTS);
@@ -314,8 +378,10 @@ public class PersistAdSelectionResultRunner {
         DBAdData winningAd;
         if (auctionResult.getAdType() == AuctionResult.AdType.REMARKETING_AD) {
             winningAd = fetchRemarketingAd(auctionResult);
+            logPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
         } else if (auctionResult.getAdType() == AuctionResult.AdType.APP_INSTALL_AD) {
             winningAd = fetchAppInstallAd(auctionResult);
+            logPersistAdSelectionResultWinnerType(WINNER_TYPE_PAS_WINNER);
         } else {
             String err =
                     String.format(
@@ -323,10 +389,12 @@ public class PersistAdSelectionResultRunner {
                             "The value: '%s' is not defined in AdType proto!",
                             auctionResult.getAdType().getNumber());
             sLogger.e(err);
+            logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
             throw new IllegalArgumentException(err);
         }
         return winningAd;
     }
+
 
     @NonNull
     private DBAdData fetchRemarketingAd(AuctionResult auctionResult) {
@@ -471,7 +539,9 @@ public class PersistAdSelectionResultRunner {
 
         byte metaInfoByte = resultBytes[0];
         int version = AuctionServerPayloadFormattingUtil.extractFormatterVersion(metaInfoByte);
-        mPayloadExtractor = AuctionServerPayloadFormatterFactory.createPayloadExtractor(version);
+        mPayloadExtractor =
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(
+                        version, mAdServicesLogger);
     }
 
     private AuctionResult composeAuctionResult(
@@ -607,8 +677,7 @@ public class PersistAdSelectionResultRunner {
                             .setAttemptedKeySizesRangeType(
                                     DestinationRegisteredBeaconsReportedStats
                                             .getInteractionKeySizeRangeTypeList(
-                                                    attemptedBuyerInteractionReportingUrls
-                                                            .keySet(),
+                                                    attemptedBuyerInteractionReportingUrls.keySet(),
                                                     maxInteractionKeySize))
                             .setTableNumRows(totalNumRegisteredAdInteractions)
                             .build());
@@ -768,8 +837,8 @@ public class PersistAdSelectionResultRunner {
 
     private void notifySuccessToCaller(
             Uri renderUri, long adSelectionId, PersistAdSelectionResultCallback callback) {
+        int resultCode = STATUS_SUCCESS;
         try {
-            // TODO(b/288370270): Collect API metrics
             callback.onSuccess(
                     new PersistAdSelectionResultResponse.Builder()
                             .setAdSelectionId(adSelectionId)
@@ -777,17 +846,20 @@ public class PersistAdSelectionResultRunner {
                             .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
+            resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v("Attempted notifying success");
+            mAdsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
+
         }
     }
 
     private void notifyEmptySuccessToCaller(
             @NonNull PersistAdSelectionResultCallback callback, long adSelectionId) {
+        int resultCode = STATUS_SUCCESS;
         try {
             // TODO(b/288368908): Determine what is an appropriate empty response for revoked
             //  consent
-            // TODO(b/288370270): Collect API metrics
             callback.onSuccess(
                     new PersistAdSelectionResultResponse.Builder()
                             .setAdSelectionId(adSelectionId)
@@ -795,6 +867,7 @@ public class PersistAdSelectionResultRunner {
                             .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
+            resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v(
                     "Persist Ad Selection Result completed, attempted notifying success for a"
@@ -803,10 +876,10 @@ public class PersistAdSelectionResultRunner {
     }
 
     private void notifyFailureToCaller(Throwable t, PersistAdSelectionResultCallback callback) {
+        int resultCode = STATUS_UNSET;
         try {
-            // TODO(b/288370270): Collect API metrics
             sLogger.e("Notify caller of error: " + t);
-            int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+            resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
 
             FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
@@ -817,8 +890,10 @@ public class PersistAdSelectionResultRunner {
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
+            resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v("Persist Ad Selection Result failed");
+            mAdsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
         }
     }
 
@@ -850,10 +925,13 @@ public class PersistAdSelectionResultRunner {
     abstract static class ReportingRegistrationLimits {
         /** MaxRegisteredAdBeaconsTotalCount */
         public abstract long getMaxRegisteredAdBeaconsTotalCount();
+
         /** MaxInteractionKeySize */
         public abstract long getMaxInteractionKeySize();
+
         /** MaxInteractionReportingUriSize */
         public abstract long getMaxInteractionReportingUriSize();
+
         /** MaxRegisteredAdBeaconsPerAdTechCount */
         public abstract long getMaxRegisteredAdBeaconsPerAdTechCount();
 
@@ -868,16 +946,30 @@ public class PersistAdSelectionResultRunner {
             /** Sets MaxRegisteredAdBeaconsTotalCount */
             public abstract Builder setMaxRegisteredAdBeaconsTotalCount(
                     long maxRegisteredAdBeaconsTotalCount);
+
             /** Sets MaxInteractionKeySize */
             public abstract Builder setMaxInteractionKeySize(long maxInteractionKeySize);
+
             /** Sets MaxInteractionReportingUriSize */
             public abstract Builder setMaxInteractionReportingUriSize(
                     long maxInteractionReportingUriSize);
+
             /** Sets MaxRegisteredAdBeaconsPerAdTechCount */
             public abstract Builder setMaxRegisteredAdBeaconsPerAdTechCount(
                     long maxRegisteredAdBeaconsPerAdTechCount);
+
             /** Builds a {@link ReportingRegistrationLimits} */
             public abstract ReportingRegistrationLimits build();
+        }
+    }
+
+    private void logPersistAdSelectionResultWinnerType(
+            @AdsRelevanceStatusUtils.WinnerType int winnerType) {
+        if (mFlags.getPasExtendedMetricsEnabled()) {
+            mAdServicesLogger.logPersistAdSelectionResultCalledStats(
+                    PersistAdSelectionResultCalledStats.builder()
+                            .setWinnerType(winnerType)
+                            .build());
         }
     }
 }

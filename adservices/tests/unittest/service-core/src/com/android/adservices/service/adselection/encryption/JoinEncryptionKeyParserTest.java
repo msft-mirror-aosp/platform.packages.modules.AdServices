@@ -20,7 +20,8 @@ import static android.adservices.adselection.AuctionEncryptionKeyFixture.ENCRYPT
 
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.DEFAULT_JOIN_HEADERS;
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.ENCRYPTION_KEY_JOIN;
-import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.JOIN_PUBLIC_KEY_1;
+import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.JOIN_PUBLIC_KEY_1_BASE_16;
+import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.JOIN_PUBLIC_KEY_2_BASE_16;
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.mockJoinKeyFetchResponse;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -32,11 +33,13 @@ import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.io.BaseEncoding;
 
 import org.json.JSONException;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -48,6 +51,9 @@ public class JoinEncryptionKeyParserTest {
 
     private Flags mFlags = new JoinEncryptionKeyParserTestFlags();
     private JoinEncryptionKeyParser mJoinEncryptionKeyParser;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
@@ -77,9 +83,9 @@ public class JoinEncryptionKeyParserTest {
                                         AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN)
                                 .setKeyIdentifier(ENCRYPTION_KEY_JOIN.getKeyIdentifier())
                                 .setPublicKey(
-                                        ENCRYPTION_KEY_JOIN
-                                                .getPublicKey()
-                                                .getBytes(StandardCharsets.UTF_8))
+                                        BaseEncoding.base16()
+                                                .lowerCase()
+                                                .decode(JOIN_PUBLIC_KEY_1_BASE_16))
                                 .build());
     }
 
@@ -112,8 +118,8 @@ public class JoinEncryptionKeyParserTest {
                 mJoinEncryptionKeyParser.getDbEncryptionKeys(mockJoinKeyFetchResponse());
 
         assertThat(keys).hasSize(1);
-        assertThat(keys.get(0).getKeyIdentifier()).isEqualTo("0");
-        assertThat(keys.get(0).getPublicKey()).isEqualTo(JOIN_PUBLIC_KEY_1);
+        assertThat(keys.get(0).getKeyIdentifier()).isEqualTo("h");
+        assertThat(keys.get(0).getPublicKey()).isEqualTo(JOIN_PUBLIC_KEY_2_BASE_16);
         assertThat(keys.get(0).getEncryptionKeyType())
                 .isEqualTo(EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_JOIN);
         assertThat(keys.get(0).getExpiryTtlSeconds()).isEqualTo(DEFAULT_MAX_AGE_SECONDS);

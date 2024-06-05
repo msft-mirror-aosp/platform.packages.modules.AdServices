@@ -86,7 +86,7 @@ public class ConsentNotificationFragment extends Fragment {
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity());
         View rootView;
         if (mIsEUDevice) {
             rootView =
@@ -117,9 +117,9 @@ public class ConsentNotificationFragment extends Fragment {
                                 LANDING_PAGE_OPT_OUT_CLICKED, getContext());
 
                         // opt-out confirmation activity
-                        ConsentManager.getInstance(requireContext()).disable(requireContext());
+                        ConsentManager.getInstance().disable(requireContext());
                         if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                            ConsentManager.getInstance(requireContext())
+                            ConsentManager.getInstance()
                                     .recordUserManualInteractionWithConsent(
                                             ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                         }
@@ -247,9 +247,9 @@ public class ConsentNotificationFragment extends Fragment {
                     ConsentNotificationActivity.handleAction(
                             LANDING_PAGE_OPT_IN_CLICKED, getContext());
 
-                    ConsentManager.getInstance(requireContext()).enable(requireContext());
+                    ConsentManager.getInstance().enable(requireContext());
                     if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                        ConsentManager.getInstance(requireContext())
+                        ConsentManager.getInstance()
                                 .recordUserManualInteractionWithConsent(
                                         ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }

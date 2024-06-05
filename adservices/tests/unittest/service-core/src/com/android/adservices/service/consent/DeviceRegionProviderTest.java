@@ -27,52 +27,33 @@ import android.telephony.TelephonyManager;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
-import java.io.IOException;
 import java.util.Locale;
 
+@SpyStatic(FlagsFactory.class)
 @SmallTest
-public class DeviceRegionProviderTest {
+public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private Context mContext;
     @Mock private TelephonyManager mTelephonyManager;
     @Mock private PackageManager mPackageManager;
     @Mock private Flags mMockFlags;
-    private MockitoSession mStaticMockSession = null;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
+        extendedMockito.mockGetFlags(mMockFlags);
 
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // return the default EEA countries list for most test cases
         doReturn(Flags.UI_EEA_COUNTRIES).when(mMockFlags).getUiEeaCountries();
         Locale.setDefault(Locale.US);
-    }
-
-    @After
-    public void teardown() throws IOException {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -85,7 +66,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
     }
 
     @Test
@@ -98,7 +79,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
     }
 
     @Test
@@ -111,7 +92,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
     }
 
     @Test
@@ -122,7 +103,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
     }
 
     @Test
@@ -133,7 +114,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
     }
 
     @Test
@@ -144,7 +125,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
     }
 
     @Test
@@ -155,7 +136,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
     }
 
     @Test
@@ -166,7 +147,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
     }
 
     @Test
@@ -174,7 +155,7 @@ public class DeviceRegionProviderTest {
         doReturn(false).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
     }
 
     @Test
@@ -183,7 +164,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(null).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
     }
 
     @Test
@@ -196,7 +177,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
     }
 
     @Test
@@ -209,7 +190,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
     }
 
     @Test
@@ -222,7 +203,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
     }
 
     @Test
@@ -235,7 +216,7 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
     }
 
     @Test
@@ -248,11 +229,11 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
     }
 
     @Test
-    public void deviceRegionFlagOnTest_gbFlagNoSim() {
+    public void deviceRegionFlagOnTest_gbFlagNoSimTabletOff() {
         doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
         doReturn(true).when(mMockFlags).isEeaDevice();
 
@@ -261,7 +242,16 @@ public class DeviceRegionProviderTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext, mMockFlags)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+    }
+
+    @Test
+    public void deviceRegionFlagOnTest_gbFlagNoSimTabletOn() {
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
+        doReturn(true).when(mMockFlags).isEeaDevice();
+        doReturn(true).when(mMockFlags).getEnableTabletRegionFix();
+
+        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
     }
 
     @Test

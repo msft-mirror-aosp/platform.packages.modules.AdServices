@@ -89,6 +89,7 @@ android_test {
       ":SampleCodeProviderApp",
       ":SampleServiceApp",
       ":CodeProviderWithResources",
+      ":CtsSdkProviderAppWithoutSdkProviderClassNameProperty",
     ],
 }
 
@@ -108,4 +109,3 @@ android_test {
       ":CodeProviderWithResources",
     ],
 }
-

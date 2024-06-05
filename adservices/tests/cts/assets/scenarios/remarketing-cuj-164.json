@@ -19,7 +19,7 @@
         "path": "scoring"
       },
       "response": {
-        "body": "ScoringLogic.js"
+        "body": "ScoringLogicWithDebugReporting.js"
       }
     },
     {
@@ -40,7 +40,50 @@
     },
     {
       "request": {
-        "path": "buyer/reportWin?wb=10.0&madeWb=true"
+        "path": "buyer/reportImpression"
+      },
+      "response": {
+        "body": null
+      }
+    },
+    {
+      "request": {
+        "path": "seller/reportImpression"
+      },
+      "response": {
+        "body": null
+      }
+    },
+    {
+      "request": {
+        "path": "buyer/reportWin"
+      },
+      "response": {
+        "body": null
+      },
+      "verify_called": true
+    },
+    {
+      "request": {
+        "path": "buyer/reportLoss"
+      },
+      "response": {
+        "body": null
+      },
+      "verify_called": true
+    },
+    {
+      "request": {
+        "path": "seller/reportWin"
+      },
+      "response": {
+        "body": null
+      },
+      "verify_called": true
+    },
+    {
+      "request": {
+        "path": "seller/reportLoss"
       },
       "response": {
         "body": null
@@ -52,7 +95,10 @@
     "<daily-update-uri>": "{base_url}/bidding/daily",
     "<ad-render-uri-1>": "{base_url}/render_ad/1",
     "<ad-render-uri-2>": "{base_url}/render_ad/2",
+    "https://js.example.com/render/ad1": "{base_url}/render_ad/1",
+    "https://js.example.com/render/ad2": "{base_url}/render_ad/2",
     "<buyer-trusted-bidding-uri>": "{base_url}/bidding/trusted",
+    "https://js.example.com/bidding/trusted": "{base_url}/bidding/trusted",
     "<buyer-reporting-uri>": "{base_url}/buyer/reportImpression",
     "<seller-reporting-uri>": "{base_url}/seller/reportImpression",
     "<buyer-win-debug-reporting-uri>": "{base_url}/buyer/reportWin",

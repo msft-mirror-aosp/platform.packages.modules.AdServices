@@ -97,6 +97,8 @@ import java.util.stream.Collectors;
  *   <li>APPSEARCH_ONLY: Write and read consent from appSearch only for back compat.
  *   <li>PPAPI_AND_ADEXT_SERVICE: Write and read consent from PPAPI and AdExt service..
  * </ul>
+ *
+ * IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with ConsentManager.
  */
 // TODO(b/279042385): move UI logs to UI.
 @RequiresApi(Build.VERSION_CODES.S)
@@ -265,12 +267,19 @@ public class ConsentManagerV2 {
                     if (enableAdExtServiceConsentData) {
                         AdServicesExtDataStorageServiceManager adServicesExtDataManager =
                                 AdServicesExtDataStorageServiceManager.getInstance(context);
-                        if (FlagsFactory.getFlags().getEnableAdExtServiceToAppSearchMigration()) {
-                            ConsentMigrationUtils.handleConsentMigrationToAppSearchIfNeededV2(
-                                    context,
-                                    datastore,
-                                    appSearchConsentStorageManager,
-                                    adServicesExtDataManager);
+                        // TODO(b/324273438): Support R->T+ consent migration for Consent Manager
+                        //  V2 project.
+                        // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03-
+                        // builds, use the deprecated flag
+                        // enable_adext_service_to_appsearch_migration.
+                        if (FlagsFactory.getFlags().getEnableMigrationFromAdExtService()) {
+                            AdExtDataConsentMigrationUtilsV2
+                                    .handleConsentMigrationFromAdExtDataIfNeededV2(
+                                            context,
+                                            appSearchConsentStorageManager,
+                                            adServicesExtDataManager,
+                                            statsdAdServicesLogger,
+                                            adServicesManager);
                         }
                         mAppConsentForRStorageManager =
                                 new AppConsentForRStorageManager(
@@ -589,10 +598,12 @@ public class ConsentManagerV2 {
 
         asyncExecute(
                 () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(
                     () -> mFrequencyCapDao.deleteHistogramDataBySourceApp(app.getPackageName()));
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
         }
     }
 
@@ -617,9 +628,11 @@ public class ConsentManagerV2 {
         mConsentCompositeStorage.clearAllAppConsentData();
 
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
         }
     }
 
@@ -633,9 +646,11 @@ public class ConsentManagerV2 {
     public void clearKnownAppsWithConsent() throws IOException {
         mConsentCompositeStorage.clearKnownAppsWithConsent();
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
+        }
+        if (mFlags.getFledgeAppInstallFilteringEnabled()) {
+            asyncExecute(mAppInstallDao::deleteAllAppInstallData);
         }
     }
 
@@ -760,77 +775,6 @@ public class ConsentManagerV2 {
      */
     public Boolean wasGaUxNotificationDisplayed() {
         return mConsentCompositeStorage.wasGaUxNotificationDisplayed();
-    }
-
-    /**
-     * Retrieves the PP API default consent.
-     *
-     * @return true if the topics default consent is true, false otherwise.
-     */
-    public Boolean getDefaultConsent() {
-        return mConsentCompositeStorage.getDefaultConsent(AdServicesApiType.ALL_API).isGiven();
-    }
-
-    /**
-     * Retrieves the topics default consent.
-     *
-     * @return true if the topics default consent is true, false otherwise.
-     */
-    public Boolean getTopicsDefaultConsent() {
-        return mConsentCompositeStorage.getDefaultConsent(AdServicesApiType.TOPICS).isGiven();
-    }
-
-    /**
-     * Retrieves the FLEDGE default consent.
-     *
-     * @return true if the FLEDGE default consent is true, false otherwise.
-     */
-    public Boolean getFledgeDefaultConsent() {
-        return mConsentCompositeStorage.getDefaultConsent(AdServicesApiType.FLEDGE).isGiven();
-    }
-
-    /**
-     * Retrieves the measurement default consent.
-     *
-     * @return true if the measurement default consent is true, false otherwise.
-     */
-    public Boolean getMeasurementDefaultConsent() {
-        return mConsentCompositeStorage.getDefaultConsent(AdServicesApiType.MEASUREMENTS).isGiven();
-    }
-
-    /**
-     * Retrieves the default AdId state.
-     *
-     * @return true if the AdId is enabled by default, false otherwise.
-     */
-    public Boolean getDefaultAdIdState() {
-        return mConsentCompositeStorage.getDefaultAdIdState();
-    }
-
-    /** Saves the default consent bit to data stores based on source of truth. */
-    public void recordDefaultConsent(boolean defaultConsent) {
-        mConsentCompositeStorage.recordDefaultConsent(AdServicesApiType.ALL_API, defaultConsent);
-    }
-
-    /** Saves the topics default consent bit to data stores based on source of truth. */
-    public void recordTopicsDefaultConsent(boolean defaultConsent) {
-        mConsentCompositeStorage.recordDefaultConsent(AdServicesApiType.TOPICS, defaultConsent);
-    }
-
-    /** Saves the FLEDGE default consent bit to data stores based on source of truth. */
-    public void recordFledgeDefaultConsent(boolean defaultConsent) {
-        mConsentCompositeStorage.recordDefaultConsent(AdServicesApiType.FLEDGE, defaultConsent);
-    }
-
-    /** Saves the measurement default consent bit to data stores based on source of truth. */
-    public void recordMeasurementDefaultConsent(boolean defaultConsent) {
-        mConsentCompositeStorage.recordDefaultConsent(
-                AdServicesApiType.MEASUREMENTS, defaultConsent);
-    }
-
-    /** Saves the default AdId state bit to data stores based on source of truth. */
-    public void recordDefaultAdIdState(boolean defaultAdIdState) {
-        mConsentCompositeStorage.recordDefaultAdIdState(defaultAdIdState);
     }
 
     /** Set the current privacy sandbox feature. */
@@ -1028,7 +972,6 @@ public class ConsentManagerV2 {
             editor.putBoolean(ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED, true);
             appConsents =
                     AppConsents.builder()
-                            .setDefaultConsent(consentKey)
                             .setMsmtConsent(consentKey)
                             .setFledgeConsent(consentKey)
                             .setTopicsConsent(consentKey)
@@ -1289,19 +1232,13 @@ public class ConsentManagerV2 {
             boolean consented = appSearchConsentManager.getConsent(apiType).isGiven();
             datastore.put(apiType.toPpApiDatastoreKey(), consented);
             adServicesManager.setConsent(apiType, consented);
-            boolean defaultConsent = appSearchConsentManager.getDefaultConsent(apiType).isGiven();
-            datastore.put(apiType.toDefaultConsentDatastoreKey(), defaultConsent);
-            adServicesManager.recordDefaultConsent(apiType, defaultConsent);
             consentMap.put(apiType.toPpApiDatastoreKey(), consented);
-            consentMap.put(apiType.toDefaultConsentDatastoreKey(), defaultConsent);
         }
         return AppConsents.builder()
                 .setMsmtConsent(
                         consentMap.get(AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey()))
                 .setTopicsConsent(consentMap.get(AdServicesApiType.TOPICS.toPpApiDatastoreKey()))
                 .setFledgeConsent(consentMap.get(AdServicesApiType.FLEDGE.toPpApiDatastoreKey()))
-                .setDefaultConsent(
-                        consentMap.get(AdServicesApiType.ALL_API.toDefaultConsentDatastoreKey()))
                 .build();
     }
 
@@ -1437,7 +1374,6 @@ public class ConsentManagerV2 {
                         .setMsmtConsent(appConsents == null || appConsents.getMsmtConsent())
                         .setTopicsConsent(appConsents == null || appConsents.getTopicsConsent())
                         .setFledgeConsent(appConsents == null || appConsents.getFledgeConsent())
-                        .setDefaultConsent(appConsents == null || appConsents.getDefaultConsent())
                         .setRegion(getConsentRegion(context))
                         .build();
         return consentMigrationStats;

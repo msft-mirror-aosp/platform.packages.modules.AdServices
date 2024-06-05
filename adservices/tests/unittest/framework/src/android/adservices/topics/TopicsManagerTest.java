@@ -23,11 +23,17 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
 import org.junit.Assume;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link Topic} */
 public class TopicsManagerTest {
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testTopicsManagerCtor_TPlus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
@@ -38,7 +44,6 @@ public class TopicsManagerTest {
 
     @Test
     public void testTopicsManagerCtor_SMinus() {
-        // TODO(b/269798827) - Topics is not enabled on R
         Assume.assumeTrue(
                 Build.VERSION.SDK_INT == Build.VERSION_CODES.S
                         || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);

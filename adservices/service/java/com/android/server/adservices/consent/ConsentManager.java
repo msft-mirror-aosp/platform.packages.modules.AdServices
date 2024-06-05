@@ -15,7 +15,6 @@
  */
 package com.android.server.adservices.consent;
 
-
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
@@ -49,6 +48,10 @@ public final class ConsentManager {
     static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
 
     static final String GA_UX_NOTIFICATION_DISPLAYED_ONCE = "GA-UX-NOTIFICATION-DISPLAYED-ONCE";
+
+    static final String PAS_NOTIFICATION_DISPLAYED_ONCE = "PAS_NOTIFICATION_DISPLAYED_ONCE";
+
+    static final String PAS_NOTIFICATION_OPENED = "PAS_NOTIFICATION_OPENED";
 
     static final String TOPICS_CONSENT_PAGE_DISPLAYED = "TOPICS-CONSENT-PAGE-DISPLAYED";
 
@@ -223,6 +226,44 @@ public final class ConsentManager {
      */
     public boolean wasGaUxNotificationDisplayed() {
         return getValueWithLock(GA_UX_NOTIFICATION_DISPLAYED_ONCE);
+    }
+
+    /**
+     * Saves information to the storage that PAS notification was displayed for the first time to
+     * the user.
+     */
+    public void recordPasNotificationDisplayed(boolean wasNotificationDisplayed) {
+        setValueWithLock(
+                PAS_NOTIFICATION_DISPLAYED_ONCE,
+                wasNotificationDisplayed,
+                "recordPasNotificationDisplayed");
+    }
+
+    /**
+     * Returns information whether PAS Consent Notification was displayed or not.
+     *
+     * @return true if PAS Consent Notification was displayed, otherwise false.
+     */
+    public boolean wasPasNotificationDisplayed() {
+        return getValueWithLock(PAS_NOTIFICATION_DISPLAYED_ONCE);
+    }
+
+    /**
+     * Saves information to the storage that PAS notification was opened for the first time to the
+     * user.
+     */
+    public void recordPasNotificationOpened(boolean wasNotificationOpened) {
+        setValueWithLock(
+                PAS_NOTIFICATION_OPENED, wasNotificationOpened, "recordPasNotificationOpened");
+    }
+
+    /**
+     * Returns information whether PAS Consent Notification was opened or not.
+     *
+     * @return true if PAS Consent Notification was opened, otherwise false.
+     */
+    public boolean wasPasNotificationOpened() {
+        return getValueWithLock(PAS_NOTIFICATION_OPENED);
     }
 
     /** Saves the default consent of a user. */
@@ -560,6 +601,33 @@ public final class ConsentManager {
             mReadWriteLock.readLock().unlock();
         }
         return null;
+    }
+
+    @VisibleForTesting static final String IS_MEASUREMENT_DATA_RESET = "IS_MEASUREMENT_DATA_RESET";
+
+    /** Returns whether the isMeasurementDataReset bit is true. */
+    public boolean isMeasurementDataReset() {
+        return getValueWithLock(IS_MEASUREMENT_DATA_RESET);
+    }
+
+    /** Set the isMeasurementDataReset bit in system server. */
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) throws IOException {
+        setValueWithLock(
+                IS_MEASUREMENT_DATA_RESET,
+                isMeasurementDataReset,
+                /* callerName */ "isMeasurementDataReset");
+    }
+
+    @VisibleForTesting static final String IS_PA_DATA_RESET = "IS_Pa_DATA_RESET";
+
+    /** Returns whether the isPaDataReset bit is true. */
+    public boolean isPaDataReset() {
+        return getValueWithLock(IS_PA_DATA_RESET);
+    }
+
+    /** Set the isPaDataReset bit in system server. */
+    public void setPaDataReset(boolean isPaDataReset) throws IOException {
+        setValueWithLock(IS_PA_DATA_RESET, isPaDataReset, /* callerName */ "isPaDataReset");
     }
 
     private boolean getValueWithLock(String key) {

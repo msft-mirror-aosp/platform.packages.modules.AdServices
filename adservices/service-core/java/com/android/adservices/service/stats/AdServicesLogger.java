@@ -16,6 +16,20 @@
 
 package com.android.adservices.service.stats;
 
+import com.android.adservices.service.common.AppManifestConfigCall;
+import com.android.adservices.service.common.AppManifestConfigHelper;
+import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+
 /** Interface for Adservices logger. */
 public interface AdServicesLogger {
     /** log method for MeasurementReportsStats. */
@@ -26,6 +40,12 @@ public interface AdServicesLogger {
 
     /** log UIStats which has stats about UI events. */
     void logUIStats(UIStats uiStats);
+
+    /**
+     * Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object with app
+     * package name, if enabled.
+     */
+    void logFledgeApiCallStats(int apiName, String appPackageName, int resultCode, int latencyMs);
 
     /** Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object. */
     void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs);
@@ -106,6 +126,12 @@ public interface AdServicesLogger {
     void logMeasurementClickVerificationStats(
             MeasurementClickVerificationStats measurementClickVerificationStats);
 
+    /** Logs measurement ODP registrations. */
+    void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats);
+
+    /** Logs measurement ODP API calls. */
+    void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats);
+
     /** Logs enrollment data stats. */
     void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId);
 
@@ -139,4 +165,94 @@ public interface AdServicesLogger {
 
     /** Logs beacon level reporting for clearing interaction reporting table stats. */
     void logInteractionReportingTableClearedStats(InteractionReportingTableClearedStats stats);
+
+    /** Logs call to {@link AppManifestConfigHelper} to check if app is allowed to access an API. */
+    void logAppManifestConfigCall(AppManifestConfigCall call);
+
+    /** Logs status for {@link com.android.adservices.service.kanon.KAnonSignJoinManager}. */
+    void logKAnonSignJoinStatus();
+
+    /**
+     * Logs status for initialize method for {@link
+     * com.android.adservices.service.kanon.KAnonCaller}.
+     */
+    void logKAnonInitializeStats(KAnonInitializeStatusStats kAnonInitializeStatusStats);
+
+    /** Logs status for sign method for {@link com.android.adservices.service.kanon.KAnonCaller */
+    void logKAnonSignStats(KAnonSignStatusStats kAnonSignStatusStats);
+
+    /** Logs status for join method for {@link com.android.adservices.service.kanon.KAnonCaller} */
+    void logKAnonJoinStats(KAnonJoinStatusStats kAnonJoinStatusStats);
+
+    /**
+     * Logs status for {@link
+     * com.android.adservices.service.kanon.KAnonSignJoinBackgroundJobService}
+     */
+    void logKAnonBackgroundJobStats(KAnonBackgroundJobStatusStats kAnonBackgroundJobStatusStats);
+
+    /**
+     * Logs status for immediate sign join in {@link
+     * com.android.adservices.service.kanon.KAnonSignJoinManager}
+     */
+    void logKAnonImmediateSignJoinStats(
+            KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats);
+
+    /** Logs status for get challenge method during kAnon sign join process. */
+    void logKAnonGetChallengeJobStats(KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats);
+
+    /** Logs stats for GetAdSelectionDataApiCalled */
+    void logGetAdSelectionDataApiCalledStats(GetAdSelectionDataApiCalledStats stats);
+
+    /** Logs stats for GetAdSelectionDataBuyerInputGenerated */
+    void logGetAdSelectionDataBuyerInputGeneratedStats(
+            GetAdSelectionDataBuyerInputGeneratedStats stats);
+
+    /** Logs AdFilteringProcessJoinCAReported stats. */
+    void logAdFilteringProcessJoinCAReportedStats(AdFilteringProcessJoinCAReportedStats stats);
+
+    /** Logs AdFilteringProcessAdSelectionReported stats. */
+    void logAdFilteringProcessAdSelectionReportedStats(
+            AdFilteringProcessAdSelectionReportedStats stats);
+
+    /** Logs AdCounterHistogramUpdaterReported stats. */
+    void logAdCounterHistogramUpdaterReportedStats(AdCounterHistogramUpdaterReportedStats stats);
+
+    /** Logs TopicsEncryptionEpochComputationReported stats. */
+    void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats);
+
+    /** Logs TopicsEncryptionGetTopicsReported stats */
+    void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats);
+
+    /** Logs stats for shell command indicating success/failure, latency. */
+    void logShellCommandStats(ShellCommandStats stats);
+
+    /**
+     * Logs stats for signature verification for {@link
+     * android.adservices.adselection.SignedContextualAds} during on-device ad selection auction
+     */
+    void logSignatureVerificationStats(SignatureVerificationStats stats);
+
+    /** Logs stats for EncodingFetchStats */
+    void logEncodingJsFetchStats(EncodingFetchStats stats);
+
+    /** Logs stats for UpdateSignalsApiCalledStats */
+    void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats);
+
+    /** Logs stats for ServerAuctionBackgroundKeyFetchScheduled */
+    void logServerAuctionBackgroundKeyFetchScheduledStats(
+            ServerAuctionBackgroundKeyFetchScheduledStats stats);
+
+    /** Logs stats for UpdateSignalsApiCalledStats */
+    void logEncodingJsExecutionStats(EncodingJsExecutionStats stats);
+
+    /** Logs stats for ServerAuctionKeyFetchCalled */
+    void logServerAuctionKeyFetchCalledStats(ServerAuctionKeyFetchCalledStats stats);
+
+    /** Logs stats for EncodingJobRunStats */
+    void logEncodingJobRunStats(EncodingJobRunStats stats);
+
+    /** Logs stats for PersistAdSelectionResultCalledStats */
+    void logPersistAdSelectionResultCalledStats(PersistAdSelectionResultCalledStats stats);
 }

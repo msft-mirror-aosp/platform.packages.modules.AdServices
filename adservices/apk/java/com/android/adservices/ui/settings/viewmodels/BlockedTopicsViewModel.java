@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableList;
  * interacting with the {@link ConsentManager} that persists and changes the topics data in a
  * storage.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsViewModel extends AndroidViewModel {
 
@@ -56,7 +55,7 @@ public class BlockedTopicsViewModel extends AndroidViewModel {
     public BlockedTopicsViewModel(@NonNull Application application) {
         super(application);
 
-        mConsentManager = ConsentManager.getInstance(application);
+        mConsentManager = ConsentManager.getInstance();
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
     }
 

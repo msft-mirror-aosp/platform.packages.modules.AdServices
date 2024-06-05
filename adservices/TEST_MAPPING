@@ -236,9 +236,29 @@
       ]
     },
     {
+      // Install com.google.android.adservices.apex and run
+      // AdServicesServiceCoreTopicsUnitTests.
+      "name": "AdServicesServiceCoreTopicsUnitTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.extservices.apex and run
       // AdExtServicesServiceCoreMeasurementUnitTests.
       "name": "AdExtServicesServiceCoreMeasurementUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run
+      // AdExtServicesServiceCoreTopicsUnitTests.
+      "name": "AdExtServicesServiceCoreTopicsUnitTests[com.google.android.extservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -685,7 +705,7 @@
       ]
     },
     {
-      "name": "AdExtServicesServiceCoreMeasurementUnitTests",
+      "name": "AdServicesServiceCoreTopicsUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"

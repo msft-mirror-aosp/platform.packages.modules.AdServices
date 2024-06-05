@@ -17,22 +17,28 @@
 package android.app.sdksandbox.sdkprovider;
 
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER;
+import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.Activity;
 import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.StatsdUtil;
 import android.app.sdksandbox.sandboxactivity.ActivityContextInfo;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.ArrayMap;
 
 import androidx.annotation.RequiresApi;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -53,6 +59,7 @@ public class SdkSandboxActivityRegistry {
 
     // A lock to keep all map synchronized
     private final Object mMapsLock = new Object();
+    private Injector mInjector;
 
     @GuardedBy("mMapsLock")
     private final Map<SdkSandboxActivityHandler, HandlerInfo> mHandlerToHandlerInfoMap =
@@ -61,16 +68,35 @@ public class SdkSandboxActivityRegistry {
     @GuardedBy("mMapsLock")
     private final Map<IBinder, HandlerInfo> mTokenToHandlerInfoMap = new ArrayMap<>();
 
-    private SdkSandboxActivityRegistry() {}
+    private SdkSandboxActivityRegistry(Injector injector) {
+        setInjector(injector);
+    }
 
     /** Returns a singleton instance of this class. */
     public static SdkSandboxActivityRegistry getInstance() {
+        return getInstance(new Injector());
+    }
+
+    /**
+     * Returns a singleton instance of this class with a custom {@link Injector}. If the instance
+     * already exists, overrides old injector with the new one.
+     *
+     * @hide
+     */
+    @VisibleForTesting
+    public static SdkSandboxActivityRegistry getInstance(@NonNull Injector injector) {
         synchronized (sLock) {
             if (sInstance == null) {
-                sInstance = new SdkSandboxActivityRegistry();
+                sInstance = new SdkSandboxActivityRegistry(injector);
+            } else {
+                sInstance.setInjector(injector);
             }
             return sInstance;
         }
+    }
+
+    private void setInjector(@NonNull Injector injector) {
+        mInjector = injector;
     }
 
     /**
@@ -89,6 +115,7 @@ public class SdkSandboxActivityRegistry {
     public IBinder register(
             @NonNull SandboxedSdkContext sdkContext, @NonNull SdkSandboxActivityHandler handler) {
         synchronized (mMapsLock) {
+            long timeEventStarted = mInjector.elapsedRealtime();
             if (mHandlerToHandlerInfoMap.containsKey(handler)) {
                 HandlerInfo handlerInfo = mHandlerToHandlerInfoMap.get(handler);
                 return handlerInfo.getToken();
@@ -98,6 +125,11 @@ public class SdkSandboxActivityRegistry {
             HandlerInfo handlerInfo = new HandlerInfo(sdkContext, handler, token);
             mHandlerToHandlerInfoMap.put(handlerInfo.getHandler(), handlerInfo);
             mTokenToHandlerInfoMap.put(handlerInfo.getToken(), handlerInfo);
+            logSandboxActivityApiLatency(
+                    StatsdUtil
+                            .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__PUT_SDK_SANDBOX_ACTIVITY_HANDLER,
+                    StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                    timeEventStarted);
             return token;
         }
     }
@@ -110,12 +142,18 @@ public class SdkSandboxActivityRegistry {
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     public void unregister(@NonNull SdkSandboxActivityHandler handler) {
         synchronized (mMapsLock) {
+            long timeEventStarted = mInjector.elapsedRealtime();
             HandlerInfo handlerInfo = mHandlerToHandlerInfoMap.get(handler);
             if (handlerInfo == null) {
                 return;
             }
             mHandlerToHandlerInfoMap.remove(handlerInfo.getHandler());
             mTokenToHandlerInfoMap.remove(handlerInfo.getToken());
+            logSandboxActivityApiLatency(
+                    StatsdUtil
+                            .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__REMOVE_SDK_SANDBOX_ACTIVITY_HANDLER,
+                    StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                    timeEventStarted);
         }
     }
 
@@ -136,9 +174,21 @@ public class SdkSandboxActivityRegistry {
      */
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     public void notifyOnActivityCreation(@NonNull Intent intent, @NonNull Activity activity) {
+        long sandboxActivityInitiationTime = extractActivityInitiationTime(intent);
+        if (sandboxActivityInitiationTime != 0L) {
+            // Remove time sandbox activity was initiated at, to avoid logging the wrong activity
+            // creation time in case of recreation.
+            intent.removeExtra(EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME);
+        }
         synchronized (mMapsLock) {
+            long timeEventStarted = mInjector.elapsedRealtime();
             IBinder handlerToken = extractHandlerToken(intent);
             if (handlerToken == null) {
+                logSandboxActivityApiLatency(
+                        StatsdUtil
+                                .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__NOTIFY_SDK_ON_ACTIVITY_CREATION,
+                        StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE,
+                        timeEventStarted);
                 throw new IllegalArgumentException(
                         "Extra params of the intent are missing the IBinder value for the key ("
                                 + SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER
@@ -146,10 +196,29 @@ public class SdkSandboxActivityRegistry {
             }
             HandlerInfo handlerInfo = mTokenToHandlerInfoMap.get(handlerToken);
             if (handlerInfo == null) {
+                logSandboxActivityApiLatency(
+                        StatsdUtil
+                                .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__NOTIFY_SDK_ON_ACTIVITY_CREATION,
+                        StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE,
+                        timeEventStarted);
                 throw new IllegalArgumentException(
                         "There is no registered SdkSandboxActivityHandler to notify");
             }
+            // TODO(b/326974007): log SandboxActivity creation latency in SandboxedActivity class.
+            // Don't log time taken by SDK to perform 'onActivityCreated' as it can be roughly
+            // calculated using total activity creation latency.
+            logSandboxActivityApiLatency(
+                    StatsdUtil
+                            .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__NOTIFY_SDK_ON_ACTIVITY_CREATION,
+                    StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                    timeEventStarted);
             handlerInfo.getHandler().onActivityCreated(activity);
+        }
+        if (sandboxActivityInitiationTime != 0L) {
+            logSandboxActivityApiLatency(
+                    StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__TOTAL,
+                    StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
+                    sandboxActivityInitiationTime);
         }
     }
 
@@ -174,9 +243,6 @@ public class SdkSandboxActivityRegistry {
             final HandlerInfo handlerInfo = mTokenToHandlerInfoMap.get(handlerToken);
             if (handlerInfo == null) {
                 return null;
-            }
-            if (!handlerInfo.getSdkContext().isCustomizedSdkContextEnabled()) {
-                throw new IllegalStateException("Customized SDK flag is disabled.");
             }
             return handlerInfo.getContextInfo();
         }
@@ -215,6 +281,27 @@ public class SdkSandboxActivityRegistry {
         return intent.getExtras().getBinder(EXTRA_SANDBOXED_ACTIVITY_HANDLER);
     }
 
+    private long extractActivityInitiationTime(Intent intent) {
+        if (intent == null || intent.getExtras() == null) {
+            return 0L;
+        }
+        return intent.getExtras().getLong(EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME);
+    }
+
+    private void logSandboxActivityApiLatency(int method, int callResult, long timeEventStarted) {
+        try {
+            mInjector
+                    .getSdkSandboxLocalSingleton()
+                    .getSdkToServiceCallback()
+                    .logSandboxActivityApiLatencyFromSandbox(
+                            method,
+                            callResult,
+                            (int) (mInjector.elapsedRealtime() - timeEventStarted));
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
     /**
      * Unregisters all {@link SdkSandboxActivityHandler} instances that are registered by the passed
      * SDK.
@@ -237,6 +324,22 @@ public class SdkSandboxActivityRegistry {
                     mTokenToHandlerInfoMap.remove(handlerToken);
                 }
             }
+        }
+    }
+
+    /**
+     * Injects dependencies into {@link SdkSandboxActivityRegistry}.
+     *
+     * @hide
+     */
+    @VisibleForTesting
+    public static class Injector {
+        public SdkSandboxLocalSingleton getSdkSandboxLocalSingleton() {
+            return SdkSandboxLocalSingleton.getExistingInstance();
+        }
+
+        public long elapsedRealtime() {
+            return SystemClock.elapsedRealtime();
         }
     }
 

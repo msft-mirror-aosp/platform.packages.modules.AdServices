@@ -16,6 +16,7 @@
 
 package com.android.adservices.ui;
 
+
 import android.annotation.RequiresApi;
 import android.content.Context;
 import android.os.Build;
@@ -30,29 +31,93 @@ import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollectio
  */
 @RequiresApi(Build.VERSION_CODES.S)
 public interface UxSelector {
+    enum EndUserUx {
+        UNKNOWN,
+        BETA,
+        GA,
+        U18,
+        RVC,
+        GA_WITH_PAS
+    }
+
     /**
-     * This method will be called in during initialization of class to determine which mode to
-     * choose.
+     * This method will be called in during initialization of class to determine which ux to choose.
      *
-     * @param context Current context
+     * @param fragmentActivity unused.
+     * @param context current context.
+     * @return Ux that end user should see.
      */
-    default void initWithUx(FragmentActivity fragmentActivity, Context context) {
-        switch (UxUtil.getUx(context)) {
-            case U18_UX:
+    default EndUserUx initWithUx(FragmentActivity fragmentActivity, Context context) {
+        return initWithUx(context, false);
+    }
+
+    /**
+     * This method will be called in during initialization of class to determine which ux to choose.
+     *
+     * @param context current context.
+     * @param beforePasUxActive if the current activity is before PAS UX is active, so it is part of
+     *     the process of activating PAS UX and should be shown if flag is on.
+     * @return Ux that end user should see.
+     */
+    default EndUserUx initWithUx(Context context, boolean beforePasUxActive) {
+        EndUserUx endUserUx = getEndUserUx(context, beforePasUxActive);
+        switch (endUserUx) {
+            case U18:
                 initU18();
                 break;
-            case GA_UX:
+            case GA:
                 initGA();
                 break;
-            case BETA_UX:
+            case BETA:
                 initBeta();
                 break;
-            case RVC_UX:
+            case RVC:
                 initRvc();
                 break;
+            case GA_WITH_PAS:
+                initGaUxWithPas();
+                break;
+            default:
+                initGA();
+        }
+        return endUserUx;
+    }
+
+    /**
+     * Returns the UX that the end user should be seeing currently.
+     *
+     * @param context current Context.
+     * @return Ux that end user should see.
+     */
+    default EndUserUx getEndUserUx(Context context) {
+        return getEndUserUx(context, false);
+    }
+
+    /**
+     * Returns the UX that the end user should be seeing currently.
+     *
+     * @param context current Context.
+     * @param beforePasUxActive if the current context is before PAS UX is active.
+     * @return Ux that end user should see.
+     */
+    default EndUserUx getEndUserUx(Context context, boolean beforePasUxActive) {
+        switch (UxUtil.getUx(context)) {
+            case U18_UX:
+                return EndUserUx.U18;
+            case GA_UX:
+                if (UxUtil.pasUxIsActive(beforePasUxActive)) {
+                    // ROW UI views should be updated only once notification is sent.
+                    // EEA UI views should be updated only once notification is opened.
+                    return EndUserUx.GA_WITH_PAS;
+                }
+                return EndUserUx.GA;
+            case BETA_UX:
+                return EndUserUx.BETA;
+            case RVC_UX:
+                return EndUserUx.RVC;
             default:
                 // TODO: log some warning or error
-                initGA();
+                return EndUserUx.GA;
         }
     }
 
@@ -64,7 +129,7 @@ public interface UxSelector {
 
     /**
      * This method will be called in {@link #initWithUx} if app is in {@link
-     * PrivacySandboxUxCollection#GA_UX} mode.
+     * PrivacySandboxUxCollection#GA_UX} mode and PAS Ux feature is disabled.
      */
     void initGA();
 
@@ -79,4 +144,10 @@ public interface UxSelector {
      * PrivacySandboxUxCollection#RVC_UX} mode.
      */
     void initRvc();
+
+    /**
+     * This method will be called in {@link #initWithUx} if app is in {@link
+     * PrivacySandboxUxCollection#GA_UX} mode and PAS Ux feature is enabled.
+     */
+    void initGaUxWithPas();
 }

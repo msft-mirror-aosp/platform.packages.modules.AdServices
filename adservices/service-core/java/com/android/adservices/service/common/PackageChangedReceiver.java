@@ -81,7 +81,8 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     private static final int DEFAULT_PACKAGE_UID = -1;
-    private static boolean sFilteringEnabled;
+    private static boolean sFrequencyCapFilteringEnabled;
+    private static boolean sAppInstallFilteringEnabled;
 
     private static final Object LOCK = new Object();
 
@@ -98,8 +99,10 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private static boolean changeReceiverState(
             @NonNull Context context, @NonNull Flags flags, int state) {
         synchronized (LOCK) {
-            sFilteringEnabled =
-                    BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled);
+            sFrequencyCapFilteringEnabled =
+                    BinderFlagReader.readFlag(flags::getFledgeFrequencyCapFilteringEnabled);
+            sAppInstallFilteringEnabled =
+                    BinderFlagReader.readFlag(flags::getFledgeAppInstallFilteringEnabled);
             try {
                 context.getPackageManager()
                         .setComponentEnabledSetting(
@@ -194,7 +197,12 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
         LogUtil.d("Package Fully Removed:" + packageUri);
         sBackgroundExecutor.execute(
-                () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
+                () ->
+                        MeasurementImpl.getInstance(
+                                        SdkLevel.isAtLeastS()
+                                                ? context
+                                                : context.getApplicationContext())
+                                .deletePackageRecords(packageUri));
 
         // Log wipeout event triggered by request to uninstall package on device
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
@@ -272,19 +280,21 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                         getCustomAudienceDatabase(context)
                                 .customAudienceDao()
                                 .deleteCustomAudienceDataByOwner(packageUri.toString()));
-        if (sFilteringEnabled) {
-            LogUtil.d("Deleting app install data for package: " + packageUri);
-            sBackgroundExecutor.execute(
-                    () ->
-                            getSharedStorageDatabase(context)
-                                    .appInstallDao()
-                                    .deleteByPackageName(packageUri.toString()));
+        if (sFrequencyCapFilteringEnabled) {
             LogUtil.d("Deleting frequency cap histogram data for package: " + packageUri);
             sBackgroundExecutor.execute(
                     () ->
                             getSharedStorageDatabase(context)
                                     .frequencyCapDao()
                                     .deleteHistogramDataBySourceApp(packageUri.toString()));
+        }
+        if (sAppInstallFilteringEnabled) {
+            LogUtil.d("Deleting app install data for package: " + packageUri);
+            sBackgroundExecutor.execute(
+                    () ->
+                            getSharedStorageDatabase(context)
+                                    .appInstallDao()
+                                    .deleteByPackageName(packageUri.toString()));
         }
     }
 
@@ -306,7 +316,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Deleting consent data for package %s with UID %d", packageName, packageUid);
         sBackgroundExecutor.execute(
                 () -> {
-                    ConsentManager instance = ConsentManager.getInstance(context);
+                    ConsentManager instance = ConsentManager.getInstance();
                     if (packageUid == DEFAULT_PACKAGE_UID) {
                         // There can be multiple instances of PackageChangedReceiver, e.g. in
                         // different user profiles. The system broadcasts a package change

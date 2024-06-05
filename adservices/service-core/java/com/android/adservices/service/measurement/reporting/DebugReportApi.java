@@ -42,6 +42,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -81,6 +82,8 @@ public class DebugReportApi {
         String TRIGGER_AGGREGATE_STORAGE_LIMIT = "trigger-aggregate-storage-limit";
         String TRIGGER_AGGREGATE_EXCESSIVE_REPORTS = "trigger-aggregate-excessive-reports";
         String TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED = "trigger-event-report-window-not-started";
+        String TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA = "trigger-event-no-matching-trigger-data";
+        String HEADER_PARSING_ERROR = "header-parsing-error";
     }
 
     /** Defines different verbose debug report body parameters. */
@@ -96,6 +99,11 @@ public class DebugReportApi {
         String SOURCE_TYPE = "source_type";
         String TRIGGER_DATA = "trigger_data";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
+        String SOURCE_DESTINATION_LIMIT = "source_destination_limit";
+        String CONTEXT_SITE = "context_site";
+        String HEADER = "header";
+        String VALUE = "value";
+        String ERROR = "error";
     }
 
     private enum PermissionState {
@@ -147,7 +155,10 @@ public class DebugReportApi {
     }
 
     /** Schedules the Source Success Debug Report */
-    public void scheduleSourceSuccessDebugReport(Source source, IMeasurementDao dao) {
+    public void scheduleSourceSuccessDebugReport(
+            Source source,
+            IMeasurementDao dao,
+            @Nullable Map<String, String> additionalBodyParams) {
         if (isSourceDebugFlagDisabled(Type.SOURCE_SUCCESS)) {
             return;
         }
@@ -160,7 +171,7 @@ public class DebugReportApi {
         }
         scheduleReport(
                 Type.SOURCE_SUCCESS,
-                generateSourceDebugReportBody(source, null),
+                generateSourceDebugReportBody(source, additionalBodyParams),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
                 source.getRegistrant(),
@@ -182,7 +193,10 @@ public class DebugReportApi {
     }
 
     /** Schedules the Source Noised Debug Report */
-    public void scheduleSourceNoisedDebugReport(Source source, IMeasurementDao dao) {
+    public void scheduleSourceNoisedDebugReport(
+            Source source,
+            IMeasurementDao dao,
+            @Nullable Map<String, String> additionalDebugReportParams) {
         if (isSourceDebugFlagDisabled(Type.SOURCE_NOISED)) {
             return;
         }
@@ -195,7 +209,7 @@ public class DebugReportApi {
         }
         scheduleReport(
                 Type.SOURCE_NOISED,
-                generateSourceDebugReportBody(source, null),
+                generateSourceDebugReportBody(source, additionalDebugReportParams),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
                 source.getRegistrant(),
@@ -218,7 +232,7 @@ public class DebugReportApi {
         }
         scheduleReport(
                 Type.SOURCE_STORAGE_LIMIT,
-                generateSourceDebugReportBody(source, limit),
+                generateSourceDebugReportBody(source, Map.of(Body.LIMIT, String.valueOf(limit))),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
                 source.getRegistrant(),
@@ -391,6 +405,34 @@ public class DebugReportApi {
         }
     }
 
+    /** Schedule header parsing and validation errors verbose debug reports. */
+    public void scheduleHeaderErrorReport(
+            Uri registrationUri,
+            Uri registrant,
+            String headerName,
+            String enrollmentId,
+            String errorMessage,
+            String originalHeader,
+            IMeasurementDao dao) {
+        try {
+            JSONObject body = new JSONObject();
+            body.put(Body.CONTEXT_SITE, registrationUri);
+            body.put(Body.HEADER, headerName);
+            body.put(Body.VALUE, originalHeader);
+            body.put(Body.ERROR, errorMessage);
+            scheduleReport(
+                    Type.HEADER_PARSING_ERROR,
+                    body,
+                    enrollmentId,
+                    registrationUri,
+                    registrant,
+                    dao);
+        } catch (JSONException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Json error in debug report %s", Type.HEADER_PARSING_ERROR);
+        }
+    }
+
     /**
      * Schedules the Debug Report to be sent
      *
@@ -519,14 +561,19 @@ public class DebugReportApi {
 
     /** Generates source debug report body */
     private JSONObject generateSourceDebugReportBody(
-            @NonNull Source source, @Nullable String limit) {
+            Source source, @Nullable Map<String, String> additionalBodyParams) {
         JSONObject body = new JSONObject();
         try {
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
             body.put(Body.ATTRIBUTION_DESTINATION, generateSourceDestinations(source));
             body.put(Body.SOURCE_SITE, generateSourceSite(source));
-            body.put(Body.LIMIT, limit);
             body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
+            if (additionalBodyParams != null) {
+                for (Map.Entry<String, String> entry : additionalBodyParams.entrySet()) {
+                    body.put(entry.getKey(), entry.getValue());
+                }
+            }
+
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Json error while generating source debug report body.");
@@ -604,7 +651,7 @@ public class DebugReportApi {
             body.put(Body.SOURCE_TYPE, source.getSourceType().getValue());
             body.put(
                     Body.RANDOMIZED_TRIGGER_RATE,
-                    mSourceNoiseHandler.getRandomAttributionProbability(source));
+                    mSourceNoiseHandler.getRandomizedTriggerRate(source));
             if (triggerData != null) {
                 body.put(Body.TRIGGER_DATA, triggerData.toString());
             }

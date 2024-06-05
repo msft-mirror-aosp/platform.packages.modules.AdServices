@@ -1,8 +1,12 @@
 {
-  "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate a real aggregate report with two contributions and 31 null aggregate reports",
+  "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate a real aggregate report with two contributions and 30 null aggregate reports",
   "phflags_override": {
     "measurement_null_aggregate_report_enabled": true,
-    "measurement_null_agg_report_rate_incl_source_registration_time": "1.0"
+    "measurement_null_agg_report_rate_incl_source_registration_time": "1.0",
+    // Though set to 1, the path for null agg reports excluding source registration time should
+    // never be reached. This will detect bugs if agg reports excluding source registration time are
+    // created.
+    "measurement_null_agg_report_rate_excl_source_registration_time": "1.0"
   },
   "input": {
     "sources": [{
@@ -57,6 +61,7 @@
                 "priority": "101"
               }
             ],
+            "debug_key": "8971346783", // should not be present in any agg report
             "aggregatable_trigger_data": [
               {
                 "key_piece": "0x400",
@@ -99,11 +104,11 @@
   },
   "output": {
     "event_level_results": [{
-      "report_time": "800176400001",
+      "report_time": "800172800001",
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
         "attribution_destination": "android-app://example.2d1.test",
-        "scheduled_report_time": "800176400",
+        "scheduled_report_time": "800172800",
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
@@ -125,7 +130,8 @@
               "key": "0xa85",
               "value": 1664
             }
-          ]
+          ],
+          "source_registration_time": "799977600"
         }
       },
       {
@@ -138,7 +144,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797408600"
         }
       },
       {
@@ -151,7 +158,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797495000"
         }
       },
       {
@@ -164,7 +172,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797581400"
         }
       },
       {
@@ -177,7 +186,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797667800"
         }
       },
       {
@@ -190,7 +200,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797754200"
         }
       },
       {
@@ -203,7 +214,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797840600"
         }
       },
       {
@@ -216,7 +228,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "797927000"
         }
       },
       {
@@ -229,7 +242,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798013400"
         }
       },
       {
@@ -242,7 +256,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798099800"
         }
       },
       {
@@ -255,7 +270,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798186200"
         }
       },
       {
@@ -268,7 +284,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798272600"
         }
       },
       {
@@ -281,7 +298,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798359000"
         }
       },
       {
@@ -294,7 +312,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798445400"
         }
       },
       {
@@ -307,7 +326,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798531800"
         }
       },
       {
@@ -320,7 +340,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798618200"
         }
       },
       {
@@ -333,7 +354,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798704600"
         }
       },
       {
@@ -346,7 +368,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798791000"
         }
       },
       {
@@ -359,7 +382,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798877400"
         }
       },
       {
@@ -372,7 +396,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "798963800"
         }
       },
       {
@@ -385,7 +410,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799050200"
         }
       },
       {
@@ -398,7 +424,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799136600"
         }
       },
       {
@@ -411,7 +438,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799223000"
         }
       },
       {
@@ -424,7 +452,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799309400"
         }
       },
       {
@@ -437,7 +466,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799395800"
         }
       },
       {
@@ -450,7 +480,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799482200"
         }
       },
       {
@@ -463,7 +494,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799568600"
         }
       },
       {
@@ -476,7 +508,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799655000"
         }
       },
       {
@@ -489,7 +522,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799741400"
         }
       },
       {
@@ -502,7 +536,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799827800"
         }
       },
       {
@@ -515,7 +550,8 @@
               "key": "0x0",
               "value": 0
             }
-          ]
+          ],
+          "source_registration_time": "799914200"
         }
       }
     ]

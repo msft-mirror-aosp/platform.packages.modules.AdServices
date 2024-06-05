@@ -24,6 +24,7 @@
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS" />
 
     <!-- Needed to resolve Intent to ComponentName for measurement verifiedDestination -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
@@ -51,6 +52,13 @@
                      "com.android.adservices.service.customaudience.BackgroundFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+
+        <!-- FLEDGE Schedule Custom Audience Update Job -->
+        <service android:name=
+                     "com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- FLEDGE Background Key Fetch Job -->
         <service android:name=
                      "com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService"
@@ -64,6 +72,12 @@
         <!-- FLEDGE Protected Signals periodic encoding job -->
         <service android:name=
                      "com.android.adservices.service.signals.PeriodicEncodingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- FLEDGE KAnon sign join background job -->
+        <service android:name=
+                     "com.android.adservices.service.kanon.KAnonSignJoinBackgroundJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
@@ -95,6 +109,11 @@
             android:name="com.android.adservices.cobalt.CobaltJobService"
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+        <provider
+            android:name="com.android.adservices.common.AdServicesTestingProvider"
+            android:authorities="com.android.adservices.provider.testing"
+            android:exported="false"
+        />
         <uses-library android:name="android.ext.adservices" android:required="false" />
     </application>
     <instrumentation

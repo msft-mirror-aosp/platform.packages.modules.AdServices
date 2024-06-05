@@ -18,20 +18,20 @@ import "google/protobuf/struct.proto";
 
 package com.android.adservices.service.proto.bidding_auction_servers;
 
-// ProtectedAudienceInput is generated and encrypted by the client,
+// ProtectedAuctionInput is generated and encrypted by the client,
 // passed through the untrusted Seller service, and decrypted by the
 // SellerFrontEnd service.
 // It is the wrapper for all of BuyerInput and other information required
 // for the Protected Audience auction.
-message ProtectedAudienceInput {
+message ProtectedAuctionInput {
   // Input per buyer.
-  // The key in the map corresponds to Custom Audience Owner that
+  // The key in the map corresponds to IGOwner (Interest Group Owner) that
   // is the Buyer / DSP. This  string that can identify a
-  // buyer participating in the auction. The value corresponds to compressed
-  // BuyerInput data. BuyerInput is ingested by the Buyer for bidding.
+  // buyer participating in the auction. The value corresponds to plaintext
+  // BuyerInput ingested by the buyer for bidding.
   map<string, bytes> buyer_input = 1;
 
-  // Publisher app.
+  // Publisher website or app.
   // This is required to construct browser signals for web.
   // It will also be passed via GetBids to buyers for their Buyer KV lookup
   // to fetch trusted bidding signals.
@@ -42,9 +42,15 @@ message ProtectedAudienceInput {
   bool enable_debug_reporting = 3;
 
   // Globally unique identifier for the client request.
-  // TODO(b/288287435) : For Android, currently set to adSelectionId but should be changed to an
-  // ID which is not accessible in plain text.
   string generation_id = 4;
+
+  // Consented debugging field.
+  ConsentedDebugConfiguration consented_debug_config = 5;
+
+  // Optional.
+  // A boolean value which indicates whether temporary unlimited egress should
+  // be enabled.
+  bool enable_unlimited_egress = 6;
 }
 
 // Grouping of data pertaining to protected app signals.
@@ -248,4 +254,19 @@ message DebugReportUrls {
   // URL to be triggered if the interest grou losses the auction.
   // If undefined or malformed url it will be ignored.
   string auction_debug_loss_url = 2;
+}
+
+// Consented debugging configuration.
+// Example:
+// The Chrome browser can set the following two fields:
+// 'consentedDebugConfig': {'isConsented': 'true', 'token': 'xxx'}
+message ConsentedDebugConfiguration {
+  // Whether the request is consented for debugging.
+  bool is_consented = 1;
+
+  // The debug token embedded in the request.
+  string token = 2;
+
+  // Whether save debug logs in response (only in non_prod)
+  bool is_debug_info_in_response = 3;
 }

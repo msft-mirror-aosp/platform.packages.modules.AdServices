@@ -32,10 +32,27 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 public class SelectAdsFlagRule implements TestRule {
+    private String mCoordinatorToUse;
+    public static final String PUBLIC_COORDINATOR =
+            "https://publickeyservice.pa.gcp.privacysandboxservices.com/.well-known/protected-auction/v1/public-keys";
+
+    public static final String TEST_COORDINATOR =
+            "https://ba-kv-service-5jyy5ulagq-uc.a.run.app/keys/2";
+
+    public static final String COORDINATOR_WITH_OLD_KEYS =
+            "https://key-test-5jyy5ulagq-uc.a.run.app/keys/3";
+
+    public SelectAdsFlagRule() {
+        this.mCoordinatorToUse = TEST_COORDINATOR;
+    }
+
+    public SelectAdsFlagRule(String coordinatorToUse) {
+        this.mCoordinatorToUse = coordinatorToUse;
+    }
 
     @Rule
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+            AdServicesFlagsSetterRule.forAllApisEnabledTests().setCompatModeFlags();
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -61,16 +78,19 @@ public class SelectAdsFlagRule implements TestRule {
         modifyServerAuctionFlags();
     }
 
-    private static void modifyServerAuctionFlags() {
+    private void modifyServerAuctionFlags() {
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_auction_server_ad_render_id_enabled "
                         + "true");
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_auction_server_kill_switch false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_auction_server_enabled true");
+        String coordinatorUri = mCoordinatorToUse;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "fledge_auction_server_auction_key_fetch_uri",
-                "https://ba-kv-service-5jyy5ulagq-uc.a.run.app/keys/2",
+                coordinatorUri,
                 false);
     }
 
@@ -104,14 +124,18 @@ public class SelectAdsFlagRule implements TestRule {
     }
 
     private static void enableAdservicesApi() {
-        ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices disable_fledge_enrollment_check true");
         ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
+        ShellUtils.runShellCommand(
+                "device_config put fledge_schedule_custom_audience_update_enabled true");
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_custom_audience_service_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_select_ads_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices adservice_system_service_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices enable_back_compat true");
     }
 }

@@ -18,7 +18,7 @@ package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.ATTRIBUTION_PROCESSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -38,7 +38,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.util.JobLockHolder;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -73,10 +73,10 @@ public class AttributionFallbackJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID);
 
-        if (FlagsFactory.getFlags().getMeasurementAttributionFallbackJobKillSwitch()) {
+        if (!FlagsFactory.getFlags().getMeasurementAttributionFallbackJobEnabled()) {
             LoggerFactory.getMeasurementLogger().e("AttributionFallbackJobService is disabled");
             return skipAndCancelBackgroundJob(
                     params,
@@ -93,8 +93,7 @@ public class AttributionFallbackJobService extends JobService {
                             DebugReportingJobService.scheduleIfNeeded(
                                     getApplicationContext(), /* forceSchedule */ false);
 
-                            AdservicesJobServiceLogger.getInstance(
-                                            AttributionFallbackJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
                                             /* isSuccessful */ true,
@@ -132,7 +131,7 @@ public class AttributionFallbackJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -163,7 +162,7 @@ public class AttributionFallbackJobService extends JobService {
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
-        if (flags.getMeasurementAttributionFallbackJobKillSwitch()) {
+        if (!flags.getMeasurementAttributionFallbackJobEnabled()) {
             LoggerFactory.getMeasurementLogger()
                     .e("AttributionFallbackJobService is disabled, skip scheduling");
             return;
@@ -196,7 +195,7 @@ public class AttributionFallbackJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID, skipReason);
         }
 

@@ -32,6 +32,8 @@ import com.android.adservices.service.measurement.aggregation.AggregatableAttrib
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import com.google.common.truth.Truth;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -140,6 +142,8 @@ public class TriggerTest {
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(
                                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAttributionScopesString(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_SCOPES)
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -169,6 +173,8 @@ public class TriggerTest {
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(
                                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAttributionScopesString(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_SCOPES)
                         .build());
     }
 
@@ -313,6 +319,9 @@ public class TriggerTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
                         .build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder().setAttributionScopesString("1").build(),
+                TriggerFixture.getValidTriggerBuilder().setAttributionScopesString("2").build());
     }
 
     @Test
@@ -335,6 +344,9 @@ public class TriggerTest {
         assertNotEquals(trigger1.hashCode(), trigger2.hashCode());
         assertNotEquals(trigger1, trigger2);
         assertNotEquals(triggerSet1, triggerSet2);
+        assertNotEquals(
+                trigger1,
+                TriggerFixture.getValidTriggerBuilder().setAttributionScopesString("5").build());
     }
 
     @Test
@@ -352,7 +364,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
-                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
@@ -366,7 +379,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
-                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
     }
 
     @Test
@@ -384,7 +398,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
-                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
     }
 
     @Test
@@ -402,7 +417,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
-                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
@@ -416,7 +432,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
-                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
     }
 
     @Test
@@ -434,6 +451,26 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                null,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
+    }
+
+    @Test
+    public void testTriggerBuilder_validateArgumentSourceRegistrationTimeConfig() {
+        assertInvalidTriggerArguments(
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
+                TriggerFixture.ValidTriggerParams.REGISTRANT,
+                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
+                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 null);
     }
 
@@ -856,6 +893,16 @@ public class TriggerTest {
         assertEquals(adtechMapping.get("AdTechB-enrollment_id"), adtechBit2);
     }
 
+    @Test
+    public void getAttributionScopes_validJsonStringArray_parseSuccess() throws JSONException {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setAttributionScopesString("[\"1\", \"2\"]")
+                        .build();
+        Truth.assertThat(trigger.getAttributionScopes()).containsExactly("1", "2");
+    }
+
     private void assertInvalidTriggerArguments(
             Uri attributionDestination,
             String enrollmentId,
@@ -869,7 +916,8 @@ public class TriggerTest {
             UnsignedLong debugKey,
             String mAttributionConfig,
             String mAdtechBitMapping,
-            Uri registrationOrigin) {
+            Uri registrationOrigin,
+            Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -887,6 +935,8 @@ public class TriggerTest {
                                 .setAttributionConfig(mAttributionConfig)
                                 .setAdtechBitMapping(mAdtechBitMapping)
                                 .setRegistrationOrigin(registrationOrigin)
+                                .setAggregatableSourceRegistrationTimeConfig(
+                                        sourceRegistrationTimeConfig)
                                 .build());
     }
 

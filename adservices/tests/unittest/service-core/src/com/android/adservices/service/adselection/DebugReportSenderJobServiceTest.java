@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -27,7 +27,7 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNo
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnJobFinishedLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
-import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -54,8 +54,7 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -63,9 +62,11 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -74,20 +75,24 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-public class DebugReportSenderJobServiceTest {
+@RequiresSdkLevelAtLeastS()
+@SpyStatic(FlagsFactory.class)
+@MockStatic(ConsentManager.class)
+@SpyStatic(DebugReportSenderJobService.class)
+@SpyStatic(DebugReportSenderWorker.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int FLEDGE_DEBUG_REPORT_SENDER_JOB_ID =
             FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB.getJobId();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
+    private static final JobScheduler JOB_SCHEDULER = sContext.getSystemService(JobScheduler.class);
     // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
 
@@ -104,36 +109,18 @@ public class DebugReportSenderJobServiceTest {
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private DebugReportSenderWorker mDebugReportSenderWorker;
     @Mock private JobParameters mJobParametersMock;
-    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
-
-    @Mock private AdservicesJobServiceLogger mSpyLogger;
-    private MockitoSession mStaticMockSession = null;
 
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .mockStatic(ConsentManager.class)
-                        .spyStatic(DebugReportSenderJobService.class)
-                        .spyStatic(DebugReportSenderWorker.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
         Assume.assumeNotNull(JOB_SCHEDULER);
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(FLEDGE_DEBUG_REPORT_SENDER_JOB_ID));
-
-        mSpyLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
     }
 
     @After
     public void teardown() {
         JOB_SCHEDULER.cancelAll();
-        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -146,10 +133,12 @@ public class DebugReportSenderJobServiceTest {
                     }
                 };
         doReturn(mFlagsWithDisabledBgFWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, mFlagsWithDisabledBgFWithoutLogging);
 
         testOnStartJobFlagDisabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -162,11 +151,13 @@ public class DebugReportSenderJobServiceTest {
                     }
                 };
         doReturn(mFlagsWithDisabledBgFWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, mFlagsWithDisabledBgFWithLogging);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
 
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
+        verifyBackgroundJobsSkipLogged(logger, callback);
     }
 
     @Test
@@ -181,7 +172,7 @@ public class DebugReportSenderJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                new ComponentName(sContext, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -207,7 +198,7 @@ public class DebugReportSenderJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                new ComponentName(sContext, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -224,7 +215,7 @@ public class DebugReportSenderJobServiceTest {
     @Test
     public void testOnStartJobGaUxFlagDisabled() {
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -237,7 +228,7 @@ public class DebugReportSenderJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                new ComponentName(sContext, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -254,7 +245,7 @@ public class DebugReportSenderJobServiceTest {
     @Test
     public void testOnStartJobConsentRevokedGaUxDisabled() {
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -267,7 +258,7 @@ public class DebugReportSenderJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                new ComponentName(sContext, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -286,7 +277,7 @@ public class DebugReportSenderJobServiceTest {
         doCallRealMethod()
                 .when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), eq(false)));
         doReturn(mFlagsWithDebugReportingDisabled).when(FlagsFactory::getFlags);
-        DebugReportSenderJobService.scheduleIfNeeded(CONTEXT, false);
+        DebugReportSenderJobService.scheduleIfNeeded(sContext, false);
 
         ExtendedMockito.verify(() -> DebugReportSenderJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(DebugReportSenderWorker.class));
@@ -299,7 +290,7 @@ public class DebugReportSenderJobServiceTest {
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
         doNothing().when(() -> DebugReportSenderJobService.schedule(any(), any()));
 
-        DebugReportSenderJobService.scheduleIfNeeded(CONTEXT, false);
+        DebugReportSenderJobService.scheduleIfNeeded(sContext, false);
 
         ExtendedMockito.verify(() -> DebugReportSenderJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(DebugReportSenderWorker.class));
@@ -311,7 +302,7 @@ public class DebugReportSenderJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                new ComponentName(sContext, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -320,7 +311,7 @@ public class DebugReportSenderJobServiceTest {
         doCallRealMethod()
                 .when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), eq(false)));
 
-        DebugReportSenderJobService.scheduleIfNeeded(CONTEXT, false);
+        DebugReportSenderJobService.scheduleIfNeeded(sContext, false);
 
         ExtendedMockito.verify(() -> DebugReportSenderJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(DebugReportSenderWorker.class));
@@ -332,7 +323,7 @@ public class DebugReportSenderJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                new ComponentName(sContext, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -342,7 +333,7 @@ public class DebugReportSenderJobServiceTest {
                 .when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), eq(true)));
         doNothing().when(() -> DebugReportSenderJobService.schedule(any(), any()));
 
-        DebugReportSenderJobService.scheduleIfNeeded(CONTEXT, true);
+        DebugReportSenderJobService.scheduleIfNeeded(sContext, true);
 
         ExtendedMockito.verify(() -> DebugReportSenderJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(DebugReportSenderWorker.class));
@@ -351,7 +342,7 @@ public class DebugReportSenderJobServiceTest {
     @Test
     public void testScheduleFlagDisabled() {
         doReturn(mFlagsWithDebugReportingDisabled).when(FlagsFactory::getFlags);
-        DebugReportSenderJobService.schedule(CONTEXT, mFlagsWithDebugReportingDisabled);
+        DebugReportSenderJobService.schedule(sContext, mFlagsWithDebugReportingDisabled);
 
         verifyNoMoreInteractions(staticMockMarker(DebugReportSenderWorker.class));
     }
@@ -361,10 +352,11 @@ public class DebugReportSenderJobServiceTest {
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
         testOnStartJobShouldDisableJobTrue();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -373,10 +365,12 @@ public class DebugReportSenderJobServiceTest {
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
 
         doReturn(flagsWithGaUxDisabledLoggingDisabled).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingDisabled);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -384,13 +378,15 @@ public class DebugReportSenderJobServiceTest {
         Flags flagsWithGaUxDisabledLoggingEnabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
         doReturn(flagsWithGaUxDisabledLoggingEnabled).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingEnabled);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyOnStartJobLogged(mSpyLogger, onStartJobCallback);
-        verifyOnJobFinishedLogged(mSpyLogger, onJobDoneCallback);
+        verifyOnStartJobLogged(logger, onStartJobCallback);
+        verifyOnJobFinishedLogged(logger, onJobDoneCallback);
     }
 
     @Test
@@ -398,7 +394,7 @@ public class DebugReportSenderJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -431,7 +427,7 @@ public class DebugReportSenderJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -465,12 +461,13 @@ public class DebugReportSenderJobServiceTest {
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
         testOnStartJobShouldDisableJobTrue();
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -478,10 +475,12 @@ public class DebugReportSenderJobServiceTest {
         Flags flagsWithGaUxDisabledLoggingDisabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
         doReturn(flagsWithGaUxDisabledLoggingDisabled).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingDisabled);
 
         testOnStopJobCallsStopWork();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -489,11 +488,12 @@ public class DebugReportSenderJobServiceTest {
         Flags mockFlag =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
         mockGetFlags(mockFlag);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStopJobCallsStopWork();
 
-        verifyOnStopJobLogged(mSpyLogger, callback);
+        verifyOnStopJobLogged(logger, callback);
     }
 
     @Test
@@ -501,24 +501,26 @@ public class DebugReportSenderJobServiceTest {
         Flags flags =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxEnabledLoggingDisabled();
         mockGetFlags(flags);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, flags);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
     public void testOnStartJobConsentRevokedGaUxEnabledWithLogging() throws InterruptedException {
         Flags flags = new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxEnabledLoggingEnabled();
         mockGetFlags(flags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, flags);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
         // Verify logging has happened
-        verifyOnStartJobLogged(mSpyLogger, onStartJobCallback);
-        verifyBackgroundJobsSkipLogged(mSpyLogger, onJobDoneCallback);
+        verifyOnStartJobLogged(logger, onStartJobCallback);
+        verifyBackgroundJobsSkipLogged(logger, onJobDoneCallback);
     }
 
     @Test
@@ -526,10 +528,12 @@ public class DebugReportSenderJobServiceTest {
         Flags flagsWithGaUxDisabledLoggingDisabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
         doReturn(flagsWithGaUxDisabledLoggingDisabled).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingDisabled);
 
         testOnStartJobUpdateSuccess();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -537,18 +541,20 @@ public class DebugReportSenderJobServiceTest {
         Flags flagsWithGaUxDisabledLoggingEnabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
         doReturn(flagsWithGaUxDisabledLoggingEnabled).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingEnabled);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateSuccess();
 
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
+        verifyJobFinishedLogged(logger, onStartJobCallback, onJobDoneCallback);
     }
 
     private void testOnStartJobUpdateSuccess() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -575,7 +581,7 @@ public class DebugReportSenderJobServiceTest {
     }
 
     private void testOnStartJobConsentRevokedGaUxEnabled() {
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -588,7 +594,7 @@ public class DebugReportSenderJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                new ComponentName(sContext, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -605,7 +611,7 @@ public class DebugReportSenderJobServiceTest {
     private void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -655,7 +661,7 @@ public class DebugReportSenderJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                new ComponentName(sContext, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -679,7 +685,7 @@ public class DebugReportSenderJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
-                                new ComponentName(CONTEXT, DebugReportSenderJobService.class))
+                                new ComponentName(sContext, DebugReportSenderJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);

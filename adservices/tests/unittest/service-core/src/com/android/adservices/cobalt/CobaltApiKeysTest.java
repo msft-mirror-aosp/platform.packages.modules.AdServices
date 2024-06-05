@@ -23,11 +23,17 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
 import com.google.protobuf.ByteString;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 public final class CobaltApiKeysTest {
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void defaultApiKey_copiedAsUtf8() throws Exception {

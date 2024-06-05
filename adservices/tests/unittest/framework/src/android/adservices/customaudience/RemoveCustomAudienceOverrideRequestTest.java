@@ -20,11 +20,17 @@ import static org.junit.Assert.assertEquals;
 
 import android.adservices.common.AdTechIdentifier;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class RemoveCustomAudienceOverrideRequestTest {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildAddCustomAudienceOverrideRequest() {

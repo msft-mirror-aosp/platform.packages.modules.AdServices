@@ -26,9 +26,9 @@ import android.cts.statsdatom.lib.ReportUtils;
 import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
-import com.android.adservices.common.BackgroundLogReceiver;
-import com.android.adservices.common.HostSideSdkLevelSupportRule;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.BackgroundLogReceiver;
+import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
 import com.android.os.AtomsProto;
 import com.android.os.AtomsProto.AdServicesSettingsUsageReported;
@@ -66,6 +66,14 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
             "AdExtBootCompletedReceiver onReceive invoked";
     public static final int WAIT_TIME_LONG = 2000;
 
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE =
+            "com.google.android.ext.adservices.api";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP =
+            "com.android.ext.adservices.api";
+    private static final String LOW_RAM_DEVICE_CONFIG = "ro.config.low_ram";
+    private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
+    private static final int APPSEARCH_ONLY = 3;
+    private int mApiLevel;
     private String mTargetPackage;
 
     @Rule(order = 0)
@@ -81,8 +89,8 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
                     .setTopicsKillSwitch(false)
                     .setAdServicesEnabled(true)
                     .setMddBackgroundTaskKillSwitch(true)
-                    .setConsentManagerDebugMode(true)
-                    .setDisableTopicsEnrollmentCheckForTests(true)
+                    .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setFlag(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                     .setFlag(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, true);
 
     @Rule(order = 3)

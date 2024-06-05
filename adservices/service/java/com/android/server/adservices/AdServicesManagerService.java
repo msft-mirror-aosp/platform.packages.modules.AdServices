@@ -517,6 +517,60 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                         .wasGaUxNotificationDisplayed());
     }
 
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordPasNotificationDisplayed(boolean wasNotificationDisplayed) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordPasNotificationDisplayed() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordPasNotificationDisplayed(wasNotificationDisplayed);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to Record PAS Notification Displayed.");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasPasNotificationDisplayed() {
+        return executeGetter(
+                /* defaultReturn= */ true,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .wasPasNotificationDisplayed());
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordPasNotificationOpened(boolean wasNotificationOpened) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordPasNotificationOpened() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordPasNotificationOpened(wasNotificationOpened);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to Record PAS Notification Opened.");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasPasNotificationOpened() {
+        return executeGetter(
+                /* defaultReturn= */ true,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .wasPasNotificationOpened());
+    }
+
     /** retrieves the default consent of a user. */
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean getDefaultConsent() {
@@ -565,7 +619,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     @Override
-    @RequiresPermission
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public List<String> getKnownAppsWithConsent(@NonNull List<String> installedPackages) {
         return executeGetter(/* defaultReturn= */ List.of(),
                 (userId) -> mUserInstanceManager
@@ -1307,6 +1361,62 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isMeasurementDataReset() {
+        return executeGetter(
+                /* defaultReturn= */ false,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .isMeasurementDataReset());
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isMeasurementDataReset() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setMeasurementDataReset(isMeasurementDataReset);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isMeasurementDataReset().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isPaDataReset() {
+        return executeGetter(
+                /* defaultReturn= */ false,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .isPaDataReset());
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setPaDataReset(boolean isPaDataReset) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isPaDataReset() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setPaDataReset(isPaDataReset);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isPaDataReset().");
+        }
+    }
+
     @FunctionalInterface
     interface ThrowableGetter<R> {
         R apply(int userId) throws IOException;
@@ -1318,7 +1428,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         final int userIdentifier = getUserIdentifierFromBinderCallingUid();
 
         String logPrefix = getClass().getSimpleName() + function.toString();
-        LogUtil.v(logPrefix + " called.", userIdentifier);
+        LogUtil.v("%s called. User identifier: %s", logPrefix, userIdentifier);
 
         try {
             return function.apply(userIdentifier);

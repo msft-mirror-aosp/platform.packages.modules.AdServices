@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.adselection.encryption;
 
+import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.VALID_AD_SELECTION_ENCRYPTION_KEY_TYPES;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION;
+
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 import android.net.Uri;
@@ -23,20 +28,19 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
-import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 
 import java.security.spec.InvalidKeySpecException;
@@ -51,51 +55,47 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /** Class to manage key fetch. */
-public class AdSelectionEncryptionKeyManager {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private final Clock mClock;
-    private final Flags mFlags;
+public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionConfigManagerBase {
     private final EncryptionKeyDao mEncryptionKeyDao;
-    private final AdServicesHttpsClient mAdServicesHttpsClient;
-    private final ExecutorService mLightweightExecutor;
-    private final AuctionEncryptionKeyParser mAuctionEncryptionKeyParser;
-    private final JoinEncryptionKeyParser mJoinEncryptionKeyParser;
 
     public AdSelectionEncryptionKeyManager(
             @NonNull EncryptionKeyDao encryptionKeyDao,
             @NonNull Flags flags,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
-            @NonNull ExecutorService lightweightExecutor) {
-        Objects.requireNonNull(encryptionKeyDao);
-        Objects.requireNonNull(flags);
-        Objects.requireNonNull(adServicesHttpsClient);
-        Objects.requireNonNull(lightweightExecutor);
+            @NonNull ExecutorService lightweightExecutor,
+            @NonNull AdServicesLogger adServicesLogger) {
+        super(
+                flags,
+                Clock.systemUTC(),
+                new AuctionEncryptionKeyParser(flags),
+                new JoinEncryptionKeyParser(flags),
+                adServicesHttpsClient,
+                lightweightExecutor,
+                adServicesLogger);
 
+        Objects.requireNonNull(encryptionKeyDao);
         mEncryptionKeyDao = encryptionKeyDao;
-        mFlags = flags;
-        mAdServicesHttpsClient = adServicesHttpsClient;
-        mLightweightExecutor = lightweightExecutor;
-        mClock = Clock.systemUTC();
-        mAuctionEncryptionKeyParser = new AuctionEncryptionKeyParser(flags);
-        mJoinEncryptionKeyParser = new JoinEncryptionKeyParser(flags);
     }
 
     @VisibleForTesting
     AdSelectionEncryptionKeyManager(
-            EncryptionKeyDao encryptionKeyDao,
-            Flags flags,
-            Clock clock,
+            @NonNull EncryptionKeyDao encryptionKeyDao,
+            @NonNull Flags flags,
+            @NonNull Clock clock,
             @NonNull AuctionEncryptionKeyParser auctionEncryptionKeyParser,
             @NonNull JoinEncryptionKeyParser joinEncryptionKeyParser,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
-            @NonNull ExecutorService lightweightExecutor) {
+            @NonNull ExecutorService lightweightExecutor,
+            @NonNull AdServicesLogger adServicesLogger) {
+        super(
+                flags,
+                clock,
+                auctionEncryptionKeyParser,
+                joinEncryptionKeyParser,
+                adServicesHttpsClient,
+                lightweightExecutor,
+                adServicesLogger);
         mEncryptionKeyDao = encryptionKeyDao;
-        mFlags = flags;
-        mAuctionEncryptionKeyParser = auctionEncryptionKeyParser;
-        mJoinEncryptionKeyParser = joinEncryptionKeyParser;
-        mAdServicesHttpsClient = adServicesHttpsClient;
-        mLightweightExecutor = lightweightExecutor;
-        mClock = clock;
     }
 
     /**
@@ -105,14 +105,17 @@ public class AdSelectionEncryptionKeyManager {
     @Nullable
     public FluentFuture<ObliviousHttpKeyConfig> getLatestActiveOhttpKeyConfigOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
-            long timeoutMs) {
+            long timeoutMs,
+            FetchProcessLogger keyFetchLogger) {
         return FluentFuture.from(
                         immediateFuture(getLatestActiveKeyOfType(adSelectionEncryptionKeyType)))
                 .transformAsync(
                         encryptionKey ->
                                 encryptionKey == null
                                         ? fetchPersistAndGetActiveKeyOfType(
-                                                adSelectionEncryptionKeyType, timeoutMs)
+                                                adSelectionEncryptionKeyType,
+                                                timeoutMs,
+                                                keyFetchLogger)
                                         : immediateFuture(encryptionKey),
                         mLightweightExecutor)
                 .transform(
@@ -130,20 +133,66 @@ public class AdSelectionEncryptionKeyManager {
     }
 
     /**
-     * Returns an ObliviousHttpKeyConfig consisting of the latest key of keyType. The key might be
-     * expired. Can return null if no keys are available.
+     * Returns an ObliviousHttpKeyConfig consisting of the latest key of keyType. Can return null if
+     * no keys are available. Ignores the passed coordinator in this implementation.
      */
     @Nullable
     public FluentFuture<ObliviousHttpKeyConfig> getLatestOhttpKeyConfigOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
-            long timeoutMs) {
+            long timeoutMs,
+            @Nullable Uri coordinatorUrl) {
+        sLogger.v("Ignoring the coordinatorUrl passed, if any.");
+        ServerAuctionKeyFetchExecutionLoggerFactory serverAuctionKeyFetchExecutionLoggerFactory =
+                new ServerAuctionKeyFetchExecutionLoggerFactory(
+                        com.android.adservices.shared.util.Clock.getInstance(),
+                        mAdServicesLogger,
+                        mFlags);
+        FetchProcessLogger keyFetchLogger =
+                serverAuctionKeyFetchExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
+        keyFetchLogger.setSource(SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION);
+        keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
+        return getLatestOhttpKeyConfigOfType(
+                adSelectionEncryptionKeyType, timeoutMs, keyFetchLogger);
+    }
+
+    @Nullable
+    private AdSelectionEncryptionKey maybeRefreshAndGetLatestKeyFromDatabase(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
+            @NonNull FetchProcessLogger fetchProcessLogger) {
+        AdSelectionEncryptionKey key =
+                mFlags.getFledgeAuctionServerRefreshExpiredKeysDuringAuction()
+                        ? getLatestActiveKeyOfType(adSelectionEncryptionKeyType)
+                        : getLatestKeyOfType(adSelectionEncryptionKeyType);
+
+        if (key != null) {
+            fetchProcessLogger.setEncryptionKeySource(
+                    SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_DATABASE);
+            fetchProcessLogger.logServerAuctionKeyFetchCalledStatsFromDatabase();
+        }
+        return key;
+    }
+
+    /**
+     * Returns an ObliviousHttpKeyConfig consisting of the latest key of keyType. The key might be
+     * expired. Can return null if no keys are available.
+     */
+    @Nullable
+    private FluentFuture<ObliviousHttpKeyConfig> getLatestOhttpKeyConfigOfType(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
+            long timeoutMs,
+            FetchProcessLogger keyFetchLogger) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_LATEST_OHTTP_KEY_CONFIG);
-        return FluentFuture.from(immediateFuture(getLatestKeyOfType(adSelectionEncryptionKeyType)))
+        return FluentFuture.from(
+                        immediateFuture(
+                                maybeRefreshAndGetLatestKeyFromDatabase(
+                                        adSelectionEncryptionKeyType, keyFetchLogger)))
                 .transformAsync(
                         encryptionKey ->
                                 encryptionKey == null
                                         ? fetchPersistAndGetActiveKeyOfType(
-                                                adSelectionEncryptionKeyType, timeoutMs)
+                                                adSelectionEncryptionKeyType,
+                                                timeoutMs,
+                                                keyFetchLogger)
                                         : immediateFuture(encryptionKey),
                         mLightweightExecutor)
                 .transform(
@@ -173,11 +222,14 @@ public class AdSelectionEncryptionKeyManager {
     public AdSelectionEncryptionKey getLatestActiveKeyOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
                     int adSelectionEncryptionKeyType) {
+        sLogger.d("Getting latest encryption key from database excluding expired keys");
+
         List<DBEncryptionKey> keys =
                 mEncryptionKeyDao.getLatestExpiryNActiveKeysOfType(
                         EncryptionKeyConstants.from(adSelectionEncryptionKeyType),
                         mClock.instant(),
                         getKeyCountForType(adSelectionEncryptionKeyType));
+
 
         return keys.isEmpty() ? null : selectRandomDbKeyAndParse(keys);
     }
@@ -194,6 +246,8 @@ public class AdSelectionEncryptionKeyManager {
     public AdSelectionEncryptionKey getLatestKeyOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
                     int adSelectionEncryptionKeyType) {
+        sLogger.d("Getting latest encryption key from database including expired keys");
+
         List<DBEncryptionKey> keys =
                 mEncryptionKeyDao.getLatestExpiryNKeysOfType(
                         EncryptionKeyConstants.from(adSelectionEncryptionKeyType),
@@ -210,9 +264,11 @@ public class AdSelectionEncryptionKeyManager {
      */
     public FluentFuture<AdSelectionEncryptionKey> fetchPersistAndGetActiveKeyOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
-            long timeoutMs) {
+            long timeoutMs,
+            FetchProcessLogger keyFetchLogger) {
         Instant fetchInstant = mClock.instant();
-        return fetchAndPersistActiveKeysOfType(adSelectionKeyType, fetchInstant, timeoutMs)
+        return fetchAndPersistActiveKeysOfType(
+                        adSelectionKeyType, fetchInstant, timeoutMs, null, keyFetchLogger)
                 .transform(keys -> selectRandomDbKeyAndParse(keys), mLightweightExecutor);
     }
 
@@ -225,17 +281,16 @@ public class AdSelectionEncryptionKeyManager {
     public FluentFuture<List<DBEncryptionKey>> fetchAndPersistActiveKeysOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             Instant keyExpiryInstant,
-            long timeoutMs) {
-
-        Uri fetchUri = getKeyFetchUriForKeyType(adSelectionKeyType);
+            long timeoutMs,
+            @Nullable Uri unusedCoordinatorUrl,
+            FetchProcessLogger keyFetchLogger) {
+        Uri fetchUri = getKeyFetchUriOfType(adSelectionKeyType, null, null, keyFetchLogger);
         if (fetchUri == null) {
             throw new IllegalStateException(
                     "Uri to fetch active key of type " + adSelectionKeyType + " is null.");
         }
 
-        return FluentFuture.from(
-                        mAdServicesHttpsClient.fetchPayload(
-                                fetchUri, DevContext.createForDevOptionsDisabled()))
+        return FluentFuture.from(fetchKeyPayload(adSelectionKeyType, fetchUri, keyFetchLogger))
                 .transform(
                         response -> parseKeyResponse(response, adSelectionKeyType),
                         mLightweightExecutor)
@@ -262,79 +317,18 @@ public class AdSelectionEncryptionKeyManager {
                 .collect(Collectors.toSet());
     }
 
+    /** Returns the AdSelectionEncryptionKeyTypes which are absent. */
+    public Set<Integer> getAbsentAdSelectionEncryptionKeyTypes() {
+        return VALID_AD_SELECTION_ENCRYPTION_KEY_TYPES.stream()
+                .filter(
+                        keyType ->
+                                mEncryptionKeyDao.getLatestExpiryNKeysOfType(keyType, 1).isEmpty())
+                .collect(Collectors.toSet());
+    }
+
     private AdSelectionEncryptionKey selectRandomDbKeyAndParse(List<DBEncryptionKey> keys) {
         Random random = new Random();
         return parseDbEncryptionKey(keys.get(random.nextInt(keys.size())));
     }
 
-    @Nullable
-    private Uri getKeyFetchUriForKeyType(
-            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType
-                    int adSelectionEncryptionKeyType) {
-        switch (adSelectionEncryptionKeyType) {
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
-                return Uri.parse(mFlags.getFledgeAuctionServerAuctionKeyFetchUri());
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
-                return Uri.parse(mFlags.getFledgeAuctionServerJoinKeyFetchUri());
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
-            default:
-                return null;
-        }
-    }
-
-    private List<DBEncryptionKey> parseKeyResponse(
-            AdServicesHttpClientResponse keyFetchResponse,
-            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int encryptionKeyType) {
-        switch (encryptionKeyType) {
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
-                return mAuctionEncryptionKeyParser.getDbEncryptionKeys(keyFetchResponse);
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
-                return mJoinEncryptionKeyParser.getDbEncryptionKeys(keyFetchResponse);
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
-            default:
-                return ImmutableList.of();
-        }
-    }
-
-    private AdSelectionEncryptionKey parseDbEncryptionKey(DBEncryptionKey dbEncryptionKey) {
-        switch (dbEncryptionKey.getEncryptionKeyType()) {
-            case EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION:
-                return mAuctionEncryptionKeyParser.parseDbEncryptionKey(dbEncryptionKey);
-            case EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_JOIN:
-                return mJoinEncryptionKeyParser.parseDbEncryptionKey(dbEncryptionKey);
-            case EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_QUERY:
-            default:
-                return null;
-        }
-    }
-
-    private int getKeyCountForType(
-            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int type) {
-        switch (type) {
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
-                // For auctions, more than one key is fetched from the DB to mitigate impact
-                // due to key leakage.
-                return mFlags.getFledgeAuctionServerAuctionKeySharding();
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
-                return 1;
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
-            default:
-                return 0;
-        }
-    }
-
-    private ObliviousHttpKeyConfig getOhttpKeyConfigForKey(AdSelectionEncryptionKey encryptionKey)
-            throws InvalidKeySpecException {
-        Objects.requireNonNull(encryptionKey);
-        switch (encryptionKey.keyType()) {
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
-                return mAuctionEncryptionKeyParser.getObliviousHttpKeyConfig(encryptionKey);
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
-                return mJoinEncryptionKeyParser.getObliviousHttpKeyConfig(encryptionKey);
-            case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.UNASSIGNED:
-            default:
-                throw new IllegalArgumentException(
-                        "Encryption Key of given type is not supported.");
-        }
-    }
 }

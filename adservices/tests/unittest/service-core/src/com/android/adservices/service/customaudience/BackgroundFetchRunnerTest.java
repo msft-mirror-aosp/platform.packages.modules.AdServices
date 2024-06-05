@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.OMIT_ADS_VALUE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
@@ -31,25 +34,33 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 
 import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.http.MockWebServerRule;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
+import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
@@ -73,7 +84,19 @@ import java.util.concurrent.TimeUnit;
 
 public class BackgroundFetchRunnerTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private final Flags mFlags = FlagsFactory.getFlagsForTest();
+    private final Flags mFlags =
+            new FakeFlagsFactory.TestFlags() {
+                @Override
+                public boolean getFledgeFrequencyCapFilteringEnabled() {
+                    return true;
+                }
+
+                @Override
+                public boolean getFledgeAppInstallFilteringEnabled() {
+                    return true;
+                }
+            };
+
     private final String mFetchPath = "/fetch";
 
     private MockitoSession mStaticMockSession = null;
@@ -89,6 +112,9 @@ public class BackgroundFetchRunnerTest {
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     private Uri mFetchUri;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -366,6 +392,129 @@ public class BackgroundFetchRunnerTest {
         assertEquals(mFetchPath, fetchRequest.getPath());
     }
 
+    @Test
+    public void
+            testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithAuctionServerRequestFlagsEnabled()
+                    throws Exception {
+        class FlagsWithAuctionServerRequestEnabled extends FakeFlagsFactory.TestFlags {
+            @Override
+            public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeAppInstallFilteringEnabled() {
+                return true;
+            }
+        }
+
+        BackgroundFetchRunner runner =
+                new BackgroundFetchRunner(
+                        mCustomAudienceDaoMock,
+                        mAppInstallDaoMock,
+                        mPackageManagerMock,
+                        mEnrollmentDaoMock,
+                        new FlagsWithAuctionServerRequestEnabled(),
+                        mCustomAudienceLoggerFactoryMock);
+
+        String jsonResponseString =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
+                                        CommonFixture.VALID_BUYER_1)
+                                .build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1),
+                        ImmutableList.of(OMIT_ADS_VALUE));
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setBody(jsonResponseString)));
+        CustomAudienceUpdatableData expectedUpdatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderFullSuccessfulResponse()
+                        .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                        .build();
+
+        CustomAudienceUpdatableData updatableData =
+                runner.fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                mFetchUri,
+                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                        .get();
+
+        assertEquals(expectedUpdatableData, updatableData);
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        RecordedRequest fetchRequest = mockWebServer.takeRequest();
+        assertEquals(mFetchPath, fetchRequest.getPath());
+    }
+
+    @Test
+    public void
+            testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithAuctionServerRequestFlagsDisabled()
+                    throws Exception {
+        class FlagsWithAuctionServerRequestDisabled extends FakeFlagsFactory.TestFlags {
+            @Override
+            public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+                return false;
+            }
+
+            @Override
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeAppInstallFilteringEnabled() {
+                return true;
+            }
+        }
+
+        BackgroundFetchRunner runner =
+                new BackgroundFetchRunner(
+                        mCustomAudienceDaoMock,
+                        mAppInstallDaoMock,
+                        mPackageManagerMock,
+                        mEnrollmentDaoMock,
+                        new FlagsWithAuctionServerRequestDisabled(),
+                        mCustomAudienceLoggerFactoryMock);
+
+        String jsonResponseString =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
+                                        CommonFixture.VALID_BUYER_1)
+                                .build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1),
+                        ImmutableList.of(OMIT_ADS_VALUE));
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setBody(jsonResponseString)));
+        CustomAudienceUpdatableData expectedUpdatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderFullSuccessfulResponse().build();
+
+        CustomAudienceUpdatableData updatableData =
+                runner.fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                mFetchUri,
+                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                        .get();
+
+        assertEquals(expectedUpdatableData, updatableData);
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        RecordedRequest fetchRequest = mockWebServer.takeRequest();
+        assertEquals(mFetchPath, fetchRequest.getPath());
+    }
+
+    @FlakyTest(bugId = 322167446)
     @Test
     public void testFetchAndValidateCustomAudienceUpdatableDataNetworkTimeout() throws Exception {
         class FlagsWithSmallLimits implements Flags {

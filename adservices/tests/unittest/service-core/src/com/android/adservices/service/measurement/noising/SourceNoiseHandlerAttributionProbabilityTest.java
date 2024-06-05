@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * This test is to test {@link SourceNoiseHandler#getRandomAttributionProbability(Source)} through
+ * This test is to test {@link SourceNoiseHandler#getRandomizedTriggerRate(Source)} through
  * parameters.
  */
 @RunWith(Parameterized.class)
@@ -740,7 +740,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
     }
 
     @Test
-    public void getRandomAttributionProbability_withParameterizedData() {
+    public void getRandomizedTriggerRate_withParameterizedData() {
         // Setup
         Flags flags = mock(Flags.class);
         doReturn(convertEarlyReportingWindowFlagString(mEarlyReportingWindows))
@@ -753,10 +753,15 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
         doReturn(mConfiguredMaxEventReportsCount)
                 .when(flags)
                 .getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
+                .when(flags).getMeasurementMaxReportStatesPerSourceRegistration();
+        doReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)
+                .when(flags)
+                .getMeasurementPrivacyEpsilon();
 
         // Execution
         double actualProbability =
-                new SourceNoiseHandler(flags).getRandomAttributionProbability(mSource);
+                new SourceNoiseHandler(flags).getRandomizedTriggerRate(mSource);
 
         // Assertion
         assertEquals(mDescription, mExpectedProbability, actualProbability, ZERO_DELTA);

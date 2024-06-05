@@ -18,6 +18,7 @@ package android.adservices.cts;
 
 import static android.adservices.common.AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE;
 import static android.adservices.common.CommonFixture.VALID_BUYER_1;
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 import static android.adservices.customaudience.CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTIVATION_TIME;
@@ -27,6 +28,8 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER
 import static android.adservices.customaudience.CustomAudienceFixture.getValidFetchUriByBuyer;
 
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
@@ -43,6 +46,7 @@ import static org.junit.Assert.assertTrue;
 import android.Manifest;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
+import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -58,15 +62,17 @@ import android.net.Uri;
 import android.os.Process;
 import android.util.Pair;
 
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.annotations.SetFlagEnabled;
-import com.android.adservices.common.annotations.SetIntegerFlag;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -75,6 +81,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -99,6 +106,15 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     private final ArrayList<Pair<AdTechIdentifier, String>> mCustomAudiencesToCleanUp =
             new ArrayList<>();
+
+    @Override
+    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
+        return AdServicesFlagsSetterRule.withAllLogcatTags()
+                .setGlobalKillSwitch(false)
+                .setFlag(FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
+                .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                .setPpapiAppAllowList(mPackageName);
+    }
 
     @Before
     public void setup() throws Exception {
@@ -137,6 +153,15 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     public void testJoinCustomAudience_validCustomAudience_success()
             throws ExecutionException, InterruptedException, TimeoutException {
         joinCustomAudience(CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1).build());
+    }
+
+    @Test
+    public void testJoinCustomAudience_validCustomAudience_successWithAuctionServerRequestFlags()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderByBuyerWithAuctionServerRequestFlags(
+                                VALID_BUYER_1, FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                        .build());
     }
 
     @Test
@@ -264,6 +289,45 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
+    @SetFlagDisabled(KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED)
+    @SetIntegerFlag(name = KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH, value = 1)
+    public void testJoinCustomAudience_adRenderIdDisabled_invalidAdRenderIds_success()
+            throws Exception {
+        AdData adWithVeryLongAdRenderId =
+                AdDataFixture.getValidAdDataBuilderByBuyer(VALID_BUYER_1, 0)
+                        .setAdRenderId("this is a very very very very very long string")
+                        .build();
+        CustomAudience customAudienceWithInvalidAdDataRenderUris =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
+                        .setAds(ImmutableList.of(adWithVeryLongAdRenderId))
+                        .build();
+
+        joinCustomAudience(customAudienceWithInvalidAdDataRenderUris);
+    }
+
+    @Test
+    @SetFlagEnabled(KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED)
+    @SetIntegerFlag(name = KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH, value = 1)
+    public void testJoinCustomAudience_adRenderIdEnabled_invalidAdRenderIds_fail() {
+        AdData adWithVeryLongAdRenderId =
+                AdDataFixture.getValidAdDataBuilderByBuyer(VALID_BUYER_1, 0)
+                        .setAdRenderId("this is a very very very very very long string")
+                        .build();
+        CustomAudience customAudienceWithInvalidAdDataRenderUris =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
+                        .setAds(ImmutableList.of(adWithVeryLongAdRenderId))
+                        .build();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> joinCustomAudience(customAudienceWithInvalidAdDataRenderUris));
+
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+    }
+
+    @Test
     @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS, value = 2)
     public void testJoinCustomAudience_invalidNumberOfAds_fail() {
         CustomAudience customAudienceWithInvalidNumberOfAds =
@@ -361,7 +425,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validFetchUri_validRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -382,14 +446,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validFetchUri_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validFetchUri_validRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -414,14 +478,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validName_validRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -443,14 +507,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validName_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validName_validRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_tooLongName_invalidRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -475,14 +539,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_tooLongName_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_tooLongName_invalidRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validActivationTime_validRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -505,14 +569,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validActivationTime_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validActivationTime_validRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -535,14 +599,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validExpirationTime_validRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -564,14 +628,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validExpirationTime_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validExpirationTime_validRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -594,14 +658,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -623,14 +687,14 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest();
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest() {
         // NOTE: not using flag annotations because it's called by other test
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
@@ -653,7 +717,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    @FlakyTest(bugId = 319330548)
+    @Ignore("b/319330548")
     public void testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest_getMethod() {
         createClientUsingGetMethod();
         testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest();

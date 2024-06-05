@@ -25,6 +25,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.common.CommonFixture;
 import android.adservices.common.KeyedFrequencyCap;
@@ -35,14 +36,17 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.kanon.KAnonMessageDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.InteractionReportingTableClearedStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -51,7 +55,7 @@ import org.mockito.MockitoSession;
 import java.time.Instant;
 
 public class FledgeMaintenanceTasksWorkerTests {
-    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
     @Mock private AdSelectionEntryDao mAdSelectionEntryDaoMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
@@ -62,6 +66,10 @@ public class FledgeMaintenanceTasksWorkerTests {
     private MockitoSession mMockitoSession;
 
     @Mock private AdServicesLogger mAdServicesLoggerMock;
+    @Mock private KAnonMessageDao mKAnonMessageDaoMock;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -76,7 +84,8 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mEncryptionContextDaoMock,
                         mAdSelectionDebugReportDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
     }
 
     @After
@@ -153,7 +162,8 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mEncryptionContextDaoMock,
                         mAdSelectionDebugReportDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
 
         mFledgeMaintenanceTasksWorkerWithAuctionDisabled.clearExpiredAdSelectionData();
 
@@ -220,7 +230,8 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mEncryptionContextDaoMock,
                         mAdSelectionDebugReportDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
 
         mFledgeMaintenanceTasksWorkerWithAuctionDisabled.clearExpiredAdSelectionData();
 
@@ -253,7 +264,7 @@ public class FledgeMaintenanceTasksWorkerTests {
     public void testClearExpiredFrequencyCapHistogramData_adFilteringEnabled_doesMaintenance() {
         final class FlagsWithAdFilteringFeatureEnabled implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -272,7 +283,8 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mEncryptionContextDaoMock,
                         mAdSelectionDebugReportDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
 
         worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
 
@@ -294,7 +306,7 @@ public class FledgeMaintenanceTasksWorkerTests {
             testClearExpiredFrequencyCapHistogramData_enrollmentDisabled_skipsBuyerMaintenance() {
         final class FlagsWithAdFilteringFeatureEnabled implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
 
@@ -313,7 +325,8 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mEncryptionContextDaoMock,
                         mAdSelectionDebugReportDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
 
         worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
 
@@ -332,7 +345,7 @@ public class FledgeMaintenanceTasksWorkerTests {
     public void testClearExpiredFrequencyCapHistogramData_adFilteringDisabled_skipsMaintenance() {
         final class FlagsWithAdFilteringFeatureDisabled implements Flags {
             @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
+            public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return false;
             }
 
@@ -351,7 +364,8 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mEncryptionContextDaoMock,
                         mAdSelectionDebugReportDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
 
         worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
 
@@ -385,7 +399,8 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mEncryptionContextDaoMock,
                         mAdSelectionDebugReportDaoMock,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
 
         mFledgeMaintenanceTasksWorkerWithAuctionDisabled.clearExpiredAdSelectionData();
 
@@ -402,5 +417,62 @@ public class FledgeMaintenanceTasksWorkerTests {
         verify(mAdSelectionDebugReportDaoMock, never())
                 .deleteDebugReportsBeforeTime(expectedExpirationTime);
         verifyNoMoreInteractions(mAdSelectionDebugReportDaoMock);
+    }
+
+    @Test
+    public void
+            testRemovedExpiredKAnonEntites_withKAnonFeatureFlagEnabled_removesExpiredEntities() {
+        final class FlagWithKAnonEnabled implements Flags {
+            @Override
+            public boolean getFledgeKAnonSignJoinFeatureEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getFledgeKAnonSignJoinFeatureAuctionServerEnabled() {
+                return true;
+            }
+        }
+        FledgeMaintenanceTasksWorker worker =
+                new FledgeMaintenanceTasksWorker(
+                        new FlagWithKAnonEnabled(),
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
+
+        worker.clearExpiredKAnonMessageEntities();
+
+        verify(mKAnonMessageDaoMock, times(1))
+                .removeExpiredEntities(CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI.instant());
+    }
+
+    @Test
+    public void testRemovedExpiredKAnonEntites_withKAnonFeatureFlagDisabled_doesNothing() {
+        final class FlagWithKAnonEnabled implements Flags {
+            @Override
+            public boolean getFledgeKAnonSignJoinFeatureEnabled() {
+                return false;
+            }
+        }
+        FledgeMaintenanceTasksWorker worker =
+                new FledgeMaintenanceTasksWorker(
+                        new FlagWithKAnonEnabled(),
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
+
+        worker.clearExpiredKAnonMessageEntities();
+
+        verifyZeroInteractions(mKAnonMessageDaoMock);
     }
 }

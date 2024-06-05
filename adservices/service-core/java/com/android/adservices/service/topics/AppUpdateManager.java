@@ -57,7 +57,6 @@ import java.util.stream.Collectors;
  *
  * <p>See go/rb-topics-app-update for details.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppUpdateManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();

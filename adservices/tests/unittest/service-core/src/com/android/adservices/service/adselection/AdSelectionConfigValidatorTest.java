@@ -34,8 +34,8 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdDataValidator;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
@@ -43,10 +43,12 @@ import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
 import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.common.ValidatorUtil;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -106,9 +108,12 @@ public class AdSelectionConfigValidatorTest {
     private Flags mFlags;
     private PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setup() {
-        mFlags = FlagsFactory.getFlagsForTest();
+        mFlags = FakeFlagsFactory.getFlagsForTest();
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
 
         mAdSelectionConfigBuilder =
@@ -357,7 +362,9 @@ public class AdSelectionConfigValidatorTest {
                         .build();
         buyerContextualAds.put(buyer2, contextualAds2);
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setBuyerSignedContextualAds(buyerContextualAds).build();
+                mAdSelectionConfigBuilder
+                        .setPerBuyerSignedContextualAds(buyerContextualAds)
+                        .build();
         AdSelectionConfigValidator adSelectionConfigValidator =
                 new AdSelectionConfigValidator(
                         mPrebuiltLogicGenerator, new FrequencyCapAdDataValidatorImpl());
@@ -395,7 +402,9 @@ public class AdSelectionConfigValidatorTest {
         // Creating ads which have a render Uri with a different buyer
         buyerContextualAds.put(buyer2, contextualAds2);
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setBuyerSignedContextualAds(buyerContextualAds).build();
+                mAdSelectionConfigBuilder
+                        .setPerBuyerSignedContextualAds(buyerContextualAds)
+                        .build();
         AdSelectionConfigValidator adSelectionConfigValidator =
                 new AdSelectionConfigValidator(
                         mPrebuiltLogicGenerator, new FrequencyCapAdDataValidatorImpl());
@@ -439,7 +448,7 @@ public class AdSelectionConfigValidatorTest {
                         CommonFixture.VALID_BUYER_1, 0);
 
         List<AdWithBid> adsWithBids =
-                List.of(new AdWithBid(adDataWithExceededFrequencyCapLimits, 100.0));
+                ImmutableList.of(new AdWithBid(adDataWithExceededFrequencyCapLimits, 100.0));
 
         Map<AdTechIdentifier, SignedContextualAds> buyerContextualAds = new HashMap<>();
         buyerContextualAds.put(
@@ -450,7 +459,9 @@ public class AdSelectionConfigValidatorTest {
                         .build());
 
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setBuyerSignedContextualAds(buyerContextualAds).build();
+                mAdSelectionConfigBuilder
+                        .setPerBuyerSignedContextualAds(buyerContextualAds)
+                        .build();
 
         AdSelectionConfigValidator adSelectionConfigValidator =
                 new AdSelectionConfigValidator(

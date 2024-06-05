@@ -19,6 +19,7 @@ package android.adservices.shell;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -60,6 +61,24 @@ public class ShellCommandParam implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeStringArray(mCommandArgs);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ShellCommandParam)) {
+            return false;
+        }
+
+        ShellCommandParam that = (ShellCommandParam) o;
+        return Arrays.equals(mCommandArgs, that.mCommandArgs);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(mCommandArgs);
     }
 
     /** Get the command name with all the args as a list. */

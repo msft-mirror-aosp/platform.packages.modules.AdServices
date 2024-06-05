@@ -31,12 +31,12 @@ import java.util.List;
 
 /** Utility class supporting ad services API unit tests */
 public class AdDataFixture {
-    // TODO(b/266837113) Set to true once app install is unhidden
-    public static final boolean APP_INSTALL_ENABLED = false;
     public static final String VALID_METADATA = "{\"example\": \"metadata\", \"valid\": true}";
     public static final String INVALID_METADATA = "not.{real!metadata} = 1";
 
     public static final String VALID_RENDER_ID = "render-id";
+    public static final String INVALID_RENDER_ID =
+            "this is a very very very very very long render-id";
 
     public static ImmutableSet<Integer> getAdCounterKeys() {
         return ImmutableSet.<Integer>builder()
@@ -60,6 +60,10 @@ public class AdDataFixture {
     }
 
     public static Uri getValidRenderUriByBuyer(AdTechIdentifier buyer, int sequence) {
+        return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
+    }
+
+    public static Uri getValidRenderUriByBuyer(AdTechIdentifier buyer, String sequence) {
         return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
     }
 
@@ -88,6 +92,14 @@ public class AdDataFixture {
                 getValidFilterAdDataByBuyer(buyer, 4),
                 getValidAdDataByBuyer(buyer, 5),
                 getValidAdDataByBuyer(buyer, 6));
+    }
+
+    /** Returns a list AdData with invalid render IDs */
+    public static List<AdData> getValidFilterAdsWithInvalidAdRenderIdByBuyer(
+            AdTechIdentifier buyer) {
+        return ImmutableList.of(
+                getValidFilterAdDataWithAdRenderIdByBuyer(buyer, INVALID_RENDER_ID + "1"),
+                getValidFilterAdDataWithAdRenderIdByBuyer(buyer, INVALID_RENDER_ID + "2"));
     }
 
     public static List<AdData> getInvalidAdsByBuyer(AdTechIdentifier buyer) {
@@ -150,6 +162,25 @@ public class AdDataFixture {
             AdTechIdentifier buyer, int sequenceNumber) {
         return getValidFilterAdDataBuilderByBuyer(buyer, sequenceNumber)
                 .setAdRenderId(String.valueOf(sequenceNumber))
+                .build();
+    }
+
+    public static AdData getValidFilterAdDataWithAdRenderIdByBuyer(
+            AdTechIdentifier buyer, String sequenceString) {
+
+        String metadata;
+        try {
+            metadata = JsonFixture.formatAsOrgJsonJSONObjectString(VALID_METADATA);
+        } catch (JSONException exception) {
+            throw new IllegalStateException("Error parsing valid metadata!", exception);
+        }
+
+        return new AdData.Builder()
+                .setRenderUri(getValidRenderUriByBuyer(buyer, sequenceString))
+                .setMetadata(metadata)
+                .setAdCounterKeys(getAdCounterKeys())
+                .setAdFilters(AdFiltersFixture.getValidAdFilters())
+                .setAdRenderId(sequenceString)
                 .build();
     }
 

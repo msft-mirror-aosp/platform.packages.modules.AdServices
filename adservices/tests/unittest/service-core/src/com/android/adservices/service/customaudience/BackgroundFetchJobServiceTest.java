@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdservicesJobServiceLogger;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -26,7 +26,7 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinish
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
-import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
@@ -54,8 +54,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -63,9 +62,10 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -74,19 +74,26 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-public class BackgroundFetchJobServiceTest {
+// The actual scheduling of the job needs to be mocked out because the test application does
+// not have the required permissions to schedule the job with the constraints requested by
+// the BackgroundFetchJobService, and adding them is non-trivial.
+@RequiresSdkLevelAtLeastS()
+@SpyStatic(FlagsFactory.class)
+@MockStatic(ConsentManager.class)
+@SpyStatic(BackgroundFetchJobService.class)
+@SpyStatic(BackgroundFetchWorker.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMockitoTestCase {
     private static final int FLEDGE_BACKGROUND_FETCH_JOB_ID =
             FLEDGE_BACKGROUND_FETCH_JOB.getJobId();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
+    private static final JobScheduler JOB_SCHEDULER = sContext.getSystemService(JobScheduler.class);
     // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
 
@@ -97,43 +104,23 @@ public class BackgroundFetchJobServiceTest {
     private final Flags mFlagsWithDisabledBgF = new FlagsWithDisabledBgF();
     private final Flags mFlagsWithCustomAudienceServiceKillSwitchOn = new FlagsWithKillSwitchOn();
     private final Flags mFlagsWithCustomAudienceServiceKillSwitchOff = new FlagsWithKillSwitchOff();
+
     @Mock private BackgroundFetchWorker mBgFWorkerMock;
     @Mock private JobParameters mJobParametersMock;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private PackageManager mPackageManagerMock;
-    @Mock StatsdAdServicesLogger mMockStatsdLogger;
-    private AdservicesJobServiceLogger mSpyLogger;
-    private MockitoSession mStaticMockSession = null;
 
     @Before
     public void setup() {
-        // The actual scheduling of the job needs to be mocked out because the test application does
-        // not have the required permissions to schedule the job with the constraints requested by
-        // the BackgroundFetchJobService, and adding them is non-trivial.
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .mockStatic(ConsentManager.class)
-                        .spyStatic(BackgroundFetchJobService.class)
-                        .spyStatic(BackgroundFetchWorker.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-
         Assume.assumeNotNull(JOB_SCHEDULER);
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
-
-        mSpyLogger = mockAdservicesJobServiceLogger(CONTEXT, mMockStatsdLogger);
     }
 
     @After
     public void teardown() {
         JOB_SCHEDULER.cancelAll();
-        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -147,10 +134,12 @@ public class BackgroundFetchJobServiceTest {
                     }
                 };
         doReturn(mFlagsWithDisabledBgFWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, mFlagsWithDisabledBgFWithoutLogging);
 
         testOnStartJobFlagDisabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -164,12 +153,14 @@ public class BackgroundFetchJobServiceTest {
                     }
                 };
         doReturn(mFlagsWithDisabledBgFWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(sContext, mFlagsWithDisabledBgFWithLogging);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
 
-        verifyOnStartJobLogged(mSpyLogger, onStartJobCallback);
+        verifyOnStartJobLogged(logger, onStartJobCallback);
         onJobDoneCallback.assertLoggingFinished();
     }
 
@@ -177,7 +168,7 @@ public class BackgroundFetchJobServiceTest {
     public void testOnStartJobConsentRevokedGaUxDisabled()
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -188,7 +179,7 @@ public class BackgroundFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                                new ComponentName(sContext, BackgroundFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -208,10 +199,11 @@ public class BackgroundFetchJobServiceTest {
         FlagsWithEnabledBgFGaUxEnabledWithoutLogging flags =
                 new FlagsWithEnabledBgFGaUxEnabledWithoutLogging();
         doReturn(flags).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, flags);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -220,12 +212,13 @@ public class BackgroundFetchJobServiceTest {
         FlagsWithEnabledBgFGaUxEnabledWithLogging flags =
                 new FlagsWithEnabledBgFGaUxEnabledWithLogging();
         doReturn(flags).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, flags);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
 
         // Verify logging has happened
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
+        verifyBackgroundJobsSkipLogged(logger, callback);
     }
 
     @Test
@@ -239,7 +232,7 @@ public class BackgroundFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                                new ComponentName(sContext, BackgroundFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -257,7 +250,7 @@ public class BackgroundFetchJobServiceTest {
     public void testOnStartJobCustomAudienceKillSwitchOff()
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(mFlagsWithCustomAudienceServiceKillSwitchOff).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -290,10 +283,13 @@ public class BackgroundFetchJobServiceTest {
         Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
                 new FlagsWithEnabledBgFGaUxDisabledWithoutLogging();
         doReturn(flagsWithEnabledBgFGaUxDisabledWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithEnabledBgFGaUxDisabledWithoutLogging);
 
         testOnStartJobUpdateSuccess();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -302,12 +298,15 @@ public class BackgroundFetchJobServiceTest {
         Flags flagsWithEnabledBgFGaUxDisabledWithLogging =
                 new FlagsWithEnabledBgFGaUxDisabledWithLogging();
         doReturn(flagsWithEnabledBgFGaUxDisabledWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithEnabledBgFGaUxDisabledWithLogging);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateSuccess();
 
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
+        verifyJobFinishedLogged(logger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
@@ -315,10 +314,13 @@ public class BackgroundFetchJobServiceTest {
         Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
                 new FlagsWithEnabledBgFGaUxDisabledWithoutLogging();
         doReturn(flagsWithEnabledBgFGaUxDisabledWithoutLogging).when(FlagsFactory::getFlags);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithEnabledBgFGaUxDisabledWithoutLogging);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -326,12 +328,15 @@ public class BackgroundFetchJobServiceTest {
         Flags flagsWithEnabledBgFGaUxDisabledWithLogging =
                 new FlagsWithEnabledBgFGaUxDisabledWithLogging();
         doReturn(flagsWithEnabledBgFGaUxDisabledWithLogging).when(FlagsFactory::getFlags);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(
+                        sContext, flagsWithEnabledBgFGaUxDisabledWithLogging);
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         testOnStartJobUpdateTimeoutHandled();
 
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
+        verifyJobFinishedLogged(logger, onStartJobCallback, onJobDoneCallback);
     }
 
     @Test
@@ -339,7 +344,7 @@ public class BackgroundFetchJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -371,7 +376,7 @@ public class BackgroundFetchJobServiceTest {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -404,10 +409,11 @@ public class BackgroundFetchJobServiceTest {
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
         testOnStopJobCallsStopWork();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -415,11 +421,12 @@ public class BackgroundFetchJobServiceTest {
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ false);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
+        JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStopJobCallsStopWork();
 
-        verifyOnStopJobLogged(mSpyLogger, callback);
+        verifyOnStopJobLogged(logger, callback);
     }
 
     @Test
@@ -427,7 +434,7 @@ public class BackgroundFetchJobServiceTest {
         doCallRealMethod()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
 
-        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, mFlagsWithDisabledBgF, false);
+        BackgroundFetchJobService.scheduleIfNeeded(sContext, mFlagsWithDisabledBgF, false);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -440,7 +447,7 @@ public class BackgroundFetchJobServiceTest {
         doNothing().when(() -> BackgroundFetchJobService.schedule(any(), any()));
 
         BackgroundFetchJobService.scheduleIfNeeded(
-                CONTEXT, mFlagsWithEnabledBgFGaUxDisabled, false);
+                sContext, mFlagsWithEnabledBgFGaUxDisabled, false);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -451,7 +458,7 @@ public class BackgroundFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                                new ComponentName(sContext, BackgroundFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -461,7 +468,7 @@ public class BackgroundFetchJobServiceTest {
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
 
         BackgroundFetchJobService.scheduleIfNeeded(
-                CONTEXT, mFlagsWithEnabledBgFGaUxDisabled, false);
+                sContext, mFlagsWithEnabledBgFGaUxDisabled, false);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -472,7 +479,7 @@ public class BackgroundFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                                new ComponentName(sContext, BackgroundFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -482,7 +489,8 @@ public class BackgroundFetchJobServiceTest {
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(true)));
         doNothing().when(() -> BackgroundFetchJobService.schedule(any(), any()));
 
-        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, mFlagsWithEnabledBgFGaUxDisabled, true);
+        BackgroundFetchJobService.scheduleIfNeeded(
+                sContext, mFlagsWithEnabledBgFGaUxDisabled, true);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -490,7 +498,7 @@ public class BackgroundFetchJobServiceTest {
 
     @Test
     public void testScheduleFlagDisabled() {
-        BackgroundFetchJobService.schedule(CONTEXT, mFlagsWithDisabledBgF);
+        BackgroundFetchJobService.schedule(sContext, mFlagsWithDisabledBgF);
 
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
@@ -501,10 +509,11 @@ public class BackgroundFetchJobServiceTest {
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
         testOnStartJobShouldDisableJobTrue();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     @Test
@@ -512,12 +521,13 @@ public class BackgroundFetchJobServiceTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         Flags mockFlag = mock(Flags.class);
         mockGetFlags(mockFlag);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
         testOnStartJobShouldDisableJobTrue();
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
-        verifyLoggingNotHappened(mSpyLogger);
+        verifyLoggingNotHappened(logger);
     }
 
     private void testOnStartJobShouldDisableJobTrue()
@@ -534,7 +544,7 @@ public class BackgroundFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                                new ComponentName(sContext, BackgroundFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -557,7 +567,7 @@ public class BackgroundFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                                new ComponentName(sContext, BackgroundFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -575,7 +585,7 @@ public class BackgroundFetchJobServiceTest {
             throws InterruptedException, ExecutionException, TimeoutException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -603,7 +613,7 @@ public class BackgroundFetchJobServiceTest {
     private void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -633,7 +643,7 @@ public class BackgroundFetchJobServiceTest {
 
     private void testOnStartJobConsentRevokedGaUxEnabled()
             throws ExecutionException, InterruptedException, TimeoutException {
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -644,7 +654,7 @@ public class BackgroundFetchJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
-                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                                new ComponentName(sContext, BackgroundFetchJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);

@@ -31,8 +31,11 @@ import android.os.Parcel;
 import android.view.InputEvent;
 import android.view.KeyEvent;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class ReportInteractionInputTest {
@@ -46,6 +49,9 @@ public class ReportInteractionInputTest {
     private static final InputEvent CLICK_EVENT =
             new KeyEvent(/* action= */ ACTION_UP, /* code= */ 90);
     private static final String AD_ID = "35a4ac90-e4dc-4fe7-bbc6-95e804aa7dbc";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {

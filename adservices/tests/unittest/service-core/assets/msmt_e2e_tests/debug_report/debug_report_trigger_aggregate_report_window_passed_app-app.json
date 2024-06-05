@@ -103,28 +103,28 @@
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "176400",
+          "scheduled_report_time": "172800",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "1",
           "source_debug_key" : "347982378",
           "trigger_debug_key" : "8971346781"
         },
-        "report_time": "176400000",
+        "report_time": "172800000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution"
       },
       {
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "176400",
+          "scheduled_report_time": "172800",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "2",
           "source_debug_key" : "347982378",
           "trigger_debug_key" : "8971346782"
         },
-        "report_time": "176400000",
+        "report_time": "172800000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution"
       }
     ],
@@ -133,7 +133,7 @@
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "176400",
+          "scheduled_report_time": "172800",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "1",
@@ -147,7 +147,7 @@
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "176400",
+          "scheduled_report_time": "172800",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "2",
@@ -169,7 +169,8 @@
             }
           ],
           "source_debug_key" : "347982378",
-          "trigger_debug_key" : "8971346781"
+          "trigger_debug_key" : "8971346781",
+          "source_registration_time": "0"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "5600000"
@@ -186,7 +187,8 @@
             }
           ],
           "source_debug_key" : "347982378",
-          "trigger_debug_key" : "8971346781"
+          "trigger_debug_key" : "8971346781",
+          "source_registration_time": "0"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "report_time": "2000000"
@@ -206,6 +208,7 @@
             }
           }
         ],
+        "report_time": "3600000",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
       }
     ]

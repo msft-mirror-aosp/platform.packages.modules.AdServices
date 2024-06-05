@@ -42,7 +42,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -88,7 +89,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [{
@@ -99,7 +101,7 @@
           "triggerData": 2,
           "triggerTime": 8640000002,
           "status": 0,
-          "reportTime": 8730000001,
+          "reportTime": 8726400001,
           "triggerPriority": 101,
           "sourceType": "navigation",
           "randomizedTriggerRate":  0.0001372,
@@ -174,7 +176,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -230,7 +233,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [{
@@ -241,7 +245,7 @@
           "triggerData": 2,
           "triggerTime": 8640000002,
           "status": 0,
-          "reportTime": 8730000001,
+          "reportTime": 8726400001,
           "triggerPriority": 101,
           "sourceType": "navigation",
           "randomizedTriggerRate":  0.0001372,
@@ -316,7 +320,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -334,7 +339,8 @@
               }
             ],
             "triggerTime": 8640001002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -390,7 +396,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -408,7 +415,8 @@
               }
             ],
             "triggerTime": 8640001002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -420,7 +428,7 @@
             "triggerData": 2,
             "triggerTime": 8640000002,
             "status": 0,
-            "reportTime": 8730000001,
+            "reportTime": 8726400001,
             "triggerPriority": 101,
             "sourceType": "navigation",
             "randomizedTriggerRate":  0.0001372,
@@ -435,7 +443,7 @@
             "triggerData": 2,
             "triggerTime": 8640001002,
             "status": 0,
-            "reportTime": 8730000001,
+            "reportTime": 8726400001,
             "triggerPriority": 101,
             "sourceType": "navigation",
             "randomizedTriggerRate":  0.0001372,
@@ -513,7 +521,8 @@
               }
             ],
             "triggerTime": 1643408373000,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -559,7 +568,8 @@
               }
             ],
             "triggerTime": 1643408373000,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -608,7 +618,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -654,7 +665,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -724,7 +736,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -791,14 +804,15 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [{
           "id": "unused",
           "sourceEventId": 2,
           "attributionDestination": "android-app://com.example2.app",
-          "reportTime": 8730000001,
+          "reportTime": 8726400001,
           "enrollmentId": "enrollment-id-3",
           "triggerData": 2,
           "triggerTime": 8640000002,
@@ -886,7 +900,8 @@
               }
             ],
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -951,14 +966,15 @@
               }
             ],
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [{
           "id": "unused",
           "sourceEventId": 2,
           "attributionDestination": "android-app://com.example.xyz",
-          "reportTime": 8730000002,
+          "reportTime": 8726400002,
           "enrollmentId": "enrollment-id-3",
           "triggerData": 2,
           "triggerTime": 8640000003,
@@ -1049,7 +1065,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -1116,7 +1133,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -1129,7 +1147,7 @@
             "triggerTime": 8640000002,
             "triggerPriority": 101,
             "status": 0,
-            "reportTime": 8816400000,
+            "reportTime": 8812800000,
             "sourceType": "navigation",
             "randomizedTriggerRate":  0.0024263,
             "sourceId": "S2",
@@ -1216,7 +1234,8 @@
               }
             ],
             "triggerTime": 9072000001,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -1284,7 +1303,8 @@
               }
             ],
             "triggerTime": 9072000001,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -1297,7 +1317,7 @@
             "triggerTime": 9072000001,
             "triggerPriority": 101,
             "status": 0,
-            "reportTime": 9248400001,
+            "reportTime": 9244800001,
             "sourceType": "navigation",
             "randomizedTriggerRate":  0.0024263,
             "sourceId": "S1",
@@ -1385,7 +1405,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -1452,7 +1473,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -1465,7 +1487,7 @@
             "triggerTime": 8640000002,
             "triggerPriority": 101,
             "status": 0,
-            "reportTime": 8816400000,
+            "reportTime": 8812800000,
             "sourceType": "event",
             "randomizedTriggerRate":  0.0000125,
             "sourceId": "S2",
@@ -1552,7 +1574,8 @@
               }
             ],
             "triggerTime": 9072000001,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -1619,7 +1642,8 @@
               }
             ],
             "triggerTime": 9072000001,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -1632,7 +1656,7 @@
             "triggerTime": 9072000001,
             "triggerPriority": 101,
             "status": 0,
-            "reportTime": 10371600000,
+            "reportTime": 10368000000,
             "sourceType": "event",
             "randomizedTriggerRate":  0.0000025,
             "sourceId": "S1",
@@ -1699,7 +1723,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -1746,7 +1771,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [{
@@ -1757,7 +1783,7 @@
           "triggerData": 1,
           "triggerTime": 8640000002,
           "status": 0,
-          "reportTime": 8730000001,
+          "reportTime": 8726400001,
           "triggerPriority": 101,
           "sourceType": "event",
           "randomizedTriggerRate":  0.0000025,
@@ -1823,7 +1849,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -1869,7 +1896,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [{
@@ -1880,7 +1908,7 @@
           "triggerData": 7,
           "triggerTime": 8640000002,
           "status": 0,
-          "reportTime": 8730000001,
+          "reportTime": 8726400001,
           "triggerPriority": 101,
           "sourceType": "navigation",
           "randomizedTriggerRate":  0.0001372,
@@ -1944,7 +1972,8 @@
             }
           ],
           "triggerTime": 8640000002,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }, {
           "id": "T2",
           "attributionDestination": "android-app://com.example2.app",
@@ -1960,7 +1989,8 @@
             }
           ],
           "triggerTime": 8640000003,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }],
         "event_reports": [],
         "attributions": []
@@ -2003,7 +2033,8 @@
             }
           ],
           "triggerTime": 8640000002,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }, {
           "id": "T2",
           "attributionDestination": "android-app://com.example2.app",
@@ -2019,7 +2050,8 @@
             }
           ],
           "triggerTime": 8640000003,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }],
         "event_reports": [{
           "id": "unused",
@@ -2029,7 +2061,7 @@
           "triggerData": 0,
           "triggerTime": 8640000002,
           "status": 0,
-          "reportTime": 8730000001,
+          "reportTime": 8726400001,
           "triggerPriority": 101,
           "sourceType": "event",
           "randomizedTriggerRate":  0.0000025,
@@ -2091,7 +2123,8 @@
             }
           ],
           "triggerTime": 8640000002,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }, {
           "id": "T2",
           "attributionDestination": "android-app://com.example2.app",
@@ -2107,7 +2140,8 @@
             }
           ],
           "triggerTime": 8640000003,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }],
         "event_reports": [],
         "attributions": []
@@ -2150,7 +2184,8 @@
             }
           ],
           "triggerTime": 8640000002,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }, {
           "id": "T2",
           "attributionDestination": "android-app://com.example2.app",
@@ -2166,7 +2201,8 @@
             }
           ],
           "triggerTime": 8640000003,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }],
         "event_reports": [{
           "id": "unused",
@@ -2176,7 +2212,7 @@
           "triggerData": 1,
           "triggerTime": 8640000003,
           "status": 0,
-          "reportTime": 8730000001,
+          "reportTime": 8726400001,
           "triggerPriority": 102,
           "sourceType": "event",
           "randomizedTriggerRate":  0.0000025,
@@ -2252,7 +2288,8 @@
             }
           ],
           "triggerTime": 8640000002,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }, {
           "id": "T2",
           "attributionDestination": "https://subdomain.example.test/another/path?queries=2",
@@ -2269,7 +2306,8 @@
             }
           ],
           "triggerTime": 8640000003,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }],
         "event_reports": [],
         "attributions": []
@@ -2313,7 +2351,8 @@
             }
           ],
           "triggerTime": 8640000002,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }, {
           "id": "T2",
           "attributionDestination": "https://subdomain.example.test/another/path?queries=2",
@@ -2330,7 +2369,8 @@
             }
           ],
           "triggerTime": 8640000003,
-          "registrant": "android-app://com.example.xyz"
+          "registrant": "android-app://com.example.xyz",
+          "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
         }],
         "event_reports": [{
           "id": "unused",
@@ -2340,7 +2380,7 @@
           "triggerData": 1,
           "triggerTime": 8640000003,
           "status": 0,
-          "reportTime": 8730000001,
+          "reportTime": 8726400001,
           "triggerPriority": 102,
           "sourceType": "event",
           "randomizedTriggerRate":  0.0000025,
@@ -2417,7 +2457,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -2434,7 +2475,8 @@
               }
             ],
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T3",
@@ -2451,7 +2493,8 @@
               }
             ],
             "triggerTime": 8640000004,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T4",
@@ -2468,7 +2511,8 @@
               }
             ],
             "triggerTime": 8640000005,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -2514,7 +2558,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -2531,7 +2576,8 @@
               }
             ],
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T3",
@@ -2548,7 +2594,8 @@
               }
             ],
             "triggerTime": 8640000004,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T4",
@@ -2565,7 +2612,8 @@
               }
             ],
             "triggerTime": 8640000005,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -2577,7 +2625,7 @@
             "triggerData": 2,
             "triggerTime": 8640000003,
             "status": 0,
-            "reportTime": 8730000001,
+            "reportTime": 8726400001,
             "triggerPriority": 102,
             "sourceType": "navigation",
             "randomizedTriggerRate":  0.0001372,
@@ -2592,7 +2640,7 @@
             "triggerData": 3,
             "triggerTime": 8640000004,
             "status": 0,
-            "reportTime": 8730000001,
+            "reportTime": 8726400001,
             "triggerPriority": 103,
             "sourceType": "navigation",
             "randomizedTriggerRate":  0.0001372,
@@ -2607,7 +2655,7 @@
             "triggerData": 4,
             "triggerTime": 8640000005,
             "status": 0,
-            "reportTime": 8730000001,
+            "reportTime": 8726400001,
             "triggerPriority": 104,
             "sourceType": "navigation",
             "randomizedTriggerRate":  0.0001372,
@@ -2711,7 +2759,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -2728,7 +2777,8 @@
               }
             ],
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T3",
@@ -2745,7 +2795,8 @@
               }
             ],
             "triggerTime": 8640000004,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T4",
@@ -2762,7 +2813,8 @@
               }
             ],
             "triggerTime": 8640000005,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -2809,7 +2861,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -2826,7 +2879,8 @@
               }
             ],
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T3",
@@ -2843,7 +2897,8 @@
               }
             ],
             "triggerTime": 8640000004,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T4",
@@ -2860,7 +2915,8 @@
               }
             ],
             "triggerTime": 8640000005,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -2872,7 +2928,7 @@
             "triggerData": 1,
             "triggerTime": 8640000002,
             "status": 0,
-            "reportTime": 8730000001,
+            "reportTime": 8726400001,
             "triggerPriority": 101,
             "sourceType": "navigation",
             "randomizedTriggerRate":  0.0001372,
@@ -2887,7 +2943,7 @@
             "triggerData": 2,
             "triggerTime": 8640000003,
             "status": 0,
-            "reportTime": 8730000001,
+            "reportTime": 8726400001,
             "triggerPriority": 101,
             "sourceType": "navigation",
             "randomizedTriggerRate":  0.0001372,
@@ -2902,7 +2958,7 @@
             "triggerData": 4,
             "triggerTime": 8640000005,
             "status": 0,
-            "reportTime": 8730000001,
+            "reportTime": 8726400001,
             "triggerPriority": 102,
             "sourceType": "navigation",
             "randomizedTriggerRate":  0.0001372,
@@ -3026,7 +3082,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -3093,7 +3150,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -3164,7 +3222,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -3231,7 +3290,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -3287,7 +3347,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -3339,7 +3400,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -3351,7 +3413,7 @@
             "triggerData": 1,
             "triggerTime": 8640000002,
             "status": 0,
-            "reportTime": 8730000000,
+            "reportTime": 8726400000,
             "triggerPriority": 101,
             "sourceType": "event",
             "randomizedTriggerRate": 0.0000025,
@@ -3437,7 +3499,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"]}, {
               "key_21": ["value_21_x", "value_22_x"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -3503,7 +3566,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"]}, {
               "key_21": ["value_21_x", "value_22_x"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -3561,7 +3625,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"],
               "key_21": ["value_21", "value_22"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -3614,7 +3679,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"],
               "key_21": ["value_21", "value_22"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -3667,7 +3733,8 @@
             }],
             "not_filters": [{
               "source_type": ["navigation"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -3684,7 +3751,8 @@
             "not_filters": [
               {"key1": ["val1"]},
               {"source_type": ["event"]}
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -3733,7 +3801,8 @@
             }],
             "not_filters": [{
               "source_type": ["navigation"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -3750,7 +3819,8 @@
             "not_filters": [
               {"key1": ["val1"]},
               {"source_type": ["event"]}
-            ]
+            ],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -3762,7 +3832,7 @@
             "triggerData": 2,
             "triggerTime": 8640000004,
             "status": 0,
-            "reportTime": 8643600030,
+            "reportTime": 8640000030,
             "triggerPriority": 0,
             "sourceType": "navigation",
             "randomizedTriggerRate": 0.0001372,
@@ -3832,7 +3902,8 @@
             }],
             "not_filters": [{
               "source_type": ["navigation"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -3848,7 +3919,8 @@
             }],
             "not_filters": [{
               "source_type": ["event"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -3897,7 +3969,8 @@
             }],
             "not_filters": [{
               "source_type": ["navigation"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -3913,7 +3986,8 @@
             }],
             "not_filters": [{
               "source_type": ["event"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -3925,7 +3999,7 @@
             "triggerData": 2,
             "triggerTime": 8640000004,
             "status": 0,
-            "reportTime": 8643600030,
+            "reportTime": 8640000030,
             "triggerPriority": 0,
             "sourceType": "navigation",
             "randomizedTriggerRate": 0.0001372,
@@ -4008,7 +4082,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"],
               "key_21": ["value_21", "value_22"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -4070,7 +4145,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"],
               "key_21": ["value_21", "value_22"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -4082,7 +4158,7 @@
             "triggerData": 0,
             "triggerTime": 8640000002,
             "status": 0,
-            "reportTime": 8730000000,
+            "reportTime": 8726400000,
             "triggerPriority": 102,
             "sourceType": "event",
             "randomizedTriggerRate": 0.0000025,
@@ -4164,7 +4240,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"],
               "key_21": ["value_21", "value_22"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -4225,7 +4302,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"],
               "key_21": ["value_21", "value_22"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -4237,7 +4315,7 @@
             "triggerData": 0,
             "triggerTime": 8640000002,
             "status": 0,
-            "reportTime": 8730000000,
+            "reportTime": 8726400000,
             "triggerPriority": 102,
             "sourceType": "event",
             "randomizedTriggerRate": 0.0000025,
@@ -4315,7 +4393,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -4372,7 +4451,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -4384,7 +4464,7 @@
             "triggerData": 1,
             "triggerTime": 8640000002,
             "status": 0,
-            "reportTime": 8730000000,
+            "reportTime": 8726400000,
             "triggerPriority": 101,
             "sourceType": "event",
             "randomizedTriggerRate": 0.0000025,
@@ -4471,7 +4551,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -4537,7 +4618,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -4549,7 +4631,7 @@
             "triggerData": 0,
             "triggerTime": 8640000002,
             "status": 0,
-            "reportTime": 8730000000,
+            "reportTime": 8726400000,
             "triggerPriority": 102,
             "sourceType": "event",
             "randomizedTriggerRate": 0.0000025,
@@ -4639,7 +4721,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"],
               "key_21": ["value_21", "value_22"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -4708,7 +4791,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"],
               "key_21": ["value_21", "value_22"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -4720,7 +4804,7 @@
             "triggerData": 1,
             "triggerTime": 8640000002,
             "status": 0,
-            "reportTime": 8730000000,
+            "reportTime": 8726400000,
             "triggerPriority": 103,
             "sourceType": "event",
             "randomizedTriggerRate": 0.0000025,
@@ -4809,7 +4893,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"],
               "key_21": ["value_21", "value_22"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -4877,7 +4962,8 @@
             "filters": [{
               "key_11": ["value_11", "value_12"],
               "key_21": ["value_21", "value_22"]
-            }]
+            }],
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -4889,7 +4975,7 @@
             "triggerData": 1,
             "triggerTime": 8640000002,
             "status": 0,
-            "reportTime": 8730000000,
+            "reportTime": 8726400000,
             "triggerPriority": 103,
             "sourceType": "event",
             "randomizedTriggerRate": 0.0000025,
@@ -4973,7 +5059,8 @@
               "campaignCounts": 32678
             },
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -5038,7 +5125,8 @@
               "campaignCounts": 32678
             },
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [{
@@ -5049,7 +5137,7 @@
           "triggerData": 2,
           "triggerTime": 8640000002,
           "status": 0,
-          "reportTime": 8730000001,
+          "reportTime": 8726400001,
           "triggerPriority": 101,
           "sourceType": "navigation",
           "randomizedTriggerRate": 0.0008051,
@@ -5161,7 +5249,8 @@
               "campaignCounts": 32678
             },
             "triggerTime": 8726400001,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -5226,7 +5315,8 @@
               "campaignCounts": 32678
             },
             "triggerTime": 8726400001,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -5322,7 +5412,8 @@
               "campaignCounts": 32678
             },
             "triggerTime": 8726400001,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -5387,7 +5478,8 @@
               "campaignCounts": 32678
             },
             "triggerTime": 8726400001,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [{
@@ -5398,7 +5490,7 @@
           "triggerData": 2,
           "triggerTime": 8726400001,
           "status": 0,
-          "reportTime": 8730000002,
+          "reportTime": 8726400002,
           "triggerPriority": 101,
           "sourceType": "navigation",
           "randomizedTriggerRate": 0.0008051,
@@ -5484,7 +5576,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -5501,7 +5594,8 @@
               }
             ],
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -5513,7 +5607,7 @@
             "triggerData": 1,
             "triggerTime": 8640000002,
             "status": 0,
-            "reportTime": 8730000000,
+            "reportTime": 8726400000,
             "triggerPriority": 101,
             "sourceType": "event",
             "randomizedTriggerRate":  2.5E-6,
@@ -5582,7 +5676,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "T2",
@@ -5599,7 +5694,8 @@
               }
             ],
             "triggerTime": 8640000003,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [
@@ -5611,7 +5707,7 @@
             "triggerData": 1,
             "triggerTime": 8640000002,
             "status": 0,
-            "reportTime": 8730000000,
+            "reportTime": 8726400000,
             "triggerPriority": 101,
             "sourceType": "event",
             "randomizedTriggerRate":  2.5E-6,
@@ -5626,7 +5722,7 @@
             "triggerData": 1,
             "triggerTime": 8640000003,
             "status": 0,
-            "reportTime": 8730000001,
+            "reportTime": 8726400001,
             "triggerPriority": 101,
             "sourceType": "EVENT",
             "randomizedTriggerRate": 2.5E-6,
@@ -5685,7 +5781,8 @@
             "status": 0,
             "eventTriggers": [],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -5723,7 +5820,8 @@
             "status": 1,
             "eventTriggers": [],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],

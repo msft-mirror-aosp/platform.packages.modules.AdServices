@@ -26,21 +26,13 @@ import java.util.function.Supplier;
 public class KillSwitchAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Measurement API is disabled by kill-switch.";
     private final boolean mEnabled;
-
     public KillSwitchAccessResolver(@NonNull Supplier<Boolean> enabledSupplier) {
         mEnabled = enabledSupplier.get();
     }
 
     @Override
-    public boolean isAllowed(@NonNull Context context) {
-        return !mEnabled;
-    }
-
-    @NonNull
-    @Override
-    @AdServicesStatusUtils.StatusCode
-    public int getErrorStatusCode() {
-        return AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
+    public AccessInfo getAccessInfo(@NonNull Context context) {
+        return new AccessInfo(!mEnabled, AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED);
     }
 
     @NonNull

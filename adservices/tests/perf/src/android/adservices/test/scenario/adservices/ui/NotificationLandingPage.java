@@ -26,7 +26,6 @@ import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
@@ -51,13 +50,11 @@ public class NotificationLandingPage {
     @Rule
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setDebugUxFlagsForRvcUx()
-                    .setFlag(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY, "false");
+                    .setCompatModeFlags();
 
     @Before
     public void setup() throws Exception {
-        UiUtils.setFlipFlow(false);
+        UiUtils.setFlipFlow(true);
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
         AdservicesTestHelper.killAdservicesProcess(sContext);

@@ -44,7 +44,6 @@ import java.io.IOException;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppsActionDelegate {
     private final AppsActivity mAppsActivity;
@@ -88,7 +87,7 @@ public class AppsActionDelegate {
                                 break;
                             case BLOCK_APP:
                                 UiStatsLogger.logBlockAppSelected();
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockAppDialog(
                                                 mAppsActivity, mAppsViewModel, app);
@@ -102,7 +101,7 @@ public class AppsActionDelegate {
                                 break;
                             case RESET_APPS:
                                 UiStatsLogger.logResetAppSelected();
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetAppDialog(
                                                 mAppsActivity, mAppsViewModel);

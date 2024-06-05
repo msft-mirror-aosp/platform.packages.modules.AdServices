@@ -16,10 +16,14 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.adservices.shared.tests" >
+          package="com.android.adservices.shared.tests">
 
     <application android:debuggable="true">
-        <uses-library android:name="android.test.runner" />
+        <uses-library android:name="android.test.runner"/>
+
+        <service android:name="com.android.adservices.shared.spe.framework.TestJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
     </application>
 
     <instrumentation

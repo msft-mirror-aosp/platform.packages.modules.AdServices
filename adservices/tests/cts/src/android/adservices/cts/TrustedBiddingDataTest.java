@@ -28,6 +28,9 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -38,6 +41,9 @@ import java.util.Collections;
 public final class TrustedBiddingDataTest {
     private static final Uri VALID_TRUSTED_BIDDING_URL =
             TrustedBiddingDataFixture.getValidTrustedBiddingUriByBuyer(CommonFixture.VALID_BUYER_1);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidTrustedBiddingDataSuccess() {

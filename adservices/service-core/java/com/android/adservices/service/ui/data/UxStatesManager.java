@@ -15,6 +15,9 @@
  */
 package com.android.adservices.service.ui.data;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_EEA_PAS_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
 
 import android.adservices.common.AdServicesStates;
@@ -34,15 +37,16 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 import java.util.Map;
 
 /**
  * Manager that deals with all UX related states. All other UX code should use this class to read ux
  * component states. Specifically, this class:
- * <li>Reads process statble UX flags from {@code Flags}, and provide these flags through the
+ * <li>Reads process stable UX flags from {@code Flags}, and provide these flags through the
  *     getFlags API.
- * <li>Reads process statble consent manager bits such as UX and enrollment channel, so that these
+ * <li>Reads process stable consent manager bits such as UX and enrollment channel, so that these
  *     values are process stable.
  */
 @RequiresApi(Build.VERSION_CODES.S)
@@ -61,6 +65,8 @@ public class UxStatesManager {
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull ConsentManager consentManager) {
+        LogUtil.d("Instantiating lazy UxStatesManager instance.");
+
         mUxFlags = flags.getUxFlags();
         mConsentManager = consentManager;
         mIsEeaDevice = DeviceRegionProvider.isEuDevice(context);
@@ -68,23 +74,18 @@ public class UxStatesManager {
                 context.getSharedPreferences("UX_SHARED_PREFERENCES", Context.MODE_PRIVATE);
     }
 
+    private static class UxStatesManagerLazyInstanceHolder {
+        static final UxStatesManager LAZY_INSTANCE =
+                new UxStatesManager(
+                        ApplicationContextSingleton.get(),
+                        FlagsFactory.getFlags(),
+                        ConsentManager.getInstance());
+    }
+
     /** Returns an instance of the UxStatesManager. */
     @NonNull
-    public static UxStatesManager getInstance(Context context) {
-        LogUtil.d("UxStates getInstance() called.");
-        if (sUxStatesManager == null) {
-            synchronized (LOCK) {
-                if (sUxStatesManager == null) {
-                    LogUtil.d("Creaeting new UxStatesManager.");
-                    sUxStatesManager =
-                            new UxStatesManager(
-                                    context,
-                                    FlagsFactory.getFlags(),
-                                    ConsentManager.getInstance(context));
-                }
-            }
-        }
-        return sUxStatesManager;
+    public static UxStatesManager getInstance() {
+        return UxStatesManagerLazyInstanceHolder.LAZY_INSTANCE;
     }
 
     /** Saves the AdServices states into data stores. */
@@ -99,7 +100,7 @@ public class UxStatesManager {
         mConsentManager.setEntryPointEnabled(adServicesStates.isPrivacySandboxUiEnabled());
     }
 
-    /** Returns process statble UX flags. */
+    /** Returns process stable UX flags. */
     public boolean getFlag(String uxFlagKey) {
         if (!mUxFlags.containsKey(uxFlagKey)) {
             LogUtil.e("Key not found in cached UX flags: %s", uxFlagKey);
@@ -108,7 +109,7 @@ public class UxStatesManager {
         return value != null ? value : false;
     }
 
-    /** Returns process statble UX. */
+    /** Returns process stable UX. */
     public PrivacySandboxUxCollection getUx() {
         // Lazy read.
         if (mUx == null) {
@@ -117,7 +118,7 @@ public class UxStatesManager {
         return mUx != null ? mUx : UNSUPPORTED_UX;
     }
 
-    /** Returns process statble enrollment channel. */
+    /** Returns process stable enrollment channel. */
     public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel() {
         // Lazy read.
         if (mEnrollmentChannel == null) {
@@ -126,7 +127,7 @@ public class UxStatesManager {
         return mEnrollmentChannel;
     }
 
-    /** Returns process statble devicce region. */
+    /** Returns process stable device region. */
     public boolean isEeaDevice() {
         return mIsEeaDevice;
     }
@@ -144,7 +145,9 @@ public class UxStatesManager {
         boolean isNotificationDisplayed =
                 mConsentManager.wasGaUxNotificationDisplayed()
                         || mConsentManager.wasU18NotificationDisplayed()
-                        || mConsentManager.wasNotificationDisplayed();
+                        || mConsentManager.wasNotificationDisplayed()
+                        || (getFlag(KEY_PAS_UX_ENABLED)
+                                && mConsentManager.wasPasNotificationDisplayed());
         // We follow the Chrome's capabilities practice here, when user is not in adult account and
         // u18 account, (the u18 account is for teen and un-supervised account), we are consider
         // them as supervised accounts for now, it actually also contains robot account, but we
@@ -170,5 +173,41 @@ public class UxStatesManager {
             return false;
         }
         return true;
+    }
+
+    /**
+     * PAS could be enabled but user may not have received notification, so user would see GA UX
+     * instead of PAS UX. Before the notification card is shown the notification has not been
+     * displayed yet, so if the calling context is related to this then we should only look at the
+     * PAS UX flag.
+     *
+     * @param beforeNotificationShown True if the calling context is logic before PAS notification
+     *     shown has been recorded. Or in the case of EEA, before notificationOpened.
+     * @return True if user will see PAS UX for settings/notification, otherwise false.
+     */
+    public boolean pasUxIsActive(boolean beforeNotificationShown) {
+        if (getFlag(KEY_EEA_PAS_UX_ENABLED)) {
+            if (isEeaDevice()) {
+                return wasPasNotificationOpened() || beforeNotificationShown;
+            }
+        }
+        return getFlag(KEY_PAS_UX_ENABLED)
+                && (wasPasNotificationDisplayed() || beforeNotificationShown);
+    }
+
+    /** Returns if PAS notification was displayed. */
+    private boolean wasPasNotificationDisplayed() {
+        if (getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)) {
+            return getFlag(KEY_PAS_UX_ENABLED);
+        }
+        return ConsentManager.getInstance().wasPasNotificationDisplayed();
+    }
+
+    /** Returns if PAS notification was opened. */
+    private boolean wasPasNotificationOpened() {
+        if (getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)) {
+            return getFlag(KEY_EEA_PAS_UX_ENABLED);
+        }
+        return ConsentManager.getInstance().wasPasNotificationOpened();
     }
 }

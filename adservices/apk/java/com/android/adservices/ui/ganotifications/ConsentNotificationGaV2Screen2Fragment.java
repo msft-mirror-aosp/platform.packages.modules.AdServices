@@ -82,7 +82,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity());
         return inflater.inflate(R.layout.consent_notification_screen_2_ga_v2_eu, container, false);
     }
 
@@ -110,14 +110,14 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                             LANDING_PAGE_OPT_OUT_CLICKED, getContext());
 
                     // opt-out confirmation activity
-                    ConsentManager.getInstance(requireContext())
+                    ConsentManager.getInstance()
                             .disable(requireContext(), AdServicesApiType.TOPICS);
                     if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                        ConsentManager.getInstance(requireContext())
+                        ConsentManager.getInstance()
                                 .recordUserManualInteractionWithConsent(
                                         ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }
-                    requireActivity().finish();
+                    requireActivity().finishAndRemoveTask();
                 });
 
         Button rightControlButton =
@@ -218,14 +218,13 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                         LANDING_PAGE_OPT_IN_CLICKED, getContext());
 
                 // opt-in to topics
-                ConsentManager.getInstance(requireContext())
-                        .enable(requireContext(), AdServicesApiType.TOPICS);
+                ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.TOPICS);
                 if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                    ConsentManager.getInstance(requireContext())
+                    ConsentManager.getInstance()
                             .recordUserManualInteractionWithConsent(
                                     ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                 }
-                requireActivity().finish();
+                requireActivity().finishAndRemoveTask();
             } else {
                 ConsentNotificationActivity.handleAction(
                         LANDING_PAGE_MORE_BUTTON_CLICKED, getContext());

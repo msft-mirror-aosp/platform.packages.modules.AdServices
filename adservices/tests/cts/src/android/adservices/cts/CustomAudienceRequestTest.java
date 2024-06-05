@@ -16,6 +16,9 @@
 
 package android.adservices.cts;
 
+import static android.adservices.common.CommonFixture.VALID_BUYER_1;
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import static org.junit.Assert.assertEquals;
 
 import android.adservices.common.AdTechIdentifier;
@@ -25,13 +28,23 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.LeaveCustomAudienceRequest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class CustomAudienceRequestTest {
     private static final CustomAudience CUSTOM_AUDIENCE =
             CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
+    private static final CustomAudience CUSTOM_AUDIENCE_OMIT_ADS =
+            CustomAudienceFixture.getValidBuilderByBuyerWithAuctionServerRequestFlags(
+                            VALID_BUYER_1, FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                    .build();
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
     private static final String NAME = CustomAudienceFixture.VALID_NAME;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildJoinCustomAudienceRequestSuccess() {
@@ -39,6 +52,16 @@ public class CustomAudienceRequestTest {
                 new JoinCustomAudienceRequest.Builder().setCustomAudience(CUSTOM_AUDIENCE).build();
 
         assertEquals(request.getCustomAudience(), CUSTOM_AUDIENCE);
+    }
+
+    @Test
+    public void testBuildJoinCustomAudienceRequestSuccessWithAuctionServerRequestFlags() {
+        JoinCustomAudienceRequest request =
+                new JoinCustomAudienceRequest.Builder()
+                        .setCustomAudience(CUSTOM_AUDIENCE_OMIT_ADS)
+                        .build();
+
+        assertEquals(request.getCustomAudience(), CUSTOM_AUDIENCE_OMIT_ADS);
     }
 
     @Test

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -26,11 +27,10 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJo
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
-import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MAINTENANCE_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
@@ -43,7 +43,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -56,50 +55,50 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.JobServiceCallback;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /** Unit tests for {@link com.android.adservices.service.MaintenanceJobService} */
 @SuppressWarnings("ConstantConditions")
-public class MaintenanceJobServiceTest {
+@SpyStatic(MaintenanceJobService.class)
+@SpyStatic(TopicsWorker.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@SpyStatic(ErrorLogUtil.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTestCase {
     private static final int BACKGROUND_THREAD_TIMEOUT_MS = 5_000;
     private static final int MAINTENANCE_JOB_ID = MAINTENANCE_JOB.getJobId();
     private static final long MAINTENANCE_JOB_PERIOD_MS = 10_000L;
     private static final long MAINTENANCE_JOB_FLEX_MS = 1_000L;
     private static final long CURRENT_EPOCH_ID = 1L;
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
-    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final JobScheduler JOB_SCHEDULER = sContext.getSystemService(JobScheduler.class);
+    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
+
+    private AdServicesJobServiceLogger mSpyLogger;
 
     @Spy private MaintenanceJobService mSpyMaintenanceJobService;
-    private MockitoSession mStaticMockSession;
 
     // Mock EpochManager and CacheManager as the methods called are tested in corresponding
     // unit test. In this test, only verify whether specific method is initiated.
@@ -111,26 +110,11 @@ public class MaintenanceJobServiceTest {
     @Mock Flags mMockFlags;
     @Mock JobScheduler mMockJobScheduler;
     @Mock private PackageManager mPackageManagerMock;
-    @Mock StatsdAdServicesLogger mMockStatsdLogger;
-    private AdservicesJobServiceLogger mSpyLogger;
     @Mock private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerMock;
     @Mock private SignalsMaintenanceTasksWorker mSignalsMaintenanceTasksWorkerMock;
 
     @Before
     public void setup() {
-        // Start a mockitoSession to mock static method
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(MaintenanceJobService.class)
-                        .spyStatic(TopicsWorker.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(AdservicesJobServiceLogger.class)
-                        .spyStatic(ErrorLogUtil.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .initMocks(this)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-
         // Mock JobScheduler invocation in EpochJobService
         assertThat(JOB_SCHEDULER).isNotNull();
         doReturn(JOB_SCHEDULER)
@@ -139,17 +123,12 @@ public class MaintenanceJobServiceTest {
 
         mockGetFlags(mMockFlags);
 
-        mSpyLogger =
-                ExtendedMockitoExpectations.mockAdservicesJobServiceLogger(
-                        CONTEXT, mMockStatsdLogger);
+        mSpyLogger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
     }
 
     @After
     public void teardown() {
         JOB_SCHEDULER.cancelAll();
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -191,20 +170,15 @@ public class MaintenanceJobServiceTest {
                 mFledgeMaintenanceTasksWorkerMock);
         mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
                 mSignalsMaintenanceTasksWorkerMock);
-        CountDownLatch jobCompletionLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            jobCompletionLatch.countDown();
-                            return null;
-                        })
-                .when(mSpyMaintenanceJobService)
-                .jobFinished(mMockJobParameters, false);
+
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         // Schedule the job to assert after starting that the scheduled job has been started
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(CONTEXT, EpochJobService.class))
+                                new ComponentName(sContext, EpochJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -217,9 +191,7 @@ public class MaintenanceJobServiceTest {
 
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNotNull();
 
-        assertWithMessage("Job completed within timeout")
-                .that(jobCompletionLatch.await(1, TimeUnit.SECONDS))
-                .isTrue();
+        callback.assertJobFinished();
 
         // Verify that topics job is not done
         verify(() -> TopicsWorker.getInstance(any(Context.class)), never());
@@ -254,20 +226,14 @@ public class MaintenanceJobServiceTest {
         // appUpdateWorker in order to get a test instance.
         doReturn(topicsWorker).when(() -> TopicsWorker.getInstance(any(Context.class)));
 
-        CountDownLatch jobCompletionLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            jobCompletionLatch.countDown();
-                            return null;
-                        })
-                .when(mSpyMaintenanceJobService)
-                .jobFinished(mMockJobParameters, false);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         // Schedule the job to assert after starting that the scheduled job has been started
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(CONTEXT, EpochJobService.class))
+                                new ComponentName(sContext, EpochJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -280,9 +246,7 @@ public class MaintenanceJobServiceTest {
 
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNotNull();
 
-        assertWithMessage("Job completed within timeout")
-                .that(jobCompletionLatch.await(1, TimeUnit.SECONDS))
-                .isTrue();
+        callback.assertJobFinished();
 
         verify(() -> TopicsWorker.getInstance(any(Context.class)));
         verify(mMockAppUpdateManager)
@@ -318,20 +282,14 @@ public class MaintenanceJobServiceTest {
         mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
                 mSignalsMaintenanceTasksWorkerMock);
 
-        CountDownLatch jobCompletionLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            jobCompletionLatch.countDown();
-                            return null;
-                        })
-                .when(mSpyMaintenanceJobService)
-                .jobFinished(mMockJobParameters, false);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         // Schedule the job to assert after starting that the scheduled job has been started
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(CONTEXT, EpochJobService.class))
+                                new ComponentName(sContext, EpochJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -344,9 +302,7 @@ public class MaintenanceJobServiceTest {
 
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNotNull();
 
-        assertWithMessage("Job completed within timeout")
-                .that(jobCompletionLatch.await(1, TimeUnit.SECONDS))
-                .isTrue();
+        callback.assertJobFinished();
 
         verify(() -> TopicsWorker.getInstance(any(Context.class)));
         verify(mMockAppUpdateManager)
@@ -413,20 +369,14 @@ public class MaintenanceJobServiceTest {
                 .when(mMockAppUpdateManager)
                 .reconcileUninstalledApps(any(Context.class), eq(CURRENT_EPOCH_ID));
 
-        CountDownLatch jobCompletionLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            jobCompletionLatch.countDown();
-                            return null;
-                        })
-                .when(mSpyMaintenanceJobService)
-                .jobFinished(mMockJobParameters, false);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         // Schedule the job to assert after starting that the scheduled job has been started
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(CONTEXT, EpochJobService.class))
+                                new ComponentName(sContext, EpochJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -439,9 +389,7 @@ public class MaintenanceJobServiceTest {
 
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNotNull();
 
-        assertWithMessage("Job completed within timeout")
-                .that(jobCompletionLatch.await(1, TimeUnit.SECONDS))
-                .isTrue();
+        callback.assertJobFinished();
 
         // Verify that this is not called because we threw an exception
         verify(mMockAppUpdateManager, never())
@@ -486,20 +434,14 @@ public class MaintenanceJobServiceTest {
                 .when(mFledgeMaintenanceTasksWorkerMock)
                 .clearExpiredAdSelectionData();
 
-        CountDownLatch jobCompletionLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            jobCompletionLatch.countDown();
-                            return null;
-                        })
-                .when(mSpyMaintenanceJobService)
-                .jobFinished(mMockJobParameters, false);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         // Schedule the job to assert after starting that the scheduled job has been started
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(CONTEXT, EpochJobService.class))
+                                new ComponentName(sContext, EpochJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -512,9 +454,7 @@ public class MaintenanceJobServiceTest {
 
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNotNull();
 
-        assertWithMessage("Job completed within timeout")
-                .that(jobCompletionLatch.await(1, TimeUnit.SECONDS))
-                .isTrue();
+        callback.assertJobFinished();
 
         verify(
                 () -> TopicsWorker.getInstance(any(Context.class)),
@@ -555,20 +495,14 @@ public class MaintenanceJobServiceTest {
         mSpyMaintenanceJobService.injectSignalsMaintenanceTasksWorker(
                 mSignalsMaintenanceTasksWorkerMock);
 
-        CountDownLatch jobCompletionLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            jobCompletionLatch.countDown();
-                            return null;
-                        })
-                .when(mSpyMaintenanceJobService)
-                .jobFinished(mMockJobParameters, false);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         // Schedule the job to assert after starting that the scheduled job has been cancelled
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(CONTEXT, EpochJobService.class))
+                                new ComponentName(sContext, EpochJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -581,9 +515,7 @@ public class MaintenanceJobServiceTest {
 
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNull();
 
-        assertWithMessage("Job completed within timeout")
-                .that(jobCompletionLatch.await(1, TimeUnit.SECONDS))
-                .isTrue();
+        callback.assertJobFinished();
 
         verify(mSpyMaintenanceJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));
@@ -626,7 +558,7 @@ public class MaintenanceJobServiceTest {
         doReturn(false).when(mMockFlags).getGlobalKillSwitch();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
+        assertThat(MaintenanceJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false))
                 .isTrue();
     }
 
@@ -640,12 +572,12 @@ public class MaintenanceJobServiceTest {
         doReturn(false).when(mMockFlags).getGlobalKillSwitch();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
+        assertThat(MaintenanceJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false))
                 .isTrue();
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNotNull();
 
         // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
-        assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
+        assertThat(MaintenanceJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false))
                 .isFalse();
     }
 
@@ -658,7 +590,7 @@ public class MaintenanceJobServiceTest {
         doReturn(TEST_FLAGS.getMaintenanceJobFlexMs()).when(mMockFlags).getMaintenanceJobFlexMs();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
+        assertThat(MaintenanceJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false))
                 .isTrue();
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNotNull();
 
@@ -667,7 +599,7 @@ public class MaintenanceJobServiceTest {
         doReturn(TEST_FLAGS.getMaintenanceJobFlexMs() + 1)
                 .when(mMockFlags)
                 .getMaintenanceJobFlexMs();
-        assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
+        assertThat(MaintenanceJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false))
                 .isTrue();
     }
 
@@ -681,16 +613,16 @@ public class MaintenanceJobServiceTest {
         doReturn(false).when(mMockFlags).getGlobalKillSwitch();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
+        assertThat(MaintenanceJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false))
                 .isTrue();
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNotNull();
 
         // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
-        assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
+        assertThat(MaintenanceJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false))
                 .isFalse();
 
         // The third invocation of scheduleIfNeeded() is forced and re-schedules the job.
-        assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ true))
+        assertThat(MaintenanceJobService.scheduleIfNeeded(sContext, /* forceSchedule */ true))
                 .isTrue();
     }
 
@@ -701,7 +633,7 @@ public class MaintenanceJobServiceTest {
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
-        assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
+        assertThat(EpochJobService.scheduleIfNeeded(sContext, /* forceSchedule */ false)).isFalse();
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNull();
         verify(
                 () -> {
@@ -716,7 +648,7 @@ public class MaintenanceJobServiceTest {
         final ArgumentCaptor<JobInfo> argumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
 
         MaintenanceJobService.schedule(
-                CONTEXT, mMockJobScheduler, MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS);
+                sContext, mMockJobScheduler, MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS);
 
         verify(mMockJobScheduler, times(1)).schedule(argumentCaptor.capture());
         assertThat(argumentCaptor.getValue()).isNotNull();
@@ -752,14 +684,8 @@ public class MaintenanceJobServiceTest {
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();
         doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
 
-        CountDownLatch jobCompletionLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            jobCompletionLatch.countDown();
-                            return null;
-                        })
-                .when(mSpyMaintenanceJobService)
-                .jobFinished(mMockJobParameters, false);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         // Inject FledgeMaintenanceTasksWorker since the test can't get it the standard way
         doReturn(mPackageManagerMock).when(mSpyMaintenanceJobService).getPackageManager();
@@ -772,7 +698,7 @@ public class MaintenanceJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(CONTEXT, EpochJobService.class))
+                                new ComponentName(sContext, EpochJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -785,9 +711,7 @@ public class MaintenanceJobServiceTest {
 
         assertNull(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID));
 
-        assertWithMessage("Job completed within timeout")
-                .that(jobCompletionLatch.await(1, TimeUnit.SECONDS))
-                .isTrue();
+        callback.assertJobFinished();
 
         verify(mSpyMaintenanceJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));
@@ -818,14 +742,8 @@ public class MaintenanceJobServiceTest {
         // appUpdateWorker in order to get a test instance.
         doReturn(topicsWorker).when(() -> TopicsWorker.getInstance(any(Context.class)));
 
-        CountDownLatch jobCompletionLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            jobCompletionLatch.countDown();
-                            return null;
-                        })
-                .when(mSpyMaintenanceJobService)
-                .jobFinished(mMockJobParameters, false);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         doReturn(mPackageManagerMock).when(mSpyMaintenanceJobService).getPackageManager();
         mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
@@ -837,7 +755,7 @@ public class MaintenanceJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(CONTEXT, EpochJobService.class))
+                                new ComponentName(sContext, EpochJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -850,9 +768,7 @@ public class MaintenanceJobServiceTest {
 
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNotNull();
 
-        assertWithMessage("Job completed within timeout")
-                .that(jobCompletionLatch.await(1, TimeUnit.SECONDS))
-                .isTrue();
+        callback.assertJobFinished();
 
         verify(() -> TopicsWorker.getInstance(any(Context.class)));
         verify(mMockAppUpdateManager)
@@ -881,14 +797,8 @@ public class MaintenanceJobServiceTest {
                                 ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                         any(Context.class)));
 
-        CountDownLatch jobCompletionLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            jobCompletionLatch.countDown();
-                            return null;
-                        })
-                .when(mSpyMaintenanceJobService)
-                .jobFinished(mMockJobParameters, false);
+        JobServiceCallback callback =
+                new JobServiceCallback().expectJobFinished(mSpyMaintenanceJobService);
 
         // Inject FledgeMaintenanceTasksWorker since the test can't get it the standard way
         doReturn(mPackageManagerMock).when(mSpyMaintenanceJobService).getPackageManager();
@@ -901,7 +811,7 @@ public class MaintenanceJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MAINTENANCE_JOB_ID,
-                                new ComponentName(CONTEXT, EpochJobService.class))
+                                new ComponentName(sContext, EpochJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
                         .setPersisted(true)
@@ -914,9 +824,7 @@ public class MaintenanceJobServiceTest {
 
         assertNull(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID));
 
-        assertWithMessage("Job completed within timeout")
-                .that(jobCompletionLatch.await(1, TimeUnit.SECONDS))
-                .isTrue();
+        callback.assertJobFinished();
 
         verify(mSpyMaintenanceJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));

@@ -53,6 +53,7 @@ java_library {
         "modules-utils-testable-device-config",
         "adservices-profile-text-protos-genrule",
         "adservices-concurrent-profile-text-protos-genrule",
+        "adservices-collectors-helper"
     ],
 
     srcs: ["src/**/*.java"],

@@ -16,7 +16,11 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.shared.common.flags.FeatureFlag.Type.DEBUG;
+
 import android.annotation.Nullable;
+
+import com.android.adservices.shared.common.flags.FeatureFlag;
 
 import java.io.PrintWriter;
 
@@ -28,6 +32,7 @@ import java.io.PrintWriter;
 public interface CommonFlags {
 
     /** Whether to enable the AdServices Shell Command interface. By default, it's disabled. */
+    @FeatureFlag(DEBUG)
     boolean ADSERVICES_SHELL_COMMAND_ENABLED = false;
 
     default boolean getAdServicesShellCommandEnabled() {

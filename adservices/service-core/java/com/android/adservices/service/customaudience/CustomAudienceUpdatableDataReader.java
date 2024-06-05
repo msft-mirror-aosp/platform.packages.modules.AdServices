@@ -16,8 +16,11 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.customaudience.CustomAudience;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -57,6 +60,8 @@ public class CustomAudienceUpdatableDataReader {
     public static final String AD_FILTERS_KEY = "ad_filters";
     public static final String AD_RENDER_ID_KEY = "ad_render_id";
     public static final String STRING_ERROR_FORMAT = "Unexpected format parsing %s in %s";
+    public static final String AUCTION_SERVER_REQUEST_FLAGS_KEY = "auction_server_request_flags";
+    public static final String OMIT_ADS_VALUE = "omit_ads";
 
     public static final String FIELD_FOUND_LOG_FORMAT = "%s Found %s in JSON response";
     public static final String VALIDATED_FIELD_LOG_FORMAT =
@@ -90,7 +95,9 @@ public class CustomAudienceUpdatableDataReader {
      *     bidding data
      * @param maxAdsSizeB the configured maximum size in bytes allocated for ads
      * @param maxNumAds the configured maximum number of ads allowed per update
-     * @param filteringEnabled whether or not ad selection filtering fields should be read
+     * @param frequencyCapFilteringEnabled whether or not frequency cap filtering fields should be
+     *     read
+     * @param appInstallFilteringEnabled whether or not app install filtering fields should be read
      * @param adRenderIdEnabled whether ad render id field should be read
      * @param adRenderIdMaxLength the max length of the ad render id
      */
@@ -102,7 +109,8 @@ public class CustomAudienceUpdatableDataReader {
             int maxTrustedBiddingDataSizeB,
             int maxAdsSizeB,
             int maxNumAds,
-            boolean filteringEnabled,
+            boolean frequencyCapFilteringEnabled,
+            boolean appInstallFilteringEnabled,
             boolean adRenderIdEnabled,
             long adRenderIdMaxLength) {
         Objects.requireNonNull(responseObject);
@@ -117,7 +125,8 @@ public class CustomAudienceUpdatableDataReader {
         mMaxAdsSizeB = maxAdsSizeB;
         mMaxNumAds = maxNumAds;
         mGetFiltersFromJsonObjectStrategy =
-                ReadFiltersFromJsonStrategyFactory.getStrategy(filteringEnabled);
+                ReadFiltersFromJsonStrategyFactory.getStrategy(
+                        frequencyCapFilteringEnabled, appInstallFilteringEnabled);
         mReadAdRenderIdFromJsonStrategy =
                 ReadAdRenderIdFromJsonStrategyFactory.getStrategy(
                         adRenderIdEnabled, adRenderIdMaxLength);
@@ -310,5 +319,29 @@ public class CustomAudienceUpdatableDataReader {
         }
     }
 
-
+    /**
+     * Returns the server auction request bitfield extracted from the response, if found.
+     *
+     * @throws JSONException if the value found at the key is not a {@link JSONArray}
+     */
+    @CustomAudience.AuctionServerRequestFlag
+    public int getAuctionServerRequestFlags() throws JSONException {
+        @CustomAudience.AuctionServerRequestFlag int result = 0;
+        if (mResponseObject.has(AUCTION_SERVER_REQUEST_FLAGS_KEY)) {
+            sLogger.v(FIELD_FOUND_LOG_FORMAT, mResponseHash, AUCTION_SERVER_REQUEST_FLAGS_KEY);
+            JSONArray array = mResponseObject.getJSONArray(AUCTION_SERVER_REQUEST_FLAGS_KEY);
+            for (int i = 0; i < array.length(); i++) {
+                if (OMIT_ADS_VALUE.equals(array.getString(i))) {
+                    if ((result & FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS) == 0) {
+                        // Only set the flag and print the log once
+                        sLogger.v(VALIDATED_FIELD_LOG_FORMAT, mResponseHash, OMIT_ADS_VALUE);
+                        result = result | FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+                    }
+                }
+            }
+        } else {
+            sLogger.v(FIELD_NOT_FOUND_LOG_FORMAT, mResponseHash, AUCTION_SERVER_REQUEST_FLAGS_KEY);
+        }
+        return result;
+    }
 }

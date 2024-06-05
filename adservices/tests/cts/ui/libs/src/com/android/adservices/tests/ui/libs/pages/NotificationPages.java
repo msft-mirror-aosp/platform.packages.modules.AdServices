@@ -15,13 +15,14 @@
  */
 package com.android.adservices.tests.ui.libs.pages;
 
-import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
+import static com.android.adservices.tests.ui.libs.UiConstants.NOTIFICATION_SCROLLER;
 import static com.android.adservices.tests.ui.libs.UiUtils.LAUNCH_TIMEOUT;
 import static com.android.adservices.tests.ui.libs.UiUtils.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT;
 import static com.android.adservices.tests.ui.libs.UiUtils.SCROLL_WAIT_TIME;
 import static com.android.adservices.tests.ui.libs.UiUtils.getElement;
 import static com.android.adservices.tests.ui.libs.UiUtils.getPageElement;
 import static com.android.adservices.tests.ui.libs.UiUtils.getString;
+import static com.android.adservices.tests.ui.libs.UiUtils.sysuiResSelector;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -33,6 +34,7 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
+import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.tests.ui.libs.UiConstants;
@@ -96,7 +98,10 @@ public class NotificationPages {
         UiSelector notificationCardSelector =
                 new UiSelector().text(getString(context, notificationTitle));
 
-        UiObject2 scroller = device.findObject(By.res(SYSTEM_UI_RESOURCE_ID));
+        UiObject2 scroller =
+                device.wait(
+                        Until.findObject(sysuiResSelector(NOTIFICATION_SCROLLER)), LAUNCH_TIMEOUT);
+
         UiObject2 notificationCard =
                 scroller.findObject(By.textContains(getString(context, notificationTitle)));
         if (!isDisplayed) {
@@ -180,17 +185,15 @@ public class NotificationPages {
         UiObject2 leftControlButton = getElement(context, device, leftButtonResId);
         UiObject2 rightControlButton = getElement(context, device, rightButtonResId);
         if (isGoSettings) {
-            leftControlButton.click();
+            leftControlButton.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         } else {
-            rightControlButton.click();
-
+            rightControlButton.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
             if (isFlip) {
                 UiObject2 title2 =
                         getElement(context, device, R.string.notificationUI_header_ga_title_eu_v2);
                 assertThat(title2).isNotNull();
             }
         }
-        Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
     }
 
     public static void euNotificationLandingPageTopicsPage(

@@ -56,8 +56,7 @@
   "description": "One event source with two trigger specs, see comment above for full description.",
   "phflags_override": {
     "measurement_flex_api_max_information_gain_navigation": 15,
-    "measurement_flexible_event_reporting_api_enabled": "true",
-    "measurement_min_event_report_delay_millis": 0
+    "measurement_flexible_event_reporting_api_enabled": "true"
   },
   "input": {
     "sources": [
@@ -385,7 +384,7 @@
           "source_type": "navigation",
           "source_debug_key": "111",
           "trigger_summary_bucket": [10, 49],
-          "randomized_trigger_rate": 0.00030175409301020603
+          "randomized_trigger_rate": 0.0003018
         }
       },
       {
@@ -400,7 +399,7 @@
           "source_debug_key": "111",
           "trigger_debug_keys": ["1", "3"],
           "trigger_summary_bucket": [10, 49],
-          "randomized_trigger_rate": 0.00030175409301020603
+          "randomized_trigger_rate": 0.0003018
         }
       },
       {
@@ -414,7 +413,7 @@
           "source_type": "navigation",
           "source_debug_key": "111",
           "trigger_summary_bucket": [20, 69],
-          "randomized_trigger_rate": 0.00030175409301020603
+          "randomized_trigger_rate": 0.0003018
         }
       },
       {
@@ -428,7 +427,7 @@
           "source_type": "navigation",
           "source_debug_key": "111",
           "trigger_summary_bucket": [70, 4294967295],
-          "randomized_trigger_rate": 0.00030175409301020603
+          "randomized_trigger_rate": 0.0003018
         }
       }
     ],
@@ -445,7 +444,7 @@
           "source_debug_key": "111",
           "trigger_debug_keys": ["1", "3"],
           "trigger_summary_bucket": [10, 49],
-          "randomized_trigger_rate": 0.00030175409301020603
+          "randomized_trigger_rate": 0.0003018
         }
       },
       {
@@ -460,7 +459,7 @@
           "source_debug_key": "111",
           "trigger_debug_keys": ["1", "3"],
           "trigger_summary_bucket": [10, 49],
-          "randomized_trigger_rate": 0.00030175409301020603
+          "randomized_trigger_rate": 0.0003018
         }
       }
     ],

@@ -23,29 +23,25 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
 import android.os.Process;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.modules.utils.build.SdkLevel;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-public class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableCtsTest {
+@RequiresSdkLevelAtLeastS
+public final class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     private TestAdvertisingCustomAudienceClient mTestClient;
 
-    private static final String OWNER = sContext.getPackageName();
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer.example.com");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
@@ -55,25 +51,10 @@ public class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableCtsTest
     private boolean mHasAccessToDevOverrides;
 
     private String mAccessStatus;
-    private String mPreviousAppAllowList;
-
-    // Ignore tests when device is not at least S
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName());
 
     @Before
     public void setup() {
-        if (SdkLevel.isAtLeastT()) {
+        if (sdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         }
 

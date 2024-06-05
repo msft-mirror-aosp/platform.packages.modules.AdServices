@@ -23,7 +23,6 @@ import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
@@ -65,7 +64,8 @@ public class GaUxDebugChannelTest {
     public void setUp() throws Exception {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
+        UiUtils.setBinderTimeout();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.resetAdServicesConsentData(sContext);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -109,7 +109,6 @@ public class GaUxDebugChannelTest {
 
     /** Verify that the API returns false when API is disabled. */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testApiDisabled() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -146,7 +145,6 @@ public class GaUxDebugChannelTest {
 
     /** Verify that entry point disabled can not trigger consent notification. */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testEntryPointDisabled() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -174,7 +172,6 @@ public class GaUxDebugChannelTest {
 
     /** Verify that when request sent from entry point, we won't trigger notification. */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testFromEntryPointRequest() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -203,7 +200,6 @@ public class GaUxDebugChannelTest {
 
     /** Verify that non-adult account can not trigger consent notification. */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testNonAdultAccount() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -234,7 +230,6 @@ public class GaUxDebugChannelTest {
      * displayed.
      */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdEnabled() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -264,7 +259,6 @@ public class GaUxDebugChannelTest {
      * Verify that for GA, ROW devices with zeroed-out AdId, the GA EU notification is displayed.
      */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testGaRowAdIdDisabled() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -294,7 +288,6 @@ public class GaUxDebugChannelTest {
      * Verify that for GA, EU devices with non zeroed-out AdId, the GA EU notification is displayed.
      */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdEnabled() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -322,7 +315,6 @@ public class GaUxDebugChannelTest {
 
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testGaEuAdIdDisabled() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 

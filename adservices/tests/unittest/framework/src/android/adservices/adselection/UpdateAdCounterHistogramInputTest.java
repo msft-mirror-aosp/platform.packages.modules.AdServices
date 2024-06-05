@@ -26,6 +26,9 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Random;
@@ -35,6 +38,9 @@ public class UpdateAdCounterHistogramInputTest {
     private static final Random RANDOM = new Random();
     private static final long VALID_AD_SELECTION_ID = 10;
     private static final String VALID_PACKAGE_NAME = "test.package";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidInput_success() {

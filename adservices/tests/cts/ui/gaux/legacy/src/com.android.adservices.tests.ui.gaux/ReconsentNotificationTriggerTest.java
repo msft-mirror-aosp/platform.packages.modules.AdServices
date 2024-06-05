@@ -25,7 +25,6 @@ import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
@@ -102,7 +101,6 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testRowAdIdDisabledGaUxEnabledReConsent() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -115,7 +113,6 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledGaUxEnabledReConsent() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -128,7 +125,6 @@ public class ReconsentNotificationTriggerTest {
      * should not displayed
      */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledGaUxEnabledReConsentSecondNotDisplayed() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -152,7 +148,6 @@ public class ReconsentNotificationTriggerTest {
      * consent, and GA UX feature enabled, the GA UX notification is not displayed.
      */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testRowAdIdEnabledConsentOptoutGaUxEnabledReConsent() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -165,7 +160,6 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testEuAdIdEnabledGaUxEnabledReconsent() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -198,7 +192,6 @@ public class ReconsentNotificationTriggerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 297347345)
     public void testDeleteStatus() {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 

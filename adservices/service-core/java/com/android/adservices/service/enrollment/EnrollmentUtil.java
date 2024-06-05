@@ -19,9 +19,8 @@ package com.android.adservices.service.enrollment;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import androidx.annotation.NonNull;
-
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 /** Util class for all enrollment-related classes */
@@ -38,11 +37,10 @@ public class EnrollmentUtil {
     }
 
     /** Returns an instance of the EnrollmentDao given a context. */
-    @NonNull
-    public static EnrollmentUtil getInstance(@NonNull Context context) {
+    public static EnrollmentUtil getInstance() {
         synchronized (EnrollmentUtil.class) {
             if (sSingleton == null) {
-                sSingleton = new EnrollmentUtil(context);
+                sSingleton = new EnrollmentUtil(ApplicationContextSingleton.get());
             }
             return sSingleton;
         }
@@ -50,28 +48,16 @@ public class EnrollmentUtil {
 
     /** Get build ID from shared preference */
     public int getBuildId() {
-        int defaultValue = -1;
-        if (mContext == null) {
-            SharedPreferences prefs =
-                    mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
-            if (prefs != null) {
-                return prefs.getInt(BUILD_ID, defaultValue);
-            }
-        }
-        return defaultValue;
+        SharedPreferences prefs =
+                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        return prefs.getInt(BUILD_ID, /* defaultValue */ -1);
     }
 
     /** Get file group status from shared preference */
     public int getFileGroupStatus() {
-        int defaultValue = 0;
-        if (mContext == null) {
-            SharedPreferences prefs =
-                    mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
-            if (prefs != null) {
-                return prefs.getInt(FILE_GROUP_STATUS, defaultValue);
-            }
-        }
-        return defaultValue;
+        SharedPreferences prefs =
+                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        return prefs.getInt(FILE_GROUP_STATUS, /* defaultValue */ 0);
     }
 
     private int convertBuildIdStringToInt(String buildIdString) {

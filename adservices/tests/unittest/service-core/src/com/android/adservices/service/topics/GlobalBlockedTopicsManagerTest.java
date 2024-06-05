@@ -23,10 +23,12 @@ import static org.mockito.Mockito.when;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -39,6 +41,9 @@ import java.util.stream.Stream;
 @SmallTest
 public class GlobalBlockedTopicsManagerTest {
     @Mock Flags mMockFlags;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

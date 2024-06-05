@@ -24,10 +24,12 @@ import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -37,11 +39,14 @@ import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CustomAudienceQuantityCheckerTest {
-    private static final Flags FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags FLAGS = FakeFlagsFactory.getFlagsForTest();
 
     @Mock private CustomAudienceDao mCustomAudienceDao;
 
     private CustomAudienceQuantityChecker mChecker;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.access;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
-
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.SourceRegistrationRequest;
@@ -86,15 +84,12 @@ public class DevContextAccessResolver implements IAccessResolver {
     }
 
     @Override
-    public boolean isAllowed(@NonNull Context context) {
-        return mIsAllowed;
-    }
-
-    @NonNull
-    @Override
-    @AdServicesStatusUtils.StatusCode
-    public int getErrorStatusCode() {
-        return STATUS_UNAUTHORIZED;
+    public AccessInfo getAccessInfo(@NonNull Context context) {
+        int statusCode =
+                mIsAllowed
+                        ? AdServicesStatusUtils.STATUS_SUCCESS
+                        : AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+        return new AccessInfo(mIsAllowed, statusCode);
     }
 
     @NonNull

@@ -24,7 +24,7 @@ import android.os.IBinder;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.PackageChangedReceiver;
@@ -36,7 +36,6 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.util.Objects;
 
 /** Protected Signals Service */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsService extends Service {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -58,7 +57,7 @@ public class ProtectedSignalsService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (mFlags.getProtectedSignalsServiceKillSwitch()) {
+        if (!mFlags.getProtectedSignalsEnabled()) {
             sLogger.e("Protected Signals API is disabled");
             return;
         }
@@ -69,13 +68,13 @@ public class ProtectedSignalsService extends Service {
 
         if (hasUserConsent()) {
             PackageChangedReceiver.enableReceiver(this, mFlags);
-            MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+            MddJob.scheduleAllMddJobs();
         }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        if (mFlags.getProtectedSignalsServiceKillSwitch()) {
+        if (!mFlags.getProtectedSignalsEnabled()) {
             sLogger.e("Protected signals API is disabled");
             // Return null so that clients can not bind to the service.
             return null;
@@ -87,6 +86,6 @@ public class ProtectedSignalsService extends Service {
      * @return {@code true} if the Privacy Sandbox has user consent
      */
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven();
+        return ConsentManager.getInstance().getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 }

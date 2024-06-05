@@ -16,9 +16,12 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
-import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.annotation.RequiresApi;
 import android.net.Uri;
@@ -101,7 +104,7 @@ class ReportEventImpl extends EventReporter {
                             // Fail Silently by notifying success to caller
                             notifySuccessToCaller(callback);
                         } else {
-                            notifyFailureToCaller(callback, t);
+                            notifyFailureToCaller(input.getCallerPackageName(), callback, t);
                         }
                     }
                 },
@@ -119,8 +122,7 @@ class ReportEventImpl extends EventReporter {
                                                 .setBeaconReportingDestinationType(
                                                         input.getReportingDestinations())
                                                 .setNumMatchingUris(reportingUris.size())
-                                                .build()
-                                );
+                                                .build());
                             }
                             return reportUris(reportingUris, input);
                         },
@@ -131,7 +133,10 @@ class ReportEventImpl extends EventReporter {
                             public void onSuccess(List<Void> result) {
                                 sLogger.d("reportEvent() completed successfully.");
                                 mAdServicesLogger.logFledgeApiCallStats(
-                                        LOGGING_API_NAME, AdServicesStatusUtils.STATUS_SUCCESS, 0);
+                                        LOGGING_API_NAME,
+                                        input.getCallerPackageName(),
+                                        STATUS_SUCCESS,
+                                        /*latencyMs=*/ 0);
                             }
 
                             @Override
@@ -140,13 +145,15 @@ class ReportEventImpl extends EventReporter {
                                 if (t instanceof IOException) {
                                     mAdServicesLogger.logFledgeApiCallStats(
                                             LOGGING_API_NAME,
-                                            AdServicesStatusUtils.STATUS_IO_ERROR,
-                                            0);
+                                            input.getCallerPackageName(),
+                                            STATUS_IO_ERROR,
+                                            /*latencyMs=*/ 0);
                                 } else {
                                     mAdServicesLogger.logFledgeApiCallStats(
                                             LOGGING_API_NAME,
-                                            AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
-                                            0);
+                                            input.getCallerPackageName(),
+                                            STATUS_INTERNAL_ERROR,
+                                            /*latencyMs=*/ 0);
                                 }
                             }
                         },

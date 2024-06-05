@@ -18,6 +18,7 @@ package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.FrequencyCapFilters;
@@ -28,13 +29,19 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link FrequencyCapFilters}. */
 @SmallTest
 public class FrequencyCapFiltersTest {
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testBuildValidFrequencyCapFilters_success() {
         final FrequencyCapFilters originalFilters =
@@ -323,5 +330,21 @@ public class FrequencyCapFiltersTest {
         filtersBuilder.setKeyedFrequencyCapsForClickEvents(listBuilder.build());
 
         assertThrows(IllegalArgumentException.class, filtersBuilder::build);
+    }
+
+    @Test
+    public void testFrequencyCapFiltersDescribeContents() {
+        final FrequencyCapFilters originalFilters =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForWinEvents(
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
+                        .setKeyedFrequencyCapsForImpressionEvents(
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
+                        .setKeyedFrequencyCapsForViewEvents(
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
+                        .setKeyedFrequencyCapsForClickEvents(
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
+                        .build();
+        assertEquals("describeContents", 0, originalFilters.describeContents());
     }
 }

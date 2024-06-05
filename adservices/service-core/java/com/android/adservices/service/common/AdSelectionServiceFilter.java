@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
+
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -32,7 +34,6 @@ import com.android.adservices.service.exception.FilterException;
 import java.util.Objects;
 
 /** Utility class to filter FLEDGE requests. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
     public AdSelectionServiceFilter(
@@ -86,9 +87,10 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
                 assertForegroundCaller(callerUid, apiName);
             }
             if (!Objects.isNull(adTech)) {
-                assertFledgeEnrollment(adTech, callerPackageName, apiName, devContext);
+                assertFledgeEnrollment(
+                        adTech, callerPackageName, apiName, devContext, API_AD_SELECTION);
             }
-            assertAppInAllowList(callerPackageName, apiName);
+            assertAppInAllowList(callerPackageName, apiName, API_AD_SELECTION);
             if (enforceConsent) {
                 assertCallerHasUserConsent();
             }

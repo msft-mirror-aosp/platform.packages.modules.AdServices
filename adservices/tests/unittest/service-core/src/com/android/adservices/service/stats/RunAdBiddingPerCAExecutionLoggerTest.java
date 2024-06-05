@@ -53,12 +53,18 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdSelectionSignals;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.util.Clock;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.nio.charset.StandardCharsets;
 
 public class RunAdBiddingPerCAExecutionLoggerTest {
 
@@ -97,7 +103,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
     private static final int NUM_OF_ADS_FOR_BIDDING = 4;
     private static final int NUM_OF_KEYS_OF_TRUSTED_BIDDING_SIGNALS = 3;
     private static final int FETCHED_BUYER_DECISION_LOGIC_SCRIPT_SIZE_IN_BYTES =
-            BUYER_DECISION_LOGIC_JS.getBytes().length;
+            BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length;
     private static final int FETCHED_TRUSTED_BIDDING_SIGNALS_DATA_SIZE_IN_BYTES =
             TRUSTED_BIDDING_SIGNALS.getSizeInBytes();
     @Captor
@@ -106,6 +112,9 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
 
     @Mock private Clock mMockClock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

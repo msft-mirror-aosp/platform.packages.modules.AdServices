@@ -41,3 +41,18 @@ java_library {
         "src/**/*.aidl",
     ],
 }
+
+android_test_helper_app {
+    name: "CtsSdkProviderAppWithoutSdkProviderClassNameProperty",
+    certificate: ":sdksandbox-test",
+    defaults: ["platform_app_defaults"],
+    manifest: "AndroidManifestWithoutSdkProviderClassNameProperty.xml",
+    sdk_version: "current",
+    compile_dex: true,
+    dex_preopt: {
+        enabled: true,
+    },
+    test_suites: ["general-tests"],
+    min_sdk_version: "33",
+    target_sdk_version: "33",
+}

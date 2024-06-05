@@ -20,7 +20,7 @@ import android.net.Uri;
 import android.util.Pair;
 
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -44,6 +44,8 @@ public final class TriggerFixture {
                 .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
                 .setEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
                 .setRegistrant(ValidTriggerParams.REGISTRANT)
+                .setAggregatableSourceRegistrationTimeConfig(
+                        ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG)
                 .setRegistrationOrigin(ValidTriggerParams.REGISTRATION_ORIGIN);
     }
 
@@ -65,6 +67,10 @@ public final class TriggerFixture {
                 .setAdtechBitMapping(ValidTriggerParams.X_NETWORK_KEY_MAPPING)
                 .setRegistrationOrigin(ValidTriggerParams.REGISTRATION_ORIGIN)
                 .setAggregationCoordinatorOrigin(ValidTriggerParams.AGGREGATION_COORDINATOR_ORIGIN)
+                .setAggregatableSourceRegistrationTimeConfig(
+                        ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG)
+                .setTriggerContextId(ValidTriggerParams.TRIGGER_CONTEXT_ID)
+                .setAttributionScopesString(ValidTriggerParams.ATTRIBUTION_SCOPES)
                 .build();
     }
 
@@ -136,21 +142,19 @@ public final class TriggerFixture {
                         .setPriority(99L)
                         .setExpiry(604800L)
                         .setFilterData(
-                                Collections.singletonList(
-                                        new FilterMap.Builder()
-                                                .setAttributionFilterMap(
-                                                        Map.of(
-                                                                "campaign_type",
-                                                                Collections.singletonList(
-                                                                        "install")))
-                                                .build()))
+                                new FilterMap.Builder()
+                                        .setAttributionFilterMap(
+                                                Map.of(
+                                                        "campaign_type",
+                                                        Collections.singletonList("install")))
+                                        .build())
                         .build();
 
         public static final String ATTRIBUTION_CONFIGS_STRING =
                 new JSONArray(
                                 Collections.singletonList(
                                         ATTRIBUTION_CONFIG.serializeAsJson(
-                                                FlagsFactory.getFlagsForTest())))
+                                                FakeFlagsFactory.getFlagsForTest())))
                         .toString();
 
         public static final String X_NETWORK_KEY_MAPPING =
@@ -164,8 +168,14 @@ public final class TriggerFixture {
         public static final Uri AGGREGATION_COORDINATOR_ORIGIN =
                 WebUtil.validUri("https://coordinator.example.test");
 
+        public static final Trigger.SourceRegistrationTimeConfig
+                AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG =
+                        Trigger.SourceRegistrationTimeConfig.INCLUDE;
+
         public static final String PLATFORM_AD_ID = "test-platform-ad-id";
         public static final String DEBUG_AD_ID = "test-debug-ad-id";
+        public static final String TRIGGER_CONTEXT_ID = "test-trigger-context-id";
+        public static final String ATTRIBUTION_SCOPES = "[\"1\"]";
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
             final FilterMap filter =

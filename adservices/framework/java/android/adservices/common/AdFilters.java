@@ -16,13 +16,14 @@
 
 package android.adservices.common;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
-import com.android.internal.annotations.VisibleForTesting;
+import com.android.adservices.flags.Flags;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,9 +39,9 @@ import java.util.Objects;
  */
 public final class AdFilters implements Parcelable {
     /** @hide */
-    @VisibleForTesting public static final String FREQUENCY_CAP_FIELD_NAME = "frequency_cap";
+    public static final String FREQUENCY_CAP_FIELD_NAME = "frequency_cap";
     /** @hide */
-    @VisibleForTesting public static final String APP_INSTALL_FIELD_NAME = "app_install";
+    public static final String APP_INSTALL_FIELD_NAME = "app_install";
     /** @hide */
     @Nullable private final FrequencyCapFilters mFrequencyCapFilters;
 
@@ -95,9 +96,8 @@ public final class AdFilters implements Parcelable {
      * ad.
      *
      * <p>If {@code null}, there are no app install filters which apply to the ad.
-     *
-     * @hide
      */
+    @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
     @Nullable
     public AppInstallFilters getAppInstallFilters() {
         return mAppInstallFilters;
@@ -192,10 +192,14 @@ public final class AdFilters implements Parcelable {
         return Objects.hash(mFrequencyCapFilters, mAppInstallFilters);
     }
 
-    // TODO(b/266837113) Add app install once it is unhidden
     @Override
     public String toString() {
-        return "AdFilters{mFrequencyCapFilters=" + mFrequencyCapFilters + '}';
+        return "AdFilters{"
+                + "mFrequencyCapFilters="
+                + mFrequencyCapFilters
+                + ", mAppInstallFilters="
+                + mAppInstallFilters
+                + '}';
     }
 
     /** Builder for creating {@link AdFilters} objects. */
@@ -222,9 +226,8 @@ public final class AdFilters implements Parcelable {
          *
          * <p>If set to {@code null} or not set, no app install filters will be associated with the
          * ad.
-         *
-         * @hide
          */
+        @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
         @NonNull
         public Builder setAppInstallFilters(@Nullable AppInstallFilters appInstallFilters) {
             mAppInstallFilters = appInstallFilters;

@@ -16,18 +16,33 @@
 
 package com.android.adservices.service.stats;
 
+
+import com.android.adservices.cobalt.AppNameApiErrorLogger;
+import com.android.adservices.service.common.AppManifestConfigCall;
+import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
+import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import javax.annotation.concurrent.ThreadSafe;
 
 /** AdServicesLogger that delegate to the appropriate Logger Implementations. */
 @ThreadSafe
-public class AdServicesLoggerImpl implements AdServicesLogger {
+public final class AdServicesLoggerImpl implements AdServicesLogger {
+
     private static volatile AdServicesLoggerImpl sAdServicesLogger;
     private final StatsdAdServicesLogger mStatsdAdServicesLogger;
 
     private AdServicesLoggerImpl() {
-        mStatsdAdServicesLogger = StatsdAdServicesLogger.getInstance();
+        this(StatsdAdServicesLogger.getInstance());
     }
 
     @VisibleForTesting
@@ -55,6 +70,11 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logApiCallStats(ApiCallStats apiCallStats) {
         mStatsdAdServicesLogger.logApiCallStats(apiCallStats);
+
+        cobaltLogAppNameApiError(
+                apiCallStats.getAppPackageName(),
+                apiCallStats.getApiName(),
+                apiCallStats.getResultCode());
     }
 
     @Override
@@ -65,6 +85,15 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs) {
         mStatsdAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, latencyMs);
+    }
+
+    @Override
+    public void logFledgeApiCallStats(
+            int apiName, String appPackageName, int resultCode, int latencyMs) {
+        mStatsdAdServicesLogger.logFledgeApiCallStats(
+                apiName, appPackageName, resultCode, latencyMs);
+
+        cobaltLogAppNameApiError(appPackageName, apiName, resultCode);
     }
 
     @Override
@@ -156,6 +185,16 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
+    public void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats) {
+        mStatsdAdServicesLogger.logMeasurementOdpRegistrations(stats);
+    }
+
+    @Override
+    public void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats) {
+        mStatsdAdServicesLogger.logMeasurementOdpApiCall(stats);
+    }
+
+    @Override
     public void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId) {
         mStatsdAdServicesLogger.logEnrollmentDataStats(mType, mIsSuccessful, mBuildId);
     }
@@ -216,5 +255,142 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     public void logInteractionReportingTableClearedStats(
             InteractionReportingTableClearedStats stats) {
         mStatsdAdServicesLogger.logInteractionReportingTableClearedStats(stats);
+    }
+
+    @Override
+    public void logAppManifestConfigCall(AppManifestConfigCall call) {
+        mStatsdAdServicesLogger.logAppManifestConfigCall(call);
+    }
+
+    @Override
+    public void logKAnonSignJoinStatus() {
+        // TODO(b/324564459): add logging for KAnon Sign Join
+    }
+
+    @Override
+    public void logKAnonInitializeStats(KAnonInitializeStatusStats kAnonInitializeStatusStats) {
+        mStatsdAdServicesLogger.logKAnonInitializeStats(kAnonInitializeStatusStats);
+    }
+
+    @Override
+    public void logKAnonSignStats(KAnonSignStatusStats kAnonSignStatusStats) {
+        mStatsdAdServicesLogger.logKAnonSignStats(kAnonSignStatusStats);
+    }
+
+    @Override
+    public void logKAnonJoinStats(KAnonJoinStatusStats kAnonJoinStatusStats) {
+        mStatsdAdServicesLogger.logKAnonJoinStats(kAnonJoinStatusStats);
+    }
+
+    @Override
+    public void logKAnonBackgroundJobStats(
+            KAnonBackgroundJobStatusStats kAnonBackgroundJobStatusStats) {
+        mStatsdAdServicesLogger.logKAnonBackgroundJobStats(kAnonBackgroundJobStatusStats);
+    }
+
+    @Override
+    public void logKAnonGetChallengeJobStats(
+            KAnonGetChallengeStatusStats kAnonGetChallengeStatusStats) {
+        mStatsdAdServicesLogger.logKAnonGetChallengeJobStats(kAnonGetChallengeStatusStats);
+    }
+
+    @Override
+    public void logKAnonImmediateSignJoinStats(
+            KAnonImmediateSignJoinStatusStats kAnonImmediateSignJoinStatusStats) {
+        mStatsdAdServicesLogger.logKAnonImmediateSignJoinStats(kAnonImmediateSignJoinStatusStats);
+    }
+
+    @Override
+    public void logGetAdSelectionDataApiCalledStats(GetAdSelectionDataApiCalledStats stats) {
+        mStatsdAdServicesLogger.logGetAdSelectionDataApiCalledStats(stats);
+    }
+
+    @Override
+    public void logServerAuctionBackgroundKeyFetchScheduledStats(
+            ServerAuctionBackgroundKeyFetchScheduledStats stats) {
+        mStatsdAdServicesLogger.logServerAuctionBackgroundKeyFetchScheduledStats(stats);
+    }
+
+    @Override
+    public void logServerAuctionKeyFetchCalledStats(ServerAuctionKeyFetchCalledStats stats) {
+        mStatsdAdServicesLogger.logServerAuctionKeyFetchCalledStats(stats);
+    }
+
+    @Override
+    public void logGetAdSelectionDataBuyerInputGeneratedStats(
+            GetAdSelectionDataBuyerInputGeneratedStats stats) {
+        mStatsdAdServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
+    }
+
+    @Override
+    public void logAdFilteringProcessJoinCAReportedStats(
+            AdFilteringProcessJoinCAReportedStats stats) {
+        mStatsdAdServicesLogger.logAdFilteringProcessJoinCAReportedStats(stats);
+    }
+
+    @Override
+    public void logAdFilteringProcessAdSelectionReportedStats(
+            AdFilteringProcessAdSelectionReportedStats stats) {
+        mStatsdAdServicesLogger.logAdFilteringProcessAdSelectionReportedStats(stats);
+    }
+
+    @Override
+    public void logAdCounterHistogramUpdaterReportedStats(
+            AdCounterHistogramUpdaterReportedStats stats) {
+        mStatsdAdServicesLogger.logAdCounterHistogramUpdaterReportedStats(stats);
+    }
+
+    @Override
+    public void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats) {
+        mStatsdAdServicesLogger.logTopicsEncryptionEpochComputationReportedStats(stats);
+    }
+
+    @Override
+    public void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats) {
+        mStatsdAdServicesLogger.logTopicsEncryptionGetTopicsReportedStats(stats);
+    }
+
+    @Override
+    public void logShellCommandStats(ShellCommandStats stats) {
+        mStatsdAdServicesLogger.logShellCommandStats(stats);
+    }
+
+    @Override
+    public void logSignatureVerificationStats(SignatureVerificationStats stats) {
+        mStatsdAdServicesLogger.logSignatureVerificationStats(stats);
+    }
+
+    @Override
+    public void logEncodingJsFetchStats(EncodingFetchStats stats) {
+        mStatsdAdServicesLogger.logEncodingJsFetchStats(stats);
+    }
+
+    @Override
+    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
+        mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
+    }
+
+    @Override
+    public void logEncodingJsExecutionStats(EncodingJsExecutionStats stats) {
+        mStatsdAdServicesLogger.logEncodingJsExecutionStats(stats);
+    }
+
+    @Override
+    public void logEncodingJobRunStats(EncodingJobRunStats stats) {
+        mStatsdAdServicesLogger.logEncodingJobRunStats(stats);
+    }
+
+    @Override
+    public void logPersistAdSelectionResultCalledStats(PersistAdSelectionResultCalledStats stats) {
+        mStatsdAdServicesLogger.logPersistAdSelectionResultCalledStats(stats);
+    }
+
+    /** Logs api call error status using {@code CobaltLogger}. */
+    private void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
+        AppNameApiErrorLogger appNameApiErrorLogger = AppNameApiErrorLogger.getInstance();
+
+        appNameApiErrorLogger.logErrorOccurrence(appPackageName, apiName, errorCode);
     }
 }

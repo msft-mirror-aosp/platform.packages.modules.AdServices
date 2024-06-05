@@ -154,6 +154,15 @@ public final class SdkSandboxManager {
     public static final String EXTRA_SANDBOXED_ACTIVITY_HANDLER =
             "android.app.sdksandbox.extra.SANDBOXED_ACTIVITY_HANDLER";
 
+    /**
+     * The key for an element in {@link Activity} intent extra params, the value is set while
+     * calling {@link #startSdkSandboxActivity(Activity, IBinder)}.
+     *
+     * @hide
+     */
+    public static final String EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME =
+            "android.app.sdksandbox.extra.EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME";
+
     private static final String TAG = "SdkSandboxManager";
     private TimeProvider mTimeProvider;
 
@@ -701,19 +710,20 @@ public final class SdkSandboxManager {
 
         Bundle params = new Bundle();
         params.putBinder(EXTRA_SANDBOXED_ACTIVITY_HANDLER, sdkActivityToken);
+        params.putLong(EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME, timeEventStarted);
         intent.putExtras(params);
 
         fromActivity.startActivity(intent);
 
-        logStartSdkSandboxActivityEvent(timeEventStarted);
+        logStartSdkSandboxActivityLatency(timeEventStarted);
     }
 
     // TODO(b/304459399): move Sandbox Activity latency logging to its own class
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-    private void logStartSdkSandboxActivityEvent(long timeEventStarted) {
+    private void logStartSdkSandboxActivityLatency(long timeEventStarted) {
         try {
             // TODO(b/305240130): retrieve SDK info from sandbox process
-            mService.logSandboxActivityEvent(
+            mService.logSandboxActivityApiLatency(
                     StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY,
                     StatsdUtil.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__SUCCESS,
                     (int) (mTimeProvider.elapsedRealtime() - timeEventStarted));
@@ -833,26 +843,26 @@ public final class SdkSandboxManager {
         @Override
         public void onLoadSdkSuccess(
                 SandboxedSdk sandboxedSdk, SandboxLatencyInfo sandboxLatencyInfo) {
-            logLatencies(sandboxLatencyInfo);
+            logSandboxApiLatency(sandboxLatencyInfo);
             mExecutor.execute(() -> mCallback.onResult(sandboxedSdk));
         }
 
         @Override
         public void onLoadSdkFailure(
                 LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
-            logLatencies(sandboxLatencyInfo);
+            logSandboxApiLatency(sandboxLatencyInfo);
             mExecutor.execute(() -> mCallback.onError(exception));
         }
 
-        private void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
+        private void logSandboxApiLatency(SandboxLatencyInfo sandboxLatencyInfo) {
             sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(
                     SystemClock.elapsedRealtime());
             try {
-                mService.logLatencies(sandboxLatencyInfo);
+                mService.logSandboxApiLatency(sandboxLatencyInfo);
             } catch (RemoteException e) {
                 Log.w(
                         TAG,
-                        "Remote exception while calling logLatencies."
+                        "Remote exception while calling logSandboxApiLatency."
                                 + "Error: "
                                 + e.getMessage());
             }
@@ -881,7 +891,7 @@ public final class SdkSandboxManager {
                 int surfacePackageId,
                 Bundle params,
                 SandboxLatencyInfo sandboxLatencyInfo) {
-            logLatencies(sandboxLatencyInfo);
+            logSandboxApiLatency(sandboxLatencyInfo);
             mExecutor.execute(
                     () -> {
                         params.putParcelable(EXTRA_SURFACE_PACKAGE, surfacePackage);
@@ -892,22 +902,22 @@ public final class SdkSandboxManager {
         @Override
         public void onSurfacePackageError(
                 int errorCode, String errorMsg, SandboxLatencyInfo sandboxLatencyInfo) {
-            logLatencies(sandboxLatencyInfo);
+            logSandboxApiLatency(sandboxLatencyInfo);
             mExecutor.execute(
                     () ->
                             mReceiver.onError(
                                     new RequestSurfacePackageException(errorCode, errorMsg)));
         }
 
-        private void logLatencies(SandboxLatencyInfo sandboxLatencyInfo) {
+        private void logSandboxApiLatency(SandboxLatencyInfo sandboxLatencyInfo) {
             sandboxLatencyInfo.setTimeAppReceivedCallFromSystemServer(
                     SystemClock.elapsedRealtime());
             try {
-                mService.logLatencies(sandboxLatencyInfo);
+                mService.logSandboxApiLatency(sandboxLatencyInfo);
             } catch (RemoteException e) {
                 Log.w(
                         TAG,
-                        "Remote exception while calling logLatencies."
+                        "Remote exception while calling logSandboxApiLatency."
                                 + "Error: "
                                 + e.getMessage());
             }

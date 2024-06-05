@@ -37,21 +37,6 @@ public class AdservicesWorkflows {
     private static final String SETTINGS_PACKAGE = "android.adservices.ui.SETTINGS";
 
     public static void startNotificationActivity(
-            Context context, UiDevice device, boolean isEUActivity) {
-        if (context.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
-                != PackageManager.PERMISSION_GRANTED) {
-            Log.d("adservices", "this does not have read_device_config permission");
-        } else {
-            Log.d("adservices", "this has read_device_config permission");
-        }
-        Intent intent = new Intent(NOTIFICATION_PACKAGE);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("isEUDevice", isEUActivity);
-        context.startActivity(intent);
-        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
-    }
-
-    public static void startNotificationActivity(
             Context context, UiDevice device, boolean isEUActivity, String packageName) {
         if (context.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -79,21 +64,6 @@ public class AdservicesWorkflows {
         context.startActivity(intent);
         // Wait for the view to appear
         device.wait(Until.hasObject(By.pkg(packageName).depth(0)), LAUNCH_TIMEOUT);
-    }
-
-    public static void startSettingsActivity(Context context, UiDevice device) {
-        if (context.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
-                != PackageManager.PERMISSION_GRANTED) {
-            Log.d("adservices", "this does not have read_device_config permission");
-        } else {
-            Log.d("adservices", "this has read_device_config permission");
-        }
-        // Launch the setting view.
-        Intent intent = new Intent(SETTINGS_PACKAGE);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
-        // Wait for the view to appear
-        device.wait(Until.hasObject(By.pkg(SETTINGS_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
 
     public static void testNotificationActivityFlow(

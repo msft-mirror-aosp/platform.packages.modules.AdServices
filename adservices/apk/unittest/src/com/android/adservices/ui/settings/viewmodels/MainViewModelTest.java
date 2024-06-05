@@ -38,7 +38,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
 /** Tests for {@link MainViewModel}. */
 @SpyStatic(FlagsFactory.class)
@@ -54,8 +53,7 @@ public final class MainViewModelTest extends AdServicesExtendedMockitoTestCase {
     public void setup() {
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         mMainViewModel =
                 new MainViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);

@@ -20,8 +20,9 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -52,6 +53,16 @@ public final class SourceFixture {
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
+    /**
+     * @return The minimum valid source with attribiton scopes.
+     */
+    public static Source.Builder getMinimalValidSourceWithAttributionScope() {
+        return getMinimalValidSourceBuilder()
+                .setAttributionScopes(ValidSourceParams.ATTRIBUTION_SCOPES)
+                .setAttributionScopeLimit(ValidSourceParams.ATTRIBUTION_SCOPE_LIMIT)
+                .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES);
+    }
+
     // Assume the field values in this Source have no relation to the field values in
     // {@link ValidSourceParams}
     public static Source getValidSource() {
@@ -77,7 +88,7 @@ public final class SourceFixture {
                 .setInstallCooldownWindow(ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
                 .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
-                .setFilterData(ValidSourceParams.buildFilterData())
+                .setFilterDataString(ValidSourceParams.buildFilterDataString())
                 .setSharedFilterDataKeys(ValidSourceParams.SHARED_FILTER_DATA_KEYS)
                 .setIsDebugReporting(true)
                 .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
@@ -88,6 +99,9 @@ public final class SourceFixture {
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
                 .setCoarseEventReportDestinations(true)
                 .setSharedDebugKey(ValidSourceParams.SHARED_DEBUG_KEY)
+                .setAttributionScopes(ValidSourceParams.ATTRIBUTION_SCOPES)
+                .setAttributionScopeLimit(ValidSourceParams.ATTRIBUTION_SCOPE_LIMIT)
+                .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES)
                 .setAttributedTriggers(new ArrayList<>());
     }
 
@@ -120,6 +134,9 @@ public final class SourceFixture {
         public static final Uri REGISTRATION_ORIGIN =
                 WebUtil.validUri("https://subdomain.example.test");
         public static final UnsignedLong SHARED_DEBUG_KEY = new UnsignedLong(834690L);
+        public static final List<String> ATTRIBUTION_SCOPES = List.of("1", "2", "3");
+        public static final Long ATTRIBUTION_SCOPE_LIMIT = 10L;
+        public static final Long MAX_NUM_VIEW_STATES = 1000L;
 
         public static final String buildAggregateSource() {
             try {
@@ -133,7 +150,8 @@ public final class SourceFixture {
             return null;
         }
 
-        public static final String buildFilterData() {
+        /** Creates a filter data string */
+        public static final String buildFilterDataString() {
             try {
                 JSONObject filterMap = new JSONObject();
                 filterMap.put("conversion_subdomain",
@@ -181,7 +199,7 @@ public final class SourceFixture {
         TriggerSpecs triggerSpecs = new TriggerSpecs(
                 triggerSpecArrayFrom(triggerSpecsString), 3, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -198,7 +216,23 @@ public final class SourceFixture {
         TriggerSpecs triggerSpecs = new TriggerSpecs(
                 triggerSpecArrayFrom(triggerSpecsString), 1, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
+        return triggerSpecs;
+    }
+
+    /** Provides a valid TriggerSpecs with hardcoded epsilon. */
+    public static TriggerSpecs getValidTriggerSpecsWithNonDefaultEpsilon() throws JSONException {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0, "
+                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1]}]";
+        Source source = getMinimalValidSourceBuilder().build();
+        double mockFlipProbability = Combinatorics.getFlipProbability(5, 3);
+        String jsonString = String.format("{\"flip_probability\": %f}", mockFlipProbability);
+        TriggerSpecs triggerSpecs = new TriggerSpecs(triggerSpecsString, "1", source, jsonString);
         return triggerSpecs;
     }
 
@@ -218,7 +252,23 @@ public final class SourceFixture {
                 maxReports,
                 source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
+        return triggerSpecs;
+    }
+
+    /** Provides a value-sum-based valid TriggerSpecs. */
+    public static TriggerSpecs getValidTriggerSpecsValueSumWithStartTime(long startTime)
+            throws JSONException {
+        Source source =
+                getMinimalValidSourceBuilder()
+                        .setAttributedTriggers(new ArrayList<>())
+                        .build();
+        TriggerSpecs triggerSpecs = new TriggerSpecs(
+                getTriggerSpecValueSumArrayValidBaseline(startTime),
+                /* maxReports */ 3,
+                source);
+        // Oblige building privacy parameters for the trigger specs
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -247,6 +297,20 @@ public final class SourceFixture {
         }
     }
 
+    /** Provide a Source with hardcoded epsilon in TriggerSpecs. */
+    public static Source getValidFullFlexSourceWithNonDefaultEpsilon() {
+        try {
+            return getMinimalValidSourceBuilder()
+                    .setAttributedTriggers(new ArrayList<>())
+                    .setTriggerSpecs(getValidTriggerSpecsWithNonDefaultEpsilon())
+                    .setMaxEventLevelReports(
+                            getValidTriggerSpecsCountBasedWithFewerState().getMaxReports())
+                    .build();
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
     public static Source.Builder getValidFullSourceBuilderWithFlexEventReportValueSum() {
         try {
             return getValidSourceBuilder()
@@ -265,7 +329,7 @@ public final class SourceFixture {
                 .setTriggerSpecsString(triggerSpecs.encodeToJson())
                 .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                 .setEventAttributionStatus(null)
-                .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString());
+                .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJsonString());
     }
 
     public static Source.Builder getValidSourceBuilderWithFlexEventReport() throws JSONException {
@@ -275,10 +339,10 @@ public final class SourceFixture {
                 .setTriggerSpecsString(triggerSpecs.encodeToJson())
                 .setMaxEventLevelReports(triggerSpecs.getMaxReports())
                 .setEventAttributionStatus(null)
-                .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJSONString());
+                .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJsonString());
     }
 
-    public static String getTriggerSpecCountEncodedJSONValidBaseline() {
+    public static String getTriggerSpecCountEncodedJsonValidBaseline() {
         return "[{\"trigger_data\": [1, 2, 3],"
                 + "\"event_report_windows\": { "
                 + "\"start_time\": 0, "
@@ -292,13 +356,18 @@ public final class SourceFixture {
     }
 
     public static TriggerSpec[] getTriggerSpecArrayCountValidBaseline() {
-        return triggerSpecArrayFrom(getTriggerSpecCountEncodedJSONValidBaseline());
+        return triggerSpecArrayFrom(getTriggerSpecCountEncodedJsonValidBaseline());
     }
 
-    public static String getTriggerSpecValueSumEncodedJSONValidBaseline() {
+    public static String getTriggerSpecValueSumEncodedJsonValidBaseline() {
+        return getTriggerSpecValueSumEncodedJsonValidBaseline(0L);
+    }
+
+    /** Provides baseline trigger specs JSON given a start time. */
+    public static String getTriggerSpecValueSumEncodedJsonValidBaseline(long startTime) {
         return "[{\"trigger_data\": [1, 2],"
                 + "\"event_report_windows\": { "
-                + "\"start_time\": 0, "
+                + "\"start_time\": " + String.valueOf(startTime) + ", "
                 + String.format(
                         "\"end_times\": [%s, %s]}, ",
                         TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
@@ -307,10 +376,15 @@ public final class SourceFixture {
     }
 
     public static TriggerSpec[] getTriggerSpecValueSumArrayValidBaseline() {
-        return triggerSpecArrayFrom(getTriggerSpecValueSumEncodedJSONValidBaseline());
+        return triggerSpecArrayFrom(getTriggerSpecValueSumEncodedJsonValidBaseline(0L));
     }
 
-    public static TriggerSpec[] getTriggerSpecValueCountJSONTwoTriggerSpecs() {
+    /** Provides value-sum trigger specs given a start time. */
+    public static TriggerSpec[] getTriggerSpecValueSumArrayValidBaseline(long startTime) {
+        return triggerSpecArrayFrom(getTriggerSpecValueSumEncodedJsonValidBaseline(startTime));
+    }
+
+    public static TriggerSpec[] getTriggerSpecValueCountJsonTwoTriggerSpecs() {
         return triggerSpecArrayFrom(
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "

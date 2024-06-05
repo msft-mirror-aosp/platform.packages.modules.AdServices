@@ -16,15 +16,17 @@
 
 package android.adservices.signals;
 
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.RequiresApi;
 import android.annotation.RequiresPermission;
+import android.annotation.SuppressLint;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.Build;
@@ -35,15 +37,13 @@ import android.os.RemoteException;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-/**
- * ProtectedSignalsManager provides APIs for apps and ad-SDKs manage their protected signals.
- *
- * @hide
- */
+/** ProtectedSignalsManager provides APIs for apps and ad-SDKs to manage their protected signals. */
+@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED)
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -64,7 +64,9 @@ public class ProtectedSignalsManager {
      * @param context The {@link Context} to use
      * @return A {@link ProtectedSignalsManager} instance
      */
+    @SuppressLint("ManagerLookup")
     @NonNull
+    // TODO(b/303896680): Investigate why this lint was not triggered for similar managers
     public static ProtectedSignalsManager get(@NonNull Context context) {
         // On T+, context.getSystemService() does more than just call constructor.
         return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
@@ -158,6 +160,9 @@ public class ProtectedSignalsManager {
      * <p>The sub-key for providing an encoder endpoint is "endpoint" and the value is the URI
      * string for the endpoint.
      *
+     * <p>On success, the onResult method of the provided OutcomeReceiver will be called with an
+     * empty Object. This Object has no significance and is used merely as a placeholder.
+     *
      * <p>Key may only be operated on by one command per JSON. If two command attempt to operate on
      * the same key, this method will through an {@link IllegalArgumentException}
      *
@@ -181,7 +186,7 @@ public class ProtectedSignalsManager {
      * <p>This call fails with an {@link IllegalStateException} if an internal service error is
      * encountered.
      */
-    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    @RequiresPermission(ACCESS_ADSERVICES_PROTECTED_SIGNALS)
     public void updateSignals(
             @NonNull UpdateSignalsRequest updateSignalsRequest,
             @NonNull @CallbackExecutor Executor executor,

@@ -20,40 +20,26 @@ import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_EN
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.By;
-import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
 import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
-public class ConsentSettingsUiAutomatorTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final int LAUNCH_TIMEOUT = 5000;
-    private static UiDevice sDevice;
-
-    private String mTestName;
+public class ConsentSettingsUiAutomatorTest extends AdServicesUiTestCase {
 
     @Rule(order = 0)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
@@ -65,34 +51,9 @@ public class ConsentSettingsUiAutomatorTest {
                     .setCompatModeFlags()
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, false);
 
-    @Before
-    public void setup() {
-        // Initialize UiDevice instance
-        sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        // Start from the home screen
-        sDevice.pressHome();
-
-        // Wait for launcher
-        final String launcherPackage = sDevice.getLauncherPackageName();
-        assertThat(launcherPackage).isNotNull();
-        sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
-    }
-
-    @After
-    public void teardown() {
-        if (!ApkTestUtil.isDeviceSupported()) return;
-
-        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
-
-        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
-    }
-
     @Test
     @Ignore("b/293366771")
-    public void consentSystemServerOnlyTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
+    public void consentSystemServerOnlyTest() {
         Assume.assumeTrue(SdkLevel.isAtLeastT());
 
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 0");
@@ -102,8 +63,7 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     @Ignore("b/293366771")
-    public void consentPpApiOnlyTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+    public void consentPpApiOnlyTest() {
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         consentTest(false);
@@ -111,9 +71,7 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     @Ignore("b/293366771")
-    public void consentSystemServerAndPpApiTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
+    public void consentSystemServerAndPpApiTest() {
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
@@ -122,9 +80,7 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     @Ignore("b/293366771")
-    public void consentSystemServerOnlyDialogsOnTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
+    public void consentSystemServerOnlyDialogsOnTest() {
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 0");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
@@ -133,8 +89,7 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     @Ignore("b/293366771")
-    public void consentPpApiOnlyDialogsOnTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+    public void consentPpApiOnlyDialogsOnTest() {
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
 
@@ -143,9 +98,7 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     @Ignore("b/293366771")
-    public void consentSystemServerAndPpApiDialogsOnTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
+    public void consentSystemServerAndPpApiDialogsOnTest() {
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
@@ -154,8 +107,7 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     @Ignore("b/293366771")
-    public void consentAppSearchOnlyTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+    public void consentAppSearchOnlyTest() {
         // APPSEARCH_ONLY is not a valid choice of consent_source_of_truth on T+.
         Assume.assumeTrue(!SdkLevel.isAtLeastT());
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
@@ -177,15 +129,14 @@ public class ConsentSettingsUiAutomatorTest {
         consentTest(true);
     }
 
-    private void consentTest(boolean dialogsOn) throws UiObjectNotFoundException {
+    private void consentTest(boolean dialogsOn) {
         ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
+                "setprop debug.adservices.consent_notification_activity_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices debug_ux BETA_UX");
 
-        ApkTestUtil.launchSettingViewGivenUx(
-                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT, "BETA_UX");
+        ApkTestUtil.launchSettingViewGivenUx(mDevice, LAUNCH_TIMEOUT, "BETA_UX");
 
-        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
+        UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch(mDevice);
         setConsentToFalse(dialogsOn);
 
         // click switch
@@ -197,24 +148,23 @@ public class ConsentSettingsUiAutomatorTest {
         assertThat(consentSwitch.isChecked()).isFalse();
     }
 
-    private void setConsentToFalse(boolean dialogsOn) throws UiObjectNotFoundException {
-        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
+    private void setConsentToFalse(boolean dialogsOn) {
+        UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch(mDevice);
         if (consentSwitch.isChecked()) {
             performSwitchClick(dialogsOn, consentSwitch);
         }
     }
 
-    private void performSwitchClick(boolean dialogsOn, UiObject mainSwitch)
-            throws UiObjectNotFoundException {
+    private void performSwitchClick(boolean dialogsOn, UiObject2 mainSwitch) {
         if (dialogsOn && mainSwitch.isChecked()) {
             mainSwitch.click();
-            UiObject dialogTitle =
-                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
-            UiObject positiveText =
+            UiObject2 dialogTitle =
+                    ApkTestUtil.getElement(mDevice, R.string.settingsUI_dialog_opt_out_title);
+            UiObject2 positiveText =
                     ApkTestUtil.getElement(
-                            sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
-            assertThat(dialogTitle.exists()).isTrue();
-            assertThat(positiveText.exists()).isTrue();
+                            mDevice, R.string.settingsUI_dialog_opt_out_positive_text);
+            assertThat(dialogTitle).isNotNull();
+            assertThat(positiveText).isNotNull();
             positiveText.click();
         } else {
             mainSwitch.click();

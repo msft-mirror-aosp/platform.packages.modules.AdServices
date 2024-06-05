@@ -115,17 +115,17 @@
   "output": {
     "event_level_results": [
       {
-        "report_time": "1800599000001",
+        "report_time": "1800595400001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "1800599000",
+          "scheduled_report_time": "1800595400",
           "source_event_id": "2",
           "trigger_data": "0",
           "source_type": "navigation",
           "source_debug_key": "333",
           "trigger_summary_bucket": [10, 4294967295],
-          "randomized_trigger_rate": 0.000004157629766763622,
+          "randomized_trigger_rate": 0.0000042,
           "trigger_debug_keys": ["555", "444"]
         }
       }
@@ -136,13 +136,13 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "1800599000",
+          "scheduled_report_time": "1800595400",
           "source_event_id": "2",
           "trigger_data": "0",
           "source_type": "navigation",
           "source_debug_key": "333",
           "trigger_summary_bucket": [10, 4294967295],
-          "randomized_trigger_rate": 0.000004157629766763622,
+          "randomized_trigger_rate": 0.0000042,
           "trigger_debug_keys": ["555", "444"]
         }
       }

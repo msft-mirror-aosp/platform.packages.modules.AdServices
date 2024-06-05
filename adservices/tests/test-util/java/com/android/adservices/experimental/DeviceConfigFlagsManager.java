@@ -22,9 +22,9 @@ import android.provider.DeviceConfig.Properties;
 import android.util.ArrayMap;
 import android.util.Log;
 
-import com.android.adservices.common.Nullable;
 import com.android.adservices.experimental.AbstractFlagsRouletteRunner.FlagState;
 import com.android.adservices.experimental.AbstractFlagsRouletteRunner.FlagsManager;
+import com.android.adservices.shared.testing.Nullable;
 
 import java.util.Collection;
 import java.util.Map;

@@ -17,6 +17,7 @@
 package com.android.adservices.service.ui.enrollment.impl;
 
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 
 import android.content.Context;
@@ -24,6 +25,8 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
@@ -41,6 +44,11 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
             UxStatesManager uxStatesManager) {
         switch (uxCollection) {
             case GA_UX:
+                if (uxStatesManager.getFlag(KEY_PAS_UX_ENABLED)) {
+                    // PreNotificationManualUsers should be in PasReconsentNotificationChannel.
+                    return consentManager.wasPasNotificationDisplayed()
+                            || isManuallyOptedOutOfPaAndMsmt(consentManager);
+                }
                 return consentManager.wasGaUxNotificationDisplayed()
                         || isPreNotificationManualUser(consentManager, uxStatesManager);
             case BETA_UX:
@@ -54,6 +62,18 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
         }
     }
 
+    private static boolean isManuallyOptedOutOfPaAndMsmt(ConsentManager consentManager) {
+        return consentManager.wasGaUxNotificationDisplayed()
+                && consentManager.getUserManualInteractionWithConsent()
+                        == MANUAL_INTERACTIONS_RECORDED
+                && consentManager
+                        .getConsent(AdServicesApiType.FLEDGE)
+                        .equals(AdServicesApiConsent.REVOKED)
+                && consentManager
+                        .getConsent(AdServicesApiType.MEASUREMENTS)
+                        .equals(AdServicesApiConsent.REVOKED);
+    }
+
     private static boolean isPreNotificationManualUser(
             ConsentManager consentManager, UxStatesManager uxStatesManager) {
         return uxStatesManager.getFlag(KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE)
@@ -64,8 +84,7 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
     /** No-Op if the user has already enrolled. */
     public void enroll(Context context, ConsentManager consentManager) {
         if (!consentManager.wasGaUxNotificationDisplayed()
-                && isPreNotificationManualUser(
-                        consentManager, UxStatesManager.getInstance(context))) {
+                && isPreNotificationManualUser(consentManager, UxStatesManager.getInstance())) {
             UiStatsLogger.logRequestedNotificationIneligible();
             consentManager.recordGaUxNotificationDisplayed(true);
         }

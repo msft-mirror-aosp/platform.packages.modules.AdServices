@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
+import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
@@ -29,6 +30,7 @@ import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
+import android.app.sdksandbox.testutils.FakeSdkSandboxActivityRegistryInjector;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
@@ -40,13 +42,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Process;
-import android.provider.DeviceConfig;
 import android.view.SurfaceControlViewHost;
 
 import androidx.annotation.RequiresApi;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.compatibility.common.util.DeviceConfigStateManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -111,8 +111,7 @@ public class SdkSandboxTest {
             new SharedPreferencesUpdate(KEYS_TO_SYNC, getBundleFromMap(TEST_DATA));
     private static final SandboxLatencyInfo SANDBOX_LATENCY_INFO = new SandboxLatencyInfo();
 
-    private static boolean sCustomizedSdkContextEnabled = SdkLevel.isAtLeastU();
-    private static SdkSandboxActivityRegistry sSdkSandboxActivityRegistry;
+    private SdkSandboxActivityRegistry mRegistry;
 
     private Context mContext;
     private InjectorForTest mInjector;
@@ -123,10 +122,12 @@ public class SdkSandboxTest {
     static class InjectorForTest extends SdkSandboxServiceImpl.Injector {
 
         private Context mContext;
+        private SdkSandboxActivityRegistry mRegistry;
 
-        InjectorForTest(Context context) {
+        InjectorForTest(Context context, SdkSandboxActivityRegistry registry) {
             super(context);
             mContext = context;
+            mRegistry = registry;
         }
 
         @Override
@@ -142,7 +143,7 @@ public class SdkSandboxTest {
         @Override
         @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
         SdkSandboxActivityRegistry getSdkSandboxActivityRegistry() {
-            return sSdkSandboxActivityRegistry;
+            return mRegistry;
         }
     }
 
@@ -153,14 +154,6 @@ public class SdkSandboxTest {
     public static void setupClass() {
         // Required to create a SurfaceControlViewHost
         Looper.prepare();
-
-        DeviceConfigStateManager stateManager =
-                new DeviceConfigStateManager(
-                        InstrumentationRegistry.getInstrumentation().getContext(),
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        "sdksandbox_customized_sdk_context_enabled");
-        sCustomizedSdkContextEnabled &= Boolean.parseBoolean(stateManager.get());
-        sSdkSandboxActivityRegistry = Mockito.spy(SdkSandboxActivityRegistry.getInstance());
     }
 
     @Before
@@ -168,7 +161,7 @@ public class SdkSandboxTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .strictness(Strictness.LENIENT)
-                        .mockStatic(Process.class)
+                        .spyStatic(Process.class)
                         .startMocking();
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
 
@@ -176,7 +169,8 @@ public class SdkSandboxTest {
         mContext = Mockito.spy(context);
         mApplicationInfo = mContext.getPackageManager().getApplicationInfo(SDK_PACKAGE, 0);
         mLoader = getClassLoader(mApplicationInfo);
-        if (sCustomizedSdkContextEnabled) {
+        // Starting from Android U, we customize the base context of SandboxedSdkContext directly.
+        if (SdkLevel.isAtLeastU()) {
             Mockito.doReturn(mContext)
                     .when(mContext)
                     .createContextForSdkInSandbox(Mockito.any(), Mockito.anyInt());
@@ -186,14 +180,23 @@ public class SdkSandboxTest {
         mSpyPackageManager = Mockito.spy(mContext.getPackageManager());
         Mockito.doReturn(mSpyPackageManager).when(mContext).getPackageManager();
 
-        mInjector = Mockito.spy(new InjectorForTest(mContext));
+        SdkSandboxLocalSingleton sdkSandboxLocalSingleton =
+                Mockito.mock(SdkSandboxLocalSingleton.class);
+        ISdkToServiceCallback serviceCallback = Mockito.mock(ISdkToServiceCallback.class);
+        Mockito.when(sdkSandboxLocalSingleton.getSdkToServiceCallback())
+                .thenReturn(serviceCallback);
+        FakeSdkSandboxActivityRegistryInjector activityRegistryInjector =
+                new FakeSdkSandboxActivityRegistryInjector(sdkSandboxLocalSingleton);
+        mRegistry = Mockito.spy(SdkSandboxActivityRegistry.getInstance(activityRegistryInjector));
+
+        mInjector = Mockito.spy(new InjectorForTest(mContext, mRegistry));
         mService = new SdkSandboxServiceImpl(mInjector);
     }
 
     @After
     public void teardown() throws Exception {
-        mService.getClientSharedPreferences().edit().clear().commit();
-        mStaticMockSession.finishMocking();
+        if (mService != null) mService.getClientSharedPreferences().edit().clear().commit();
+        if (mStaticMockSession != null) mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -201,7 +204,7 @@ public class SdkSandboxTest {
         assertThrows(
                 IllegalStateException.class, () -> SdkSandboxLocalSingleton.getExistingInstance());
 
-        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
+        mService.initialize(new StubSdkToServiceLink());
 
         assertThat(SdkSandboxLocalSingleton.getExistingInstance()).isNotNull();
     }
@@ -211,7 +214,7 @@ public class SdkSandboxTest {
         // First write some data
         mService.syncDataFromClient(TEST_UPDATE);
 
-        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
+        mService.initialize(new StubSdkToServiceLink());
 
         assertThat(mService.getClientSharedPreferences().getAll()).isEmpty();
     }
@@ -219,7 +222,7 @@ public class SdkSandboxTest {
     @Test
     public void testLoadingSuccess() throws Exception {
         LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
-        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
+        mService.initialize(new StubSdkToServiceLink());
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
@@ -290,7 +293,7 @@ public class SdkSandboxTest {
     @Test
     public void testDuplicateLoadingFails() throws Exception {
         LoadSdkCallback loadSdkCallback1 = new LoadSdkCallback();
-        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
+        mService.initialize(new StubSdkToServiceLink());
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
@@ -322,7 +325,7 @@ public class SdkSandboxTest {
     @Test
     public void testRequestSurfacePackage() throws Exception {
         LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
-        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
+        mService.initialize(new StubSdkToServiceLink());
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
@@ -354,7 +357,7 @@ public class SdkSandboxTest {
     @Test
     public void testSurfacePackageError() throws Exception {
         LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
-        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
+        mService.initialize(new StubSdkToServiceLink());
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
@@ -396,7 +399,7 @@ public class SdkSandboxTest {
     @Test
     public void testDump_WithSdk() throws Exception {
         LoadSdkCallback callback = new LoadSdkCallback();
-        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
+        mService.initialize(new StubSdkToServiceLink());
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
@@ -503,7 +506,7 @@ public class SdkSandboxTest {
                         TIME_SANDBOX_CALLED_SYSTEM_SERVER);
 
         final LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
-        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
+        mService.initialize(new StubSdkToServiceLink());
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
@@ -551,7 +554,7 @@ public class SdkSandboxTest {
                         TIME_SANDBOX_CALLED_SYSTEM_SERVER);
 
         LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
-        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
+        mService.initialize(new StubSdkToServiceLink());
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
@@ -583,8 +586,7 @@ public class SdkSandboxTest {
         assertThat(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
                 .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
         if (SdkLevel.isAtLeastU()) {
-            Mockito.verify(sSdkSandboxActivityRegistry)
-                    .unregisterAllActivityHandlersForSdk(SDK_NAME);
+            Mockito.verify(mRegistry).unregisterAllActivityHandlersForSdk(SDK_NAME);
         }
     }
 
@@ -603,7 +605,7 @@ public class SdkSandboxTest {
                         TIME_SANDBOX_CALLED_SYSTEM_SERVER);
 
         final LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
-        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
+        mService.initialize(new StubSdkToServiceLink());
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
@@ -630,11 +632,6 @@ public class SdkSandboxTest {
                         callback);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(callback.mSurfacePackage).isNotNull();
-        assertThat(callback.mSandboxLatencyInfo.getSystemServerToSandboxLatency())
-                .isEqualTo(
-                        (int)
-                                (TIME_SANDBOX_RECEIVED_CALL_FROM_SYSTEM_SERVER
-                                        - TIME_SYSTEM_SERVER_CALL_FINISHED));
         assertThat(callback.mSandboxLatencyInfo.getSdkLatency())
                 .isEqualTo((int) (TIME_SDK_CALL_COMPLETED - TIME_SANDBOX_CALLED_SDK));
         assertThat(callback.mSandboxLatencyInfo.getSandboxLatency())
@@ -665,8 +662,7 @@ public class SdkSandboxTest {
                         mApplicationInfo,
                         SDK_NAME,
                         null,
-                        null,
-                        false),
+                        null),
                 new SdkSandboxServiceImpl.Injector(mContext),
                 SANDBOX_LATENCY_INFO,
                 sdkHolderCallback);
@@ -679,7 +675,7 @@ public class SdkSandboxTest {
         LoadSdkCallback mCallback = new LoadSdkCallback();
         Bundle params = new Bundle();
         params.putString(THROW_EXCEPTION_KEY, "random-value");
-        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
+        mService.initialize(new StubSdkToServiceLink());
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,

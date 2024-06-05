@@ -186,8 +186,9 @@ public abstract class AbstractDbIntegrationTest {
                 && Objects.equals(
                         aggregateReport.getAttributionDestination(),
                         aggregateReport1.getAttributionDestination())
-                && aggregateReport.getSourceRegistrationTime()
-                        == aggregateReport1.getSourceRegistrationTime()
+                && Objects.equals(
+                        aggregateReport.getSourceRegistrationTime(),
+                        aggregateReport1.getSourceRegistrationTime())
                 && Math.abs(
                                 aggregateReport.getScheduledReportTime()
                                         - aggregateReport1.getScheduledReportTime())
@@ -478,6 +479,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
                 trigger.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG,
+                trigger.getAggregatableSourceRegistrationTimeConfig().name());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");

@@ -20,23 +20,27 @@ import android.annotation.Nullable;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.util.Log;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.shell.ShellCommandServiceImpl;
+import com.android.internal.annotations.VisibleForTesting;
 
+import java.io.FileDescriptor;
+import java.io.PrintWriter;
 import java.util.Objects;
 
 /** Implements a service which runs the shell command in the adservices process. */
 public final class AdServicesShellCommandService extends Service {
+    @VisibleForTesting static final String TAG = "AdServicesShellCommand";
 
     /** The binder service. This field must only be accessed on the main thread. */
-    private ShellCommandServiceImpl mShellCommandService;
+    @Nullable private ShellCommandServiceImpl mShellCommandService;
 
     @Override
     public void onCreate() {
         if (!FlagsFactory.getFlags().getAdServicesShellCommandEnabled()) {
-            LogUtil.e("Shell command service is not enabled.");
+            Log.e(TAG, "Shell command service is not enabled.");
             return;
         }
 
@@ -47,11 +51,15 @@ public final class AdServicesShellCommandService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         if (!FlagsFactory.getFlags().getAdServicesShellCommandEnabled()) {
-            LogUtil.e("Shell command service is not enabled.");
+            Log.e(TAG, "Shell command service is not enabled.");
             return null;
         }
         return Objects.requireNonNull(mShellCommandService);
     }
 
-    // TODO(b/308009734): Implement dump method.
+    @Override
+    public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
+        // TODO(b/308009734): Add service and flag info to the dump.
+        super.dump(fd, pw, args);
+    }
 }

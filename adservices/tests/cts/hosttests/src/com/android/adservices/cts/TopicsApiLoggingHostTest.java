@@ -16,6 +16,9 @@
 
 package com.android.adservices.cts;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertNotNull;
@@ -29,7 +32,7 @@ import android.platform.test.annotations.FlakyTest;
 import com.android.adservices.common.AdServicesHostSideDeviceSupportedRule;
 import com.android.adservices.common.AdServicesHostSideFlagsSetterRule;
 import com.android.adservices.common.AdServicesHostSideTestCase;
-import com.android.adservices.common.HostSideSdkLevelSupportRule;
+import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
 import com.android.os.AtomsProto.AdServicesApiCalled;
 import com.android.os.AtomsProto.Atom;
@@ -61,9 +64,17 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
     private static final String SDK_NAME = "AdservicesCtsSdk";
     private static final String TARGET_PACKAGE_SUFFIX_TPLUS = "android.adservices.api";
     private static final String TARGET_PACKAGE_SUFFIX_SMINUS = "android.ext.services";
+    private static final int PPAPI_ONLY_SOURCE_OF_TRUTH = 1;
+    private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
+    private static final String TARGET_PACKAGE = "com.google.android.adservices.api";
+    private static final String TARGET_PACKAGE_AOSP = "com.android.adservices.api";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE =
+            "com.google.android.ext.adservices.api";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP =
+            "com.android.ext.adservices.api";
+    private static final String LOW_RAM_DEVICE_CONFIG = "ro.config.low_ram";
 
-    // Topics are not going to be implemented on Android R, so this test shouldn't run on R.
-    // If that decision changes, this will need to be enabled. TODO(b/269798827).
+    // Topics are not going to be implemented on Android R.
     @Rule(order = 0)
     public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAtLeastS();
 
@@ -77,8 +88,8 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
                     .setTopicsKillSwitch(false)
                     .setAdServicesEnabled(true)
                     .setMddBackgroundTaskKillSwitch(true)
-                    .setConsentManagerDebugMode(true)
-                    .setDisableTopicsEnrollmentCheckForTests(true);
+                    .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true);
 
     @Rule(order = 3)
     public TestMetrics mMetrics = new TestMetrics();
@@ -170,5 +181,12 @@ public class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
                 .filter(s -> s.endsWith(suffix))
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * The test is unsupported if the device is configured as a low-RAM device.
+     */
+    private boolean isDeviceSupported() throws DeviceNotAvailableException {
+        return !"true".equals(getDevice().getProperty(LOW_RAM_DEVICE_CONFIG));
     }
 }

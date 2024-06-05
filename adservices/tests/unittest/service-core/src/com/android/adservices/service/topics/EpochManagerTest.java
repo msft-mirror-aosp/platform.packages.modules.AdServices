@@ -42,16 +42,24 @@ import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.TopicsEncryptionEpochComputationReportedStats;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.util.Clock;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -82,11 +90,20 @@ public final class EpochManagerTest {
     // TODO: (b/232807776) Replace below hardcoded taxonomy version and model version
     private static final long TAXONOMY_VERSION = 1L;
     private static final long MODEL_VERSION = 1L;
+    private static final long TEST_TOPICS_ENCRYPTION_START_TIMESTAMP = 100L;
+    private static final long TEST_TOPICS_ENCRYPTION_END_TIMESTAMP = 150L;
+    private static final long TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_START_TIMESTAMP = 200L;
+    private static final long TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_END_TIMESTAMP = 210L;
+    private static final int TEST_TOPICS_ENCRYPTION_LATENCY =
+            (int) (TEST_TOPICS_ENCRYPTION_END_TIMESTAMP - TEST_TOPICS_ENCRYPTION_START_TIMESTAMP);
+    private static final int TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_LATENCY =
+            (int) (TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_END_TIMESTAMP
+                    - TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_START_TIMESTAMP);
 
     @SuppressWarnings({"unused"})
     private final Context mContext = ApplicationProvider.getApplicationContext();
 
-    private final Flags mFlags = FlagsFactory.getFlagsForTest();
+    private final Flags mFlags = FakeFlagsFactory.getFlagsForTest();
 
     private DbHelper mDbHelper;
     private TopicsDao mTopicsDao;
@@ -98,6 +115,14 @@ public final class EpochManagerTest {
     @Mock ClassifierManager mClassifierManager;
     @Mock EncryptionManager mEncryptionManager;
     @Mock Random mRandom;
+    @Mock AdServicesLogger mAdServicesLogger;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
+    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(ErrorLogUtil.class).build();
 
     @Before
     public void setup() {
@@ -114,7 +139,8 @@ public final class EpochManagerTest {
                         mFlags,
                         mMockClock,
                         mClassifierManager,
-                        mEncryptionManager);
+                        mEncryptionManager,
+                        mAdServicesLogger);
 
         // Erase all existing data.
         DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
@@ -219,7 +245,8 @@ public final class EpochManagerTest {
                         mFlags,
                         mMockClock,
                         mClassifierManager,
-                        mEncryptionManager);
+                        mEncryptionManager,
+                        mAdServicesLogger);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -261,7 +288,8 @@ public final class EpochManagerTest {
                         mFlags,
                         mMockClock,
                         mClassifierManager,
-                        mEncryptionManager);
+                        mEncryptionManager,
+                        mAdServicesLogger);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -292,7 +320,8 @@ public final class EpochManagerTest {
                         mFlags,
                         mMockClock,
                         mClassifierManager,
-                        mEncryptionManager);
+                        mEncryptionManager,
+                        mAdServicesLogger);
 
         // Note: we iterate over the appSdksUsageMap. For the test to be deterministic, we use
         // LinkedHashMap so that the order of iteration is defined.
@@ -425,7 +454,8 @@ public final class EpochManagerTest {
                         mMockFlag,
                         mMockClock,
                         mClassifierManager,
-                        mEncryptionManager);
+                        mEncryptionManager,
+                        mAdServicesLogger);
 
         // For table except CallerCanLearnTopicsContract, epoch to delete from is 7-3-1 = epoch 3
         final long epochToDeleteFrom = currentEpoch - epochLookBackNumberForGarbageCollection - 1;
@@ -512,7 +542,8 @@ public final class EpochManagerTest {
                         mMockFlag,
                         mMockClock,
                         mClassifierManager,
-                        mEncryptionManager);
+                        mEncryptionManager,
+                        mAdServicesLogger);
 
         final String app = "app";
         final String sdk = "sdk";
@@ -589,7 +620,8 @@ public final class EpochManagerTest {
                                 mFlags,
                                 mMockClock,
                                 mClassifierManager,
-                                mEncryptionManager));
+                                mEncryptionManager,
+                                mAdServicesLogger));
         // Mock EpochManager for getCurrentEpochId()
         final long epochId = 1L;
         doReturn(epochId).when(epochManager).getCurrentEpochId();
@@ -749,7 +781,16 @@ public final class EpochManagerTest {
     }
 
     @Test
-    public void testProcessEpoch_enableEncryptedTopics() {
+    public void testProcessEpoch_enableEncryptedTopics_encryptionSucceed() {
+        // Initializes the argumentCaptor to collect topics encryption metrics.
+        ArgumentCaptor<TopicsEncryptionEpochComputationReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(TopicsEncryptionEpochComputationReportedStats.class);
+        // Sets up the timestamps for topics encryption metrics logging.
+        when(mMockClock.currentTimeMillis()).thenReturn(
+                TEST_TOPICS_ENCRYPTION_START_TIMESTAMP,
+                TEST_TOPICS_ENCRYPTION_END_TIMESTAMP,
+                TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_START_TIMESTAMP,
+                TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_END_TIMESTAMP);
         // Simplify the setup of epoch computation, to only test the effect of feature flag
         // Mock the flag to make test result deterministic
         EpochManager epochManager =
@@ -762,9 +803,9 @@ public final class EpochManagerTest {
                                 mMockFlag,
                                 mMockClock,
                                 mClassifierManager,
-                                mEncryptionManager));
+                                mEncryptionManager,
+                                mAdServicesLogger));
 
-        final String app = "app";
         final String sdk = "sdk";
         final long epochId = 1L;
         final int numberOfLookBackEpochs = 1;
@@ -775,8 +816,12 @@ public final class EpochManagerTest {
         Topic topic4 = Topic.create(/* topic */ 4, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic5 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic6 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
-        Map<String, List<Topic>> appClassificationTopicsMap =
-                Map.of(app, List.of(topic1, topic2, topic3, topic4, topic5, topic6));
+        Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
+        appClassificationTopicsMap.put("app1", createTopics(Arrays.asList(1, 2, 3, 4, 5, 6)));
+        appClassificationTopicsMap.put("app2", createTopics(Arrays.asList(1, 2, 3, 4, 5, 6)));
+        appClassificationTopicsMap.put("app3", createTopics(Arrays.asList(1, 2, 3, 4, 5, 6)));
+        appClassificationTopicsMap.put("app4", createTopics(Arrays.asList(1, 2, 3, 4, 5, 6)));
+
         List<Topic> topTopics = List.of(topic1, topic2, topic3, topic4, topic5, topic6);
 
         when(mMockFlag.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
@@ -786,7 +831,10 @@ public final class EpochManagerTest {
                 .thenReturn(mFlags.getTopicsNumberOfRandomTopics());
         doReturn(epochId).when(epochManager).getCurrentEpochId();
 
-        mTopicsDao.recordUsageHistory(epochId, app, sdk);
+        mTopicsDao.recordUsageHistory(epochId, "app1", sdk);
+        mTopicsDao.recordUsageHistory(epochId, "app2", sdk);
+        mTopicsDao.recordUsageHistory(epochId, "app3", sdk);
+        mTopicsDao.recordUsageHistory(epochId, "app4", sdk);
         when(mMockClassifier.classify(any())).thenReturn(appClassificationTopicsMap);
         when(mMockClassifier.getTopTopics(
                         appClassificationTopicsMap,
@@ -800,9 +848,10 @@ public final class EpochManagerTest {
         when(mEncryptionManager.encryptTopic(any(), any()))
                 .thenReturn(Optional.of(expectedEncryptedTopic));
 
-        // Mock encryption db and feature flag.
+        // Mock encryption db, feature and metrics flag.
         when(mMockFlag.getTopicsEncryptionEnabled()).thenReturn(true);
         when(mMockFlag.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+        when(mMockFlag.getTopicsEncryptionMetricsEnabled()).thenReturn(true);
 
         epochManager.processEpoch();
 
@@ -816,7 +865,121 @@ public final class EpochManagerTest {
                         mTopicsDao
                                 .retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs)
                                 .get(epochId))
-                .containsEntry(Pair.create(app, sdk), expectedEncryptedTopic);
+                .containsEntry(Pair.create("app1", sdk), expectedEncryptedTopic);
+        assertThat(
+                mTopicsDao
+                        .retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs)
+                        .get(epochId))
+                .containsEntry(Pair.create("app2", sdk), expectedEncryptedTopic);
+
+        // Verifies the topics encryption metrics are logged correctly.
+        verify(mAdServicesLogger)
+                .logTopicsEncryptionEpochComputationReportedStats(argumentCaptor.capture());
+        TopicsEncryptionEpochComputationReportedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getCountOfTopicsBeforeEncryption()).isEqualTo(4);
+        assertThat(stats.getCountOfEmptyEncryptedTopics()).isEqualTo(0);
+        assertThat(stats.getCountOfEncryptedTopics()).isEqualTo(4);
+        assertThat(stats.getLatencyOfWholeEncryptionProcessMs())
+                .isEqualTo(TEST_TOPICS_ENCRYPTION_LATENCY);
+        assertThat(stats.getLatencyOfEncryptionPerTopicMs())
+                .isEqualTo(TEST_TOPICS_ENCRYPTION_LATENCY/4);
+        assertThat(stats.getLatencyOfPersistingEncryptedTopicsToDbMs())
+                .isEqualTo(TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_LATENCY);
+    }
+
+    @Test
+    public void testProcessEpoch_enableEncryptedTopics_encryptionFailed() {
+        // Do nothing for ErrorLogUtil calls.
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
+        // Initializes the argumentCaptor to collect topics encryption metrics.
+        ArgumentCaptor<TopicsEncryptionEpochComputationReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(TopicsEncryptionEpochComputationReportedStats.class);
+        // Sets up the timestamps for topics encryption metrics logging.
+        when(mMockClock.currentTimeMillis()).thenReturn(
+                TEST_TOPICS_ENCRYPTION_START_TIMESTAMP,
+                TEST_TOPICS_ENCRYPTION_END_TIMESTAMP,
+                TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_START_TIMESTAMP,
+                TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_END_TIMESTAMP);
+        // Simplify the setup of epoch computation, to only test the effect of feature flag
+        // Mock the flag to make test result deterministic
+        EpochManager epochManager =
+                Mockito.spy(
+                        new EpochManager(
+                                mTopicsDao,
+                                mDbHelper,
+                                new Random(),
+                                mMockClassifier,
+                                mMockFlag,
+                                mMockClock,
+                                mClassifierManager,
+                                mEncryptionManager,
+                                mAdServicesLogger));
+
+        final String sdk = "sdk";
+        final long epochId = 1L;
+        final int numberOfLookBackEpochs = 1;
+
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic4 = Topic.create(/* topic */ 4, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic5 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic6 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
+        Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
+        appClassificationTopicsMap.put("app1", createTopics(Arrays.asList(1, 2, 3, 4, 5, 6)));
+        appClassificationTopicsMap.put("app2", createTopics(Arrays.asList(1, 2, 3, 4, 5, 6)));
+        appClassificationTopicsMap.put("app3", createTopics(Arrays.asList(1, 2, 3, 4, 5, 6)));
+
+        List<Topic> topTopics = List.of(topic1, topic2, topic3, topic4, topic5, topic6);
+
+        when(mMockFlag.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        when(mMockFlag.getTopicsNumberOfTopTopics())
+                .thenReturn(mFlags.getTopicsNumberOfTopTopics());
+        when(mMockFlag.getTopicsNumberOfRandomTopics())
+                .thenReturn(mFlags.getTopicsNumberOfRandomTopics());
+        doReturn(epochId).when(epochManager).getCurrentEpochId();
+
+        mTopicsDao.recordUsageHistory(epochId, "app1", sdk);
+        mTopicsDao.recordUsageHistory(epochId, "app2", sdk);
+        mTopicsDao.recordUsageHistory(epochId, "app3", sdk);
+        when(mMockClassifier.classify(any())).thenReturn(appClassificationTopicsMap);
+        when(mMockClassifier.getTopTopics(
+                appClassificationTopicsMap,
+                mFlags.getTopicsNumberOfTopTopics(),
+                mFlags.getTopicsNumberOfRandomTopics()))
+                .thenReturn(topTopics);
+
+        // Mock for encryption data.
+        when(mEncryptionManager.encryptTopic(any(), any()))
+                .thenReturn(Optional.empty());
+
+        // Mock encryption db, feature and metrics flag.
+        when(mMockFlag.getTopicsEncryptionEnabled()).thenReturn(true);
+        when(mMockFlag.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+        when(mMockFlag.getTopicsEncryptionMetricsEnabled()).thenReturn(true);
+
+        epochManager.processEpoch();
+
+        // ReturnedEncryptedTopics table should be empty when encryption failed.
+        assertThat(
+                mTopicsDao
+                        .retrieveReturnedEncryptedTopics(epochId, numberOfLookBackEpochs)
+                        .get(epochId))
+                .isNull();
+
+        // Verifies the topics encryption metrics are logged correctly.
+        verify(mAdServicesLogger)
+                .logTopicsEncryptionEpochComputationReportedStats(argumentCaptor.capture());
+        TopicsEncryptionEpochComputationReportedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getCountOfTopicsBeforeEncryption()).isEqualTo(3);
+        assertThat(stats.getCountOfEmptyEncryptedTopics()).isEqualTo(3);
+        assertThat(stats.getCountOfEncryptedTopics()).isEqualTo(0);
+        assertThat(stats.getLatencyOfWholeEncryptionProcessMs())
+                .isEqualTo(TEST_TOPICS_ENCRYPTION_LATENCY);
+        assertThat(stats.getLatencyOfEncryptionPerTopicMs())
+                .isEqualTo(TEST_TOPICS_ENCRYPTION_LATENCY/3);
+        assertThat(stats.getLatencyOfPersistingEncryptedTopicsToDbMs())
+                .isEqualTo(TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_LATENCY);
     }
 
     @Test
@@ -857,7 +1020,8 @@ public final class EpochManagerTest {
                                 mFlags,
                                 mMockClock,
                                 mClassifierManager,
-                                mEncryptionManager));
+                                mEncryptionManager,
+                                mAdServicesLogger));
 
         // To mimic the scenario that there was no usage in last epoch.
         // i.e. current epoch id is 2, with some usages, while epoch id = 1 has no usage.
@@ -1059,7 +1223,8 @@ public final class EpochManagerTest {
                         flags,
                         mMockClock,
                         mClassifierManager,
-                        mEncryptionManager);
+                        mEncryptionManager,
+                        mAdServicesLogger);
 
         // Mock clock so that:
         // 1st call: There is no origin and will set 0 as origin.
@@ -1173,7 +1338,7 @@ public final class EpochManagerTest {
         List<Topic> topTopics = List.of(topic1, topic2, topic3, topic4, topic5, topic6);
 
         when(mMockFlag.getTopicsNumberOfTopTopics())
-                .thenReturn(FlagsFactory.getFlagsForTest().getTopicsNumberOfTopTopics());
+                .thenReturn(FakeFlagsFactory.getFlagsForTest().getTopicsNumberOfTopTopics());
 
         // topic1, topic2, topic3 will be computed as they are normal top topics.
         // topic4 and topic5 will be annotated as padded topics.
@@ -1213,7 +1378,8 @@ public final class EpochManagerTest {
                         mMockFlag,
                         mMockClock,
                         mClassifierManager,
-                        mEncryptionManager);
+                        mEncryptionManager,
+                        mAdServicesLogger);
 
         // The first random double is 0.1, it's smaller than 0.595,
         // loggedTopic should be a random topic 50.
@@ -1294,6 +1460,7 @@ public final class EpochManagerTest {
                 mMockFlag,
                 mMockClock,
                 mClassifierManager,
-                mEncryptionManager);
+                mEncryptionManager,
+                mAdServicesLogger);
     }
 }

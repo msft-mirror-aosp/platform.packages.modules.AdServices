@@ -53,10 +53,6 @@ public abstract class ConsentMigrationStats {
      * @return opt in/out value of fledge app
      */
     public abstract boolean getFledgeConsent();
-    /**
-     * @return opt in/out value in beta for all apps
-     */
-    public abstract boolean getDefaultConsent();
     /***
      *
      * @return region of OTA
@@ -134,8 +130,6 @@ public abstract class ConsentMigrationStats {
         public abstract Builder setTopicsConsent(boolean value);
         /** Set opt in/out value of fledge app */
         public abstract Builder setFledgeConsent(boolean value);
-        /** Set opt in/out value in beta for all apps */
-        public abstract Builder setDefaultConsent(boolean value);
         /** Set region of OTA */
         public abstract Builder setRegion(int value);
         /** build for {@link ConsentMigrationStats}. */

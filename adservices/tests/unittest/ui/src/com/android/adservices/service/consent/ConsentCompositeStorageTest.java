@@ -97,8 +97,6 @@ public class ConsentCompositeStorageTest {
         consentCompositeStorage.clearConsentForUninstalledApp(MOCK_PACKAGE_NAME, MOCK_PACKAGE_UID);
         consentCompositeStorage.clearKnownAppsWithConsent();
 
-        consentCompositeStorage.recordDefaultAdIdState(true);
-        consentCompositeStorage.recordDefaultConsent(AdServicesApiType.TOPICS, false);
         consentCompositeStorage.recordGaUxNotificationDisplayed(true);
         consentCompositeStorage.recordNotificationDisplayed(false);
         consentCompositeStorage.recordUserManualInteractionWithConsent(1);
@@ -139,9 +137,6 @@ public class ConsentCompositeStorageTest {
                 .clearConsentForUninstalledApp(eq(MOCK_PACKAGE_NAME), eq(MOCK_PACKAGE_UID));
         Mockito.verify(consentStorage).clearKnownAppsWithConsent();
 
-        Mockito.verify(consentStorage).recordDefaultAdIdState(eq(true));
-        Mockito.verify(consentStorage)
-                .recordDefaultConsent(eq(AdServicesApiType.TOPICS), eq(false));
         Mockito.verify(consentStorage).recordGaUxNotificationDisplayed(eq(true));
         Mockito.verify(consentStorage).recordNotificationDisplayed(eq(false));
         Mockito.verify(consentStorage).recordUserManualInteractionWithConsent(eq(1));

@@ -193,6 +193,57 @@ public final class AdServicesManager {
     }
 
     /**
+     * Returns information whether Consent PAS Notification was displayed or not.
+     *
+     * @return true if PAS Notification was displayed, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasPasNotificationDisplayed() {
+        try {
+            return mService.wasPasNotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Saves information to the storage that PAS notification was displayed for the first time to
+     * the user.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordPasNotificationDisplayed(boolean wasNotificationDisplayed) {
+        try {
+            mService.recordPasNotificationDisplayed(wasNotificationDisplayed);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns information whether Consent PAS Notification was opened or not.
+     *
+     * @return true if PAS Notification was opened, otherwise false.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasPasNotificationOpened() {
+        try {
+            return mService.wasPasNotificationOpened();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves information to the storage that PAS notification was opened. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordPasNotificationOpened(boolean wasNotificationOpened) {
+        try {
+            mService.recordPasNotificationOpened(wasNotificationOpened);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
      * Record a blocked topic.
      *
      * @param blockedTopicParcels the blocked topic to record
@@ -631,6 +682,46 @@ public final class AdServicesManager {
     public void setEnrollmentChannel(String enrollmentChannel) {
         try {
             mService.setEnrollmentChannel(enrollmentChannel);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns whether the isMeasurementDataReset bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isMeasurementDataReset() {
+        try {
+            return mService.isMeasurementDataReset();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isMeasurementDataReset bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        try {
+            mService.setMeasurementDataReset(isMeasurementDataReset);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns whether the isPaDataReset bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isPaDataReset() {
+        try {
+            return mService.isPaDataReset();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isPaDataReset bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setPaDataReset(boolean isPaDataReset) {
+        try {
+            mService.setPaDataReset(isPaDataReset);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

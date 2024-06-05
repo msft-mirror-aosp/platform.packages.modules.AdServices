@@ -16,18 +16,24 @@
 
 package android.adservices.debuggablects;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 
+import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
+import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
@@ -35,6 +41,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+@SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
 public class AdSelectionMediationTest extends FledgeScenarioTest {
 
     /** Test sellers can orchestrate waterfall mediation. Remarketing CUJ 069. */
@@ -88,6 +95,63 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
             doReportImpression(adSelectionId, config);
         } finally {
             leaveCustomAudience(SHIRTS_CA);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+    /**
+     * CUJ 198: Impressions are reported to winner buyer/seller after waterfall mediation while
+     * using unified tables.
+     */
+    @Test
+    public void testSelectAdsWithUnifiedTable_withImpressionReporting_eventsAreReceived()
+            throws Exception {
+        overrideShouldUseUnifiedTable(true);
+        try {
+            testSelectAds_withImpressionReporting_eventsAreReceived();
+        } finally {
+            overrideShouldUseUnifiedTable(false);
+        }
+    }
+
+    /** Test buyers must be enrolled in order to participate in waterfall mediation. For CUJ 080. */
+    @Test
+    public void testAdSelectionFromOutcome_buyerMustEnrolledToParticipate() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-mediation.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+
+        try {
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            joinCustomAudience(SHIRTS_CA);
+            AdSelectionOutcome adSelectionOutcome1 = doSelectAds(makeAdSelectionConfig());
+            long adSelectionId = adSelectionOutcome1.getAdSelectionId();
+
+            final AdSelectionFromOutcomesConfig fromOutcomesConfigEnrollmentFail =
+                    makeAdSelectionFromOutcomesConfig()
+                            .setSeller(AdTechIdentifier.fromString("fakeadtech.com"))
+                            .setAdSelectionIds(List.of(adSelectionId))
+                            .build();
+
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+            Exception e =
+                    Assert.assertThrows(
+                            ExecutionException.class,
+                            () -> doSelectAds(fromOutcomesConfigEnrollmentFail));
+            assertThat(e.getCause() instanceof SecurityException).isTrue();
+
+            AdSelectionFromOutcomesConfig fromOutcomesConfig =
+                    makeAdSelectionFromOutcomesConfig()
+                            .setAdSelectionIds(List.of(adSelectionId))
+                            .build();
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            AdSelectionOutcome result = doSelectAds(fromOutcomesConfig);
+            assertThat(result.hasOutcome()).isTrue();
+        } finally {
+            leaveCustomAudience(SHIRTS_CA);
+            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
         }
 
         assertThat(dispatcher.getCalledPaths())

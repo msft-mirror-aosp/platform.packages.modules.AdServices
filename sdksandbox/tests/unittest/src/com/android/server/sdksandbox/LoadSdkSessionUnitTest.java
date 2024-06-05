@@ -29,11 +29,13 @@ import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
+
 
 import org.junit.Before;
 import org.junit.Test;
@@ -67,35 +69,55 @@ public class LoadSdkSessionUnitTest {
     }
 
     @Test
-    public void testLoadSdkSessionIsInitiallyPendingLoad() {
+    public void testLoadSdkSessionIsInitiallyPendingLoad() throws Exception {
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, null, mInjector, "random", mTestCallingInfo, null, null);
+                        mContext,
+                        /*service=*/ null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        /*loadParams=*/ null,
+                        /*loadCallback=*/ null);
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_PENDING);
         assertThat(sdkSession.getSandboxedSdk()).isNull();
     }
 
     @Test
-    public void testGetSdkProviderInfo_SdkDoesNotExist() {
-        LoadSdkSession sdkSession =
-                new LoadSdkSession(
-                        mContext, null, mInjector, "random", mTestCallingInfo, null, null);
-        assertThat(sdkSession.mSdkProviderInfo).isNull();
-        assertThat(sdkSession.getSdkProviderErrorIfExists()).contains("not found for loading");
+    public void testGetSdkProviderInfo_SdkDoesNotExist() throws Exception {
+        PackageManager.NameNotFoundException exception =
+                assertThrows(
+                        PackageManager.NameNotFoundException.class,
+                        () ->
+                                new LoadSdkSession(
+                                        mContext,
+                                        /*service=*/ null,
+                                        mInjector,
+                                        "random",
+                                        mTestCallingInfo,
+                                        /*loadParams=*/ null,
+                                        /*loadCallback=*/ null));
+
+        assertThat(exception.getMessage()).isEqualTo("random");
     }
 
     @Test
-    public void testGetSdkProviderInfo_SdkIsValid() {
+    public void testGetSdkProviderInfo_SdkIsValid() throws Exception {
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, null, mInjector, SDK_NAME, mTestCallingInfo, null, null);
+                        mContext,
+                        /*service=*/ null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        /*loadParams=*/ null,
+                        /*loadCallback=*/ null);
 
         assertThat(sdkSession.mSdkProviderInfo).isNotNull();
         assertThat(sdkSession.mSdkProviderInfo.getSdkProviderClassName())
                 .isEqualTo("test.class.name");
         assertThat(sdkSession.mSdkProviderInfo.getSdkInfo().getPackageName())
                 .isEqualTo("com.android.codeprovider_1");
-        assertThat(sdkSession.getSdkProviderErrorIfExists()).isEmpty();
     }
 
     @Test
@@ -112,7 +134,7 @@ public class LoadSdkSessionUnitTest {
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
                         mContext,
-                        null,
+                        /*service=*/ null,
                         mInjector,
                         SDK_NAME,
                         mTestCallingInfo,
@@ -135,7 +157,7 @@ public class LoadSdkSessionUnitTest {
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
                         mContext,
-                        null,
+                        /*service=*/ null,
                         mInjector,
                         SDK_NAME,
                         mTestCallingInfo,
@@ -178,13 +200,13 @@ public class LoadSdkSessionUnitTest {
     }
 
     @Test
-    public void testSandboxDiedOnLoadSdkRequest() {
+    public void testSandboxDiedOnLoadSdkRequest() throws Exception {
         // Create a new load session.
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
                         mContext,
-                        null,
+                        /*service=*/ null,
                         mInjector,
                         SDK_NAME,
                         mTestCallingInfo,
@@ -209,13 +231,13 @@ public class LoadSdkSessionUnitTest {
     }
 
     @Test
-    public void testLoadSdk_SandboxDiesBeforeCompletion() {
+    public void testLoadSdk_SandboxDiesBeforeCompletion() throws Exception {
         // Create a new load session.
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
                         mContext,
-                        null,
+                        /*service=*/ null,
                         mInjector,
                         SDK_NAME,
                         mTestCallingInfo,
@@ -239,7 +261,7 @@ public class LoadSdkSessionUnitTest {
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
                         mContext,
-                        null,
+                        /*service=*/ null,
                         mInjector,
                         SDK_NAME,
                         mTestCallingInfo,
@@ -270,7 +292,7 @@ public class LoadSdkSessionUnitTest {
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
                         mContext,
-                        null,
+                        /*service=*/ null,
                         mInjector,
                         SDK_NAME,
                         mTestCallingInfo,
@@ -300,7 +322,7 @@ public class LoadSdkSessionUnitTest {
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
                         mContext,
-                        null,
+                        /*service=*/ null,
                         mInjector,
                         SDK_NAME,
                         mTestCallingInfo,
@@ -372,13 +394,13 @@ public class LoadSdkSessionUnitTest {
     }
 
     @Test
-    public void testRequestPackage_SdkNotLoaded() {
+    public void testRequestPackage_SdkNotLoaded() throws Exception {
         // Create a new load session, but don't load the SDK
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
                         mContext,
-                        null,
+                        /*service=*/ null,
                         mInjector,
                         SDK_NAME,
                         mTestCallingInfo,
@@ -423,13 +445,32 @@ public class LoadSdkSessionUnitTest {
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
     }
 
+    @Test
+    public void testLoadSessionFailure_propertySdkProviderClassNameMissing() throws Exception {
+        PackageManager.NameNotFoundException exception =
+                assertThrows(
+                        PackageManager.NameNotFoundException.class,
+                        () ->
+                                new LoadSdkSession(
+                                        mContext,
+                                        /*service=*/ null,
+                                        mInjector,
+                                        "com.android.property_sdkprovider_classname_not_present",
+                                        mTestCallingInfo,
+                                        /*loadParams=*/ null,
+                                        /*loadCallback=*/ null));
+
+        assertThat(exception.getMessage())
+                .isEqualTo("android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME property");
+    }
+
     private LoadSdkSession loadSdk() throws Exception {
         // Create a new load session.
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
                         mContext,
-                        null,
+                        /*service=*/ null,
                         mInjector,
                         SDK_NAME,
                         mTestCallingInfo,

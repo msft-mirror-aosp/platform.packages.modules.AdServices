@@ -16,6 +16,8 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
+import static android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule.PUBLIC_COORDINATOR;
+
 import android.Manifest;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
@@ -66,10 +68,9 @@ public class ServerAuctionOneBuyerLargeCaLatency {
 
     private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
     private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
-    private static final String SFE_ADDRESS = "https://seller1-paprod.sfe.bas-gcp.pstest.dev/v1/selectAd";
+    private static final String SFE_ADDRESS =
+            "https://seller1-paprod.sfe.ppapi.gcp.pstest.dev/v1/selectAd";
 
-    private static final String CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD =
-            "CustomAudienceOneBuyerOneCaOneAd.json";
     private static final String CUSTOM_AUDIENCE_SERVER_AUCTION_ONE_BUYER_LARGE_CA =
             "ServerPerformanceCustomAudiencesOneBuyerLargeCa.json";
 
@@ -77,6 +78,8 @@ public class ServerAuctionOneBuyerLargeCaLatency {
             "ContextualSignalsPerformance.json";
 
     private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = false;
+
+    private static final int NUM_WARMUP_ITERATIONS = 5;
 
     private static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
     private static final long NANO_TO_MILLISECONDS = 1000000;
@@ -107,7 +110,7 @@ public class ServerAuctionOneBuyerLargeCaLatency {
                                     AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
                                     /* clearOnStarting = */ true,
                                     /* clearOnFinished = */ false))
-                    .around(new SelectAdsFlagRule());
+                    .around(new SelectAdsFlagRule(PUBLIC_COORDINATOR));
 
     /** Give the required permissions to the APK */
     @BeforeClass
@@ -119,42 +122,54 @@ public class ServerAuctionOneBuyerLargeCaLatency {
 
     @Before
     public void warmup() throws Exception {
-        List<CustomAudience> customAudiences =
-                CustomAudienceTestFixture.readCustomAudiences(
-                        CUSTOM_AUDIENCE_ONE_BUYER_ONE_CA_ONE_AD);
-        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+        try {
+            for (int count = 0; count < NUM_WARMUP_ITERATIONS; count++) {
+                List<CustomAudience> customAudiences =
+                        CustomAudienceTestFixture.readCustomAudiences(
+                                CUSTOM_AUDIENCE_SERVER_AUCTION_ONE_BUYER_LARGE_CA);
+                CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
 
-        GetAdSelectionDataRequest request =
-                new GetAdSelectionDataRequest.Builder()
-                        .setSeller(AdTechIdentifier.fromString(SELLER))
-                        .build();
-        GetAdSelectionDataOutcome outcome =
-                AD_SELECTION_CLIENT
-                        .getAdSelectionData(request)
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                GetAdSelectionDataRequest request =
+                        new GetAdSelectionDataRequest.Builder()
+                                .setSeller(AdTechIdentifier.fromString(SELLER))
+                                .build();
+                GetAdSelectionDataOutcome outcome =
+                        AD_SELECTION_CLIENT
+                                .getAdSelectionData(request)
+                                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        SelectAdResponse selectAdResponse =
-                FakeAdExchangeServer.runServerAuction(
-                        CONTEXTUAL_SIGNALS_PERFORMANCE,
-                        outcome.getAdSelectionData(),
-                        SFE_ADDRESS,
-                        SERVER_RESPONSE_LOGGING_ENABLED);
+                SelectAdResponse selectAdResponse =
+                        FakeAdExchangeServer.runServerAuction(
+                                CONTEXTUAL_SIGNALS_PERFORMANCE,
+                                outcome.getAdSelectionData(),
+                                SFE_ADDRESS,
+                                SERVER_RESPONSE_LOGGING_ENABLED);
 
-        PersistAdSelectionResultRequest persistAdSelectionResultRequest =
-                new PersistAdSelectionResultRequest.Builder()
-                        .setAdSelectionId(outcome.getAdSelectionId())
-                        .setSeller(AdTechIdentifier.fromString(SELLER))
-                        .setAdSelectionResult(
-                                BaseEncoding.base64()
-                                        .decode(selectAdResponse.auctionResultCiphertext))
-                        .build();
+                PersistAdSelectionResultRequest persistAdSelectionResultRequest =
+                        new PersistAdSelectionResultRequest.Builder()
+                                .setAdSelectionId(outcome.getAdSelectionId())
+                                .setSeller(AdTechIdentifier.fromString(SELLER))
+                                .setAdSelectionResult(
+                                        BaseEncoding.base64()
+                                                .decode(selectAdResponse.auctionResultCiphertext))
+                                .build();
 
-        AdSelectionOutcome adSelectionOutcome =
-                AD_SELECTION_CLIENT
-                        .persistAdSelectionResult(persistAdSelectionResultRequest)
-                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                AdSelectionOutcome adSelectionOutcome =
+                        AD_SELECTION_CLIENT
+                                .persistAdSelectionResult(persistAdSelectionResultRequest)
+                                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+                CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
+
+                Thread.sleep(1000L);
+            }
+        } catch (Exception e) {
+            Log.w(
+                    TAG,
+                    "Exception encountered during warmup: "
+                            + e.getMessage()
+                            + ". Continuing execution.");
+        }
     }
 
     @Test

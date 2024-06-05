@@ -18,12 +18,18 @@ package com.android.adservices.service.signals.updateprocessors;
 
 import static org.junit.Assert.assertEquals;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
 public class UpdateOutputTest {
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testCreate() {

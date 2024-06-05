@@ -36,7 +36,6 @@ import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel.Bloc
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsActionDelegate {
     private final BlockedTopicsActivity mBlockedTopicsActivity;
@@ -65,7 +64,7 @@ public class BlockedTopicsActionDelegate {
                         if (event == BlockedTopicsViewModelUiEvent.RESTORE_TOPIC) {
                             UiStatsLogger.logUnblockTopicSelected();
                             mBlockedTopicsViewModel.restoreTopicConsent(topic);
-                            if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                            if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                 if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                     DialogFragmentManager.showUnblockTopicDialog(
                                             mBlockedTopicsActivity, topic);

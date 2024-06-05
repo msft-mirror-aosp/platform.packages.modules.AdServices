@@ -33,7 +33,9 @@ import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -54,25 +56,54 @@ public class AdFilteringFeatureFactoryTest {
                     .build()
                     .adSelectionEntryDao();
     private boolean mAuctionServerEnabledForUpdateHistogram =
-            new FlagsWithAdSelectionFilteringDisabled()
+            new FlagsWithFrequencyCapFilteringDisabled()
                     .getFledgeAuctionServerEnabledForUpdateHistogram();
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
-    public void testGetAdFiltererFilteringEnabled() {
+    public void testGetFrequencyCapAdFiltererFilteringEnabled() {
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
                         mAppInstallDao,
                         mFrequencyCapDao,
-                        new FlagsWithAdSelectionFilteringEnabled());
-        assertTrue(adFilteringFeatureFactory.getAdFilterer() instanceof AdFiltererImpl);
+                        new FlagsWithFrequencyCapFilteringEnabled());
+        assertTrue(
+                adFilteringFeatureFactory.getFrequencyCapAdFilterer()
+                        instanceof FrequencyCapAdFiltererImpl);
     }
 
     @Test
-    public void testGetAdFiltererFilteringDisabled() {
+    public void testGetFrequencyCapAdFiltererFilteringDisabled() {
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
-                        null, null, new FlagsWithAdSelectionFilteringDisabled());
-        assertTrue(adFilteringFeatureFactory.getAdFilterer() instanceof AdFiltererNoOpImpl);
+                        null, null, new FlagsWithFrequencyCapFilteringDisabled());
+        assertTrue(
+                adFilteringFeatureFactory.getFrequencyCapAdFilterer()
+                        instanceof FrequencyCapAdFiltererNoOpImpl);
+    }
+
+    @Test
+    public void testAppInstallAdFiltererFilteringEnabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao,
+                        mFrequencyCapDao,
+                        new FlagsWithAppInstallFilteringEnabled());
+        assertTrue(
+                adFilteringFeatureFactory.getAppInstallAdFilterer()
+                        instanceof AppInstallAdFiltererImpl);
+    }
+
+    @Test
+    public void testAppInstallAdFiltererFilteringDisabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        null, null, new FlagsWithAppInstallFilteringDisabled());
+        assertTrue(
+                adFilteringFeatureFactory.getAppInstallAdFilterer()
+                        instanceof AppInstallAdFiltererNoOpImpl);
     }
 
     @Test
@@ -81,7 +112,7 @@ public class AdFilteringFeatureFactoryTest {
                 new AdFilteringFeatureFactory(
                         mAppInstallDao,
                         mFrequencyCapDao,
-                        new FlagsWithAdSelectionFilteringEnabled());
+                        new FlagsWithFrequencyCapFilteringEnabled());
         assertTrue(
                 adFilteringFeatureFactory.getAdCounterKeyCopier()
                         instanceof AdCounterKeyCopierImpl);
@@ -91,7 +122,7 @@ public class AdFilteringFeatureFactoryTest {
     public void testGetAdCounterKeyCopierFilteringDisabled() {
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
-                        null, null, new FlagsWithAdSelectionFilteringDisabled());
+                        null, null, new FlagsWithFrequencyCapFilteringDisabled());
         assertTrue(
                 adFilteringFeatureFactory.getAdCounterKeyCopier()
                         instanceof AdCounterKeyCopierNoOpImpl);
@@ -103,7 +134,7 @@ public class AdFilteringFeatureFactoryTest {
                 new AdFilteringFeatureFactory(
                         mAppInstallDao,
                         mFrequencyCapDao,
-                        new FlagsWithAdSelectionFilteringEnabled());
+                        new FlagsWithFrequencyCapFilteringEnabled());
         assertThat(adFilteringFeatureFactory.getFrequencyCapAdDataValidator())
                 .isInstanceOf(FrequencyCapAdDataValidatorImpl.class);
     }
@@ -112,7 +143,7 @@ public class AdFilteringFeatureFactoryTest {
     public void testGetFrequencyCapAdDataValidatorFilteringDisabled() {
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
-                        null, null, new FlagsWithAdSelectionFilteringDisabled());
+                        null, null, new FlagsWithFrequencyCapFilteringDisabled());
         assertThat(adFilteringFeatureFactory.getFrequencyCapAdDataValidator())
                 .isInstanceOf(FrequencyCapAdDataValidatorNoOpImpl.class);
     }
@@ -123,7 +154,7 @@ public class AdFilteringFeatureFactoryTest {
                 new AdFilteringFeatureFactory(
                         mAppInstallDao,
                         mFrequencyCapDao,
-                        new FlagsWithAdSelectionFilteringEnabled());
+                        new FlagsWithFrequencyCapFilteringEnabled());
         assertThat(
                         adFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                 mAdSelectionEntryDao, mAuctionServerEnabledForUpdateHistogram))
@@ -134,24 +165,38 @@ public class AdFilteringFeatureFactoryTest {
     public void testGetAdCounterHistogramUpdaterFilteringDisabled() {
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
-                        null, null, new FlagsWithAdSelectionFilteringDisabled());
+                        null, null, new FlagsWithFrequencyCapFilteringDisabled());
         assertThat(
                         adFilteringFeatureFactory.getAdCounterHistogramUpdater(
                                 mAdSelectionEntryDao, mAuctionServerEnabledForUpdateHistogram))
                 .isInstanceOf(AdCounterHistogramUpdaterNoOpImpl.class);
     }
 
-    private static class FlagsWithAdSelectionFilteringDisabled implements Flags {
+    private static class FlagsWithFrequencyCapFilteringDisabled implements Flags {
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
             return false;
         }
     }
 
-    private static class FlagsWithAdSelectionFilteringEnabled implements Flags {
+    private static class FlagsWithFrequencyCapFilteringEnabled implements Flags {
         @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
             return true;
+        }
+    }
+
+    private static class FlagsWithAppInstallFilteringEnabled implements Flags {
+        @Override
+        public boolean getFledgeAppInstallFilteringEnabled() {
+            return true;
+        }
+    }
+
+    private static class FlagsWithAppInstallFilteringDisabled implements Flags {
+        @Override
+        public boolean getFledgeAppInstallFilteringEnabled() {
+            return false;
         }
     }
 }

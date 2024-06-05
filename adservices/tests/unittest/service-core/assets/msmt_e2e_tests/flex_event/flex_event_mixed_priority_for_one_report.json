@@ -127,16 +127,16 @@
   "output": {
     "event_level_results": [
       {
-        "report_time": "1800177000001",
+        "report_time": "1800173400001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "1800177000",
+          "scheduled_report_time": "1800173400",
           "source_event_id": "123",
           "trigger_data": "1",
           "source_type": "event",
           "trigger_summary_bucket": [10, 4294967295],
-          "randomized_trigger_rate": 0.0000033261065791548415
+          "randomized_trigger_rate": 0.0000033
         }
       }
     ],

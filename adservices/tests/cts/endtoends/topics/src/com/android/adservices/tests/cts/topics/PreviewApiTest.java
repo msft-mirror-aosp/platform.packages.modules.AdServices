@@ -16,14 +16,16 @@
 
 package com.android.adservices.tests.cts.topics;
 
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
+import android.adservices.topics.EncryptedTopic;
 import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
-
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
@@ -46,6 +48,8 @@ public final class PreviewApiTest extends CtsTopicsEndToEndTestCase {
 
     // Use 0 percent for random topic in the test so that we can verify the returned topic.
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
+    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+    private static final String EMPTY_STRING = "";
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
@@ -61,13 +65,13 @@ public final class PreviewApiTest extends CtsTopicsEndToEndTestCase {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        flags.setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS);
+        flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
-        flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        flags.setFlag(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
     @Test
-    @FlakyTest(bugId = 298870400)
     public void testRecordObservation() throws Exception {
         // The Test app has 2 SDKs: sdk1 calls the Topics API. This will record the usage for Sdk1
         // by default, recordObservation is true.
@@ -146,6 +150,15 @@ public final class PreviewApiTest extends CtsTopicsEndToEndTestCase {
         GetTopicsResponse.Builder mockedBuilder =
                 new GetTopicsResponse.Builder(List.of(mockedTopic));
         mockedBuilder.build();
+
+        EncryptedTopic mockedEncryptedTopic =
+                new EncryptedTopic(
+                        /* encryptedTopic */ EMPTY_BYTE_ARRAY,
+                        /* keyIdentifier */ EMPTY_STRING,
+                        /* encapsulatedKey */ EMPTY_BYTE_ARRAY);
+        GetTopicsResponse.Builder mockedEncryptedBuilder =
+                new GetTopicsResponse.Builder(List.of(mockedTopic), List.of(mockedEncryptedTopic));
+        mockedEncryptedBuilder.build();
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */

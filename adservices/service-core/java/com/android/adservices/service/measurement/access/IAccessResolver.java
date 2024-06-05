@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.access;
 
-import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
 
@@ -25,13 +24,10 @@ public interface IAccessResolver {
     /**
      * @param context to retrieve contextual parameters. This method is chosen over constructor to
      *     pass context to avoid memory leak issues
-     * @return true, if access is granted, false otherwise
+     * @return AccessContainer
      */
-    boolean isAllowed(@NonNull Context context);
-
-    /** @return error status code to return in case the access was not granted. */
-    @AdServicesStatusUtils.StatusCode
-    int getErrorStatusCode();
+    @NonNull
+    AccessInfo getAccessInfo(@NonNull Context context);
 
     /** @return error message to throw in case access wasn't granted. */
     @NonNull

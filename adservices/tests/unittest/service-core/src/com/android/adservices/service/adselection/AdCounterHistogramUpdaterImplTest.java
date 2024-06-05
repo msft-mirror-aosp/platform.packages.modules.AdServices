@@ -36,6 +36,7 @@ import com.android.adservices.data.adselection.DBAdSelectionFixture;
 import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,6 +62,9 @@ public class AdCounterHistogramUpdaterImplTest {
 
     private AdCounterHistogramUpdater mAdCounterHistogramUpdater;
     private boolean mAuctionServerEnabledForUpdateHistogram;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

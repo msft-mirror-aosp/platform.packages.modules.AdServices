@@ -28,17 +28,20 @@ import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableDataFixture;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 
 import java.time.Instant;
 
+@RequiresSdkLevelAtLeastS()
 public final class DBCustomAudienceBackgroundFetchDataTest
         extends AdServicesExtendedMockitoTestCase {
 
@@ -117,7 +120,7 @@ public final class DBCustomAudienceBackgroundFetchDataTest
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         NUM_VALIDATION_FAILURES_POSITIVE,
                         NUM_TIMEOUT_FAILURES_POSITIVE,
-                        /*debuggable=*/ false);
+                        false);
 
         assertEquals(CustomAudienceFixture.VALID_OWNER, fetchData.getOwner());
         assertEquals(CommonFixture.VALID_BUYER_1, fetchData.getBuyer());
@@ -159,7 +162,7 @@ public final class DBCustomAudienceBackgroundFetchDataTest
 
     @Test
     public void testComputeNextEligibleUpdateTimeWithInputFlags() {
-        Flags testFlags = FlagsFactory.getFlagsForTest();
+        Flags testFlags = FakeFlagsFactory.getFlagsForTest();
         Instant expectedEligibleUpdateTime =
                 CommonFixture.FIXED_NOW.plusSeconds(
                         testFlags.getFledgeBackgroundFetchEligibleUpdateBaseIntervalS());
@@ -174,7 +177,7 @@ public final class DBCustomAudienceBackgroundFetchDataTest
 
     @Test
     public void testComputeNextEligibleUpdateTimeWithPhFlags() {
-        Flags flags = FlagsFactory.getFlagsForTest();
+        Flags flags = FakeFlagsFactory.getFlagsForTest();
         long configuredBaseIntervalS = flags.getFledgeBackgroundFetchEligibleUpdateBaseIntervalS();
         Instant expectedEligibleUpdateTime =
                 CommonFixture.FIXED_NOW.plusSeconds(configuredBaseIntervalS);
@@ -194,7 +197,7 @@ public final class DBCustomAudienceBackgroundFetchDataTest
         // computeNextEligibleUpdateTimeAfterSuccessfulUpdate() method that calls
         // FlagsFactory.getInstance(), so we need to mock that method (otherwise it would call
         // DeviceConfig and fail due to lack of permissions)
-        extendedMockito.mockGetFlags(FlagsFactory.getFlagsForTest());
+        extendedMockito.mockGetFlags(FakeFlagsFactory.getFlagsForTest());
 
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(

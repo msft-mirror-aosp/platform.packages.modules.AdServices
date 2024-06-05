@@ -72,6 +72,32 @@ interface IAdServicesManager {
     boolean wasGaUxNotificationDisplayed();
 
     /**
+     * Saves information to the storage that GA UX notification was displayed for the
+     * first time to the user.
+     */
+    void recordPasNotificationDisplayed(boolean wasNotificationDisplayed);
+
+    /**
+     * Returns information whether PAS Consent Notification was displayed or not.
+     *
+     * @return true if PAS Consent Notification was displayed, otherwise false.
+     */
+    boolean wasPasNotificationDisplayed();
+
+    /**
+     * Saves information to the storage that GA UX notification was opened for the
+     * first time to the user.
+     */
+    void recordPasNotificationOpened(boolean wasNotificationOpened);
+
+    /**
+     * Returns information whether PAS Consent Notification was opened or not.
+     *
+     * @return true if PAS Consent Notification was opened, otherwise false.
+     */
+    boolean wasPasNotificationOpened();
+
+    /**
      * Saves information to the storage that user explicitly interacted with consent.
      *
      * Current state:
@@ -234,4 +260,16 @@ interface IAdServicesManager {
 
     /** Set the current enrollment channel. */
     void setEnrollmentChannel(in String enrollmentChannel);
+
+    /** Returns whether the isMeasurementDataReset bit is true. */
+    boolean isMeasurementDataReset();
+
+    /** Saves the isMeasurementDataReset bit. */
+    void setMeasurementDataReset(boolean isMeasurementDataReset);
+
+    /** Returns whether the isPaDataReset bit is true. */
+    boolean isPaDataReset();
+
+    /** Saves the isPaDataReset bit. */
+    void setPaDataReset(boolean isPaDataReset);
 }

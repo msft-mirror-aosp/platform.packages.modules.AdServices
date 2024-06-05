@@ -28,6 +28,9 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 /** CTS tests for {@link AdWithBid} */
@@ -36,6 +39,9 @@ public final class AdWithBidTest {
     private static final AdData VALID_AD_DATA =
             AdDataFixture.getValidAdDataByBuyer(CommonFixture.VALID_BUYER_1, 0);
     private static final double TEST_BID = 1.0;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidAdWithBidSuccess() {

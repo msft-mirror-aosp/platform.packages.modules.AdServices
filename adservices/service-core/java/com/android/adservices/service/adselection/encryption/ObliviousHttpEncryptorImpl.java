@@ -18,6 +18,10 @@ package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
 
+import android.net.Uri;
+
+import androidx.annotation.Nullable;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.ohttp.ObliviousHttpClient;
@@ -35,22 +39,23 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Class to encrypt and decrypt bytes using OHTTP. */
+// TODO(b/328734393): Implement an OhttpEncryptorFactory
 public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private AdSelectionEncryptionKeyManager mEncryptionKeyManager;
+    private ProtectedServersEncryptionConfigManagerBase mEncryptionConfigManager;
     private ObliviousHttpRequestContextMarshaller mObliviousHttpRequestContextMarshaller;
 
     private ExecutorService mLightweightExecutor;
 
     public ObliviousHttpEncryptorImpl(
-            AdSelectionEncryptionKeyManager encryptionKeyManager,
+            ProtectedServersEncryptionConfigManagerBase encryptionConfigManager,
             EncryptionContextDao encryptionContextDao,
             ExecutorService lightweightExecutor) {
-        Objects.requireNonNull(encryptionKeyManager);
+        Objects.requireNonNull(encryptionConfigManager);
         Objects.requireNonNull(encryptionContextDao);
         Objects.requireNonNull(lightweightExecutor);
 
-        mEncryptionKeyManager = encryptionKeyManager;
+        mEncryptionConfigManager = encryptionConfigManager;
         mObliviousHttpRequestContextMarshaller =
                 new ObliviousHttpRequestContextMarshaller(encryptionContextDao);
         mLightweightExecutor = lightweightExecutor;
@@ -59,10 +64,10 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
     /** Encrypts the given byte and stores the encryption context data keyed by given contextId */
     @Override
     public FluentFuture<byte[]> encryptBytes(
-            byte[] plainText, long contextId, long keyFetchTimeoutMs) {
+            byte[] plainText, long contextId, long keyFetchTimeoutMs, @Nullable Uri coordinator) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.OHTTP_ENCRYPT_BYTES);
-        return mEncryptionKeyManager
-                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs)
+        return mEncryptionConfigManager
+                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs, coordinator)
                 .transform(
                         key -> {
                             byte[] serializedRequest =
@@ -100,7 +105,10 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             ObliviousHttpClient client = ObliviousHttpClient.create(config);
 
             Objects.requireNonNull(client);
-            ObliviousHttpRequest request = client.createObliviousHttpRequest(plainText);
+            ObliviousHttpRequest request =
+                    client.createObliviousHttpRequest(
+                            plainText,
+                            ObliviousHttpKeyConfig.useFledgeAuctionServerMediaTypeChange(AUCTION));
 
             Objects.requireNonNull(request);
             mObliviousHttpRequestContextMarshaller.insertAuctionEncryptionContext(

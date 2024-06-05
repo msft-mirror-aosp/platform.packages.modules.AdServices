@@ -17,6 +17,7 @@ package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
 import android.os.Build;
+import android.widget.Switch;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -55,7 +56,7 @@ public class MeasurementViewModel extends AndroidViewModel {
 
     public MeasurementViewModel(@NonNull Application application) {
         super(application);
-        mConsentManager = ConsentManager.getInstance(application);
+        mConsentManager = ConsentManager.getInstance();
         mMeasurementConsent = new MutableLiveData<>(getMeasurementConsentFromConsentManager());
     }
 
@@ -90,7 +91,7 @@ public class MeasurementViewModel extends AndroidViewModel {
         }
         mMeasurementConsent.postValue(getMeasurementConsentFromConsentManager());
         if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-            ConsentManager.getInstance(getApplication())
+            ConsentManager.getInstance()
                     .recordUserManualInteractionWithConsent(
                             ConsentManager.MANUAL_INTERACTIONS_RECORDED);
         }
@@ -99,6 +100,8 @@ public class MeasurementViewModel extends AndroidViewModel {
     /** Reset all information related to Measurement */
     public void resetMeasurement() {
         mConsentManager.resetMeasurement();
+        // add the msmt data reset bit
+        mConsentManager.setMeasurementDataReset(true);
     }
 
     /** Returns an observable but immutable event enum representing an action on UI. */
@@ -124,6 +127,20 @@ public class MeasurementViewModel extends AndroidViewModel {
      * confirmation dialog will handle switch change.
      */
     public void consentSwitchClickHandler(MainSwitchBar measurementSwitchBar) {
+        if (measurementSwitchBar.isChecked()) {
+            measurementSwitchBar.setChecked(false);
+            mEventTrigger.postValue(MeasurementViewModelUiEvent.SWITCH_ON_MEASUREMENT);
+        } else {
+            measurementSwitchBar.setChecked(true);
+            mEventTrigger.postValue(MeasurementViewModelUiEvent.SWITCH_OFF_MEASUREMENT);
+        }
+    }
+
+    /**
+     * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
+     * confirmation dialog will handle switch change.
+     */
+    public void consentSwitchClickHandlerOnR(Switch measurementSwitchBar) {
         if (measurementSwitchBar.isChecked()) {
             measurementSwitchBar.setChecked(false);
             mEventTrigger.postValue(MeasurementViewModelUiEvent.SWITCH_ON_MEASUREMENT);

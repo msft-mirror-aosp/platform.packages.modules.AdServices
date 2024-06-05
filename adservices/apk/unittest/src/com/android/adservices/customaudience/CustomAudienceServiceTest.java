@@ -17,7 +17,7 @@
 package com.android.adservices.customaudience;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
@@ -35,7 +35,7 @@ import android.os.IBinder;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -47,12 +47,11 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
 @SpyStatic(ConsentManager.class)
 @SpyStatic(CustomAudienceServiceImpl.class)
 @SpyStatic(PackageChangedReceiver.class)
-@SpyStatic(MddJobService.class)
+@SpyStatic(MddJob.class)
 public final class CustomAudienceServiceTest extends AdServicesExtendedMockitoTestCase {
     private final Flags mFlagsWithAdSelectionSwitchOnGaUxEnabled =
             new FlagsWithKillSwitchOnGaUxEnabled();
@@ -76,7 +75,7 @@ public final class CustomAudienceServiceTest extends AdServicesExtendedMockitoTe
 
         verify(mConsentManagerMock, never()).getConsent();
         verify(mConsentManagerMock, never()).getConsent(any());
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()), never());
+        verify(MddJob::scheduleAllMddJobs, never());
     }
 
     /**
@@ -87,13 +86,13 @@ public final class CustomAudienceServiceTest extends AdServicesExtendedMockitoTe
     public void testBindableCustomAudienceServiceKillSwitchOffGaUxEnabled() {
         doReturn(mMockCustomAudienceServiceImpl)
                 .when(() -> CustomAudienceServiceImpl.create(any(Context.class)));
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(eq(AdServicesApiType.FLEDGE));
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        doReturn(true).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(MddJob::scheduleAllMddJobs);
 
         CustomAudienceService customAudienceServiceSpy =
                 new CustomAudienceService(mFlagsWithAdSelectionSwitchOffGaUxEnabled);
@@ -108,7 +107,7 @@ public final class CustomAudienceServiceTest extends AdServicesExtendedMockitoTe
         verify(mConsentManagerMock, never()).getConsent();
         verify(mConsentManagerMock).getConsent(eq(AdServicesApiType.FLEDGE));
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        verify(MddJob::scheduleAllMddJobs);
     }
 
     private Intent getIntentForCustomAudienceService() {

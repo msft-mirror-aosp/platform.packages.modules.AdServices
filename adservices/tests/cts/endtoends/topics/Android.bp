@@ -27,6 +27,7 @@ java_defaults {
         "truth",
         "adservices-clients",
         "adservices-test-utility",
+        "framework-adservices-lib",
     ],
     libs: [
         "android.test.base",

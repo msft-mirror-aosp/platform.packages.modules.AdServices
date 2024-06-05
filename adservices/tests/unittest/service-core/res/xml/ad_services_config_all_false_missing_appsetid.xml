@@ -17,6 +17,8 @@
 <ad-services-config>
     <attribution allowAllToAccess="false" />
     <custom-audiences allowAllToAccess="false"/>
+    <protected-signals allowAllToAccess="false"/>
+    <ad-selection allowAllToAccess="false"/>
     <topics allowAllToAccess="false"/>
     <adid allowAllToAccess="false"/>
     <!--

@@ -16,13 +16,14 @@
 
 package android.adservices.common;
 
-import android.adservices.FlagsConstants;
 import android.adservices.adid.AdId;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 
@@ -34,7 +35,7 @@ import java.util.Objects;
  */
 // TODO(b/300445889): Consider using codegen for Parcelable.
 @SystemApi
-@FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+@FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
 public final class UpdateAdIdRequest implements Parcelable {
     private final String mAdId;
     private final boolean mLimitAdTrackingEnabled;
@@ -48,7 +49,7 @@ public final class UpdateAdIdRequest implements Parcelable {
         this(in.readString(), in.readBoolean());
     }
 
-    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     @NonNull
     public static final Creator<UpdateAdIdRequest> CREATOR =
             new Parcelable.Creator<>() {
@@ -64,7 +65,7 @@ public final class UpdateAdIdRequest implements Parcelable {
                 }
             };
 
-    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     @Override
     public int describeContents() {
         return 0;
@@ -72,7 +73,7 @@ public final class UpdateAdIdRequest implements Parcelable {
 
     /** @hide */
     @Override
-    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
 
@@ -81,7 +82,7 @@ public final class UpdateAdIdRequest implements Parcelable {
     }
 
     /** Returns the advertising ID associated with this result. */
-    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     @NonNull
     public String getAdId() {
         return mAdId;
@@ -93,7 +94,7 @@ public final class UpdateAdIdRequest implements Parcelable {
      * <p>When Limited Ad Tracking is enabled, it implies the user opts out the usage of {@link
      * AdId}. {@link AdId#ZERO_OUT} will be assigned to the device.
      */
-    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     public boolean isLimitAdTrackingEnabled() {
         return mLimitAdTrackingEnabled;
     }
@@ -131,18 +132,18 @@ public final class UpdateAdIdRequest implements Parcelable {
     }
 
     /** Builder for {@link UpdateAdIdRequest} objects. */
-    @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     public static final class Builder {
         private final String mAdId;
         private boolean mLimitAdTrackingEnabled;
 
-        @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+        @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
         public Builder(@NonNull String adId) {
             mAdId = Objects.requireNonNull(adId);
         }
 
         /** Sets the Limited AdTracking enabled field. */
-        @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+        @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
         @NonNull
         public UpdateAdIdRequest.Builder setLimitAdTrackingEnabled(
                 boolean isLimitAdTrackingEnabled) {
@@ -151,7 +152,7 @@ public final class UpdateAdIdRequest implements Parcelable {
         }
 
         /** Builds a {@link UpdateAdIdRequest} instance. */
-        @FlaggedApi(FlagsConstants.KEY_AD_ID_CACHE_ENABLED)
+        @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
         @NonNull
         public UpdateAdIdRequest build() {
             return new UpdateAdIdRequest(mAdId, mLimitAdTrackingEnabled);

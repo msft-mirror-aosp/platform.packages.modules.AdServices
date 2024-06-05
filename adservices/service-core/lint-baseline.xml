@@ -95,16 +95,16 @@
         id="NewAdServicesFile"
         message="Please use FileCompatUtils to ensure any newly added files have a name that begins with &quot;adservices&quot; or create the files in a subdirectory called &quot;adservices/&quot; (go/rb-extservices-ota-data-cleanup)">
         <location
-            file="packages/modules/AdServices/adservices/service-core/java/com/android/adservices/spe/AdservicesJobServiceLogger.java"
-            line="194"/>
+            file="packages/modules/AdServices/adservices/service-core/java/com/android/adservices/spe/AdServicesJobServiceLogger.java"
+            line="224"/>
     </issue>
 
     <issue
         id="NewAdServicesFile"
         message="Please use FileCompatUtils to ensure any newly added files have a name that begins with &quot;adservices&quot; or create the files in a subdirectory called &quot;adservices/&quot; (go/rb-extservices-ota-data-cleanup)">
         <location
-            file="packages/modules/AdServices/adservices/service-core/java/com/android/adservices/spe/AdservicesJobServiceLogger.java"
-            line="291"/>
+            file="packages/modules/AdServices/adservices/service-core/java/com/android/adservices/spe/AdServicesJobServiceLogger.java"
+            line="343"/>
     </issue>
 
     <issue

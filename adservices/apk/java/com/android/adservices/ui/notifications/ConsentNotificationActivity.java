@@ -45,6 +45,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
         LANDING_PAGE_SCROLLED,
         LANDING_PAGE_SCROLLED_TO_BOTTOM,
         LANDING_PAGE_ADDITIONAL_INFO_CLICKED,
+        LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED,
         LANDING_PAGE_MORE_BUTTON_CLICKED,
         LANDING_PAGE_SETTINGS_BUTTON_CLICKED,
         LANDING_PAGE_OPT_IN_CLICKED,
@@ -70,7 +71,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
     private static boolean sLandingPageScrolled;
     private static boolean sLandingPageScrolledToBottom;
     private static boolean sLandingPageAdditionalInfoClicked;
-
+    private static boolean sLandingPageSecondAdditionalInfoClicked;
     private static boolean sLandingPageOptInClicked;
     private static boolean sLandingPageOptOutClicked;
     private static boolean sLandingPageGotItClicked;
@@ -88,13 +89,14 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
         Context context = getApplicationContext();
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()
+                || FlagsFactory.getFlags().getUiOtaResourcesFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context, true);
         }
 
         if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
                 || isUxStatesReady(this)) {
-            initWithUx(this, context);
+            initWithUx(context, /* beforePasUxActive */ true);
         } else {
             initFragment();
         }
@@ -118,6 +120,11 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
     @Override
     public void initRvc() {
         initU18();
+    }
+
+    @Override
+    public void initGaUxWithPas() {
+        setContentView(R.layout.consent_notification_pas_activity);
     }
 
     @Override
@@ -180,6 +187,14 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 sLandingPageAdditionalInfoClicked = true;
                 LogUtil.v("LANDING_PAGE_ADDITIONAL_INFO_CLICKED logged!");
                 UiStatsLogger.logLandingPageAdditionalInfoClicked();
+                break;
+            case LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED:
+                if (sLandingPageSecondAdditionalInfoClicked) {
+                    return;
+                }
+                sLandingPageSecondAdditionalInfoClicked = true;
+                LogUtil.v("LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED logged!");
+                UiStatsLogger.logLandingPageSecondAdditionalInfoClicked();
                 break;
             case LANDING_PAGE_MORE_BUTTON_CLICKED:
                 if (sLandingPageMoreButtonClicked) {

@@ -17,8 +17,12 @@
 package com.android.adservices.service.topics;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
@@ -28,6 +32,9 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
+import static com.android.adservices.service.enrollment.EnrollmentUtil.BUILD_ID;
+import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
+import static com.android.adservices.service.enrollment.EnrollmentUtil.FILE_GROUP_STATUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
@@ -59,6 +66,7 @@ import android.adservices.topics.IGetTopicsCallback;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -68,10 +76,8 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.cobalt.TopicsCobaltLogger;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.IntFailureSyncCallback;
-import com.android.adservices.common.NoFailureSyncCallback;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -96,8 +102,10 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
-import com.android.adservices.service.topics.cobalt.TopicsCobaltLogger;
+import com.android.adservices.shared.testing.IntFailureSyncCallback;
+import com.android.adservices.shared.testing.NoFailureSyncCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -148,7 +156,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     private final AdServicesLogger mAdServicesLogger =
             Mockito.spy(AdServicesLoggerImpl.getInstance());
 
-    private Context mSpyContext;
     private CallerMetadata mCallerMetadata;
     private TopicsWorker mTopicsWorker;
     private TopicsWorker mSpyTopicsWorker;
@@ -172,11 +179,11 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @Mock private AdServicesManager mMockAdServicesManager;
     @Mock private AppSearchConsentManager mAppSearchConsentManager;
     @Mock private TopicsCobaltLogger mTopicsCobaltLogger;
+    @Mock private SharedPreferences mEnrollmentSharedPreferences;
 
     @Before
     public void setup() throws Exception {
         // TODO(b/310270746): Holly Hack, Batman! This class needs some serious refactoring :-(
-        mSpyContext = spy(appContext.get());
         appContext.set(mMockAppContext);
 
         extendedMockito.mockGetCallingUidOrThrow(); // expect to return test uid by default
@@ -201,7 +208,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         mBlockedTopicsManager,
                         new GlobalBlockedTopicsManager(
                                 /* globalBlockedTopicIds= */ new HashSet<>()),
-                        mTopicsCobaltLogger);
+                        mTopicsCobaltLogger,
+                        mClock);
 
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);
@@ -277,7 +285,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // Topics must call AppManifestConfigHelper to check if topics is enabled, whose behavior is
         // currently guarded by a flag
         extendedMockito.mockGetFlags(mMockFlags);
-        when(mMockFlags.getAppConfigReturnsEnabledByDefault()).thenReturn(false);
+
         // Similarly, AppManifestConfigHelper.isAllowedTopicsAccess() is failing to parse the XML
         // (which returns false), but logging the error on ErrorLogUtil, so we need to ignored that.
         doNothingOnErrorLogUtilError();
@@ -285,7 +293,20 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // stuff in a bg thread - chances are the test is done by the time the thread runs,
         // which could cause test failures (like lack of permission when calling Flags)
         ExtendedMockito.doNothing().when(() -> AppManifestConfigMetricsLogger.logUsage(any()));
+
+        // Mock shared preferences behavior for enrollment build id and file group status
+        when(mMockAppContext.getSharedPreferences(
+                        eq(ENROLLMENT_SHARED_PREF), eq(Context.MODE_PRIVATE)))
+                .thenReturn(mEnrollmentSharedPreferences);
+        when(mMockSdkContext.getSharedPreferences(
+                        eq(ENROLLMENT_SHARED_PREF), eq(Context.MODE_PRIVATE)))
+                .thenReturn(mEnrollmentSharedPreferences);
+        when(mEnrollmentSharedPreferences.getInt(eq(BUILD_ID), eq(/* defaultValue */ -1)))
+                .thenReturn(1000);
+        when(mEnrollmentSharedPreferences.getInt(eq(FILE_GROUP_STATUS), eq(/* defaultValue */ 0)))
+                .thenReturn(2);
     }
+
     @Test
     public void checkEmptySdkNameRequests() throws Exception {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
@@ -298,7 +319,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .setSdkPackageName(SDK_PACKAGE_NAME)
                         .build();
 
-        invokeGetTopicsAndVerifyError(mSpyContext, STATUS_INVALID_ARGUMENT, request, false);
+        invokeGetTopicsAndVerifyError(
+                mSpyContext, STATUS_INVALID_ARGUMENT, request, true, FAILURE_REASON_UNSET);
         ExtendedMockito.verify(
                 () ->
                         ErrorLogUtil.e(
@@ -314,7 +336,8 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         GetTopicsParam request =
                 new GetTopicsParam.Builder().setAppPackageName(TEST_APP_PACKAGE_NAME).build();
 
-        invokeGetTopicsAndVerifyError(mSpyContext, STATUS_INVALID_ARGUMENT, request, false);
+        invokeGetTopicsAndVerifyError(
+                mSpyContext, STATUS_INVALID_ARGUMENT, request, true, FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -344,7 +367,11 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // Empty allow list and bypass list.
         when(mMockFlags.getPpapiAppSignatureAllowList()).thenReturn("");
         invokeGetTopicsAndVerifyError(
-                mSpyContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+                mSpyContext,
+                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
+                mRequest,
+                /* checkLoggingStatus */ true,
+                FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -373,7 +400,11 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                 .thenReturn(false);
         // We don't log STATUS_RATE_LIMIT_REACHED for getTopics API.
         invokeGetTopicsAndVerifyError(
-                mSpyContext, STATUS_RATE_LIMIT_REACHED, request, /* checkLoggingStatus */ false);
+                mSpyContext,
+                STATUS_RATE_LIMIT_REACHED,
+                request, /* checkLoggingStatus */
+                false,
+                FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -393,7 +424,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         doReturn(true).when(mMockFlags).getEnforceForegroundStatusForTopics();
 
         invokeGetTopicsAndVerifyError(
-                mSpyContext, STATUS_BACKGROUND_CALLER, mRequest, /* checkLoggingStatus */ true);
+                mSpyContext, STATUS_BACKGROUND_CALLER, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -493,7 +524,11 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(
-                mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+                mMockSdkContext,
+                STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_INVALID_ID,
+                mRequest,
+                /* checkLoggingStatus */ true,
+                FAILURE_REASON_UNSET);
         verify(mAdServicesLogger)
                 .logEnrollmentFailedStats(
                         anyInt(),
@@ -505,6 +540,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
     @Test
     public void checkSdkEnrollmentInBlocklist_blocked() throws Exception {
+        mockAppContextForAppManifestConfigHelperCall();
         EnrollmentData fakeEnrollmentData =
                 new EnrollmentData.Builder().setEnrollmentId(ALLOWED_SDK_ID).build();
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
@@ -513,7 +549,11 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         when(mMockFlags.isEnrollmentBlocklisted(ALLOWED_SDK_ID)).thenReturn(true);
 
         invokeGetTopicsAndVerifyError(
-                mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+                mMockSdkContext,
+                STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED,
+                mRequest,
+                /* checkLoggingStatus */ true,
+                FAILURE_REASON_UNSET);
 
         verify(mAdServicesLogger)
                 .logEnrollmentFailedStats(
@@ -531,7 +571,11 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(
-                mMockSdkContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+                mMockSdkContext,
+                STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
+                mRequest,
+                /* checkLoggingStatus */ true,
+                FAILURE_REASON_UNSET);
 
         verify(mAdServicesLogger)
                 .logEnrollmentFailedStats(
@@ -561,7 +605,11 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
                 .thenReturn(resources);
         invokeGetTopicsAndVerifyError(
-                mMockAppContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+                mMockAppContext,
+                STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
+                mRequest,
+                /* checkLoggingStatus */ true,
+                FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -582,8 +630,26 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                 mSpyContext.getPackageManager().getResourcesForApplication(TEST_APP_PACKAGE_NAME);
         when(mPackageManager.getResourcesForApplication(TEST_APP_PACKAGE_NAME))
                 .thenReturn(resources);
-        invokeGetTopicsAndVerifyError(
-                mMockAppContext, STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */ true);
+
+        TopicsServiceImpl topicsServiceImpl = createTestTopicsServiceImplInstance();
+        GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
+
+        // No topics (empty list) were returned.
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(STATUS_SUCCESS)
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
+                        .build();
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
     }
 
     @Test
@@ -745,6 +811,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
         // To capture result in inner class, we have to declare final.
         GetTopicsResult getTopicsResult = getTopicsResults(topicsServiceImpl);
+
         // Since the returned topic list is shuffled, elements have to be verified separately
         assertThat(getTopicsResult.getResultCode())
                 .isEqualTo(expectedGetTopicsResult.getResultCode());
@@ -845,9 +912,14 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .setSdkPackageName(SOME_SDK_NAME)
                         .build();
 
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
         callback.assertFailed(STATUS_UNAUTHORIZED);
+
+        logApiCallStatsCallback.assertResultReceived();
 
         ExtendedMockito.verify(
                 () ->
@@ -856,6 +928,35 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                                 eq(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION),
                                 eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)));
+    }
+
+    @Test
+    public void testGetTopics_enforceCallingPackage_logCallingPackageNotFound() throws Exception {
+        doNothingOnErrorLogUtilError();
+        when(mMockAppContext.getPackageManager()).thenReturn(mPackageManager);
+        when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0))
+                .thenThrow(new PackageManager.NameNotFoundException());
+
+        invokeGetTopicsAndVerifyError(
+                mMockAppContext,
+                STATUS_UNAUTHORIZED, /* checkLoggingStatus */
+                mRequest,
+                true,
+                FAILURE_REASON_UNSET);
+    }
+
+    @Test
+    public void testGetTopics_enforceCallingPackage_logCallingPackageIdMismatch() throws Exception {
+        doNothingOnErrorLogUtilError();
+        when(mMockAppContext.getPackageManager()).thenReturn(mPackageManager);
+        when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(/* uid */ -1);
+
+        invokeGetTopicsAndVerifyError(
+                mMockAppContext,
+                STATUS_UNAUTHORIZED, /* checkLoggingStatus */
+                mRequest,
+                true,
+                FAILURE_REASON_UNSET);
     }
 
     @Test
@@ -949,14 +1050,16 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     private void invokeGetTopicsAndVerifyError(
             Context context, int expectedResultCode, boolean checkLoggingStatus)
             throws InterruptedException {
-        invokeGetTopicsAndVerifyError(context, expectedResultCode, mRequest, checkLoggingStatus);
+        invokeGetTopicsAndVerifyError(
+                context, expectedResultCode, mRequest, checkLoggingStatus, FAILURE_REASON_UNSET);
     }
 
     private void invokeGetTopicsAndVerifyError(
             Context context,
             int expectedResultCode,
             GetTopicsParam request,
-            boolean checkLoggingStatus)
+            boolean checkLoggingStatus,
+            int expectedFailureReason)
             throws InterruptedException {
 
         NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
@@ -995,6 +1098,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
             expect.withMessage("%s.getSdkPackageName()", apiCallStats)
                     .that(apiCallStats.getSdkPackageName())
                     .isEqualTo(request.getSdkName());
+            assertThat(apiCallStats.getFailureReason()).isEqualTo(expectedFailureReason);
         }
     }
 
@@ -1035,8 +1139,13 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @NonNull
     private GetTopicsResult getTopicsResults(TopicsServiceImpl topicsServiceImpl)
             throws InterruptedException {
+        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger);
+
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         topicsServiceImpl.getTopics(mRequest, mCallerMetadata, callback);
+
+        logApiCallStatsCallback.assertResultReceived();
         return callback.assertSuccess();
     }
 

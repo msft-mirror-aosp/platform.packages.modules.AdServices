@@ -17,10 +17,13 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
-import static com.android.adservices.spe.AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_FAILED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
@@ -40,7 +43,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.tracing.PropagatedFutures;
@@ -114,12 +118,19 @@ public class MddJobService extends JobService {
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d("Disabling MddJobService job because it's running in ExtServices on T+");
             return skipAndCancelBackgroundJob(
-                    params, jobId, /* skipReason=*/ 0, /* doRecord=*/ false);
+                    params, jobId, /* skipReason= */ 0, /* doRecord= */ false);
+        }
+
+        // Reschedule jobs with SPE if it's enabled. Note scheduled jobs by this MddJobService will
+        // be cancelled for the same job ID.
+        if (FlagsFactory.getFlags().getSpeOnPilotJobsEnabled()) {
+            MddJob.scheduleAllMddJobs();
+            return false;
         }
 
         // Record the invocation of onStartJob() for logging purpose.
         LogUtil.d("MddJobService.onStartJob");
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(jobId);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(jobId);
 
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             LogUtil.e("MDD background task is disabled, skipping and cancelling MddJobService");
@@ -127,7 +138,7 @@ public class MddJobService extends JobService {
                     params,
                     jobId,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
-                    /* doRecord=*/ true);
+                    /* doRecord= */ true);
         }
 
         // This service executes each incoming job on a Handler running on the application's
@@ -138,7 +149,7 @@ public class MddJobService extends JobService {
                             String mddTag = getMddTag(params);
                             LogUtil.d("MddJobService.onStartJob for " + mddTag);
 
-                            return MobileDataDownloadFactory.getMdd(this, FlagsFactory.getFlags())
+                            return MobileDataDownloadFactory.getMdd(FlagsFactory.getFlags())
                                     .handleTask(mddTag);
                         },
                         AdServicesExecutors.getBackgroundExecutor());
@@ -152,8 +163,12 @@ public class MddJobService extends JobService {
 
                         sBlockingExecutor.execute(
                                 () -> {
-                                    EnrollmentDataDownloadManager.getInstance(MddJobService.this)
+                                    EnrollmentDataDownloadManager.getInstance()
                                             .readAndInsertEnrollmentDataFromMdd();
+                                    ListenableFuture<EncryptionDataDownloadManager.DownloadStatus>
+                                            unused =
+                                                    EncryptionDataDownloadManager.getInstance()
+                                                            .readAndInsertEncryptionDataFromMdd();
 
                                     // Logging has to happen before jobFinished() is called. Due to
                                     // JobScheduler infra, the JobService instance will end its
@@ -162,7 +177,7 @@ public class MddJobService extends JobService {
                                     // Tell the JobScheduler that the job has completed and does not
                                     // need to be rescheduled.
                                     boolean shouldRetry = false;
-                                    AdservicesJobServiceLogger.getInstance(MddJobService.this)
+                                    AdServicesJobServiceLogger.getInstance()
                                             .recordJobFinished(
                                                     jobId, /* isSuccessful= */ true, shouldRetry);
 
@@ -181,7 +196,7 @@ public class MddJobService extends JobService {
                         // When failure, also tell the JobScheduler that the job has completed and
                         // does not need to be rescheduled.
                         boolean shouldRetry = false;
-                        AdservicesJobServiceLogger.getInstance(MddJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(jobId, /* isSuccessful= */ false, shouldRetry);
 
                         jobFinished(params, shouldRetry);
@@ -200,7 +215,7 @@ public class MddJobService extends JobService {
         // execution is completed or not to avoid executing the task twice.
         boolean shouldRetry = false;
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, getMddTaskJobId(getMddTag(params)), shouldRetry);
         return shouldRetry;
     }
@@ -211,16 +226,17 @@ public class MddJobService extends JobService {
      * @param context the context
      * @param forceSchedule a flag to indicate whether to force rescheduling the job.
      */
-    public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
+    @JobSchedulingResultCode
+    public static int scheduleIfNeeded(Context context, boolean forceSchedule) {
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             LogUtil.e("Mdd background task is disabled, skip scheduling.");
-            return false;
+            return SCHEDULING_RESULT_CODE_SKIPPED;
         }
 
         final JobScheduler jobscheduler = context.getSystemService(JobScheduler.class);
         if (jobscheduler == null) {
             LogUtil.e("Cannot fetch Job Scheduler!");
-            return false;
+            return SCHEDULING_RESULT_CODE_FAILED;
         }
 
         // Assign boolean local variable to each task to prevent short-circuit following tasks.
@@ -254,9 +270,11 @@ public class MddJobService extends JobService {
                         jobscheduler);
 
         return isMaintenancePeriodicTaskScheduled
-                && isChargingPeriodicTaskScheduled
-                && isCellularChargingPeriodicTaskScheduled
-                && isWifiChargingPeriodicTaskScheduled;
+                        && isChargingPeriodicTaskScheduled
+                        && isCellularChargingPeriodicTaskScheduled
+                        && isWifiChargingPeriodicTaskScheduled
+                ? SCHEDULING_RESULT_CODE_SUCCESSFUL
+                : SCHEDULING_RESULT_CODE_SKIPPED;
     }
 
     /**
@@ -332,7 +350,7 @@ public class MddJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this).recordJobSkipped(jobId, skipReason);
+            AdServicesJobServiceLogger.getInstance().recordJobSkipped(jobId, skipReason);
         }
 
         // Tell the JobScheduler that the job has completed and does not need to be

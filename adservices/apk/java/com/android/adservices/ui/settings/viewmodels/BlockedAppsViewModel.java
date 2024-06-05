@@ -40,7 +40,6 @@ import java.io.IOException;
  * model is responsible for serving apps to the apps view and blocked apps view, and interacting
  * with the {@link ConsentManager} that persists and changes the apps data in a storage.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedAppsViewModel extends AndroidViewModel {
 
@@ -57,7 +56,7 @@ public class BlockedAppsViewModel extends AndroidViewModel {
     public BlockedAppsViewModel(@NonNull Application application) {
         super(application);
 
-        mConsentManager = ConsentManager.getInstance(application);
+        mConsentManager = ConsentManager.getInstance();
         mBlockedApps = new MutableLiveData<>(getBlockedAppsFromConsentManager());
     }
 

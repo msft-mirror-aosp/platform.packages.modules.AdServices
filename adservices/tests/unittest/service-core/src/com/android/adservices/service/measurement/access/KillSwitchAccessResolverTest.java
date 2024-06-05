@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 
 import org.junit.Before;
@@ -45,25 +44,18 @@ public class KillSwitchAccessResolverTest {
     public void testIsAllowed_killSwitchOff_isAllowed() {
         mResolver = new KillSwitchAccessResolver(() -> /* kill switch off */ false);
 
-        assertTrue(mResolver.isAllowed(mContext));
+        assertTrue(mResolver.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
     public void testIsAllowed_killSwitchOn_isNotAllowed() {
         mResolver = new KillSwitchAccessResolver(() -> /* kill switch on */ true);
 
-        assertFalse(mResolver.isAllowed(mContext));
+        assertFalse(mResolver.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
     public void testGetErrorMessage() {
         assertEquals(ERROR_MESSAGE, new KillSwitchAccessResolver(() -> false).getErrorMessage());
-    }
-
-    @Test
-    public void testGetErrorStatusCode() {
-        assertEquals(
-                AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED,
-                new KillSwitchAccessResolver(() -> false).getErrorStatusCode());
     }
 }

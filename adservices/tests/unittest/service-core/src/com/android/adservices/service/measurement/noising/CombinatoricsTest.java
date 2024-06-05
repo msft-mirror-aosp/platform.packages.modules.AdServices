@@ -18,52 +18,24 @@ package com.android.adservices.service.measurement.noising;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.PrivacyParams;
+
+import com.google.common.math.LongMath;
 
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CombinatoricsTest {
-    @Test
-    public void testCalcBinomialCoefficient() {
-        // Test Case: {n, k, expectedOutput}
-        int[][] testCases = {
-                {0, 0, 1}, {0, 1, 0}, {0, 2, 0}, {0, 3, 0}, {0, 4, 0}, {0, 5, 0},
-                {0, 6, 0}, {0, 7, 0}, {0, 8, 0}, {0, 9, 0}, {1, 0, 1}, {1, 1, 1},
-                {1, 2, 0}, {1, 3, 0}, {1, 4, 0}, {1, 5, 0}, {1, 6, 0}, {1, 7, 0},
-                {1, 8, 0}, {1, 9, 0}, {2, 0, 1}, {2, 1, 2}, {2, 2, 1}, {2, 3, 0},
-                {2, 4, 0}, {2, 5, 0}, {2, 6, 0}, {2, 7, 0}, {2, 8, 0}, {2, 9, 0},
-                {3, 0, 1}, {3, 1, 3}, {3, 2, 3}, {3, 3, 1}, {3, 4, 0}, {3, 5, 0},
-                {3, 6, 0}, {3, 7, 0}, {3, 8, 0}, {3, 9, 0}, {4, 0, 1}, {4, 1, 4},
-                {4, 2, 6}, {4, 3, 4}, {4, 4, 1}, {4, 5, 0}, {4, 6, 0}, {4, 7, 0},
-                {4, 8, 0}, {4, 9, 0}, {5, 0, 1}, {5, 1, 5}, {5, 2, 10}, {5, 3, 10},
-                {5, 4, 5}, {5, 5, 1}, {5, 6, 0}, {5, 7, 0}, {5, 8, 0}, {5, 9, 0},
-                {6, 0, 1}, {6, 1, 6}, {6, 2, 15}, {6, 3, 20}, {6, 4, 15}, {6, 5, 6},
-                {6, 6, 1}, {6, 7, 0}, {6, 8, 0}, {6, 9, 0}, {7, 0, 1}, {7, 1, 7},
-                {7, 2, 21}, {7, 3, 35}, {7, 4, 35}, {7, 5, 21}, {7, 6, 7}, {7, 7, 1},
-                {7, 8, 0}, {7, 9, 0}, {8, 0, 1}, {8, 1, 8}, {8, 2, 28}, {8, 3, 56},
-                {8, 4, 70}, {8, 5, 56}, {8, 6, 28}, {8, 7, 8}, {8, 8, 1}, {8, 9, 0},
-                {9, 0, 1}, {9, 1, 9}, {9, 2, 36}, {9, 3, 84}, {9, 4, 126}, {9, 5, 126},
-                {9, 6, 84}, {9, 7, 36}, {9, 8, 9}, {9, 9, 1},
-                {30, 3, 4060},
-                {100, 2, 4950},
-                {100, 5, 75287520},
-        };
-        Arrays.stream(testCases).forEach((testCase) ->
-                assertEquals(testCase[2],
-                        Combinatorics.getBinomialCoefficient(/*n=*/testCase[0], /*k=*/
-                                testCase[1])));
-    }
-
     @Test
     public void testGetKCombinationAtIndex() {
         // Test Case { {combinationIndex, k}, expectedOutput}
@@ -124,7 +96,9 @@ public class CombinatoricsTest {
                 long[] combination = Combinatorics.getKCombinationAtIndex(index, k);
                 long sum = 0;
                 for (int i = 0; i < k; i++) {
-                    sum += Combinatorics.getBinomialCoefficient((int) combination[i], k - i);
+                    if ((int) combination[i] >= k - i) {
+                        sum += LongMath.binomial((int) combination[i], k - i);
+                    }
                 }
                 assertEquals(sum, (long) index);
             }
@@ -189,25 +163,6 @@ public class CombinatoricsTest {
     }
 
     @Test
-    public void testNumStatesArithmeticOverflow() {
-        // Test Case: {numBucketIncrements, numTriggerData, numWindows}
-        int[][] testCasesOverflow = {
-            {3, Integer.MAX_VALUE - 1, 3},
-            {3, 8, Integer.MAX_VALUE - 1},
-            {8, 40, 26},
-        };
-
-        Arrays.stream(testCasesOverflow)
-                .forEach(
-                        (testCase) ->
-                                assertThrows(
-                                        ArithmeticException.class,
-                                        () ->
-                                                Combinatorics.getNumStatesArithmetic(
-                                                        testCase[0], testCase[1], testCase[2])));
-    }
-
-    @Test
     public void testNumStatesFlexApi() {
         // Test Case: {numBucketIncrements, perTypeNumWindows, perTypeCap}, {expected number of
         // states}
@@ -233,7 +188,48 @@ public class CombinatoricsTest {
                                         Combinatorics.getNumStatesFlexApi(
                                                 testCase[0][0][0],
                                                 testCase[0][1],
-                                                testCase[0][2])));
+                                                testCase[0][2],
+                                                Long.MAX_VALUE)));
+    }
+
+    @Test
+    public void getNumStatesFlexApi_iterativeOverBound_returnsLongMaxValue() {
+        assertEquals(
+                Long.MAX_VALUE,
+                Combinatorics.getNumStatesFlexApi(
+                        20,
+                        new int[]{5, 5, 5, 5, 5, 5, 5, 5},
+                        new int[]{20, 19, 18, 17, 16, 15, 14, 13},
+                        Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
+    }
+
+    @Test
+    public void getNumStatesFlexApi_iterativeGreaterThanLong_throws() {
+        assertThrows(
+                ArithmeticException.class,
+                () ->
+                        Combinatorics.getNumStatesFlexApi(
+                                20,
+                                new int[]{5, 5, 5, 5, 5, 5, 5, 5,
+                                        5, 5, 5, 5, 5, 5, 5, 5,
+                                        5, 5, 5, 5, 5, 5, 5, 5,
+                                        5, 5, 5, 5, 5, 5, 5, 5},
+                                new int[]{20, 19, 18, 17, 16, 15, 14, 13,
+                                        20, 19, 18, 17, 16, 15, 14, 13,
+                                        20, 19, 18, 17, 16, 15, 14, 13,
+                                        20, 19, 18, 17, 16, 15, 14, 13},
+                                Long.MAX_VALUE - 1L));
+    }
+
+    @Test
+    public void getNumStatesFlexApi_arithmeticOverBound_returnsLongMaxValue() {
+        assertEquals(
+                Long.MAX_VALUE,
+                Combinatorics.getNumStatesFlexApi(
+                        20,
+                        new int[]{5, 5, 5, 5, 5, 5, 5, 5},
+                        new int[]{20, 20, 20, 20, 20, 20, 20, 20},
+                        Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
     }
 
     @Test
@@ -251,9 +247,21 @@ public class CombinatoricsTest {
                 .forEach(
                         (testCase) -> {
                             double result =
-                                    100 * Combinatorics.getFlipProbability((int) testCase[0]);
+                                    100
+                                            * Combinatorics.getFlipProbability(
+                                                    (int) testCase[0],
+                                                    Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
                             assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
+    }
+
+    @Test
+    public void testFlipProbabilityWithNonDefaultEpsilon() {
+        double defaultProbability =
+                Combinatorics.getFlipProbability(
+                        (int) 2925.0, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+        double newProbability = Combinatorics.getFlipProbability((int) 2925.0, 0.89);
+        assertNotEquals(defaultProbability, newProbability, 0);
     }
 
     @Test
@@ -273,49 +281,53 @@ public class CombinatoricsTest {
                             double result =
                                     Combinatorics.getInformationGain(
                                             (int) testCase[0],
-                                            Combinatorics.getFlipProbability((int) testCase[0]));
+                                            Combinatorics.getFlipProbability(
+                                                    (int) testCase[0],
+                                                    Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON));
                             assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
     }
 
-    private static boolean atomReportStateSetMeetRequirement(
-            int totalCap,
-            int[] perTypeNumWindowList,
-            int[] perTypeCapList,
-            List<Combinatorics.AtomReportState> reportSet) {
-        // if number of report over max reports
-        if (reportSet.size() > totalCap) {
-            return false;
-        }
-        int[] perTypeReportList = new int[perTypeCapList.length];
-        // Initialize all elements to zero
-        for (int i = 0; i < perTypeCapList.length; i++) {
-            perTypeReportList[i] = 0;
-        }
-        for (Combinatorics.AtomReportState report : reportSet) {
-            int triggerDataIndex = report.getTriggerDataType();
-            // if the report window larger than total report window of this trigger data
-            // input perTypeNumWindowList is [3,3,3], and report windows index is 4, return false
-            if (report.getWindowIndex() + 1 > perTypeNumWindowList[triggerDataIndex]) {
-                return false;
-            }
-            perTypeReportList[triggerDataIndex]++;
-            // number of report for this trigger data over the per data limit
-            if (perTypeCapList[triggerDataIndex] < perTypeReportList[triggerDataIndex]) {
-                return false;
-            }
-        }
-        return true;
-    }
+    @Test
+    public void testGetMaxInformationGainWithAttributionScope() {
+        double[][] testCases = {
+            {2925.0, 1.0, 1.0, 11.461727965384876d},
+            {3.0, 1.0, 1.0, 1.5849265115082312d},
+            {455.0, 1.0, 1.0, 8.821556150827456d},
+            {2.0, 1.0, 1.0, 0.9999820053790732d},
+            {1.0, 1.0, 1.0, 0.0d},
+            {2925.0, 1.0, 3.0, 11.4617279653849d},
+            {2925.0, 5.0, 3.0, 11.4674862153563d},
+            {2925.0, 100.0, 3.0, 11.5975771979061d},
+            {300000.0, 1.0, 1.0, 13.8407667231044d},
+            {300000.0, 2.0, 2.0, 13.8407705719511d},
+            {300000.0, 3.0, 3.0, 13.8407744207849d},
+            {300000.0, 4.0, 4.0, 13.8407782696060d},
+            {300000.0, 5.0, 5.0, 13.8407821184142d},
+        };
 
-    private static class AtomReportStateComparator
-            implements Comparator<Combinatorics.AtomReportState> {
-        @Override
-        public int compare(Combinatorics.AtomReportState o1, Combinatorics.AtomReportState o2) {
-            if (o1.getTriggerDataType() != o2.getTriggerDataType()) {
-                return Integer.compare(o1.getTriggerDataType(), o2.getTriggerDataType());
-            }
-            return Integer.compare(o1.getWindowIndex(), o2.getWindowIndex());
-        }
+        Arrays.stream(testCases)
+                .forEach(
+                        (testCase) -> {
+                            double result =
+                                    Combinatorics.getMaxInformationGainWithAttributionScope(
+                                            (long) testCase[0],
+                                            (long) testCase[1],
+                                            (long) testCase[2],
+                                            Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+                            assertEquals(testCase[3], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
+                        });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    Combinatorics.getMaxInformationGainWithAttributionScope(
+                            0L, 2L, 3L, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+                });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    Combinatorics.getMaxInformationGainWithAttributionScope(
+                            3L, 2L, 0L, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+                });
     }
 }

@@ -71,7 +71,6 @@ public class SdkSandboxServiceImpl extends Service {
     private final Map<String, SandboxedSdkHolder> mHeldSdk = new ArrayMap<>();
 
     private volatile boolean mInitialized;
-    private boolean mCustomizedSdkContextEnabled;
     private Injector mInjector;
     private ISdkSandboxService.Stub mBinder;
 
@@ -134,8 +133,7 @@ public class SdkSandboxServiceImpl extends Service {
      *
      * @param sdkToServiceCallback for initialization of {@link SdkSandboxLocalSingleton}
      */
-    public void initialize(
-            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled) {
+    public void initialize(ISdkToServiceCallback sdkToServiceCallback) {
         enforceCallerIsSystemServer();
 
         if (mInitialized) {
@@ -143,17 +141,12 @@ public class SdkSandboxServiceImpl extends Service {
             return;
         }
 
-        mCustomizedSdkContextEnabled = isCustomizedSdkContextEnabled;
-
         SdkSandboxLocalSingleton.initInstance(sdkToServiceCallback.asBinder());
 
         cleanUpSyncedSharedPreferencesData();
 
         mInitialized = true;
-        LogUtil.d(
-                TAG,
-                "Sandbox initialized. isCustomizedSdkContextEnabled: "
-                        + isCustomizedSdkContextEnabled);
+        LogUtil.d(TAG, "Sandbox initialized.");
     }
 
     /** Computes the storage of the shared and SDK storage for an app */
@@ -373,8 +366,10 @@ public class SdkSandboxServiceImpl extends Service {
             return;
         }
 
+        // Starting from Android U, we customize the base context directly. See #createBaseContext
+        boolean isCustomizedSdkContextEnabled = SdkLevel.isAtLeastU();
         final ClassLoader loader =
-                mCustomizedSdkContextEnabled
+                isCustomizedSdkContextEnabled
                         ? baseContext.getClassLoader()
                         : getClassLoader(applicationInfo);
 
@@ -386,8 +381,7 @@ public class SdkSandboxServiceImpl extends Service {
                         applicationInfo,
                         sdkName,
                         customizedApplicationInfo.credentialProtectedDataDir,
-                        customizedApplicationInfo.deviceProtectedDataDir,
-                        mCustomizedSdkContextEnabled);
+                        customizedApplicationInfo.deviceProtectedDataDir);
 
         final SandboxedSdkHolder sandboxedSdkHolder = new SandboxedSdkHolder();
         SdkHolderToSdkSandboxServiceCallbackImpl sdkHolderToSdkSandboxServiceCallback =
@@ -424,7 +418,7 @@ public class SdkSandboxServiceImpl extends Service {
         // instance should have sdk-specific information infused so that system services get the
         // correct information from the base context.
         // customizedInfo has already been infused with sdk-specific information on the server-side.
-        if (SdkLevel.isAtLeastU() && mCustomizedSdkContextEnabled) {
+        if (SdkLevel.isAtLeastU()) {
             // Context.CONTEXT_INCLUDE_CODE ensures SDK code is loaded in sandbox process along with
             // its class loaders. There is a security check to ensure an app loads code that belongs
             // to it only, but the check can be bypassed using Context.Context_IGNORE_SECURITY.
@@ -473,12 +467,9 @@ public class SdkSandboxServiceImpl extends Service {
 
     final class SdkSandboxServiceDelegate extends ISdkSandboxService.Stub {
         @Override
-        public void initialize(
-                @NonNull ISdkToServiceCallback sdkToServiceCallback,
-                boolean isCustomizedSdkContextEnabled) {
+        public void initialize(@NonNull ISdkToServiceCallback sdkToServiceCallback) {
             Objects.requireNonNull(sdkToServiceCallback, "sdkToServiceCallback should not be null");
-            SdkSandboxServiceImpl.this.initialize(
-                    sdkToServiceCallback, isCustomizedSdkContextEnabled);
+            SdkSandboxServiceImpl.this.initialize(sdkToServiceCallback);
         }
 
         @Override

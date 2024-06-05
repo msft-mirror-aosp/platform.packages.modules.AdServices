@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.noising;
 
 import android.annotation.NonNull;
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.Source;
@@ -30,7 +31,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -75,9 +75,9 @@ public class SourceNoiseHandler {
             @NonNull Source source) {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
         double value = rand.nextDouble();
-        if (value > getRandomAttributionProbability(source)) {
+        if (value >= getRandomizedSourceResponsePickRate(source)) {
             source.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
-            return Collections.emptyList();
+            return null;
         }
 
         List<Source.FakeReport> fakeReports;
@@ -86,20 +86,30 @@ public class SourceNoiseHandler {
             // There will at least be one (app or web) destination available
             ImpressionNoiseParams noiseParams = getImpressionNoiseParams(source);
             fakeReports =
-                    ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(
-                                    noiseParams, rand)
+                    ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(noiseParams, rand)
                             .stream()
                             .map(
-                                    reportConfig ->
-                                            new Source.FakeReport(
-                                                    new UnsignedLong(
-                                                            Long.valueOf(reportConfig[0])),
+                                    reportConfig -> {
+                                        long triggerTime = source.getEventTime();
+                                        long reportingTime =
+                                                mEventReportWindowCalcDelegate
+                                                        .getReportingTimeForNoising(
+                                                                source, reportConfig[1]);
+                                        if (mFlags.getMeasurementEnableAttributionScope()) {
+                                            Pair<Long, Long> reportingAndTriggerTime =
                                                     mEventReportWindowCalcDelegate
-                                                            .getReportingTimeForNoising(
-                                                                    source,
-                                                                    reportConfig[1]),
-                                                    resolveFakeReportDestinations(
-                                                            source, reportConfig[2])))
+                                                            .getReportingAndTriggerTimeForNoising(
+                                                                    source, reportConfig[1]);
+                                            triggerTime = reportingAndTriggerTime.first;
+                                            reportingTime = reportingAndTriggerTime.second;
+                                        }
+                                        return new Source.FakeReport(
+                                                new UnsignedLong(Long.valueOf(reportConfig[0])),
+                                                reportingTime,
+                                                triggerTime,
+                                                resolveFakeReportDestinations(
+                                                        source, reportConfig[2]));
+                                    })
                             .collect(Collectors.toList());
         } else {
             int destinationTypeMultiplier = source.getDestinationTypeMultiplier(mFlags);
@@ -109,17 +119,32 @@ public class SourceNoiseHandler {
             fakeReports =
                     fakeReportConfigs.stream()
                             .map(
-                                    reportConfig ->
-                                            new Source.FakeReport(
-                                                    triggerSpecs.getTriggerDataFromIndex(
-                                                            reportConfig[0]),
+                                    reportConfig -> {
+                                        long triggerTime = source.getEventTime();
+                                        long reportingTime =
+                                                mEventReportWindowCalcDelegate
+                                                        .getReportingTimeForNoisingFlexEventApi(
+                                                                reportConfig[1],
+                                                                reportConfig[0],
+                                                                source);
+                                        if (mFlags.getMeasurementEnableAttributionScope()) {
+                                            Pair<Long, Long> reportingAndTriggerTime =
                                                     mEventReportWindowCalcDelegate
-                                                            .getReportingTimeForNoisingFlexEventApi(
+                                                            .getReportingAndTriggerTimeForNoisingFlexEventApi(
                                                                     reportConfig[1],
                                                                     reportConfig[0],
-                                                                    triggerSpecs),
-                                                    resolveFakeReportDestinations(
-                                                            source, reportConfig[2])))
+                                                                    source);
+                                            triggerTime = reportingAndTriggerTime.first;
+                                            reportingTime = reportingAndTriggerTime.second;
+                                        }
+                                        return new Source.FakeReport(
+                                                triggerSpecs.getTriggerDataFromIndex(
+                                                        reportConfig[0]),
+                                                reportingTime,
+                                                triggerTime,
+                                                resolveFakeReportDestinations(
+                                                        source, reportConfig[2]));
+                                    })
                             .collect(Collectors.toList());
         }
         @Source.AttributionMode
@@ -131,13 +156,18 @@ public class SourceNoiseHandler {
         return fakeReports;
     }
 
-    /** @return Probability of selecting random state for attribution */
-    public double getRandomAttributionProbability(@NonNull Source source) {
+    @VisibleForTesting
+    double getRandomizedSourceResponsePickRate(Source source) {
         // Methods on Source and EventReportWindowCalcDelegate that calculate flip probability for
         // the source rely on reporting windows and max reports that are obtained with consideration
         // to install-state and its interaction with configurable report windows and configurable
         // max reports.
-        return convertToDoubleAndLimitDecimal(source.getFlipProbability(mFlags));
+        return source.getFlipProbability(mFlags);
+    }
+
+    /** @return Probability of selecting random state for attribution */
+    public double getRandomizedTriggerRate(@NonNull Source source) {
+        return convertToDoubleAndLimitDecimal(getRandomizedSourceResponsePickRate(source));
     }
 
     private double convertToDoubleAndLimitDecimal(double probability) {

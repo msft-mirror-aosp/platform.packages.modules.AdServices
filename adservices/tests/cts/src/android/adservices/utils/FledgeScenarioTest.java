@@ -32,6 +32,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
+import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.content.Context;
 import android.net.Uri;
@@ -43,8 +44,10 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -57,7 +60,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 
-import java.io.IOException;
+import java.net.URL;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
@@ -72,7 +75,7 @@ import java.util.concurrent.TimeoutException;
 public abstract class FledgeScenarioTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
-    protected static final String TAG = "FledgeScenarioTest";
+    protected static final String TAG = FledgeScenarioTest.class.getSimpleName();
     protected static final int TIMEOUT = 120;
     protected static final String SHOES_CA = "shoes";
     protected static final String SHIRTS_CA = "shirts";
@@ -94,24 +97,28 @@ public abstract class FledgeScenarioTest {
     private int mCacheBuster;
 
     @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final SupportedByConditionRule devOptionsEnabled =
             DevContextUtils.createDevOptionsAvailableRule(sContext, TAG);
 
-    @Rule(order = 4)
+    @Rule(order = 5)
     public final AdServicesDeviceSupportedRule deviceSupported =
             new AdServicesDeviceSupportedRule();
 
-    @Rule(order = 2)
+    @Rule(order = 3)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             CtsWebViewSupportUtil.createJSSandboxAvailableRule(CONTEXT);
 
-    @Rule(order = 1)
+    @Rule(order = 2)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName());
+                    .setPpapiAppAllowList(sContext.getPackageName())
+                    .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
 
-    @Rule(order = 5)
+    @Rule(order = 6)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
                     CONTEXT, "adservices_untrusted_test_server.p12", "adservices_test");
@@ -151,9 +158,17 @@ public abstract class FledgeScenarioTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public final void tearDown() throws Exception {
         if (mMockWebServer != null) {
             mMockWebServer.shutdown();
+        }
+
+        try {
+            leaveCustomAudience(SHOES_CA);
+            leaveCustomAudience(SHIRTS_CA);
+        } catch (Exception e) {
+            // No-op catch here, these are only for cleaning up
+            Log.w(TAG, "Failed while cleaning up custom audiences", e);
         }
     }
 
@@ -213,6 +228,12 @@ public abstract class FledgeScenarioTest {
         Log.d(TAG, "Left Custom Audience: " + customAudienceName);
     }
 
+    protected void doScheduleCustomAudienceUpdate(ScheduleCustomAudienceUpdateRequest request)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        mCustomAudienceClient.scheduleCustomAudienceUpdate(request).get(TIMEOUT, TimeUnit.SECONDS);
+        Log.d(TAG, "Scheduled Custom Audience Update: " + request);
+    }
+
     protected String getServerBaseAddress() {
         return String.format(
                 "https://%s:%s%s/",
@@ -231,6 +252,14 @@ public abstract class FledgeScenarioTest {
                 String.format(
                         "device_config put adservices fledge_register_ad_beacon_enabled %s",
                         enabled ? "true" : "false"));
+    }
+
+    protected void overrideShouldUseUnifiedTable(boolean shouldUse) {
+        ShellUtils.runShellCommand(
+                String.format(
+                        "device_config put adservices"
+                                + " fledge_on_device_auction_should_use_unified_tables %s",
+                        shouldUse ? "true" : "false"));
     }
 
     protected void setDebugReportingEnabledForTesting(boolean enabled) {
@@ -271,6 +300,7 @@ public abstract class FledgeScenarioTest {
         mMockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
         mServerBaseAddress = getServerBaseAddress();
         mAdTechIdentifier = AdTechIdentifier.fromString(mMockWebServer.getHostName());
+        dispatcher.setServerBaseURL(new URL(mServerBaseAddress));
         Log.d(TAG, "Started default MockWebServer.");
     }
 
@@ -324,7 +354,7 @@ public abstract class FledgeScenarioTest {
                 .setRenderUri(
                         Uri.parse(
                                 String.format(
-                                        "%s/render/%s/%s",
+                                        "%srender/%s/%s",
                                         mServerBaseAddress, customAudienceName, adNumber)))
                 .build();
     }

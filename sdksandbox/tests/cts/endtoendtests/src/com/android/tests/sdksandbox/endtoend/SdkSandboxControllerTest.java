@@ -87,6 +87,7 @@ public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
         assumeTrue(SdkLevel.isAtLeastU());
 
         loadSdk();
+        mSdk.createAndRegisterSdkSandboxClientImportanceListener();
 
         mSdk.waitForStateChangeDetection(
                 /*expectedForegroundValue=*/ 0, /*expectedBackgroundValue=*/ 0);
@@ -111,6 +112,7 @@ public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
         assumeTrue(SdkLevel.isAtLeastU());
 
         loadSdk();
+        mSdk.createAndRegisterSdkSandboxClientImportanceListener();
 
         mSdk.waitForStateChangeDetection(
                 /*expectedForegroundValue=*/ 0, /*expectedBackgroundValue=*/ 0);

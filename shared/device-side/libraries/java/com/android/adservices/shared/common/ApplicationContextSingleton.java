@@ -16,8 +16,8 @@
 package com.android.adservices.shared.common;
 
 import android.content.Context;
-import android.util.Log;
 
+import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -34,10 +34,6 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public final class ApplicationContextSingleton {
-
-    // TODO(b/280460130): use adservice helpers for tag name / logging methods
-    private static final String TAG = "AppContextSingleton";
-
     @VisibleForTesting
     public static final String ERROR_MESSAGE_SET_NOT_CALLED = "set() not called yet";
 
@@ -71,7 +67,7 @@ public final class ApplicationContextSingleton {
 
         // Set if it's not set yet
         if (sContext.compareAndSet(null, appContext)) {
-            Log.i(TAG, "Set singleton context as " + appContext);
+            LogUtil.i("Set singleton context as %s", appContext);
             return;
         }
 
@@ -98,7 +94,7 @@ public final class ApplicationContextSingleton {
     @VisibleForTesting
     public static Context getForTests() {
         Context context = sContext.get();
-        Log.i(TAG, "getForTests(): returning " + context);
+        LogUtil.i("getForTests(): returning %s", context);
         return context;
     }
 
@@ -111,7 +107,7 @@ public final class ApplicationContextSingleton {
      */
     @VisibleForTesting
     public static void setForTests(Context context) {
-        Log.i(TAG, "setForTests(): from " + sContext.get() + " to " + context);
+        LogUtil.i("setForTests(): from %s to %s.", sContext.get(), context);
         sContext.set(context);
     }
 

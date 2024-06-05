@@ -19,7 +19,7 @@ package com.android.adservices.service.signals;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
-import static com.android.adservices.spe.AdservicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -39,7 +39,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -70,7 +70,7 @@ public class PeriodicEncodingJobService extends JobService {
 
         LoggerFactory.getFledgeLogger().d("PeriodicEncodingJobService.onStartJob");
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID);
 
         if (!FlagsFactory.getFlags().getProtectedSignalsPeriodicEncodingEnabled()) {
@@ -82,7 +82,7 @@ public class PeriodicEncodingJobService extends JobService {
                     /* doRecord=*/ true);
         }
 
-        if (FlagsFactory.getFlags().getProtectedSignalsServiceKillSwitch()) {
+        if (!FlagsFactory.getFlags().getProtectedSignalsEnabled()) {
             LoggerFactory.getFledgeLogger()
                     .d("FLEDGE Protected Signals API is disabled ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
@@ -93,7 +93,7 @@ public class PeriodicEncodingJobService extends JobService {
 
         // Skip the execution and cancel the job if user consent is revoked.
         // Use the per-API consent with GA UX.
-        if (!ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven()) {
+        if (!ConsentManager.getInstance().getConsent(AdServicesApiType.FLEDGE).isGiven()) {
             LoggerFactory.getFledgeLogger()
                     .d("User Consent is revoked ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
@@ -113,8 +113,7 @@ public class PeriodicEncodingJobService extends JobService {
                                         .d("PeriodicEncodingJobService encoding completed");
 
                                 boolean shouldRetry = false;
-                                AdservicesJobServiceLogger.getInstance(
-                                                PeriodicEncodingJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
                                                 /* isSuccessful= */ true,
@@ -126,8 +125,7 @@ public class PeriodicEncodingJobService extends JobService {
                             @Override
                             public void onFailure(Throwable t) {
                                 boolean shouldRetry = false;
-                                AdservicesJobServiceLogger.getInstance(
-                                                PeriodicEncodingJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
                                                 /* isSuccessful= */ false,
@@ -146,7 +144,7 @@ public class PeriodicEncodingJobService extends JobService {
         PeriodicEncodingJobWorker.getInstance(this).stopWork();
 
         boolean shouldRetry = true;
-        AdservicesJobServiceLogger.getInstance(PeriodicEncodingJobService.this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID, shouldRetry);
 
         return shouldRetry;
@@ -166,15 +164,20 @@ public class PeriodicEncodingJobService extends JobService {
             return;
         }
 
-        if (flags.getProtectedSignalsServiceKillSwitch()) {
+        if (!flags.getProtectedSignalsEnabled()) {
             LoggerFactory.getFledgeLogger()
                     .d("FLEDGE Protected Signals API is disabled ; skipping and cancelling job");
             return;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-        if ((jobScheduler.getPendingJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID) == null)
-                || forceSchedule) {
+        JobInfo job = jobScheduler.getPendingJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID);
+        long existingJobPeriodMillis = flags.getProtectedSignalPeriodicEncodingJobPeriodMs();
+        if (job == null
+                || forceSchedule
+                // Reschedule the job if the period flag has changed
+                || (job.getIntervalMillis() != existingJobPeriodMillis
+                        && JobInfo.getMinPeriodMillis() < existingJobPeriodMillis)) {
             schedule(context, flags);
         } else {
             LoggerFactory.getFledgeLogger()
@@ -182,7 +185,6 @@ public class PeriodicEncodingJobService extends JobService {
                             "Protected Signals periodic encoding job already scheduled, skipping "
                                     + "reschedule");
         }
-        // TODO(b/267651517) Jobs should be rescheduled if the job-params get updated
     }
 
     /**
@@ -204,7 +206,6 @@ public class PeriodicEncodingJobService extends JobService {
                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
                                 new ComponentName(context, PeriodicEncodingJobService.class))
                         .setRequiresBatteryNotLow(true)
-                        .setRequiresDeviceIdle(true)
                         .setPeriodic(
                                 flags.getProtectedSignalPeriodicEncodingJobPeriodMs(),
                                 flags.getProtectedSignalsPeriodicEncodingJobFlexMs())
@@ -221,7 +222,7 @@ public class PeriodicEncodingJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID, skipReason);
         }
 

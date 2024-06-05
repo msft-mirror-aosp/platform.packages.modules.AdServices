@@ -33,8 +33,7 @@ option java_package = "com.google.cobalt";
 //
 // A Report is associated with a Metric and this means that the Report analyzes
 // the Events that were logged to that Metric. The first step occurs on a
-// Fuchsia device where Cobalt analyzes the logged Events in order to form
-// Observations.
+// device where Cobalt analyzes the logged Events in order to form Observations.
 //
 // An Observation is built for a particular Report. The type of observation,
 // including which of several privacy-oriented Encodings is used or not, depends
@@ -43,8 +42,7 @@ option java_package = "com.google.cobalt";
 // The Observations are sent to the Cobalt Shuffler which shuffles them in order
 // to break linkability between Observations and linkability with the
 // originating device. Next the shuffled Observations are sent to the Analyzer
-// which aggregates Observations from all Fuchsia devices in order to generate
-// a report.
+// which aggregates Observations from all devices in order to generate a report.
 //
 // There are multiple types of Metrics and multiple types of Reports. Each
 // Report type is compatible with only some of the Metric types.
@@ -54,13 +52,11 @@ option java_package = "com.google.cobalt";
 // MetricDefinition called the owning MetricDefinition.
 // Next ID: 33
 message ReportDefinition {
-  reserved 4, 5, 6, 7, 8, 11, 14, 15, 16, 12, 101, 102, 31, 21;
-  reserved "aggregation_type", "aggregation_window", "candidate_lis",
-      "dp_release_config", "expected_population_size",
-      "expected_string_set_size", "export_location_override",
-      "local_privacy_noise_level", "output_location", "percentiles",
-      "threshold", "window_size", "use_poisson_mechanism_for_privacy",
-      "prob_bit_flip";
+  reserved 4, 5, 6, 7, 8, 9, 11, 14, 15, 16, 12, 101, 102, 31, 21;
+  reserved "aggregation_type", "aggregation_window", "candidate_lis", "dp_release_config",
+      "expected_population_size", "expected_string_set_size", "export_location_override",
+      "local_privacy_noise_level", "output_location", "percentiles", "threshold", "window_size",
+      "use_poisson_mechanism_for_privacy", "prob_bit_flip", "candidate_file";
 
   // Unique name for this Report within its owning MetricDefinition.
   // The name must obey the syntax of a C variable name and must have length
@@ -79,12 +75,10 @@ message ReportDefinition {
   // Next standard report type ID: 22
   enum ReportType {
     reserved 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 9999;
-    reserved "CUSTOM_RAW_DUMP", "EVENT_COMPONENT_OCCURRENCE_COUNT",
-        "HIGH_FREQUENCY_STRING_COUNTS", "INT_RANGE_HISTOGRAM",
-        "NUMERIC_AGGREGATION", "NUMERIC_PERF_RAW_DUMP", "PER_DEVICE_HISTOGRAM",
-        "PER_DEVICE_NUMERIC_STATS", "SIMPLE_OCCURRENCE_COUNT",
-        "STRING_COUNTS_WITH_THRESHOLD", "STRING_HISTOGRAMS",
-        "UNIQUE_N_DAY_ACTIVES";
+    reserved "CUSTOM_RAW_DUMP", "EVENT_COMPONENT_OCCURRENCE_COUNT", "HIGH_FREQUENCY_STRING_COUNTS",
+        "INT_RANGE_HISTOGRAM", "NUMERIC_AGGREGATION", "NUMERIC_PERF_RAW_DUMP",
+        "PER_DEVICE_HISTOGRAM", "PER_DEVICE_NUMERIC_STATS", "SIMPLE_OCCURRENCE_COUNT",
+        "STRING_COUNTS_WITH_THRESHOLD", "STRING_HISTOGRAMS", "UNIQUE_N_DAY_ACTIVES";
 
     REPORT_TYPE_UNSET = 0;
 
@@ -377,7 +371,6 @@ message ReportDefinition {
     // (See report_row.proto)
     //
     // ReportDefinition fields particular to this type:
-    //   - candidate_file
     //   - string_buffer_max
     STRING_COUNTS = 20;
 
@@ -402,7 +395,6 @@ message ReportDefinition {
     // (See report_row.proto)
     //
     // ReportDefinition fields particular to this type:
-    //   - candidate_file
     //   - local_aggregation_period
     //   - string_buffer_max
     //   - system_profile_selection (SELECT_FIRST and SELECT LAST will maintain
@@ -444,7 +436,7 @@ message ReportDefinition {
   // user population size. For now, it should be set manually in the Cobalt
   // registry in consultation with the Cobalt team.
   //
-  // TODO(b/278932979): update this comment once the field is populated by
+  // TODO(b/295053509): update this comment once the field is populated by
   // the registry parser.
   double poisson_mean = 30;
 
@@ -513,11 +505,6 @@ message ReportDefinition {
   uint64 max_count = 25;
 
   ////////////////  Fields specific to some report types /////////////////
-
-  // Simple name or full path to file containing known string values.
-  //
-  // This field is used only for reports of type STRING.
-  string candidate_file = 9;
 
   // A specification of integer-range buckets for a histogram.
   //
@@ -589,44 +576,39 @@ message ReportDefinition {
   // period is specified for UNIQUE_DEVICE_* report types.
   WindowSize local_aggregation_period = 19;
 
-  // The maximum number of distinct event vectors for which an instance of the
-  // Cobalt client should produce an observation, for a given local aggregation
-  // period. Event vectors are prioritized in order of first arrival during the
-  // aggregation period.
+  // The maximum number of distinct event vectors for which an instance of the Cobalt
+  // client should produce an observation, for a given local aggregation period. Event
+  // vectors are prioritized in order of first arrival during the aggregation period.
   //
-  // For example, if a report has an event_vector_buffer_max of 10, and 12
-  // distinct event vectors are logged for this metric over an aggregation
-  // period, then Cobalt will send observations of the first 10 event vectors
-  // for that aggregation period and drop the last 2.
+  // For example, if a report has an event_vector_buffer_max of 10, and 12 distinct event
+  // vectors are logged for this metric over an aggregation period, then Cobalt will send
+  // observations of the first 10 event vectors for that aggregation period and drop the
+  // last 2.
   //
-  // If this field is unset, the registry parser assigns to it the total number
-  // of event vectors for the report's parent metric (i.e., the product over all
-  // metric dimensions of the number of event codes per dimension).
+  // If this field is unset, the registry parser assigns to it the total number of event
+  // vectors for the report's parent metric (i.e., the product over all metric dimensions
+  // of the number of event codes per dimension).
   //
-  // The report's project will be charged against a resource budget for this
-  // value so project owners are encouraged to set this as small as possible.
-  // For example, the report's parent metric may include a dimension with
-  // thousands of event codes, but it is expected that any one device will log
-  // only a few distinct event vectors per day. In that case we may set
-  // event_vector_buffer_max to a relatively small number, say 20. For reports
-  // which use differential privacy, setting event_vector_buffer_max to a
-  // smaller number will improve the signal for event vectors which are included
-  // in observations.
+  // The report's project will be charged against a resource budget for this value
+  // so project owners are encouraged to set this as small as possible.  For example,
+  // the report's parent metric may include a dimension with thousands of event codes,
+  // but it is expected that any one device will log only a few distinct event vectors
+  // per day. In that case we may set event_vector_buffer_max to a relatively small number,
+  // say 20. For reports which use differential privacy, setting event_vector_buffer_max
+  // to a smaller number will improve the signal for event vectors which are included in
+  // observations.
   uint64 event_vector_buffer_max = 26;
 
-  // The maximum number of distinct strings that Cobalt must keep in its
-  // in-memory buffer on any single device. During local aggregation for reports
-  // of type STRING_COUNTS and UNIQUE_DEVICE_STRING_COUNTS, Cobalt will keep
-  // track of this many distinct strings per aggregation period. The report's
-  // project will be charged against a resource budget for this value so project
-  // owners are encouraged to set this as small as possible. A STRING metric
-  // includes a file of candidate strings that may contain many thousands of
-  // strings. But it is expected that any one device will log only a few of
-  // these strings per day. We may set string_buffer_max to a relatively small
-  // number, say 20.
+  // The maximum number of distinct strings that Cobalt must keep in its in-memory buffer
+  // on any single device. During local aggregation for reports of type STRING_COUNTS and
+  // UNIQUE_DEVICE_STRING_COUNTS, Cobalt will keep track of this many distinct strings per
+  // aggregation period. The report's project will be charged against a resource budget for this
+  // value so project owners are encouraged to set this as small as possible. A STRING metric
+  // includes a file of candidate strings that may contain many thousands of strings. But it is
+  // expected that any one device will log only a few of these strings per day. We may set
+  // string_buffer_max to a relatively small number, say 20.
   //
-  // This is a required field for reports of type STRING_COUNTS and
-  // UNIQUE_DEVICE_STRING_COUNTS.
+  // This is a required field for reports of type STRING_COUNTS and UNIQUE_DEVICE_STRING_COUNTS.
   uint32 string_buffer_max = 28;
 
   // For reports of type UNIQUE_DEVICE_COUNTS, send observations as soon as the
@@ -645,7 +627,7 @@ message ReportDefinition {
   bool expedited_sending = 29;
 
   ///////////////////  Fields used by all report types ///////////////////
-  // Next id: 106
+  // Next id: 109
 
   // The list of SystemProfileFields to include in each row of the report.
   // Optional.
@@ -653,11 +635,10 @@ message ReportDefinition {
 
   // The list of Experiments to include in each row of the report.
   //
-  // Each report row lists the intersection of the experiment ids active on the
-  // device and experiment ids specified in this field.
+  // Each report row lists the intersection of the experiment ids active on the device and
+  // experiment ids specified in this field.
   //
-  // The specified experiment ids must be found in one of the project's
-  // experiments_namespaces.
+  // The specified experiment ids must be found in one of the project's experiments_namespaces.
   repeated int64 experiment_id = 104;
 
   // This field is required for reports of type UNIQUE_DEVICE_COUNTS,
@@ -672,6 +653,68 @@ message ReportDefinition {
 
   // Maximum ReleaseStage for which this Report is allowed to be collected.
   ReleaseStage max_release_stage = 105;
+
+  // Report can be collected even if the user/device has not consented.
+  // This field can only be set to true on reports that use privacy mechanisms
+  // that include differential privacy (i.e. not DE_IDENTIFICATION). The use of
+  // this field is for collecting anonymized data that is allowed even when
+  // the consent is not given. These use cases need to be specially approved
+  // by privacy reviewers.
+  bool exempt_from_consent = 108;
+
+  // New Privacy API
+
+  // This enum identifies what privacy protection is applied to the report.
+  enum PrivacyMechanism {
+    PRIVACY_MECHANISM_UNSPECIFIED = 0;
+    // If you specify this value the data will be de-identified without
+    // additional privacy protections.
+    DE_IDENTIFICATION = 1;
+    // If you specify this value the data will be protected with Shuffled
+    // Differential Privacy guarantees (e.g., the noise wll be added on the
+    // devices)
+    SHUFFLED_DIFFERENTIAL_PRIVACY = 2;
+  }
+
+  // This field identifies what privacy protection is applied to the report.
+  // It will eventually be required once migration from privacy_level
+  // is complete.
+  PrivacyMechanism privacy_mechanism = 106;
+
+  // The object for grouping all parameters needed for SHUFFLED DP mode.
+  message ShuffledDifferentialPrivacyConfig {
+    // This field represents an upper bound on the amount of information which
+    // can be learned about a device from a report including that device.
+    // Lower values correspond to higher privacy.
+    // Epsilon must be > 0.
+    double epsilon = 1;
+    // This field represents the risk of the epsilon guarantee not holding. This
+    // is usually set as 1 over the expected number of participating devices.
+    // Delta must be > 0 and < 1.
+    double delta = 2;
+    // The generated report will exclude an Observation if there are not at
+    // least |reporting_threshold| number of distinct devices reporting
+    // Observations with the same ObservationMetadata.
+    uint32 reporting_threshold = 3;
+
+    // The mean number of observations added per index point when performing the
+    // Poisson mechanism encoding for Cobalt reports. Required.
+    //
+    // In the future, the value of this field will be computed by the registry
+    // parser as a function of other fields in this
+    // ShuffledDifferentialPrivacyConfig. For now, it should be set manually in
+    // the Cobalt registry in consultation with the Cobalt team.
+    //
+    // TODO(b/295053509): update this comment once the field is auto populated by
+    // the registry parser.
+    double poisson_mean = 4;
+  }
+
+  // If privacy_mechanism is SHUFFLED_DIFFERENTIAL_PRIVACY then privacy_config
+  // must contain valid ShuffledDifferentialPrivacyConfig otherwise empty.
+  oneof privacy_config {
+    ShuffledDifferentialPrivacyConfig shuffled_dp = 107;
+  }
 }
 
 // A specification for SystemProfile selection policy.

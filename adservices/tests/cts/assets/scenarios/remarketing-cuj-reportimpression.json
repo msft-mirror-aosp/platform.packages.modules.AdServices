@@ -43,7 +43,7 @@
     },
     {
       "request": {
-        "path": "seller/reportImpression?render_uri=https://localhost:38383/render/shoes/0?bid=10"
+        "path": "seller/reportImpression?render_uri={base_url}/render/shoes/0?bid=10"
       },
       "response": {
         "body": "DefaultResponse.txt"

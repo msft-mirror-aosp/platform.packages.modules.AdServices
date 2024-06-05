@@ -44,6 +44,7 @@ import java.util.concurrent.Executors;
 
 @Scenario
 @RunWith(JUnit4.class)
+// TODO(b/333900177): Remove this test once the new Ad ID CB test is stable.
 public class GetAdId {
     private static final String TAG = GetAdId.class.getSimpleName();
     private static final Context sContext = ApplicationProvider.getApplicationContext();

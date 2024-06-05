@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.common;
 
+import static com.android.adservices.service.common.AllowLists.ALLOW_ALL;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -28,9 +29,7 @@ import android.content.pm.ApplicationInfo;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -41,6 +40,7 @@ import org.mockito.MockitoSession;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class CleanupUtilsTest {
@@ -66,27 +66,18 @@ public class CleanupUtilsTest {
 
     @Test
     public void testEmpty() {
-        class FlagsThatAllowOneApp implements Flags {
-            @Override
-            public String getPpapiAppAllowList() {
-                return CommonFixture.TEST_PACKAGE_NAME_1;
-            }
-        }
         List<String> packageList = new ArrayList<>();
+
         CleanupUtils.removeAllowedPackages(
-                packageList, CONTEXT.getPackageManager(), new FlagsThatAllowOneApp());
+                packageList,
+                CONTEXT.getPackageManager(),
+                Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1));
+
         assertEquals(new ArrayList<>(), packageList);
     }
 
     @Test
     public void testCleanupNotUninstalled() {
-        class FlagsThatAllowOneApp implements Flags {
-            @Override
-            public String getPpapiAppAllowList() {
-                return CommonFixture.TEST_PACKAGE_NAME_1;
-            }
-        }
-
         ApplicationInfo installedPackage1 = new ApplicationInfo();
         installedPackage1.packageName = CommonFixture.TEST_PACKAGE_NAME_1;
         ApplicationInfo installedPackage2 = new ApplicationInfo();
@@ -99,21 +90,17 @@ public class CleanupUtilsTest {
                                 CommonFixture.TEST_PACKAGE_NAME_1,
                                 CommonFixture.TEST_PACKAGE_NAME_2));
         List<String> expected = Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_2);
+
         CleanupUtils.removeAllowedPackages(
-                packageList, CONTEXT.getPackageManager(), new FlagsThatAllowOneApp());
+                packageList,
+                CONTEXT.getPackageManager(),
+                Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1));
+
         assertEquals(expected, packageList);
     }
 
     @Test
     public void testCleanupNotAllowed() {
-        // All owners are allowed
-        class FlagsThatAllowAllApps implements Flags {
-            @Override
-            public String getPpapiAppAllowList() {
-                return AllowLists.ALLOW_ALL;
-            }
-        }
-
         ApplicationInfo installedPackage2 = new ApplicationInfo();
         installedPackage2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
         doReturn(Arrays.asList(installedPackage2))
@@ -124,8 +111,81 @@ public class CleanupUtilsTest {
                                 CommonFixture.TEST_PACKAGE_NAME_1,
                                 CommonFixture.TEST_PACKAGE_NAME_2));
         List<String> expected = Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1);
+
         CleanupUtils.removeAllowedPackages(
-                packageList, CONTEXT.getPackageManager(), new FlagsThatAllowAllApps());
+                packageList, CONTEXT.getPackageManager(), Arrays.asList(ALLOW_ALL));
+
+        assertEquals(expected, packageList);
+    }
+
+    @Test
+    public void testCleanupMultipleAllowLists() {
+        ApplicationInfo installedPackage1 = new ApplicationInfo();
+        installedPackage1.packageName = CommonFixture.TEST_PACKAGE_NAME_1;
+        ApplicationInfo installedPackage2 = new ApplicationInfo();
+        installedPackage2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
+        doReturn(Arrays.asList(installedPackage1, installedPackage2))
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
+        List<String> packageList =
+                new ArrayList<>(
+                        Arrays.asList(
+                                CommonFixture.TEST_PACKAGE_NAME_1,
+                                CommonFixture.TEST_PACKAGE_NAME_2));
+        List<String> expected = Collections.emptyList();
+
+        CleanupUtils.removeAllowedPackages(
+                packageList,
+                CONTEXT.getPackageManager(),
+                Arrays.asList(
+                        CommonFixture.TEST_PACKAGE_NAME_1, CommonFixture.TEST_PACKAGE_NAME_2));
+
+        assertEquals(expected, packageList);
+    }
+
+    @Test
+    public void testCleanupMultipleAllowListsWildCard() {
+        ApplicationInfo installedPackage1 = new ApplicationInfo();
+        installedPackage1.packageName = CommonFixture.TEST_PACKAGE_NAME_1;
+        ApplicationInfo installedPackage2 = new ApplicationInfo();
+        installedPackage2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
+        doReturn(Arrays.asList(installedPackage1, installedPackage2))
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
+        List<String> packageList =
+                new ArrayList<>(
+                        Arrays.asList(
+                                CommonFixture.TEST_PACKAGE_NAME_1,
+                                CommonFixture.TEST_PACKAGE_NAME_2));
+        List<String> expected = Collections.emptyList();
+
+        CleanupUtils.removeAllowedPackages(
+                packageList,
+                CONTEXT.getPackageManager(),
+                Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1, ALLOW_ALL));
+
+        assertEquals(expected, packageList);
+    }
+
+    @Test
+    public void testCleanupMultipleAllowListsRedundant() {
+        ApplicationInfo installedPackage1 = new ApplicationInfo();
+        installedPackage1.packageName = CommonFixture.TEST_PACKAGE_NAME_1;
+        ApplicationInfo installedPackage2 = new ApplicationInfo();
+        installedPackage2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
+        doReturn(Arrays.asList(installedPackage1, installedPackage2))
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
+        List<String> packageList =
+                new ArrayList<>(
+                        Arrays.asList(
+                                CommonFixture.TEST_PACKAGE_NAME_1,
+                                CommonFixture.TEST_PACKAGE_NAME_2));
+        List<String> expected = Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_2);
+
+        CleanupUtils.removeAllowedPackages(
+                packageList,
+                CONTEXT.getPackageManager(),
+                Arrays.asList(
+                        CommonFixture.TEST_PACKAGE_NAME_1, CommonFixture.TEST_PACKAGE_NAME_1));
+
         assertEquals(expected, packageList);
     }
 }

@@ -24,6 +24,7 @@ interface ICtsSdkProviderApi {
     void checkResourcesAndAssets();
     boolean isPermissionGranted (String permissionName, boolean useApplicationContext);
     int getContextHashCode(boolean useApplicationContext);
+    int getContextUserId();
     void testStoragePaths();
     int getProcessImportance();
     void startSandboxActivityDirectlyByAction();
@@ -36,6 +37,7 @@ interface ICtsSdkProviderApi {
     void checkCanUseSharedPreferences();
     void checkReadFileDescriptor(in ParcelFileDescriptor fd, String expectedValue);
     ParcelFileDescriptor createFileDescriptor(String valueToWrite);
+    void createAndRegisterSdkSandboxClientImportanceListener();
     void waitForStateChangeDetection(int expectedForegroundValue, int expectedBackgroundValue);
     void unregisterSdkSandboxClientImportanceListener();
 }

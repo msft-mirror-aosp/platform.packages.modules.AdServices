@@ -41,10 +41,12 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
@@ -71,6 +73,9 @@ public class ProtectedSignalsDaoTest {
     private ProtectedSignalsDao mProtectedSignalsDao;
 
     private MockitoSession mStaticMockSession;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -139,6 +144,17 @@ public class ProtectedSignalsDaoTest {
         assertEquals(1, readResult.size());
         assertNotNull(readResult.get(0).getId());
         assertEqualsExceptId(DBProtectedSignalFixture.SIGNAL, readResult.get(0));
+    }
+
+    @Test
+    public void testTwoSignalsDeleteAll() {
+        mProtectedSignalsDao.insertSignals(
+                Arrays.asList(DBProtectedSignalFixture.SIGNAL, DBProtectedSignalFixture.SIGNAL));
+
+        List<DBProtectedSignal> readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        mProtectedSignalsDao.deleteAllSignals();
+        readResult = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);
+        assertEquals(0, readResult.size());
     }
 
     @Test
@@ -344,7 +360,7 @@ public class ProtectedSignalsDaoTest {
                 DBProtectedSignalFixture.getBuilder().setPackageName(PACKAGE_2).build();
         final class FlagsWithAllAppsAllowed implements Flags {
             @Override
-            public String getPpapiAppAllowList() {
+            public String getPasAppAllowList() {
                 return AllowLists.ALLOW_ALL;
             }
         }
@@ -377,7 +393,7 @@ public class ProtectedSignalsDaoTest {
                 DBProtectedSignalFixture.getBuilder().setPackageName(PACKAGE_2).build();
         class FlagsThatAllowOneApp implements Flags {
             @Override
-            public String getPpapiAppAllowList() {
+            public String getPasAppAllowList() {
                 return PACKAGE_1;
             }
         }

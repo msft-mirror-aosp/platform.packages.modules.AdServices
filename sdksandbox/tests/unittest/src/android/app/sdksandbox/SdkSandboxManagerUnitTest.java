@@ -279,7 +279,8 @@ public class SdkSandboxManagerUnitTest {
     }
 
     @Test
-    public void testRequestSurfacePackage_callSuccessful_logLatenciesCalled() throws Exception {
+    public void testRequestSurfacePackage_callSuccessful_logSandboxApiLatencyCalled()
+            throws Exception {
         final Bundle params = new Bundle();
         params.putInt(EXTRA_WIDTH_IN_PIXELS, 400);
         params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
@@ -314,14 +315,14 @@ public class SdkSandboxManagerUnitTest {
                         surfacePackageMock, 0, extraInfo, sandboxLatencyInfoCaptor.getValue());
 
         Mockito.verify(mBinder, Mockito.times(1))
-                .logLatencies(Mockito.eq(sandboxLatencyInfoCaptor.getValue()));
+                .logSandboxApiLatency(Mockito.eq(sandboxLatencyInfoCaptor.getValue()));
         assertEquals(
                 SandboxLatencyInfo.METHOD_REQUEST_SURFACE_PACKAGE,
                 sandboxLatencyInfoCaptor.getValue().getMethod());
     }
 
     @Test
-    public void testRequestSurfacePackage_callFails_logLatenciesCalled() throws Exception {
+    public void testRequestSurfacePackage_callFails_logSandboxApiLatencyCalled() throws Exception {
         final Bundle params = new Bundle();
         params.putInt(EXTRA_WIDTH_IN_PIXELS, 400);
         params.putInt(EXTRA_HEIGHT_IN_PIXELS, 500);
@@ -356,14 +357,15 @@ public class SdkSandboxManagerUnitTest {
                         sandboxLatencyInfoCaptor.getValue());
 
         Mockito.verify(mBinder, Mockito.times(1))
-                .logLatencies(Mockito.eq(sandboxLatencyInfoCaptor.getValue()));
+                .logSandboxApiLatency(Mockito.eq(sandboxLatencyInfoCaptor.getValue()));
         assertEquals(
                 SandboxLatencyInfo.METHOD_REQUEST_SURFACE_PACKAGE,
                 sandboxLatencyInfoCaptor.getValue().getMethod());
     }
 
     @Test
-    public void testRequestSurfacePackage_logLatencies_remoteExceptionThrown() throws Exception {
+    public void testRequestSurfacePackage_logSandboxApiLatency_remoteExceptionThrown()
+            throws Exception {
         MockitoSession mStaticMockSession =
                 ExtendedMockito.mockitoSession().mockStatic(Log.class).startMocking();
 
@@ -375,7 +377,7 @@ public class SdkSandboxManagerUnitTest {
 
         Mockito.doThrow(new RemoteException("failed"))
                 .when(mBinder)
-                .logLatencies(Mockito.any(SandboxLatencyInfo.class));
+                .logSandboxApiLatency(Mockito.any(SandboxLatencyInfo.class));
 
         mSdkSandboxManager.requestSurfacePackage(
                 SDK_NAME, params, Runnable::run, new FakeOutcomeReceiver<>());
@@ -405,12 +407,13 @@ public class SdkSandboxManagerUnitTest {
                 () ->
                         Log.w(
                                 SDK_SANDBOX_MANAGER_TAG,
-                                "Remote exception while calling " + "logLatencies.Error: failed"));
+                                "Remote exception while calling "
+                                        + "logSandboxApiLatency.Error: failed"));
         mStaticMockSession.finishMocking();
     }
 
     @Test
-    public void testLoadSdk_callSuccessful_logLatenciesCalled() throws Exception {
+    public void testLoadSdk_callSuccessful_logSandboxApiLatencyCalled() throws Exception {
         final Bundle params = new Bundle();
 
         mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, new FakeOutcomeReceiver<>());
@@ -433,14 +436,14 @@ public class SdkSandboxManagerUnitTest {
                         new SandboxedSdk(new Binder()), sandboxLatencyInfoCaptor.getValue());
 
         Mockito.verify(mBinder, Mockito.times(1))
-                .logLatencies(Mockito.eq(sandboxLatencyInfoCaptor.getValue()));
+                .logSandboxApiLatency(Mockito.eq(sandboxLatencyInfoCaptor.getValue()));
         assertEquals(
                 SandboxLatencyInfo.METHOD_LOAD_SDK,
                 sandboxLatencyInfoCaptor.getValue().getMethod());
     }
 
     @Test
-    public void testLoadSdk_callFails_logLatenciesCalled() throws Exception {
+    public void testLoadSdk_callFails_logSandboxApiLatencyCalled() throws Exception {
         final Bundle params = new Bundle();
 
         mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, new FakeOutcomeReceiver<>());
@@ -464,7 +467,7 @@ public class SdkSandboxManagerUnitTest {
                         sandboxLatencyInfoCaptor.getValue());
 
         Mockito.verify(mBinder, Mockito.times(1))
-                .logLatencies(Mockito.eq(sandboxLatencyInfoCaptor.getValue()));
+                .logSandboxApiLatency(Mockito.eq(sandboxLatencyInfoCaptor.getValue()));
         assertEquals(
                 SandboxLatencyInfo.METHOD_LOAD_SDK,
                 sandboxLatencyInfoCaptor.getValue().getMethod());
@@ -595,10 +598,13 @@ public class SdkSandboxManagerUnitTest {
                 .isNotNull();
         assertThat(params.getBinder(SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER))
                 .isEqualTo(token);
+        // TODO(b/326966352): test sandbox activity start param is set correctly.
+        assertThat(params.getLong(SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME))
+                .isNotEqualTo(0L);
     }
 
     @Test
-    public void testStartSandboxActivity_logSandboxActivityEventCalled() throws Exception {
+    public void testStartSandboxActivity_logSandboxActivityApiLatencyCalled() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
         Activity fromActivitySpy = Mockito.mock(Activity.class);
@@ -606,7 +612,7 @@ public class SdkSandboxManagerUnitTest {
         mSdkSandboxManager.startSdkSandboxActivity(fromActivitySpy, token);
 
         Mockito.verify(mBinder, Mockito.times(1))
-                .logSandboxActivityEvent(
+                .logSandboxActivityApiLatency(
                         Mockito.eq(
                                 SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__START_SDK_SANDBOX_ACTIVITY),
                         Mockito.anyInt(),

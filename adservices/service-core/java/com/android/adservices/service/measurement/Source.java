@@ -58,6 +58,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class Source {
 
+    public static final long DEFAULT_MAX_EVENT_STATES = 3L;
+
     private String mId;
     private UnsignedLong mEventId;
     private Uri mPublisher;
@@ -111,6 +113,9 @@ public class Source {
     @Nullable private UnsignedLong mSharedDebugKey;
     private List<Pair<Long, Long>> mParsedEventReportWindows;
     private boolean mDropSourceIfInstalled;
+    @Nullable private List<String> mAttributionScopes;
+    @Nullable private Long mAttributionScopeLimit;
+    @Nullable private Long mMaxEventStates;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -225,6 +230,66 @@ public class Source {
     }
 
     /**
+     * Checks if the source has a valid number of report states and sets the value. mNumStates will
+     * not be set if invalid.
+     *
+     * @param flags flag values
+     */
+    public boolean validateAndSetNumReportStates(Flags flags) {
+        if (mTriggerSpecs == null) {
+            long reportStateCountLimit = flags.getMeasurementMaxReportStatesPerSourceRegistration();
+            EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
+                    new EventReportWindowCalcDelegate(flags);
+            int reportingWindowCountForNoising =
+                    eventReportWindowCalcDelegate.getReportingWindowCountForNoising(this);
+
+            int numStars = eventReportWindowCalcDelegate.getMaxReportCount(this);
+            int numBars = getTriggerDataCardinality()
+                    * reportingWindowCountForNoising
+                    * getDestinationTypeMultiplier(flags);
+
+            long numStates = Combinatorics.getNumberOfStarsAndBarsSequences(numStars, numBars);
+            if (numStates > reportStateCountLimit) {
+                return false;
+            }
+
+            setNumStates(numStates);
+
+            return true;
+        } else {
+            return mTriggerSpecs.hasValidReportStateCount(this, flags);
+        }
+    }
+
+    /**
+     * Verifies whether the source contains a valid maximum event states value and assigns the
+     * default value if it's not specified in certain instances.
+     *
+     * @param flags flag values
+     */
+    public boolean validateAndSetMaxEventStates(Flags flags) {
+        if (!flags.getMeasurementEnableAttributionScope() || getAttributionScopeLimit() == null) {
+            return true;
+        }
+        Long numStates =
+                mTriggerSpecs == null
+                        ? getNumStates(flags)
+                        : mTriggerSpecs.getNumStates(this, flags);
+        if (numStates == null || numStates == 0L) {
+            throw new IllegalStateException(
+                    "Num states should be validated before validating max event states");
+        }
+        if (mMaxEventStates == null) {
+            // Fallback to default max event states.
+            setMaxEventStates(DEFAULT_MAX_EVENT_STATES);
+        }
+        if (getSourceType() == SourceType.EVENT && numStates > getMaxEventStates()) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Checks if the source has valid information gain
      *
      * @param flags flag values
@@ -247,11 +312,33 @@ public class Source {
                 : flags.getMeasurementFlexApiMaxInformationGainNavigation();
     }
 
+    /**
+     * Compute information gain for the source given the numTriggerStates. Attribution scope limit
+     * and max event states will also be considered if attribution scope is enabled.
+     *
+     * @param flags flag values.
+     * @param flipProbability the flip probability, used only if attribution scope is not enabled.
+     * @param numTriggerStates num of trigger states.
+     */
+    public double getInformationGain(Flags flags, long numTriggerStates, double flipProbability) {
+        if (flags.getMeasurementEnableAttributionScope()) {
+            long attributionScopeLimit =
+                    getAttributionScopeLimit() == null ? 1L : getAttributionScopeLimit();
+            long maxEventStates = getMaxEventStates() == null ? 1L : getMaxEventStates();
+            return Combinatorics.getMaxInformationGainWithAttributionScope(
+                    numTriggerStates,
+                    attributionScopeLimit,
+                    maxEventStates,
+                    flags.getMeasurementPrivacyEpsilon());
+        }
+        return Combinatorics.getInformationGain(numTriggerStates, flipProbability);
+    }
+
     private boolean isFlexLiteApiValueValid(Flags flags) {
         if (!flags.getMeasurementFlexLiteApiEnabled()) {
             return true;
         }
-        return Combinatorics.getInformationGain(getNumStates(flags), getFlipProbability(flags))
+        return getInformationGain(flags, getNumStates(flags), getFlipProbability(flags))
                 <= getInformationGainThreshold(flags);
     }
 
@@ -264,18 +351,8 @@ public class Source {
             setFlipProbability(mTriggerSpecs.getFlipProbability(this, flags));
             return;
         }
-        EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
-                new EventReportWindowCalcDelegate(flags);
-        int reportingWindowCountForNoising =
-                eventReportWindowCalcDelegate.getReportingWindowCountForNoising(this);
-        long numberOfStates =
-                Combinatorics.getNumberOfStarsAndBarsSequences(
-                        /*numStars=*/ eventReportWindowCalcDelegate.getMaxReportCount(this),
-                        /*numBars=*/ getTriggerDataCardinality()
-                                * reportingWindowCountForNoising
-                                * getDestinationTypeMultiplier(flags));
-        setNumStates(numberOfStates);
-        setFlipProbability(Combinatorics.getFlipProbability(numberOfStates));
+        double epsilon = (double) flags.getMeasurementPrivacyEpsilon();
+        setFlipProbability(Combinatorics.getFlipProbability(getNumStates(flags), epsilon));
     }
 
     /** Should source report coarse destinations */
@@ -363,12 +440,18 @@ public class Source {
     public static class FakeReport {
         private final UnsignedLong mTriggerData;
         private final long mReportingTime;
+        private final long mTriggerTime;
         private final List<Uri> mDestinations;
 
-        public FakeReport(UnsignedLong triggerData, long reportingTime, List<Uri> destinations) {
+        public FakeReport(
+                UnsignedLong triggerData,
+                long reportingTime,
+                long triggerTime,
+                List<Uri> destinations) {
             mTriggerData = triggerData;
             mReportingTime = reportingTime;
             mDestinations = destinations;
+            mTriggerTime = triggerTime;
         }
 
         @Override
@@ -378,16 +461,21 @@ public class Source {
             FakeReport that = (FakeReport) o;
             return Objects.equals(mTriggerData, that.mTriggerData)
                     && mReportingTime == that.mReportingTime
+                    && mTriggerTime == that.mTriggerTime
                     && Objects.equals(mDestinations, that.mDestinations);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(mTriggerData, mReportingTime, mDestinations);
+            return Objects.hash(mTriggerData, mReportingTime, mTriggerTime, mDestinations);
         }
 
         public long getReportingTime() {
             return mReportingTime;
+        }
+
+        public long getTriggerTime() {
+            return mTriggerTime;
         }
 
         public UnsignedLong getTriggerData() {
@@ -516,7 +604,10 @@ public class Source {
                 && Objects.equals(mPrivacyParametersString, source.mPrivacyParametersString)
                 && Objects.equals(mTriggerDataMatching, source.mTriggerDataMatching)
                 && Objects.equals(mSharedDebugKey, source.mSharedDebugKey)
-                && mDropSourceIfInstalled == source.mDropSourceIfInstalled;
+                && mDropSourceIfInstalled == source.mDropSourceIfInstalled
+                && Objects.equals(mAttributionScopes, source.mAttributionScopes)
+                && Objects.equals(mAttributionScopeLimit, source.mAttributionScopeLimit)
+                && Objects.equals(mMaxEventStates, source.mMaxEventStates);
     }
 
     @Override
@@ -564,7 +655,10 @@ public class Source {
                 mPrivacyParametersString,
                 mCoarseEventReportDestinations,
                 mSharedDebugKey,
-                mDropSourceIfInstalled);
+                mDropSourceIfInstalled,
+                mAttributionScopes,
+                mAttributionScopeLimit,
+                mMaxEventStates);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -629,6 +723,22 @@ public class Source {
     @Nullable
     public List<Uri> getWebDestinations() {
         return mWebDestinations;
+    }
+
+    /** Returns combined list of web and app attribution destinations. */
+    public List<Pair<Integer, String>> getAllAttributionDestinations() {
+        List<Pair<Integer, String>> destinations = new ArrayList<>();
+        if (hasAppDestinations()) {
+            for (Uri appDestination : getAppDestinations()) {
+                destinations.add(Pair.create(EventSurfaceType.APP, appDestination.toString()));
+            }
+        }
+        if (hasWebDestinations()) {
+            for (Uri webDestination : getWebDestinations()) {
+                destinations.add(Pair.create(EventSurfaceType.WEB, webDestination.toString()));
+            }
+        }
+        return destinations;
     }
 
     /**
@@ -946,7 +1056,7 @@ public class Source {
      */
     private Long getNumStates(Flags flags) {
         if (mNumStates == null) {
-            buildPrivacyParameters(flags);
+            validateAndSetNumReportStates(flags);
         }
         return mNumStates;
     }
@@ -1012,6 +1122,11 @@ public class Source {
     /** Set the number of report states for the {@link Source}. */
     private void setNumStates(long numStates) {
         mNumStates = numStates;
+    }
+
+    /** Set max event states for the {@link Source}. */
+    private void setMaxEventStates(long maxEventStates) {
+        mMaxEventStates = maxEventStates;
     }
 
     /** Set flip probability for the {@link Source}. */
@@ -1140,15 +1255,15 @@ public class Source {
         return mWebDestinations != null && mWebDestinations.size() > 0;
     }
 
-    private static boolean areEqualNullableDestinations(List<Uri> destinations,
-            List<Uri> otherDestinations) {
+    private static boolean areEqualNullableDestinations(
+            List<Uri> destinations, List<Uri> otherDestinations) {
         if (destinations == null && otherDestinations == null) {
             return true;
         } else if (destinations == null || otherDestinations == null) {
             return false;
         } else {
-            return ImmutableMultiset.copyOf(destinations).equals(
-                    ImmutableMultiset.copyOf(otherDestinations));
+            return ImmutableMultiset.copyOf(destinations)
+                    .equals(ImmutableMultiset.copyOf(otherDestinations));
         }
     }
 
@@ -1186,9 +1301,25 @@ public class Source {
         }
     }
 
-    /**
-     * Builder for {@link Source}.
-     */
+    /** Returns the attribution scopes attached to the source. */
+    @Nullable
+    public List<String> getAttributionScopes() {
+        return mAttributionScopes;
+    }
+
+    /** Returns the attribution scope limit for the source. It should be positive. */
+    @Nullable
+    public Long getAttributionScopeLimit() {
+        return mAttributionScopeLimit;
+    }
+
+    /** Returns max number of event states. It should be positive. */
+    @Nullable
+    public Long getMaxEventStates() {
+        return mMaxEventStates;
+    }
+
+    /** Builder for {@link Source}. */
     public static final class Builder {
         private final Source mBuilding;
 
@@ -1232,7 +1363,7 @@ public class Source {
             builder.setMaxEventLevelReports(copyFrom.mMaxEventLevelReports);
             builder.setAggregatableReportWindow(copyFrom.mAggregatableReportWindow);
             builder.setEnrollmentId(copyFrom.mEnrollmentId);
-            builder.setFilterData(copyFrom.mFilterDataString);
+            builder.setFilterDataString(copyFrom.mFilterDataString);
             builder.setSharedFilterDataKeys(copyFrom.mSharedFilterDataKeys);
             builder.setInstallTime(copyFrom.mInstallTime);
             builder.setIsDebugReporting(copyFrom.mIsDebugReporting);
@@ -1248,6 +1379,9 @@ public class Source {
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
             builder.setDropSourceIfInstalled(copyFrom.mDropSourceIfInstalled);
+            builder.setAttributionScopes(copyFrom.mAttributionScopes);
+            builder.setAttributionScopeLimit(copyFrom.mAttributionScopeLimit);
+            builder.setMaxEventStates(copyFrom.mMaxEventStates);
             return builder;
         }
 
@@ -1450,7 +1584,7 @@ public class Source {
         }
 
         /** See {@link Source#getFilterDataString()}. */
-        public Builder setFilterData(@Nullable String filterMap) {
+        public Builder setFilterDataString(@Nullable String filterMap) {
             mBuilding.mFilterDataString = filterMap;
             return this;
         }
@@ -1600,6 +1734,27 @@ public class Source {
         @NonNull
         public Builder setDropSourceIfInstalled(boolean dropSourceIfInstalled) {
             mBuilding.mDropSourceIfInstalled = dropSourceIfInstalled;
+            return this;
+        }
+
+        /** See {@link Source#getAttributionScopes()}. */
+        @NonNull
+        public Builder setAttributionScopes(@Nullable List<String> attributionScopes) {
+            mBuilding.mAttributionScopes = attributionScopes;
+            return this;
+        }
+
+        /** See {@link Source#getAttributionScopeLimit()}. */
+        @NonNull
+        public Builder setAttributionScopeLimit(@Nullable Long attributionScopeLimit) {
+            mBuilding.mAttributionScopeLimit = attributionScopeLimit;
+            return this;
+        }
+
+        /** See {@link Source#getMaxEventStates()}. */
+        @NonNull
+        public Builder setMaxEventStates(@Nullable Long maxEventStates) {
+            mBuilding.mMaxEventStates = maxEventStates;
             return this;
         }
 

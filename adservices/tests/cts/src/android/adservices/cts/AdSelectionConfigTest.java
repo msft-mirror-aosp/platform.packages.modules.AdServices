@@ -22,17 +22,26 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.SignedContextualAds;
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 import android.os.Parcel;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
+
+import java.util.Map;
 
 public class AdSelectionConfigTest {
     @Test
     public void testBuildValidAdSelectionConfigSuccess() {
+        Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap =
+                SignedContextualAdsFixture.getBuyerSignedContextualAdsMap();
         AdSelectionConfig config =
                 new AdSelectionConfig.Builder()
                         .setSeller(AdSelectionConfigFixture.SELLER)
@@ -41,6 +50,7 @@ public class AdSelectionConfigTest {
                         .setAdSelectionSignals(AdSelectionConfigFixture.AD_SELECTION_SIGNALS)
                         .setSellerSignals(AdSelectionConfigFixture.SELLER_SIGNALS)
                         .setPerBuyerSignals(AdSelectionConfigFixture.PER_BUYER_SIGNALS)
+                        .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .setTrustedScoringSignalsUri(
                                 AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI)
                         .build();
@@ -52,14 +62,20 @@ public class AdSelectionConfigTest {
         assertEquals(config.getAdSelectionSignals(), AdSelectionConfigFixture.AD_SELECTION_SIGNALS);
         assertEquals(config.getSellerSignals(), AdSelectionConfigFixture.SELLER_SIGNALS);
         assertEquals(config.getPerBuyerSignals(), AdSelectionConfigFixture.PER_BUYER_SIGNALS);
+        assertEquals(config.getPerBuyerSignedContextualAds(), contextualAdsMap);
         assertEquals(
                 config.getTrustedScoringSignalsUri(),
                 AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
     }
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testParcelValidAdDataSuccess() {
-        AdSelectionConfig config = AdSelectionConfigFixture.anAdSelectionConfig();
+        AdSelectionConfig config =
+                AdSelectionConfigFixture.anAdSelectionConfigWithSignedContextualAdsBuilder()
+                        .build();
 
         Parcel p = Parcel.obtain();
         config.writeToParcel(p, 0);
@@ -72,6 +88,9 @@ public class AdSelectionConfigTest {
         assertEquals(config.getAdSelectionSignals(), fromParcel.getAdSelectionSignals());
         assertEquals(config.getSellerSignals(), fromParcel.getSellerSignals());
         assertEquals(config.getPerBuyerSignals(), fromParcel.getPerBuyerSignals());
+        assertEquals(
+                config.getPerBuyerSignedContextualAds(),
+                fromParcel.getPerBuyerSignedContextualAds());
         assertEquals(
                 config.getTrustedScoringSignalsUri(), fromParcel.getTrustedScoringSignalsUri());
     }
@@ -99,6 +118,7 @@ public class AdSelectionConfigTest {
         assertEquals(config.getAdSelectionSignals(), AdSelectionConfigFixture.EMPTY_SIGNALS);
         assertEquals(config.getSellerSignals(), AdSelectionConfigFixture.EMPTY_SIGNALS);
         assertTrue(config.getPerBuyerSignals().isEmpty());
+        assertTrue(config.getPerBuyerSignedContextualAds().isEmpty());
     }
 
     @Test

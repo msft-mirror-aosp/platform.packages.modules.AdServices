@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -34,6 +35,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -47,7 +49,7 @@ import java.util.regex.Pattern;
  *
  * @hide
  */
-class FetcherUtil {
+public class FetcherUtil {
     static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
 
     /**
@@ -87,7 +89,7 @@ class FetcherUtil {
             return Optional.of(new UnsignedLong((String) maybeValue));
         } catch (JSONException | NumberFormatException e) {
             LoggerFactory.getMeasurementLogger()
-                    .d(e, "extractUnsignedLong: caught exception. Key: %s", key);
+                    .e(e, "extractUnsignedLong: caught exception. Key: %s", key);
             return Optional.empty();
         }
     }
@@ -102,7 +104,7 @@ class FetcherUtil {
             return Optional.of(Long.parseLong((String) maybeValue));
         } catch (JSONException | NumberFormatException e) {
             LoggerFactory.getMeasurementLogger()
-                    .d(e, "extractLongString: caught exception. Key: %s", key);
+                    .e(e, "extractLongString: caught exception. Key: %s", key);
             return Optional.empty();
         }
     }
@@ -122,7 +124,7 @@ class FetcherUtil {
             return Optional.of(Long.parseLong(String.valueOf(maybeValue)));
         } catch (JSONException | NumberFormatException e) {
             LoggerFactory.getMeasurementLogger()
-                    .d(e, "extractLong: caught exception. Key: %s", key);
+                    .e(e, "extractLong: caught exception. Key: %s", key);
             return Optional.empty();
         }
     }
@@ -132,7 +134,7 @@ class FetcherUtil {
             long lookbackWindow = Long.parseLong(obj.optString(FilterMap.LOOKBACK_WINDOW));
             if (lookbackWindow <= 0) {
                 LoggerFactory.getMeasurementLogger()
-                        .d(
+                        .e(
                                 "extractLookbackWindow: non positive lookback window found: %d",
                                 lookbackWindow);
                 return Optional.empty();
@@ -140,7 +142,7 @@ class FetcherUtil {
             return Optional.of(lookbackWindow);
         } catch (NumberFormatException e) {
             LoggerFactory.getMeasurementLogger()
-                    .d(
+                    .e(
                             e,
                             "extractLookbackWindow: caught exception. Key: %s",
                             FilterMap.LOOKBACK_WINDOW);
@@ -148,19 +150,56 @@ class FetcherUtil {
         }
     }
 
+    /** Extract string from an obj with max length. */
+    public static Optional<String> extractString(Object obj, int maxLength) {
+        if (!(obj instanceof String)) {
+            LoggerFactory.getMeasurementLogger().e("obj should be a string.");
+            return Optional.empty();
+        }
+        String stringValue = (String) obj;
+        if (stringValue.length() > maxLength) {
+            LoggerFactory.getMeasurementLogger()
+                    .e("Length of string value should be non-empty and smaller than " + maxLength);
+            return Optional.empty();
+        }
+        return Optional.of(stringValue);
+    }
+
+    /** Extract list of strings from an obj with max array size and max string length. */
+    public static Optional<List<String>> extractStringArray(
+            JSONObject json, String key, int maxArraySize, int maxStringLength)
+            throws JSONException {
+        JSONArray jsonArray = json.getJSONArray(key);
+        if (jsonArray.length() > maxArraySize) {
+            LoggerFactory.getMeasurementLogger()
+                    .e("Json array size should not be greater " + "than " + maxArraySize);
+            return Optional.empty();
+        }
+        List<String> strings = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); ++i) {
+            Optional<String> string = FetcherUtil.extractString(jsonArray.get(i), maxStringLength);
+            if (string.isEmpty()) {
+                return Optional.empty();
+            }
+            strings.add(string.get());
+        }
+        return Optional.of(strings);
+    }
+
     /**
      * Validate aggregate key ID.
      */
     static boolean isValidAggregateKeyId(String id) {
         return id != null
-                && id.getBytes().length
+                && !id.isEmpty()
+                && id.getBytes(StandardCharsets.UTF_8).length
                         <= FlagsFactory.getFlags()
                                 .getMeasurementMaxBytesPerAttributionAggregateKeyId();
     }
 
     /** Validate aggregate deduplication key. */
     static boolean isValidAggregateDeduplicationKey(String deduplicationKey) {
-        if (deduplicationKey == null) {
+        if (deduplicationKey == null || deduplicationKey.isEmpty()) {
             return false;
         }
         try {
@@ -175,50 +214,94 @@ class FetcherUtil {
      * Validate aggregate key-piece.
      */
     static boolean isValidAggregateKeyPiece(String keyPiece, Flags flags) {
-        if (keyPiece == null) {
+        if (keyPiece == null || keyPiece.isEmpty()) {
             return false;
         }
-        int length = keyPiece.getBytes().length;
-        if (flags.getMeasurementEnableAraParsingAlignmentV1()) {
-            if (!(keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))) {
-                return false;
-            }
-            // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
-            // at most 32 digits.
-            if (length < 3 || length > 34) {
-                return false;
-            }
-            if (!HEX_PATTERN.matcher(keyPiece.substring(2)).matches()) {
-                return false;
-            }
-            return true;
-        } else {
-            // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
-            // at most 32 digits.
-            return (keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))
-                    && 2 < length && length < 35;
+        int length = keyPiece.getBytes(StandardCharsets.UTF_8).length;
+        if (!(keyPiece.startsWith("0x") || keyPiece.startsWith("0X"))) {
+            return false;
         }
+        // Key-piece is restricted to a maximum of 128 bits and the hex strings therefore have
+        // at most 32 digits.
+        if (length < 3 || length > 34) {
+            return false;
+        }
+        if (!HEX_PATTERN.matcher(keyPiece.substring(2)).matches()) {
+            return false;
+        }
+        return true;
     }
 
     /** Validate attribution filters JSONArray. */
     static boolean areValidAttributionFilters(
-            @NonNull JSONArray filterSet, Flags flags, boolean canIncludeLookbackWindow) {
+            @NonNull JSONArray filterSet,
+            Flags flags,
+            boolean canIncludeLookbackWindow,
+            boolean shouldCheckFilterSize) throws JSONException {
         if (filterSet.length()
                 > FlagsFactory.getFlags().getMeasurementMaxFilterMapsPerFilterSet()) {
             return false;
         }
         for (int i = 0; i < filterSet.length(); i++) {
             if (!areValidAttributionFilters(
-                    filterSet.optJSONObject(i), flags, canIncludeLookbackWindow)) {
+                    filterSet.optJSONObject(i),
+                    flags,
+                    canIncludeLookbackWindow,
+                    shouldCheckFilterSize)) {
                 return false;
             }
         }
         return true;
     }
 
+    /**
+     * Parses header error debug report opt-in info from "Attribution-Reporting-Info" header. The
+     * header is a structured header and only supports dictionary format. Check HTTP [RFC8941]
+     * Section3.2 for details.
+     *
+     * <p>Examples of this type of header:
+     *
+     * <ul>
+     *   <li>"Attribution-Reporting-Info":“report-header-errors=?0"
+     *   <li>"Attribution-Reporting-Info": “report-header-errors,chrome-param=value"
+     *   <li>"Attribution-Reporting-Info": "report-header-errors=?1;chrome-param=value,
+     *       report-header-errors=?0"
+     * </ul>
+     *
+     * <p>The header may contain information that is only used in Chrome. Android will ignore it and
+     * be less strict in parsing in the current version. When "report-header-errors" value can't be
+     * extracted, Android will skip sending the debug report instead of dropping the whole
+     * registration.
+     */
+    public static boolean isHeaderErrorDebugReportEnabled(
+            @Nullable List<String> attributionInfoHeaders) {
+        if (attributionInfoHeaders == null || attributionInfoHeaders.size() == 0) {
+            return false;
+        }
+        // When there are multiple headers or the same key appears multiple times, find the last
+        // appearance and get the value.
+        for (int i = attributionInfoHeaders.size() - 1; i >= 0; i--) {
+            String[] parsed = attributionInfoHeaders.get(i).split("[,;]+");
+            for (int j = parsed.length - 1; j >= 0; j--) {
+                String parsedStr = parsed[j].trim();
+                if (parsedStr.equals("report-header-errors")
+                        || parsedStr.equals("report-header-errors=?1")) {
+                    return true;
+                } else if (parsedStr.equals("report-header-errors=?0")) {
+                    return false;
+                }
+            }
+        }
+        // Skip sending the debug report when the key is not found.
+        return false;
+    }
+
     /** Validate attribution filters JSONObject. */
     static boolean areValidAttributionFilters(
-            JSONObject filtersObj, Flags flags, boolean canIncludeLookbackWindow) {
+            JSONObject filtersObj,
+            Flags flags,
+            boolean canIncludeLookbackWindow,
+            boolean shouldCheckFilterSize) throws JSONException {
         if (filtersObj == null
                 || filtersObj.length()
                         > FlagsFactory.getFlags().getMeasurementMaxAttributionFilters()) {
@@ -227,10 +310,14 @@ class FetcherUtil {
         Iterator<String> keys = filtersObj.keys();
         while (keys.hasNext()) {
             String key = keys.next();
-            if (key.getBytes().length
-                    > FlagsFactory.getFlags().getMeasurementMaxBytesPerAttributionFilterString()) {
+            if (shouldCheckFilterSize
+                    && key.getBytes(StandardCharsets.UTF_8).length
+                            > FlagsFactory.getFlags()
+                                    .getMeasurementMaxBytesPerAttributionFilterString()) {
                 return false;
             }
+            // Process known reserved keys that start with underscore first, then invalidate on
+            // catch-all.
             if (flags.getMeasurementEnableLookbackWindowFilter()
                     && FilterMap.LOOKBACK_WINDOW.equals(key)) {
                 if (!canIncludeLookbackWindow || extractLookbackWindow(filtersObj).isEmpty()) {
@@ -238,17 +325,27 @@ class FetcherUtil {
                 }
                 continue;
             }
+            // Invalidate catch-all reserved prefix.
+            if (key.startsWith(FilterMap.RESERVED_PREFIX)) {
+                return false;
+            }
             JSONArray values = filtersObj.optJSONArray(key);
-            if (values == null
-                    || values.length()
+            if (values == null) {
+                return false;
+            }
+            if (shouldCheckFilterSize
+                    && values.length()
                             > FlagsFactory.getFlags()
                                     .getMeasurementMaxValuesPerAttributionFilter()) {
                 return false;
             }
             for (int i = 0; i < values.length(); i++) {
-                String value = values.optString(i);
-                if (value == null
-                        || value.getBytes().length
+                Object value = values.get(i);
+                if (!(value instanceof String)) {
+                    return false;
+                }
+                if (shouldCheckFilterSize
+                        && ((String) value).getBytes(StandardCharsets.UTF_8).length
                                 > FlagsFactory.getFlags()
                                         .getMeasurementMaxBytesPerAttributionFilterString()) {
                     return false;
@@ -267,15 +364,14 @@ class FetcherUtil {
     }
 
     static void emitHeaderMetrics(
-            Flags flags,
+            long headerSizeLimitBytes,
             AdServicesLogger logger,
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus) {
         long headerSize = asyncFetchStatus.getResponseSize();
-        long maxSize = flags.getMaxResponseBasedRegistrationPayloadSizeBytes();
         String adTechDomain = null;
 
-        if (headerSize > maxSize) {
+        if (headerSize > headerSizeLimitBytes) {
             adTechDomain =
                     WebAddresses.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
                             .map(Uri::toString)
@@ -294,7 +390,8 @@ class FetcherUtil {
                                 asyncFetchStatus.getRegistrationDelay(),
                                 getSourceRegistrantToLog(asyncRegistration),
                                 asyncFetchStatus.getRetryCount(),
-                                asyncFetchStatus.isRedirectOnly())
+                                asyncFetchStatus.isRedirectOnly(),
+                                asyncFetchStatus.isPARequest())
                         .setAdTechDomain(adTechDomain)
                         .build());
     }
@@ -318,7 +415,7 @@ class FetcherUtil {
             redirects.add(Uri.parse(field.get(0)));
             if (field.size() > 1) {
                 LoggerFactory.getMeasurementLogger()
-                        .d("Expected one Location redirect only, others ignored!");
+                        .e("Expected one Location redirect only, others ignored!");
             }
         }
         return redirects;
@@ -390,13 +487,17 @@ class FetcherUtil {
     }
 
     private static int getFailureType(AsyncFetchStatus asyncFetchStatus) {
-        if (asyncFetchStatus.getResponseStatus()
-                        == AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE
-                || asyncFetchStatus.getResponseStatus()
-                        == AsyncFetchStatus.ResponseStatus.NETWORK_ERROR
-                || asyncFetchStatus.getResponseStatus()
-                        == AsyncFetchStatus.ResponseStatus.INVALID_URL) {
+        if (asyncFetchStatus.getResponseStatus() == AsyncFetchStatus.ResponseStatus.NETWORK_ERROR) {
             return RegistrationEnumsValues.FAILURE_TYPE_NETWORK;
+        } else if (asyncFetchStatus.getResponseStatus()
+                == AsyncFetchStatus.ResponseStatus.INVALID_URL) {
+            return RegistrationEnumsValues.FAILURE_TYPE_INVALID_URL;
+        } else if (asyncFetchStatus.getResponseStatus()
+                == AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE) {
+            return RegistrationEnumsValues.FAILURE_TYPE_SERVER_UNAVAILABLE;
+        } else if (asyncFetchStatus.getResponseStatus()
+                == AsyncFetchStatus.ResponseStatus.HEADER_SIZE_LIMIT_EXCEEDED) {
+            return RegistrationEnumsValues.FAILURE_TYPE_HEADER_SIZE_LIMIT_EXCEEDED;
         } else if (asyncFetchStatus.getEntityStatus()
                 == AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT) {
             return RegistrationEnumsValues.FAILURE_TYPE_ENROLLMENT;
@@ -436,5 +537,8 @@ class FetcherUtil {
         int FAILURE_TYPE_ENROLLMENT = 3;
         int FAILURE_TYPE_REDIRECT = 4;
         int FAILURE_TYPE_STORAGE = 5;
+        int FAILURE_TYPE_HEADER_SIZE_LIMIT_EXCEEDED = 7;
+        int FAILURE_TYPE_SERVER_UNAVAILABLE = 8;
+        int FAILURE_TYPE_INVALID_URL = 9;
     }
 }

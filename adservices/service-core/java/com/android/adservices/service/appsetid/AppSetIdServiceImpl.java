@@ -15,8 +15,9 @@
  */
 package com.android.adservices.service.appsetid;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -53,7 +54,7 @@ import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 
 import java.util.concurrent.Executor;
 
@@ -108,11 +109,11 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
 
         sBackgroundExecutor.execute(
                 () -> {
-                    int resultCode = STATUS_SUCCESS;
+                    ApiCallStats.Result result = null;
                     try {
-                        resultCode =
+                        result =
                                 canCallerInvokeAppSetIdService(appSetIdParam, callingUid, callback);
-                        if (resultCode != STATUS_SUCCESS) {
+                        if (!result.isSuccess()) {
                             return;
                         }
                         mAppSetIdWorker.getAppSetId(packageName, callingUid, callback);
@@ -123,7 +124,9 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
                                 e,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
                                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__APP_SET_ID);
-                        resultCode = STATUS_INTERNAL_ERROR;
+                        result =
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET);
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
                         long serviceLatency = mClock.elapsedRealtime() - startServiceTime;
@@ -139,7 +142,7 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
                                         .setAppPackageName(packageName)
                                         .setSdkPackageName(sdkPackageName)
                                         .setLatencyMillisecond(apiLatency)
-                                        .setResultCode(resultCode)
+                                        .setResult(result)
                                         .build());
                     }
                 });
@@ -194,9 +197,9 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
      *
      * @param appSetIdParam {@link GetAppSetIdParam} to get information about the request.
      * @param callback {@link IGetAppSetIdCallback} to invoke when caller is not allowed.
-     * @return API response status code.
+     * @return ApiCallStats.Result containing API response status code and failure reason.
      */
-    private int canCallerInvokeAppSetIdService(
+    private ApiCallStats.Result canCallerInvokeAppSetIdService(
             GetAppSetIdParam appSetIdParam, int callingUid, IGetAppSetIdCallback callback) {
         // Enforce caller calls AppSetId API from foreground.
         try {
@@ -204,7 +207,7 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
         } catch (WrongCallingApplicationStateException backgroundCaller) {
             invokeCallbackWithStatus(
                     callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
-            return STATUS_BACKGROUND_CALLER;
+            return ApiCallStats.failureResult(STATUS_BACKGROUND_CALLER, FAILURE_REASON_UNSET);
         }
 
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
@@ -216,19 +219,20 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
         if (!appCanUsePpapi) {
             invokeCallbackWithStatus(
                     callback,
-                    STATUS_CALLER_NOT_ALLOWED,
+                    STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
                     "Unauthorized caller. Caller is not allowed.");
-            return STATUS_CALLER_NOT_ALLOWED;
+            return ApiCallStats.failureResult(
+                    STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST, FAILURE_REASON_UNSET);
         }
 
         // Check whether calling package belongs to the callingUid
-        int resultCode =
+        ApiCallStats.Result result =
                 enforceCallingPackageBelongsToUid(appSetIdParam.getAppPackageName(), callingUid);
-        if (resultCode != STATUS_SUCCESS) {
-            invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
-            return resultCode;
+        if (result.getResultCode() != STATUS_SUCCESS) {
+            invokeCallbackWithStatus(callback, result.getResultCode(), "Caller is not authorized.");
+            return result;
         }
-        return STATUS_SUCCESS;
+        return ApiCallStats.successResult();
     }
 
     private void invokeCallbackWithStatus(
@@ -248,7 +252,8 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
     }
 
     // Enforce that the callingPackage has the callingUid.
-    private int enforceCallingPackageBelongsToUid(String callingPackage, int callingUid) {
+    private ApiCallStats.Result enforceCallingPackageBelongsToUid(
+            String callingPackage, int callingUid) {
         int appCallingUid = SdkRuntimeUtil.getCallingAppUid(callingUid);
         int packageUid;
         try {
@@ -259,12 +264,12 @@ public class AppSetIdServiceImpl extends IAppSetIdService.Stub {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__APP_SET_ID);
-            return STATUS_UNAUTHORIZED;
+            return ApiCallStats.failureResult(STATUS_UNAUTHORIZED, FAILURE_REASON_UNSET);
         }
         if (packageUid != appCallingUid) {
             LogUtil.e(callingPackage + " does not belong to uid " + callingUid);
-            return STATUS_UNAUTHORIZED;
+            return ApiCallStats.failureResult(STATUS_UNAUTHORIZED, FAILURE_REASON_UNSET);
         }
-        return STATUS_SUCCESS;
+        return ApiCallStats.successResult();
     }
 }

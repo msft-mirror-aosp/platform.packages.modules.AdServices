@@ -164,29 +164,6 @@ public class AppConsentStorageManager implements IConsentStorage {
         }
     }
 
-    /**
-     * Retrieves the default AdId state.
-     *
-     * @return true if the AdId is enabled by default, false otherwise.
-     */
-    @Override
-    public boolean getDefaultAdIdState() {
-        return Objects.requireNonNullElse(
-                mDatastore.get(ConsentConstants.DEFAULT_AD_ID_STATE), false);
-    }
-
-    /**
-     * Retrieves the PP API default consent.
-     *
-     * @return AdServicesApiConsent.
-     */
-    @Override
-    public AdServicesApiConsent getDefaultConsent(AdServicesApiType apiType) {
-        return AdServicesApiConsent.getConsent(
-                Objects.requireNonNullElse(
-                        mDatastore.get(apiType.toDefaultConsentDatastoreKey()), false));
-    }
-
     /** Returns current enrollment channel. */
     @Override
     public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
@@ -304,19 +281,6 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public void setU18Account(boolean isU18Account) throws IOException {
         mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account);
-    }
-
-    /** Saves the default AdId state bit to data stores based on source of truth. */
-    @Override
-    public void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException {
-        mDatastore.put(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState);
-    }
-
-    /** Saves the PP API default consent of a user. */
-    @Override
-    public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent)
-            throws IOException {
-        mDatastore.put(apiType.toDefaultConsentDatastoreKey(), defaultConsent);
     }
 
     /**

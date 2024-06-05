@@ -27,10 +27,16 @@ import android.adservices.customaudience.CustomAudienceFixture;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 @SmallTest
 public class HistogramEventTest {
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testBuildValidHistogramEvent_success() {
         HistogramEvent event =

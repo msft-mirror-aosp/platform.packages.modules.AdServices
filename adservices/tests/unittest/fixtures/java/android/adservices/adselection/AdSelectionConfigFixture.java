@@ -127,7 +127,7 @@ public class AdSelectionConfigFixture {
      */
     public static AdSelectionConfig.Builder anAdSelectionConfigWithSignedContextualAdsBuilder() {
         return anAdSelectionConfigBuilder()
-                .setBuyerSignedContextualAds(
+                .setPerBuyerSignedContextualAds(
                         SignedContextualAdsFixture.getBuyerSignedContextualAdsMap());
     }
 }

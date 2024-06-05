@@ -27,8 +27,11 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -36,6 +39,9 @@ import java.time.Duration;
 /** Unit tests for {@link KeyedFrequencyCap}. */
 @SmallTest
 public class KeyedFrequencyCapTest {
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testBuildValidKeyedFrequencyCap_success() {
         final KeyedFrequencyCap originalCap =
@@ -377,5 +383,16 @@ public class KeyedFrequencyCapTest {
         JSONObject json = toSerialize.toJson();
         json.remove(KeyedFrequencyCap.INTERVAL_FIELD_NAME);
         assertThrows(JSONException.class, () -> KeyedFrequencyCap.fromJson(json));
+    }
+
+    @Test
+    public void testKeyedFrequencyCapDescribeContents() {
+        final KeyedFrequencyCap originalCap =
+                new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                        .build();
+        assertEquals("describeContents", 0, originalCap.describeContents());
     }
 }

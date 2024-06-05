@@ -41,6 +41,7 @@ android_test {
       ":EmptySdkProviderApp",
       ":SdkSandboxManagerCtsProvider",
       ":SdkSandboxMediationTestProvider",
+      ":CtsSdkProviderAppWithoutSdkProviderClassNameProperty",
     ],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",

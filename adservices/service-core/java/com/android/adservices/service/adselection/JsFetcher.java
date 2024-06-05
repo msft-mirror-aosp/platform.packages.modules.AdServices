@@ -34,6 +34,7 @@ import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
+import com.android.adservices.service.stats.FetchProcessLoggerNoLoggingImpl;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -372,7 +373,9 @@ public class JsFetcher {
                                             + " is: "
                                             + jsFetchingRequest.getUseCache());
                             return FluentFuture.from(
-                                            mAdServicesHttpsClient.fetchPayload(jsFetchingRequest))
+                                            mAdServicesHttpsClient.fetchPayloadWithLogging(
+                                                    jsFetchingRequest,
+                                                    new FetchProcessLoggerNoLoggingImpl()))
                                     .transform(
                                             response -> {
                                                 String payload = response.getResponseBody();

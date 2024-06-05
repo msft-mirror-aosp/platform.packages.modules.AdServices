@@ -215,19 +215,6 @@ public class AppConsentForRStorageManager extends AppConsentStorageManager {
                         /* illegalAction= */ "check if consent has been revoked for" + " app"));
     }
 
-    @Override
-    public void recordDefaultConsent(AdServicesApiType apiType, boolean defaultConsent)
-            throws IOException {
-        if (apiType == AdServicesApiType.MEASUREMENTS) {
-            super.recordDefaultConsent(apiType, defaultConsent);
-        } else {
-            throw new IllegalStateException(
-                    getAdExtExceptionMessage(
-                            /* illegalAction= */ "record default consent for "
-                                    + apiType.toString()));
-        }
-    }
-
     /** Stores isU18Account bit in AdExtData. */
     @Override
     public void setU18Account(boolean isU18Account) {

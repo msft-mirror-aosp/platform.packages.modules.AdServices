@@ -77,7 +77,8 @@
           }
         ],
         "triggerTime": 1648665733600,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T2",
@@ -96,7 +97,8 @@
           }
         ],
         "triggerTime": 1648665733605,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T3",
@@ -115,7 +117,8 @@
           }
         ],
         "triggerTime": 1648665733600,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [
@@ -316,7 +319,8 @@
           }
         ],
         "triggerTime": 1648665733605,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T3",
@@ -335,7 +339,8 @@
           }
         ],
         "triggerTime": 1648665733600,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [

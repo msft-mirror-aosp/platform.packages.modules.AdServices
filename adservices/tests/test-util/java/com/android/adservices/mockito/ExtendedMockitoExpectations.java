@@ -15,6 +15,7 @@
  */
 package com.android.adservices.mockito;
 
+import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -23,25 +24,30 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.never;
 
 import android.content.Context;
+import android.os.SystemProperties;
+import android.provider.DeviceConfig;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.common.SyncCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.stats.Clock;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.shared.testing.SyncCallback;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 import org.mockito.verification.VerificationMode;
 
@@ -59,19 +65,25 @@ public final class ExtendedMockitoExpectations {
 
     private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
 
-    /** Mocks a call to {@link SdkLevel#isAtLeastR()}, returning {@code isIt}. */
-    public static void mockIsAtLeastR(boolean isIt) {
-        Log.v(TAG, "mockIsAtLeastR(" + isIt + ")");
-        doReturn(isIt).when(SdkLevel::isAtLeastR);
-    }
-
-    /** Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}. */
+    // TODO(b/314969513): remove once there is no more usage
+    /**
+     * Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}.
+     *
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockIsAtLeastS(boolean)} instead
+     */
+    @Deprecated
     public static void mockIsAtLeastS(boolean isIt) {
         Log.v(TAG, "mockIsAtLeastS(" + isIt + ")");
         doReturn(isIt).when(SdkLevel::isAtLeastS);
     }
 
-    /** Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}. */
+    // TODO(b/314969513): remove once there is no more usage
+    /**
+     * Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}.
+     *
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockIsAtLeastT(boolean)} instead
+     */
+    @Deprecated
     public static void mockIsAtLeastT(boolean isIt) {
         Log.v(TAG, "mockIsAtLeastT(" + isIt + ")");
         doReturn(isIt).when(SdkLevel::isAtLeastT);
@@ -140,12 +152,12 @@ public final class ExtendedMockitoExpectations {
     // TODO(b/314969513): remove once there is no more usage
     /**
      * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
-     * FlagsFactory#getFlagsForTest()}
+     * FakeFlagsFactory#getFlagsForTest()}
      *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlagsForTesting(Flags)} instead
+     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlagsForTesting()} instead
      */
     public static void mockGetFlagsForTest() {
-        mockGetFlags(FlagsFactory.getFlagsForTest());
+        mockGetFlags(FakeFlagsFactory.getFlagsForTest());
     }
 
     // TODO(b/314969513): remove once there is no more usage
@@ -163,7 +175,7 @@ public final class ExtendedMockitoExpectations {
     /**
      * Mocks a call to a method that dumps something into a {@link PrintWriter}.
      *
-     * @param runnable invocation that will call dump passing a {@link PrintWriter}. Typically a
+     * @param invocation invocation that will call dump passing a {@link PrintWriter}. Typically a
      *     static method, using {@code any()} to represent the {@link PrintWriter} reference.
      * @param pwArgIndex index of the {@link PrintWriter}
      * @param dump value to be {@code println}'ed into the {@link PrintWriter}.
@@ -178,13 +190,12 @@ public final class ExtendedMockitoExpectations {
                 .when(() -> invocation.run());
     }
 
-    /** Mocks {@link AdservicesJobServiceLogger} to not actually log the stats to server. */
-    public static AdservicesJobServiceLogger mockAdservicesJobServiceLogger(
-            Context context, StatsdAdServicesLogger statsDLogger) {
-        AdservicesJobServiceLogger logger =
-                spy(new AdservicesJobServiceLogger(context, Clock.SYSTEM_CLOCK, statsDLogger));
+    /** Mocks {@link AdServicesJobServiceLogger} to not actually log the stats to server. */
+    public static AdServicesJobServiceLogger mockAdServicesJobServiceLogger(
+            Context context, Flags flags) {
+        AdServicesJobServiceLogger logger = getSpiedAdServicesJobServiceLogger(context, flags);
 
-        mockGetAdservicesJobServiceLogger(logger);
+        mockGetAdServicesJobServiceLogger(logger);
         doNothing().when(logger).recordOnStartJob(anyInt());
         doNothing().when(logger).recordOnStopJob(any(), anyInt(), anyBoolean());
         doNothing().when(logger).recordJobSkipped(anyInt(), anyInt());
@@ -193,9 +204,102 @@ public final class ExtendedMockitoExpectations {
         return logger;
     }
 
-    /** Mocks {@link AdservicesJobServiceLogger#getInstance(Context)} to return a mocked logger. */
-    public static void mockGetAdservicesJobServiceLogger(AdservicesJobServiceLogger logger) {
-        doReturn(logger).when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
+    /** Mocks {@link AdServicesJobServiceLogger#getInstance()} to return a mocked logger. */
+    public static void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
+        doReturn(logger).when(() -> AdServicesJobServiceLogger.getInstance());
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getBoolean()} using the AdServices namespace and
+     * returning {@code value}.
+     */
+    public static void mockGetAdServicesFlag(String name, boolean value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getBoolean(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyBoolean()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getString()} using the AdServices namespace and returning
+     * {@code value}.
+     */
+    public static void mockGetAdServicesFlag(String name, String value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getString(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ any()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getInt()} using the AdServices namespace and returning
+     * {@code value}.
+     */
+    public static void mockGetAdServicesFlag(String name, int value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getInt(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyInt()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getLong()} using the AdServices namespace and returning
+     * {@code value}.
+     */
+    public static void mockGetAdServicesFlag(String name, long value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getLong(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyLong()));
+    }
+
+    /**
+     * Mocks a call to {@code DeviceConfig.getFloat()} using the AdServices namespace and returning
+     * {@code value}.
+     */
+    public static void mockGetAdServicesFlag(String name, float value) {
+        logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        doReturn(value)
+                .when(
+                        () ->
+                                DeviceConfig.getFloat(
+                                        eq(DeviceConfig.NAMESPACE_ADSERVICES),
+                                        eq(name),
+                                        /* defaultValue= */ anyFloat()));
+    }
+
+    /**
+     * Verifies no call to {@link SystemProperties#getLong(String, boolean)} with the given {@code
+     * key} was made.
+     */
+    public static void verifyGetBooleanSystemPropertyNotCalled(String key) {
+        logV("verifyGetBooleanSystemPropertyNotCalled(key=%s)", key);
+        verify(() -> SystemProperties.getBoolean(eq(key), anyBoolean()), never());
+    }
+
+    /**
+     * Verifies no call to {@link DeviceConfig#getBoolean(String, String, boolean)} with the given
+     * {@code namespace} and {@code name} was made.
+     */
+    public static void verifyGetBooleanDeviceConfigFlagNotCalled(String namespace, String name) {
+        logV("verifyGetBooleanDeviceConfigFlagNotCalled(namespace=%s, name=%s)", namespace, name);
+        verify(() -> DeviceConfig.getBoolean(eq(namespace), eq(name), anyBoolean()), never());
     }
 
     /**
@@ -349,6 +453,11 @@ public final class ExtendedMockitoExpectations {
                     + ppapiName
                     + "]";
         }
+    }
+
+    @FormatMethod
+    private static void logV(@FormatString String fmt, Object... args) {
+        Log.v(TAG, String.format(fmt, args));
     }
 
     private ExtendedMockitoExpectations() {

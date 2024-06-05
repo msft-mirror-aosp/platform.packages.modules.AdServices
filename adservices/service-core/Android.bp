@@ -85,6 +85,7 @@ filegroup {
     srcs: [
         "java/com/android/adservices/cobalt/CobaltConstants.java",
         "java/com/android/adservices/service/FlagsConstants.java",
+        "java/com/android/adservices/service/DebugFlagsConstants.java",
     ],
     path: "java",
     visibility: [
@@ -101,6 +102,7 @@ filegroup {
         "java/com/android/adservices/service/CommonFlags.java",
         "java/com/android/adservices/service/CommonFlagsConstants.java",
         "java/com/android/adservices/service/CommonPhFlags.java",
+        "java/com/android/adservices/service/DeviceConfigFlagsHelper.java",
     ],
     path: "java",
     visibility: [
@@ -116,6 +118,7 @@ filegroup {
         "java/com/android/adservices/service/Flags.java",
         "java/com/android/adservices/service/FlagsFactory.java",
         "java/com/android/adservices/service/PhFlags.java",
+        "java/com/android/adservices/service/DebugFlags.java",
     ],
     path: "java",
     visibility: [
@@ -150,6 +153,7 @@ android_library {
         "framework-adservices.impl",
         "framework-configinfrastructure",
         "framework-sdksandbox.impl",
+        "framework-ondevicepersonalization",
         "framework-statsd.stubs.module_lib", // For WW logging
         "jsr305",
         "auto_value_annotations"
@@ -171,13 +175,15 @@ android_library {
         "adservices-grpclib-lite",
         "adservices-shared-common",
         "adservices-shared-error-logging",
+        "adservices-shared-spe",
         "adservices-shared-storage",
+        "adservices-shared-util",
         "modules-utils-build",
     ],
     jarjar_rules: "jarjar-rules.txt",
     apex_available: ["com.android.adservices", "com.android.extservices"],
     lint: {
-        extra_check_modules: ["BackCompatLintChecker"],
+        extra_check_modules: ["AdServicesLintChecker"],
     },
 }
 

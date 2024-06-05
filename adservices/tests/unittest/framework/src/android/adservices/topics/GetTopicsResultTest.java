@@ -24,6 +24,9 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -37,6 +40,9 @@ public final class GetTopicsResultTest {
     private static final byte[] BYTE_ARRAY_2 = new byte[] {4, 5, 6};
     private static final byte[] BYTE_ARRAY_3 = new byte[] {7, 8, 9};
     private static final byte[] BYTE_ARRAY_4 = new byte[] {10, 11, 12};
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testWriteToParcel() throws Exception {

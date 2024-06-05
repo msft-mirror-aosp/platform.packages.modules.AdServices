@@ -65,6 +65,10 @@ public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider 
 
         ISdkSandboxTestExecutor.Stub testExecutor =
                 new ISdkSandboxTestExecutor.Stub() {
+                    public void cleanOnTestFinish() {
+                        cleanUpOnTestFinish();
+                    }
+
                     public List<String> retrieveAnnotatedMethods(String annotationName) {
                         List<String> annotatedMethods = new ArrayList<>();
 
@@ -176,4 +180,7 @@ public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider 
         error.getCause().printStackTrace(errorWriter);
         return errorStackTrace.toString();
     }
+
+    public abstract void cleanUpOnTestFinish();
+
 }

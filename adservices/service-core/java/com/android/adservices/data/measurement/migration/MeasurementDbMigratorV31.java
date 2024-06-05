@@ -20,11 +20,9 @@ import android.annotation.NonNull;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.service.measurement.registration.AsyncRedirect;
 
-import java.util.Locale;
 
 /**
  * Migrates Measurement DB to version 31. This upgrade adds one column in the async registration
@@ -59,13 +57,9 @@ public class MeasurementDbMigratorV31 extends AbstractMeasurementDbMigrator {
                         values,
                         null,
                         new String[0]);
-        String log =
-                String.format(
-                        Locale.ENGLISH,
-                        "Updated %s for %d %s records",
-                        MeasurementTables.AsyncRegistrationContract.REDIRECT_BEHAVIOR,
-                        rows,
-                        MeasurementTables.AsyncRegistrationContract.TABLE);
-        LoggerFactory.getMeasurementLogger().d(log);
+        MigrationHelpers.logUpdateQuery(
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_BEHAVIOR,
+                rows,
+                MeasurementTables.AsyncRegistrationContract.TABLE);
     }
 }

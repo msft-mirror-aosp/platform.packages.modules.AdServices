@@ -39,7 +39,9 @@ import java.util.Objects;
             DBCustomAudience.class,
             DBCustomAudienceBackgroundFetchData.class,
             DBCustomAudienceOverride.class,
-            DBCustomAudienceQuarantine.class
+            DBCustomAudienceQuarantine.class,
+            DBPartialCustomAudience.class,
+            DBScheduledCustomAudienceUpdate.class
         },
         version = CustomAudienceDatabase.DATABASE_VERSION,
         autoMigrations = {
@@ -47,12 +49,15 @@ import java.util.Objects;
             @AutoMigration(from = 2, to = 3),
             @AutoMigration(from = 3, to = 4),
             @AutoMigration(from = 4, to = 5),
+            @AutoMigration(from = 5, to = 6),
+            @AutoMigration(from = 6, to = 7),
+            @AutoMigration(from = 7, to = 8, spec = CustomAudienceDatabase.AutoMigration7To8.class),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 5;
+    public static final int DATABASE_VERSION = 8;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("customaudience.db");
@@ -70,6 +75,8 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
             fromColumnName = "daily_update_url",
             toColumnName = "daily_update_uri")
     static class AutoMigration1To2 implements AutoMigrationSpec {}
+
+    static class AutoMigration7To8 implements AutoMigrationSpec {}
 
     private static volatile CustomAudienceDatabase sSingleton;
 
@@ -90,12 +97,15 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
                                 BinderFlagReader.readFlag(
                                         () ->
                                                 FlagsFactory.getFlags()
-                                                        .getFledgeAdSelectionFilteringEnabled()),
+                                                        .getFledgeFrequencyCapFilteringEnabled()),
                                 BinderFlagReader.readFlag(
                                         () ->
                                                 FlagsFactory.getFlags()
-                                                        .getFledgeAuctionServerAdRenderIdEnabled())
-                        );
+                                                        .getFledgeAppInstallFilteringEnabled()),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeAuctionServerAdRenderIdEnabled()));
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, CustomAudienceDatabase.class, DATABASE_NAME)

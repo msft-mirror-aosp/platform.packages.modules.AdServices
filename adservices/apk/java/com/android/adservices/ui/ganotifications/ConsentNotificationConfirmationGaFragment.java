@@ -73,15 +73,13 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         AdServicesApiConsent topicsConsent =
-                ConsentManager.getInstance(requireContext()).getConsent(AdServicesApiType.TOPICS);
+                ConsentManager.getInstance().getConsent(AdServicesApiType.TOPICS);
         mTopicsOptIn = topicsConsent != null ? topicsConsent.isGiven() : false;
 
         dismissNotificationIfNeeded();
 
-        ConsentManager.getInstance(requireContext())
-                .enable(requireContext(), AdServicesApiType.FLEDGE);
-        ConsentManager.getInstance(requireContext())
-                .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+        ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
+        ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
         return inflater.inflate(
                 R.layout.consent_notification_fledge_measurement_fragment_eu, container, false);
     }
@@ -259,7 +257,7 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
         private void onMoreOrAcceptClicked(View view) {
             if (mHasScrolledToBottom) {
                 // acknowledge and dismiss
-                requireActivity().finish();
+                requireActivity().finishAndRemoveTask();
             } else {
                 mScrollContainer.smoothScrollTo(
                         0,

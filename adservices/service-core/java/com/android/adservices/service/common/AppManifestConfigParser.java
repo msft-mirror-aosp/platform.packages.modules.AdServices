@@ -20,8 +20,6 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.res.XmlResourceParser;
 
-import androidx.annotation.VisibleForTesting;
-
 import com.android.adservices.service.exception.XmlParseException;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -38,6 +36,8 @@ public class AppManifestConfigParser {
     private static final String TAG_INCLUDES_SDK_LIBRARY = "includes-sdk-library";
     static final String TAG_ATTRIBUTION = "attribution";
     static final String TAG_CUSTOM_AUDIENCES = "custom-audiences";
+    static final String TAG_PROTECTED_SIGNALS = "protected-signals";
+    static final String TAG_AD_SELECTION = "ad-selection";
     static final String TAG_TOPICS = "topics";
     static final String TAG_ADID = "adid";
     static final String TAG_APPSETID = "appsetid";
@@ -47,12 +47,6 @@ public class AppManifestConfigParser {
 
     private AppManifestConfigParser() {}
 
-    @VisibleForTesting
-    static AppManifestConfig getConfig(@NonNull XmlResourceParser parser)
-            throws XmlParseException, XmlPullParserException, IOException {
-        return getConfig(parser, /* enabledByDefault=*/ false);
-    }
-
     /**
      * Parses and validates the given XML resource into a {@link AppManifestConfig} object.
      *
@@ -60,13 +54,14 @@ public class AppManifestConfigParser {
      * app_manifest_config.xsd schema.
      *
      * @param parser the XmlParser representing the AdServices App Manifest configuration
-     * @param enabledByDefault whether APIs should be enabled by default when missing from the
      */
-    static AppManifestConfig getConfig(@NonNull XmlResourceParser parser, boolean enabledByDefault)
+    static AppManifestConfig getConfig(@NonNull XmlResourceParser parser)
             throws XmlParseException, XmlPullParserException, IOException {
         AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig;
         AppManifestAttributionConfig attributionConfig = null;
         AppManifestCustomAudiencesConfig customAudiencesConfig = null;
+        AppManifestProtectedSignalsConfig protectedSignalsConfig = null;
+        AppManifestAdSelectionConfig adSelectionConfig = null;
         AppManifestTopicsConfig topicsConfig = null;
         AppManifestAdIdConfig adIdConfig = null;
         AppManifestAppSetIdConfig appSetIdConfig = null;
@@ -137,6 +132,30 @@ public class AppManifestConfigParser {
                                     getAllowAdPartnersToAccess(parser, allowAllToAccess));
                     break;
 
+                case TAG_PROTECTED_SIGNALS:
+                    allowAllToAccess = getAllowAllToAccess(parser);
+                    if (protectedSignalsConfig != null) {
+                        throw new XmlParseException(
+                                "Tag " + parser.getName() + " appears more than once");
+                    }
+                    protectedSignalsConfig =
+                            new AppManifestProtectedSignalsConfig(
+                                    allowAllToAccess,
+                                    getAllowAdPartnersToAccess(parser, allowAllToAccess));
+                    break;
+
+                case TAG_AD_SELECTION:
+                    allowAllToAccess = getAllowAllToAccess(parser);
+                    if (adSelectionConfig != null) {
+                        throw new XmlParseException(
+                                "Tag " + parser.getName() + " appears more than once");
+                    }
+                    adSelectionConfig =
+                            new AppManifestAdSelectionConfig(
+                                    allowAllToAccess,
+                                    getAllowAdPartnersToAccess(parser, allowAllToAccess));
+                    break;
+
                 case TAG_TOPICS:
                     allowAllToAccess = getAllowAllToAccess(parser);
                     if (topicsConfig != null) {
@@ -182,16 +201,16 @@ public class AppManifestConfigParser {
             parser.next();
         }
 
-        includesSdkLibraryConfig =
-                new AppManifestIncludesSdkLibraryConfig(enabledByDefault, includesSdkLibraries);
+        includesSdkLibraryConfig = new AppManifestIncludesSdkLibraryConfig(includesSdkLibraries);
         return new AppManifestConfig(
                 includesSdkLibraryConfig,
                 attributionConfig,
                 customAudiencesConfig,
+                protectedSignalsConfig,
+                adSelectionConfig,
                 topicsConfig,
                 adIdConfig,
-                appSetIdConfig,
-                enabledByDefault);
+                appSetIdConfig);
     }
 
     private static String getSdkLibrary(@NonNull XmlResourceParser parser) {

@@ -15,6 +15,9 @@
  */
 package com.android.adservices.tests.cts.measurement;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
@@ -34,24 +37,23 @@ abstract class CtsMeasurementEndToEndTestCase extends AdServicesCtsTestCase {
 
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        String packageName = sContext.getPackageName();
-        Log.d(mTag, "getAdServicesFlagsSetterRule(): allow-listing for " + packageName);
+        Log.d(mTag, "getAdServicesFlagsSetterRule(): allow-listing for " + mPackageName);
         return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                 .setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE)
                 .setCompatModeFlags()
-                .setMsmtApiAppAllowList(packageName)
-                .setMsmtWebContextClientAllowList(packageName)
-                .setConsentManagerDebugMode(true)
-                .setConsentNotifiedDebugMode(true)
-                .setSystemProperty(KEY_GLOBAL_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
+                .setMsmtApiAppAllowList(mPackageName)
+                .setMsmtWebContextClientAllowList(mPackageName)
+                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                .setSystemProperty(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true)
+                .setFlag(KEY_GLOBAL_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
                 .setFlag(KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES, false)
-                .setAdIdKillSwitchForTests(false);
+                .setFlag(KEY_ADID_KILL_SWITCH, false);
     }
 }

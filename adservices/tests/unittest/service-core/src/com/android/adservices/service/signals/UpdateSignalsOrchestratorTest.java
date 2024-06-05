@@ -33,12 +33,15 @@ import android.net.Uri;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -58,6 +61,9 @@ public class UpdateSignalsOrchestratorTest {
     @Mock private AdTechUriValidator mAdTechUriValidator;
 
     private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -80,7 +86,11 @@ public class UpdateSignalsOrchestratorTest {
 
         mUpdateSignalsOrchestrator
                 .orchestrateUpdate(
-                        URI, CommonFixture.VALID_BUYER_1, TEST_PACKAGE_NAME_1, DEV_CONTEXT)
+                        URI,
+                        CommonFixture.VALID_BUYER_1,
+                        TEST_PACKAGE_NAME_1,
+                        DEV_CONTEXT,
+                        UpdateSignalsApiCalledStats.builder())
                 .get(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         verify(mUpdatesDownloader).getUpdateJson(eq(URI), eq(TEST_PACKAGE_NAME_1), eq(DEV_CONTEXT));
@@ -90,7 +100,8 @@ public class UpdateSignalsOrchestratorTest {
                         anyString(),
                         any(Instant.class),
                         any(JSONObject.class),
-                        any(DevContext.class));
+                        any(DevContext.class),
+                        any(UpdateSignalsApiCalledStats.Builder.class));
         verify(mAdTechUriValidator).addValidation(eq(URI), any());
     }
 }

@@ -28,7 +28,6 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
@@ -58,7 +57,6 @@ import java.util.concurrent.TimeUnit;
 
 public class AggregateReportingJobHandler {
 
-    private final EnrollmentDao mEnrollmentDao;
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
     private boolean mIsDebugInstance;
@@ -70,7 +68,6 @@ public class AggregateReportingJobHandler {
     private final Context mContext;
 
     AggregateReportingJobHandler(
-            EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             AggregateEncryptionKeyManager aggregateEncryptionKeyManager,
             Flags flags,
@@ -78,7 +75,6 @@ public class AggregateReportingJobHandler {
             ReportingStatus.ReportType reportType,
             ReportingStatus.UploadMethod uploadMethod,
             Context context) {
-        mEnrollmentDao = enrollmentDao;
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
         mFlags = flags;
@@ -90,14 +86,12 @@ public class AggregateReportingJobHandler {
 
     @VisibleForTesting
     AggregateReportingJobHandler(
-            EnrollmentDao enrollmentDao,
             DatastoreManager datastoreManager,
             AggregateEncryptionKeyManager aggregateEncryptionKeyManager,
             Flags flags,
             AdServicesLogger logger,
             Context context) {
         this(
-                enrollmentDao,
                 datastoreManager,
                 aggregateEncryptionKeyManager,
                 flags,
@@ -356,13 +350,16 @@ public class AggregateReportingJobHandler {
     @VisibleForTesting
     JSONObject createReportJsonPayload(AggregateReport aggregateReport, Uri reportingOrigin,
             AggregateEncryptionKey key) throws JSONException {
+        String sourceRegistrationTimeStr =
+                aggregateReport.getSourceRegistrationTime() == null
+                        ? null
+                        : String.valueOf(
+                                TimeUnit.MILLISECONDS.toSeconds(
+                                        aggregateReport.getSourceRegistrationTime()));
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
                 .setAttributionDestination(aggregateReport.getAttributionDestination().toString())
-                .setSourceRegistrationTime(
-                        String.valueOf(
-                                TimeUnit.MILLISECONDS.toSeconds(
-                                        aggregateReport.getSourceRegistrationTime())))
+                .setSourceRegistrationTime(sourceRegistrationTimeStr)
                 .setScheduledReportTime(
                         String.valueOf(
                                 TimeUnit.MILLISECONDS.toSeconds(
@@ -378,8 +375,9 @@ public class AggregateReportingJobHandler {
                                         && aggregateReport.getTriggerDebugKey() != null
                                 ? "enabled"
                                 : null)
+                .setTriggerContextId(aggregateReport.getTriggerContextId())
                 .build()
-                .toJson(key);
+                .toJson(key, mFlags);
     }
 
     /**

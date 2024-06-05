@@ -22,11 +22,17 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
 import com.google.cobalt.ReleaseStage;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 public final class CobaltReleaseStagesTest {
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void defaultStage_isGa() throws Exception {

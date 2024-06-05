@@ -50,8 +50,8 @@ interface ISdkSandboxManager {
     oneway void syncDataFromClient(in String callingPackageName, in SandboxLatencyInfo sandboxLatencyInfo, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
     boolean isSdkSandboxServiceRunning(in String callingPackageName);
     void stopSdkSandbox(in String callingPackageName);
-    void logLatencies(in SandboxLatencyInfo sandboxLatencyInfo);
-    void logSandboxActivityEvent(int method, int callResult, int latencyMillis);
+    void logSandboxApiLatency(in SandboxLatencyInfo sandboxLatencyInfo);
+    void logSandboxActivityApiLatency(int method, int callResult, int latencyMillis);
 
     // TODO(b/282239822): Remove this workaround on Android VIC
     IBinder getAdServicesManager();
