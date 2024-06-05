@@ -28,6 +28,7 @@ import org.json.JSONException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public final class AggregateReportFixture {
@@ -40,6 +41,7 @@ public final class AggregateReportFixture {
     // values in {@link ValidAggregateReportParams}
     public static AggregateReport.Builder getValidAggregateReportBuilder() {
         return new AggregateReport.Builder()
+                .setId(UUID.randomUUID().toString())
                 .setPublisher(ValidAggregateReportParams.PUBLISHER)
                 .setAttributionDestination(ValidAggregateReportParams.ATTRIBUTION_DESTINATION)
                 .setSourceRegistrationTime(ValidAggregateReportParams.SOURCE_REGISTRATION_TIME)

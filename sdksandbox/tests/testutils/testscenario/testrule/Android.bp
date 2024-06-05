@@ -13,13 +13,14 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 android_library {
     name: "CtsSdkSandboxTestScenario",
     srcs: [
-         "src/**/*.java",
+        "src/**/*.java",
     ],
     static_libs: [
         "truth",
@@ -35,4 +36,3 @@ android_library {
     manifest: "AndroidManifest.xml",
     resource_dirs: ["res"],
 }
-

@@ -52,7 +52,6 @@ public final class EncryptedTopic {
      * @param keyIdentifier key used to identify the public key used for encryption.
      * @param encapsulatedKey encapsulated key generated during HPKE setup.
      */
-    @FlaggedApi(Flags.FLAG_TOPICS_ENCRYPTION_ENABLED)
     public EncryptedTopic(
             @NonNull byte[] encryptedTopic,
             @NonNull String keyIdentifier,
@@ -64,21 +63,18 @@ public final class EncryptedTopic {
 
     /** Returns encrypted bytes for the JSON version of the {@link Topic} object as cipher text. */
     @NonNull
-    @FlaggedApi(Flags.FLAG_TOPICS_ENCRYPTION_ENABLED)
     public byte[] getEncryptedTopic() {
         return mEncryptedTopic;
     }
 
     /** Returns key identifier for the used encryption key. */
     @NonNull
-    @FlaggedApi(Flags.FLAG_TOPICS_ENCRYPTION_ENABLED)
     public String getKeyIdentifier() {
         return mKeyIdentifier;
     }
 
     /** Returns the encapsulated key generated during HPKE setup. */
     @NonNull
-    @FlaggedApi(Flags.FLAG_TOPICS_ENCRYPTION_ENABLED)
     public byte[] getEncapsulatedKey() {
         return mEncapsulatedKey;
     }

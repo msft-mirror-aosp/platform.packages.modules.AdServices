@@ -44,7 +44,6 @@ import androidx.test.filters.FlakyTest;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.DBAdDataFixture;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -52,11 +51,13 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
@@ -84,7 +85,7 @@ import java.util.concurrent.TimeUnit;
 public class BackgroundFetchRunnerTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final Flags mFlags =
-            new FlagsFactory.TestFlags() {
+            new FakeFlagsFactory.TestFlags() {
                 @Override
                 public boolean getFledgeFrequencyCapFilteringEnabled() {
                     return true;
@@ -395,7 +396,7 @@ public class BackgroundFetchRunnerTest {
     public void
             testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithAuctionServerRequestFlagsEnabled()
                     throws Exception {
-        class FlagsWithAuctionServerRequestEnabled extends FlagsFactory.TestFlags {
+        class FlagsWithAuctionServerRequestEnabled extends FakeFlagsFactory.TestFlags {
             @Override
             public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                 return true;
@@ -457,7 +458,7 @@ public class BackgroundFetchRunnerTest {
     public void
             testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithAuctionServerRequestFlagsDisabled()
                     throws Exception {
-        class FlagsWithAuctionServerRequestDisabled extends FlagsFactory.TestFlags {
+        class FlagsWithAuctionServerRequestDisabled extends FakeFlagsFactory.TestFlags {
             @Override
             public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                 return false;

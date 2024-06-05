@@ -138,4 +138,11 @@ public class FakeSdkSandboxProvider implements SdkSandboxServiceProvider {
             throws PackageManager.NameNotFoundException {
         return TEST_PACKAGE + SANDBOX_PROCESS_NAME_SUFFIX;
     }
+
+    @NonNull
+    @Override
+    public String toSandboxProcessNameForInstrumentation(@NonNull CallingInfo callingInfo)
+            throws PackageManager.NameNotFoundException {
+        return TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX;
+    }
 }

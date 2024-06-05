@@ -31,7 +31,7 @@ import android.os.IBinder;
 
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.ExceptionFailureSyncCallback;
+import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -87,28 +87,22 @@ public class AdServicesExtDataServiceCtsTest {
                 new int[] {}, // Fake service implementation ignores this parameter.
                 putReceiver);
 
-        putReceiver.assertSuccess();
+        putReceiver.assertResultReceived();
 
         // Get updated AdExt data
         SyncAdExtTestCallback getReceiver = new SyncAdExtTestCallback();
         service.getAdServicesExtData(getReceiver);
 
-        GetAdServicesExtDataResult result = getReceiver.assertSuccess();
+        GetAdServicesExtDataResult result = getReceiver.assertResultReceived();
         assertThat(result.getAdServicesExtDataParams()).isEqualTo(paramsToUpdate);
     }
 
     private static final class SyncAdExtTestCallback
-            extends ExceptionFailureSyncCallback<GetAdServicesExtDataResult>
+            extends FailableOnResultSyncCallback<GetAdServicesExtDataResult, String>
             implements IGetAdServicesExtDataCallback {
-
         @Override
         public void onError(String msg) {
-            injectError(new RuntimeException(msg));
-        }
-
-        @Override
-        public IBinder asBinder() {
-            return null;
+            onFailure(msg);
         }
     }
 }

@@ -16,8 +16,8 @@
 package com.android.adservices.tests.cts.measurement;
 
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
@@ -27,24 +27,27 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.common.AdServicesCtsTestCase.LOGCAT_TAG_MEASUREMENT;
 
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
+import com.android.adservices.shared.testing.annotations.SetLogcatTag;
 
+@SetLogcatTag(tag = LOGCAT_TAG_MEASUREMENT)
+@SetMsmtApiAppAllowList
 abstract class CtsMeasurementEndToEndTestCase extends AdServicesCtsTestCase {
 
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
         Log.d(mTag, "getAdServicesFlagsSetterRule(): allow-listing for " + mPackageName);
         return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                .setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE)
                 .setCompatModeFlags()
-                .setMsmtApiAppAllowList(mPackageName)
                 .setMsmtWebContextClientAllowList(mPackageName)
-                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
-                .setSystemProperty(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true)
+                .setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                .setDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true)
                 .setFlag(KEY_GLOBAL_KILL_SWITCH, false)
                 .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
                 .setFlag(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)

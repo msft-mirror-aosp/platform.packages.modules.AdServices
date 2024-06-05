@@ -51,6 +51,7 @@ import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.ClassifierInputConfig.ClassifierInputField;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
@@ -162,12 +163,12 @@ public class ModelManager {
 
     /** Returns the singleton instance of the {@link ModelManager} given a context. */
     @NonNull
-    public static ModelManager getInstance(@NonNull Context context) {
+    public static ModelManager getInstance() {
         synchronized (ModelManager.class) {
             if (sSingleton == null) {
                 sSingleton =
                         new ModelManager(
-                                context,
+                                ApplicationContextSingleton.get(),
                                 BUNDLED_LABELS_FILE_PATH,
                                 BUNDLED_TOP_APP_FILE_PATH,
                                 BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH,

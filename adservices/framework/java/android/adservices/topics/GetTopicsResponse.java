@@ -28,6 +28,7 @@ import java.util.Objects;
 public final class GetTopicsResponse {
     /** List of Topic objects returned by getTopics API. */
     private final List<Topic> mTopics;
+
     /** List of EncryptedTopic objects returned by getTopics API. */
     private final List<EncryptedTopic> mEncryptedTopics;
 
@@ -78,7 +79,7 @@ public final class GetTopicsResponse {
          * Creates a {@link Builder} for {@link GetTopicsResponse} objects.
          *
          * @param topics The list of the returned Topics.
-         * @deprecated Use {@link Builder#Builder(List, List)} instead.
+         * @deprecated This function is deprecated.
          */
         @Deprecated
         public Builder(@NonNull List<Topic> topics) {

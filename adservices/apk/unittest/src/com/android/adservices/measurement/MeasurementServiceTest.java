@@ -53,7 +53,7 @@ import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
-import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
@@ -91,7 +91,7 @@ import java.util.List;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MeasurementImpl.class)
 @SpyStatic(AsyncRegistrationQueueJobService.class)
-@SpyStatic(AsyncRegistrationFallbackJobService.class)
+@SpyStatic(AsyncRegistrationFallbackJob.class)
 @SpyStatic(VerboseDebugReportingFallbackJobService.class)
 @SpyStatic(DebugReportingFallbackJobService.class)
 public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestCase {
@@ -204,7 +204,7 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
                 .when(mMockConsentManager)
                 .getConsent(eq(AdServicesApiType.MEASUREMENTS));
 
-        ExtendedMockito.doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance(any()));
+        ExtendedMockito.doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance());
         doReturn(ENROLLMENT).when(mMockEnrollmentDao).getEnrollmentDataFromMeasurementUrl(any());
         ExtendedMockito.doReturn(mMockMeasurementImpl)
                 .when(() -> MeasurementImpl.getInstance(any()));
@@ -238,11 +238,7 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
                 .when(() -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()));
         ExtendedMockito.doNothing()
                 .when(() -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                                        any(), anyBoolean()));
+        ExtendedMockito.doNothing().when(AsyncRegistrationFallbackJob::schedule);
         ExtendedMockito.doNothing()
                 .when(
                         () ->
@@ -286,9 +282,7 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
         ExtendedMockito.verify(
                 () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));
-        ExtendedMockito.verify(
-                () -> AsyncRegistrationFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
-                times(timesCalled));
+        ExtendedMockito.verify(AsyncRegistrationFallbackJob::schedule, times(timesCalled));
         ExtendedMockito.verify(
                 () -> VerboseDebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()),
                 times(timesCalled));

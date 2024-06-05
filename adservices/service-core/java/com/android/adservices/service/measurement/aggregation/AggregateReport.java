@@ -24,6 +24,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Class that contains all the real data needed after aggregation, it is not encrypted.
@@ -503,6 +505,7 @@ public class AggregateReport {
         public Builder getNullAggregateReportBuilder(
                 Trigger trigger, @Nullable Long fakeSourceTime, long delay, String apiVersion)
                 throws JSONException {
+            mAttributionReport.mId = UUID.randomUUID().toString();
             long reportTime = trigger.getTriggerTime();
             if (trigger.getTriggerContextId() == null) {
                 reportTime += delay;
@@ -521,7 +524,6 @@ public class AggregateReport {
             mAttributionReport.mScheduledReportTime = reportTime;
             mAttributionReport.mDebugCleartextPayload = debugPayload;
             mAttributionReport.mSourceDebugKey = null;
-            mAttributionReport.mTriggerDebugKey = trigger.getDebugKey();
             mAttributionReport.mIsFakeReport = true;
             mAttributionReport.mTriggerId = trigger.getId();
             mAttributionReport.mTriggerContextId = trigger.getTriggerContextId();
@@ -534,6 +536,13 @@ public class AggregateReport {
                         Uri.parse(
                                 AdServicesConfig
                                         .getMeasurementDefaultAggregationCoordinatorOrigin());
+            }
+
+            if ((trigger.getDestinationType() == EventSurfaceType.APP
+                            && trigger.hasAdIdPermission())
+                    || (trigger.getDestinationType() == EventSurfaceType.WEB
+                            && trigger.hasArDebugPermission())) {
+                mAttributionReport.mTriggerDebugKey = trigger.getDebugKey();
             }
 
             return this;

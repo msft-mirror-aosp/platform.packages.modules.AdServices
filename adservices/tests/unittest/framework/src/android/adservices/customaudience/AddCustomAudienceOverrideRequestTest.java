@@ -16,25 +16,21 @@
 
 package android.adservices.customaudience;
 
-import static org.junit.Assert.assertEquals;
-
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class AddCustomAudienceOverrideRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class AddCustomAudienceOverrideRequestTest extends AdServicesUnitTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
             AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildAddCustomAudienceOverrideRequest() {
@@ -46,9 +42,13 @@ public class AddCustomAudienceOverrideRequestTest {
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_DATA)
                         .build();
 
-        assertEquals(BUYER, request.getBuyer());
-        assertEquals(NAME, request.getName());
-        assertEquals(BIDDING_LOGIC_JS, request.getBiddingLogicJs());
-        assertEquals(TRUSTED_BIDDING_DATA, request.getTrustedBiddingSignals());
+        expect.withMessage("buyer").that(request.getBuyer()).isEqualTo(BUYER);
+        expect.withMessage("name").that(request.getName()).isEqualTo(NAME);
+        expect.withMessage("Bidding logic JS")
+                .that(request.getBiddingLogicJs())
+                .isEqualTo(BIDDING_LOGIC_JS);
+        expect.withMessage("Trusted bidding signals")
+                .that(request.getTrustedBiddingSignals())
+                .isEqualTo(TRUSTED_BIDDING_DATA);
     }
 }

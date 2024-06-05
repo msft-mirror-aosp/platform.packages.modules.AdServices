@@ -391,9 +391,11 @@ public class AdServicesHttpsClient {
             }
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
             Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
+            fetchProcessLogger.startDownloadScriptTimestamp();
             fetchProcessLogger.startNetworkCallTimestamp();
             int responseCode = urlConnection.getResponseCode();
             fetchProcessLogger.logServerAuctionKeyFetchCalledStatsFromNetwork(responseCode);
+            fetchProcessLogger.endDownloadScriptTimestamp(responseCode);
             LogUtil.v("Received %s response status code.", responseCode);
             if (isSuccessfulResponse(responseCode)) {
                 inputStream = new BufferedInputStream(urlConnection.getInputStream());

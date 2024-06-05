@@ -28,6 +28,9 @@ import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.platform.test.annotations.RequiresFlagsEnabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
@@ -36,6 +39,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.sdksandbox.flags.Flags;
 
 import org.junit.After;
 import org.junit.Before;
@@ -52,6 +56,9 @@ public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
     @Rule(order = 1)
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
+
+    @Rule(order = 2)
     public final ActivityScenarioRule<TestActivity> activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
 
@@ -83,6 +90,7 @@ public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
     }
 
     @Test
+    @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
     public void testSdkDetectsAppForegroundState() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 
@@ -108,6 +116,7 @@ public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
     }
 
     @Test
+    @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
     public void testUnregisterSdkSandboxClientImportanceListener() throws Exception {
         assumeTrue(SdkLevel.isAtLeastU());
 

@@ -16,10 +16,12 @@
 
 package com.android.adservices.service.shell;
 
-
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
+import com.android.adservices.service.shell.signals.SignalsShellCommandFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 import com.google.common.collect.ImmutableList;
@@ -29,9 +31,16 @@ public final class AdservicesShellCommandFactorySupplier extends ShellCommandFac
     private static final ImmutableList<ShellCommandFactory> sDefaultFactories =
             ImmutableList.of(
                     CustomAudienceShellCommandFactory.getInstance(
-                            FlagsFactory.getFlags(), ApplicationContextSingleton.get()),
+                            DebugFlags.getInstance(),
+                            FlagsFactory.getFlags(),
+                            ApplicationContextSingleton.get()),
                     AdSelectionShellCommandFactory.getInstance(
-                            FlagsFactory.getFlags(), ApplicationContextSingleton.get()));
+                            DebugFlags.getInstance(),
+                            FlagsFactory.getFlags(),
+                            ApplicationContextSingleton.get()),
+                    SignalsShellCommandFactory.getInstance(
+                            DebugFlags.getInstance(),
+                            ProtectedSignalsDatabase.getInstance().protectedSignalsDao()));
 
     @Override
     public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {

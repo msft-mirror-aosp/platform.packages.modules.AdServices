@@ -32,8 +32,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
@@ -42,7 +46,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
 import android.text.TextUtils;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
@@ -194,10 +198,10 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     @Override
-    public void startSandboxActivityDirectlyByAction() {
+    public void startSandboxActivityDirectlyByAction(String sandboxPackageName) {
         Intent intent = new Intent();
         intent.setAction("android.app.sdksandbox.action.START_SANDBOXED_ACTIVITY");
-        intent.setPackage(mContext.getPackageManager().getSdkSandboxPackageName());
+        intent.setPackage(sandboxPackageName);
         intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
 
         Bundle params = new Bundle();
@@ -208,12 +212,10 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     @Override
-    public void startSandboxActivityDirectlyByComponent() {
+    public void startSandboxActivityDirectlyByComponent(String sandboxPackageName) {
         Intent intent = new Intent();
         intent.setComponent(
-                new ComponentName(
-                        mContext.getPackageManager().getSdkSandboxPackageName(),
-                        "com.android.sdksandbox.SandboxedActivity"));
+                new ComponentName(sandboxPackageName, "com.android.sdksandbox.SandboxedActivity"));
         intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
 
         Bundle params = new Bundle();
@@ -381,6 +383,40 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                 .unregisterSdkSandboxClientImportanceListener(mClientImportanceListener);
     }
 
+    @Override
+    public int getLauncherActivityCount() {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        intent.setPackage(CLIENT_PACKAGE_NAME);
+        intent.setAction(Intent.ACTION_MAIN);
+        List<ResolveInfo> launcherActivities =
+                mContext.getPackageManager()
+                        .queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER);
+        return launcherActivities.size();
+    }
+
+    @Override
+    public int requestAudioFocus() {
+        try {
+            AudioManager manager = mContext.getSystemService(AudioManager.class);
+
+            AudioAttributes attr =
+                    new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build();
+
+            AudioFocusRequest mediaFocusReq =
+                    new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                            .setAudioAttributes(attr)
+                            .build();
+
+            return manager.requestAudioFocus(mediaFocusReq);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     private void registerLifecycleEvents(
             IActivityStarter iActivityStarter,
             Activity sandboxActivity,
@@ -427,13 +463,21 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     private void buildActivityLayout(Activity activity, String textToCheck) {
-        final LinearLayout layout = new LinearLayout(activity);
+        final RelativeLayout layout = new RelativeLayout(activity);
         layout.setLayoutParams(
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT));
-        layout.setOrientation(LinearLayout.HORIZONTAL);
+                new RelativeLayout.LayoutParams(
+                        RelativeLayout.LayoutParams.MATCH_PARENT,
+                        RelativeLayout.LayoutParams.MATCH_PARENT));
+
+        // Place text view in the center to ensure UIAutomator finds the text.
+        RelativeLayout.LayoutParams textViewLayoutParams =
+                new RelativeLayout.LayoutParams(
+                        RelativeLayout.LayoutParams.WRAP_CONTENT,
+                        RelativeLayout.LayoutParams.WRAP_CONTENT);
+        textViewLayoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        textViewLayoutParams.addRule(RelativeLayout.CENTER_VERTICAL);
         final TextView tv1 = new TextView(activity);
+        tv1.setLayoutParams(textViewLayoutParams);
         int orientation = activity.getResources().getConfiguration().orientation;
         tv1.setText(textToCheck + "_orientation: " + orientation);
         layout.addView(tv1);
@@ -450,6 +494,11 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         }
 
         private Activity mActivity;
+
+        @Override
+        public String getDataDir() {
+            return mActivity.getApplicationInfo().dataDir;
+        }
 
         @Override
         public void disableBackButton() {

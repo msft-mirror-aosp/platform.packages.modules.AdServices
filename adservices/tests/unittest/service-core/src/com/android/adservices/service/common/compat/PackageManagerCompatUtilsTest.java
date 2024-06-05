@@ -16,12 +16,15 @@
 
 package com.android.adservices.service.common.compat;
 
+import static android.content.pm.PackageManager.NameNotFoundException;
+
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -32,47 +35,37 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 
-public class PackageManagerCompatUtilsTest {
-    private static final String TEST_PACKAGE_NAME = "test";
+@MockStatic(ErrorLogUtil.class)
+public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMockitoTestCase {
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
     private static final String EXTSERVICES_PACKAGE_NAME = "com.android.ext.services";
-    private MockitoSession mMockitoSession;
 
     @Mock private PackageManager mPackageManagerMock;
     @Mock private PackageInfo mPackageInfo;
     @Mock private ApplicationInfo mApplicationInfo;
 
-    @Before
-    public void setUp() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(SdkLevel.class)
-                        .initMocks(this)
-                        .startMocking();
-    }
-
-    @After
-    public void tearDown() {
-        mMockitoSession.finishMocking();
-    }
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Test
     public void testPackageManagerCompatUtilsValidatesArguments() {
@@ -102,8 +95,9 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
+    @MockStatic(SdkLevel.class)
     public void testGetInstalledApplications_SMinus() {
-        doReturn(false).when(SdkLevel::isAtLeastT);
+        mocker.mockIsAtLeastT(false);
         doReturn(ImmutableList.of(mApplicationInfo))
                 .when(mPackageManagerMock)
                 .getInstalledApplications(anyInt());
@@ -115,8 +109,8 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(reason = "Mocks a PackageManager API not available on S-")
     public void testGetInstalledApplications_TPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         doReturn(ImmutableList.of(mApplicationInfo))
                 .when(mPackageManagerMock)
                 .getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
@@ -129,8 +123,9 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
+    @MockStatic(SdkLevel.class)
     public void testGetInstalledPackages_SMinus() {
-        doReturn(false).when(SdkLevel::isAtLeastT);
+        mocker.mockIsAtLeastT(false);
         doReturn(ImmutableList.of(mPackageInfo))
                 .when(mPackageManagerMock)
                 .getInstalledPackages(anyInt());
@@ -142,8 +137,8 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT(reason = "Mocks a PackageManager API not available on S-")
     public void testGetInstalledPackages_TPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         doReturn(ImmutableList.of(mPackageInfo))
                 .when(mPackageManagerMock)
                 .getInstalledPackages(any(PackageManager.PackageInfoFlags.class));
@@ -156,8 +151,9 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
-    public void testGetUidForPackage_SMinus() throws PackageManager.NameNotFoundException {
-        doReturn(false).when(SdkLevel::isAtLeastT);
+    @MockStatic(SdkLevel.class)
+    public void testGetUidForPackage_SMinus() throws Exception {
+        mocker.mockIsAtLeastT(false);
         final int packageUid = 100;
         doReturn(packageUid).when(mPackageManagerMock).getPackageUid(anyString(), anyInt());
 
@@ -169,8 +165,8 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
-    public void testGetUidForPackage_TPlus() throws PackageManager.NameNotFoundException {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
+    @RequiresSdkLevelAtLeastT(reason = "Mocks a PackageManager API not available on S-")
+    public void testGetUidForPackage_TPlus() throws Exception {
         final int packageUid = 100;
         doReturn(packageUid)
                 .when(mPackageManagerMock)
@@ -185,8 +181,9 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
-    public void testGetApplicationInfo_SMinus() throws PackageManager.NameNotFoundException {
-        doReturn(false).when(SdkLevel::isAtLeastT);
+    @MockStatic(SdkLevel.class)
+    public void testGetApplicationInfo_SMinus() throws Exception {
+        mocker.mockIsAtLeastT(false);
         doReturn(mApplicationInfo)
                 .when(mPackageManagerMock)
                 .getApplicationInfo(anyString(), anyInt());
@@ -201,9 +198,8 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
-    public void testGetApplicationInfo_TPlus() throws PackageManager.NameNotFoundException {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-
+    @RequiresSdkLevelAtLeastT(reason = "Mocks a PackageManager API not available on S-")
+    public void testGetApplicationInfo_TPlus() throws Exception {
         doReturn(mApplicationInfo)
                 .when(mPackageManagerMock)
                 .getApplicationInfo(anyString(), any(PackageManager.ApplicationInfoFlags.class));
@@ -219,22 +215,27 @@ public class PackageManagerCompatUtilsTest {
     }
 
     @Test
-    public void testIsAdServicesActivityEnabled_adServicesPackage_defaultToEnabled()
-            throws PackageManager.NameNotFoundException {
-        Context mockContext = mock(Context.class);
-        when(mockContext.getPackageManager()).thenReturn(mPackageManagerMock);
-        when(mockContext.getPackageName()).thenReturn(ADSERVICES_PACKAGE_NAME);
+    public void testIsAdServicesActivityEnabled_adServicesPackage_defaultToEnabled() {
+        when(mMockContext.getPackageManager()).thenReturn(mPackageManagerMock);
+        when(mMockContext.getPackageName()).thenReturn(ADSERVICES_PACKAGE_NAME);
         boolean isActivityEnabled =
-                PackageManagerCompatUtils.isAdServicesActivityEnabled(mockContext);
+                PackageManagerCompatUtils.isAdServicesActivityEnabled(mMockContext);
         assertThat(isActivityEnabled).isTrue();
     }
 
     @Test
-    public void testIsAdServicesActivityEnabled_extServicesPackage_enabled()
-            throws PackageManager.NameNotFoundException {
-        Context mockContext = mock(Context.class);
-        when(mockContext.getPackageManager()).thenReturn(mPackageManagerMock);
-        when(mockContext.getPackageName()).thenReturn(EXTSERVICES_PACKAGE_NAME);
+    public void testIsAdServicesActivityEnabled_nullPackageName_defaultToEnabled() {
+        when(mMockContext.getPackageManager()).thenReturn(mPackageManagerMock);
+        when(mMockContext.getPackageName()).thenReturn(null);
+        boolean isActivityEnabled =
+                PackageManagerCompatUtils.isAdServicesActivityEnabled(mMockContext);
+        assertThat(isActivityEnabled).isFalse();
+    }
+
+    @Test
+    public void testIsAdServicesActivityEnabled_extServicesPackage_enabled() throws Exception {
+        when(mMockContext.getPackageManager()).thenReturn(mPackageManagerMock);
+        when(mMockContext.getPackageName()).thenReturn(EXTSERVICES_PACKAGE_NAME);
 
         PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
         packageInfo.packageName = EXTSERVICES_PACKAGE_NAME;
@@ -244,7 +245,7 @@ public class PackageManagerCompatUtilsTest {
                 .thenReturn(PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
 
         boolean isActivityEnabled =
-                PackageManagerCompatUtils.isAdServicesActivityEnabled(mockContext);
+                PackageManagerCompatUtils.isAdServicesActivityEnabled(mMockContext);
 
         assertThat(isActivityEnabled).isTrue();
         verify(mPackageManagerMock, times(7)).getComponentEnabledSetting(any(ComponentName.class));
@@ -252,10 +253,9 @@ public class PackageManagerCompatUtilsTest {
 
     @Test
     public void testIsAdServicesActivityEnabled_extServicesPackage_defaultToDisabled()
-            throws PackageManager.NameNotFoundException {
-        Context mockContext = mock(Context.class);
-        when(mockContext.getPackageManager()).thenReturn(mPackageManagerMock);
-        when(mockContext.getPackageName()).thenReturn(EXTSERVICES_PACKAGE_NAME);
+            throws Exception {
+        when(mMockContext.getPackageManager()).thenReturn(mPackageManagerMock);
+        when(mMockContext.getPackageName()).thenReturn(EXTSERVICES_PACKAGE_NAME);
 
         PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
         packageInfo.packageName = EXTSERVICES_PACKAGE_NAME;
@@ -265,9 +265,29 @@ public class PackageManagerCompatUtilsTest {
                 .thenReturn(PackageManager.COMPONENT_ENABLED_STATE_DEFAULT);
 
         boolean isActivityEnabled =
-                PackageManagerCompatUtils.isAdServicesActivityEnabled(mockContext);
+                PackageManagerCompatUtils.isAdServicesActivityEnabled(mMockContext);
 
         assertThat(isActivityEnabled).isFalse();
         verify(mPackageManagerMock).getComponentEnabledSetting(any(ComponentName.class));
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            throwable = NameNotFoundException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+    public void testIsAdServicesActivityEnabled_exception_disabled() throws Exception {
+        when(mMockContext.getPackageManager()).thenReturn(mPackageManagerMock);
+        when(mMockContext.getPackageName()).thenReturn(EXTSERVICES_PACKAGE_NAME);
+
+        PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
+        packageInfo.packageName = EXTSERVICES_PACKAGE_NAME;
+        when(mPackageManagerMock.getPackageInfo(eq(packageInfo.packageName), eq(0)))
+                .thenThrow(new NameNotFoundException());
+
+        boolean isActivityEnabled =
+                PackageManagerCompatUtils.isAdServicesActivityEnabled(mMockContext);
+
+        assertThat(isActivityEnabled).isFalse();
     }
 }

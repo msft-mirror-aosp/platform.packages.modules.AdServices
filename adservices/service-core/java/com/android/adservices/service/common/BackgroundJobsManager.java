@@ -59,7 +59,7 @@ import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
-import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
@@ -68,6 +68,7 @@ import com.android.adservices.service.measurement.reporting.EventFallbackReporti
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
+import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.EpochJobService;
 
 import java.util.Objects;
@@ -166,7 +167,7 @@ public class BackgroundJobsManager {
      */
     public static void scheduleTopicsBackgroundJobs(@NonNull Context context) {
         if (!FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            EpochJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+            EpochJob.schedule();
             MaintenanceJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             scheduleMddBackgroundJobs();
             scheduleEncryptionKeyBackgroundJobs(context);
@@ -212,6 +213,7 @@ public class BackgroundJobsManager {
      *   <li>{@link DeleteExpiredJobService}
      *   <li>{@link DeleteUninstalledJobService}
      *   <li>{@link AsyncRegistrationQueueJobService}
+     *   <li>{@link AsyncRegistrationFallbackJob}
      *   <li>{@link MddJobService}
      *   <li>{@link EncryptionKeyJobService}
      *   <li>{@link CobaltJobService}
@@ -233,8 +235,7 @@ public class BackgroundJobsManager {
             DeleteExpiredJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             DeleteUninstalledJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
             AsyncRegistrationQueueJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
-            AsyncRegistrationFallbackJobService.scheduleIfNeeded(
-                    context, /* forceSchedule= */ false);
+            AsyncRegistrationFallbackJob.schedule();
             VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
                     context, /* forceSchedule= */ false);
             DebugReportingFallbackJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);

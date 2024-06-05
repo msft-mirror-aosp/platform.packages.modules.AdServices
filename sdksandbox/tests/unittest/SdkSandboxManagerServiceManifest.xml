@@ -22,7 +22,7 @@
 
     <queries>
         <package android:name="com.android.codeproviderresources_1" />
-        <package android:name="com.android.serviceprovider" />
+        <package android:name="com.android.emptysampleapp" />
         <package android:name="com.android.codeprovider_1" />
         <package android:name="com.android.property_sdkprovider_classname_not_present_1" />
     </queries>

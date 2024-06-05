@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -47,11 +48,14 @@ java_test_host {
     test_config: "SdkSandboxShellHostTest.xml",
     libs: ["tradefed"],
     test_suites: ["general-tests"],
+    static_libs: [
+        "SdkSandboxHostTestUtils",
+    ],
     data: [
         ":TestCodeProvider",
         ":TestCodeProvider2",
         ":SdkSandboxTestApp",
-        ":SdkSandboxTestDebuggableApp"
+        ":SdkSandboxTestDebuggableApp",
     ],
 }
 
@@ -158,7 +162,7 @@ android_test_helper_app {
     defaults: ["platform_app_defaults"],
     certificate: ":sdksandbox-test",
     srcs: [
-       "codeprovider/src/**/TestSandboxedSdkProvider.java",
+        "codeprovider/src/**/TestSandboxedSdkProvider.java",
     ],
     libs: [
         "framework-sdksandbox.impl",
@@ -174,7 +178,7 @@ android_test_helper_app {
     certificate: ":sdksandbox-test",
     defaults: ["platform_app_defaults"],
     srcs: [
-       "codeprovider/src/**/TestSandboxedSdkProvider2.java",
+        "codeprovider/src/**/TestSandboxedSdkProvider2.java",
     ],
     libs: [
         "framework-sdksandbox.impl",

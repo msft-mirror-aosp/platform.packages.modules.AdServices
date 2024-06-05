@@ -16,21 +16,20 @@
 package com.android.server.adservices;
 
 import android.annotation.NonNull;
-
-import com.android.adservices.service.CommonPhFlags;
+import android.provider.DeviceConfig;
 
 /**
  * Flags Implementation that delegates to DeviceConfig.
  *
  * @hide
  */
-public final class PhFlags extends CommonPhFlags implements Flags {
+public final class PhFlags implements Flags {
 
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
-    public static PhFlags getInstance() {
+    static PhFlags getInstance() {
         return sSingleton;
     }
 
@@ -43,5 +42,10 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     @Override
     public boolean getAdServicesSystemServiceEnabled() {
         return getFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, ADSERVICES_SYSTEM_SERVICE_ENABLED);
+    }
+
+    @SuppressWarnings("AvoidDeviceConfigUsage") // Helper / infra method
+    private boolean getFlag(String name, boolean defaultValue) {
+        return DeviceConfig.getBoolean(DeviceConfig.NAMESPACE_ADSERVICES, name, defaultValue);
     }
 }

@@ -26,11 +26,13 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -44,13 +46,15 @@ public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
 
     private final BackgroundJobHelper mBackgroundJobHelper = new BackgroundJobHelper(sContext);
 
+    @Ignore("b/343292815")
     @Test
     public void testAdSelection_afterOneDay_adSelectionDataCleared() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-default.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             overrideBiddingLogicVersionToV3(true);
@@ -79,11 +83,11 @@ public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
     @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     public void testAdSelection_afterOneDay_adInteractionsIsCleared() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-beacon-no-interactions.json",
-                        getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-beacon-no-interactions.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             overrideBiddingLogicVersionToV3(true);

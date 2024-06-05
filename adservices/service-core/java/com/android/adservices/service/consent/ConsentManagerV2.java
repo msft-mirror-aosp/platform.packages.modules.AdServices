@@ -32,7 +32,6 @@ import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
 
@@ -46,6 +45,8 @@ import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -122,6 +123,7 @@ public class ConsentManagerV2 {
     private final MeasurementImpl mMeasurementImpl;
     private final CustomAudienceDao mCustomAudienceDao;
     private final AppInstallDao mAppInstallDao;
+    private final ProtectedSignalsDao mProtectedSignalsDao;
     private final FrequencyCapDao mFrequencyCapDao;
     private final AdServicesStorageManager mAdServicesStorageManager;
     private final AppSearchConsentStorageManager mAppSearchConsentStorageManager;
@@ -143,6 +145,7 @@ public class ConsentManagerV2 {
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AppConsentStorageManager appConsentStorageManager,
             @NonNull AppInstallDao appInstallDao,
+            @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull FrequencyCapDao frequencyCapDao,
             @NonNull AdServicesStorageManager adServicesStorageManager,
             @NonNull BooleanFileDatastore booleanFileDatastore,
@@ -158,6 +161,7 @@ public class ConsentManagerV2 {
         Objects.requireNonNull(measurementImpl);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(appInstallDao);
+        Objects.requireNonNull(protectedSignalsDao);
         Objects.requireNonNull(frequencyCapDao);
         Objects.requireNonNull(booleanFileDatastore);
         Objects.requireNonNull(userProfileIdManager);
@@ -182,6 +186,7 @@ public class ConsentManagerV2 {
         mMeasurementImpl = measurementImpl;
         mCustomAudienceDao = customAudienceDao;
         mAppInstallDao = appInstallDao;
+        mProtectedSignalsDao = protectedSignalsDao;
         mFrequencyCapDao = frequencyCapDao;
 
         mAppSearchConsentStorageManager = appSearchConsentStorageManager;
@@ -224,8 +229,6 @@ public class ConsentManagerV2 {
     @NonNull
     public static ConsentManagerV2 getInstance() {
         Context context = ApplicationContextSingleton.get();
-
-        Trace.beginSection("ConsentManager#Initialization");
 
         if (sConsentManager == null) {
             synchronized (LOCK) {
@@ -305,13 +308,14 @@ public class ConsentManagerV2 {
                             new AppConsentStorageManager(datastore, appConsentDao, uxStatesDao);
                     sConsentManager =
                             new ConsentManagerV2(
-                                    TopicsWorker.getInstance(context),
+                                    TopicsWorker.getInstance(),
                                     appConsentDao,
-                                    EnrollmentDao.getInstance(context),
+                                    EnrollmentDao.getInstance(),
                                     MeasurementImpl.getInstance(context),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                                     appConsentStorageManager,
                                     SharedStorageDatabase.getInstance(context).appInstallDao(),
+                                    ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                     SharedStorageDatabase.getInstance(context).frequencyCapDao(),
                                     adServicesManager,
                                     datastore,
@@ -326,7 +330,6 @@ public class ConsentManagerV2 {
                 }
             }
         }
-        Trace.endSection();
         return sConsentManager;
     }
 
@@ -352,7 +355,7 @@ public class ConsentManagerV2 {
         try {
             // reset all state data which should be removed
             resetTopicsAndBlockedTopics();
-            clearAllAppConsentData();
+            resetAppsAndBlockedApps();
             resetMeasurement();
             resetUserProfileId();
             mUserProfileIdManager.getOrCreateId();
@@ -375,7 +378,7 @@ public class ConsentManagerV2 {
         try {
             // reset all data
             resetTopicsAndBlockedTopics();
-            clearAllAppConsentData();
+            resetAppsAndBlockedApps();
             resetMeasurement();
             resetEnrollment();
             resetUserProfileId();
@@ -629,7 +632,7 @@ public class ConsentManagerV2 {
      *
      * @throws IOException if the operation fails
      */
-    public void clearAllAppConsentData() throws IOException {
+    public void resetAppsAndBlockedApps() throws IOException {
         mConsentCompositeStorage.clearAllAppConsentData();
 
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
@@ -638,6 +641,9 @@ public class ConsentManagerV2 {
         }
         if (mFlags.getFledgeAppInstallFilteringEnabled()) {
             asyncExecute(mAppInstallDao::deleteAllAppInstallData);
+        }
+        if (mFlags.getProtectedSignalsCleanupEnabled()) {
+            asyncExecute(mProtectedSignalsDao::deleteAllSignals);
         }
     }
 
@@ -648,7 +654,7 @@ public class ConsentManagerV2 {
      *
      * @throws IOException if the operation fails
      */
-    public void clearKnownAppsWithConsent() throws IOException {
+    public void resetApps() throws IOException {
         mConsentCompositeStorage.clearKnownAppsWithConsent();
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
         if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
@@ -761,16 +767,8 @@ public class ConsentManagerV2 {
      *
      * @return true if Consent Notification was displayed, otherwise false.
      */
-    public Boolean wasNotificationDisplayed() {
+    public boolean wasNotificationDisplayed() {
         return mConsentCompositeStorage.wasNotificationDisplayed();
-    }
-
-    /**
-     * Saves information to the storage that Pas notification was displayed for the first time to
-     * the user.
-     */
-    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
-        mConsentCompositeStorage.recordPasNotificationDisplayed(wasPasDisplayed);
     }
 
     /**
@@ -786,7 +784,7 @@ public class ConsentManagerV2 {
      *
      * @return true if GA UX Consent Notification was displayed, otherwise false.
      */
-    public Boolean wasGaUxNotificationDisplayed() {
+    public boolean wasGaUxNotificationDisplayed() {
         return mConsentCompositeStorage.wasGaUxNotificationDisplayed();
     }
 
@@ -911,7 +909,7 @@ public class ConsentManagerV2 {
                 resetTopicsAndBlockedTopics();
                 break;
             case FLEDGE:
-                clearAllAppConsentData();
+                resetAppsAndBlockedApps();
                 resetUserProfileId();
                 break;
             case MEASUREMENTS:
@@ -1284,7 +1282,7 @@ public class ConsentManagerV2 {
     }
 
     /** Returns whether the isAdIdEnabled bit is true based on consent_source_of_truth. */
-    public Boolean isAdIdEnabled() {
+    public boolean isAdIdEnabled() {
         return mConsentCompositeStorage.isAdIdEnabled();
     }
 
@@ -1294,7 +1292,7 @@ public class ConsentManagerV2 {
     }
 
     /** Returns whether the isU18Account bit is true based on consent_source_of_truth. */
-    public Boolean isU18Account() {
+    public boolean isU18Account() {
         return mConsentCompositeStorage.isU18Account();
     }
 
@@ -1304,7 +1302,7 @@ public class ConsentManagerV2 {
     }
 
     /** Returns whether the isEntryPointEnabled bit is true based on consent_source_of_truth. */
-    public Boolean isEntryPointEnabled() {
+    public boolean isEntryPointEnabled() {
         return mConsentCompositeStorage.isEntryPointEnabled();
     }
 
@@ -1314,7 +1312,7 @@ public class ConsentManagerV2 {
     }
 
     /** Returns whether the isAdultAccount bit is true based on consent_source_of_truth. */
-    public Boolean isAdultAccount() {
+    public boolean isAdultAccount() {
         return mConsentCompositeStorage.isAdultAccount();
     }
 
@@ -1326,7 +1324,7 @@ public class ConsentManagerV2 {
     /**
      * Returns whether the wasU18NotificationDisplayed bit is true based on consent_source_of_truth.
      */
-    public Boolean wasU18NotificationDisplayed() {
+    public boolean wasU18NotificationDisplayed() {
         return mConsentCompositeStorage.wasU18NotificationDisplayed();
     }
 
@@ -1362,14 +1360,14 @@ public class ConsentManagerV2 {
         mDatastore.put(ConsentConstants.CONSENT_KEY, isGiven);
     }
 
-    /** Returns the region od the device */
+    /* Returns the region od the device */
     private static int getConsentRegion(@NonNull Context context) {
         return DeviceRegionProvider.isEuDevice(context)
                 ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
                 : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
     }
 
-    /** Returns an object of ConsentMigrationStats */
+    /* Returns an object of ConsentMigrationStats */
     private static ConsentMigrationStats getConsentManagerStatsForLogging(
             AppConsents appConsents,
             ConsentMigrationStats.MigrationStatus migrationStatus,
@@ -1409,5 +1407,115 @@ public class ConsentManagerV2 {
      */
     public boolean isMeasurementDataReset() {
         return mConsentCompositeStorage.isMeasurementDataReset();
+    }
+
+    /**
+     * Retrieves if PAS notification has been displayed.
+     *
+     * @return true if PAS Consent Notification was displayed, otherwise false.
+     */
+    public boolean wasPasNotificationDisplayed() {
+        return mConsentCompositeStorage.wasPasNotificationDisplayed();
+    }
+
+    /**
+     * Saves information to the storage that PAS UX notification was displayed for the first time to
+     * the user.
+     */
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
+        mConsentCompositeStorage.recordPasNotificationDisplayed(wasPasDisplayed);
+    }
+
+    /** get pas conset for measurement */
+    public boolean isPasMeasurementConsentGiven() {
+        if (mFlags.getConsentManagerDebugMode()) {
+            return true;
+        }
+
+        return mFlags.getPasUxEnabled()
+                && wasPasNotificationDisplayed()
+                && getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+    }
+
+    /**
+     * Retrieves the PP API default consent.
+     *
+     * @return true if the default consent is true, false otherwise.
+     */
+    public boolean getDefaultConsent() {
+        return mConsentCompositeStorage.getDefaultConsent();
+    }
+
+    /**
+     * Retrieves the topics default consent.
+     *
+     * @return true if the topics default consent is true, false otherwise.
+     */
+    boolean getTopicsDefaultConsent() {
+        return mConsentCompositeStorage.getTopicsDefaultConsent();
+    }
+
+    /**
+     * Retrieves the FLEDGE default consent.
+     *
+     * @return true if the FLEDGE default consent is true, false otherwise.
+     */
+    boolean getFledgeDefaultConsent() {
+        return mConsentCompositeStorage.getFledgeDefaultConsent();
+    }
+
+    /**
+     * Retrieves the measurement default consent.
+     *
+     * @return true if the measurement default consent is true, false otherwise.
+     */
+    boolean getMeasurementDefaultConsent() {
+        return mConsentCompositeStorage.getMeasurementDefaultConsent();
+    }
+
+    /**
+     * Retrieves the default AdId state.
+     *
+     * @return true if the AdId is enabled by default, false otherwise.
+     */
+    boolean getDefaultAdIdState() {
+        return mConsentCompositeStorage.getDefaultAdIdState();
+    }
+
+    /** Saves the default consent bit to data stores based on source of truth. */
+    void recordDefaultConsent(boolean defaultConsent) {
+        mConsentCompositeStorage.recordDefaultConsent(defaultConsent);
+    }
+
+    /** Saves the topics default consent bit to data stores based on source of truth. */
+    void recordTopicsDefaultConsent(boolean defaultConsent) {
+        mConsentCompositeStorage.recordTopicsDefaultConsent(defaultConsent);
+    }
+
+    /** Saves the FLEDGE default consent bit to data stores based on source of truth. */
+    void recordFledgeDefaultConsent(boolean defaultConsent) {
+        mConsentCompositeStorage.recordFledgeDefaultConsent(defaultConsent);
+    }
+
+    /** Saves the measurement default consent bit to data stores based on source of truth. */
+    void recordMeasurementDefaultConsent(boolean defaultConsent) {
+        mConsentCompositeStorage.recordMeasurementDefaultConsent(defaultConsent);
+    }
+
+    /** Saves the default AdId state bit to data stores based on source of truth. */
+    void recordDefaultAdIdState(boolean defaultAdIdState) {
+        mConsentCompositeStorage.recordDefaultAdIdState(defaultAdIdState);
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    boolean isPaDataReset() {
+        return mConsentCompositeStorage.isPaDataReset();
+    }
+
+    /** Set the isPaDataReset bit to storage based on consent_source_of_truth. */
+    void setPaDataReset(boolean isPaDataReset) {
+        mConsentCompositeStorage.setPaDataReset(isPaDataReset);
     }
 }

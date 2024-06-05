@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "bidding",
+        "path": "/bidding",
         "header": {
           "x_fledge_buyer_bidding_logic_version": "3"
         }
@@ -16,7 +16,7 @@
     },
     {
       "request": {
-        "path": "scoring"
+        "path": "/scoring"
       },
       "response": {
         "body": "ScoringLogicWithDebugReporting.js"
@@ -24,7 +24,7 @@
     },
     {
       "request": {
-        "path": "scoring/trusted"
+        "path": "/scoring/trusted"
       },
       "response": {
         "body": "ScoringSignals.json"
@@ -32,7 +32,7 @@
     },
     {
       "request": {
-        "path": "bidding/trusted"
+        "path": "/bidding/trusted"
       },
       "response": {
         "body": "BiddingSignals.json"
@@ -40,7 +40,7 @@
     },
     {
       "request": {
-        "path": "buyer/reportImpression"
+        "path": "/buyer/reportImpression"
       },
       "response": {
         "body": null
@@ -48,7 +48,7 @@
     },
     {
       "request": {
-        "path": "seller/reportImpression"
+        "path": "/seller/reportImpression"
       },
       "response": {
         "body": null
@@ -56,7 +56,7 @@
     },
     {
       "request": {
-        "path": "buyer/reportWin"
+        "path": "/buyer/reportWin"
       },
       "response": {
         "body": null
@@ -65,7 +65,7 @@
     },
     {
       "request": {
-        "path": "buyer/reportLoss"
+        "path": "/buyer/reportLoss"
       },
       "response": {
         "body": null
@@ -74,7 +74,7 @@
     },
     {
       "request": {
-        "path": "seller/reportWin"
+        "path": "/seller/reportWin"
       },
       "response": {
         "body": null
@@ -83,7 +83,7 @@
     },
     {
       "request": {
-        "path": "seller/reportLoss"
+        "path": "/seller/reportLoss"
       },
       "response": {
         "body": null
@@ -92,18 +92,18 @@
     }
   ],
   "substitutions": {
-    "<daily-update-uri>": "{base_url}/bidding/daily",
-    "<ad-render-uri-1>": "{base_url}/render_ad/1",
-    "<ad-render-uri-2>": "{base_url}/render_ad/2",
-    "https://js.example.com/render/ad1": "{base_url}/render_ad/1",
-    "https://js.example.com/render/ad2": "{base_url}/render_ad/2",
-    "<buyer-trusted-bidding-uri>": "{base_url}/bidding/trusted",
-    "https://js.example.com/bidding/trusted": "{base_url}/bidding/trusted",
-    "<buyer-reporting-uri>": "{base_url}/buyer/reportImpression",
-    "<seller-reporting-uri>": "{base_url}/seller/reportImpression",
-    "<buyer-win-debug-reporting-uri>": "{base_url}/buyer/reportWin",
-    "<buyer-loss-debug-reporting-uri>": "{base_url}/buyer/reportLoss",
-    "<seller-win-debug-reporting-uri>": "{base_url}/seller/reportWin",
-    "<seller-loss-debug-reporting-uri>": "{base_url}/seller/reportLoss"
+    "<daily-update-uri>": "{base_url_with_prefix}/bidding/daily",
+    "<ad-render-uri-1>": "{base_url_with_prefix}/render_ad/1",
+    "<ad-render-uri-2>": "{base_url_with_prefix}/render_ad/2",
+    "https://js.example.com/render/ad1": "{base_url_with_prefix}/render_ad/1",
+    "https://js.example.com/render/ad2": "{base_url_with_prefix}/render_ad/2",
+    "<buyer-trusted-bidding-uri>": "{base_url_with_prefix}/bidding/trusted",
+    "https://js.example.com/bidding/trusted": "{base_url_with_prefix}/bidding/trusted",
+    "<buyer-reporting-uri>": "{base_url_with_prefix}/buyer/reportImpression",
+    "<seller-reporting-uri>": "{base_url_with_prefix}/seller/reportImpression",
+    "<buyer-win-debug-reporting-uri>": "{base_url_with_prefix}/buyer/reportWin",
+    "<buyer-loss-debug-reporting-uri>": "{base_url_with_prefix}/buyer/reportLoss",
+    "<seller-win-debug-reporting-uri>": "{base_url_with_prefix}/seller/reportWin",
+    "<seller-loss-debug-reporting-uri>": "{base_url_with_prefix}/seller/reportLoss"
   }
 }

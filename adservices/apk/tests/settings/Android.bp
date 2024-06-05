@@ -108,7 +108,7 @@ android_test {
     ],
     test_suites: [
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
@@ -206,5 +206,5 @@ android_test {
     test_config: "AndroidTest.AppConsent.ExtServices.xml",
     data: [":com.example.adservices.samples.ui.consenttestapp"],
     instrumentation_for: "ExtServices-sminus",
-    manifest: "AndroidManifestExtServices.xml"
+    manifest: "AndroidManifestExtServices.xml",
 }

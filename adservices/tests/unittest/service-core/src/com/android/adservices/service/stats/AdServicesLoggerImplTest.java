@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
@@ -32,6 +31,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
@@ -45,6 +46,7 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVE
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_SMALL;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.NUM_OF_ELIGIBLE_TO_UPDATE_CAS;
 import static com.android.adservices.service.stats.BackgroundFetchProcessReportedStatsTest.RESULT_CODE;
@@ -52,6 +54,8 @@ import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessRepor
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.FETCHED_BUYER_DECISION_LOGIC_SCRIPT_SIZE_IN_BYTES;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.FETCHED_TRUSTED_BIDDING_SIGNALS_DATA_SIZE_IN_BYTES;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.GENERATE_BIDS_LATENCY_IN_MILLIS;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.GENERATE_BID_JS_SCRIPT_RESULT_CODE;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.GET_BUYER_DECISION_LOGIC_LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.GET_BUYER_DECISION_LOGIC_RESULT_CODE;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.GET_TRUSTED_BIDDING_SIGNALS_LATENCY_IN_MILLIS;
@@ -60,6 +64,7 @@ import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessRepor
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.NUM_OF_KEYS_OF_TRUSTED_BIDDING_SIGNALS;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.RUN_AD_BIDDING_PER_CA_LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.RUN_AD_BIDDING_PER_CA_RESULT_CODE;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.RUN_BIDDING_LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.RUN_BIDDING_RESULT_CODE;
 import static com.android.adservices.service.stats.RunAdBiddingProcessReportedStatsTest.GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_IN_MILLIS;
@@ -88,6 +93,8 @@ import static com.android.adservices.service.stats.RunAdScoringProcessReportedSt
 import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.RUN_AD_SCORING_LATENCY_IN_MILLIS;
 import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.RUN_AD_SCORING_RESULT_CODE;
 import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.SCORE_ADS_LATENCY_IN_MILLIS;
+import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.SCORE_AD_JS_SCRIPT_RESULT_CODE;
+import static com.android.adservices.service.stats.RunAdScoringProcessReportedStatsTest.SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION;
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.DB_AD_SELECTION_SIZE_IN_BYTES;
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.IS_RMKT_ADS_WON;
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.PERSIST_AD_SELECTION_LATENCY_IN_MILLIS;
@@ -96,6 +103,7 @@ import static com.android.adservices.service.stats.RunAdSelectionProcessReported
 import static com.android.adservices.service.stats.RunAdSelectionProcessReportedStatsTest.RUN_AD_SELECTION_RESULT_CODE;
 import static com.android.adservices.service.stats.UpdateCustomAudienceProcessReportedStatsTest.DATA_SIZE_OF_ADS_IN_BYTES;
 import static com.android.adservices.service.stats.UpdateCustomAudienceProcessReportedStatsTest.NUM_OF_ADS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -116,10 +124,14 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
+import com.android.adservices.service.measurement.ondevicepersonalization.OdpApiCallStatus;
+import com.android.adservices.service.measurement.ondevicepersonalization.OdpRegistrationStatus;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.shared.testing.AnswerSyncCallback;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -149,14 +161,25 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testLogFledgeApiCallStatsWithAppPackageNameLogging() {
+    public void testLogFledgeApiCallStatsWithAppPackageNameLogging() throws Exception {
+        mockAppNameApiErrorLogger();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
         String appPackageName = TEST_PACKAGE_NAME;
         int resultCode = STATUS_SUCCESS;
         int latencyMs = 10;
 
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback)
+                .when(mMockAppNameApiErrorLogger)
+                .logErrorOccurrence(
+                        appPackageName,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        STATUS_SUCCESS);
+
         adServicesLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+
+        callback.assertCalled();
 
         // Verify method logging app package name is called.
         verify(mStatsdLoggerMock)
@@ -220,6 +243,9 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                                 NUM_OF_CONTEXTUAL_ADS_ENTERING_SCORING)
                         .setRunAdScoringLatencyInMillis(RUN_AD_SCORING_LATENCY_IN_MILLIS)
                         .setRunAdScoringResultCode(RUN_AD_SCORING_RESULT_CODE)
+                        .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION)
+                        .setScoreAdJsScriptResultCode(SCORE_AD_JS_SCRIPT_RESULT_CODE)
                         .build();
 
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
@@ -256,6 +282,10 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getRunAdScoringLatencyInMillis())
                 .isEqualTo(RUN_AD_SCORING_LATENCY_IN_MILLIS);
         expect.that(loggedStats.getRunAdScoringResultCode()).isEqualTo(RUN_AD_SCORING_RESULT_CODE);
+        expect.that(loggedStats.getScoreAdSellerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
+        expect.that(loggedStats.getScoreAdJsScriptResultCode())
+                .isEqualTo(SCORE_AD_JS_SCRIPT_RESULT_CODE);
     }
 
     @Test
@@ -329,6 +359,10 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setGenerateBidsLatencyInMillis(GENERATE_BIDS_LATENCY_IN_MILLIS)
                         .setRunBiddingLatencyInMillis(RUN_BIDDING_LATENCY_IN_MILLIS)
                         .setRunBiddingResultCode(RUN_BIDDING_RESULT_CODE)
+                        .setRunAdBiddingPerCaReturnedAdCost(RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST)
+                        .setGenerateBidBuyerAdditionalSignalsContainedDataVersion(
+                                GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION)
+                        .setGenerateBidJsScriptResultCode(GENERATE_BID_JS_SCRIPT_RESULT_CODE)
                         .build();
 
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
@@ -364,6 +398,12 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getRunBiddingLatencyInMillis())
                 .isEqualTo(RUN_BIDDING_LATENCY_IN_MILLIS);
         expect.that(loggedStats.getRunBiddingResultCode()).isEqualTo(RUN_BIDDING_RESULT_CODE);
+        expect.that(loggedStats.getRunAdBiddingPerCaReturnedAdCost())
+                .isEqualTo(RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST);
+        expect.that(loggedStats.getGenerateBidBuyerAdditionalSignalsContainedDataVersion())
+                .isEqualTo(GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION);
+        expect.that(loggedStats.getGenerateBidJsScriptResultCode())
+                .isEqualTo(GENERATE_BID_JS_SCRIPT_RESULT_CODE);
     }
 
     @Test
@@ -430,13 +470,19 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testLogApiCallStats() {
+    public void testLogApiCallStats() throws Exception {
         String packageName = "com.android.test";
         String sdkName = "com.android.container";
         int latency = 100;
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         mockAppNameApiErrorLogger();
+
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback)
+                .when(mMockAppNameApiErrorLogger)
+                .logErrorOccurrence(
+                        packageName, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, STATUS_SUCCESS);
 
         ApiCallStats stats =
                 new ApiCallStats.Builder()
@@ -446,10 +492,12 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setAppPackageName(packageName)
                         .setSdkPackageName(sdkName)
                         .setLatencyMillisecond(latency)
-                        .setResult(ApiCallStats.failureResult(STATUS_SUCCESS, FAILURE_REASON_UNSET))
+                        .setResultCode(STATUS_SUCCESS)
                         .build();
         AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
         adServicesLogger.logApiCallStats(stats);
+        callback.assertCalled();
+
         ArgumentCaptor<ApiCallStats> argumentCaptor = ArgumentCaptor.forClass(ApiCallStats.class);
         verify(mStatsdLoggerMock).logApiCallStats(argumentCaptor.capture());
         ApiCallStats loggedStats = argumentCaptor.getValue();
@@ -462,11 +510,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getSdkPackageName()).isEqualTo(sdkName);
         expect.that(loggedStats.getLatencyMillisecond()).isEqualTo(latency);
         expect.that(loggedStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
-        expect.that(loggedStats.getFailureReason()).isEqualTo(FAILURE_REASON_UNSET);
-
-        verify(mMockAppNameApiErrorLogger)
-                .logErrorOccurrence(
-                        packageName, AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS, STATUS_SUCCESS);
     }
 
     @Test
@@ -613,6 +656,54 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                 .isEqualTo(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION);
         expect.that(loggedStats.getRegistrationStatus()).isEqualTo(UnknownEnumValue);
         expect.that(loggedStats.getRegistrationDelay()).isEqualTo(registrationDelay);
+    }
+
+    @Test
+    public void testLogMeasurementOdpRegistrationsStats() {
+        MeasurementOdpRegistrationStats stats =
+                new MeasurementOdpRegistrationStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION)
+                        .setRegistrationType(
+                                OdpRegistrationStatus.RegistrationType.TRIGGER.getValue())
+                        .setRegistrationStatus(
+                                OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE.getValue())
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementOdpRegistrations(stats);
+        ArgumentCaptor<MeasurementOdpRegistrationStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementOdpRegistrationStats.class);
+        verify(mStatsdLoggerMock).logMeasurementOdpRegistrations(argumentCaptor.capture());
+        MeasurementOdpRegistrationStats loggedStats = argumentCaptor.getValue();
+        expect.that(loggedStats.getCode())
+                .isEqualTo(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION);
+        expect.that(loggedStats.getRegistrationType())
+                .isEqualTo(OdpRegistrationStatus.RegistrationType.TRIGGER.getValue());
+        expect.that(loggedStats.getRegistrationStatus())
+                .isEqualTo(OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE.getValue());
+    }
+
+    @Test
+    public void testLogMeasurementOdpApiCallStats() {
+        long latency = 5L;
+        MeasurementOdpApiCallStats stats =
+                new MeasurementOdpApiCallStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP)
+                        .setLatency(latency)
+                        .setApiCallStatus(OdpApiCallStatus.ApiCallStatus.SUCCESS.getValue())
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementOdpApiCall(stats);
+        ArgumentCaptor<MeasurementOdpApiCallStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementOdpApiCallStats.class);
+        verify(mStatsdLoggerMock).logMeasurementOdpApiCall(argumentCaptor.capture());
+        MeasurementOdpApiCallStats loggedStats = argumentCaptor.getValue();
+        expect.that(loggedStats.getCode())
+                .isEqualTo(AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP);
+        expect.that(loggedStats.getLatency()).isEqualTo(latency);
+        expect.that(loggedStats.getApiCallStatus())
+                .isEqualTo(OdpApiCallStatus.ApiCallStatus.SUCCESS.getValue());
     }
 
     @Test
@@ -1042,6 +1133,36 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         adServicesLogger.logEncodingJobRunStats(stats);
 
         verify(mStatsdLoggerMock).logEncodingJobRunStats(eq(stats));
+    }
+
+    @Test
+    public void testLogPersistAdSelectionResultCalledStats() {
+        PersistAdSelectionResultCalledStats stats =
+                PersistAdSelectionResultCalledStats.builder()
+                        .setWinnerType(WINNER_TYPE_PAS_WINNER)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logPersistAdSelectionResultCalledStats(stats);
+
+        verify(mStatsdLoggerMock).logPersistAdSelectionResultCalledStats(eq(stats));
+    }
+
+    @Test
+    public void testLogSelectAdsFromOutcomesApiCalledStats() {
+        SelectAdsFromOutcomesApiCalledStats stats =
+                SelectAdsFromOutcomesApiCalledStats.builder()
+                        .setCountIds(5)
+                        .setCountNonExistingIds(2)
+                        .setUsedPrebuilt(false)
+                        .setDownloadResultCode(0)
+                        .setDownloadLatencyMillis(350)
+                        .setExecutionResultCode(1)
+                        .setExecutionLatencyMillis(180)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logSelectAdsFromOutcomesApiCalledStats(stats);
+
+        verify(mStatsdLoggerMock).logSelectAdsFromOutcomesApiCalledStats(eq(stats));
     }
 
     private void mockAppNameApiErrorLogger() {

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.measurement.Source.DEFAULT_MAX_EVENT_STATES;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -41,6 +43,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -176,6 +179,9 @@ public class SourceTest {
                         .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJsonString())
                         .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
                         .setDropSourceIfInstalled(true)
+                        .setAttributionScopes(List.of("1", "2", "3"))
+                        .setAttributionScopeLimit(4L)
+                        .setMaxEventStates(10L)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -227,6 +233,9 @@ public class SourceTest {
                         .setEventAttributionStatus(null)
                         .setPrivacyParameters(triggerSpecs.encodePrivacyParametersToJsonString())
                         .setDropSourceIfInstalled(true)
+                        .setAttributionScopes(List.of("1", "2", "3"))
+                        .setAttributionScopeLimit(4L)
+                        .setMaxEventStates(10L)
                         .build());
     }
 
@@ -498,6 +507,27 @@ public class SourceTest {
                 SourceFixture.getMinimalValidSourceBuilder().setDropSourceIfInstalled(true).build(),
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setDropSourceIfInstalled(false)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setAttributionScopes(List.of("1", "2", "3"))
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setAttributionScopes(List.of("4", "5", "6"))
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setAttributionScopeLimit(10L)
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setAttributionScopeLimit(5L)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setMaxEventStates(1L)
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setMaxEventStates(2L)
                         .build());
     }
 
@@ -799,23 +829,31 @@ public class SourceTest {
         assertNotNull(source.getAggregatableAttributionSource(trigger, mFlags).orElse(null));
         assertNotNull(
                 source.getAggregatableAttributionSource(trigger, mFlags)
-                        .orElse(null)
+                        .get()
                         .getAggregatableSource());
         assertNotNull(
-                source.getAggregatableAttributionSource(trigger, mFlags)
-                        .orElse(null)
-                        .getFilterMap());
+                source.getAggregatableAttributionSource(trigger, mFlags).get().getFilterMap());
         assertEquals(
                 aggregatableSource,
                 source.getAggregatableAttributionSource(trigger, mFlags)
-                        .orElse(null)
+                        .get()
                         .getAggregatableSource());
         assertEquals(
                 filterMap,
                 source.getAggregatableAttributionSource(trigger, mFlags)
-                        .orElse(null)
+                        .get()
                         .getFilterMap()
                         .getAttributionFilterMap());
+    }
+
+    @Test
+    public void testReinstallReattributionWindow() throws Exception {
+        final Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setReinstallReattributionWindow(50L)
+                        .build();
+
+        assertEquals(50L, source.getReinstallReattributionWindow());
     }
 
     @Test
@@ -885,6 +923,19 @@ public class SourceTest {
         assertEquals(
                 source.getAttributionDestinations(EventSurfaceType.WEB),
                 source.getWebDestinations());
+    }
+
+    @Test
+    public void testGetAllAttributionDestinations() {
+        Source source = SourceFixture.getValidSource();
+        assertThat(source.getAllAttributionDestinations())
+                .containsExactly(
+                        Pair.create(
+                                EventSurfaceType.APP,
+                                Uri.parse("android-app://com.destination").toString()),
+                        Pair.create(
+                                EventSurfaceType.WEB,
+                                Uri.parse("https://destination.com").toString()));
     }
 
     @Test
@@ -1324,15 +1375,141 @@ public class SourceTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(baseTime)
-                        .setEventReportWindows("{"
-                                + "\"start_time\": \"0\","
-                                + String.format(
-                                        "\"end_times\": [%s, %s]}",
-                                        baseTime + TimeUnit.DAYS.toMillis(7),
-                                        baseTime + TimeUnit.DAYS.toMillis(30)))
+                        .setEventReportWindows(
+                                "{"
+                                        + "\"start_time\": \"0\","
+                                        + String.format(
+                                                "\"end_times\": [%s, %s]}",
+                                                baseTime + TimeUnit.DAYS.toMillis(7),
+                                                baseTime + TimeUnit.DAYS.toMillis(30)))
                         .setMaxEventLevelReports(2)
                         .build();
         assertTrue(source.validateAndSetNumReportStates(flags));
+    }
+
+    @Test
+    public void validateAndSetMaxEventStates_attributionScopeEnabledValid_returnsTrue() {
+        Flags flags = mock(Flags.class);
+        doReturn(true).when(flags).getMeasurementFlexLiteApiEnabled();
+        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
+        doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
+                .when(flags)
+                .getMeasurementMaxReportStatesPerSourceRegistration();
+        doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
+                .when(flags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
+        long baseTime = System.currentTimeMillis();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(baseTime)
+                        .setEventReportWindows(
+                                "{"
+                                        + "\"start_time\": \"0\","
+                                        + String.format(
+                                                "\"end_times\": [%s, %s]}",
+                                                baseTime + TimeUnit.DAYS.toMillis(7),
+                                                baseTime + TimeUnit.DAYS.toMillis(30)))
+                        .setMaxEventLevelReports(2)
+                        .setAttributionScopes(List.of("1", "2"))
+                        .setAttributionScopeLimit(3L)
+                        .setMaxEventStates(100L)
+                        .build();
+        assertTrue(source.validateAndSetMaxEventStates(flags));
+    }
+
+    @Test
+    public void validateAndSetMaxEventStates_maxEventStatesNullNonDefaultVtc_returnsFalse() {
+        Flags flags = mock(Flags.class);
+        doReturn(true).when(flags).getMeasurementFlexLiteApiEnabled();
+        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
+        doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
+                .when(flags)
+                .getMeasurementMaxReportStatesPerSourceRegistration();
+        doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
+                .when(flags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
+        long baseTime = System.currentTimeMillis();
+        // Source with numStates = 15.
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(baseTime)
+                        .setEventReportWindows(
+                                "{"
+                                        + "\"start_time\": \"0\","
+                                        + String.format(
+                                                "\"end_times\": [%s, %s]}",
+                                                baseTime + TimeUnit.DAYS.toMillis(7),
+                                                baseTime + TimeUnit.DAYS.toMillis(30)))
+                        .setMaxEventLevelReports(2)
+                        .setAttributionScopes(List.of("1", "2"))
+                        .setAttributionScopeLimit(3L)
+                        .build();
+        assertFalse(source.validateAndSetMaxEventStates(flags));
+    }
+
+    @Test
+    public void validateAndSetMaxEventStates_maxEventStatesNullNavigation_returnsFalse() {
+        Flags flags = mock(Flags.class);
+        doReturn(true).when(flags).getMeasurementFlexLiteApiEnabled();
+        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
+        doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
+                .when(flags)
+                .getMeasurementMaxReportStatesPerSourceRegistration();
+        doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
+                .when(flags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
+        long baseTime = System.currentTimeMillis();
+        // Source with numStates = 15.
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setEventTime(baseTime)
+                        .setEventReportWindows(
+                                "{"
+                                        + "\"start_time\": \"0\","
+                                        + String.format(
+                                                "\"end_times\": [%s, %s]}",
+                                                baseTime + TimeUnit.DAYS.toMillis(7),
+                                                baseTime + TimeUnit.DAYS.toMillis(30)))
+                        .setMaxEventLevelReports(2)
+                        .setAttributionScopes(List.of("1", "2"))
+                        .setAttributionScopeLimit(3L)
+                        .build();
+        assertThat(source.validateAndSetMaxEventStates(flags)).isTrue();
+        assertThat(source.getMaxEventStates()).isEqualTo(DEFAULT_MAX_EVENT_STATES);
+    }
+
+    @Test
+    public void validateAndSetMaxEventStates_attributionScopeMaxEventStatesTooLow_returnsFalse() {
+        Flags flags = mock(Flags.class);
+        doReturn(true).when(flags).getMeasurementFlexLiteApiEnabled();
+        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
+        doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
+                .when(flags)
+                .getMeasurementMaxReportStatesPerSourceRegistration();
+        doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
+                .when(flags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
+        long baseTime = System.currentTimeMillis();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(baseTime)
+                        .setEventReportWindows(
+                                "{"
+                                        + "\"start_time\": \"0\","
+                                        + String.format(
+                                                "\"end_times\": [%s, %s]}",
+                                                baseTime + TimeUnit.DAYS.toMillis(7),
+                                                baseTime + TimeUnit.DAYS.toMillis(30)))
+                        .setMaxEventLevelReports(2)
+                        .setAttributionScopes(List.of("1", "2"))
+                        .setAttributionScopeLimit(5L)
+                        .setMaxEventStates(3L)
+                        .build();
+        assertFalse(source.validateAndSetMaxEventStates(flags));
     }
 
     @Test
@@ -1504,6 +1681,106 @@ public class SourceTest {
     }
 
     @Test
+    public void
+            validateAndSetMaxEventStates_fullFlexAttributionScopeMaxEventStatesNull_returnsFalse()
+                    throws JSONException {
+        Flags flags = mock(Flags.class);
+        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
+        doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
+        doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
+                .when(flags)
+                .getMeasurementMaxReportStatesPerSourceRegistration();
+        // setup
+        // setup
+        String triggerSpecsString =
+                "[{\"trigger_data\": [0, 1],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format("\"end_times\": [%s]},", TimeUnit.DAYS.toMillis(7))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1]}]";
+        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
+        int maxEventLevelReports = 3;
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setMaxEventLevelReports(maxEventLevelReports)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setTriggerSpecs(
+                                new TriggerSpecs(triggerSpecsArray, maxEventLevelReports, null))
+                        .setAttributionScopeLimit(3L)
+                        .build();
+        assertFalse(testSource.validateAndSetMaxEventStates(flags));
+    }
+
+    @Test
+    public void testGetInformationGain_attributionScopeOff_doesNotIncludeAttributionScopeParams() {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(false);
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionScopeLimit(100L)
+                        .setMaxEventStates(5L)
+                        .build();
+        long numStates = 2925L;
+        assertThat(
+                        testSource.getInformationGain(
+                                mFlags,
+                                numStates,
+                                Combinatorics.getFlipProbability(
+                                        numStates, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)))
+                .isWithin(PrivacyParams.NUMBER_EQUAL_THRESHOLD)
+                .of(11.461727965384876d);
+    }
+
+    @Test
+    public void testGetInformationGain_attributionScopeOn_includesAttributionScopeParams() {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementPrivacyEpsilon())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+        Source testSource =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionScopeLimit(100L)
+                        .setMaxEventStates(5L)
+                        .build();
+        long numStates = 2925L;
+        assertThat(
+                        testSource.getInformationGain(
+                                mFlags,
+                                numStates,
+                                Combinatorics.getFlipProbability(
+                                        numStates, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)))
+                .isWithin(PrivacyParams.NUMBER_EQUAL_THRESHOLD)
+                .of(11.680063513093458d);
+    }
+
+    @Test
+    public void testGetInformationGain_attributionScopeOnParamsNull_fallbackToDefaultValue() {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementPrivacyEpsilon())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+        Source testSource = SourceFixture.getMinimalValidSourceBuilder().build();
+        long numStates = 2925L;
+        assertThat(
+                        testSource.getInformationGain(
+                                mFlags,
+                                numStates,
+                                Combinatorics.getFlipProbability(
+                                        numStates, Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)))
+                .isWithin(PrivacyParams.NUMBER_EQUAL_THRESHOLD)
+                .of(11.461727965384876d);
+    }
+
+    @Test
     public void isFlexEventApiValueValid_eventSource_true() throws JSONException {
         Flags flags = mock(Flags.class);
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
@@ -1565,6 +1842,9 @@ public class SourceTest {
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION)
                 .when(flags)
                 .getMeasurementFlexApiMaxInformationGainNavigation();
+        doReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)
+                .when(flags)
+                .getMeasurementPrivacyEpsilon();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"

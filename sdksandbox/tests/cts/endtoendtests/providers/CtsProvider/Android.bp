@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -21,11 +22,12 @@ android_test_helper_app {
     defaults: ["platform_app_defaults"],
     certificate: ":sdksandbox-test",
     srcs: [
-       "src/**/*.java",
+        "src/**/*.java",
     ],
     static_libs: [
         "SdkSandbox-java-lib",
         "CtsSdkProviderApi",
+        "androidx.sqlite_sqlite",
         "truth",
         "androidx.room_room-runtime",
     ],

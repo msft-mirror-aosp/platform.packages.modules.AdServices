@@ -27,8 +27,8 @@ import static com.android.adservices.service.signals.SignalsFixture.createSignal
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.json.JSONArray;
 import org.junit.Rule;

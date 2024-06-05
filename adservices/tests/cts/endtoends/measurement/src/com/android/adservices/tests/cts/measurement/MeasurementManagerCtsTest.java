@@ -41,8 +41,9 @@ import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -996,12 +997,12 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     private void allowAllPackageNamesAccessToMeasurementApis() {
-        final String packageName = "*";
+        final String packageName = FlagsConstants.ALLOWLIST_ALL;
         flags.setMsmtApiAppAllowList(packageName).setMsmtWebContextClientAllowList(packageName);
     }
 
     private void blockAllPackageNamesAccessToMeasurementApis() {
-        final String packageName = "";
+        final String packageName = FlagsConstants.ALLOWLIST_NONE;
         flags.setMsmtApiAppAllowList(packageName).setMsmtWebContextClientAllowList(packageName);
     }
 

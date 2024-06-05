@@ -39,10 +39,8 @@ import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
@@ -80,21 +78,10 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
         setupListeners(savedInstanceState);
 
         ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
-        boolean isConsentManagerV2 = FlagsFactory.getFlags().getEnableConsentManagerV2();
-        if (isConsentManagerV2) {
-            if (ConsentManagerV2.getInstance().getUserManualInteractionWithConsent()
-                    != MANUAL_INTERACTIONS_RECORDED) {
-                ConsentManagerV2.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
-                ConsentManagerV2.getInstance()
-                        .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
-            }
-        } else {
-            if (ConsentManager.getInstance().getUserManualInteractionWithConsent()
-                    != MANUAL_INTERACTIONS_RECORDED) {
-                ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
-                ConsentManager.getInstance()
-                        .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
-            }
+        if (ConsentManager.getInstance().getUserManualInteractionWithConsent()
+                != MANUAL_INTERACTIONS_RECORDED) {
+            ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
+            ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
         }
     }
 
@@ -250,7 +237,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
                 if (mIsEUDevice) {
                     startScreen2Fragment();
                 } else {
-                    requireActivity().finish();
+                    requireActivity().finishAndRemoveTask();
                 }
             } else {
                 mScrollContainer.smoothScrollTo(

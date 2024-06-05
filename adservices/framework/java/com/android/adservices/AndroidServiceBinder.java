@@ -15,6 +15,8 @@
  */
 package com.android.adservices;
 
+import static android.adservices.common.AdServicesStatusUtils.SERVICE_UNAVAILABLE_ERROR_MESSAGE;
+
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_EXT_DATA_STORAGE_SERVICE;
@@ -41,10 +43,11 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Process;
 import android.os.SystemProperties;
 import android.text.TextUtils;
 
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.List;
@@ -113,6 +116,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                         DEFAULT_BINDER_CONNECTION_TIMEOUT_MS);
     }
 
+    @Override
     public T getService() {
         if (mSimulatingLowRamDevice) {
             throw new ServiceUnavailableException(
@@ -156,7 +160,9 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                         mServiceConnection = null;
                         return null;
                     } else {
-                        LogUtil.d("bindService() started...");
+                        LogUtil.d(
+                                "bindService() started on user %d...",
+                                Process.myUserHandle().getIdentifier());
                     }
                 } catch (Exception e) {
                     LogUtil.e(
@@ -183,7 +189,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
         synchronized (mLock) {
             if (mService == null) {
-                throw new ServiceUnavailableException();
+                throw new ServiceUnavailableException(SERVICE_UNAVAILABLE_ERROR_MESSAGE);
             }
             return mService;
         }

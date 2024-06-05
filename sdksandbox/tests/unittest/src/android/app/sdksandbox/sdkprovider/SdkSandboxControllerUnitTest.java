@@ -40,18 +40,15 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.provider.DeviceConfig;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.compatibility.common.util.DeviceConfigStateManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -71,23 +68,11 @@ public class SdkSandboxControllerUnitTest {
     private static final String SDK_NAME = "testSdk";
     private static final String ERROR_MSG = "Error";
 
-    private static boolean sCustomizedSdkContextEnabled;
-
     private Context mContext;
     private SandboxedSdkContext mSandboxedSdkContext;
     private SdkSandboxLocalSingleton mSdkSandboxLocalSingleton;
     private ISdkToServiceCallback mServiceCallback;
     private StaticMockitoSession mStaticMockSession;
-
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-        DeviceConfigStateManager stateManager =
-                new DeviceConfigStateManager(
-                        InstrumentationRegistry.getInstrumentation().getContext(),
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        "sdksandbox_customized_sdk_context_enabled");
-        sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
-    }
 
     @Before
     public void setup() throws Exception {
@@ -96,12 +81,11 @@ public class SdkSandboxControllerUnitTest {
                 new SandboxedSdkContext(
                         mContext,
                         getClass().getClassLoader(),
-                        /*clientPackageName=*/ CLIENT_PACKAGE_NAME,
+                        /* clientPackageName= */ CLIENT_PACKAGE_NAME,
                         new ApplicationInfo(),
-                        /*sdkName=*/ "",
-                        /*sdkCeDataDir=*/ null,
-                        /*sdkDeDataDir=*/ null,
-                        sCustomizedSdkContextEnabled);
+                        /* sdkName= */ "",
+                        /* sdkCeDataDir= */ null,
+                        /* sdkDeDataDir= */ null);
 
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()

@@ -27,6 +27,8 @@ import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -37,6 +39,7 @@ import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
@@ -78,20 +81,31 @@ public class AsyncSourceFetcher {
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final Context mContext;
+    private final DatastoreManager mDatastoreManager;
+    private final DebugReportApi mDebugReportApi;
 
     public AsyncSourceFetcher(Context context) {
         this(
                 context,
-                EnrollmentDao.getInstance(context),
-                FlagsFactory.getFlags());
+                EnrollmentDao.getInstance(),
+                FlagsFactory.getFlags(),
+                DatastoreManagerFactory.getDatastoreManager(context),
+                new DebugReportApi(context, FlagsFactory.getFlags()));
     }
 
     @VisibleForTesting
-    public AsyncSourceFetcher(Context context, EnrollmentDao enrollmentDao, Flags flags) {
+    public AsyncSourceFetcher(
+            Context context,
+            EnrollmentDao enrollmentDao,
+            Flags flags,
+            DatastoreManager datastoreManager,
+            DebugReportApi debugReportApi) {
         mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mNetworkConnection = new MeasurementHttpClient(context);
+        mDatastoreManager = datastoreManager;
+        mDebugReportApi = debugReportApi;
     }
 
     private boolean parseCommonSourceParams(
@@ -215,6 +229,19 @@ public class AsyncSourceFetcher {
                     TimeUnit.SECONDS.toMillis(
                             mFlags.getMeasurementMinPostInstallExclusivityWindow()));
         }
+        if (mFlags.getMeasurementEnableReinstallReattribution()) {
+            if (!json.isNull(SourceHeaderContract.REINSTALL_REATTRIBUTION_WINDOW_KEY)) {
+                long reinstallReattributionWindow =
+                        extractValidNumberInRange(
+                                json.getLong(
+                                        SourceHeaderContract.REINSTALL_REATTRIBUTION_WINDOW_KEY),
+                                0L,
+                                mFlags.getMeasurementMaxReinstallReattributionWindowSeconds());
+                builder.setReinstallReattributionWindow(reinstallReattributionWindow);
+            } else {
+                builder.setReinstallReattributionWindow(0L);
+            }
+        }
         // This "filter_data" field is used to generate reports.
         if (!json.isNull(SourceHeaderContract.FILTER_DATA)) {
             JSONObject maybeFilterData = json.optJSONObject(SourceHeaderContract.FILTER_DATA);
@@ -303,6 +330,9 @@ public class AsyncSourceFetcher {
                         .d("Source registration exceeded the number of allowed destinations.");
                 return false;
             }
+            if (jsonDestinations.length() == 0 && appUri == null) {
+                throw new JSONException("Expected a destination");
+            }
             for (int i = 0; i < jsonDestinations.length(); i++) {
                 Uri destination = Uri.parse(jsonDestinations.getString(i));
                 if (shouldMatchAtLeastOneWebDestination
@@ -322,7 +352,9 @@ public class AsyncSourceFetcher {
                 }
             }
             List<Uri> destinationList = new ArrayList<>(destinationSet);
-            builder.setWebDestinations(destinationList);
+            if (!destinationList.isEmpty()) {
+                builder.setWebDestinations(destinationList);
+            }
         }
 
         if (mFlags.getMeasurementEnableCoarseEventReportDestinations()
@@ -452,6 +484,79 @@ public class AsyncSourceFetcher {
                 LoggerFactory.getMeasurementLogger()
                         .e(e, "parseCommonSourceParams: parsing shared debug key failed");
             }
+        }
+
+        if (mFlags.getMeasurementEnableAttributionScope()
+                && !populateAttributionScopeFields(json, builder)) {
+            return false;
+        }
+        return true;
+    }
+
+    // Populates attribution scope fields if they are available.
+    // Returns false if the json fields are invalid.
+    // Note returning true doesn't indicate whether the fields are populated or not.
+    private boolean populateAttributionScopeFields(JSONObject json, Source.Builder builder)
+            throws JSONException {
+        // Parses attribution scopes.
+        List<String> attributionScopes = new ArrayList<>();
+        if (!json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES)) {
+            Optional<List<String>> maybeAttributionScopes =
+                    FetcherUtil.extractStringArray(
+                            json,
+                            SourceHeaderContract.ATTRIBUTION_SCOPES,
+                            mFlags.getMeasurementMaxAttributionScopesPerSource(),
+                            mFlags.getMeasurementMaxAttributionScopeLength());
+            if (maybeAttributionScopes.isEmpty()) {
+                return false;
+            }
+            attributionScopes = maybeAttributionScopes.get();
+            builder.setAttributionScopes(attributionScopes);
+        }
+
+        if (json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT)) {
+            if (!attributionScopes.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                "Attribution scope limit should be set if attribution scopes are "
+                                        + "not empty.");
+                return false;
+            }
+            if (!json.isNull(SourceHeaderContract.MAX_EVENT_STATES)) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                "Attribution scope limit should be set if max event states is "
+                                        + "set.");
+                return false;
+            }
+            return true;
+        }
+        // Parses attribution scope limit, can be optional.
+        long attributionScopeLimit =
+                Long.parseLong(json.optString(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT));
+        if (attributionScopeLimit <= 0 || attributionScopes.size() > attributionScopeLimit) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            "Attribution scope limit should be positive and not be smaller "
+                                    + "than the number of attribution scopes.");
+            return false;
+        }
+        builder.setAttributionScopeLimit(attributionScopeLimit);
+
+        // Parsing max event states, can be optional.
+        if (!json.isNull(SourceHeaderContract.MAX_EVENT_STATES)) {
+            long maxEventStates =
+                    Long.parseLong(json.optString(SourceHeaderContract.MAX_EVENT_STATES));
+            if (maxEventStates <= 0
+                    || maxEventStates
+                            > mFlags.getMeasurementMaxReportStatesPerSourceRegistration()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                "Max event states should be a positive integer and smaller than max"
+                                        + " report states per source registration.");
+                return false;
+            }
+            builder.setMaxEventStates(maxEventStates);
         }
         return true;
     }
@@ -700,8 +805,14 @@ public class AsyncSourceFetcher {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_ERROR);
             return Optional.empty();
         }
+        String registrationHeaderStr = field.get(0);
+
+        boolean isHeaderErrorDebugReportEnabled =
+                FetcherUtil.isHeaderErrorDebugReportEnabled(
+                        headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO),
+                        mFlags);
         try {
-            JSONObject json = new JSONObject(field.get(0));
+            JSONObject json = new JSONObject(registrationHeaderStr);
             boolean isValid =
                     parseCommonSourceParams(json, asyncRegistration, builder, enrollmentId);
             if (!isValid) {
@@ -739,8 +850,23 @@ public class AsyncSourceFetcher {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
-            LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: invalid JSON");
+            String errMsg = "Source JSON parsing failed";
+            LoggerFactory.getMeasurementLogger().d(e, errMsg);
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
+            if (isHeaderErrorDebugReportEnabled) {
+                mDatastoreManager.runInTransaction(
+                        (dao) -> {
+                            mDebugReportApi.scheduleHeaderErrorReport(
+                                    asyncRegistration.getRegistrationUri(),
+                                    asyncRegistration.getRegistrant(),
+                                    SourceHeaderContract
+                                            .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
+                                    enrollmentId,
+                                    errMsg,
+                                    registrationHeaderStr,
+                                    dao);
+                        });
+            }
             return Optional.empty();
         } catch (IllegalArgumentException | ArithmeticException e) {
             LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: IllegalArgumentException"
@@ -762,6 +888,7 @@ public class AsyncSourceFetcher {
      *
      * @param asyncRegistration a {@link AsyncRegistration}, a request the record.
      * @param asyncFetchStatus a {@link AsyncFetchStatus}, stores Ad Tech server status.
+     * @param asyncRedirects a {@link AsyncRedirects}, stores redirects.
      */
     public Optional<Source> fetchSource(
             AsyncRegistration asyncRegistration,
@@ -786,6 +913,7 @@ public class AsyncSourceFetcher {
             urlConnection.setInstanceFollowRedirects(false);
             String body = asyncRegistration.getPostBody();
             if (mFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled() && body != null) {
+                asyncFetchStatus.setPARequestStatus(true);
                 urlConnection.setRequestProperty("Content-Type", "text/plain");
                 urlConnection.setDoOutput(true);
                 OutputStream os = urlConnection.getOutputStream();
@@ -916,6 +1044,8 @@ public class AsyncSourceFetcher {
     private interface SourceHeaderContract {
         String HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE =
                 "Attribution-Reporting-Register-Source";
+        // Header for enable header error verbose debug reports.
+        String HEADER_ATTRIBUTION_REPORTING_INFO = "Attribution-Reporting-Info";
         String SOURCE_EVENT_ID = "source_event_id";
         String DEBUG_KEY = "debug_key";
         String DESTINATION = "destination";
@@ -925,6 +1055,7 @@ public class AsyncSourceFetcher {
         String PRIORITY = "priority";
         String INSTALL_ATTRIBUTION_WINDOW_KEY = "install_attribution_window";
         String POST_INSTALL_EXCLUSIVITY_WINDOW_KEY = "post_install_exclusivity_window";
+        String REINSTALL_REATTRIBUTION_WINDOW_KEY = "reinstall_reattribution_window";
         String FILTER_DATA = "filter_data";
         String WEB_DESTINATION = "web_destination";
         String AGGREGATION_KEYS = "aggregation_keys";
@@ -941,6 +1072,9 @@ public class AsyncSourceFetcher {
         String DROP_SOURCE_IF_INSTALLED = "drop_source_if_installed";
         String TRIGGER_DATA_MATCHING = "trigger_data_matching";
         String TRIGGER_DATA = "trigger_data";
+        String ATTRIBUTION_SCOPES = "attribution_scopes";
+        String ATTRIBUTION_SCOPE_LIMIT = "attribution_scope_limit";
+        String MAX_EVENT_STATES = "max_event_states";
     }
 
     private interface SourceRequestContract {

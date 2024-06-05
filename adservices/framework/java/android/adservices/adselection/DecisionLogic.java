@@ -29,7 +29,7 @@ import java.util.Objects;
 @FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class DecisionLogic implements Parcelable {
 
-    @NonNull private final String mDecisionLogic;
+    @NonNull private String mDecisionLogic;
 
     public DecisionLogic(@NonNull String buyerDecisionLogic) {
         Objects.requireNonNull(buyerDecisionLogic);

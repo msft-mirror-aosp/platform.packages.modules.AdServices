@@ -92,7 +92,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesExtendedMockit
     @Before
     public void setup() {
         doReturn(mAppSearchConsentWorker).when(() -> AppSearchConsentWorker.getInstance());
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         mAppSearchConsentStorageManager =
                 new AppSearchConsentStorageManager(mAppSearchConsentWorker);
         ApplicationInfo app1 = new ApplicationInfo();

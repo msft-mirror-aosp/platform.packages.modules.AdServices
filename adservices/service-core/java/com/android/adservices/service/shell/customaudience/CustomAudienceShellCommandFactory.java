@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell.customaudience;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -26,6 +28,7 @@ import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
@@ -73,16 +76,17 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
     /**
      * @return an instance of the {@link CustomAudienceShellCommandFactory}.
      */
-    public static ShellCommandFactory getInstance(Flags flags, Context context) {
+    public static ShellCommandFactory getInstance(
+            DebugFlags debugFlags, Flags flags, Context context) {
         CustomAudienceDao customAudienceDao =
                 CustomAudienceDatabase.getInstance(context).customAudienceDao();
         return new CustomAudienceShellCommandFactory(
-                flags.getFledgeCustomAudienceCLIEnabledStatus(),
+                debugFlags.getFledgeCustomAudienceCLIEnabledStatus(),
                 new BackgroundFetchRunner(
                         customAudienceDao,
                         SharedStorageDatabase.getInstance(context).appInstallDao(),
                         ApplicationContextSingleton.get().getPackageManager(),
-                        EnrollmentDao.getInstance(context),
+                        EnrollmentDao.getInstance(),
                         flags,
                         // Avoid logging metrics when using shell commands (such as daily update).
                         CustomAudienceLoggerFactory.getNoOpInstance()),
@@ -100,7 +104,10 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
         }
         ShellCommand command = mAllCommandsMap.get(cmd);
         if (!mIsCustomAudienceCliEnabled) {
-            return new NoOpShellCommand(cmd, command.getMetricsLoggerCommand());
+            return new NoOpShellCommand(
+                    cmd,
+                    command.getMetricsLoggerCommand(),
+                    KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED);
         }
         return command;
     }

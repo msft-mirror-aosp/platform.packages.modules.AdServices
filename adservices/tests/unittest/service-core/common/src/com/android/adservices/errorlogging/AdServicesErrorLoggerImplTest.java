@@ -33,7 +33,6 @@ import com.android.adservices.shared.errorlogging.AdServicesErrorStats;
 import com.android.adservices.shared.errorlogging.ErrorCodeSampler;
 import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLogger;
 
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
@@ -57,11 +56,9 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
 
     @Before
     public void setUp() {
-        mErrorLogger =
-                new AdServicesErrorLoggerImpl(
-                        mFlags, mStatsdLoggerMock, Suppliers.ofInstance(null));
-        mockErrorCodeLoggingDenyList(ImmutableList.of());
         enableCustomErrorCodeSampling(/*enable=*/ false);
+        mErrorLogger = new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock);
+        mockErrorCodeLoggingDenyList(ImmutableList.of());
     }
 
     @Test
@@ -172,28 +169,26 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
     @Test
     public void testIsEnabled_customSamplerEnabled_returnsTrue() {
         enableCustomErrorCodeSampling(true);
-        mErrorLogger =
-                new AdServicesErrorLoggerImpl(
-                        mFlags, mStatsdLoggerMock, Suppliers.ofInstance(mErrorCodeSampler));
         int errorCode = 1;
         when(mErrorCodeSampler.shouldLog(errorCode)).thenReturn(true);
+        AdServicesErrorLoggerImpl errorLogger =
+                new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock, mErrorCodeSampler);
 
         expect.withMessage("shouldLog(%s)", errorCode)
-                .that(mErrorLogger.isEnabled(errorCode))
+                .that(errorLogger.isEnabled(errorCode))
                 .isTrue();
     }
 
     @Test
     public void testIsEnabled_customSamplerEnabled_returnsFalse() {
         enableCustomErrorCodeSampling(true);
-        mErrorLogger =
-                new AdServicesErrorLoggerImpl(
-                        mFlags, mStatsdLoggerMock, Suppliers.ofInstance(mErrorCodeSampler));
         int errorCode = 1;
         when(mErrorCodeSampler.shouldLog(errorCode)).thenReturn(false);
+        AdServicesErrorLoggerImpl errorLogger =
+                new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock, mErrorCodeSampler);
 
         expect.withMessage("shouldLog(%s)", errorCode)
-                .that(mErrorLogger.isEnabled(errorCode))
+                .that(errorLogger.isEnabled(errorCode))
                 .isFalse();
     }
 

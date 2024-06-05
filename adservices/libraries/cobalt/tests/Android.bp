@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 package {
+    default_team: "trendy_team_android_rubidium",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -27,6 +28,7 @@ android_test {
         "adservices-service-core",
         "adservices-test-utility",
         "adservices-cobalt-schema",
+        "adservices-cobalt-testing",
         "androidx.test.core",
         "androidx.test.runner",
         "androidx.room_room-runtime",
@@ -47,7 +49,7 @@ android_test {
     min_sdk_version: "Tiramisu",
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
 }
 
@@ -63,6 +65,7 @@ android_test {
         "adservices-service-core",
         "adservices-test-utility",
         "adservices-cobalt-schema",
+        "adservices-cobalt-testing",
         "androidx.test.core",
         "androidx.test.runner",
         "androidx.room_room-runtime",
@@ -84,6 +87,6 @@ android_test {
     max_sdk_version: "32",
     test_suites: [
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
 }

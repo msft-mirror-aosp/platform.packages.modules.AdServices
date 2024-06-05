@@ -51,18 +51,18 @@ public class SharedDbMigratorV4 extends AbstractSharedDbMigrator {
     private void migrateEnrolledAPIsEnrolledSite(@NonNull SQLiteDatabase db) {
         try (Cursor cursor =
                 db.query(
-                        /*table=*/ EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ new String[] {
+                        /* table= */ EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /* columns= */ new String[] {
                             EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID,
                             EnrollmentTables.EnrollmentDataContract.COMPANY_ID,
                             EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL
                         },
                         /*selection*/ null,
-                        /*selectionArgs=*/ null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* selectionArgs= */ null,
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             while (cursor.moveToNext()) {
                 ContentValues values = new ContentValues();
                 String enrollmentId =

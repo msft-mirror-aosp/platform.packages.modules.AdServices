@@ -19,6 +19,9 @@ import static com.android.compatibility.common.util.ShellIdentityUtils.invokeSta
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 
@@ -26,8 +29,13 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.compatibility.common.util.PackageUtil;
 import com.android.compatibility.common.util.PropertyUtil;
+import com.android.internal.annotations.VisibleForTesting;
+
+import java.util.List;
 
 // TODO(b/297248322): move this class to sideless as the logic is duplicated on hostside
 /** Helper to check if AdServices is supported / enabled in a device. */
@@ -54,6 +62,34 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
         boolean value = invokeStaticMethodWithShellPermissions(() -> flags.getGlobalKillSwitch());
         sInstance.mLog.v("getGlobalKillSwitch(): %b", value);
         return value;
+    }
+
+    @Override
+    protected boolean isAndroidServiceAvailable(String intentAction) {
+        Intent intent = new Intent(intentAction);
+
+        try {
+            List<ResolveInfo> resolveInfos =
+                    mContext.getPackageManager()
+                            .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
+            if (resolveInfos == null) {
+                mLog.d("Returns null when query ResolveInfo for Intent %s", intent.getAction());
+                return false;
+            }
+
+            mLog.v(
+                    "The number of ResolveInfo for Intent %s is %d",
+                    intent.getAction(), resolveInfos.size());
+
+            if (resolveInfos.size() == 1) {
+                return true;
+            }
+        } catch (Exception e) {
+            mLog.e("Error when query ResolveInfo for Intent %s", intent.getAction());
+            return false;
+        }
+
+        return false;
     }
 
     @Override
@@ -99,6 +135,13 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
         super(AndroidLogger.getInstance(), DeviceSideSystemPropertiesHelper.getInstance());
 
         mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    }
+
+    @VisibleForTesting
+    AdServicesSupportHelper(Context context) {
+        super(AndroidLogger.getInstance(), DeviceSideSystemPropertiesHelper.getInstance());
+
+        mContext = context;
     }
 
     private boolean isLargeScreen(Resources resources) {

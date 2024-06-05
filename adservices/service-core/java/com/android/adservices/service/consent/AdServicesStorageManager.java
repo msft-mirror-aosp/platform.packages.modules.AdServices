@@ -256,15 +256,6 @@ public final class AdServicesStorageManager implements IConsentStorage {
         mAdServicesManager.recordNotificationDisplayed(wasNotificationDisplayed);
     }
 
-    /**
-     * Saves information to the storage that Pas notification was displayed for the first time to
-     * the user.
-     */
-    @Override
-    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) throws IOException {
-        mAdServicesManager.recordPasNotificationDisplayed(wasPasDisplayed);
-    }
-
     /** Saves information to the storage that user interacted with consent manually. */
     @Override
     public void recordUserManualInteractionWithConsent(int interaction) {
@@ -308,6 +299,16 @@ public final class AdServicesStorageManager implements IConsentStorage {
     public void setConsentForApp(String packageName, boolean isConsentRevoked) {
         int packageUid = getUidForInstalledPackageName(packageName);
         mAdServicesManager.setConsentForApp(packageName, packageUid, isConsentRevoked);
+    }
+
+    @Override
+    public void resetAppsAndBlockedApps() throws IOException {
+        mAdServicesManager.clearAllAppConsentData();
+    }
+
+    @Override
+    public void resetApps() throws IOException {
+        mAdServicesManager.clearKnownAppsWithConsent();
     }
 
     /**
@@ -390,6 +391,11 @@ public final class AdServicesStorageManager implements IConsentStorage {
         return mAdServicesManager.wasPasNotificationDisplayed();
     }
 
+    @Override
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
+        mAdServicesManager.recordPasNotificationDisplayed(wasPasDisplayed);
+    }
+
     /** Set the measurement data reset activity happens based on consent_source_of_truth. */
     @Override
     public void setMeasurementDataReset(boolean isMeasurementDataReset) {
@@ -402,6 +408,66 @@ public final class AdServicesStorageManager implements IConsentStorage {
     @Override
     public boolean isMeasurementDataReset() throws IOException {
         return mAdServicesManager.isMeasurementDataReset();
+    }
+
+    @Override
+    public Boolean getDefaultConsent() throws IOException {
+        return mAdServicesManager.getDefaultConsent();
+    }
+
+    @Override
+    public Boolean getTopicsDefaultConsent() {
+        return mAdServicesManager.getTopicsDefaultConsent();
+    }
+
+    @Override
+    public Boolean getFledgeDefaultConsent() {
+        return mAdServicesManager.getFledgeDefaultConsent();
+    }
+
+    @Override
+    public Boolean getMeasurementDefaultConsent() {
+        return mAdServicesManager.getMeasurementDefaultConsent();
+    }
+
+    @Override
+    public Boolean getDefaultAdIdState() {
+        return mAdServicesManager.getDefaultAdIdState();
+    }
+
+    @Override
+    public void recordDefaultConsent(boolean defaultConsent) {
+        mAdServicesManager.recordDefaultConsent(defaultConsent);
+    }
+
+    @Override
+    public void recordTopicsDefaultConsent(boolean defaultConsent) {
+        mAdServicesManager.recordTopicsDefaultConsent(defaultConsent);
+    }
+
+    @Override
+    public void recordFledgeDefaultConsent(boolean defaultConsent) {
+        mAdServicesManager.recordFledgeDefaultConsent(defaultConsent);
+    }
+
+    @Override
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) {
+        mAdServicesManager.recordMeasurementDefaultConsent(defaultConsent);
+    }
+
+    @Override
+    public void recordDefaultAdIdState(boolean defaultAdIdState) {
+        mAdServicesManager.recordDefaultAdIdState(defaultAdIdState);
+    }
+
+    @Override
+    public Boolean isPaDataReset() {
+        return mAdServicesManager.isPaDataReset();
+    }
+
+    @Override
+    public void setPaDataReset(boolean isPaDataReset) {
+        mAdServicesManager.setPaDataReset(isPaDataReset);
     }
 
     private PrivacySandboxUxCollection convertUxString(@NonNull String uxString) {

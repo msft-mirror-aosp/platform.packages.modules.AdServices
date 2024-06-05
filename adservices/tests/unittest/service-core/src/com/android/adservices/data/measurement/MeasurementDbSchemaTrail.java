@@ -20,10 +20,13 @@ import static com.android.adservices.data.measurement.MeasurementTables.Aggregat
 import static com.android.adservices.data.measurement.MeasurementTables.AggregateReport;
 import static com.android.adservices.data.measurement.MeasurementTables.AsyncRegistrationContract;
 import static com.android.adservices.data.measurement.MeasurementTables.AttributionContract;
+import static com.android.adservices.data.measurement.MeasurementTables.CREATE_TABLE_APP_REPORT_HISTORY_LATEST;
+import static com.android.adservices.data.measurement.MeasurementTables.AppReportHistoryContract;
 import static com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.INDEX_PREFIX;
 import static com.android.adservices.data.measurement.MeasurementTables.SourceContract;
+import static com.android.adservices.data.measurement.MeasurementTables.SourceAttributionScopeContract;
 import static com.android.adservices.data.measurement.MeasurementTables.SourceDestination;
 import static com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import static com.android.adservices.data.measurement.MeasurementTables.XnaIgnoredSourcesContract;
@@ -977,6 +980,194 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT "
                     + ")";
 
+    public static final String CREATE_TABLE_SOURCE_V34 =
+            "CREATE TABLE "
+                    + SourceContract.TABLE
+                    + " ("
+                    + SourceContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + SourceContract.EVENT_ID
+                    + " INTEGER, "
+                    + SourceContract.PUBLISHER
+                    + " TEXT, "
+                    + SourceContract.PUBLISHER_TYPE
+                    + " INTEGER, "
+                    + SourceContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + SourceContract.EVENT_TIME
+                    + " INTEGER, "
+                    + SourceContract.EXPIRY_TIME
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.AGGREGATABLE_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.PRIORITY
+                    + " INTEGER, "
+                    + SourceContract.STATUS
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + SourceContract.REGISTRANT
+                    + " TEXT, "
+                    + SourceContract.ATTRIBUTION_MODE
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_ATTRIBUTION_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_COOLDOWN_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED
+                    + " INTEGER, "
+                    + SourceContract.FILTER_DATA
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_SOURCE
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + SourceContract.DEBUG_KEY
+                    + " INTEGER , "
+                    + SourceContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + SourceContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.AR_DEBUG_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.REGISTRATION_ID
+                    + " TEXT, "
+                    + SourceContract.SHARED_AGGREGATION_KEYS
+                    + " TEXT, "
+                    + SourceContract.INSTALL_TIME
+                    + " INTEGER, "
+                    + SourceContract.DEBUG_JOIN_KEY
+                    + " TEXT, "
+                    + SourceContract.TRIGGER_SPECS
+                    + " TEXT, "
+                    + SourceContract.MAX_EVENT_LEVEL_REPORTS
+                    + " INTEGER, "
+                    + SourceContract.PLATFORM_AD_ID
+                    + " TEXT, "
+                    + SourceContract.DEBUG_AD_ID
+                    + " TEXT, "
+                    + SourceContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + SourceContract.COARSE_EVENT_REPORT_DESTINATIONS
+                    + " INTEGER, "
+                    + SourceContract.EVENT_ATTRIBUTION_STATUS
+                    + " TEXT, "
+                    + SourceContract.PRIVACY_PARAMETERS
+                    + " TEXT, "
+                    + SourceContract.EVENT_REPORT_WINDOWS
+                    + " TEXT, "
+                    + SourceContract.SHARED_DEBUG_KEY
+                    + " INTEGER, "
+                    + SourceContract.SHARED_FILTER_DATA_KEYS
+                    + " TEXT, "
+                    + SourceContract.TRIGGER_DATA_MATCHING
+                    + " TEXT, "
+                    + SourceContract.ATTRIBUTION_SCOPE_LIMIT
+                    + " INTEGER, "
+                    + SourceContract.MAX_EVENT_STATES
+                    + " INTEGER "
+                    + ")";
+    public static final String CREATE_TABLE_SOURCE_V36 =
+            "CREATE TABLE "
+                    + SourceContract.TABLE
+                    + " ("
+                    + SourceContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + SourceContract.EVENT_ID
+                    + " INTEGER, "
+                    + SourceContract.PUBLISHER
+                    + " TEXT, "
+                    + SourceContract.PUBLISHER_TYPE
+                    + " INTEGER, "
+                    + SourceContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + SourceContract.EVENT_TIME
+                    + " INTEGER, "
+                    + SourceContract.EXPIRY_TIME
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.AGGREGATABLE_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.PRIORITY
+                    + " INTEGER, "
+                    + SourceContract.STATUS
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + SourceContract.REGISTRANT
+                    + " TEXT, "
+                    + SourceContract.ATTRIBUTION_MODE
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_ATTRIBUTION_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_COOLDOWN_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED
+                    + " INTEGER, "
+                    + SourceContract.FILTER_DATA
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_SOURCE
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + SourceContract.DEBUG_KEY
+                    + " INTEGER , "
+                    + SourceContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + SourceContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.AR_DEBUG_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.REGISTRATION_ID
+                    + " TEXT, "
+                    + SourceContract.SHARED_AGGREGATION_KEYS
+                    + " TEXT, "
+                    + SourceContract.INSTALL_TIME
+                    + " INTEGER, "
+                    + SourceContract.DEBUG_JOIN_KEY
+                    + " TEXT, "
+                    + SourceContract.TRIGGER_SPECS
+                    + " TEXT, "
+                    + SourceContract.MAX_EVENT_LEVEL_REPORTS
+                    + " INTEGER, "
+                    + SourceContract.PLATFORM_AD_ID
+                    + " TEXT, "
+                    + SourceContract.DEBUG_AD_ID
+                    + " TEXT, "
+                    + SourceContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + SourceContract.COARSE_EVENT_REPORT_DESTINATIONS
+                    + " INTEGER, "
+                    + SourceContract.EVENT_ATTRIBUTION_STATUS
+                    + " TEXT, "
+                    + SourceContract.PRIVACY_PARAMETERS
+                    + " TEXT, "
+                    + SourceContract.EVENT_REPORT_WINDOWS
+                    + " TEXT, "
+                    + SourceContract.SHARED_DEBUG_KEY
+                    + " INTEGER, "
+                    + SourceContract.SHARED_FILTER_DATA_KEYS
+                    + " TEXT, "
+                    + SourceContract.TRIGGER_DATA_MATCHING
+                    + " TEXT, "
+                    + SourceContract.ATTRIBUTION_SCOPE_LIMIT
+                    + " INTEGER, "
+                    + SourceContract.MAX_EVENT_STATES
+                    + " INTEGER, "
+                    + SourceContract.REINSTALL_REATTRIBUTION_WINDOW
+                    + " INTEGER "
+                    + ")";
     public static final String CREATE_TABLE_SOURCE_DESTINATION_V9 =
             "CREATE TABLE "
                     + SourceDestination.TABLE
@@ -1356,6 +1547,83 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT "
                     + ")";
 
+    public static final String CREATE_TABLE_TRIGGER_V34 =
+            "CREATE TABLE "
+                    + TriggerContract.TABLE
+                    + " ("
+                    + TriggerContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + TriggerContract.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + TriggerContract.DESTINATION_TYPE
+                    + " INTEGER, "
+                    + TriggerContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + TriggerContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + TriggerContract.EVENT_TRIGGERS
+                    + " TEXT, "
+                    + TriggerContract.STATUS
+                    + " INTEGER, "
+                    + TriggerContract.REGISTRANT
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_TRIGGER_DATA
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_VALUES
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS
+                    + " TEXT, "
+                    + TriggerContract.FILTERS
+                    + " TEXT, "
+                    + TriggerContract.NOT_FILTERS
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_KEY
+                    + " INTEGER, "
+                    + TriggerContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + TriggerContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + TriggerContract.AR_DEBUG_PERMISSION
+                    + " INTEGER, "
+                    + TriggerContract.ATTRIBUTION_CONFIG
+                    + " TEXT, "
+                    + TriggerContract.X_NETWORK_KEY_MAPPING
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_JOIN_KEY
+                    + " TEXT, "
+                    + TriggerContract.PLATFORM_AD_ID
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_AD_ID
+                    + " TEXT, "
+                    + TriggerContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATION_COORDINATOR_ORIGIN
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG
+                    + " TEXT, "
+                    + TriggerContract.TRIGGER_CONTEXT_ID
+                    + " TEXT, "
+                    + TriggerContract.ATTRIBUTION_SCOPES
+                    + " TEXT"
+                    + ")";
+
+    public static final String CREATE_TABLE_SOURCE_ATTRIBUTION_SCOPE_V34 =
+            "CREATE TABLE "
+                    + SourceAttributionScopeContract.TABLE
+                    + " ("
+                    + SourceAttributionScopeContract.SOURCE_ID
+                    + " TEXT, "
+                    + SourceAttributionScopeContract.ATTRIBUTION_SCOPE
+                    + " TEXT, "
+                    + "FOREIGN KEY ("
+                    + SourceDestination.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE "
+                    + ")";
+
     private static final String CREATE_TABLE_EVENT_REPORT_V6 =
             "CREATE TABLE "
                     + EventReportContract.TABLE
@@ -1694,6 +1962,52 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT, "
                     + AttributionContract.SCOPE
                     + " INTEGER, "
+                    + "FOREIGN KEY ("
+                    + AttributionContract.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE, "
+                    + "FOREIGN KEY ("
+                    + AttributionContract.TRIGGER_ID
+                    + ") REFERENCES "
+                    + TriggerContract.TABLE
+                    + "("
+                    + TriggerContract.ID
+                    + ") ON DELETE CASCADE"
+                    + ")";
+
+    private static final String CREATE_TABLE_ATTRIBUTION_V35 =
+            "CREATE TABLE "
+                    + AttributionContract.TABLE
+                    + " ("
+                    + AttributionContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AttributionContract.SOURCE_SITE
+                    + " TEXT, "
+                    + AttributionContract.SOURCE_ORIGIN
+                    + " TEXT, "
+                    + AttributionContract.DESTINATION_SITE
+                    + " TEXT, "
+                    + AttributionContract.DESTINATION_ORIGIN
+                    + " TEXT, "
+                    + AttributionContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + AttributionContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + AttributionContract.REGISTRANT
+                    + " TEXT, "
+                    + AttributionContract.SOURCE_ID
+                    + " TEXT, "
+                    + AttributionContract.TRIGGER_ID
+                    + " TEXT, "
+                    + AttributionContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + AttributionContract.SCOPE
+                    + " INTEGER, "
+                    + AttributionContract.REPORT_ID
+                    + " TEXT, "
                     + "FOREIGN KEY ("
                     + AttributionContract.SOURCE_ID
                     + ") REFERENCES "
@@ -2548,6 +2862,73 @@ public class MeasurementDbSchemaTrail {
                             + MeasurementTables.AttributionContract.TRIGGER_TIME
                             + ")");
 
+    private static final Map<String, String> CREATE_INDEXES_V33_V34 =
+            ImmutableMap.of(
+                    INDEX_PREFIX + MeasurementTables.SourceAttributionScopeContract.TABLE + "_a",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + SourceAttributionScopeContract.TABLE
+                            + "_a"
+                            + " ON "
+                            + SourceAttributionScopeContract.TABLE
+                            + "("
+                            + SourceAttributionScopeContract.ATTRIBUTION_SCOPE
+                            + ")",
+                    INDEX_PREFIX + MeasurementTables.SourceAttributionScopeContract.TABLE + "_s",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + SourceAttributionScopeContract.TABLE
+                            + "_s"
+                            + " ON "
+                            + SourceAttributionScopeContract.TABLE
+                            + "("
+                            + SourceAttributionScopeContract.SOURCE_ID
+                            + ")",
+                    INDEX_PREFIX + SourceContract.TABLE + "_asl",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + SourceContract.TABLE
+                            + "_asl "
+                            + "ON "
+                            + SourceContract.TABLE
+                            + "("
+                            + SourceContract.ATTRIBUTION_SCOPE_LIMIT
+                            + ")",
+                    INDEX_PREFIX + SourceContract.TABLE + "_mes",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + SourceContract.TABLE
+                            + "_mes "
+                            + "ON "
+                            + SourceContract.TABLE
+                            + "("
+                            + SourceContract.MAX_EVENT_STATES
+                            + ")");
+    private static final Map<String, String> CREATE_INDEXES_V36_V37 =
+            ImmutableMap.of(
+                    INDEX_PREFIX + MeasurementTables.AppReportHistoryContract.TABLE + "_lrdt",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + AppReportHistoryContract.TABLE
+                            + "_lrdt"
+                            + " ON "
+                            + AppReportHistoryContract.TABLE
+                            + "("
+                            + AppReportHistoryContract.LAST_REPORT_DELIVERED_TIME
+                            + ")",
+                    INDEX_PREFIX + MeasurementTables.AppReportHistoryContract.TABLE + "_ro_ad",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + AppReportHistoryContract.TABLE
+                            + "_ro_ad "
+                            + "ON "
+                            + AppReportHistoryContract.TABLE
+                            + "("
+                            + AppReportHistoryContract.REGISTRATION_ORIGIN
+                            + ", "
+                            + AppReportHistoryContract.APP_DESTINATION
+                            + ")");
+
     private static Map<String, String> getCreateStatementByTableV7() {
         return CREATE_STATEMENT_BY_TABLE_V6;
     }
@@ -2720,6 +3101,35 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV34() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV33());
+        createStatements.put(SourceContract.TABLE, CREATE_TABLE_SOURCE_V34);
+        createStatements.put(TriggerContract.TABLE, CREATE_TABLE_TRIGGER_V34);
+        createStatements.put(
+                SourceAttributionScopeContract.TABLE, CREATE_TABLE_SOURCE_ATTRIBUTION_SCOPE_V34);
+        return createStatements;
+    }
+
+    private static Map<String, String> getCreateStatementByTableV35() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV34());
+        createStatements.put(AttributionContract.TABLE, CREATE_TABLE_ATTRIBUTION_V35);
+        return createStatements;
+    }
+
+    private static Map<String, String> getCreateStatementByTableV36() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV35());
+        createStatements.put(SourceContract.TABLE, CREATE_TABLE_SOURCE_V36);
+        return createStatements;
+    }
+
+    private static Map<String, String> getCreateStatementByTableV37() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV36());
+        createStatements.put(
+                MeasurementTables.AppReportHistoryContract.TABLE,
+                CREATE_TABLE_APP_REPORT_HISTORY_LATEST);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -2838,6 +3248,26 @@ public class MeasurementDbSchemaTrail {
         return getCreateIndexesV32();
     }
 
+    private static Map<String, String> getCreateIndexesV34() {
+        Map<String, String> createIndexes = getCreateIndexesV33();
+        createIndexes.putAll(CREATE_INDEXES_V33_V34);
+        return createIndexes;
+    }
+
+    private static Map<String, String> getCreateIndexesV35() {
+        return getCreateIndexesV34();
+    }
+
+    private static Map<String, String> getCreateIndexesV36() {
+        return getCreateIndexesV35();
+    }
+
+    private static Map<String, String> getCreateIndexesV37() {
+        Map<String, String> createIndexes = getCreateIndexesV36();
+        createIndexes.putAll(CREATE_INDEXES_V36_V37);
+        return createIndexes;
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -2868,6 +3298,10 @@ public class MeasurementDbSchemaTrail {
                     .put(31, getCreateStatementByTableV31().values())
                     .put(32, getCreateStatementByTableV32().values())
                     .put(33, getCreateStatementByTableV33().values())
+                    .put(34, getCreateStatementByTableV34().values())
+                    .put(35, getCreateStatementByTableV35().values())
+                    .put(36, getCreateStatementByTableV36().values())
+                    .put(37, getCreateStatementByTableV37().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -2900,6 +3334,10 @@ public class MeasurementDbSchemaTrail {
                     .put(31, getCreateIndexesV31().values())
                     .put(32, getCreateIndexesV32().values())
                     .put(33, getCreateIndexesV33().values())
+                    .put(34, getCreateIndexesV34().values())
+                    .put(35, getCreateIndexesV35().values())
+                    .put(36, getCreateIndexesV36().values())
+                    .put(37, getCreateIndexesV37().values())
                     .build();
 
     /**

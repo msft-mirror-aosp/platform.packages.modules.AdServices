@@ -31,6 +31,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_TRANSACTION_STATS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_GET_TOP_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_GET_TOPICS_REPORTED;
@@ -52,11 +53,14 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INI
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.PERSIST_AD_SELECTION_RESULT_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_IMPRESSION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SELECT_ADS_FROM_OUTCOMES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_KEY_FETCH_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SIGNATURE_VERIFICATION;
@@ -82,6 +86,7 @@ import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -104,7 +109,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     @NonNull private final Flags mFlags;
 
     @VisibleForTesting
-    protected StatsdAdServicesLogger(@NonNull Flags flags) {
+    StatsdAdServicesLogger(@NonNull Flags flags) {
         this.mFlags = Objects.requireNonNull(flags);
     }
 
@@ -215,7 +220,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 getAllowlistedAppPackageName(stats.getSourceRegistrant()),
                 stats.getRetryCount(),
                 /* httpResponseCode */ 0,
-                stats.isRedirectOnly());
+                stats.isRedirectOnly(),
+                stats.isPARequest());
     }
 
     @Override
@@ -265,7 +271,9 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getNumOfRemarketingAdsEnteringScoring(),
                 stats.getNumOfContextualAdsEnteringScoring(),
                 stats.getRunAdScoringLatencyInMillis(),
-                stats.getRunAdScoringResultCode());
+                stats.getRunAdScoringResultCode(),
+                stats.getScoreAdSellerAdditionalSignalsContainedDataVersion(),
+                stats.getScoreAdJsScriptResultCode());
     }
 
     @Override
@@ -286,7 +294,10 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getGetTrustedBiddingSignalsResultCode(),
                 stats.getGenerateBidsLatencyInMillis(),
                 stats.getRunBiddingLatencyInMillis(),
-                stats.getRunBiddingResultCode());
+                stats.getRunBiddingResultCode(),
+                stats.getRunAdBiddingPerCaReturnedAdCost(),
+                stats.getGenerateBidBuyerAdditionalSignalsContainedDataVersion(),
+                stats.getGenerateBidJsScriptResultCode());
     }
 
     @Override
@@ -434,7 +445,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 measurementAttributionStats.getAggregateDebugReportCount(),
                 measurementAttributionStats.getEventReportCount(),
                 measurementAttributionStats.getEventDebugReportCount(),
-                /* retryCount */ 0);
+                /* retryCount */ 0,
+                measurementAttributionStats.getNullAggregateReportCount());
     }
 
     /** log method for measurement wipeout. */
@@ -474,6 +486,17 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 measurementClickVerificationStats.getMaxSourcesPerClick(),
                 measurementClickVerificationStats
                         .isCurrentRegistrationUnderClickDeduplicationLimit());
+    }
+
+    /** Logs measurement ODP registrations. */
+    public void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats) {
+        AdServicesStatsLog.write(
+                stats.getCode(), stats.getRegistrationType(), stats.getRegistrationStatus());
+    }
+
+    /** Logs measurement ODP API calls. */
+    public void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats) {
+        AdServicesStatsLog.write(stats.getCode(), stats.getLatency(), stats.getApiCallStatus());
     }
 
     /** log method for consent migrations. */
@@ -521,6 +544,20 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 mEnrollmentRecordCountInTable,
                 mQueryParameter,
                 mErrorCause);
+    }
+
+    @Override
+    public void logEnrollmentTransactionStats(AdServicesEnrollmentTransactionStats stats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_ENROLLMENT_TRANSACTION_STATS,
+                stats.transactionType().getValue(),
+                stats.transactionStatus().getValue(),
+                stats.transactionParameterCount(),
+                stats.transactionResultCount(),
+                stats.queryResultCount(),
+                stats.dataSourceRecordCountPre(),
+                stats.dataSourceRecordCountPost(),
+                stats.enrollmentFileBuildId());
     }
 
     /** Logs encryption key fetch stats. */
@@ -866,6 +903,37 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getSignalEncodingSuccesses(),
                 stats.getSignalEncodingFailures(),
                 stats.getSignalEncodingSkips());
+    }
+
+    @Override
+    public void logPersistAdSelectionResultCalledStats(PersistAdSelectionResultCalledStats stats) {
+        AdServicesStatsLog.write(
+                PERSIST_AD_SELECTION_RESULT_CALLED,
+                stats.getWinnerType());
+    }
+
+    @Override
+    public void logSelectAdsFromOutcomesApiCalledStats(SelectAdsFromOutcomesApiCalledStats stats) {
+        AdServicesStatsLog.write(
+                SELECT_ADS_FROM_OUTCOMES_API_CALLED,
+                stats.getCountIds(),
+                stats.getCountNonExistingIds(),
+                stats.getUsedPrebuilt(),
+                stats.getDownloadResultCode(),
+                stats.getDownloadLatencyMillis(),
+                stats.getExecutionResultCode(),
+                stats.getExecutionLatencyMillis());
+    }
+
+    @Override
+    public void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats) {
+        AdServicesStatsLog.write(
+                REPORT_IMPRESSION_API_CALLED,
+                stats.getReportWinBuyerAdditionalSignalsContainedAdCost(),
+                stats.getReportWinBuyerAdditionalSignalsContainedDataVersion(),
+                stats.getReportResultSellerAdditionalSignalsContainedDataVersion(),
+                stats.getReportWinJsScriptResultCode(),
+                stats.getReportResultJsScriptResultCode());
     }
 
     @NonNull

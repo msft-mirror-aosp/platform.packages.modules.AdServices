@@ -23,8 +23,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_FOREGROUND_STATU
 
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 
-import com.android.adservices.common.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import com.google.common.truth.Truth;
 
@@ -36,15 +38,16 @@ import org.junit.Test;
 import java.util.concurrent.ExecutionException;
 
 @SetIntegerFlag(name = KEY_FOREGROUND_STATUS_LEVEL, value = IMPORTANCE_FOREGROUND)
+@RequiresSdkLevelAtLeastT(reason = "No foreground check in S-")
 public class FledgeApiCallFromBackgroundTest extends FledgeScenarioTest {
     private ScenarioDispatcher mDispatcher;
 
     @Before
     public void setup() throws Exception {
         mDispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-default.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(mDispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-default.json"));
     }
 
     @After
@@ -57,7 +60,11 @@ public class FledgeApiCallFromBackgroundTest extends FledgeScenarioTest {
     public void testRunAdSelectionFromBackground() {
         Exception e =
                 Assert.assertThrows(
-                        ExecutionException.class, () -> doSelectAds(makeAdSelectionConfig()));
+                        ExecutionException.class,
+                        () ->
+                                doSelectAds(
+                                        makeAdSelectionConfig(
+                                                mDispatcher.getBaseAddressWithPrefix())));
         Assert.assertTrue(e.getCause() instanceof IllegalStateException);
         Assert.assertEquals(
                 ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE, e.getCause().getMessage());

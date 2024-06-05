@@ -16,21 +16,16 @@
 
 package android.adservices.measurement;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-import android.content.Context;
 import android.os.Parcel;
 
-import androidx.test.InstrumentationRegistry;
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
 /** Unit tests for {@link StatusParam} */
-@SmallTest
-public final class StatusParamTest {
-    private static final Context sContext = InstrumentationRegistry.getTargetContext();
+public final class StatusParamTest extends AdServicesUnitTestCase {
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
 
     private StatusParam createExample() {
@@ -38,17 +33,15 @@ public final class StatusParamTest {
     }
 
     void verifyExample(StatusParam param) {
-        assertEquals(sContext.getPackageName(), param.getAppPackageName());
-        assertEquals(SDK_PACKAGE_NAME, param.getSdkPackageName());
+        expect.that(param.getAppPackageName()).isEqualTo(sContext.getPackageName());
+        expect.that(param.getSdkPackageName()).isEqualTo(SDK_PACKAGE_NAME);
     }
 
     @Test
     public void testMissingAppPackageName_throwException() {
         assertThrows(
                 NullPointerException.class,
-                () ->
-                        new StatusParam.Builder(/* appPackageName = */ null, SDK_PACKAGE_NAME)
-                                .build());
+                () -> new StatusParam.Builder(/* appPackageName= */ null, SDK_PACKAGE_NAME));
     }
 
     @Test
@@ -57,8 +50,7 @@ public final class StatusParamTest {
                 NullPointerException.class,
                 () ->
                         new StatusParam.Builder(
-                                        sContext.getPackageName(), /* sdkPackageName = */ null)
-                                .build());
+                                sContext.getPackageName(), /* sdkPackageName= */ null));
     }
 
     @Test
@@ -77,6 +69,6 @@ public final class StatusParamTest {
 
     @Test
     public void testDescribeContents() {
-        assertEquals(0, createExample().describeContents());
+        expect.that(createExample().describeContents()).isEqualTo(0);
     }
 }

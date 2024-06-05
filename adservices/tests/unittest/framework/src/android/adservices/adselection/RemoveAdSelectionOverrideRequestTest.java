@@ -18,20 +18,18 @@ package android.adservices.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class RemoveAdSelectionOverrideRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class RemoveAdSelectionOverrideRequestTest extends AdServicesUnitTestCase {
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfig();
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
-    public void testBuildsAddAdSelectionOverrideRequest() throws Exception {
+    public void testBuildsAddAdSelectionOverrideRequest() {
         RemoveAdSelectionOverrideRequest request =
                 new RemoveAdSelectionOverrideRequest(AD_SELECTION_CONFIG);
 

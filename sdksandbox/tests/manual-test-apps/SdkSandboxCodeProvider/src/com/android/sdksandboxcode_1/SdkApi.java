@@ -179,7 +179,12 @@ public class SdkApi extends ISdkApi.Stub {
                             } else {
                                 mediaView = mWebView;
                             }
-                            new ActivityHandler(activity, mContext, mediaView).buildLayout();
+                            new ActivityHandler(
+                                            activity,
+                                            mContext,
+                                            mediaView,
+                                            isCustomizedSdkContextEnabled())
+                                    .buildLayout();
                         });
         iActivityStarter.startActivity(token);
     }

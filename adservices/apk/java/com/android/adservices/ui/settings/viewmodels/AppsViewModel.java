@@ -30,8 +30,8 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.widget.MainSwitchBar;
 
 import com.google.common.collect.ImmutableList;
@@ -51,8 +51,6 @@ public class AppsViewModel extends AndroidViewModel {
     private final MutableLiveData<ImmutableList<App>> mApps;
     private final MutableLiveData<ImmutableList<App>> mBlockedApps;
     private final ConsentManager mConsentManager;
-
-    private final ConsentManagerV2 mConsentManagerV2;
     private final MutableLiveData<Boolean> mAppsConsent;
 
     /** UI event triggered by view model */
@@ -67,21 +65,23 @@ public class AppsViewModel extends AndroidViewModel {
     public AppsViewModel(@NonNull Application application) {
         super(application);
 
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            mConsentManagerV2 = ConsentManagerV2.getInstance();
-            mConsentManager = null;
-
-        } else {
-            mConsentManager = ConsentManager.getInstance();
-            mConsentManagerV2 = null;
-        }
-
+        mConsentManager = ConsentManager.getInstance();
         mApps = new MutableLiveData<>(getAppsFromConsentManager());
         mBlockedApps = new MutableLiveData<>(getBlockedAppsFromConsentManager());
         mAppsConsent =
                 FlagsFactory.getFlags().getGaUxFeatureEnabled()
                         ? new MutableLiveData<>(getAppsConsentFromConsentManager())
                         : null;
+    }
+
+    @VisibleForTesting
+    public AppsViewModel(@NonNull Application application, ConsentManager consentManager) {
+        super(application);
+
+        mConsentManager = consentManager;
+        mApps = new MutableLiveData<>(getAppsFromConsentManager());
+        mBlockedApps = new MutableLiveData<>(getBlockedAppsFromConsentManager());
+        mAppsConsent = new MutableLiveData<>(true);
     }
 
     /**
@@ -108,11 +108,7 @@ public class AppsViewModel extends AndroidViewModel {
      * @param app the app to be blocked.
      */
     public void revokeAppConsent(App app) throws IOException {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            mConsentManagerV2.revokeConsentForApp(app);
-        } else {
-            mConsentManager.revokeConsentForApp(app);
-        }
+        mConsentManager.revokeConsentForApp(app);
         refresh();
     }
 
@@ -128,11 +124,7 @@ public class AppsViewModel extends AndroidViewModel {
 
     /** Reset all information related to apps but blocked apps. */
     public void resetApps() throws IOException {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            mConsentManagerV2.clearKnownAppsWithConsent();
-        } else {
-            mConsentManager.resetApps();
-        }
+        mConsentManager.resetApps();
         mApps.postValue(getAppsFromConsentManager());
         mConsentManager.setPaDataReset(true);
     }
@@ -176,19 +168,11 @@ public class AppsViewModel extends AndroidViewModel {
     // ---------------------------------------------------------------------------------------------
 
     private ImmutableList<App> getAppsFromConsentManager() {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            return mConsentManagerV2.getKnownAppsWithConsent();
-        } else {
-            return mConsentManager.getKnownAppsWithConsent();
-        }
+        return mConsentManager.getKnownAppsWithConsent();
     }
 
     private ImmutableList<App> getBlockedAppsFromConsentManager() {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            return mConsentManagerV2.getAppsWithRevokedConsent();
-        } else {
-            return mConsentManager.getAppsWithRevokedConsent();
-        }
+        return mConsentManager.getAppsWithRevokedConsent();
     }
 
     /**
@@ -207,30 +191,16 @@ public class AppsViewModel extends AndroidViewModel {
      * @param newAppsConsentValue the new value that user consent should be set to for Apps PP APIs.
      */
     public void setAppsConsent(Boolean newAppsConsentValue) {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            if (newAppsConsentValue) {
-                mConsentManagerV2.enable(getApplication(), AdServicesApiType.FLEDGE);
-            } else {
-                mConsentManagerV2.disable(getApplication(), AdServicesApiType.FLEDGE);
-            }
-            mAppsConsent.postValue(getAppsConsentFromConsentManager());
-            if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                ConsentManagerV2.getInstance()
-                        .recordUserManualInteractionWithConsent(
-                                ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED);
-            }
+        if (newAppsConsentValue) {
+            mConsentManager.enable(getApplication(), AdServicesApiType.FLEDGE);
         } else {
-            if (newAppsConsentValue) {
-                mConsentManager.enable(getApplication(), AdServicesApiType.FLEDGE);
-            } else {
-                mConsentManager.disable(getApplication(), AdServicesApiType.FLEDGE);
-            }
-            mAppsConsent.postValue(getAppsConsentFromConsentManager());
-            if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                ConsentManager.getInstance()
-                        .recordUserManualInteractionWithConsent(
-                                ConsentManager.MANUAL_INTERACTIONS_RECORDED);
-            }
+            mConsentManager.disable(getApplication(), AdServicesApiType.FLEDGE);
+        }
+        mAppsConsent.postValue(getAppsConsentFromConsentManager());
+        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+            ConsentManager.getInstance()
+                    .recordUserManualInteractionWithConsent(
+                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
         }
     }
     /**
@@ -248,10 +218,6 @@ public class AppsViewModel extends AndroidViewModel {
     }
 
     private boolean getAppsConsentFromConsentManager() {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            return mConsentManagerV2.getConsent(AdServicesApiType.FLEDGE).isGiven();
-        } else {
-            return mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven();
-        }
+        return mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 }

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_android_rubidium",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -24,5 +25,6 @@ android_test {
         "adservices-collectors-helper-test",
     ],
 
+    min_sdk_version: "30",
     sdk_version: "current",
 }

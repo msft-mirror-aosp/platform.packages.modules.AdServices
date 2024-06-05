@@ -36,10 +36,15 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+    ],
     test_suites: [
         "general-tests",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -64,7 +69,7 @@ android_test {
     libs: [
         "android.test.base",
         "android.ext.adservices",
-        ],
+    ],
     test_suites: [
         "general-tests",
     ],
@@ -72,4 +77,10 @@ android_test {
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        baseline_filename: "lint-baseline-adextservices.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

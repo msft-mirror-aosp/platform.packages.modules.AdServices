@@ -21,7 +21,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory;
 
 public class DBCustomAudienceBackgroundFetchDataFixture {
     public static final int NUM_VALIDATION_FAILURES_POSITIVE = 10;
@@ -38,7 +38,7 @@ public class DBCustomAudienceBackgroundFetchDataFixture {
                         DBCustomAudienceBackgroundFetchData
                                 .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
                                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                                        FlagsFactory.getFlagsForTest()))
+                                        FakeFlagsFactory.getFlagsForTest()))
                 .setNumValidationFailures(0)
                 .setNumTimeoutFailures(0);
     }

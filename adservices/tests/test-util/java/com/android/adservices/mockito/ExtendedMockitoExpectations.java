@@ -28,7 +28,9 @@ import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.os.SystemProperties;
@@ -37,12 +39,12 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.common.SyncCallback;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
+import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
+import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
 import com.google.errorprone.annotations.FormatMethod;
@@ -59,40 +61,23 @@ import java.util.Objects;
  * <p><b>NOTE: </b> most expectations require {@code spyStatic()} or {@code mockStatic()} in the
  * {@link com.android.dx.mockito.inline.extended.StaticMockitoSession session} ahead of time - this
  * helper doesn't check that such calls were made, it's up to the caller to do so.
+ *
+ * @deprecated - use {@code mocker} reference provided by test superclasses (or {@link
+ *     AdServicesExtendedMockitoMocker} when they're not available).
  */
+@Deprecated // TODO(b/314969513): remove when not used anymore
 public final class ExtendedMockitoExpectations {
 
     private static final String TAG = ExtendedMockitoExpectations.class.getSimpleName();
 
-    // TODO(b/314969513): remove once there is no more usage
-    /**
-     * Mocks a call to {@link SdkLevel#isAtLeastS()}, returning {@code isIt}.
-     *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockIsAtLeastS(boolean)} instead
-     */
-    @Deprecated
-    public static void mockIsAtLeastS(boolean isIt) {
-        Log.v(TAG, "mockIsAtLeastS(" + isIt + ")");
-        doReturn(isIt).when(SdkLevel::isAtLeastS);
-    }
+    // NOTE: not really "Generated code", but we're using mocker (instead of sMocker or MOCKER) as
+    // that's the name of the reference provided by the superclasses - once tests are refactored
+    // to use the superclasses, they wouldn't need to change the variable name.
 
-    // TODO(b/314969513): remove once there is no more usage
-    /**
-     * Mocks a call to {@link SdkLevel#isAtLeastT()}, returning {@code isIt}.
-     *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockIsAtLeastT(boolean)} instead
-     */
-    @Deprecated
-    public static void mockIsAtLeastT(boolean isIt) {
-        Log.v(TAG, "mockIsAtLeastT(" + isIt + ")");
-        doReturn(isIt).when(SdkLevel::isAtLeastT);
-    }
-
-    /** Mocks a call to {@link SdkLevel#isAtLeastU()}, returning {@code isIt}. */
-    public static void mockIsAtLeastU(boolean isIt) {
-        Log.v(TAG, "mockIsAtLeastU(" + isIt + ")");
-        doReturn(isIt).when(SdkLevel::isAtLeastU);
-    }
+    // CHECKSTYLE:OFF Generated code
+    public static final AdServicesStaticMockitoMocker mocker =
+            new AdServicesExtendedMockitoMocker(new StaticClassChecker() {});
+    // CHECKSTYLE:ON
 
     /**
      * Mocks a call to {@link ErrorLogUtil#e()}, does nothing.
@@ -146,29 +131,6 @@ public final class ExtendedMockitoExpectations {
                         })
                 .when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         return callback;
-    }
-
-    // TODO(b/314969513): remove once there is no more usage
-    /**
-     * Mocks a call to {@link FlagsFactory#getFlags()}, returning {@link
-     * FlagsFactory#getFlagsForTest()}
-     *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlagsForTesting()} instead
-     */
-    public static void mockGetFlagsForTest() {
-        mockGetFlags(FlagsFactory.getFlagsForTest());
-    }
-
-    // TODO(b/314969513): remove once there is no more usage
-    /**
-     * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}
-     * object.
-     *
-     * @deprecated - use {@link AdServicesExtendedMockitoRule#mockGetFlags(Flags)} instead
-     */
-    @Deprecated
-    public static void mockGetFlags(Flags mockedFlags) {
-        doReturn(mockedFlags).when(FlagsFactory::getFlags);
     }
 
     /**
@@ -372,11 +334,25 @@ public final class ExtendedMockitoExpectations {
     }
 
     /**
-     * {@link SyncCallback} used in conjunction with {@link #mockErrorLogUtilWithoutThrowable()} /
+     * Mocks a call to {@link AdServicesJobServiceFactory#getJobSchedulingLogger()}.
+     *
+     * @return a mocked instance of {@link JobSchedulingLogger}.
+     */
+    public static JobSchedulingLogger mockJobSchedulingLogger(AdServicesJobServiceFactory factory) {
+        logV("mockJobSchedulingLogger()");
+
+        JobSchedulingLogger loggerMock = mock(JobSchedulingLogger.class);
+        when(factory.getJobSchedulingLogger()).thenReturn(loggerMock);
+
+        return loggerMock;
+    }
+
+    /**
+     * {@code SyncCallback} used in conjunction with {@link #mockErrorLogUtilWithoutThrowable()} /
      * {@link #mockErrorLogUtilWithThrowable()}.
      */
     public static final class ErrorLogUtilCallback
-            extends SyncCallback<ErrorLogUtilInvocation, Exception> {
+            extends FailableResultSyncCallback<ErrorLogUtilInvocation, Exception> {
 
         /**
          * Asserts {@link ErrorLogUtil#e(Throwable, int, int)}) was called with the given values.

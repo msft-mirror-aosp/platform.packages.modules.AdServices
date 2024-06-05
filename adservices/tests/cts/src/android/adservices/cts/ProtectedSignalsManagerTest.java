@@ -23,9 +23,9 @@ import android.os.Build;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.common.annotations.SetFlagEnabled;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import com.google.common.truth.Expect;
 

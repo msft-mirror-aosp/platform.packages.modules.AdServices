@@ -57,6 +57,7 @@ public final class ShellCommandStats {
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_CUSTOM_AUDIENCE_REFRESH;
 
+
     public static final int COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE;
@@ -69,6 +70,16 @@ public final class ShellCommandStats {
     public static final int COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP;
+    public static final int COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
+    public static final int COMMAND_AD_SELECTION_MOCK_AUCTION_RESULT =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_MOCK_AUCTION;
+
+    public static final int COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
 
     @IntDef({
         COMMAND_UNKNOWN,
@@ -90,7 +101,12 @@ public final class ShellCommandStats {
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_ENABLE,
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_DISABLE,
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW,
-        COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP
+        COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP,
+        COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA,
+        COMMAND_AD_SELECTION_MOCK_AUCTION_RESULT,
+
+        // Protected App Signals commands
+        COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING
     })
     @Retention(SOURCE)
     public @interface Command {}
@@ -156,7 +172,7 @@ public final class ShellCommandStats {
     @Override
     public String toString() {
         return String.format(
-                Locale.ROOT,
+                Locale.ENGLISH,
                 "ShellCommandStats[command=%d, result=%d, latencyMillis=%d]",
                 mCommand,
                 mResult,

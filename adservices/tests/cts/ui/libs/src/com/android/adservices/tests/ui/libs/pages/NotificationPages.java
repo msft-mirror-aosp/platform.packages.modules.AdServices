@@ -46,7 +46,9 @@ public class NotificationPages {
             boolean isDisplayed,
             boolean isEuTest,
             UiConstants.UX ux,
-            boolean isV2)
+            boolean isV2,
+            boolean isPas,
+            boolean isPasRenotify)
             throws Exception {
         device.openNotification();
         Thread.sleep(LAUNCH_TIMEOUT);
@@ -56,16 +58,27 @@ public class NotificationPages {
         switch (ux) {
             case GA_UX:
                 // Should match the contentTitle string in ConsentNotificationTrigger.java.
-                notificationTitle =
-                        isEuTest
-                                ? R.string.notificationUI_notification_ga_title_eu_v2
-                                : R.string.notificationUI_notification_ga_title_v2;
-                // Should match the text in consent_notification_screen_1_ga_v2_eu.xml and
-                // consent_notification_screen_1_ga_v2_row.xml, respectively.
-                notificationHeader =
-                        isEuTest
-                                ? R.string.notificationUI_fledge_measurement_title_v2
-                                : R.string.notificationUI_header_ga_title_v2;
+                if (isPas || isPasRenotify) {
+                    notificationTitle =
+                            isPasRenotify
+                                    ? R.string.notificationUI_pas_re_notification_title
+                                    : R.string.notificationUI_pas_notification_title;
+                    notificationHeader =
+                            isPasRenotify
+                                    ? R.string.notificationUI_pas_renotify_header_title
+                                    : R.string.notificationUI_pas_header_title;
+                } else {
+                    notificationTitle =
+                            isEuTest
+                                    ? R.string.notificationUI_notification_ga_title_eu_v2
+                                    : R.string.notificationUI_notification_ga_title_v2;
+                    // Should match the text in consent_notification_screen_1_ga_v2_eu.xml and
+                    // consent_notification_screen_1_ga_v2_row.xml, respectively.
+                    notificationHeader =
+                            isEuTest
+                                    ? R.string.notificationUI_fledge_measurement_title_v2
+                                    : R.string.notificationUI_header_ga_title_v2;
+                }
                 break;
             case BETA_UX:
                 notificationTitle =

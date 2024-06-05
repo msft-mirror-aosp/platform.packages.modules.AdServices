@@ -16,5 +16,8 @@ tccyp@google.com
 vikassahu@google.com
 yangwangyw@google.com
 
-per-file Flags.java = file: platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
-per-file PhFlags.java = file: platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
+# Flags related file should be reviewed by the Infra team.
+per-file *Flags*.java = set noparent
+per-file *Flags*.java = file:platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
+per-file CachedFlags.java = arpanah@google.com, lmohanan@google.com, feifeiji@google.com
+

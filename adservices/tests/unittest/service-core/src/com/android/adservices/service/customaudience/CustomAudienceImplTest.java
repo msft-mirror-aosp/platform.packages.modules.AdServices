@@ -29,19 +29,19 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.Validator;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -85,7 +85,7 @@ public class CustomAudienceImplTest {
     @Mock private Validator<CustomAudience> mCustomAudienceValidatorMock;
     @Mock private Clock mClockMock;
     private static final Flags FLAGS =
-            new FlagsFactory.TestFlags() {
+            new FakeFlagsFactory.TestFlags() {
                 @Override
                 public boolean getFledgeFrequencyCapFilteringEnabled() {
                     return true;
@@ -159,7 +159,7 @@ public class CustomAudienceImplTest {
     @Test
     public void testJoinCustomAudienceWithServerAuctionFlags_runNormallyFlagEnabled() {
         Flags flagsWithAuctionServerRequestFlagsEnabled =
-                new FlagsFactory.TestFlags() {
+                new FakeFlagsFactory.TestFlags() {
                     @Override
                     public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                         return true;
@@ -199,7 +199,7 @@ public class CustomAudienceImplTest {
     @Test
     public void testJoinCustomAudienceWithServerAuctionFlags_runNormallyFlagDisabled() {
         Flags flagsWithAuctionServerRequestFlagsDisabled =
-                new FlagsFactory.TestFlags() {
+                new FakeFlagsFactory.TestFlags() {
                     @Override
                     public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                         return false;

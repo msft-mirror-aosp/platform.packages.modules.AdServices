@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.common.compat;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -28,6 +31,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -46,6 +50,7 @@ public final class PackageManagerCompatUtils {
     // activities need need to be enabled/disabled based on flag settings and SDK version.
     // TODO(b/263904312): Remove after max_sdk_version is implemented.
     // TODO(b/272737642) scan activities instead of hardcode
+    // LINT.IfChange(activities_and_services)
     public static final ImmutableList<String> CONSENT_ACTIVITIES_CLASSES =
             ImmutableList.of(
                     "com.android.adservices.ui.settings.activities."
@@ -64,7 +69,7 @@ public final class PackageManagerCompatUtils {
     // TODO(b/263904312): Remove after max_sdk_version is implemented.
     // TODO(b/272737642) scan services instead of hardcode
     public static final ImmutableList<Pair<String, Integer>>
-            SERVICE_CLASSES_AND_ENABLE_STATUS_ON_R_PAIRS =
+            SERVICE_CLASSES_AND_MIN_SDK_SUPPORT_PAIRS =
                     ImmutableList.of(
                             new Pair<>(
                                     /* service= */ "com.android.adservices.adid.AdIdService",
@@ -90,6 +95,8 @@ public final class PackageManagerCompatUtils {
                             new Pair<>(
                                     /* service= */ "com.android.adservices.appsetid.AppSetIdService",
                                     /* minSdkSupport= */ Build.VERSION_CODES.S));
+
+    // LINT.ThenChange()
 
     /**
      * Invokes the appropriate overload of {@code getInstalledPackages} on {@link PackageManager}
@@ -194,6 +201,9 @@ public final class PackageManagerCompatUtils {
     public static boolean isAdServicesActivityEnabled(@NonNull Context context) {
         Objects.requireNonNull(context);
         String packageName = context.getPackageName();
+        if (packageName == null) {
+            return false;
+        }
 
         // Activities are enabled by default in AdServices package
         if (packageName.endsWith(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
@@ -213,6 +223,10 @@ public final class PackageManagerCompatUtils {
             }
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e("Error when checking if activities are enabled: " + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             return false;
         }
         return true;

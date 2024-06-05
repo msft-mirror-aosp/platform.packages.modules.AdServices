@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -88,7 +89,7 @@ public class FetcherUtil {
             return Optional.of(new UnsignedLong((String) maybeValue));
         } catch (JSONException | NumberFormatException e) {
             LoggerFactory.getMeasurementLogger()
-                    .d(e, "extractUnsignedLong: caught exception. Key: %s", key);
+                    .e(e, "extractUnsignedLong: caught exception. Key: %s", key);
             return Optional.empty();
         }
     }
@@ -103,7 +104,7 @@ public class FetcherUtil {
             return Optional.of(Long.parseLong((String) maybeValue));
         } catch (JSONException | NumberFormatException e) {
             LoggerFactory.getMeasurementLogger()
-                    .d(e, "extractLongString: caught exception. Key: %s", key);
+                    .e(e, "extractLongString: caught exception. Key: %s", key);
             return Optional.empty();
         }
     }
@@ -123,7 +124,7 @@ public class FetcherUtil {
             return Optional.of(Long.parseLong(String.valueOf(maybeValue)));
         } catch (JSONException | NumberFormatException e) {
             LoggerFactory.getMeasurementLogger()
-                    .d(e, "extractLong: caught exception. Key: %s", key);
+                    .e(e, "extractLong: caught exception. Key: %s", key);
             return Optional.empty();
         }
     }
@@ -133,7 +134,7 @@ public class FetcherUtil {
             long lookbackWindow = Long.parseLong(obj.optString(FilterMap.LOOKBACK_WINDOW));
             if (lookbackWindow <= 0) {
                 LoggerFactory.getMeasurementLogger()
-                        .d(
+                        .e(
                                 "extractLookbackWindow: non positive lookback window found: %d",
                                 lookbackWindow);
                 return Optional.empty();
@@ -141,12 +142,48 @@ public class FetcherUtil {
             return Optional.of(lookbackWindow);
         } catch (NumberFormatException e) {
             LoggerFactory.getMeasurementLogger()
-                    .d(
+                    .e(
                             e,
                             "extractLookbackWindow: caught exception. Key: %s",
                             FilterMap.LOOKBACK_WINDOW);
             return Optional.empty();
         }
+    }
+
+    /** Extract string from an obj with max length. */
+    public static Optional<String> extractString(Object obj, int maxLength) {
+        if (!(obj instanceof String)) {
+            LoggerFactory.getMeasurementLogger().e("obj should be a string.");
+            return Optional.empty();
+        }
+        String stringValue = (String) obj;
+        if (stringValue.length() > maxLength) {
+            LoggerFactory.getMeasurementLogger()
+                    .e("Length of string value should be non-empty and smaller than " + maxLength);
+            return Optional.empty();
+        }
+        return Optional.of(stringValue);
+    }
+
+    /** Extract list of strings from an obj with max array size and max string length. */
+    public static Optional<List<String>> extractStringArray(
+            JSONObject json, String key, int maxArraySize, int maxStringLength)
+            throws JSONException {
+        JSONArray jsonArray = json.getJSONArray(key);
+        if (jsonArray.length() > maxArraySize) {
+            LoggerFactory.getMeasurementLogger()
+                    .e("Json array size should not be greater " + "than " + maxArraySize);
+            return Optional.empty();
+        }
+        List<String> strings = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); ++i) {
+            Optional<String> string = FetcherUtil.extractString(jsonArray.get(i), maxStringLength);
+            if (string.isEmpty()) {
+                return Optional.empty();
+            }
+            strings.add(string.get());
+        }
+        return Optional.of(strings);
     }
 
     /**
@@ -215,6 +252,54 @@ public class FetcherUtil {
             }
         }
         return true;
+    }
+
+    /**
+     * Parses header error debug report opt-in info from "Attribution-Reporting-Info" header. The
+     * header is a structured header and only supports dictionary format. Check HTTP [RFC8941]
+     * Section3.2 for details.
+     *
+     * <p>Examples of this type of header:
+     *
+     * <ul>
+     *   <li>"Attribution-Reporting-Info":“report-header-errors=?0"
+     *   <li>"Attribution-Reporting-Info": “report-header-errors,chrome-param=value"
+     *   <li>"Attribution-Reporting-Info": "report-header-errors=?1;chrome-param=value,
+     *       report-header-errors=?0"
+     * </ul>
+     *
+     * <p>The header may contain information that is only used in Chrome. Android will ignore it and
+     * be less strict in parsing in the current version. When "report-header-errors" value can't be
+     * extracted, Android will skip sending the debug report instead of dropping the whole
+     * registration.
+     */
+    public static boolean isHeaderErrorDebugReportEnabled(
+            @Nullable List<String> attributionInfoHeaders, Flags flags) {
+        if (attributionInfoHeaders == null || attributionInfoHeaders.size() == 0) {
+            return false;
+        }
+        if (!flags.getMeasurementEnableDebugReport()
+                || !flags.getMeasurementEnableHeaderErrorDebugReport()) {
+            LoggerFactory.getMeasurementLogger().d("Debug report is disabled for header errors.");
+            return false;
+        }
+
+        // When there are multiple headers or the same key appears multiple times, find the last
+        // appearance and get the value.
+        for (int i = attributionInfoHeaders.size() - 1; i >= 0; i--) {
+            String[] parsed = attributionInfoHeaders.get(i).split("[,;]+");
+            for (int j = parsed.length - 1; j >= 0; j--) {
+                String parsedStr = parsed[j].trim();
+                if (parsedStr.equals("report-header-errors")
+                        || parsedStr.equals("report-header-errors=?1")) {
+                    return true;
+                } else if (parsedStr.equals("report-header-errors=?0")) {
+                    return false;
+                }
+            }
+        }
+        // Skip sending the debug report when the key is not found.
+        return false;
     }
 
     /** Validate attribution filters JSONObject. */
@@ -311,7 +396,8 @@ public class FetcherUtil {
                                 asyncFetchStatus.getRegistrationDelay(),
                                 getSourceRegistrantToLog(asyncRegistration),
                                 asyncFetchStatus.getRetryCount(),
-                                asyncFetchStatus.isRedirectOnly())
+                                asyncFetchStatus.isRedirectOnly(),
+                                asyncFetchStatus.isPARequest())
                         .setAdTechDomain(adTechDomain)
                         .build());
     }
@@ -335,7 +421,7 @@ public class FetcherUtil {
             redirects.add(Uri.parse(field.get(0)));
             if (field.size() > 1) {
                 LoggerFactory.getMeasurementLogger()
-                        .d("Expected one Location redirect only, others ignored!");
+                        .e("Expected one Location redirect only, others ignored!");
             }
         }
         return redirects;

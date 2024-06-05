@@ -16,6 +16,13 @@
 
 package android.app.sdksandbox;
 
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_ALREADY_LOADED;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_INTERNAL_ERROR;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_NOT_FOUND;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_SDK_DEFINED_ERROR;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_SDK_SANDBOX_DISABLED;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_UNSPECIFIED;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import android.annotation.CallbackExecutor;
@@ -437,7 +444,7 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Unregisters {@link AppOwnedSdkSandboxInterfaces} for an app process.
+     * Unregisters {@link AppOwnedSdkSandboxInterface}s for an app process.
      *
      * @param name the name under which AppOwnedSdkSandboxInterface was registered.
      */
@@ -755,6 +762,25 @@ public final class SdkSandboxManager {
     }
 
     /** @hide */
+    public static @SandboxLatencyInfo.ResultCode int getResultCodeForLoadSdkException(
+            LoadSdkException exception) {
+        return switch (exception.getLoadSdkErrorCode()) {
+            case LOAD_SDK_NOT_FOUND -> RESULT_CODE_LOAD_SDK_NOT_FOUND;
+            case LOAD_SDK_ALREADY_LOADED -> RESULT_CODE_LOAD_SDK_ALREADY_LOADED;
+            case LOAD_SDK_SDK_DEFINED_ERROR -> RESULT_CODE_LOAD_SDK_SDK_DEFINED_ERROR;
+            case LOAD_SDK_SDK_SANDBOX_DISABLED -> RESULT_CODE_LOAD_SDK_SDK_SANDBOX_DISABLED;
+            case LOAD_SDK_INTERNAL_ERROR -> RESULT_CODE_LOAD_SDK_INTERNAL_ERROR;
+            case SDK_SANDBOX_PROCESS_NOT_AVAILABLE -> RESULT_CODE_SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
+            default -> {
+                Log.e(
+                        TAG,
+                        "Unexpected load SDK exception code: " + exception.getLoadSdkErrorCode());
+                yield RESULT_CODE_UNSPECIFIED;
+            }
+        };
+    }
+
+    /** @hide */
     private static class SdkSandboxProcessDeathCallbackProxy
             extends ISdkSandboxProcessDeathCallback.Stub {
         private final Executor mExecutor;
@@ -850,6 +876,7 @@ public final class SdkSandboxManager {
         @Override
         public void onLoadSdkFailure(
                 LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
+            sandboxLatencyInfo.setResultCode(getResultCodeForLoadSdkException(exception));
             logSandboxApiLatency(sandboxLatencyInfo);
             mExecutor.execute(() -> mCallback.onError(exception));
         }

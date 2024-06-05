@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
@@ -253,29 +252,12 @@ public final class MeasurementServiceImplTest {
 
     private void registerSourceAndAssertFailure(@AdServicesStatusUtils.StatusCode int status)
             throws InterruptedException {
-        registerSourceAndAssertFailure(
-                status,
-                createRegistrationSourceRequest(),
-                /* assertFailureReason = */ false,
-                FAILURE_REASON_UNSET);
+        registerSourceAndAssertFailure(status, createRegistrationSourceRequest());
     }
 
     private void registerSourceAndAssertFailure(
             @AdServicesStatusUtils.StatusCode int status,
             RegistrationRequest registrationSourceRequest)
-            throws InterruptedException {
-        registerSourceAndAssertFailure(
-                status,
-                registrationSourceRequest,
-                /* assertFailureReason = */ false,
-                FAILURE_REASON_UNSET);
-    }
-
-    private void registerSourceAndAssertFailure(
-            @AdServicesStatusUtils.StatusCode int status,
-            RegistrationRequest registrationSourceRequest,
-            boolean assertFailureReason,
-            int failureReason)
             throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         final List<MeasurementErrorResponse> errorContainer = new ArrayList<>();
@@ -297,9 +279,6 @@ public final class MeasurementServiceImplTest {
         verify(mMockMeasurementImpl, never()).register(any(), anyBoolean(), anyLong());
         Assert.assertEquals(1, errorContainer.size());
         Assert.assertEquals(status, errorContainer.get(0).getStatusCode());
-        if (assertFailureReason) {
-            assertFailureReasonLogged(failureReason);
-        }
     }
 
     @Test
@@ -320,10 +299,7 @@ public final class MeasurementServiceImplTest {
                 new AccessDenier().deniedByDevContext(),
                 () ->
                         registerSourceAndAssertFailure(
-                                STATUS_UNAUTHORIZED,
-                                createRegistrationSourceRequest(true),
-                                /* assertFailureReason= */ true,
-                                FAILURE_REASON_UNSET));
+                                STATUS_UNAUTHORIZED, createRegistrationSourceRequest(true)));
     }
 
     @Test
@@ -345,9 +321,7 @@ public final class MeasurementServiceImplTest {
                 () ->
                         registerSourceAndAssertFailure(
                                 STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
-                                createRegistrationSourceRequest(),
-                                /* assertFailureReason= */ true,
-                                FAILURE_REASON_UNSET));
+                                createRegistrationSourceRequest()));
     }
 
     @Test
@@ -392,10 +366,7 @@ public final class MeasurementServiceImplTest {
                 new AccessDenier().deniedByForegroundEnforcement(),
                 () ->
                         registerSourceAndAssertFailure(
-                                STATUS_BACKGROUND_CALLER,
-                                createRegistrationSourceRequest(),
-                                /* assertFailureReason= */ true,
-                                FAILURE_REASON_UNSET));
+                                STATUS_BACKGROUND_CALLER, createRegistrationSourceRequest()));
     }
 
     @Test
@@ -2013,12 +1984,6 @@ public final class MeasurementServiceImplTest {
         verify(mMockAdServicesLogger, timeout(TIMEOUT)).logApiCallStats(captorStatus.capture());
         assertEquals(APP_PACKAGE_NAME, captorStatus.getValue().getAppPackageName());
         assertEquals(SDK_PACKAGE_NAME, captorStatus.getValue().getSdkPackageName());
-    }
-
-    private void assertFailureReasonLogged(int failureReason) {
-        ArgumentCaptor<ApiCallStats> captorStatus = ArgumentCaptor.forClass(ApiCallStats.class);
-        verify(mMockAdServicesLogger, timeout(TIMEOUT)).logApiCallStats(captorStatus.capture());
-        assertEquals(failureReason, captorStatus.getValue().getFailureReason());
     }
 
     private MeasurementServiceImpl createServiceWithMocks() {

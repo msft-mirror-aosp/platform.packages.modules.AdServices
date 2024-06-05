@@ -17,7 +17,6 @@
 package com.android.adservices.service.topics.classifier;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlagsForTest;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET;
@@ -40,10 +39,10 @@ import android.content.Context;
 import android.content.res.AssetManager;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -108,13 +107,13 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
 
     @Before
     public void setUp() {
-        mockGetFlagsForTest();
+        mocker.mockGetFlagsForTesting();
     }
 
     @Test
     public void testGetInstance() {
-        ModelManager firstInstance = ModelManager.getInstance(sContext);
-        ModelManager secondInstance = ModelManager.getInstance(sContext);
+        ModelManager firstInstance = ModelManager.getInstance();
+        ModelManager secondInstance = ModelManager.getInstance();
 
         assertThat(firstInstance).isNotNull();
         assertThat(secondInstance).isNotNull();

@@ -263,9 +263,7 @@ public class SdkSandboxRestrictionsTest {
 
     @Test
     public void testSdkCannotAccessSdkSandboxManager() throws Exception {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        SdkSandboxManager sdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
-
+        SdkSandboxManager sdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(sdkSandboxManager).isNull();
     }
 

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -51,6 +52,6 @@ android_test {
         "mcts-adservices",
     ],
     test_options: {
-        extra_test_configs: ["AndroidTest_MultiUser.xml"]
+        extra_test_configs: ["AndroidTest_MultiUser.xml"],
     },
 }

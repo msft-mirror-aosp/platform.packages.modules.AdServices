@@ -22,10 +22,9 @@ import static com.android.adservices.service.adselection.signature.ECDSASignatur
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.stats.SignatureVerificationLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,10 +53,7 @@ public class ECDSASignatureVerifierTest {
     @Before
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
-        boolean isContextualAdsLoggingEnabled = true;
-        mSignatureVerifier =
-                new ECDSASignatureVerifier(
-                        mSignatureVerificationLoggerMock, isContextualAdsLoggingEnabled);
+        mSignatureVerifier = new ECDSASignatureVerifier(mSignatureVerificationLoggerMock);
         mDataBytes = MESSAGE.getBytes(StandardCharsets.UTF_8);
 
         // Generate a key pair for testing
@@ -92,18 +88,5 @@ public class ECDSASignatureVerifierTest {
 
         assertFalse(isVerified);
         verify(mSignatureVerificationLoggerMock).addFailureDetailCountOfKeysWithWrongFormat();
-    }
-
-    @Test
-    public void testVerifySignature_malformedKeyLoggingOff_noInteractions() {
-        byte[] malformedKey = new byte[] {1, 2, 3};
-        boolean isContextualAdsLoggingEnabled = false;
-        SignatureVerifier signatureVerifier =
-                new ECDSASignatureVerifier(
-                        mSignatureVerificationLoggerMock, isContextualAdsLoggingEnabled);
-        boolean isVerified = signatureVerifier.verify(malformedKey, mDataBytes, mSignatureBytes);
-
-        assertFalse(isVerified);
-        verifyZeroInteractions(mSignatureVerificationLoggerMock);
     }
 }

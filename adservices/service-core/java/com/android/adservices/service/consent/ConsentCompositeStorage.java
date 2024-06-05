@@ -578,26 +578,6 @@ public class ConsentCompositeStorage implements IConsentStorage {
         }
     }
 
-    /**
-     * Saves information to the storage that Pas notification was displayed for the first time to
-     * the user.
-     */
-    @Override
-    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
-        for (IConsentStorage storage : getConsentStorageList()) {
-            try {
-                storage.recordPasNotificationDisplayed(wasPasDisplayed);
-            } catch (ConsentStorageDeferException e) {
-                LogUtil.i(
-                        "Skip current storage manager %s. Defer to next one",
-                        storage.getClass().getSimpleName());
-            } catch (IOException e) {
-                logDatastoreManualInteractionException(e);
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
     /** Saves information to the storage that user interacted with consent manually. */
     @Override
     public void recordUserManualInteractionWithConsent(int interaction) {
@@ -677,6 +657,38 @@ public class ConsentCompositeStorage implements IConsentStorage {
         for (IConsentStorage storage : getConsentStorageList()) {
             try {
                 storage.setConsentForApp(packageName, isConsentRevoked);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
+    public void resetAppsAndBlockedApps() throws IOException {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.resetAppsAndBlockedApps();
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
+    public void resetApps() throws IOException {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.resetApps();
             } catch (ConsentStorageDeferException e) {
                 LogUtil.i(
                         "Skip current storage manager %s. Defer to next one",
@@ -835,6 +847,21 @@ public class ConsentCompositeStorage implements IConsentStorage {
         return true;
     }
 
+    @Override
+    public void recordPasNotificationDisplayed(boolean wasPasNotificationDisplayed) {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.recordPasNotificationDisplayed(wasPasNotificationDisplayed);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+            }
+        }
+    }
+
     /** Set the measurement data reset activity happens based on consent_source_of_truth. */
     @Override
     public void setMeasurementDataReset(boolean isMeasurementDataReset) {
@@ -869,6 +896,198 @@ public class ConsentCompositeStorage implements IConsentStorage {
             }
         }
         return false;
+    }
+
+    @Override
+    public Boolean getDefaultConsent() {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                return storage.getDefaultConsent();
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean getTopicsDefaultConsent() {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                return storage.getTopicsDefaultConsent();
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean getFledgeDefaultConsent() {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                return storage.getFledgeDefaultConsent();
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean getMeasurementDefaultConsent() {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                return storage.getMeasurementDefaultConsent();
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean getDefaultAdIdState() {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                return storage.getDefaultAdIdState();
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void recordDefaultConsent(boolean defaultConsent) {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.recordDefaultConsent(defaultConsent);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+            }
+        }
+    }
+
+    @Override
+    public void recordTopicsDefaultConsent(boolean defaultConsent) {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.recordTopicsDefaultConsent(defaultConsent);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+            }
+        }
+    }
+
+    @Override
+    public void recordFledgeDefaultConsent(boolean defaultConsent) {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.recordFledgeDefaultConsent(defaultConsent);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+            }
+        }
+    }
+
+    @Override
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.recordMeasurementDefaultConsent(defaultConsent);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+            }
+        }
+    }
+
+    @Override
+    public void recordDefaultAdIdState(boolean defaultAdIdState) {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.recordDefaultAdIdState(defaultAdIdState);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+            }
+        }
+    }
+
+    @Override
+    public Boolean isPaDataReset() {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                return storage.isPaDataReset();
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void setPaDataReset(boolean isPaDataReset) {
+        for (IConsentStorage storage : getConsentStorageList()) {
+            try {
+                storage.setPaDataReset(isPaDataReset);
+            } catch (ConsentStorageDeferException e) {
+                LogUtil.i(
+                        "Skip current storage manager %s. Defer to next one",
+                        storage.getClass().getSimpleName());
+            } catch (IOException e) {
+                logDataStoreWhileRecordingException(e);
+            }
+        }
     }
 
     private static void logDataStoreWhileRecordingException(IOException e) {

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -36,6 +37,7 @@ java_test_host {
         ":StorageTestCodeProvider",
         ":SdkSandboxStorageTestApp",
         ":SdkSandboxStorageTestAppV2_DoesNotConsumeSdk",
+        ":SdkSandboxStorageTestUnlockApp",
     ],
 }
 
@@ -62,6 +64,24 @@ java_defaults {
 }
 
 android_test_helper_app {
+    name: "SdkSandboxStorageTestUnlockApp",
+    manifest: "unlockapp/SdkSandboxStorageTestUnlockAppManifest.xml",
+    srcs: [
+        "unlockapp/src/**/*.java",
+    ],
+    static_libs: [
+        "androidx.core_core",
+        "androidx.test.ext.junit",
+        "androidx.test.runner",
+        "androidx.test.uiautomator_uiautomator",
+        "truth",
+    ],
+    min_sdk_version: "Tiramisu",
+    target_sdk_version: "Tiramisu",
+    test_suites: ["general-tests"],
+}
+
+android_test_helper_app {
     name: "SdkSandboxStorageTestApp",
     manifest: "app/SdkSandboxStorageTestAppManifest.xml",
     defaults: ["SdkSandboxStorageHostTestDefaults"],
@@ -78,7 +98,7 @@ android_test_helper_app {
     manifest: "codeprovider/StorageTestCodeProvider.xml",
     defaults: ["platform_app_defaults"],
     srcs: [
-       "codeprovider/src/**/*.java",
+        "codeprovider/src/**/*.java",
     ],
     static_libs: [
         "compatibility-device-util-axt",

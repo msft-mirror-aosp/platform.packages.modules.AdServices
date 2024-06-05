@@ -16,16 +16,14 @@
 
 package android.adservices.measurement;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Parcel;
 import android.view.KeyEvent;
 
-import androidx.test.platform.app.InstrumentationRegistry;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
@@ -33,10 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-public class SourceRegistrationRequestInternalTest {
-
-    private static final Context CONTEXT =
-            InstrumentationRegistry.getInstrumentation().getContext();
+public final class SourceRegistrationRequestInternalTest extends AdServicesUnitTestCase {
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://bar.test");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.test");
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
@@ -73,11 +68,7 @@ public class SourceRegistrationRequestInternalTest {
                 NullPointerException.class,
                 () ->
                         new SourceRegistrationRequestInternal.Builder(
-                                        null,
-                                        CONTEXT.getPackageName(),
-                                        SDK_PACKAGE_NAME,
-                                        BOOT_RELATIVE_REQUEST_TIME)
-                                .build());
+                                null, mPackageName, SDK_PACKAGE_NAME, BOOT_RELATIVE_REQUEST_TIME));
     }
 
     @Test
@@ -86,11 +77,10 @@ public class SourceRegistrationRequestInternalTest {
                 NullPointerException.class,
                 () ->
                         new SourceRegistrationRequestInternal.Builder(
-                                        EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                                        /* appPackageName = */ null,
-                                        SDK_PACKAGE_NAME,
-                                        BOOT_RELATIVE_REQUEST_TIME)
-                                .build());
+                                EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
+                                /* appPackageName= */ null,
+                                SDK_PACKAGE_NAME,
+                                BOOT_RELATIVE_REQUEST_TIME));
     }
 
     @Test
@@ -99,33 +89,35 @@ public class SourceRegistrationRequestInternalTest {
                 NullPointerException.class,
                 () ->
                         new SourceRegistrationRequestInternal.Builder(
-                                        EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                                        CONTEXT.getPackageName(),
-                                        /* sdkPackageName = */ null,
-                                        BOOT_RELATIVE_REQUEST_TIME)
-                                .build());
+                                EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
+                                mPackageName,
+                                /* sdkPackageName= */ null,
+                                BOOT_RELATIVE_REQUEST_TIME));
     }
 
     @Test
     public void testDescribeContents() {
-        assertEquals(0, createExampleRegistrationRequest().describeContents());
+        expect.that(createExampleRegistrationRequest().describeContents()).isEqualTo(0);
     }
 
     @Test
     public void testHashCode_equals() {
-        final SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
-        final SourceRegistrationRequestInternal request2 = createExampleRegistrationRequest();
-        final Set<SourceRegistrationRequestInternal> requestSet1 = Set.of(request1);
-        final Set<SourceRegistrationRequestInternal> requestSet2 = Set.of(request2);
-        assertEquals(request1.hashCode(), request2.hashCode());
-        assertEquals(request1, request2);
-        assertEquals(requestSet1, requestSet2);
+        EqualsTester et = new EqualsTester(expect);
+        SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        SourceRegistrationRequestInternal request2 = createExampleRegistrationRequest();
+        et.expectObjectsAreEqual(request1, request2);
+
+        Set<SourceRegistrationRequestInternal> requestSet1 = Set.of(request1);
+        Set<SourceRegistrationRequestInternal> requestSet2 = Set.of(request2);
+        expect.that(requestSet1).isEqualTo(requestSet2);
     }
 
     @Test
-    public void testHashCode_appPackageNameMismatch_notEquals() {
-        final SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
-        final SourceRegistrationRequestInternal request2 =
+    public void testAppPackageNameMismatch_notEquals() {
+        EqualsTester et = new EqualsTester(expect);
+
+        SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        SourceRegistrationRequestInternal request2 =
                 new SourceRegistrationRequestInternal.Builder(
                                 EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
                                 "com.foo",
@@ -134,87 +126,85 @@ public class SourceRegistrationRequestInternalTest {
                         .setAdIdValue(AD_ID_VALUE)
                         .build();
 
-        assertHashCodeNotEqual(request1, request2);
+        et.expectObjectsAreNotEqual(request1, request2);
     }
 
     @Test
-    public void testHashCode_sdkNameMismatch_notEquals() {
-        final SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
-        final SourceRegistrationRequestInternal request2 =
+    public void testSdkNameMismatch_notEquals() {
+        EqualsTester et = new EqualsTester(expect);
+
+        SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        SourceRegistrationRequestInternal request2 =
                 new SourceRegistrationRequestInternal.Builder(
                                 EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                                CONTEXT.getPackageName(),
+                                mPackageName,
                                 "com.foo",
                                 BOOT_RELATIVE_REQUEST_TIME)
                         .setAdIdValue(AD_ID_VALUE)
                         .build();
 
-        assertHashCodeNotEqual(request1, request2);
+        et.expectObjectsAreNotEqual(request1, request2);
     }
 
     @Test
-    public void testHashCode_registrationUrisMismatch_notEquals() {
-        final SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+    public void testRegistrationUrisMismatch_notEquals() {
+        EqualsTester et = new EqualsTester(expect);
+
+        SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
         SourceRegistrationRequest diffSourceRegistrationRequest =
                 new SourceRegistrationRequest.Builder(EXAMPLE_REGISTRATION_URIS)
                         .setInputEvent(null) // this is the difference
                         .build();
-        final SourceRegistrationRequestInternal request2 =
+        SourceRegistrationRequestInternal request2 =
                 new SourceRegistrationRequestInternal.Builder(
                                 diffSourceRegistrationRequest,
-                                CONTEXT.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME,
                                 BOOT_RELATIVE_REQUEST_TIME)
                         .setAdIdValue(AD_ID_VALUE)
                         .build();
 
-        assertHashCodeNotEqual(request1, request2);
+        et.expectObjectsAreNotEqual(request1, request2);
     }
 
     @Test
-    public void testHashCode_requestTimeMismatch_notEquals() {
-        final SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
-        final SourceRegistrationRequestInternal request2 =
+    public void testRequestTimeMismatch_notEquals() {
+        EqualsTester et = new EqualsTester(expect);
+
+        SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        SourceRegistrationRequestInternal request2 =
                 new SourceRegistrationRequestInternal.Builder(
                                 EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                                CONTEXT.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME,
                                 43534534653L)
                         .setAdIdValue(AD_ID_VALUE)
                         .build();
 
-        assertHashCodeNotEqual(request1, request2);
+        et.expectObjectsAreNotEqual(request1, request2);
     }
 
     @Test
-    public void testHashCode_adIdMismatch_notEquals() {
-        final SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
-        final SourceRegistrationRequestInternal request2 =
+    public void testAdIdMismatch_notEquals() {
+        EqualsTester et = new EqualsTester(expect);
+
+        SourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        SourceRegistrationRequestInternal request2 =
                 new SourceRegistrationRequestInternal.Builder(
                                 EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                                CONTEXT.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME,
                                 BOOT_RELATIVE_REQUEST_TIME)
                         .setAdIdValue("different_ad_id")
                         .build();
 
-        assertHashCodeNotEqual(request1, request2);
-    }
-
-    private static void assertHashCodeNotEqual(
-            SourceRegistrationRequestInternal request1,
-            SourceRegistrationRequestInternal request2) {
-        final Set<SourceRegistrationRequestInternal> requestSet1 = Set.of(request1);
-        final Set<SourceRegistrationRequestInternal> requestSet2 = Set.of(request2);
-        assertNotEquals(request1.hashCode(), request2.hashCode());
-        assertNotEquals(request1, request2);
-        assertNotEquals(requestSet1, requestSet2);
+        et.expectObjectsAreNotEqual(request1, request2);
     }
 
     private SourceRegistrationRequestInternal createExampleRegistrationRequest() {
         return new SourceRegistrationRequestInternal.Builder(
                         EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST,
-                        CONTEXT.getPackageName(),
+                        mPackageName,
                         SDK_PACKAGE_NAME,
                         BOOT_RELATIVE_REQUEST_TIME)
                 .setAdIdValue(AD_ID_VALUE)
@@ -223,15 +213,16 @@ public class SourceRegistrationRequestInternalTest {
 
     private void verifyExampleRegistrationInternal(SourceRegistrationRequestInternal request) {
         verifyExampleRegistration(request.getSourceRegistrationRequest());
-        assertEquals(CONTEXT.getPackageName(), request.getAppPackageName());
-        assertEquals(SDK_PACKAGE_NAME, request.getSdkPackageName());
-        assertEquals(AD_ID_VALUE, request.getAdIdValue());
+        expect.that(request.getAppPackageName()).isEqualTo(mPackageName);
+        expect.that(request.getSdkPackageName()).isEqualTo(SDK_PACKAGE_NAME);
+        expect.that(request.getAdIdValue()).isEqualTo(AD_ID_VALUE);
     }
 
     private void verifyExampleRegistration(SourceRegistrationRequest request) {
-        assertEquals(EXAMPLE_REGISTRATION_URIS, request.getRegistrationUris());
-        assertEquals(INPUT_KEY_EVENT.getAction(), ((KeyEvent) request.getInputEvent()).getAction());
-        assertEquals(
-                INPUT_KEY_EVENT.getKeyCode(), ((KeyEvent) request.getInputEvent()).getKeyCode());
+        expect.that(request.getRegistrationUris()).isEqualTo(EXAMPLE_REGISTRATION_URIS);
+        expect.that(((KeyEvent) request.getInputEvent()).getAction())
+                .isEqualTo(INPUT_KEY_EVENT.getAction());
+        expect.that(((KeyEvent) request.getInputEvent()).getKeyCode())
+                .isEqualTo(INPUT_KEY_EVENT.getKeyCode());
     }
 }

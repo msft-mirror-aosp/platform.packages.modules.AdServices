@@ -36,14 +36,14 @@ java_library {
     ],
     plugins: [
         "auto_value_plugin",
-        "auto_annotation_plugin"
+        "auto_annotation_plugin",
     ],
     libs: [
         "framework-adservices.impl",
         "framework-configinfrastructure",
         "adservices-service-core",
         "auto_value_annotations",
-        "framework-annotations-lib"
+        "framework-annotations-lib",
     ],
     static_libs: [
         "adservices-service-core",
@@ -53,7 +53,13 @@ java_library {
         "mockito-target-extended-minus-junit4",
         "mockwebserver",
         "truth",
-        "adservices-test-utility"
+        "adservices-test-utility",
     ],
     apex_available: ["com.android.adservices"],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        baseline_filename: "lint-baseline.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

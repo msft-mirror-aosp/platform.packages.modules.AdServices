@@ -20,7 +20,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.ContentValues;
 import android.content.Context;
@@ -45,6 +44,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -71,14 +71,13 @@ public class SharedDbHelper extends SQLiteOpenHelper {
     // Version 4: Adds enrolled_apis and enrolled_site columns to enrollment table, guarded by
     // feature flag
     public static final int DATABASE_VERSION_V4 = 4;
-    private static SharedDbHelper sSingleton = null;
+    private static SharedDbHelper sSingleton;
     private final File mDbFile;
     private final int mDbVersion;
     private final DbHelper mDbHelper;
 
     @VisibleForTesting
-    public SharedDbHelper(
-            @NonNull Context context, @NonNull String dbName, int dbVersion, DbHelper dbHelper) {
+    public SharedDbHelper(Context context, String dbName, int dbVersion, DbHelper dbHelper) {
         super(context, dbName, null, dbVersion);
         mDbFile = FileCompatUtils.getDatabasePathHelper(context, dbName);
         this.mDbVersion = dbVersion;
@@ -86,16 +85,15 @@ public class SharedDbHelper extends SQLiteOpenHelper {
     }
 
     /** Returns an instance of the SharedDbHelper given a context. */
-    @NonNull
-    public static SharedDbHelper getInstance(@NonNull Context ctx) {
+    public static SharedDbHelper getInstance() {
         synchronized (SharedDbHelper.class) {
             if (sSingleton == null) {
                 sSingleton =
                         new SharedDbHelper(
-                                ctx,
+                                ApplicationContextSingleton.get(),
                                 DATABASE_NAME,
                                 getDatabaseVersionToCreate(),
-                                DbHelper.getInstance(ctx));
+                                DbHelper.getInstance());
             }
             return sSingleton;
         }

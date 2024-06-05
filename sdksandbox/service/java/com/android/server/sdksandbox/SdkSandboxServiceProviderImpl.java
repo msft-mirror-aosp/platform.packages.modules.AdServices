@@ -302,6 +302,13 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
         return getProcessName(callingInfo) + SANDBOX_PROCESS_NAME_SUFFIX;
     }
 
+    @Override
+    @NonNull
+    public String toSandboxProcessNameForInstrumentation(@NonNull CallingInfo callingInfo)
+            throws PackageManager.NameNotFoundException {
+        return getProcessName(callingInfo) + SANDBOX_INSTR_PROCESS_NAME_SUFFIX;
+    }
+
     @Nullable
     private ComponentName getServiceComponentName() {
         final Intent intent = new Intent(SdkSandboxManagerLocal.SERVICE_INTERFACE);

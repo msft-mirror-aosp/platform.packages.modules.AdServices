@@ -47,20 +47,20 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.DBProtectedServersEncryptionConfig;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.data.adselection.ProtectedServersEncryptionConfigDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.ServerAuctionBackgroundKeyFetchScheduledStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -157,7 +157,7 @@ public class BackgroundKeyFetchWorkerTest {
                 () ->
                         new BackgroundKeyFetchWorker(
                                 null,
-                                FlagsFactory.getFlagsForTest(),
+                                FakeFlagsFactory.getFlagsForTest(),
                                 mClockMock,
                                 mAdServicesLoggerMock));
 
@@ -172,7 +172,7 @@ public class BackgroundKeyFetchWorkerTest {
                 () ->
                         new BackgroundKeyFetchWorker(
                                 mKeyManagerSpy,
-                                FlagsFactory.getFlagsForTest(),
+                                FakeFlagsFactory.getFlagsForTest(),
                                 null,
                                 mAdServicesLoggerMock));
     }
@@ -486,6 +486,127 @@ public class BackgroundKeyFetchWorkerTest {
         assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountAuctionUrls())
                 .isEqualTo(3);
         assertThat(serverAuctionBackgroundKeyFetchScheduledStats.getCountJoinUrls()).isEqualTo(0);
+    }
+
+    @Test
+    public void testRunBackgroundKeyFetch_OnEmptyDatabaseEnabled_allKeysFetched()
+            throws ExecutionException, InterruptedException, JSONException {
+        class FlagsWithOnEmptyDatabaseEnabled extends BackgroundKeyFetchWorkerTestFlags {
+            @Override
+            public boolean getFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled() {
+                return true;
+            }
+        }
+
+        mEncryptionKeyDao.deleteAllEncryptionKeys();
+        when(mAdServicesHttpsClientMock.fetchPayloadWithLogging(
+                        any(Uri.class), any(DevContext.class), any(FetchProcessLogger.class)))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponse()));
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInBase64StringWithLogging(
+                        any(), any(FetchProcessLogger.class)))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                JoinEncryptionKeyTestUtil.mockJoinKeyFetchResponse()));
+
+        mBackgroundKeyFetchWorker =
+                new BackgroundKeyFetchWorker(
+                        mKeyManagerSpy,
+                        new FlagsWithOnEmptyDatabaseEnabled(),
+                        mClockMock,
+                        mAdServicesLoggerMock);
+
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        mBackgroundKeyFetchWorker.runBackgroundKeyFetch().get();
+
+        assertThat(mKeyManagerSpy.getExpiredAdSelectionEncryptionKeyTypes(mClockMock.instant()))
+                .containsNoneOf(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN);
+
+        List<DBEncryptionKey> auctionKeys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION, 6);
+        assertThat(auctionKeys).hasSize(5);
+        List<DBEncryptionKey> joinKeys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN, 3);
+        assertThat(joinKeys).hasSize(1);
+    }
+
+    @Test
+    public void testRunBackgroundKeyFetch_FetchInAdvanceEnabled_allKeysFetched()
+            throws ExecutionException, InterruptedException, JSONException {
+        class FlagsWithFetchInAdvanceEnabled extends BackgroundKeyFetchWorkerTestFlags {
+            @Override
+            public boolean getFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled() {
+                return true;
+            }
+
+            @Override
+            public long getFledgeAuctionServerBackgroundKeyFetchInAdvanceIntervalMs() {
+                return TimeUnit.SECONDS.toMillis(2);
+            }
+        }
+        mEncryptionKeyDao.deleteAllEncryptionKeys();
+        mEncryptionKeyDao.insertAllKeys(
+                DBEncryptionKeyFixture.getKeysExpiringInTtl(CommonFixture.FIXED_NOW, 6L));
+
+        when(mAdServicesHttpsClientMock.fetchPayloadWithLogging(
+                        any(Uri.class), any(DevContext.class), any(FetchProcessLogger.class)))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponse()));
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInBase64StringWithLogging(
+                        any(), any(FetchProcessLogger.class)))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                JoinEncryptionKeyTestUtil.mockJoinKeyFetchResponse()));
+
+        mBackgroundKeyFetchWorker =
+                new BackgroundKeyFetchWorker(
+                        mKeyManagerSpy,
+                        new FlagsWithFetchInAdvanceEnabled(),
+                        mClockMock,
+                        mAdServicesLoggerMock);
+
+        // Run once and check that keys haven't been fetched
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        mBackgroundKeyFetchWorker.runBackgroundKeyFetch().get();
+        List<DBEncryptionKey> auctionKeys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION, 6);
+        assertThat(auctionKeys).hasSize(1);
+        List<DBEncryptionKey> joinKeys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN, 3);
+        assertThat(joinKeys).hasSize(1);
+
+        // Run background key fetch job before keys expired but within the interval to fetch them in
+        // advance.
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(5));
+        mBackgroundKeyFetchWorker.runBackgroundKeyFetch().get();
+        auctionKeys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION, 8);
+        assertThat(auctionKeys).hasSize(6);
+        joinKeys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN, 3);
+        assertThat(joinKeys).hasSize(2);
+
+        // Run background key fetch job after keys expired
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(7));
+        mBackgroundKeyFetchWorker.runBackgroundKeyFetch().get();
+        auctionKeys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION, 8);
+        assertThat(auctionKeys).hasSize(5);
+        joinKeys =
+                mEncryptionKeyDao.getLatestExpiryNKeysOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN, 3);
+        assertThat(joinKeys).hasSize(1);
     }
 
     @Test

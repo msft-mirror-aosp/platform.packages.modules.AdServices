@@ -36,7 +36,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockRandom;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.EncryptedTopic;
@@ -45,12 +44,13 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.TopicsEncryptionEpochComputationReportedStats;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -63,7 +63,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -104,7 +103,7 @@ public final class EpochManagerTest {
     @SuppressWarnings({"unused"})
     private final Context mContext = ApplicationProvider.getApplicationContext();
 
-    private final Flags mFlags = FlagsFactory.getFlagsForTest();
+    private final Flags mFlags = FakeFlagsFactory.getFlagsForTest();
 
     private DbHelper mDbHelper;
     private TopicsDao mTopicsDao;
@@ -1339,7 +1338,7 @@ public final class EpochManagerTest {
         List<Topic> topTopics = List.of(topic1, topic2, topic3, topic4, topic5, topic6);
 
         when(mMockFlag.getTopicsNumberOfTopTopics())
-                .thenReturn(FlagsFactory.getFlagsForTest().getTopicsNumberOfTopTopics());
+                .thenReturn(FakeFlagsFactory.getFlagsForTest().getTopicsNumberOfTopTopics());
 
         // topic1, topic2, topic3 will be computed as they are normal top topics.
         // topic4 and topic5 will be annotated as padded topics.

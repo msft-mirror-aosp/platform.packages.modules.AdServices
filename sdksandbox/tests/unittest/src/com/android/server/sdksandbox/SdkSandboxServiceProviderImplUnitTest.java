@@ -217,6 +217,14 @@ public class SdkSandboxServiceProviderImplUnitTest {
     }
 
     @Test
+    public void testSandboxProcessNameForInstrumentation()
+            throws PackageManager.NameNotFoundException {
+        assertThat(mServiceProvider.toSandboxProcessNameForInstrumentation(mCallingInfo))
+                .isEqualTo(
+                        TEST_PACKAGE + SdkSandboxServiceProvider.SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
+    }
+
+    @Test
     public void testSandboxProcessName_nonExistentPackage() {
         String nonExistingPackageName = "does.not.exist";
         PackageManager.NameNotFoundException thrown =

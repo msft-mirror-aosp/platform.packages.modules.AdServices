@@ -21,13 +21,13 @@ android_test_helper_app {
     defaults: ["platform_app_defaults"],
     certificate: ":sdksandbox-test",
     srcs: [
-       "src/**/*.java",
+        "src/**/*.java",
     ],
     static_libs: [
-            "adservices-clients",
-            "androidx.concurrent_concurrent-futures",
-            "compatibility-device-util-axt",
-            "truth",
+        "adservices-clients",
+        "androidx.concurrent_concurrent-futures",
+        "compatibility-device-util-axt",
+        "truth",
     ],
     libs: [
         "android.test.base",
@@ -35,4 +35,10 @@ android_test_helper_app {
     platform_apis: true,
     min_sdk_version: "33",
     target_sdk_version: "33",
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        baseline_filename: "lint-baseline.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

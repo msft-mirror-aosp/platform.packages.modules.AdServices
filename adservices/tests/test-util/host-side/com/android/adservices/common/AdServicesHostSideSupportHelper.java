@@ -15,8 +15,11 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.common.TestDeviceHelper.call;
+import static com.android.adservices.shared.testing.TestDeviceHelper.call;
 
+import com.android.adservices.shared.testing.ConsoleLogger;
+import com.android.adservices.shared.testing.HostSideSystemPropertiesHelper;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.compatibility.common.util.PackageUtil;
 
 import com.google.common.collect.ImmutableSet;
@@ -29,8 +32,8 @@ final class AdServicesHostSideSupportHelper extends AbstractDeviceSupportHelper 
 
     private static final String ADSERVICES_PACKAGE = "com.google.android.adservices.api";
     private static final String ADSERVICES_PACKAGE_AOSP = "com.android.adservices.api";
-    private static final String EXT_ADSERVICES_PACKAGE = "com.google.android.ext.adservices.api";
-    private static final String EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.adservices.api";
+    private static final String EXT_ADSERVICES_PACKAGE = "com.google.android.ext.services";
+    private static final String EXT_ADSERVICES_PACKAGE_AOSP = "com.android.ext.services";
 
     private static final ImmutableSet<String> ADSERVICES_PACKAGE_NAMES =
             ImmutableSet.of(
@@ -75,6 +78,12 @@ final class AdServicesHostSideSupportHelper extends AbstractDeviceSupportHelper 
     @Override
     protected boolean isDebuggable() {
         return "1".equals(call(device -> device.getProperty("ro.debuggable")));
+    }
+
+    @Override
+    protected boolean isAndroidServiceAvailable(String intentAction) {
+        throw new UnsupportedOperationException(
+                "This method is unavailable in Host Test. Please implement it if needed.");
     }
 
     /**

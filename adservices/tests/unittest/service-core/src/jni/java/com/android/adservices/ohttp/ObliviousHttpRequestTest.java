@@ -40,7 +40,7 @@ public class ObliviousHttpRequestTest extends AdServicesExtendedMockitoTestCase 
 
     @Before
     public void setExpectations() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test

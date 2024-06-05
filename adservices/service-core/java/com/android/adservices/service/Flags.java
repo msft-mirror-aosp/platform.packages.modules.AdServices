@@ -28,6 +28,8 @@ import android.annotation.IntDef;
 import android.app.job.JobInfo;
 import android.os.Build;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.cobalt.CobaltConstants;
 import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
@@ -37,6 +39,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
+import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
@@ -51,7 +54,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
  */
-public interface Flags extends CommonFlags, ModuleSharedFlags {
+public interface Flags extends ModuleSharedFlags {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
@@ -482,6 +485,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns whether trigger debug report generation is enabled. */
     default boolean getMeasurementEnableTriggerDebugReport() {
         return MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
+    }
+
+    /** Default value for whether header error debug report is enabled. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT = false;
+
+    /** Returns whether header error debug report generation is enabled. */
+    default boolean getMeasurementEnableHeaderErrorDebugReport() {
+        return MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
     }
 
     long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
@@ -1108,7 +1119,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
-    boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = false;
+    boolean PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED = true;
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES = (int) (1.5 * 1024); // 1.5 KB
@@ -1581,7 +1592,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
-            "https://publickeyservice-v150.coordinator-a.bas-gcp.pstest.dev/.well-known/protected-auction/v1/public-keys";
+            "https://publickeyservice.pa.gcp.privacysandboxservices.com/.well-known/protected-auction/v1/public-keys";
 
     /** Returns Uri to fetch auction encryption key for fledge ad selection. */
     default String getFledgeAuctionServerAuctionKeyFetchUri() {
@@ -1736,6 +1747,29 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS;
     }
 
+    boolean FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED = false;
+
+    /**
+     * Returns whether that the periodic job to fetch encryption keys should force refresh if the
+     * database is empty or if the keys are within
+     * FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS to expire.
+     */
+    default boolean getFledgeAuctionServerBackgroundKeyFetchOnEmptyDbAndInAdvanceEnabled() {
+        return getFledgeAuctionServerBackgroundKeyFetchJobEnabled()
+                && FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
+    }
+
+    long FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS =
+            TimeUnit.HOURS.toMillis(24);
+
+    /**
+     * Returns the interval at which a key is considered to be almost expired and preventive
+     * refreshed
+     */
+    default long getFledgeAuctionServerBackgroundKeyFetchInAdvanceIntervalMs() {
+        return FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS;
+    }
+
     boolean FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING = true;
 
     default boolean getFledgeAuctionServerEnableDebugReporting() {
@@ -1757,7 +1791,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default value for feature flag for PAS unlimited egress in Server auctions. */
-    boolean DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS = true;
+    boolean DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS = false;
 
     /**
      * @return feature flag to enable PAS unlimited egress in Server auctions
@@ -1813,13 +1847,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns whether the fledge GetAdSelectionData payload metrics are enabled. */
     default boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
         return FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
-    }
-
-    @FeatureFlag boolean FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED = false;
-
-    /** Returns whether Consented Debugging is enabled for server auctions. */
-    default boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
-        return FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
     }
 
     // Protected signals cleanup feature flag disabled by default
@@ -1921,7 +1948,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
 
     default boolean getConsentNotificationDebugMode() {
-        return CONSENT_NOTIFICATION_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
 
     /** The consent notification activity debug mode is off by default. */
@@ -1930,7 +1957,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns the consent notification activity debug mode. */
     default boolean getConsentNotificationActivityDebugMode() {
-        return CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
     }
 
     @FeatureFlag(DEBUG)
@@ -1938,14 +1965,14 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns whether to suppress consent notified state. */
     default boolean getConsentNotifiedDebugMode() {
-        return CONSENT_NOTIFIED_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentNotifiedDebugMode();
     }
 
     @FeatureFlag(DEBUG)
     boolean CONSENT_MANAGER_DEBUG_MODE = false;
 
     default boolean getConsentManagerDebugMode() {
-        return CONSENT_MANAGER_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentManagerDebugMode();
     }
 
     @FeatureFlag(DEBUG)
@@ -1953,7 +1980,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** When enabled, the device is treated as OTA device. */
     default boolean getConsentManagerOTADebugMode() {
-        return DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
+        return DebugFlags.getInstance().getConsentManagerOTADebugMode();
     }
 
     boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
@@ -2693,7 +2720,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Manifest URL for encryption keys file group registered with MDD. */
     String MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/3210/0c19c2a06422c21070192580a136d433ba3ae7f8";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/4543/e9d118728752e6a6bfb5d7d8d1520807591f0717";
 
     /** Returns manifest URL for encryption keys file group registered with MDD. */
     default String getMddEncryptionKeysManifestFileUrl() {
@@ -3242,10 +3269,16 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
     long MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 250 * 1024; // 250 kB
+    long MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 16 * 1024; // 16 kB
 
     /** Returns max allowed size in bytes for trigger registrations header. */
     default long getMaxTriggerRegistrationHeaderSizeBytes() {
         return MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+    }
+
+    /** Returns max allowed size in bytes for ODP trigger registrations header. */
+    default long getMaxOdpTriggerRegistrationHeaderSizeBytes() {
+        return MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
     }
 
     boolean MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT = false;
@@ -3606,6 +3639,46 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return getFledgeAuctionServerEnabled() && FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED;
     }
 
+    // Fledge select ads from outcomes API metrics flag.
+    @FeatureFlag boolean FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED = false;
+
+    /** Returns whether the fledge select ads from outcomes API metrics feature is enabled */
+    default boolean getFledgeSelectAdsFromOutcomesApiMetricsEnabled() {
+        return FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED;
+    }
+
+    // Fledge CPC billing metrics flag.
+    @FeatureFlag boolean FLEDGE_CPC_BILLING_METRICS_ENABLED = false;
+
+    /** Returns whether the FLEDGE CPC billing metrics feature is enabled. */
+    default boolean getFledgeCpcBillingMetricsEnabled() {
+        return FLEDGE_CPC_BILLING_METRICS_ENABLED;
+    }
+
+    // Fledge data version header metrics flag.
+    @FeatureFlag boolean FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED = false;
+
+    /** Returns whether the FLEDGE data version header metrics feature is enabled. */
+    default boolean getFledgeDataVersionHeaderMetricsEnabled() {
+        return FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED;
+    }
+
+    // Fledge report impression API metrics flag.
+    @FeatureFlag boolean FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED = false;
+
+    /** Returns whether the FLEDGE report impression API metrics feature is enabled. */
+    default boolean getFledgeReportImpressionApiMetricsEnabled() {
+        return FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED;
+    }
+
+    // Fledge JS script result code metrics flag.
+    @FeatureFlag boolean FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED = false;
+
+    /** Returns whether the FLEDGE JS script result code metrics feature is enabled. */
+    default boolean getFledgeJsScriptResultCodeMetricsEnabled() {
+        return FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED;
+    }
+
     /**
      * Default allowlist of the enrollments for whom debug key insertion based on join key matching
      * is allowed.
@@ -3683,7 +3756,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     }
 
     /** Default maximum sources per publisher */
-    int MEASUREMENT_MAX_SOURCES_PER_PUBLISHER = 1024;
+    int MEASUREMENT_MAX_SOURCES_PER_PUBLISHER = 4096;
 
     /** Returns maximum sources per publisher */
     default int getMeasurementMaxSourcesPerPublisher() {
@@ -3814,6 +3887,23 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Returns the default max allowed number of event reports. */
     default int getMeasurementVtcConfigurableMaxEventReportsCount() {
         return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
+    }
+
+    boolean MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO = false;
+
+    /** Enable FIFO destinations based deletion of sources to accommodate an incoming source. */
+    default boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
+        return MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO;
+    }
+
+    boolean MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS = false;
+
+    /**
+     * Enable deletion of reports along with FIFO destinations. In practice it's a sub flag to
+     * {@link #getMeasurementEnableDestinationXPublisherXEnrollmentFifo}
+     */
+    default boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
+        return MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
     }
 
     /** Default Measurement ARA parsing alignment v1 feature flag. */
@@ -4366,7 +4456,42 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
 
     /** Returns true when attribution scope is enabled. */
     default boolean getMeasurementEnableAttributionScope() {
-        return MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+        return getMeasurementFlexLiteApiEnabled() && MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+    }
+
+    boolean MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK = false;
+
+    /**
+     * Returns true if validation is enabled for one navigation per reporting origin per
+     * registration.
+     */
+    default boolean getMeasurementEnableNavigationReportingOriginCheck() {
+        return MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
+    }
+
+    @FeatureFlag
+    boolean MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT = false;
+
+    /**
+     * Enables separate debug report types for event and aggregate attribution rate limit
+     * violations.
+     */
+    default boolean getMeasurementEnableSeparateReportTypesForAttributionRateLimit() {
+        return MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
+    }
+
+    int MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE = 20;
+
+    /** Returns max number of attribution scopes per source. */
+    default int getMeasurementMaxAttributionScopesPerSource() {
+        return MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
+    }
+
+    int MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH = 50;
+
+    /** Returns max length of attribution scope. */
+    default int getMeasurementMaxAttributionScopeLength() {
+        return MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
     }
 
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
@@ -4406,6 +4531,24 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
      */
     default boolean getTopicsCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled() && TOPICS_COBALT_LOGGING_ENABLED;
+    }
+
+    /**
+     * Default value of whether cobalt logging feature is enabled for source and trigger
+     * registrations in measurement service.
+     */
+    boolean MSMT_REGISTRATION_COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns whether the cobalt logging feature is enabled for source and trigger registration in
+     * measurement service .
+     *
+     * <p>The cobalt logging for measurement registration will be disabled either the {@code
+     * getCobaltLoggingEnabled} or {@code MSMT_REGISTRATION_COBALT_LOGGING_ENABLED} is {@code
+     * false}.
+     */
+    default boolean getMsmtRegistrationCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled() && MSMT_REGISTRATION_COBALT_LOGGING_ENABLED;
     }
 
     /** Default value of whether app name and api error cobalt logging feature is enabled. */
@@ -4501,6 +4644,21 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
     }
 
+    @ConfigFlag
+    long MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS = TimeUnit.DAYS.toSeconds(90);
+
+    /** Maximum limit of duration to determine reattribution for a verified installation. */
+    default long getMeasurementMaxReinstallReattributionWindowSeconds() {
+        return MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION = false;
+
+    /** Returns whether to enable reinstall reattribution. */
+    default boolean getMeasurementEnableReinstallReattribution() {
+        return MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
+    }
+
     /** Flag to enable context id for triggers */
     boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
 
@@ -4515,6 +4673,20 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Return the maximum allowable length of a trigger context id. */
     default int getMeasurementMaxLengthOfTriggerContextId() {
         return MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID;
+    }
+
+    /** Flag for enabling measurement registrations using ODP */
+    boolean MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION = false;
+
+    /** Return true if measurement registrations through ODP is enabled */
+    default boolean getMeasurementEnableOdpWebTriggerRegistration() {
+        return MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
+    }
+
+    float DEFAULT_MEASUREMENT_PRIVACY_EPSILON = 14f;
+
+    default float getMeasurementPrivacyEpsilon() {
+        return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
     }
 
     /**
@@ -4749,6 +4921,36 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
     }
 
+    /** Default value of the timeout for AdExtDataStorageService write operations */
+    @ConfigFlag int DEFAULT_ADEXT_WRITE_TIMEOUT_MS = 3000;
+
+    /**
+     * Gets the value of the timeout for AdExtDataStorageService write operations, in milliseconds.
+     * Note that this is the platform side timeout which awaits for the operation to be completed by
+     * the chimera service, which does not reside in AdServices. Ensure timeout on platform side is
+     * greater with ~100 ms buffer to take into account binder communication latency.
+     *
+     * @return the timeout, in milliseconds, for AdExtDataStorageService write operations
+     */
+    default int getAdExtWriteTimeoutMs() {
+        return DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
+    }
+
+    /** Default value of the timeout for AdExtDataStorageService read operations */
+    @ConfigFlag int DEFAULT_ADEXT_READ_TIMEOUT_MS = 1000;
+
+    /**
+     * Gets the value of the timeout for AdExtDataStorageService read operations, in milliseconds.
+     * Note that this is the platform side timeout which awaits for the operation to be completed by
+     * the chimera service, which does not reside in AdServices. Ensure timeout on platform side is
+     * greater with ~100 ms buffer to take into account binder communication latency.
+     *
+     * @return the timeout, in milliseconds, for AdExtDataStoreageService read operations
+     */
+    default int getAdExtReadTimeoutMs() {
+        return DEFAULT_ADEXT_READ_TIMEOUT_MS;
+    }
+
     /** default value for get adservices common states enabled */
     boolean DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED = false;
 
@@ -4760,9 +4962,21 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     /** Default value to determine whether ux related to the PAS Ux are enabled. */
     boolean DEFAULT_PAS_UX_ENABLED = false;
 
-    /** Returns whether features related to the PAS Ux are enabled */
+    /**
+     * Returns whether features related to the PAS Ux are enabled. This flag has dependencies on
+     * {@link #getEeaPasUxEnabled}. This method is the master control for PAS UX. If either EEA or
+     * original PAS UX flag is on, then this method will return true.
+     */
     default boolean getPasUxEnabled() {
         return DEFAULT_PAS_UX_ENABLED;
+    }
+
+    /** Default value to determine whether ux related to EEA PAS Ux are enabled. */
+    boolean DEFAULT_EEA_PAS_UX_ENABLED = false;
+
+    /** Returns whether features related to EEA PAS Ux are enabled. */
+    default boolean getEeaPasUxEnabled() {
+        return DEFAULT_EEA_PAS_UX_ENABLED;
     }
 
     /** Default value of the KAnon Sign/join feature flag */
@@ -4857,6 +5071,7 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled() {
         return FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED;
     }
+
     /**
      * This is a feature flag for KAnon Sign/Join feature on the server auction path.
      *
@@ -5043,26 +5258,6 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
         return GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
     }
 
-    /** Default value for status of custom audiences CLI feature */
-    boolean FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED = false;
-
-    /**
-     * @return the enabled status for custom audiences CLI feature.
-     */
-    default boolean getFledgeCustomAudienceCLIEnabledStatus() {
-        return FLEDGE_DEFAULT_CUSTOM_AUDIENCE_CLI_ENABLED;
-    }
-
-    /** Default value for status of consented debugging CLI feature */
-    boolean FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED = false;
-
-    /**
-     * @return the enabled status for custom audiences CLI feature.
-     */
-    default boolean getFledgeConsentedDebuggingCliEnabledStatus() {
-        return FLEDGE_DEFAULT_CONSENTED_DEBUGGING_CLI_ENABLED;
-    }
-
     /** Default value for the base64 encoded Job Policy proto for AdServices. */
     @ConfigFlag String AD_SERVICES_MODULE_JOB_POLICY = "";
 
@@ -5160,4 +5355,137 @@ public interface Flags extends CommonFlags, ModuleSharedFlags {
     default boolean getCustomErrorCodeSamplingEnabled() {
         return DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
     }
+
+    /** Read timeout for downloading PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Read timeout for downloading PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptDownloadReadTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
+    }
+
+    /** Connection timeout for downloading PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Connection timeout for downloading PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptDownloadConnectionTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Read timeout for downloading PAS signals in milliseconds */
+    int DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Read timeout for downloading PAS signals in milliseconds
+     */
+    default int getPasSignalsDownloadReadTimeoutMs() {
+        return DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
+    }
+
+    /** Connection timeout for downloading PAS encoding signals in milliseconds */
+    int DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Connection timeout for downloading PAS signals in milliseconds
+     */
+    default int getPasSignalsDownloadConnectionTimeoutMs() {
+        return DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Timeout for executing PAS encoding scripts in milliseconds */
+    int DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS = 5000;
+
+    /**
+     * @return Timeout for executing PAS encoding scripts in milliseconds
+     */
+    default int getPasScriptExecutionTimeoutMs() {
+        return DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
+    }
+
+    /** Default enablement for applying SPE (Scheduling Policy Engine) to the second pilot jobs. */
+    @FeatureFlag boolean DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to the second pilot
+     * jobs.
+     */
+    default boolean getSpeOnPilotJobsBatch2Enabled() {
+        return DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
+    }
+
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code EpochJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_EPOCH_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * EpochJobService}.
+     */
+    default boolean getSpeOnEpochJobEnabled() {
+        return DEFAULT_SPE_ON_EPOCH_JOB_ENABLED;
+    }
+
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code
+     * BackgroundFetchJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * BackgroundFetchJobService}.
+     */
+    default boolean getSpeOnBackgroundFetchJobEnabled() {
+        return DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
+    }
+
+    /**
+     * Default enablement for applying SPE (Scheduling Policy Engine) to {@code
+     * AsyncRegistrationFallbackJobService}.
+     */
+    @FeatureFlag boolean DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED = false;
+
+    /**
+     * Returns the default enablement of applying SPE (Scheduling Policy Engine) to {@code
+     * AsyncRegistrationFallbackJobService}.
+     */
+    default boolean getSpeOnAsyncRegistrationFallbackJobEnabled() {
+        return DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
+    }
+
+    /** Default value for the enablement the new apis for business logic migration. */
+    @FeatureFlag boolean DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED = false;
+
+    /** Returns the default value of the enablement of adservices business logic migration. */
+    default boolean getAdServicesConsentBusinessLogicMigrationEnabled() {
+        return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+    }
+
+    /** Enrollment Manifest File URL, used to provide proto file for MDD download. */
+    String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
+
+    /**
+     * @return default Enrollment Manifest File URL
+     */
+    default String getMddEnrollmentManifestFileUrl() {
+        return MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL;
+    }
+
+    /** Feature flag to ramp up use of enrollment proto file. */
+    @FeatureFlag boolean DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED = false;
+
+    /**
+     * @return whether to enable use of enrollment proto file.
+     */
+    default boolean getEnrollmentProtoFileEnabled() {
+        return DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
+    }
+
+    /** Dump some debug info for the flags */
+    default void dump(PrintWriter writer, @Nullable String[] args) {}
 }

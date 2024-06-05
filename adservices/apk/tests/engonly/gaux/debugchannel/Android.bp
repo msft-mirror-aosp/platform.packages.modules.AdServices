@@ -38,7 +38,7 @@ android_test {
         "cts_root",
         "general-tests",
         "mts-extservices",
-        "mcts-extservices"
+        "mcts-extservices",
     ],
     sdk_version: "module_current",
     max_sdk_version: "32",
@@ -69,7 +69,7 @@ android_test {
         "cts_root",
         "general-tests",
         "mts-extservices",
-        "mcts-extservices"
+        "mcts-extservices",
     ],
     sdk_version: "module_current",
     max_sdk_version: "32",
@@ -100,7 +100,7 @@ android_test {
         "cts_root",
         "general-tests",
         "mts-extservices",
-        "mcts-extservices"
+        "mcts-extservices",
     ],
     sdk_version: "module_current",
     max_sdk_version: "32",

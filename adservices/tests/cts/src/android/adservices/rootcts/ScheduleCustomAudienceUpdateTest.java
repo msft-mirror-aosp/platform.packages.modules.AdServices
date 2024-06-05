@@ -31,6 +31,7 @@ import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
@@ -87,7 +88,7 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
 
     @Test
     public void testScheduleCustomAudienceUpdate_DelayExceedsLimit_failure() {
-        Uri updateUri = Uri.parse(mMockWebServerRule.getServerBaseAddress());
+        Uri updateUri = Uri.parse("http://localhost/update/ca");
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
                                 updateUri, Duration.of(20, ChronoUnit.DAYS), Collections.EMPTY_LIST)
@@ -101,7 +102,7 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
 
     @Test
     public void testScheduleCustomAudienceUpdate_DelayLowerLimit_failure() {
-        Uri updateUri = Uri.parse(mMockWebServerRule.getServerBaseAddress());
+        Uri updateUri = Uri.parse("http://localhost/update/ca");
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
                                 updateUri,
@@ -119,16 +120,19 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
     public void testScheduleCustomAudienceUpdate_DownloadedCaWinsAdSelection_success()
             throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json",
-                        getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         // Set min allowed delay in past for easier testing
         setMinAllowedDelayTimeMinutes(MIN_ALLOWED_DELAY_TEST_OVERRIDE);
 
-        Uri updateUri = Uri.parse(getServerBaseAddress() + Scenarios.UPDATE_CA_PATH);
+        Uri updateUri =
+                Uri.parse(
+                        dispatcher.getBaseAddressWithPrefix().toString()
+                                + Scenarios.UPDATE_CA_PATH);
         CustomAudience customAudience = makeCustomAudience(CA_NAME).build();
         PartialCustomAudience partialCustomAudience =
                 new PartialCustomAudience.Builder(CA_NAME)
@@ -167,11 +171,10 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
                 "device_config put adservices fledge_schedule_custom_audience_update_enabled"
                         + " false");
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json",
-                        getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        Uri updateUri = Uri.parse(getServerBaseAddress() + Scenarios.UPDATE_CA_PATH);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/scheduleupdates/remarketing-cuj-scheduled-update.json"));
+        Uri updateUri = Uri.parse(dispatcher.getBaseAddressWithPrefix() + Scenarios.UPDATE_CA_PATH);
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
                                 updateUri,

@@ -32,6 +32,8 @@ import com.android.adservices.service.measurement.aggregation.AggregatableAttrib
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import com.google.common.truth.Truth;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -140,6 +142,8 @@ public class TriggerTest {
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(
                                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAttributionScopesString(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_SCOPES)
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -169,6 +173,8 @@ public class TriggerTest {
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(
                                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAttributionScopesString(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_SCOPES)
                         .build());
     }
 
@@ -313,6 +319,9 @@ public class TriggerTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
                         .build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder().setAttributionScopesString("1").build(),
+                TriggerFixture.getValidTriggerBuilder().setAttributionScopesString("2").build());
     }
 
     @Test
@@ -335,6 +344,9 @@ public class TriggerTest {
         assertNotEquals(trigger1.hashCode(), trigger2.hashCode());
         assertNotEquals(trigger1, trigger2);
         assertNotEquals(triggerSet1, triggerSet2);
+        assertNotEquals(
+                trigger1,
+                TriggerFixture.getValidTriggerBuilder().setAttributionScopesString("5").build());
     }
 
     @Test
@@ -549,9 +561,9 @@ public class TriggerTest {
                         .getTriggerData()
                         .get(0)
                         .getXNetworkData()
-                        .orElse(null)
+                        .get()
                         .getKeyOffset()
-                        .orElse(null)
+                        .get()
                         .getValue()
                         .longValue(),
                 10L);
@@ -567,9 +579,9 @@ public class TriggerTest {
                         .getTriggerData()
                         .get(0)
                         .getXNetworkData()
-                        .orElse(null)
+                        .get()
                         .getKeyOffset()
-                        .orElse(null)
+                        .get()
                         .getValue()
                         .longValue(),
                 10L);
@@ -879,6 +891,16 @@ public class TriggerTest {
         BigInteger adtechBit2 = new BigInteger("2", 16);
         assertEquals(adtechMapping.get("AdTechA-enrollment_id"), adtechBit1);
         assertEquals(adtechMapping.get("AdTechB-enrollment_id"), adtechBit2);
+    }
+
+    @Test
+    public void getAttributionScopes_validJsonStringArray_parseSuccess() throws JSONException {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setAttributionScopesString("[\"1\", \"2\"]")
+                        .build();
+        Truth.assertThat(trigger.getAttributionScopes()).containsExactly("1", "2");
     }
 
     private void assertInvalidTriggerArguments(

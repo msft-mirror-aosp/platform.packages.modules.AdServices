@@ -103,7 +103,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             boolean shouldUseUnifiedTables,
             @NonNull final RetryStrategy retryStrategy,
             @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory,
-            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer,
+            boolean consoleMessageInLogsEnabled) {
         super(
                 context,
                 customAudienceDao,
@@ -140,12 +141,13 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
                                 context,
-                                () -> flags.getEnforceIsolateMaxHeapSize(),
-                                () -> flags.getIsolateMaxHeapSizeBytes(),
+                                flags::getEnforceIsolateMaxHeapSize,
+                                flags::getIsolateMaxHeapSizeBytes,
                                 mAdCounterKeyCopier,
                                 mDebugReporting.getScriptStrategy(),
                                 cpcBillingEnabled,
-                                retryStrategy),
+                                retryStrategy,
+                                () -> consoleMessageInLogsEnabled),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -171,7 +173,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 mDebugReporting,
                                 cpcBillingEnabled,
                                 dataVersionHeaderEnabled,
-                                retryStrategy),
+                                retryStrategy,
+                                consoleMessageInLogsEnabled),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
                                 devContext,
@@ -263,12 +266,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
 
         ListenableFuture<List<DBCustomAudience>> filteredCas =
                 FluentFuture.from(buyerCustomAudience)
-                        .transform(
-                                mAppInstallAdFilterer::filterCustomAudiences,
-                                mLightweightExecutorService)
-                        .transform(
-                                mFrequencyCapAdFilterer::filterCustomAudiences,
-                                mLightweightExecutorService);
+                        .transform(this::filterCustomAudiences, mLightweightExecutorService);
 
         AsyncFunction<List<DBCustomAudience>, List<AdBiddingOutcome>> bidAds =
                 buyerCAs -> runAdBidding(buyerCAs, adSelectionConfig);
@@ -308,6 +306,112 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         dbAdSelectionBuilder.addListener(this::cleanUpCache, mLightweightExecutorService);
 
         return dbAdSelectionBuilder;
+    }
+
+    private List<DBCustomAudience> filterCustomAudiences(
+            @NonNull final List<DBCustomAudience> customAudiences) {
+        logStartCustomAudienceAdFiltering();
+
+        logStartCustomAudienceAppInstallFiltering();
+        List<DBCustomAudience> toReturn =
+                mAppInstallAdFilterer.filterCustomAudiences(customAudiences);
+        logEndCustomAudienceAppInstallFiltering();
+
+        logStartCustomAudienceFcapFiltering();
+        toReturn = mFrequencyCapAdFilterer.filterCustomAudiences(toReturn);
+        logEndCustomAudienceFcapFiltering();
+
+        logCustomAudienceAdFilteringDetails(customAudiences, toReturn);
+        logEndCustomAudienceAdFiltering();
+        return toReturn;
+    }
+
+    private void logStartCustomAudienceAdFiltering() {
+        if (mFlags.getFledgeAppInstallFilteringMetricsEnabled()
+                || mFlags.getFledgeFrequencyCapFilteringMetricsEnabled()) {
+            mCustomAudienceFilteringLogger.setAdFilteringStartTimestamp();
+        } else {
+            sLogger.v(
+                    "Both FledgeAppInstallFilteringMetricsEnabled and"
+                            + " FledgeFrequencyCapFilteringMetricsEnabled flags are off. Skipped"
+                            + " logStartCustomAudienceAdFiltering");
+        }
+    }
+
+    private void logEndCustomAudienceAdFiltering() {
+        if (mFlags.getFledgeAppInstallFilteringMetricsEnabled()
+                || mFlags.getFledgeFrequencyCapFilteringMetricsEnabled()) {
+            mCustomAudienceFilteringLogger.setAdFilteringEndTimestamp();
+            mCustomAudienceFilteringLogger.close();
+        } else {
+            sLogger.v(
+                    "Both FledgeAppInstallFilteringMetricsEnabled and"
+                            + " FledgeFrequencyCapFilteringMetricsEnabled flags are off. Skipped"
+                            + " logEndCustomAudienceAdFiltering");
+        }
+    }
+
+    private void logStartCustomAudienceAppInstallFiltering() {
+        if (mFlags.getFledgeAppInstallFilteringMetricsEnabled()) {
+            mCustomAudienceFilteringLogger.setAppInstallStartTimestamp();
+        } else {
+            sLogger.v(
+                    "FledgeAppInstallFilteringMetricsEnabled flag is off. Skipped"
+                            + " logStartCustomAudienceAppInstallFiltering");
+        }
+    }
+
+    private void logEndCustomAudienceAppInstallFiltering() {
+        if (mFlags.getFledgeAppInstallFilteringMetricsEnabled()) {
+            mCustomAudienceFilteringLogger.setAppInstallEndTimestamp();
+        } else {
+            sLogger.v(
+                    "FledgeAppInstallFilteringMetricsEnabled flag is off. Skipped"
+                            + " logEndCustomAudienceAppInstallFiltering");
+        }
+    }
+
+    private void logStartCustomAudienceFcapFiltering() {
+        if (mFlags.getFledgeFrequencyCapFilteringMetricsEnabled()) {
+            mCustomAudienceFilteringLogger.setFrequencyCapStartTimestamp();
+        } else {
+            sLogger.v(
+                    "FledgeFrequencyCapFilteringMetricsEnabled flag is off. Skipped"
+                            + " logStartCustomAudienceFcapFiltering");
+        }
+    }
+
+    private void logEndCustomAudienceFcapFiltering() {
+        if (mFlags.getFledgeFrequencyCapFilteringMetricsEnabled()) {
+            mCustomAudienceFilteringLogger.setFrequencyCapEndTimestamp();
+        } else {
+            sLogger.v(
+                    "FledgeFrequencyCapFilteringMetricsEnabled flag is off. Skipped"
+                            + " logEndCustomAudienceFcapFiltering");
+        }
+    }
+
+    private void logCustomAudienceAdFilteringDetails(
+            List<DBCustomAudience> beforeFiltering, List<DBCustomAudience> afterFiltering) {
+        if (mFlags.getFledgeAppInstallFilteringMetricsEnabled()
+                || mFlags.getFledgeFrequencyCapFilteringMetricsEnabled()) {
+            Function<List<DBCustomAudience>, Integer> getNumOfAds =
+                    (cas) -> (int) cas.stream().mapToLong(ca -> ca.getAds().size()).sum();
+            int numOfAdsBeforeFiltering = getNumOfAds.apply(beforeFiltering);
+            int numOfAdsAfterFiltering = getNumOfAds.apply(afterFiltering);
+            mCustomAudienceFilteringLogger.setTotalNumOfAdsBeforeFiltering(numOfAdsBeforeFiltering);
+            mCustomAudienceFilteringLogger.setTotalNumOfCustomAudiencesBeforeFiltering(
+                    beforeFiltering.size());
+            mCustomAudienceFilteringLogger.setNumOfAdsFilteredOutOfBidding(
+                    numOfAdsBeforeFiltering - numOfAdsAfterFiltering);
+            mCustomAudienceFilteringLogger.setNumOfCustomAudiencesFilteredOutOfBidding(
+                    beforeFiltering.size() - afterFiltering.size());
+        } else {
+            sLogger.v(
+                    "Both FledgeAppInstallFilteringMetricsEnabled and"
+                            + " FledgeFrequencyCapFilteringMetricsEnabled flags are off. Skipped"
+                            + " logCustomAudienceAdFilteringDetails");
+        }
     }
 
     private ListenableFuture<List<AdBiddingOutcome>> runAdBidding(
@@ -470,6 +574,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         String sellerContextualSignalsString;
         // There should always be a winner.
         AdScoringOutcome scoringWinner = winningAdScoringOutcomeAndContext.first;
+        sLogger.v("Scoring Winner: %s", scoringWinner);
         if (Objects.isNull(scoringWinner.getBuyerContextualSignals())) {
             buyerContextualSignalsString = "{}";
         } else {

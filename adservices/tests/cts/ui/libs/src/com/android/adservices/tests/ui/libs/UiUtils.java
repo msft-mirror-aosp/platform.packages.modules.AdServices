@@ -64,6 +64,8 @@ public class UiUtils {
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 500;
     public static final int SCROLL_WAIT_TIME = 1000;
 
+    private static final int DEFAULT_BINDER_CONNECTION_TIMEOUT_MS = 10000;
+
     private static final String ANDROID_WIDGET_SCROLLVIEW = "android.widget.ScrollView";
 
     private static void forceSetFlag(String flagName, boolean newFlagValue) throws Exception {
@@ -225,6 +227,22 @@ public class UiUtils {
 
     public static void disableNotificationFlowV2() throws Exception {
         forceSetFlag("eu_notif_flow_change_enabled", false);
+    }
+
+    /** set the binder time for cts test */
+    public static void setBinderTimeout() throws Exception {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.binder_timeout %s", DEFAULT_BINDER_CONNECTION_TIMEOUT_MS);
+    }
+
+    /** enable pas */
+    public static void enablePas() throws Exception {
+        forceSetFlag("pas_ux_enabled", true);
+    }
+
+    /** disable pas */
+    public static void disablePas() throws Exception {
+        forceSetFlag("pas_ux_enabled", false);
     }
 
     public static void verifyNotification(

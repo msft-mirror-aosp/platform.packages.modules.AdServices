@@ -18,11 +18,13 @@ package com.android.adservices.spe;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_NOT_CONFIGURED_CORRECTLY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
@@ -32,11 +34,19 @@ import static org.mockito.Mockito.times;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.download.MddJob;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.customaudience.BackgroundFetchJob;
+import com.android.adservices.service.customaudience.BackgroundFetchJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
+import com.android.adservices.service.topics.EpochJob;
+import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.proto.ModuleJobPolicy;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
@@ -49,7 +59,10 @@ import java.util.concurrent.Executors;
 
 /** Unit tests for {@link AdServicesJobServiceFactory} */
 @SpyStatic(AdServicesJobInfo.class)
-@SpyStatic(MddJob.class)
+@MockStatic(AsyncRegistrationFallbackJobService.class)
+@MockStatic(BackgroundFetchJobService.class)
+@MockStatic(EpochJobService.class)
+@MockStatic(MddJobService.class)
 public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMockitoTestCase {
     private static final Executor sExecutor = Executors.newCachedThreadPool();
     private static final Map<Integer, String> sJobIdToNameMap = Map.of();
@@ -93,20 +106,32 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
 
     @Test
     public void testGetJobInstance() {
-        expect.withMessage("getJobWorkerInstance()")
+        expect.withMessage("getJobWorkerInstance() for MDD_MAINTENANCE_PERIODIC_TASK_JOB")
                 .that(mFactory.getJobWorkerInstance(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId()))
                 .isInstanceOf(MddJob.class);
-        expect.withMessage("getJobWorkerInstance()")
+        expect.withMessage("getJobWorkerInstance() for MDD_CHARGING_PERIODIC_TASK_JOB")
                 .that(mFactory.getJobWorkerInstance(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId()))
                 .isInstanceOf(MddJob.class);
-        expect.withMessage("getJobWorkerInstance()")
+        expect.withMessage("getJobWorkerInstance() for MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB")
                 .that(
                         mFactory.getJobWorkerInstance(
                                 MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId()))
                 .isInstanceOf(MddJob.class);
-        expect.withMessage("getJobWorkerInstance()")
+        expect.withMessage("getJobWorkerInstance() for MDD_WIFI_CHARGING_PERIODIC_TASK_JOB")
                 .that(mFactory.getJobWorkerInstance(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()))
                 .isInstanceOf(MddJob.class);
+
+        expect.withMessage("getJobWorkerInstance() for TOPICS_EPOCH_JOB")
+                .that(mFactory.getJobWorkerInstance(TOPICS_EPOCH_JOB.getJobId()))
+                .isInstanceOf(EpochJob.class);
+        expect.withMessage("getJobWorkerInstance() for FLEDGE_BACKGROUND_FETCH_JOB")
+                .that(mFactory.getJobWorkerInstance(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
+                .isInstanceOf(BackgroundFetchJob.class);
+        expect.withMessage("getJobWorkerInstance() for MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB")
+                .that(
+                        mFactory.getJobWorkerInstance(
+                                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId()))
+                .isInstanceOf(AsyncRegistrationFallbackJob.class);
     }
 
     @Test
@@ -123,17 +148,25 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testRescheduleJobWithLegacyMethod_mddJobs() {
-        doNothing().when(MddJob::scheduleAllMddJobs);
+    public void testRescheduleJobWithLegacyMethod() {
+        boolean forceSchedule = true;
 
         mFactory.rescheduleJobWithLegacyMethod(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId());
-        verify(MddJob::scheduleAllMddJobs);
+        verify(() -> MddJobService.scheduleIfNeeded(forceSchedule));
         mFactory.rescheduleJobWithLegacyMethod(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId());
-        verify(MddJob::scheduleAllMddJobs, times(2));
+        verify(() -> MddJobService.scheduleIfNeeded(forceSchedule), times(2));
         mFactory.rescheduleJobWithLegacyMethod(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId());
-        verify(MddJob::scheduleAllMddJobs, times(3));
+        verify(() -> MddJobService.scheduleIfNeeded(forceSchedule), times(3));
         mFactory.rescheduleJobWithLegacyMethod(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
-        verify(MddJob::scheduleAllMddJobs, times(4));
+        verify(() -> MddJobService.scheduleIfNeeded(forceSchedule), times(4));
+
+        mFactory.rescheduleJobWithLegacyMethod(TOPICS_EPOCH_JOB.getJobId());
+        verify(() -> EpochJobService.scheduleIfNeeded(forceSchedule));
+        mFactory.rescheduleJobWithLegacyMethod(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(mMockFlags, forceSchedule));
+        mFactory.rescheduleJobWithLegacyMethod(
+                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId());
+        verify(() -> AsyncRegistrationFallbackJobService.scheduleIfNeeded(forceSchedule));
     }
 
     @Test

@@ -30,7 +30,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.widget.MainSwitchBar;
@@ -51,8 +50,6 @@ public class TopicsViewModel extends AndroidViewModel {
     private final MutableLiveData<ImmutableList<Topic>> mTopics;
     private final MutableLiveData<ImmutableList<Topic>> mBlockedTopics;
     private final ConsentManager mConsentManager;
-
-    private final ConsentManagerV2 mConsentManagerV2;
     private final MutableLiveData<Boolean> mTopicsConsent;
 
     /** UI event triggered by view model */
@@ -66,15 +63,7 @@ public class TopicsViewModel extends AndroidViewModel {
 
     public TopicsViewModel(@NonNull Application application) {
         super(application);
-        // Need make sure we only call one getInstance to avoid duplicate migration
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            mConsentManager = null;
-            mConsentManagerV2 = ConsentManagerV2.getInstance();
-        } else {
-            mConsentManager = ConsentManager.getInstance();
-            mConsentManagerV2 = null;
-        }
-
+        mConsentManager = ConsentManager.getInstance();
         mTopics = new MutableLiveData<>(getTopicsFromConsentManager());
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
         mTopicsConsent =
@@ -86,12 +75,10 @@ public class TopicsViewModel extends AndroidViewModel {
     @VisibleForTesting
     public TopicsViewModel(
             @NonNull Application application,
-            ConsentManagerV2 consentManagerV2,
-            Boolean topicsConsent,
-            Boolean isConsentManagerV2) {
+            ConsentManager consentManager,
+            Boolean topicsConsent) {
         super(application);
-        mConsentManagerV2 = consentManagerV2; // only test V2 version, since will remove v1 soon.
-        mConsentManager = null;
+        mConsentManager = consentManager;
         mTopics = new MutableLiveData<>(getTopicsFromConsentManager());
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
         mTopicsConsent = new MutableLiveData<>(topicsConsent);
@@ -121,11 +108,7 @@ public class TopicsViewModel extends AndroidViewModel {
      * @param topic the topic to be blocked.
      */
     public void revokeTopicConsent(Topic topic) {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            mConsentManagerV2.revokeConsentForTopic(topic);
-        } else {
-            mConsentManager.revokeConsentForTopic(topic);
-        }
+        mConsentManager.revokeConsentForTopic(topic);
         refresh();
     }
 
@@ -141,11 +124,7 @@ public class TopicsViewModel extends AndroidViewModel {
 
     /** Reset all information related to topics but blocked topics. */
     public void resetTopics() {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            mConsentManagerV2.resetTopics();
-        } else {
-            mConsentManager.resetTopics();
-        }
+        mConsentManager.resetTopics();
         mTopics.postValue(getTopicsFromConsentManager());
     }
 
@@ -188,19 +167,11 @@ public class TopicsViewModel extends AndroidViewModel {
     // ---------------------------------------------------------------------------------------------
 
     private ImmutableList<Topic> getTopicsFromConsentManager() {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            return mConsentManagerV2.getKnownTopicsWithConsent();
-        } else {
-            return mConsentManager.getKnownTopicsWithConsent();
-        }
+        return mConsentManager.getKnownTopicsWithConsent();
     }
 
     private ImmutableList<Topic> getBlockedTopicsFromConsentManager() {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            return mConsentManagerV2.getTopicsWithRevokedConsent();
-        } else {
-            return mConsentManager.getTopicsWithRevokedConsent();
-        }
+        return mConsentManager.getTopicsWithRevokedConsent();
     }
 
     /**
@@ -220,31 +191,17 @@ public class TopicsViewModel extends AndroidViewModel {
      *     APIs.
      */
     public void setTopicsConsent(Boolean newTopicsConsentValue) {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            if (newTopicsConsentValue) {
-                mConsentManagerV2.enable(getApplication(), AdServicesApiType.TOPICS);
-            } else {
-                mConsentManagerV2.disable(getApplication(), AdServicesApiType.TOPICS);
-            }
-            mTopicsConsent.postValue(getTopicsConsentFromConsentManager());
-            if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                mConsentManagerV2.recordUserManualInteractionWithConsent(
-                        ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED);
-            }
+        if (newTopicsConsentValue) {
+            mConsentManager.enable(getApplication(), AdServicesApiType.TOPICS);
         } else {
-            if (newTopicsConsentValue) {
-                mConsentManager.enable(getApplication(), AdServicesApiType.TOPICS);
-            } else {
-                mConsentManager.disable(getApplication(), AdServicesApiType.TOPICS);
-            }
-            mTopicsConsent.postValue(getTopicsConsentFromConsentManager());
-            if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                ConsentManager.getInstance()
-                        .recordUserManualInteractionWithConsent(
-                                ConsentManager.MANUAL_INTERACTIONS_RECORDED);
-            }
+            mConsentManager.disable(getApplication(), AdServicesApiType.TOPICS);
         }
-
+        mTopicsConsent.postValue(getTopicsConsentFromConsentManager());
+        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+            ConsentManager.getInstance()
+                    .recordUserManualInteractionWithConsent(
+                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+        }
     }
     /**
      * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
@@ -261,10 +218,6 @@ public class TopicsViewModel extends AndroidViewModel {
     }
 
     private boolean getTopicsConsentFromConsentManager() {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            return mConsentManagerV2.getConsent(AdServicesApiType.TOPICS).isGiven();
-        } else {
-            return mConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven();
-        }
+        return mConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven();
     }
 }

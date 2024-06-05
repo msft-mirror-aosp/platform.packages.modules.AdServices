@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -30,6 +31,9 @@ android_test {
         "SdkSandboxTestUtils",
         "CtsSdkProviderApi",
         "CtsMediationTestSdkApi",
+        "sdk_sandbox_flags_lib",
+        "android.content.pm.flags-aconfig-java",
+        "flag-junit",
     ],
     libs: [
         "android.test.base",
@@ -38,10 +42,10 @@ android_test {
         "framework-configinfrastructure",
     ],
     data: [
-      ":EmptySdkProviderApp",
-      ":SdkSandboxManagerCtsProvider",
-      ":SdkSandboxMediationTestProvider",
-      ":CtsSdkProviderAppWithoutSdkProviderClassNameProperty",
+        ":EmptySdkProviderApp",
+        ":SdkSandboxManagerCtsProvider",
+        ":SdkSandboxMediationTestProvider",
+        ":CtsSdkProviderAppWithoutSdkProviderClassNameProperty",
     ],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",
@@ -70,7 +74,7 @@ android_test {
         "android.test.runner",
     ],
     data: [
-      ":SdkSandboxManagerCtsProvider",
+        ":SdkSandboxManagerCtsProvider",
     ],
     test_config: "DisabledAndroidTest.xml",
     manifest: "DisabledAndroidManifest.xml",

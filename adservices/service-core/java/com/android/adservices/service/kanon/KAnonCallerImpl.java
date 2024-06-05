@@ -123,7 +123,7 @@ import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 
 public class KAnonCallerImpl implements KAnonCaller {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getKAnonLogger();
 
     @NonNull private ListeningExecutorService mLightweightExecutorService;
     @NonNull private ListeningExecutorService mBackgroundExecutorService;

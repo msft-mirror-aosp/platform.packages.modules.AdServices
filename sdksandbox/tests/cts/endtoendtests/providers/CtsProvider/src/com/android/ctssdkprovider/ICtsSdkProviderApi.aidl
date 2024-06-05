@@ -27,8 +27,8 @@ interface ICtsSdkProviderApi {
     int getContextUserId();
     void testStoragePaths();
     int getProcessImportance();
-    void startSandboxActivityDirectlyByAction();
-    void startSandboxActivityDirectlyByComponent();
+    void startSandboxActivityDirectlyByAction(String sandboxPackageName);
+    void startSandboxActivityDirectlyByComponent(String sandboxPackageName);
     IActivityActionExecutor startActivity(IActivityStarter callback, in Bundle extras);
     String getPackageName();
     String getOpPackageName();
@@ -40,4 +40,6 @@ interface ICtsSdkProviderApi {
     void createAndRegisterSdkSandboxClientImportanceListener();
     void waitForStateChangeDetection(int expectedForegroundValue, int expectedBackgroundValue);
     void unregisterSdkSandboxClientImportanceListener();
+    int getLauncherActivityCount();
+    int requestAudioFocus();
 }

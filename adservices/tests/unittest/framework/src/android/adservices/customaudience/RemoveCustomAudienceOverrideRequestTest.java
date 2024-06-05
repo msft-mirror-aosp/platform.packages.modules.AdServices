@@ -16,21 +16,17 @@
 
 package android.adservices.customaudience;
 
-import static org.junit.Assert.assertEquals;
-
 import android.adservices.common.AdTechIdentifier;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class RemoveCustomAudienceOverrideRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class RemoveCustomAudienceOverrideRequestTest extends AdServicesUnitTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildAddCustomAudienceOverrideRequest() {
@@ -40,7 +36,7 @@ public class RemoveCustomAudienceOverrideRequestTest {
                         .setName(NAME)
                         .build();
 
-        assertEquals(request.getBuyer(), BUYER);
-        assertEquals(request.getName(), NAME);
+        expect.that(request.getBuyer()).isEqualTo(BUYER);
+        expect.that(request.getName()).isEqualTo(NAME);
     }
 }

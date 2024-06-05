@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_rubidium_sdk_runtime",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -20,7 +21,7 @@ filegroup {
     name: "sdksandbox_aidl",
     srcs: [
         "aidl/**/*.aidl",
-        "aidl/**/*.java"
+        "aidl/**/*.java",
     ],
     path: "aidl",
 }
@@ -79,6 +80,11 @@ android_app {
     updatable: true,
     certificate: "sdk_sandbox",
     apex_available: ["com.android.adservices"],
+    optimize: {
+        // TODO(b/293177283): Remove after eliminating use of reflection
+        // for SandboxedSdkHolder instantiation.
+        proguard_compatibility: true,
+    },
     defaults: [
         "sdksandbox-java-defaults",
     ],

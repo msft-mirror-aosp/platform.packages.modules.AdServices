@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.signals;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
@@ -82,7 +81,6 @@ import java.util.concurrent.ExecutorService;
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
 
-    public static final int TIMEOUT_MS = 5000;
     public static final long MAX_SIZE_BYTES = 10000;
     public static final String ADTECH_CALLER_NAME = "caller";
     public static final String CLASS_NAME = "ProtectedSignalsServiceImpl";
@@ -112,12 +110,14 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                 AdServicesExecutors.getLightWeightExecutor(),
                                 new AdServicesHttpsClient(
                                         AdServicesExecutors.getBlockingExecutor(),
-                                        TIMEOUT_MS,
-                                        TIMEOUT_MS,
+                                        FlagsFactory.getFlags()
+                                                .getPasSignalsDownloadConnectionTimeoutMs(),
+                                        FlagsFactory.getFlags()
+                                                .getPasSignalsDownloadReadTimeoutMs(),
                                         FlagsFactory.getFlags()
                                                 .getProtectedSignalsFetchSignalUpdatesMaxSizeBytes())),
                         new UpdateProcessingOrchestrator(
-                                ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
+                                ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                 new UpdateProcessorSelector(),
                                 new UpdateEncoderEventHandler(context),
                                 new SignalEvictionController()),
@@ -145,7 +145,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                         Throttler.getInstance(FlagsFactory.getFlags())),
-                EnrollmentDao.getInstance(context));
+                EnrollmentDao.getInstance());
     }
 
     @VisibleForTesting
@@ -209,9 +209,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                             .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
                             .setApiName(apiName)
                             .setLatencyMillisecond(0)
-                            .setResult(
-                                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
-                                    FAILURE_REASON_UNSET)
+                            .setResultCode(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT)
                             .setAppPackageName(callerPackageName)
                             .setSdkPackageName(EMPTY_SDK_NAME)
                             .build());

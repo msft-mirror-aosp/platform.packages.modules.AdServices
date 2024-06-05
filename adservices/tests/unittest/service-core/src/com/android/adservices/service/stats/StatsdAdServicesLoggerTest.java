@@ -19,13 +19,6 @@ package com.android.adservices.service.stats;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JOB_RUN;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
-
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionStatus.INSERT_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.DbTransactionType.WRITE_TRANSACTION_TYPE;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats.MethodName.INSERT_KEY;
@@ -51,9 +44,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.APP_MANIFEST_CONFIG_HELPER_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.DESTINATION_REGISTERED_BEACONS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JOB_RUN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JS_EXECUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.ENCODING_JS_FETCH;
 import static com.android.adservices.service.stats.AdServicesStatsLog.GET_AD_SELECTION_DATA_API_CALLED;
@@ -65,11 +61,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INI
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.PERSIST_AD_SELECTION_RESULT_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_API_CALLED;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
+import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
@@ -77,11 +72,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIG
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_NO_OP;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_TOO_BIG;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_SMALL;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.PrecomputedClassifierStatus;
@@ -110,6 +107,8 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
+import com.android.adservices.service.measurement.ondevicepersonalization.OdpApiCallStatus;
+import com.android.adservices.service.measurement.ondevicepersonalization.OdpRegistrationStatus;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusStats;
@@ -119,6 +118,7 @@ import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
 import com.android.modules.utils.build.SdkLevel;
@@ -672,6 +672,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setAttributionDelay(100L)
                         .setSourceRegistrant(SOURCE_REGISTRANT)
                         .setAggregateReportCount(1)
+                        .setNullAggregateReportCount(1)
                         .setAggregateDebugReportCount(1)
                         .setEventReportCount(3)
                         .setEventDebugReportCount(1)
@@ -689,6 +690,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                         anyBoolean(),
                                         anyLong(),
                                         anyString(),
+                                        anyInt(),
                                         anyInt(),
                                         anyInt(),
                                         anyInt(),
@@ -715,7 +717,8 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(1),
                                 eq(3),
                                 eq(1),
-                                eq(0));
+                                eq(0),
+                                eq(1));
 
         verify(writeInvocation);
 
@@ -777,6 +780,63 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(UnknownEnumValue),
                                 eq(registrationDelay),
                                 eq(SOURCE_REGISTRANT));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementOdpRegistrations_success() {
+        MeasurementOdpRegistrationStats stats =
+                new MeasurementOdpRegistrationStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION)
+                        .setRegistrationType(
+                                OdpRegistrationStatus.RegistrationType.TRIGGER.getValue())
+                        .setRegistrationStatus(
+                                OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE.getValue())
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logMeasurementOdpRegistrations(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_PROCESS_ODP_REGISTRATION),
+                                eq(OdpRegistrationStatus.RegistrationType.TRIGGER.getValue()),
+                                eq(
+                                        OdpRegistrationStatus.RegistrationStatus.ODP_UNAVAILABLE
+                                                .getValue()));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementOdpApiCallStats_success() {
+        long latency = 5L;
+        MeasurementOdpApiCallStats stats =
+                new MeasurementOdpApiCallStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP)
+                        .setLatency(latency)
+                        .setApiCallStatus(OdpApiCallStatus.ApiCallStatus.SUCCESS.getValue())
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyLong(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logMeasurementOdpApiCall(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_NOTIFY_REGISTRATION_TO_ODP),
+                                eq(latency),
+                                eq(OdpApiCallStatus.ApiCallStatus.SUCCESS.getValue()));
 
         verify(writeInvocation);
 
@@ -2084,5 +2144,184 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 ADSERVICES_SHELL_COMMAND_CALLED, command, result, latency);
         verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogPersistAdSelectionResultCalledStats() {
+        PersistAdSelectionResultCalledStats stats =
+                PersistAdSelectionResultCalledStats.builder()
+                        .setWinnerType(WINNER_TYPE_PAS_WINNER)
+                        .build();
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logPersistAdSelectionResultCalledStats(stats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(PERSIST_AD_SELECTION_RESULT_CALLED),
+                                eq(WINNER_TYPE_PAS_WINNER));
+
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogRunAdScoringProcessReportedStats_success() {
+        // Setup
+        RunAdScoringProcessReportedStats stats =
+                RunAdScoringProcessReportedStats.builder()
+                        .setGetAdSelectionLogicLatencyInMillis(120)
+                        .setGetAdSelectionLogicResultCode(200)
+                        .setGetAdSelectionLogicScriptType(1)
+                        .setFetchedAdSelectionLogicScriptSizeInBytes(500)
+                        .setGetTrustedScoringSignalsLatencyInMillis(80)
+                        .setGetTrustedScoringSignalsResultCode(200)
+                        .setFetchedTrustedScoringSignalsDataSizeInBytes(250)
+                        .setScoreAdsLatencyInMillis(210)
+                        .setGetAdScoresLatencyInMillis(55)
+                        .setGetAdScoresResultCode(200)
+                        .setNumOfCasEnteringScoring(10)
+                        .setNumOfRemarketingAdsEnteringScoring(3)
+                        .setNumOfContextualAdsEnteringScoring(7)
+                        .setRunAdScoringLatencyInMillis(400)
+                        .setRunAdScoringResultCode(200)
+                        .setScoreAdSellerAdditionalSignalsContainedDataVersion(true)
+                        .setScoreAdJsScriptResultCode(3)
+                        .build();
+
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyInt()));
+
+        // Invocation
+        mLogger.logRunAdScoringProcessReportedStats(stats);
+
+        // Verification
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(RUN_AD_SCORING_PROCESS_REPORTED),
+                                eq(120),
+                                eq(200),
+                                eq(1),
+                                eq(500),
+                                eq(80),
+                                eq(200),
+                                eq(250),
+                                eq(210),
+                                eq(55),
+                                eq(200),
+                                eq(10),
+                                eq(3),
+                                eq(7),
+                                eq(400),
+                                eq(200),
+                                eq(true),
+                                eq(3));
+
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogRunAdBiddingPerCAProcessReportedStats_success() {
+        // Setup
+        RunAdBiddingPerCAProcessReportedStats stats =
+                RunAdBiddingPerCAProcessReportedStats.builder()
+                        .setNumOfAdsForBidding(25)
+                        .setRunAdBiddingPerCaLatencyInMillis(300)
+                        .setRunAdBiddingPerCaResultCode(200)
+                        .setGetBuyerDecisionLogicLatencyInMillis(60)
+                        .setGetBuyerDecisionLogicResultCode(200)
+                        .setBuyerDecisionLogicScriptType(1)
+                        .setFetchedBuyerDecisionLogicScriptSizeInBytes(800)
+                        .setNumOfKeysOfTrustedBiddingSignals(10)
+                        .setFetchedTrustedBiddingSignalsDataSizeInBytes(350)
+                        .setGetTrustedBiddingSignalsLatencyInMillis(50)
+                        .setGetTrustedBiddingSignalsResultCode(200)
+                        .setGenerateBidsLatencyInMillis(105)
+                        .setRunBiddingLatencyInMillis(150)
+                        .setRunBiddingResultCode(200)
+                        .setRunAdBiddingPerCaReturnedAdCost(true)
+                        .setGenerateBidBuyerAdditionalSignalsContainedDataVersion(false)
+                        .setGenerateBidJsScriptResultCode(2)
+                        .build();
+
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyInt()));
+
+        // Invocation
+        mLogger.logRunAdBiddingPerCAProcessReportedStats(stats);
+
+        // Verification
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED),
+                                eq(25),
+                                eq(300),
+                                eq(200),
+                                eq(60),
+                                eq(200),
+                                eq(1),
+                                eq(800),
+                                eq(10),
+                                eq(350),
+                                eq(50),
+                                eq(200),
+                                eq(105),
+                                eq(150),
+                                eq(200),
+                                eq(true),
+                                eq(false),
+                                eq(2));
+
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    private void mockIsAtLeastT(boolean isIt) {
+        mocker.mockIsAtLeastT(isIt);
     }
 }

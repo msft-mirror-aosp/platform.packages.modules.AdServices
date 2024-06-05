@@ -40,7 +40,7 @@ android_test {
 
     plugins: [
         "auto_value_plugin",
-        "auto_annotation_plugin"
+        "auto_annotation_plugin",
     ],
     static_libs: [
         "androidx.concurrent_concurrent-futures",
@@ -71,7 +71,7 @@ android_test {
     ],
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
     ],
     instrumentation_for: "AdServicesApk",
     jni_libs: [
@@ -86,6 +86,14 @@ android_test {
         "-0 .lite",
         "-0 .tflite",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: [
+            "MissingAndroidProcessInAdExtServicesManifest",
+            "NewAdServicesFile",
+        ],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -139,7 +147,7 @@ android_test {
     ],
     test_suites: [
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
     test_config: "AndroidTest.ExtServices.xml",
     instrumentation_for: "ExtServices-sminus",
@@ -155,4 +163,13 @@ android_test {
         "-0 .lite",
         "-0 .tflite",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: [
+            "MissingAndroidProcessInAdExtServicesManifest",
+            "NewAdServicesFile",
+        ],
+        baseline_filename: "lint-baseline-adextservices.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

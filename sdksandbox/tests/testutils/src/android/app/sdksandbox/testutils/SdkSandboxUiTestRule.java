@@ -45,8 +45,8 @@ import org.junit.runners.model.Statement;
 import platform.test.screenshot.DeviceEmulationRule;
 import platform.test.screenshot.DeviceEmulationSpec;
 import platform.test.screenshot.DisplaySpec;
-import platform.test.screenshot.GoldenImagePathManager;
-import platform.test.screenshot.GoldenImagePathManagerKt;
+import platform.test.screenshot.GoldenPathManager;
+import platform.test.screenshot.GoldenPathManagerKt;
 import platform.test.screenshot.PathConfig;
 import platform.test.screenshot.ScreenshotAsserter;
 import platform.test.screenshot.ScreenshotRuleAsserter;
@@ -80,11 +80,11 @@ public class SdkSandboxUiTestRule implements TestRule {
     private final RuleChain mDelegateRule;
 
     public SdkSandboxUiTestRule(Context context, Class activityClass, String sdkName) {
-        GoldenImagePathManager pathManager =
-                new GoldenImagePathManager(
+        GoldenPathManager pathManager =
+                new GoldenPathManager(
                         context,
                         ASSETS_DIR,
-                        GoldenImagePathManagerKt.getDeviceOutputDirectory(context),
+                        GoldenPathManagerKt.getDeviceOutputDirectory(context),
                         new PathConfig());
         mScreenshotTestRule = new ScreenshotTestRule(pathManager);
         mLoadSdkInSandboxRule = new LoadSdkInSandboxRule(context, activityClass, sdkName);
@@ -184,7 +184,9 @@ public class SdkSandboxUiTestRule implements TestRule {
                     activity -> {
                         mSdkSandboxManager.unloadSdk(mSdkName);
                     });
-            mActivityScenario.close();
+            if (mActivityScenario != null) {
+                mActivityScenario.close();
+            }
         }
 
         private ActivityScenario getActivityScenario() {

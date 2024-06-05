@@ -47,5 +47,8 @@ java_library {
         "jsr305",
         "auto_value_annotations",
     ],
-     plugins: ["auto_value_plugin"],
+    plugins: ["auto_value_plugin"],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+    },
 }

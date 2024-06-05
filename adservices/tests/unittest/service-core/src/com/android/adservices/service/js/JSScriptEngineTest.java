@@ -30,6 +30,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
@@ -42,10 +43,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
-import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.javascriptengine.IsolateStartupParameters;
+import androidx.javascriptengine.JavaScriptConsoleCallback;
 import androidx.javascriptengine.JavaScriptIsolate;
 import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.javascriptengine.MemoryLimitExceededException;
@@ -54,7 +55,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.RetryStrategyImpl;
@@ -62,6 +63,7 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -124,8 +126,9 @@ public class JSScriptEngineTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static JSScriptEngine sJSScriptEngine;
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
+    private final boolean mDefaultIsolateConsoleMessageInLogs = false;
     private final IsolateSettings mDefaultIsolateSettings =
-            IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+            IsolateSettings.forMaxHeapSizeEnforcementDisabled(mDefaultIsolateConsoleMessageInLogs);
     private final RetryStrategy mNoOpRetryStrategy = new NoOpRetryStrategyImpl();
     @Mock JSScriptEngine.JavaScriptSandboxProvider mMockSandboxProvider;
     @Mock private StopWatch mIsolateCreateWatch;
@@ -169,11 +172,11 @@ public class JSScriptEngineTest {
         try {
             staticMockSessionLocal =
                     ExtendedMockito.mockitoSession()
-                            .spyStatic(WebView.class)
+                            .spyStatic(JavaScriptSandbox.class)
                             .strictness(Strictness.LENIENT)
                             .initMocks(this)
                             .startMocking();
-            ExtendedMockito.doReturn(null).when(WebView::getCurrentWebViewPackage);
+            ExtendedMockito.doReturn(false).when(JavaScriptSandbox::isSupported);
 
             ThrowingRunnable getFutureInstance =
                     () ->
@@ -199,11 +202,11 @@ public class JSScriptEngineTest {
         try {
             staticMockSessionLocal =
                     ExtendedMockito.mockitoSession()
-                            .spyStatic(WebView.class)
+                            .spyStatic(JavaScriptSandbox.class)
                             .strictness(Strictness.LENIENT)
                             .initMocks(this)
                             .startMocking();
-            ExtendedMockito.doReturn(null).when(WebView::getCurrentWebViewPackage);
+            ExtendedMockito.doReturn(false).when(JavaScriptSandbox::isSupported);
 
             ThrowingRunnable getFutureInstance =
                     () ->
@@ -317,7 +320,7 @@ public class JSScriptEngineTest {
                                         mDefaultIsolateSettings,
                                         mNoOpRetryStrategy));
 
-        assertThat(e.getCause()).isInstanceOf(JSExecutionException.class);
+        assertThat(e).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     // During tests, look for logcat messages with tag "chromium" to check if any of your scripts
@@ -336,7 +339,7 @@ public class JSScriptEngineTest {
                                         mDefaultIsolateSettings,
                                         mNoOpRetryStrategy));
 
-        assertThat(e.getCause()).isInstanceOf(JSExecutionException.class);
+        assertThat(e).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -375,7 +378,9 @@ public class JSScriptEngineTest {
     }
 
     @Test
-    public void testCanHandleFailuresFromWebView() {
+    public void testCanHandleFailuresFromWebView() throws Exception {
+        Assume.assumeFalse(
+                WebViewSupportUtil.isEvaluationWithoutTransactionLimitSupportAvailable(sContext));
         // The binder can transfer at most 1MB, this is larger than needed since, once
         // converted into a JS array initialization script will be way over the limits.
         List<JSScriptNumericArgument<Integer>> tooBigForBinder =
@@ -393,10 +398,10 @@ public class JSScriptEngineTest {
                                                 + " return array.length;\n"
                                                 + "}",
                                         ImmutableList.of(arrayArg("array", tooBigForBinder)),
-                                        "test",
+                                        "helloBigArray",
                                         mDefaultIsolateSettings,
                                         mNoOpRetryStrategy));
-        assertThat(outerException.getCause()).isInstanceOf(JSExecutionException.class);
+        assertThat(outerException).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -446,13 +451,14 @@ public class JSScriptEngineTest {
                                 sLogger),
                         mDefaultIsolateSettings);
 
-        assertThat(executionException.getCause())
+        assertThat(executionException)
+                .hasCauseThat()
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
                 .hasMessageThat()
                 .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
-        verify(mMockSandboxProvider, never()).destroyIfCurrentInstance(mMockedSandbox);
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
     }
 
     @Test
@@ -472,7 +478,8 @@ public class JSScriptEngineTest {
                                 sLogger),
                         mDefaultIsolateSettings);
 
-        assertThat(executionException.getCause())
+        assertThat(executionException)
+                .hasCauseThat()
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
                 .hasMessageThat()
@@ -498,9 +505,11 @@ public class JSScriptEngineTest {
                                 sLogger),
                         mDefaultIsolateSettings);
 
-        assertThat(executionException.getCause())
+        assertThat(executionException)
+                .hasCauseThat()
                 .isInstanceOf(JSScriptEngineConnectionException.class);
-        assertThat(executionException.getCause().getCause())
+        assertThat(executionException.getCause())
+                .hasCauseThat()
                 .isInstanceOf(SandboxDeadException.class);
         assertThat(executionException).hasMessageThat().contains(JS_SCRIPT_ENGINE_SANDBOX_DEAD_MSG);
         verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
@@ -551,8 +560,9 @@ public class JSScriptEngineTest {
                                 sLogger),
                         mDefaultIsolateSettings);
 
-        assertThat(executionException.getCause()).isInstanceOf(JSExecutionException.class);
-        assertThat(executionException.getCause().getCause())
+        assertThat(executionException).hasCauseThat().isInstanceOf(JSExecutionException.class);
+        assertThat(executionException.getCause())
+                .hasCauseThat()
                 .isInstanceOf(MemoryLimitExceededException.class);
         assertThat(executionException).hasMessageThat().contains(expectedExceptionMessage);
         verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
@@ -577,7 +587,7 @@ public class JSScriptEngineTest {
                                 sLogger),
                         mDefaultIsolateSettings);
 
-        assertThat(executionException.getCause()).isInstanceOf(JSExecutionException.class);
+        assertThat(executionException).hasCauseThat().isInstanceOf(JSExecutionException.class);
         verify(mMockSandboxProvider, never()).destroyIfCurrentInstance(mMockedSandbox);
     }
 
@@ -591,7 +601,11 @@ public class JSScriptEngineTest {
                                 "simulating a failure caused by JavaScriptSandbox not"
                                         + " supporting max heap size"));
         IsolateSettings enforcedHeapIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementEnabled(1000);
+                IsolateSettings.builder()
+                        .setEnforceMaxHeapSizeFeature(true)
+                        .setMaxHeapSizeBytes(1000)
+                        .setIsolateConsoleMessageInLogsEnabled(mDefaultIsolateConsoleMessageInLogs)
+                        .build();
 
         ExecutionException executionException =
                 callJSEngineAndAssertExecutionException(
@@ -602,7 +616,8 @@ public class JSScriptEngineTest {
                                 sLogger),
                         enforcedHeapIsolateSettings);
 
-        assertThat(executionException.getCause())
+        assertThat(executionException)
+                .hasCauseThat()
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
                 .hasMessageThat()
@@ -617,8 +632,11 @@ public class JSScriptEngineTest {
         when(mMockedSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE))
                 .thenReturn(false);
         IsolateSettings enforcedHeapIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementEnabled(1000);
-
+                IsolateSettings.builder()
+                        .setEnforceMaxHeapSizeFeature(true)
+                        .setMaxHeapSizeBytes(1000)
+                        .setIsolateConsoleMessageInLogsEnabled(mDefaultIsolateConsoleMessageInLogs)
+                        .build();
         ExecutionException executionException =
                 callJSEngineAndAssertExecutionException(
                         JSScriptEngine.createNewInstanceForTesting(
@@ -628,7 +646,8 @@ public class JSScriptEngineTest {
                                 sLogger),
                         enforcedHeapIsolateSettings);
 
-        assertThat(executionException.getCause())
+        assertThat(executionException)
+                .hasCauseThat()
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
                 .hasMessageThat()
@@ -645,7 +664,8 @@ public class JSScriptEngineTest {
                                 "simulating a failure caused by JavaScriptSandbox not"
                                         + " supporting max heap size"));
         IsolateSettings lenientHeapIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+                IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+                        mDefaultIsolateConsoleMessageInLogs);
 
         assertThat(
                         callJSEngine(
@@ -662,7 +682,11 @@ public class JSScriptEngineTest {
         when(mMockedSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE))
                 .thenReturn(true);
         IsolateSettings enforcedHeapIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementEnabled(0);
+                IsolateSettings.builder()
+                        .setEnforceMaxHeapSizeFeature(true)
+                        .setMaxHeapSizeBytes(0)
+                        .setIsolateConsoleMessageInLogsEnabled(mDefaultIsolateConsoleMessageInLogs)
+                        .build();
         when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
 
         when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
@@ -692,7 +716,11 @@ public class JSScriptEngineTest {
         when(mMockedSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE))
                 .thenReturn(true);
         IsolateSettings enforcedHeapIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementEnabled(1000);
+                IsolateSettings.builder()
+                        .setEnforceMaxHeapSizeFeature(true)
+                        .setMaxHeapSizeBytes(1000)
+                        .setIsolateConsoleMessageInLogsEnabled(mDefaultIsolateConsoleMessageInLogs)
+                        .build();
         when(mMockedSandbox.createIsolate(Mockito.any(IsolateStartupParameters.class)))
                 .thenReturn(mMockedIsolate);
 
@@ -716,6 +744,86 @@ public class JSScriptEngineTest {
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         verify(mMockedSandbox)
                 .isFeatureSupported(JavaScriptSandbox.JS_FEATURE_ISOLATE_MAX_HEAP_SIZE);
+    }
+
+    @Test
+    public void testConsoleMessageCallbackSuccess() throws Exception {
+        IsolateSettings isolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled(true);
+        when(mMockedSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_CONSOLE_MESSAGING))
+                .thenReturn(true);
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
+                .thenReturn(Futures.immediateFuture("\"hello world\""));
+
+        callJSEngine(
+                JSScriptEngine.createNewInstanceForTesting(
+                        ApplicationProvider.getApplicationContext(),
+                        mMockSandboxProvider,
+                        sMockProfiler,
+                        sLogger),
+                "function test() { return \"hello world\"; }",
+                ImmutableList.of(),
+                "test",
+                isolateSettings,
+                mNoOpRetryStrategy);
+
+        verify(mMockedSandbox).isFeatureSupported(JavaScriptSandbox.JS_FEATURE_CONSOLE_MESSAGING);
+        verify(mMockedIsolate)
+                .setConsoleCallback(
+                        any(ExecutorService.class), any(JavaScriptConsoleCallback.class));
+    }
+
+    @Test
+    public void testConsoleMessageCallbackIsNotAddedWhenDisabled() throws Exception {
+        IsolateSettings isolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled(false);
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
+                .thenReturn(Futures.immediateFuture("\"hello world\""));
+
+        callJSEngine(
+                JSScriptEngine.createNewInstanceForTesting(
+                        ApplicationProvider.getApplicationContext(),
+                        mMockSandboxProvider,
+                        sMockProfiler,
+                        sLogger),
+                "function test() { return \"hello world\"; }",
+                ImmutableList.of(),
+                "test",
+                isolateSettings,
+                mNoOpRetryStrategy);
+
+        verify(mMockedSandbox, never())
+                .isFeatureSupported(JavaScriptSandbox.JS_FEATURE_CONSOLE_MESSAGING);
+        verify(mMockedIsolate, never())
+                .setConsoleCallback(
+                        any(ExecutorService.class), any(JavaScriptConsoleCallback.class));
+    }
+
+    @Test
+    public void testConsoleMessageCallbackIsNotSetIfFeatureNotAvailable() throws Exception {
+        IsolateSettings isolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled(true);
+        when(mMockedSandbox.isFeatureSupported(JavaScriptSandbox.JS_FEATURE_CONSOLE_MESSAGING))
+                .thenReturn(false);
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
+                .thenReturn(Futures.immediateFuture("\"hello world\""));
+
+        callJSEngine(
+                JSScriptEngine.createNewInstanceForTesting(
+                        ApplicationProvider.getApplicationContext(),
+                        mMockSandboxProvider,
+                        sMockProfiler,
+                        sLogger),
+                "function test() { return \"hello world\"; }",
+                ImmutableList.of(),
+                "test",
+                isolateSettings,
+                mNoOpRetryStrategy);
+
+        verify(mMockedSandbox).isFeatureSupported(JavaScriptSandbox.JS_FEATURE_CONSOLE_MESSAGING);
+        verify(mMockedIsolate, never())
+                .setConsoleCallback(
+                        any(ExecutorService.class), any(JavaScriptConsoleCallback.class));
     }
 
     // Troubles between google-java-format and checkstyle
@@ -895,7 +1003,7 @@ public class JSScriptEngineTest {
         verify(mMockedSandbox).createIsolate();
         // Verifying close was invoked
         verify(mMockedIsolate, timeout(2000).atLeast(1)).close();
-        assertThat(timeoutException.getCause()).isInstanceOf(TimeoutException.class);
+        assertThat(timeoutException).hasCauseThat().isInstanceOf(TimeoutException.class);
     }
     // CHECKSTYLE:ON IndentationCheck
 
@@ -977,7 +1085,7 @@ public class JSScriptEngineTest {
                                         mDefaultIsolateSettings,
                                         mNoOpRetryStrategy));
 
-        assertThat(outer.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(outer).hasCauseThat().isInstanceOf(IllegalStateException.class);
     }
 
     private ExecutionException callJSEngineAndAssertExecutionException(

@@ -32,7 +32,7 @@ import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_M
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
 import static com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager.UNKNOWN_PACKAGE_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
@@ -71,7 +71,8 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 
 public class AdServicesExtDataStorageServiceManagerTest {
-    private static final long TIMEOUT = 5_000L;
+    private static final long SLEEP_MS = 2_000L;
+    private static final int INVOCATION_TIMEOUT = 500;
     private static final long NO_APEX_VALUE = -1L;
     private static final AdServicesExtDataParams TEST_PARAMS =
             new AdServicesExtDataParams.Builder()
@@ -114,7 +115,11 @@ public class AdServicesExtDataStorageServiceManagerTest {
 
         // mock the device config read for checking debug proxy
         doReturn(false).when(mFlags).getEnableAdExtServiceDebugProxy();
-        mockGetFlags(mFlags);
+
+        // Mock timeouts
+        doReturn(INVOCATION_TIMEOUT).when(mFlags).getAdExtReadTimeoutMs();
+        doReturn(INVOCATION_TIMEOUT).when(mFlags).getAdExtWriteTimeoutMs();
+        mocker.mockGetFlags(mFlags);
 
         doReturn(mMockWorker)
                 .when(() -> AdServicesExtDataStorageServiceWorker.getInstance(mContext));
@@ -167,7 +172,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
     public void testGetAdServicesExtData_timedOut_returnsDefaultParams() {
         doAnswer(
                         (invocation) -> {
-                            Thread.sleep(TIMEOUT);
+                            Thread.sleep(SLEEP_MS);
                             return null;
                         })
                 .when(mMockWorker)
@@ -224,7 +229,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
     public void testSetAdServicesExtData_timedOut_returnsFalse() {
         doAnswer(
                         (invocation) -> {
-                            Thread.sleep(TIMEOUT);
+                            Thread.sleep(SLEEP_MS);
                             return null;
                         })
                 .when(mMockWorker)

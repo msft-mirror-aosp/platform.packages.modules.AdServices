@@ -163,16 +163,6 @@ public class AppConsentForRStorageManager extends AppConsentStorageManager {
                 getAdExtExceptionMessage(/* illegalAction= */ "store if beta notif was displayed"));
     }
 
-    /**
-     * Saves information to the storage that Pas notification was displayed for the first time to
-     * the user.
-     */
-    @Override
-    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) throws IOException {
-        throw new IllegalStateException(
-                getAdExtExceptionMessage(/* illegalAction= */ "store if PAS notif was displayed"));
-    }
-
     /** Records user manual interaction bit. */
     @Override
     public void recordUserManualInteractionWithConsent(int interaction) {
@@ -253,12 +243,6 @@ public class AppConsentForRStorageManager extends AppConsentStorageManager {
     @Override
     public boolean wasU18NotificationDisplayed() {
         return mAdExtDataManager.getNotificationDisplayed();
-    }
-
-    /** PAS update not supported on Android R yet. */
-    @Override
-    public boolean wasPasNotificationDisplayed() {
-        return false;
     }
 
     private static String getAdExtExceptionMessage(String illegalAction) {

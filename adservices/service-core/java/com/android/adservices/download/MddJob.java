@@ -39,7 +39,6 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.JobPolicy.NetworkType;
 import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
@@ -142,26 +141,28 @@ public final class MddJob implements JobWorker {
                         ignoredVoid -> {
                             // TODO(b/331285831): Handle unused return value.
                             // To suppress the lint error of future returning value is unused.
-                            ListenableFuture<DownloadStatus> unusedFuture =
+                            ListenableFuture<DownloadStatus> unusedFutureEnrollment =
                                     EnrollmentDataDownloadManager.getInstance()
                                             .readAndInsertEnrollmentDataFromMdd();
+                            ListenableFuture<EncryptionDataDownloadManager.DownloadStatus>
+                                    unusedFutureEncryption =
+                                            EncryptionDataDownloadManager.getInstance()
+                                                    .readAndInsertEncryptionDataFromMdd();
                             return SUCCESS;
                         },
                         AdServicesExecutors.getBlockingExecutor());
     }
 
-    /** Scheduled all MDD background jobs. */
+    /** Schedules all MDD background jobs. */
     public static void scheduleAllMddJobs() {
         if (!FlagsFactory.getFlags().getSpeOnPilotJobsEnabled()) {
-            int resultCode =
-                    MddJobService.scheduleIfNeeded(
-                            ApplicationContextSingleton.get(), /* forceSchedule= */ true);
+            int resultCode = MddJobService.scheduleIfNeeded(/* forceSchedule= */ false);
 
             logJobSchedulingLegacy(resultCode);
             return;
         }
 
-        MddFlags mddFlags = MddFlags.getInstance();
+        Flags mddFlags = new Flags() {};
         AdServicesJobScheduler scheduler = AdServicesJobScheduler.getInstance();
 
         // The jobs will still be rescheduled even if they were scheduled by MddJobService with same
@@ -198,6 +199,7 @@ public final class MddJob implements JobWorker {
 
         JobPolicy jobPolicy =
                 JobPolicy.newBuilder()
+                        .setJobId(getMddTaskJobId(mddTag))
                         .setPeriodicJobParams(
                                 JobPolicy.PeriodicJobParams.newBuilder()
                                         .setPeriodicIntervalMs(periodicalIntervalMs)
@@ -207,7 +209,7 @@ public final class MddJob implements JobWorker {
                         .setIsPersisted(true)
                         .build();
 
-        return new JobSpec.Builder(getMddTaskJobId(mddTag), jobPolicy).setExtras(extras).build();
+        return new JobSpec.Builder(jobPolicy).setExtras(extras).build();
     }
 
     @VisibleForTesting

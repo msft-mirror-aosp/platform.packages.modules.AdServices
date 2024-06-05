@@ -26,9 +26,8 @@ import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerI
 import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTest.TEST_JS_DOWNLOAD_START_TIMESTAMP;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -38,17 +37,18 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
+import com.android.adservices.shared.testing.BooleanSyncCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -59,59 +59,43 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class EncoderLogicHandlerTest {
-
-    @Rule public MockitoRule mRule = MockitoJUnit.rule();
+@RequiresSdkLevelAtLeastT
+public final class EncoderLogicHandlerTest extends AdServicesMockitoTestCase {
 
     @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
-
     @Mock private EncoderEndpointsDao mEncoderEndpointsDao;
-
     @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
-
     @Mock private AdServicesHttpsClient mAdServicesHttpsClient;
-
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
-
     @Mock private Clock mMockClock;
+    @Mock private AdServicesLogger mAdServicesLogger;
 
-    @Captor ArgumentCaptor<DBEncoderLogicMetadata> mDBEncoderLogicArgumentCaptor;
+    @Captor private ArgumentCaptor<DBEncoderLogicMetadata> mDBEncoderLogicArgumentCaptor;
+    @Captor private ArgumentCaptor<EncodingFetchStats> mEncodingFetchStatsCaptor;
 
-    private ListeningExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
+    private final ListeningExecutorService mExecutorService =
+            MoreExecutors.newDirectExecutorService();
+    private final ExecutorService mService = Executors.newFixedThreadPool(5);
+    private final Flags mFlags = new EncoderLogicHandlerTestFlags();
 
-    private ExecutorService mService = Executors.newFixedThreadPool(5);
     private EncoderLogicHandler mEncoderLogicHandler;
-    private AdServicesLogger mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
-    private Flags mFlags;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
-        mFlags = new EncoderLogicHandlerTestFlags();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
@@ -120,13 +104,12 @@ public class EncoderLogicHandlerTest {
                         mProtectedSignalsDao,
                         mAdServicesHttpsClient,
                         mExecutorService,
-                        mAdServicesLoggerSpy,
+                        mAdServicesLogger,
                         mFlags);
     }
 
     @Test
-    public void testDownloadAndUpdate_success()
-            throws ExecutionException, InterruptedException, TimeoutException {
+    public void testDownloadAndUpdate_success() throws Exception {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         Uri encoderUri = CommonFixture.getUri(buyer, "/encoder");
         DBEncoderEndpoint encoderEndpoint =
@@ -168,19 +151,16 @@ public class EncoderLogicHandlerTest {
                 mEncoderLogicHandler
                         .downloadAndUpdate(buyer, DevContext.createForDevOptionsDisabled())
                         .get(5, TimeUnit.SECONDS);
-        assertTrue(updateSucceeded);
+        assertThat(updateSucceeded).isTrue();
     }
 
     @Test
-    public void testDownloadAndUpdate_skipped()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        ArgumentCaptor<EncodingFetchStats> argumentCaptor =
-                ArgumentCaptor.forClass(EncodingFetchStats.class);
+    public void testDownloadAndUpdate_skipped() throws Exception {
         when(mMockClock.currentTimeMillis()).thenReturn(TEST_JS_DOWNLOAD_END_TIMESTAMP);
         EncodingFetchStats.Builder encodingJsFetchStatsBuilder = EncodingFetchStats.builder();
         FetchProcessLogger fetchProcessLogger =
                 new EncodingJsFetchProcessLoggerImpl(
-                        mAdServicesLoggerSpy, mMockClock, encodingJsFetchStatsBuilder);
+                        mAdServicesLogger, mMockClock, encodingJsFetchStatsBuilder);
         fetchProcessLogger.setJsDownloadStartTimestamp(TEST_JS_DOWNLOAD_START_TIMESTAMP);
         fetchProcessLogger.setAdTechId(TEST_AD_TECH_ID);
 
@@ -193,18 +173,18 @@ public class EncoderLogicHandlerTest {
                 mEncoderLogicHandler
                         .downloadAndUpdate(buyer, DevContext.createForDevOptionsDisabled())
                         .get(5, TimeUnit.SECONDS);
-        assertFalse("The call to download should have been skipped", updateSucceeded);
+        assertWithMessage("result of downloadAndUpdate()").that(updateSucceeded).isFalse();
 
         verifyZeroInteractions(
                 mAdServicesHttpsClient, mEncoderPersistenceDao, mEncoderLogicMetadataDao);
 
         // Verify the logging of EncodingFetchStats
-        verify(mAdServicesLoggerSpy).logEncodingJsFetchStats(argumentCaptor.capture());
+        verify(mAdServicesLogger).logEncodingJsFetchStats(mEncodingFetchStatsCaptor.capture());
 
-        EncodingFetchStats stats = argumentCaptor.getValue();
-        assertThat(stats.getFetchStatus()).isEqualTo(ENCODING_FETCH_STATUS_OTHER_FAILURE);
-        assertThat(stats.getAdTechId()).isEqualTo(EMPTY_ADTECH_ID);
-        assertThat(stats.getHttpResponseCode()).isEqualTo(FIELD_UNSET);
+        EncodingFetchStats stats = mEncodingFetchStatsCaptor.getValue();
+        expect.that(stats.getFetchStatus()).isEqualTo(ENCODING_FETCH_STATUS_OTHER_FAILURE);
+        expect.that(stats.getAdTechId()).isEqualTo(EMPTY_ADTECH_ID);
+        expect.that(stats.getHttpResponseCode()).isEqualTo(FIELD_UNSET);
     }
 
     @Test
@@ -223,12 +203,13 @@ public class EncoderLogicHandlerTest {
                         .build();
 
         when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
-        assertTrue(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
+        assertThat(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response)).isTrue();
 
-        Mockito.verify(mEncoderLogicMetadataDao)
+        verify(mEncoderLogicMetadataDao)
                 .persistEncoderLogicMetadata(mDBEncoderLogicArgumentCaptor.capture());
-        Assert.assertEquals(buyer, mDBEncoderLogicArgumentCaptor.getValue().getBuyer());
-        Assert.assertEquals(version, mDBEncoderLogicArgumentCaptor.getValue().getVersion());
+        DBEncoderLogicMetadata metadata = mDBEncoderLogicArgumentCaptor.getValue();
+        expect.that(metadata.getBuyer()).isEqualTo(buyer);
+        expect.that(metadata.getVersion()).isEqualTo(version);
     }
 
     @Test
@@ -240,15 +221,15 @@ public class EncoderLogicHandlerTest {
         AdServicesHttpClientResponse response =
                 AdServicesHttpClientResponse.builder().setResponseBody(body).build();
         when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
-        assertTrue(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
+        assertThat(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response)).isTrue();
 
-        Mockito.verify(mEncoderLogicMetadataDao)
+        verify(mEncoderLogicMetadataDao)
                 .persistEncoderLogicMetadata(mDBEncoderLogicArgumentCaptor.capture());
-        Assert.assertEquals(buyer, mDBEncoderLogicArgumentCaptor.getValue().getBuyer());
-        Assert.assertEquals(
-                "Missing version from response should have fallen back to fallback",
-                fallBack,
-                mDBEncoderLogicArgumentCaptor.getValue().getVersion());
+        DBEncoderLogicMetadata metadata = mDBEncoderLogicArgumentCaptor.getValue();
+        expect.that(metadata.getBuyer()).isEqualTo(buyer);
+        expect.withMessage("Missing version from response should have fallen back to fallback")
+                .that(metadata.getVersion())
+                .isEqualTo(fallBack);
     }
 
     @Test
@@ -269,15 +250,17 @@ public class EncoderLogicHandlerTest {
                         .build();
 
         when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
-        assertTrue(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
+        assertThat(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response)).isTrue();
 
-        Mockito.verify(mEncoderLogicMetadataDao)
+        verify(mEncoderLogicMetadataDao)
                 .persistEncoderLogicMetadata(mDBEncoderLogicArgumentCaptor.capture());
-        Assert.assertEquals(buyer, mDBEncoderLogicArgumentCaptor.getValue().getBuyer());
-        Assert.assertEquals(
-                "Unreadable version from response should have fallen back to fallback",
-                fallBack,
-                mDBEncoderLogicArgumentCaptor.getValue().getVersion());
+        DBEncoderLogicMetadata metadata = mDBEncoderLogicArgumentCaptor.getValue();
+        expect.that(metadata.getBuyer()).isEqualTo(buyer);
+        expect.withMessage(
+                        "dbEncoderLogicMetadata.getVersion() (Unreadable version from response"
+                                + " should have fallen back to fallback)")
+                .that(metadata.getVersion())
+                .isEqualTo(fallBack);
     }
 
     @Test
@@ -297,9 +280,9 @@ public class EncoderLogicHandlerTest {
 
         // Deliberately fail the persistence on file
         when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(false);
-        assertFalse(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
+        assertThat(mEncoderLogicHandler.extractAndPersistEncoder(buyer, response)).isFalse();
 
-        Mockito.verifyZeroInteractions(mEncoderLogicMetadataDao);
+        verifyZeroInteractions(mEncoderLogicMetadataDao);
     }
 
     @Test
@@ -348,7 +331,7 @@ public class EncoderLogicHandlerTest {
 
     @SuppressWarnings("FutureReturnValueIgnored")
     @Test
-    public void testExtractAndPersistEncoder_PreventsOverwrites() throws InterruptedException {
+    public void testExtractAndPersistEncoder_PreventsOverwrites() throws Exception {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         String body = "function() { fake JS}";
         int version = 1;
@@ -363,41 +346,44 @@ public class EncoderLogicHandlerTest {
                         .build();
 
         ReentrantLock buyerLock = mEncoderLogicHandler.getBuyerLock(buyer);
-        CountDownLatch writeWhileLockedLatch = new CountDownLatch(1);
+        BooleanSyncCallback writeWhileLockedCallback = new BooleanSyncCallback();
+        Boolean writeWhileLockedResult = null;
         buyerLock.lock();
         try {
             mService.submit(
-                    () -> {
-                        assertFalse(
-                                "This encoder update should have failed",
-                                mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
-                        Mockito.verifyZeroInteractions(mEncoderLogicMetadataDao);
-                        Mockito.verifyZeroInteractions(mEncoderPersistenceDao);
-                        writeWhileLockedLatch.countDown();
-                    });
-            Assert.assertTrue(writeWhileLockedLatch.await(5, TimeUnit.SECONDS));
+                    () ->
+                            writeWhileLockedCallback.injectResult(
+                                    mEncoderLogicHandler.extractAndPersistEncoder(
+                                            buyer, response)));
+            writeWhileLockedResult = writeWhileLockedCallback.assertResultReceived();
         } finally {
             buyerLock.unlock();
         }
+        assertWithMessage("result of extractAndPersistEncoder() while locked")
+                .that(writeWhileLockedResult)
+                .isFalse();
+        verifyZeroInteractions(mEncoderLogicMetadataDao);
+        verifyZeroInteractions(mEncoderPersistenceDao);
 
-        CountDownLatch writeWhileUnLockedLatch = new CountDownLatch(1);
+        BooleanSyncCallback writeWhileUnLockedCallback = new BooleanSyncCallback();
         mService.submit(
                 () -> {
                     when(mEncoderPersistenceDao.persistEncoder(buyer, body)).thenReturn(true);
-                    assertTrue(
-                            "This encoder update should have succeeded",
+                    writeWhileUnLockedCallback.injectResult(
                             mEncoderLogicHandler.extractAndPersistEncoder(buyer, response));
-                    Mockito.verify(mEncoderLogicMetadataDao)
-                            .persistEncoderLogicMetadata(mDBEncoderLogicArgumentCaptor.capture());
-                    Assert.assertEquals(buyer, mDBEncoderLogicArgumentCaptor.getValue().getBuyer());
-                    Assert.assertEquals(
-                            version, mDBEncoderLogicArgumentCaptor.getValue().getVersion());
-                    writeWhileUnLockedLatch.countDown();
                 });
-        assertTrue(writeWhileUnLockedLatch.await(5, TimeUnit.SECONDS));
+        boolean writeWhileUnLockedResult = writeWhileUnLockedCallback.assertResultReceived();
+        assertWithMessage("result of extractAndPersistEncoder() while unlocked")
+                .that(writeWhileUnLockedResult)
+                .isTrue();
+        verify(mEncoderLogicMetadataDao)
+                .persistEncoderLogicMetadata(mDBEncoderLogicArgumentCaptor.capture());
+        DBEncoderLogicMetadata metadata = mDBEncoderLogicArgumentCaptor.getValue();
+        expect.that(metadata.getBuyer()).isEqualTo(buyer);
+        expect.that(metadata.getVersion()).isEqualTo(version);
     }
 
-    private static class EncoderLogicHandlerTestFlags implements Flags {
+    private static final class EncoderLogicHandlerTestFlags implements Flags {
         @Override
         public boolean getPasExtendedMetricsEnabled() {
             return true;

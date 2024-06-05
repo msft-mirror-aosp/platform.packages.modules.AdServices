@@ -27,14 +27,14 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableDataFixture;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -48,7 +48,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class DBCustomAudienceTest {
-    private static final Flags FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags FLAGS = FakeFlagsFactory.getFlagsForTest();
     private static final Duration DEFAULT_EXPIRE_IN =
             Duration.ofMillis(FLAGS.getFledgeCustomAudienceDefaultExpireInMs());
 

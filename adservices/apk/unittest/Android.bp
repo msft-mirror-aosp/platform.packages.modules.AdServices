@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 package {
+    default_team: "trendy_team_android_rubidium",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -80,7 +81,7 @@ android_test {
         "truth",
     ],
     libs: [
-    	"android.ext.adservices",
+        "android.ext.adservices",
         "android.test.base",
         "android.test.mock.stubs",
         "framework-annotations-lib",

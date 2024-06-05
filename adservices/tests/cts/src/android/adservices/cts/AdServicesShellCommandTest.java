@@ -20,21 +20,17 @@ import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES
 
 import com.android.adservices.common.AbstractAdServicesShellCommandHelper;
 import com.android.adservices.common.AdServicesShellCommandHelper;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 
-import org.junit.Before;
 import org.junit.Test;
 
+@EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 public final class AdServicesShellCommandTest extends CtsAdServicesDeviceTestCase {
     private static final String CMD_ECHO = "echo";
     private static final String CMD_ECHO_OUT = "hello";
 
     private final AdServicesShellCommandHelper mShellCommandHelper =
             new AdServicesShellCommandHelper();
-
-    @Before
-    public void setup() {
-        flags.setFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED, true);
-    }
 
     @Test
     public void testRunCommand_echoCommand() {

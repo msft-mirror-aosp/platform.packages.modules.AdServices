@@ -29,6 +29,7 @@ public final class EventReportFixture {
 
     public static EventReport.Builder getBaseEventReportBuild() {
         return new EventReport.Builder()
+                .setId(UUID.randomUUID().toString())
                 .setSourceEventId(new UnsignedLong(21L))
                 .setEnrollmentId("enrollment-id")
                 .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))

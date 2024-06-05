@@ -22,11 +22,10 @@ import static android.os.Build.VERSION_CODES.TIRAMISU;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
-
-import com.google.common.truth.Expect;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.StandardStreamsLogger;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -40,24 +39,33 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
 
     private static final String CMD_ECHO = "echo";
     private static final String CMD_ECHO_OUT = "hello";
-    private static final String SAMPLE_DUMPSYS_OUTPUT =
+    private static final String ERR = "something went wrong";
+    private static final String SAMPLE_COMMAND_OUT = "CommandOut:\n  " + CMD_ECHO_OUT;
+    private static final String SAMPLE_COMMAND_ERR = "CommandErr:\n  " + ERR;
+    private static final String SAMPLE_DUMPSYS =
             "TASK 10145:com.google.android.ext.services id=13 userId=0\nACTIVITY com.google"
                     + ".android.ext.services/com.android.adservices.shell.ShellCommandActivity "
                     + "a3ccaeb pid=6721\n"
-                    + CMD_ECHO_OUT;
+                    + "-- ShellCommandActivity dump --\n"
+                    + "CommandStatus: FINISHED\n"
+                    + "CommandRes: 0\n";
+    private static final String SAMPLE_DUMPSYS_WITH_OUT = SAMPLE_DUMPSYS + SAMPLE_COMMAND_OUT;
+    private static final String SAMPLE_DUMPSYS_WITH_ERR = SAMPLE_DUMPSYS + SAMPLE_COMMAND_ERR;
+    private static final String SAMPLE_DUMPSYS_WITH_OUT_AND_ERR =
+            SAMPLE_DUMPSYS + SAMPLE_COMMAND_OUT + "\n" + SAMPLE_COMMAND_ERR;
+    private static final String STATUS_FINISHED = "FINISHED";
+
     private static final String ADEXTSERVICES_PACKAGE_NAME = "com.google.android.ext.services";
 
     private static final String SAMPLE_DUMPSYS_UNKNOWN_COMMAND_OUTPUT =
             "Unknown command:"
                 + " com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity";
 
-    @Mock AbstractDeviceSupportHelper mAbstractDeviceSupportHelper;
-
-    @Rule public final Expect expect = Expect.create();
+    @Mock private AbstractDeviceSupportHelper mAbstractDeviceSupportHelper;
 
     private final Logger.RealLogger mRealLogger = StandardStreamsLogger.getInstance();
 
-    private FakeAdServicesShellCommandHelper mAdServicesShellCommandHelper =
+    private final FakeAdServicesShellCommandHelper mAdServicesShellCommandHelper =
             new FakeAdServicesShellCommandHelper(
                     mAbstractDeviceSupportHelper, mRealLogger, TIRAMISU);
 
@@ -69,9 +77,39 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
 
     @Test
     public void testParseResultFromDumpsys_success() {
-        String res = mAdServicesShellCommandHelper.parseResultFromDumpsys(SAMPLE_DUMPSYS_OUTPUT);
+        CommandResult commandResult =
+                mAdServicesShellCommandHelper.parseResultFromDumpsys(SAMPLE_DUMPSYS_WITH_OUT);
 
-        expect.that(res).isEqualTo(CMD_ECHO_OUT);
+        expect.withMessage("out").that(commandResult.getOut()).isEqualTo(CMD_ECHO_OUT);
+        expect.withMessage("err").that(commandResult.getErr()).isEmpty();
+        expect.withMessage("commandStatus")
+                .that(commandResult.getCommandStatus())
+                .isEqualTo(STATUS_FINISHED);
+    }
+
+    @Test
+    public void testParseResultFromDumpsys_onlyErrPresent() {
+        CommandResult commandResult =
+                mAdServicesShellCommandHelper.parseResultFromDumpsys(SAMPLE_DUMPSYS_WITH_ERR);
+
+        expect.withMessage("out").that(commandResult.getOut()).isEmpty();
+        expect.withMessage("err").that(commandResult.getErr()).isEqualTo(ERR);
+        expect.withMessage("commandStatus")
+                .that(commandResult.getCommandStatus())
+                .isEqualTo(STATUS_FINISHED);
+    }
+
+    @Test
+    public void testParseResultFromDumpsys_bothOutAndErrPresent() {
+        CommandResult commandResult =
+                mAdServicesShellCommandHelper.parseResultFromDumpsys(
+                        SAMPLE_DUMPSYS_WITH_OUT_AND_ERR);
+
+        expect.withMessage("out").that(commandResult.getOut()).isEqualTo(CMD_ECHO_OUT);
+        expect.withMessage("err").that(commandResult.getErr()).isEqualTo(ERR);
+        expect.withMessage("commandStatus")
+                .that(commandResult.getCommandStatus())
+                .isEqualTo(STATUS_FINISHED);
     }
 
     @Test
@@ -82,9 +120,12 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
                     + " com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity"
                     + " a3ccaeb pid=6721";
 
-        String res = mAdServicesShellCommandHelper.parseResultFromDumpsys(input);
+        CommandResult commandResult = mAdServicesShellCommandHelper.parseResultFromDumpsys(input);
 
-        expect.that(res).isEqualTo(input);
+        expect.that(commandResult.getOut()).isEqualTo(input);
+        expect.withMessage("commandStatus")
+                .that(commandResult.getCommandStatus())
+                .isEqualTo(STATUS_FINISHED);
     }
 
     @Test
@@ -206,12 +247,12 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
             } else if (cmd.equals(ADSERVICES_MANAGER_SERVICE_CHECK)) {
                 return mUsesSdkSandbox ? " not found" : "found";
             } else if (cmd.equals(
-                    runDumpsysShellCommand(
+                    getDumpsysGetResultShellCommand(
                             String.format(
                                     "%s/%s", ADEXTSERVICES_PACKAGE_NAME, SHELL_ACTIVITY_NAME)))) {
                 String out =
                         mDumpsysCommandCount == 0
-                                ? SAMPLE_DUMPSYS_OUTPUT
+                                ? SAMPLE_DUMPSYS_WITH_OUT
                                 : SAMPLE_DUMPSYS_UNKNOWN_COMMAND_OUTPUT;
                 mDumpsysCommandCount++;
                 return out;

@@ -165,6 +165,7 @@ public class UpdateAdCounterHistogramWorker {
 
     private Void validateRequest(@NonNull UpdateAdCounterHistogramInput inputParams) {
         sLogger.v("Validating updateAdCounterHistogram request");
+
         if (!mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             sLogger.v("Frequency cap filtering disabled");
             throw new IllegalStateException();

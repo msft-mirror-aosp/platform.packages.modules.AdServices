@@ -29,13 +29,14 @@ import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.data.topics.Topic;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
@@ -55,7 +56,10 @@ public class AppSearchTopicsConsentDaoTest {
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final String mAdServicesPackageName =
             AppSearchConsentWorker.getAdServicesPackageName(mContext);
+    private final ListenableFuture mSearchSessionFuture = Futures.immediateFuture(null);
     private MockitoSession mStaticMockSession;
+
+    @Mock private Executor mMockExecutor;
 
     @Rule
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
@@ -216,21 +220,17 @@ public class AppSearchTopicsConsentDaoTest {
 
     @Test
     public void testGetBlockedTopics_null() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         List result =
                 AppSearchTopicsConsentDao.getBlockedTopics(
-                        mockSearchSession, mockExecutor, ID, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID, mAdServicesPackageName);
         assertThat(result).isNotNull();
         assertThat(result.size()).isEqualTo(0);
     }
 
     @Test
     public void testGetBlockedTopics() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         AppSearchTopicsConsentDao dao =
                 new AppSearchTopicsConsentDao(
                         ID, ID, NAMESPACE, TOPIC_IDS, TOPIC_TAXONOMIES, TOPIC_MODELS);
@@ -238,7 +238,7 @@ public class AppSearchTopicsConsentDaoTest {
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         List<Topic> result =
                 AppSearchTopicsConsentDao.getBlockedTopics(
-                        mockSearchSession, mockExecutor, ID, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID, mAdServicesPackageName);
         assertThat(result).isNotNull();
         assertThat(result.size()).isEqualTo(3);
         assertThat(result).contains(TOPIC1);

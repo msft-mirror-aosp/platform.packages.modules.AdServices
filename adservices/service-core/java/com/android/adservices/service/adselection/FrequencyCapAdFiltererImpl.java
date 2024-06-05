@@ -122,12 +122,13 @@ public final class FrequencyCapAdFiltererImpl implements FrequencyCapAdFilterer 
                     adsList.add(ad);
                 }
             }
+            SignedContextualAds toReturn =
+                    new SignedContextualAds.Builder(contextualAds).setAdsWithBid(adsList).build();
             sLogger.v(
                     "Frequency cap filtering finished. %d contextual ads of the original %d"
                             + " remain.",
                     adsList.size(), contextualAds.getAdsWithBid().size());
-
-            return new SignedContextualAds.Builder(contextualAds).setAdsWithBid(adsList).build();
+            return toReturn;
         } finally {
             Tracing.endAsyncSection(Tracing.FILTERER_FILTER_CONTEXTUAL, traceCookie);
         }

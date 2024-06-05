@@ -34,7 +34,16 @@ android_library {
     libs: [
         "android.test.base",
     ],
-    visibility: ["//packages/modules/AdServices/adservices:__subpackages__", "//vendor:__subpackages__"],
+    visibility: [
+        "//packages/modules/AdServices/adservices:__subpackages__",
+        "//vendor:__subpackages__",
+    ],
     sdk_version: "module_current",
     min_sdk_version: "30",
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        baseline_filename: "lint-baseline.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

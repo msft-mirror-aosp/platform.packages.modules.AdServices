@@ -19,6 +19,9 @@ package com.android.adservices.common;
 
 import android.os.SystemProperties;
 
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Nullable;
+import com.android.adservices.shared.testing.SystemPropertiesHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.errorprone.annotations.FormatMethod;

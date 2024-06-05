@@ -17,6 +17,7 @@
 package android.adservices.test.scenario.adservices.ui;
 
 import android.content.Context;
+import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
 import android.os.Trace;
 

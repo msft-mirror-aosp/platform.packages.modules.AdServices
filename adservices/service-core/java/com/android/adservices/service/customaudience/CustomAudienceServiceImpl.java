@@ -239,7 +239,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
-        int failureReason = AdServicesStatusUtils.FAILURE_REASON_UNSET;
         // The filters log internally, so don't accidentally log again
         boolean shouldLog = false;
         try {
@@ -263,7 +262,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     sLogger.v("Joining custom audience");
                     mCustomAudienceImpl.joinCustomAudience(
                             customAudience, ownerPackageName, devContext);
-                    BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
+                    BackgroundFetchJob.schedule(mFlags);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
                     sLogger.v("Consent revoked");
@@ -478,7 +477,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
-        int failureReason = AdServicesStatusUtils.FAILURE_REASON_UNSET;
         // The filters log internally, so don't accidentally log again
         boolean shouldLog = false;
         try {

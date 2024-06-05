@@ -121,7 +121,7 @@ public class CustomAudienceImpl {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(callerPackageName);
         Instant currentTime = mClock.instant();
-
+        sLogger.v("Requested CA to join: %s", customAudience);
         sLogger.v("Validating CA limits");
         mCustomAudienceQuantityChecker.check(customAudience, callerPackageName);
         sLogger.v("Validating CA");
@@ -154,7 +154,7 @@ public class CustomAudienceImpl {
                         isDebuggableCustomAudience,
                         mAuctionServerRequestFlagsEnabled);
 
-        sLogger.v("Inserting CA in the DB");
+        sLogger.v("Inserting CA in the DB: %s", dbCustomAudience);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudience, customAudience.getDailyUpdateUri(), isDebuggableCustomAudience);
     }

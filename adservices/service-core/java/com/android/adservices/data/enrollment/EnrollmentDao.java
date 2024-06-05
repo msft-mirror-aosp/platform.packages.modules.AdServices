@@ -17,6 +17,9 @@
 package com.android.adservices.data.enrollment;
 
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
+import static com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats.Builder;
+import static com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats.TransactionStatus;
+import static com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats.TransactionType;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE;
@@ -34,7 +37,6 @@ import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.util.Pair;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
@@ -42,6 +44,7 @@ import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
@@ -49,6 +52,7 @@ import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.proto.PrivacySandboxApi;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -104,15 +108,14 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     /** Returns an instance of the EnrollmentDao given a context. */
-    @NonNull
-    public static EnrollmentDao getInstance(@NonNull Context context) {
+    public static EnrollmentDao getInstance() {
         synchronized (EnrollmentDao.class) {
             if (sSingleton == null) {
                 Flags flags = FlagsFactory.getFlags();
                 sSingleton =
                         new EnrollmentDao(
-                                context,
-                                SharedDbHelper.getInstance(context),
+                                ApplicationContextSingleton.get(),
+                                SharedDbHelper.getInstance(),
                                 flags,
                                 flags.isEnableEnrollmentTestSeed(),
                                 AdServicesLoggerImpl.getInstance(),
@@ -181,14 +184,22 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     @Override
-    @NonNull
     public List<EnrollmentData> getAllEnrollmentData() {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.GET_ALL_ENROLLMENT_DATA,
+                        /* transactionParameterCount= */ 0);
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         List<EnrollmentData> enrollmentDataList = new ArrayList<>();
+
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             return enrollmentDataList;
         }
-
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -200,6 +211,11 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() == 0) {
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.MATCH_NOT_FOUND,
+                        getEnrollmentRecordCountForLogging());
                 LogUtil.d("Can't get all enrollment data from DB.");
                 return enrollmentDataList;
             }
@@ -207,8 +223,20 @@ public class EnrollmentDao implements IEnrollmentDao {
                 enrollmentDataList.add(
                         SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor));
             }
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    TransactionStatus.SUCCESS,
+                    cursor.getCount(),
+                    enrollmentDataList.size(),
+                    getEnrollmentRecordCountForLogging());
             return enrollmentDataList;
         } catch (SQLException e) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
             LogUtil.e(e, "Failed to get all enrollment data from DB.");
         }
         return enrollmentDataList;
@@ -217,11 +245,18 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @Nullable
     public EnrollmentData getEnrollmentData(String enrollmentId) {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.GET_ENROLLMENT_DATA, /* transactionParameterCount= */ 1);
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
-
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -234,16 +269,41 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 LogUtil.d("Failed to match enrollment for enrollment ID \"%s\"", enrollmentId);
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.MATCH_NOT_FOUND,
+                        getEnrollmentRecordCountForLogging());
                 return null;
             }
             cursor.moveToNext();
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    TransactionStatus.SUCCESS,
+                    cursor.getCount(),
+                    /* transactionResultCount= */ 1,
+                    getEnrollmentRecordCountForLogging());
             return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+        } catch (SQLException e) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
+            LogUtil.e(e, "Failed to get all enrollment data from DB.");
+            return null;
         }
     }
 
     @Override
     @Nullable
     public EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url) {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.GET_ENROLLMENT_DATA_FROM_MEASUREMENT_URL,
+                        /* transactionParameterCount= */ 1);
+
         if (url == null) {
             return null;
         }
@@ -263,6 +323,11 @@ public class EnrollmentDao implements IEnrollmentDao {
             return null;
         }
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, READ_QUERY, false, buildId);
             return null;
         }
@@ -283,15 +348,20 @@ public class EnrollmentDao implements IEnrollmentDao {
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ null,
+                        /* columns= */ null,
                         selectionQuery,
                         null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 LogUtil.d("Failed to match enrollment for url \"%s\"", url);
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.MATCH_NOT_FOUND,
+                        getEnrollmentRecordCountForLogging());
                 mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
@@ -307,11 +377,31 @@ public class EnrollmentDao implements IEnrollmentDao {
                                 data.getAttributionTriggerRegistrationUrl(),
                                 registrationBaseUri,
                                 originMatch)) {
+                    mEnrollmentUtil.logTransactionStats(
+                            mLogger,
+                            stats,
+                            TransactionStatus.SUCCESS,
+                            cursor.getCount(),
+                            /* transactionResultCount= */ 1,
+                            getEnrollmentRecordCountForLogging());
                     mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
                     return data;
                 }
             }
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_OUTPUT,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
+            return null;
+        } catch (SQLException e) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
+            LogUtil.e(e, "Failed to get all enrollment data from DB.");
             return null;
         }
     }
@@ -368,6 +458,10 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Nullable
     public EnrollmentData getEnrollmentDataForFledgeByAdTechIdentifier(
             AdTechIdentifier adTechIdentifier) {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.GET_ENROLLMENT_DATA_FOR_FLEDGE_BY_ADTECH_IDENTIFIER,
+                        /* transactionParameterCount= */ 1);
         if (getEnrollmentApiBasedSchema()) {
             return getEnrollmentDataForAPIByAdTechIdentifier(
                     adTechIdentifier, PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE);
@@ -376,6 +470,11 @@ public class EnrollmentDao implements IEnrollmentDao {
         String adTechIdentifierString = adTechIdentifier.toString();
         SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
 
@@ -383,21 +482,26 @@ public class EnrollmentDao implements IEnrollmentDao {
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ null,
+                        /* columns= */ null,
                         EnrollmentTables.EnrollmentDataContract
                                         .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
                                 + " LIKE '%"
                                 + adTechIdentifierString
                                 + "%'",
                         null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
                 LogUtil.d(
                         "Failed to match enrollment for ad tech identifier \"%s\"",
                         adTechIdentifierString);
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.MATCH_NOT_FOUND,
+                        getEnrollmentRecordCountForLogging());
                 mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
@@ -419,6 +523,13 @@ public class EnrollmentDao implements IEnrollmentDao {
                                     "Found positive match RBR URL \"%s\" for ad tech identifier"
                                             + " \"%s\"",
                                     rbrUriString, adTechIdentifierString);
+                            mEnrollmentUtil.logTransactionStats(
+                                    mLogger,
+                                    stats,
+                                    TransactionStatus.SUCCESS,
+                                    cursor.getCount(),
+                                    /* transactionResultCount= */ 1,
+                                    getEnrollmentRecordCountForLogging());
                             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
 
                             return potentialMatch;
@@ -431,14 +542,32 @@ public class EnrollmentDao implements IEnrollmentDao {
                     }
                 }
             }
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_OUTPUT,
+                    cursor.getCount(),
+                    /* transactionResultCount= */ 0,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
+            return null;
+        } catch (SQLException e) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
+            LogUtil.e(e, "Failed to get enrollment data from DB.");
             return null;
         }
     }
 
     @Override
-    @NonNull
     public Set<AdTechIdentifier> getAllFledgeEnrolledAdTechs() {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.GET_ALL_FLEDGE_ENROLLED_ADTECHS,
+                        /* transactionParameterCount= */ 0);
         Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
 
         if (getEnrollmentApiBasedSchema()) {
@@ -451,6 +580,11 @@ public class EnrollmentDao implements IEnrollmentDao {
         int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             return enrolledAdTechIdentifiers;
         }
 
@@ -472,6 +606,11 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
                 LogUtil.d("Failed to find any FLEDGE-enrolled ad techs");
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.MATCH_NOT_FOUND,
+                        getEnrollmentRecordCountForLogging());
                 return enrolledAdTechIdentifiers;
             }
 
@@ -485,8 +624,22 @@ public class EnrollmentDao implements IEnrollmentDao {
             LogUtil.v(
                     "Found %d FLEDGE enrolled ad tech identifiers",
                     enrolledAdTechIdentifiers.size());
-
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    TransactionStatus.SUCCESS,
+                    cursor.getCount(),
+                    enrolledAdTechIdentifiers.size(),
+                    getEnrollmentRecordCountForLogging());
             return enrolledAdTechIdentifiers;
+        } catch (SQLException e) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
+            LogUtil.e(e, "Failed to get enrollment data from DB.");
+            return null;
         }
     }
 
@@ -494,7 +647,18 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Nullable
     public Pair<AdTechIdentifier, EnrollmentData>
             getEnrollmentDataForFledgeByMatchingAdTechIdentifier(Uri originalUri) {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType
+                                .GET_ENROLLMENT_DATA_FOR_FLEDGE_BY_MATCHING_ADTECH_IDENTIFIER,
+                        /* transactionParameterCount= */ 1);
+
         if (originalUri == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_INPUT,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
 
@@ -507,6 +671,11 @@ public class EnrollmentDao implements IEnrollmentDao {
 
         String originalUriHost = originalUri.getHost();
         if (originalUriHost == null || originalUriHost.isEmpty()) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_INPUT,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
 
@@ -514,6 +683,11 @@ public class EnrollmentDao implements IEnrollmentDao {
         //  the rows with FLEDGE RBR URLs which may match the TLD
         String[] subdomains = originalUriHost.split("\\.");
         if (subdomains.length < 1) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_INPUT,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
 
@@ -522,6 +696,11 @@ public class EnrollmentDao implements IEnrollmentDao {
         int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
 
@@ -529,21 +708,26 @@ public class EnrollmentDao implements IEnrollmentDao {
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ null,
+                        /* columns= */ null,
                         EnrollmentTables.EnrollmentDataContract
                                         .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
                                 + " LIKE '%"
                                 + topLevelDomain
                                 + "%'",
-                        /*selectionArgs=*/ null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* selectionArgs= */ null,
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
                 LogUtil.d(
                         "Failed to match enrollment for URI \"%s\" with top level domain \"%s\"",
                         originalUri, topLevelDomain);
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.MATCH_NOT_FOUND,
+                        getEnrollmentRecordCountForLogging());
                 mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
@@ -567,6 +751,13 @@ public class EnrollmentDao implements IEnrollmentDao {
                             LogUtil.v(
                                     "Found positive match RBR URL \"%s\" for given URI \"%s\"",
                                     rbrUriString, originalUri);
+                            mEnrollmentUtil.logTransactionStats(
+                                    mLogger,
+                                    stats,
+                                    TransactionStatus.SUCCESS,
+                                    cursor.getCount(),
+                                    /* transactionResultCount= */ 1,
+                                    getEnrollmentRecordCountForLogging());
                             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
 
                             // AdTechIdentifiers are currently expected to only contain eTLD+1
@@ -581,8 +772,22 @@ public class EnrollmentDao implements IEnrollmentDao {
                     }
                 }
             }
-
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_OUTPUT,
+                    cursor.getCount(),
+                    /* transactionResultCount= */ 0,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
+            return null;
+        } catch (SQLException e) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
+            LogUtil.e(e, "Failed to get enrollment data from DB.");
             return null;
         }
     }
@@ -590,12 +795,26 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @Nullable
     public EnrollmentData getEnrollmentDataFromSdkName(String sdkName) {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.GET_ENROLLMENT_DATA_FROM_SDK_NAME,
+                        /* transactionParameterCount= */ 1);
         if (sdkName.contains(" ") || sdkName.contains(",")) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_INPUT,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
         int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
 
@@ -603,24 +822,44 @@ public class EnrollmentDao implements IEnrollmentDao {
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ null,
+                        /* columns= */ null,
                         EnrollmentTables.EnrollmentDataContract.SDK_NAMES
                                 + " LIKE '%"
                                 + sdkName
                                 + "%'",
                         null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 LogUtil.d("Failed to match enrollment for sdk \"%s\"", sdkName);
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.MATCH_NOT_FOUND,
+                        getEnrollmentRecordCountForLogging());
                 mEnrollmentUtil.logEnrollmentMatchStats(mLogger, false, buildId);
                 return null;
             }
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    TransactionStatus.SUCCESS,
+                    cursor.getCount(),
+                    /* transactionResultCount= */ 1,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
             cursor.moveToNext();
             return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+        } catch (SQLException e) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
+            LogUtil.e(e, "Failed to get enrollment data from DB.");
+            return null;
         }
     }
 
@@ -628,7 +867,16 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Nullable
     public Pair<AdTechIdentifier, EnrollmentData> getEnrollmentDataForPASByMatchingAdTechIdentifier(
             Uri originalUri) {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.GET_ENROLLMENT_DATA_FOR_PAS_BY_MATCHING_ADTECH_IDENTIFIER,
+                        1);
         if (originalUri == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_INPUT,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
 
@@ -642,6 +890,11 @@ public class EnrollmentDao implements IEnrollmentDao {
 
         Optional<Uri> topDomainUri = WebAddresses.topPrivateDomainAndScheme(originalUri);
         if (topDomainUri.isEmpty()) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_INPUT,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
         String originalUriHost = topDomainUri.get().getHost();
@@ -649,6 +902,11 @@ public class EnrollmentDao implements IEnrollmentDao {
         int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
 
@@ -656,7 +914,7 @@ public class EnrollmentDao implements IEnrollmentDao {
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ null,
+                        /* columns= */ null,
                         EnrollmentTables.EnrollmentDataContract.COMPANY_ID
                                 + " LIKE '%"
                                 + "PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS"
@@ -666,13 +924,18 @@ public class EnrollmentDao implements IEnrollmentDao {
                                 + " LIKE '%"
                                 + originalUriHost
                                 + "%'",
-                        /*selectionArgs=*/ null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* selectionArgs= */ null,
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
                 LogUtil.d("Failed to match enrollment for PAS URI \"%s\" ", originalUri);
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.MATCH_NOT_FOUND,
+                        getEnrollmentRecordCountForLogging());
                 mEnrollmentUtil.logEnrollmentMatchStats(
                         mLogger, /* isSuccessful= */ false, buildId);
                 return null;
@@ -697,6 +960,13 @@ public class EnrollmentDao implements IEnrollmentDao {
                         LogUtil.v(
                                 "Found positive match PAS URL \"%s\" for given URI \"%s\"",
                                 pasUriString, originalUri);
+                        mEnrollmentUtil.logTransactionStats(
+                                mLogger,
+                                stats,
+                                TransactionStatus.SUCCESS,
+                                cursor.getCount(),
+                                /* transactionResultCount= */ 1,
+                                getEnrollmentRecordCountForLogging());
                         mEnrollmentUtil.logEnrollmentMatchStats(mLogger, true, buildId);
 
                         // AdTechIdentifiers are currently expected to only contain eTLD+1
@@ -710,8 +980,22 @@ public class EnrollmentDao implements IEnrollmentDao {
                             originalUri, pasUriString, exception.getMessage());
                 }
             }
-
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_OUTPUT,
+                    cursor.getCount(),
+                    /* transactionResultCount= */ 0,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, /* isSuccessful= */ false, buildId);
+            return null;
+        } catch (SQLException e) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
+            LogUtil.e(e, "Failed to get enrollment data from DB.");
             return null;
         }
     }
@@ -720,6 +1004,11 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Nullable
     public EnrollmentData getEnrollmentDataForPASByAdTechIdentifier(
             AdTechIdentifier adTechIdentifier) {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.GET_ENROLLMENT_DATA_FOR_PAS_BY_ADTECH_IDENTIFIER,
+                        /* transactionParameterCount= */ 1);
+
         if (getEnrollmentApiBasedSchema()) {
             return getEnrollmentDataForAPIByAdTechIdentifier(
                     adTechIdentifier, PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS);
@@ -728,6 +1017,11 @@ public class EnrollmentDao implements IEnrollmentDao {
         String adTechIdentifierString = adTechIdentifier.toString();
         SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             return null;
         }
 
@@ -735,7 +1029,7 @@ public class EnrollmentDao implements IEnrollmentDao {
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ null,
+                        /* columns= */ null,
                         EnrollmentTables.EnrollmentDataContract.COMPANY_ID
                                 + " LIKE '%"
                                 + "PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS"
@@ -746,14 +1040,19 @@ public class EnrollmentDao implements IEnrollmentDao {
                                 + adTechIdentifierString
                                 + "%'",
                         null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
                 LogUtil.d(
                         "Failed to match enrollment for ad tech identifier \"%s\"",
                         adTechIdentifierString);
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.MATCH_NOT_FOUND,
+                        getEnrollmentRecordCountForLogging());
                 mEnrollmentUtil.logEnrollmentMatchStats(
                         mLogger, /* isSuccessful= */ false, buildId);
                 return null;
@@ -778,7 +1077,13 @@ public class EnrollmentDao implements IEnrollmentDao {
                                 pasUriString, adTechIdentifierString);
                         mEnrollmentUtil.logEnrollmentMatchStats(
                                 mLogger, /* isSuccessful= */ true, buildId);
-
+                        mEnrollmentUtil.logTransactionStats(
+                                mLogger,
+                                stats,
+                                TransactionStatus.SUCCESS,
+                                cursor.getCount(),
+                                /* transactionResultCount= */ 1,
+                                getEnrollmentRecordCountForLogging());
                         return potentialMatch;
                     }
                 } catch (IllegalArgumentException exception) {
@@ -788,14 +1093,33 @@ public class EnrollmentDao implements IEnrollmentDao {
                             adTechIdentifierString, pasUriString, exception.getMessage());
                 }
             }
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    TransactionStatus.INVALID_OUTPUT,
+                    cursor.getCount(),
+                    /* transactionResultCount= */ 0,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentMatchStats(mLogger, /* isSuccessful= */ false, buildId);
+            return null;
+        } catch (SQLException e) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
+            LogUtil.e(e, "Failed to get enrollment data from DB.");
             return null;
         }
     }
 
     @Override
-    @NonNull
     public Set<AdTechIdentifier> getAllPASEnrolledAdTechs() {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.GET_ALL_PAS_ENROLLED_ADTECHS,
+                        /* transactionParameterCount= */ 0);
+
         Set<AdTechIdentifier> enrolledAdTechIdentifiers = new HashSet<>();
         if (getEnrollmentApiBasedSchema()) {
             List<EnrollmentData> enrollmentDataList =
@@ -806,27 +1130,37 @@ public class EnrollmentDao implements IEnrollmentDao {
         int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = getReadableDatabase(buildId);
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             return enrolledAdTechIdentifiers;
         }
 
         // TODO (b/331781010): Cleanup EnrollmentDao Queries
         try (Cursor cursor =
                 db.query(
-                        /*distinct=*/ true,
-                        /*table=*/ EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ new String[] {
+                        /* distinct= */ true,
+                        /* table= */ EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /* columns= */ new String[] {
                             EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL
                         },
-                        /*selection=*/ EnrollmentTables.EnrollmentDataContract.COMPANY_ID
+                        /* selection= */ EnrollmentTables.EnrollmentDataContract.COMPANY_ID
                                 + " LIKE '%"
                                 + "PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS"
                                 + "%'",
-                        /*selectionArgs=*/ null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* selectionArgs= */ null,
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
+                mEnrollmentUtil.logTransactionStatsNoResult(
+                        mLogger,
+                        stats,
+                        TransactionStatus.MATCH_NOT_FOUND,
+                        getEnrollmentRecordCountForLogging());
                 LogUtil.d("Failed to find any PAS-enrolled ad techs");
                 return enrolledAdTechIdentifiers;
             }
@@ -840,7 +1174,13 @@ public class EnrollmentDao implements IEnrollmentDao {
 
             LogUtil.v(
                     "Found %d PAS enrolled ad tech identifiers", enrolledAdTechIdentifiers.size());
-
+            mEnrollmentUtil.logTransactionStats(
+                    mLogger,
+                    stats,
+                    TransactionStatus.SUCCESS,
+                    cursor.getCount(),
+                    enrolledAdTechIdentifiers.size(),
+                    getEnrollmentRecordCountForLogging());
             return enrolledAdTechIdentifiers;
         }
     }
@@ -851,16 +1191,27 @@ public class EnrollmentDao implements IEnrollmentDao {
         if (db == null) {
             return null;
         }
-        Long count =
-                DatabaseUtils.queryNumEntries(db, EnrollmentTables.EnrollmentDataContract.TABLE);
-        return count;
+        try {
+            Long count =
+                    DatabaseUtils.queryNumEntries(
+                            db, EnrollmentTables.EnrollmentDataContract.TABLE);
+            return count;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Builder getEnrollmentStatsBuilder(
+            TransactionType transactionType, int transactionParameterCount) {
+        return mEnrollmentUtil.initTransactionStatsBuilder(
+                transactionType, transactionParameterCount, getEnrollmentRecordCountForLogging());
     }
 
     @Override
     public int getEnrollmentRecordCountForLogging() {
         int limitedLoggingEnabled = -2;
         int dbError = -1;
-        if (mFlags.getEnrollmentEnableLimitedLogging()) {
+        if (BinderFlagReader.readFlag(mFlags::getEnrollmentEnableLimitedLogging)) {
             return limitedLoggingEnabled;
         }
         Long count = getEnrollmentRecordsCount();
@@ -872,18 +1223,33 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     public boolean insert(EnrollmentData enrollmentData) {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.INSERT, /* transactionParameterCount= */ 1);
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             int buildId = mEnrollmentUtil.getBuildId();
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
             return false;
         }
         try {
             insertToDb(enrollmentData, db);
         } catch (SQLException e) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
             LogUtil.e(e, "Failed to insert EnrollmentData.");
             return false;
         }
+        mEnrollmentUtil.logTransactionStatsNoResult(
+                mLogger, stats, TransactionStatus.SUCCESS, getEnrollmentRecordCountForLogging());
         return true;
     }
 
@@ -944,10 +1310,18 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     public boolean delete(String enrollmentId) {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.DELETE, /* transactionParameterCount= */ 1);
         Objects.requireNonNull(enrollmentId);
         int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
             return false;
         }
@@ -963,9 +1337,16 @@ public class EnrollmentDao implements IEnrollmentDao {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, false, buildId);
             return false;
         }
+        mEnrollmentUtil.logTransactionStatsNoResult(
+                mLogger, stats, TransactionStatus.SUCCESS, getEnrollmentRecordCountForLogging());
         mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, true, buildId);
         return true;
     }
@@ -973,10 +1354,18 @@ public class EnrollmentDao implements IEnrollmentDao {
     /** Deletes the whole EnrollmentData table. */
     @Override
     public boolean deleteAll() {
+        Builder stats =
+                getEnrollmentStatsBuilder(
+                        TransactionType.DELETE_ALL, /* transactionParameterCount= */ 0);
         boolean success = false;
         int buildId = mEnrollmentUtil.getBuildId();
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, success, buildId);
             return success;
         }
@@ -995,18 +1384,35 @@ public class EnrollmentDao implements IEnrollmentDao {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DATASTORE_EXCEPTION,
+                    getEnrollmentRecordCountForLogging());
             mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, success, buildId);
         } finally {
             db.endTransaction();
         }
+        mEnrollmentUtil.logTransactionStatsNoResult(
+                mLogger,
+                stats,
+                success ? TransactionStatus.SUCCESS : TransactionStatus.DATASTORE_EXCEPTION,
+                getEnrollmentRecordCountForLogging());
         mEnrollmentUtil.logEnrollmentDataStats(mLogger, WRITE_QUERY, success, buildId);
         return success;
     }
 
     @Override
     public boolean overwriteData(List<EnrollmentData> newEnrollments) {
+        Builder stats =
+                getEnrollmentStatsBuilder(TransactionType.OVERWRITE_DATA, newEnrollments.size());
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
+            mEnrollmentUtil.logTransactionStatsNoResult(
+                    mLogger,
+                    stats,
+                    TransactionStatus.DB_NOT_FOUND,
+                    getEnrollmentRecordCountForLogging());
             return false;
         }
 
@@ -1048,6 +1454,11 @@ public class EnrollmentDao implements IEnrollmentDao {
         if (mFlags.isEnableEnrollmentTestSeed()) {
             seed();
         }
+        mEnrollmentUtil.logTransactionStatsNoResult(
+                mLogger,
+                stats,
+                success ? TransactionStatus.SUCCESS : TransactionStatus.DATASTORE_EXCEPTION,
+                getEnrollmentRecordCountForLogging());
         return success;
     }
 
@@ -1079,13 +1490,13 @@ public class EnrollmentDao implements IEnrollmentDao {
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ null,
+                        /* columns= */ null,
                         selectionQuery,
                         null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
                 LogUtil.d(
                         "Failed to match %s enrollment to ad tech identifier \"%s\"",
@@ -1138,7 +1549,6 @@ public class EnrollmentDao implements IEnrollmentDao {
      * @return List of matching {@link EnrollmentData} or empty list if no matches were found
      */
     @VisibleForTesting
-    @NonNull
     List<EnrollmentData> getAllEnrollmentDataByAPI(PrivacySandboxApi privacySandboxApi) {
         int buildId = mEnrollmentUtil.getBuildId();
         String privacySandboxApiString = privacySandboxApi.name();
@@ -1151,18 +1561,18 @@ public class EnrollmentDao implements IEnrollmentDao {
 
         try (Cursor cursor =
                 db.query(
-                        /*distinct=*/ true,
-                        /*table=*/ EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ null,
-                        /*selection=*/ EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS
+                        /* distinct= */ true,
+                        /* table= */ EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /* columns= */ null,
+                        /* selection= */ EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS
                                 + " LIKE '%"
                                 + privacySandboxApiString
                                 + "%'",
-                        /*selectionArgs=*/ null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* selectionArgs= */ null,
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
                 LogUtil.d("Failed to find any %s-enrolled ad techs", privacySandboxApiString);
                 return enrollmentDataList;
@@ -1223,13 +1633,13 @@ public class EnrollmentDao implements IEnrollmentDao {
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ null,
+                        /* columns= */ null,
                         selectionQuery,
-                        /*selectionArgs=*/ null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* selectionArgs= */ null,
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
                 LogUtil.d(
                         "Failed to match %s enrollment for URI \"%s\" ",

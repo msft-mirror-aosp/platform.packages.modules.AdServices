@@ -18,6 +18,8 @@ package android.app.sdksandbox.sdkprovider;
 
 import android.annotation.FlaggedApi;
 
+import com.android.sdksandbox.flags.Flags;
+
 import java.util.concurrent.Executor;
 
 /**
@@ -29,7 +31,7 @@ import java.util.concurrent.Executor;
  * SdkSandboxController#registerSdkSandboxClientImportanceListener(Executor,
  * SdkSandboxClientImportanceListener)}.
  */
-@FlaggedApi("com.android.sdksandbox.flags.sandbox_client_importance_listener")
+@FlaggedApi(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
 public interface SdkSandboxClientImportanceListener {
     /**
      * Invoked every time the client transitions from a value <= {@link
@@ -40,6 +42,6 @@ public interface SdkSandboxClientImportanceListener {
      *     android.app.ActivityManager.RunningAppProcessInfo#IMPORTANCE_FOREGROUND} or lower and
      *     false when it is the other way round.
      */
-    @FlaggedApi("com.android.sdksandbox.flags.sandbox_client_importance_listener")
+    @FlaggedApi(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
     void onForegroundImportanceChanged(boolean isForeground);
 }

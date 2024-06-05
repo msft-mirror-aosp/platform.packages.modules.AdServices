@@ -32,28 +32,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-            <LinearLayout
-                android:id="@+id/no_blocked_apps_message"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/adservices_empty_list_margin_top"
-                android:layout_marginBottom="36dp"
-                android:gravity="center"
-                android:visibility="gone"
-                android:orientation="vertical">
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_placeholder_icon_for_empty_apps_list"
-                    android:contentDescription="@string/ic_placeholder_icon_for_empty_apps_list_description" />
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/adservices_content_padding"
-                    android:gravity="center"
-                    android:text="@string/settingsUI_apps_view_no_blocked_apps_text"
-                    android:textAppearance="@style/TextAppearance.Body2.Bold" />
-            </LinearLayout>
 
             <TextView
                 android:id="@+id/no_blocked_apps_ga_message"

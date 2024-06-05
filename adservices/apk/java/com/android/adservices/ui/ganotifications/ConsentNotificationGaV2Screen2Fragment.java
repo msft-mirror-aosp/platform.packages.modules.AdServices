@@ -45,7 +45,6 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.consent.ConsentManagerV2;
 import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 
@@ -109,12 +108,16 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                 view -> {
                     ConsentNotificationActivity.handleAction(
                             LANDING_PAGE_OPT_OUT_CLICKED, getContext());
-                    if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-                        enableAndRecordTopicsV2();
-                    } else {
-                        enableAndRecordTopics();
+
+                    // opt-out confirmation activity
+                    ConsentManager.getInstance()
+                            .disable(requireContext(), AdServicesApiType.TOPICS);
+                    if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                        ConsentManager.getInstance()
+                                .recordUserManualInteractionWithConsent(
+                                        ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }
-                    requireActivity().finish();
+                    requireActivity().finishAndRemoveTask();
                 });
 
         Button rightControlButton =
@@ -213,12 +216,15 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
             if (mHasScrolledToBottom) {
                 ConsentNotificationActivity.handleAction(
                         LANDING_PAGE_OPT_IN_CLICKED, getContext());
-                if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-                    enableAndRecordTopicsV2();
-                } else {
-                    enableAndRecordTopics();
+
+                // opt-in to topics
+                ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.TOPICS);
+                if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                    ConsentManager.getInstance()
+                            .recordUserManualInteractionWithConsent(
+                                    ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                 }
-                requireActivity().finish();
+                requireActivity().finishAndRemoveTask();
             } else {
                 ConsentNotificationActivity.handleAction(
                         LANDING_PAGE_MORE_BUTTON_CLICKED, getContext());
@@ -244,26 +250,6 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                 mHasScrolledToBottom = true;
                 updateControlButtons();
             }
-        }
-    }
-
-    private void enableAndRecordTopics() {
-        // opt-in to topics
-        ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.TOPICS);
-        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-            ConsentManager.getInstance()
-                    .recordUserManualInteractionWithConsent(
-                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
-        }
-    }
-
-    private void enableAndRecordTopicsV2() {
-        // opt-in to topics
-        ConsentManagerV2.getInstance().enable(requireContext(), AdServicesApiType.TOPICS);
-        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-            ConsentManagerV2.getInstance()
-                    .recordUserManualInteractionWithConsent(
-                            ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED);
         }
     }
 }

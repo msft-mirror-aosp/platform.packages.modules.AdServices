@@ -24,8 +24,9 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
-import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 
 /** No-op version of {@link AdServicesLogger}. */
@@ -101,6 +102,12 @@ public class NoOpLoggerImpl implements AdServicesLogger {
             MeasurementClickVerificationStats measurementClickVerificationStats) {}
 
     @Override
+    public void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats) {}
+
+    @Override
+    public void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats) {}
+
+    @Override
     public void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId) {}
 
     @Override
@@ -116,6 +123,9 @@ public class NoOpLoggerImpl implements AdServicesLogger {
             int mEnrollmentRecordCountInTable,
             String mQueryParameter,
             int mErrorCause) {}
+
+    @Override
+    public void logEnrollmentTransactionStats(AdServicesEnrollmentTransactionStats stats) {}
 
     @Override
     public void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats) {}
@@ -216,4 +226,13 @@ public class NoOpLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logEncodingJobRunStats(EncodingJobRunStats stats) {}
+
+    @Override
+    public void logPersistAdSelectionResultCalledStats(PersistAdSelectionResultCalledStats stats) {}
+
+    @Override
+    public void logSelectAdsFromOutcomesApiCalledStats(SelectAdsFromOutcomesApiCalledStats stats) {}
+
+    @Override
+    public void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats) {}
 }

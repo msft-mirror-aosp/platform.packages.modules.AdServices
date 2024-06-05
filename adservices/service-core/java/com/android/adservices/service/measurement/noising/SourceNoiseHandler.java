@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.noising;
 
 import android.annotation.NonNull;
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.Source;
@@ -85,20 +86,30 @@ public class SourceNoiseHandler {
             // There will at least be one (app or web) destination available
             ImpressionNoiseParams noiseParams = getImpressionNoiseParams(source);
             fakeReports =
-                    ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(
-                                    noiseParams, rand)
+                    ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(noiseParams, rand)
                             .stream()
                             .map(
-                                    reportConfig ->
-                                            new Source.FakeReport(
-                                                    new UnsignedLong(
-                                                            Long.valueOf(reportConfig[0])),
+                                    reportConfig -> {
+                                        long triggerTime = source.getEventTime();
+                                        long reportingTime =
+                                                mEventReportWindowCalcDelegate
+                                                        .getReportingTimeForNoising(
+                                                                source, reportConfig[1]);
+                                        if (mFlags.getMeasurementEnableAttributionScope()) {
+                                            Pair<Long, Long> reportingAndTriggerTime =
                                                     mEventReportWindowCalcDelegate
-                                                            .getReportingTimeForNoising(
-                                                                    source,
-                                                                    reportConfig[1]),
-                                                    resolveFakeReportDestinations(
-                                                            source, reportConfig[2])))
+                                                            .getReportingAndTriggerTimeForNoising(
+                                                                    source, reportConfig[1]);
+                                            triggerTime = reportingAndTriggerTime.first;
+                                            reportingTime = reportingAndTriggerTime.second;
+                                        }
+                                        return new Source.FakeReport(
+                                                new UnsignedLong(Long.valueOf(reportConfig[0])),
+                                                reportingTime,
+                                                triggerTime,
+                                                resolveFakeReportDestinations(
+                                                        source, reportConfig[2]));
+                                    })
                             .collect(Collectors.toList());
         } else {
             int destinationTypeMultiplier = source.getDestinationTypeMultiplier(mFlags);
@@ -108,17 +119,32 @@ public class SourceNoiseHandler {
             fakeReports =
                     fakeReportConfigs.stream()
                             .map(
-                                    reportConfig ->
-                                            new Source.FakeReport(
-                                                    triggerSpecs.getTriggerDataFromIndex(
-                                                            reportConfig[0]),
+                                    reportConfig -> {
+                                        long triggerTime = source.getEventTime();
+                                        long reportingTime =
+                                                mEventReportWindowCalcDelegate
+                                                        .getReportingTimeForNoisingFlexEventApi(
+                                                                reportConfig[1],
+                                                                reportConfig[0],
+                                                                source);
+                                        if (mFlags.getMeasurementEnableAttributionScope()) {
+                                            Pair<Long, Long> reportingAndTriggerTime =
                                                     mEventReportWindowCalcDelegate
-                                                            .getReportingTimeForNoisingFlexEventApi(
+                                                            .getReportingAndTriggerTimeForNoisingFlexEventApi(
                                                                     reportConfig[1],
                                                                     reportConfig[0],
-                                                                    triggerSpecs),
-                                                    resolveFakeReportDestinations(
-                                                            source, reportConfig[2])))
+                                                                    source);
+                                            triggerTime = reportingAndTriggerTime.first;
+                                            reportingTime = reportingAndTriggerTime.second;
+                                        }
+                                        return new Source.FakeReport(
+                                                triggerSpecs.getTriggerDataFromIndex(
+                                                        reportConfig[0]),
+                                                reportingTime,
+                                                triggerTime,
+                                                resolveFakeReportDestinations(
+                                                        source, reportConfig[2]));
+                                    })
                             .collect(Collectors.toList());
         }
         @Source.AttributionMode

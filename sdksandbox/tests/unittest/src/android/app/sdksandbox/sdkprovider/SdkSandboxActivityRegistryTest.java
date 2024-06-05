@@ -376,11 +376,9 @@ public class SdkSandboxActivityRegistryTest {
         final IBinder token = mRegistry.register(mSdkContext, mHandler);
         Intent intent = buildSandboxActivityIntent(token);
 
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
-
         ActivityContextInfo contextInfo = mRegistry.getContextInfo(intent);
 
-        assertThat(ActivityContextInfo.CONTEXT_FLAGS)
+        assertThat(contextInfo.getContextFlags())
                 .isEqualTo(Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);
         contextInfo.getSdkApplicationInfo();
         Mockito.verify(mSdkContext, Mockito.times(1)).getApplicationInfo();
@@ -390,7 +388,6 @@ public class SdkSandboxActivityRegistryTest {
     @Test
     public void testGetActivityContextInfoIsNullForNonRegisteredHandlers() {
         final Intent intent = buildSandboxActivityIntent(new Binder());
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
 
         assertThat(mRegistry.getContextInfo(intent)).isNull();
     }
@@ -415,22 +412,6 @@ public class SdkSandboxActivityRegistryTest {
 
         SandboxedSdkContext sdkContext = mRegistry.getSdkContext(intent);
         assertThat(sdkContext).isNull();
-    }
-
-    /**
-     * Ensure that the customized SDK context flag has to be enabled for retrieving the
-     * ActivityContextInfo.
-     */
-    @Test
-    public void testGetActivityContextInfoFailIfCustomizedSdkFlagIsDisabled() {
-        final IBinder token = mRegistry.register(mSdkContext, mHandler);
-        Intent intent = buildSandboxActivityIntent(token);
-
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(false);
-
-        IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> mRegistry.getContextInfo(intent));
-        assertThat(exception.getMessage()).isEqualTo("Customized SDK flag is disabled.");
     }
 
     private Intent buildSandboxActivityIntent(IBinder token) {

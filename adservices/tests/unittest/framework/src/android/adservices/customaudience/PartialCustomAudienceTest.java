@@ -21,6 +21,7 @@ import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
@@ -43,12 +44,6 @@ public class PartialCustomAudienceTest extends AdServicesUnitTestCase {
 
     @Test
     public void testBuildValidPartialCARequest_AllSetters_Success() {
-        PartialCustomAudience partialCA =
-                new PartialCustomAudience.Builder(VALID_CA_NAME)
-                        .setExpirationTime(VALID_EXPIRATION_TIME)
-                        .setActivationTime(VALID_ACTIVATION_TIME)
-                        .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
-                        .build();
         expect.that(VALID_PARTIAL_CA.getActivationTime()).isEqualTo(VALID_ACTIVATION_TIME);
         expect.that(VALID_PARTIAL_CA.getExpirationTime()).isEqualTo(VALID_EXPIRATION_TIME);
         expect.that(VALID_PARTIAL_CA.getUserBiddingSignals()).isEqualTo(VALID_BIDDING_SIGNALS);
@@ -76,6 +71,7 @@ public class PartialCustomAudienceTest extends AdServicesUnitTestCase {
 
     @Test
     public void testEquals_Same() {
+        EqualsTester et = new EqualsTester(expect);
         PartialCustomAudience partialCa1 =
                 new PartialCustomAudience.Builder(VALID_CA_NAME)
                         .setExpirationTime(VALID_EXPIRATION_TIME)
@@ -90,11 +86,12 @@ public class PartialCustomAudienceTest extends AdServicesUnitTestCase {
                         .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
                         .build();
 
-        expectObjectsAreEqual(partialCa1, partialCa2);
+        et.expectObjectsAreEqual(partialCa1, partialCa2);
     }
 
     @Test
     public void testHashCodeSame() {
+        EqualsTester et = new EqualsTester(expect);
         int partialCa1Hash =
                 new PartialCustomAudience.Builder(VALID_CA_NAME)
                         .setExpirationTime(VALID_EXPIRATION_TIME)
@@ -114,7 +111,7 @@ public class PartialCustomAudienceTest extends AdServicesUnitTestCase {
         expect.that(VALID_PARTIAL_CA.getExpirationTime()).isEqualTo(VALID_EXPIRATION_TIME);
         expect.that(VALID_PARTIAL_CA.getUserBiddingSignals()).isEqualTo(VALID_BIDDING_SIGNALS);
 
-        expectObjectsAreEqual(partialCa1Hash, partialCa2Hash);
+        et.expectObjectsAreEqual(partialCa1Hash, partialCa2Hash);
     }
 
     @Test

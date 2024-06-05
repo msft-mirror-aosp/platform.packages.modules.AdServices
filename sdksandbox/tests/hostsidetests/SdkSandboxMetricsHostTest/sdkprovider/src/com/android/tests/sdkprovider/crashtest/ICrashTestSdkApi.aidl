@@ -18,4 +18,3 @@ interface ICrashTestSdkApi {
     oneway void triggerCrash();
     List<ApplicationExitInfo> getSdkSandboxExitReasons();
 }
-

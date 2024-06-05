@@ -102,7 +102,7 @@ public class PeriodicEncodingJobService extends JobService {
                     /* doRecord=*/ true);
         }
 
-        PeriodicEncodingJobWorker encodingWorker = PeriodicEncodingJobWorker.getInstance(this);
+        PeriodicEncodingJobWorker encodingWorker = PeriodicEncodingJobWorker.getInstance();
         encodingWorker
                 .encodeProtectedSignals()
                 .addCallback(
@@ -141,7 +141,7 @@ public class PeriodicEncodingJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("PeriodicEncodingJobService.onStopJob");
-        PeriodicEncodingJobWorker.getInstance(this).stopWork();
+        PeriodicEncodingJobWorker.getInstance().stopWork();
 
         boolean shouldRetry = true;
         AdServicesJobServiceLogger.getInstance()
@@ -171,8 +171,13 @@ public class PeriodicEncodingJobService extends JobService {
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-        if ((jobScheduler.getPendingJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID) == null)
-                || forceSchedule) {
+        JobInfo job = jobScheduler.getPendingJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID);
+        long existingJobPeriodMillis = flags.getProtectedSignalPeriodicEncodingJobPeriodMs();
+        if (job == null
+                || forceSchedule
+                // Reschedule the job if the period flag has changed
+                || (job.getIntervalMillis() != existingJobPeriodMillis
+                        && JobInfo.getMinPeriodMillis() < existingJobPeriodMillis)) {
             schedule(context, flags);
         } else {
             LoggerFactory.getFledgeLogger()
@@ -180,7 +185,6 @@ public class PeriodicEncodingJobService extends JobService {
                             "Protected Signals periodic encoding job already scheduled, skipping "
                                     + "reschedule");
         }
-        // TODO(b/267651517) Jobs should be rescheduled if the job-params get updated
     }
 
     /**
@@ -202,7 +206,6 @@ public class PeriodicEncodingJobService extends JobService {
                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
                                 new ComponentName(context, PeriodicEncodingJobService.class))
                         .setRequiresBatteryNotLow(true)
-                        .setRequiresDeviceIdle(true)
                         .setPeriodic(
                                 flags.getProtectedSignalPeriodicEncodingJobPeriodMs(),
                                 flags.getProtectedSignalsPeriodicEncodingJobFlexMs())

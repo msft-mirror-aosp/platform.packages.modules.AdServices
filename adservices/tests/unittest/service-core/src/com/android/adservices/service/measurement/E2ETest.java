@@ -42,6 +42,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
@@ -129,6 +130,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
 
     interface AggregateReportPayloadKeys {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
         String HISTOGRAMS = "histograms";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String SOURCE_REGISTRATION_TIME = "source_registration_time";
@@ -277,6 +279,15 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
             return true;
         }
         return false;
+    }
+
+    /** Returns the first URL in the list of registration responses. */
+    public static String getFirstUrl(JSONObject registrationObj)
+            throws JSONException {
+        return registrationObj
+                .getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
+                .getJSONObject(0)
+                .getString(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_URL_KEY);
     }
 
     public static boolean hasArDebugPermission(JSONObject obj) throws JSONException {
@@ -512,27 +523,27 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
 
     private static int hashForEventReportObject(OutputType outputType, JSONObject obj) {
         int n = EventReportPayloadKeys.STRINGS.size();
-        int numValuesExcludingN = 4;
+        int numValuesExcludingN = 5;
         Object[] objArray = new Object[n + numValuesExcludingN];
-        // TODO (b/306863121) add time to hash
+        objArray[0] = obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
         String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
-        objArray[0] =
+        objArray[1] =
                 outputType == OutputType.EXPECTED ? url : getReportUrl(ReportType.EVENT, url);
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        objArray[1] = payload.optDouble(EventReportPayloadKeys.DOUBLE, 0);
+        objArray[2] = payload.optDouble(EventReportPayloadKeys.DOUBLE, 0);
         // Try string then JSONArray in order so as to override the string if the array parsing is
         // successful.
-        objArray[2] = null;
+        objArray[3] = null;
         String maybeString = payload.optString(EventReportPayloadKeys.STRING_OR_ARRAY);
         if (maybeString != null) {
-            objArray[2] = maybeString;
+            objArray[3] = maybeString;
         }
         JSONArray maybeArray1 = payload.optJSONArray(EventReportPayloadKeys.STRING_OR_ARRAY);
         if (maybeArray1 != null) {
-            objArray[2] = maybeArray1;
+            objArray[3] = maybeArray1;
         }
         JSONArray maybeArray2 = payload.optJSONArray(EventReportPayloadKeys.ARRAY);
-        objArray[3] = maybeArray2;
+        objArray[4] = maybeArray2;
         for (int i = 0; i < n; i++) {
             objArray[i + numValuesExcludingN] =
                     payload.optString(EventReportPayloadKeys.STRINGS.get(i), "");
@@ -541,25 +552,27 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     }
 
     private static int hashForAggregateReportObject(OutputType outputType, JSONObject obj) {
-        Object[] objArray = new Object[7];
-        // TODO (b/306863121) add time to hash
+        Object[] objArray = new Object[9];
+        objArray[0] = obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
         String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
-        objArray[0] =
+        objArray[1] =
                 outputType == OutputType.EXPECTED ? url : getReportUrl(ReportType.AGGREGATE, url);
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        objArray[1] = payload.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "");
+        objArray[2] = payload.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "");
+        objArray[3] = payload.optString(
+                AggregateReportPayloadKeys.AGGREGATION_COORDINATOR_ORIGIN, "");
         // To compare histograms, we already converted them to an ordered string of value pairs.
-        objArray[2] = getComparableHistograms(
+        objArray[4] = getComparableHistograms(
                 payload.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS));
-        objArray[3] = payload.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "");
-        objArray[4] = payload.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "");
-        objArray[5] = payload.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, "");
-        objArray[6] = payload.optString(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID, "");
+        objArray[5] = payload.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "");
+        objArray[6] = payload.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "");
+        objArray[7] = payload.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, "");
+        objArray[8] = payload.optString(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID, "");
         return Arrays.hashCode(objArray);
     }
 
     private static long reportTimeFrom(JSONObject obj) {
-        return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0);
+        return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
     }
 
     // 'obj1' is the expected result, 'obj2' is the actual result.
@@ -653,6 +666,13 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         if (!payload1.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "").equals(
                 payload2.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, ""))) {
             log("Aggregate attribution destination mismatch");
+            return false;
+        }
+        if (!payload1.optString(
+                AggregateReportPayloadKeys.AGGREGATION_COORDINATOR_ORIGIN, "").equals(
+                        payload2.optString(
+                                AggregateReportPayloadKeys.AGGREGATION_COORDINATOR_ORIGIN, ""))) {
+            log("Aggregate aggregation coordinator origin mismatch");
             return false;
         }
         if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "")
@@ -1080,7 +1100,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     }
 
     static String preprocessTestJson(String json) {
-        return json.replaceAll("\\.test(?=[\"\\/])", ".com");
+        return json.replaceAll("\\.test(?=[\"\\/,])", ".com");
     }
 
     /**
@@ -1149,13 +1169,23 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
             // with Ph Flags.
             Map<String, String> apiConfigPhFlags) {
         Map<String, String> phFlagsMap = new HashMap<>();
-        apiConfigPhFlags.keySet().forEach(
-                (key) -> {
-                        if (!apiConfigObj.isNull(key)) {
-                            phFlagsMap.put(apiConfigPhFlags.get(key), apiConfigObj.optString(key));
-                        }
+        apiConfigPhFlags.keySet().forEach((key) -> {
+            if (!apiConfigObj.isNull(key)) {
+                // Interop test configuration uses a single key for both event and aggregate
+                // level attribution limits.
+                if (key.equals("rate_limit_max_attributions")) {
+                    phFlagsMap.put(
+                            FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                            apiConfigObj.optString(key));
+                    phFlagsMap.put(
+                            FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                            apiConfigObj.optString(key));
+                } else {
+                    phFlagsMap.put(apiConfigPhFlags.get(key),
+                            apiConfigObj.optString(key));
                 }
-        );
+            }
+        });
         if (testObj.isNull(TestFormatJsonMapping.PH_FLAGS_OVERRIDE_KEY)) {
             return phFlagsMap;
         }

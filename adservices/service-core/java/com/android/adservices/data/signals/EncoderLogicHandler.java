@@ -28,7 +28,6 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -121,12 +120,14 @@ public class EncoderLogicHandler {
     public EncoderLogicHandler(@NonNull Context context) {
         this(
                 EncoderPersistenceDao.getInstance(context),
-                ProtectedSignalsDatabase.getInstance(context).getEncoderEndpointsDao(),
-                ProtectedSignalsDatabase.getInstance(context).getEncoderLogicMetadataDao(),
-                ProtectedSignalsDatabase.getInstance(context).protectedSignalsDao(),
+                ProtectedSignalsDatabase.getInstance().getEncoderEndpointsDao(),
+                ProtectedSignalsDatabase.getInstance().getEncoderLogicMetadataDao(),
+                ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBackgroundExecutor(),
-                        CacheProviderFactory.createNoOpCache()),
+                        FlagsFactory.getFlags().getPasSignalsDownloadConnectionTimeoutMs(),
+                        FlagsFactory.getFlags().getPasSignalsDownloadReadTimeoutMs(),
+                        AdServicesHttpsClient.DEFAULT_MAX_BYTES),
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesLoggerImpl.getInstance(),
                 FlagsFactory.getFlags());

@@ -22,6 +22,7 @@ import static android.app.sdksandbox.ISharedPreferencesSyncCallback.PREFERENCES_
 import static android.app.sdksandbox.SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 
+import static com.android.server.sdksandbox.SdkSandboxServiceProvider.SANDBOX_INSTR_PROCESS_NAME_SUFFIX;
 import static com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider.FAKE_DUMP_OUTPUT;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
@@ -234,7 +235,6 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(sSdkSandboxManagerLocal).isNotNull();
 
         sSdkSandboxSettingsListener = mService.getSdkSandboxSettingsListener();
-        assertThat(sSdkSandboxSettingsListener).isNotNull();
         mDeviceConfigUtil = new DeviceConfigUtil(sSdkSandboxSettingsListener);
         mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
 
@@ -381,12 +381,20 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(thrown).hasMessageThat().contains("does.not.exist");
     }
 
+    // Tests the failure of attempting to load an SDK when the calling package name and calling uid
+    // does not match.
     @Test
     public void testLoadSdkIncorrectCallingPackage() {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
 
+        // Try loading the SDK from another installed sample app with a different uid.
         mService.loadSdk(
-                SDK_PROVIDER_PACKAGE, null, SDK_NAME, mSandboxLatencyInfo, new Bundle(), callback);
+                "com.android.emptysampleapp",
+                null,
+                SDK_NAME,
+                mSandboxLatencyInfo,
+                new Bundle(),
+                callback);
 
         LoadSdkException thrown = callback.getLoadSdkException();
         assertEquals(LOAD_SDK_INTERNAL_ERROR, thrown.getLoadSdkErrorCode());
@@ -1185,7 +1193,39 @@ public class SdkSandboxManagerServiceUnitTest {
         final ApplicationInfo info = pm.getApplicationInfo(TEST_PACKAGE, 0);
         final String processName =
                 sSdkSandboxManagerLocal.getSdkSandboxProcessNameForInstrumentation(info);
-        assertThat(processName).isEqualTo(TEST_PACKAGE + "_sdk_sandbox_instr");
+        assertThat(processName).isEqualTo(TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
+    }
+
+    @Test
+    public void test_getSdkInstrumentationInfo() throws Exception {
+        final PackageManager pm =
+                InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
+        ApplicationInfo clientAppInfo = pm.getApplicationInfo(TEST_PACKAGE, 0);
+
+        ApplicationInfo sdkSandboxInfo =
+                sSdkSandboxManagerLocal.getSdkSandboxApplicationInfoForInstrumentation(
+                        clientAppInfo, /* isSdkInSandbox= */ false);
+
+        assertThat(sdkSandboxInfo.processName)
+                .isEqualTo(TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
+        assertThat(sdkSandboxInfo.packageName).isEqualTo(pm.getSdkSandboxPackageName());
+        assertThat(sdkSandboxInfo.sourceDir).startsWith("/apex/com.android.adservices");
+    }
+
+    @Test
+    public void test_getSdkInstrumentationInfo_sdkInSandbox() throws Exception {
+        final PackageManager pm =
+                InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
+        ApplicationInfo clientAppInfo = pm.getApplicationInfo(TEST_PACKAGE, 0);
+
+        ApplicationInfo sdkSandboxInfo =
+                sSdkSandboxManagerLocal.getSdkSandboxApplicationInfoForInstrumentation(
+                        clientAppInfo, /* isSdkInSandbox= */ true);
+
+        assertThat(sdkSandboxInfo.processName)
+                .isEqualTo(TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
+        assertThat(sdkSandboxInfo.packageName).isEqualTo(pm.getSdkSandboxPackageName());
+        assertThat(sdkSandboxInfo.sourceDir).startsWith("/data/app");
     }
 
     @Test
@@ -1910,6 +1950,52 @@ public class SdkSandboxManagerServiceUnitTest {
         ActivityInterceptorCallback.ActivityInterceptResult result = interceptActivityLunch(intent);
 
         assertThat(result).isNull();
+    }
+
+    @Test
+    public void testRegisterActivityInterceptorCallbackForInstrumentationActivities() {
+        assumeTrue(SdkLevel.isAtLeastV());
+        disableKillUid();
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        sSdkSandboxManagerLocal.notifyInstrumentationStarted(TEST_PACKAGE, mClientAppUid);
+
+        Intent intent = new Intent().setAction(Intent.ACTION_VIEW);
+        ActivityInfo activityInfo = new ActivityInfo();
+        activityInfo.processName = TEST_PACKAGE;
+        activityInfo.applicationInfo = new ApplicationInfo();
+        activityInfo.applicationInfo.packageName = TEST_PACKAGE;
+        activityInfo.applicationInfo.uid = mClientAppUid;
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(
+                        // Required to intercept activities during CTS-in-sandbox tests.
+                        android.Manifest.permission.START_ACTIVITIES_FROM_SDK_SANDBOX,
+                        // Required for test tearDown.
+                        Manifest.permission.READ_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_DEVICE_CONFIG);
+        ActivityInterceptorCallback.ActivityInterceptResult result =
+                mInterceptorCallbackArgumentCaptor
+                        .getValue()
+                        .onInterceptActivityLaunch(
+                                new ActivityInterceptorCallback.ActivityInterceptorInfo.Builder(
+                                                mClientAppUid,
+                                                Process.myPid(),
+                                                /* realCallingUid= */ 0,
+                                                /* realCallingPid= */ 0,
+                                                /* userId= */ 0,
+                                                intent,
+                                                /* rInfo= */ null,
+                                                activityInfo)
+                                        .setCallingPackage(TEST_PACKAGE)
+                                        .build());
+
+        assertThat(result.getIntent()).isEqualTo(intent);
+        assertThat(result.getActivityOptions()).isNull();
+        assertThat(result.isActivityResolved()).isTrue();
+        assertThat(activityInfo.processName)
+                .isEqualTo(TEST_PACKAGE + SANDBOX_INSTR_PROCESS_NAME_SUFFIX);
+        assertThat(activityInfo.applicationInfo.uid).isEqualTo(mClientAppUid);
     }
 
     private ActivityInterceptorCallback.ActivityInterceptResult interceptActivityLunch(

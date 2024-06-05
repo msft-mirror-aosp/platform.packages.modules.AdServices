@@ -1,4 +1,71 @@
 {
+  "adservices-mainline-presubmit": [
+    {
+      "name": "CtsSdkSandboxHostSideTests",
+      "options": [
+        {
+          "exclude-annotation": "android.platform.test.annotations.LargeTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsSdkSandboxInprocessTests"
+    },
+    {
+      "name": "SdkSandboxInprocessTests"
+    },
+    {
+      "name": "SdkSandboxManagerServiceUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "SdkSandboxFrameworkUnitTests"
+    },
+    {
+      "name": "SdkSandboxUnitTests"
+    },
+    {
+      "name": "SdkSandboxManagerTests"
+    },
+    {
+      "name": "SdkSandboxLifecycleHostTest"
+    },
+    {
+      "name": "SdkSandboxShellHostTest"
+    },
+    {
+      "name": "SdkSandboxRestrictionsTests"
+    },
+    {
+      "name": "SdkSandboxStorageHostTest",
+      "options": [
+        {
+          "exclude-annotation": "android.platform.test.annotations.LargeTest"
+        }
+      ]
+    },
+    {
+      "name": "SdkSandboxMetricsHostTest"
+    },
+    {
+      "name": "CtsSdkSandboxWebkitTestCases",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "SdkSandboxManagerDisabledTests"
+    },
+    {
+      "name": "SdkSandboxPerfScenarioTests"
+    }
+  ],
   "mainline-presubmit": [
     // Install com.google.android.adservices.apex and run the corresponding test.
     {
@@ -11,6 +78,9 @@
     },
     {
       "name": "CtsSdkSandboxInprocessTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxInprocessTests[com.google.android.adservices.apex]"
     },
     {
       "name": "SdkSandboxManagerServiceUnitTests[com.google.android.adservices.apex]",
@@ -71,6 +141,12 @@
     },
     {
       "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxNextTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "SdkSandboxAuditTests[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -84,6 +160,9 @@
     },
     {
       "name": "CtsSdkSandboxInprocessTests"
+    },
+    {
+      "name": "SdkSandboxInprocessTests"
     },
     {
       "name": "CtsSdkSandboxWebkitTestCases",
@@ -152,17 +231,89 @@
     },
     {
       "name": "SdkSandboxUiTests"
+    },
+    {
+      "name": "SdkSandboxNextTests"
+    },
+    {
+      "name": "SdkSandboxAuditTests"
     }
   ],
   "sdksandbox-postsubmit": [
     {
-      "name": "CtsViewTestCases"
+      "name": "CtsAnimationTestCases"
+    },
+    {
+      "name": "CtsApacheHttpTestCases"
     },
     {
       "name": "CtsContentTestCases"
     },
     {
+      "name": "CtsDatabaseTestCases"
+    },
+    {
+      "name": "CtsGraphicsTestCases"
+    },
+    {
+      "name": "CtsLocationCoarseTestCases"
+    },
+    {
+      "name": "CtsLocationFineTestCases"
+    },
+    {
+      "name": "CtsLocationGnssTestCases"
+    },
+    {
+      "name": "CtsLocationNoneTestCases"
+    },
+    {
+      "name": "CtsLocationPrivilegedTestCases"
+    },
+    {
+      "name": "CtsMediaBetterTogetherTestCases"
+    },
+    {
+      "name": "CtsMediaCodecTestCases"
+    },
+    {
+      "name": "CtsMediaMiscTestCases"
+    },
+    {
+      "name": "CtsMediaPlayerTestCases"
+    },
+    {
+      "name": "CtsMediaProjectionSDK33TestCases"
+    },
+    {
+      "name": "CtsMediaProjectionSDK34TestCases"
+    },
+    {
+      "name": "CtsMediaProjectionTestCases"
+    },
+    {
+      "name": "CtsOpenGLTestCases"
+    },
+    {
       "name": "CtsOsTestCases"
+    },
+    {
+      "name": "CtsTextTestCases"
+    },
+    {
+      "name": "CtsUtilTestCases"
+    },
+    {
+      "name": "CtsViewTestCases"
+    },
+    {
+      "name": "CtsWidgetTestCases"
+    },
+    {
+      "name": "CtsWifiNonUpdatableTestCases"
+    },
+    {
+      "name": "CtsWifiTestCases"
     }
   ]
 }

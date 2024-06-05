@@ -20,8 +20,9 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -52,6 +53,16 @@ public final class SourceFixture {
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
+    /**
+     * @return The minimum valid source with attribiton scopes.
+     */
+    public static Source.Builder getMinimalValidSourceWithAttributionScope() {
+        return getMinimalValidSourceBuilder()
+                .setAttributionScopes(ValidSourceParams.ATTRIBUTION_SCOPES)
+                .setAttributionScopeLimit(ValidSourceParams.ATTRIBUTION_SCOPE_LIMIT)
+                .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES);
+    }
+
     // Assume the field values in this Source have no relation to the field values in
     // {@link ValidSourceParams}
     public static Source getValidSource() {
@@ -75,6 +86,7 @@ public final class SourceFixture {
                 .setSourceType(ValidSourceParams.SOURCE_TYPE)
                 .setInstallAttributionWindow(ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW)
                 .setInstallCooldownWindow(ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
+                .setReinstallReattributionWindow(ValidSourceParams.REINSTALL_REATTRIBUTION_WINDOW)
                 .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
                 .setFilterDataString(ValidSourceParams.buildFilterDataString())
@@ -88,6 +100,9 @@ public final class SourceFixture {
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
                 .setCoarseEventReportDestinations(true)
                 .setSharedDebugKey(ValidSourceParams.SHARED_DEBUG_KEY)
+                .setAttributionScopes(ValidSourceParams.ATTRIBUTION_SCOPES)
+                .setAttributionScopeLimit(ValidSourceParams.ATTRIBUTION_SCOPE_LIMIT)
+                .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES)
                 .setAttributedTriggers(new ArrayList<>());
     }
 
@@ -120,6 +135,10 @@ public final class SourceFixture {
         public static final Uri REGISTRATION_ORIGIN =
                 WebUtil.validUri("https://subdomain.example.test");
         public static final UnsignedLong SHARED_DEBUG_KEY = new UnsignedLong(834690L);
+        public static final List<String> ATTRIBUTION_SCOPES = List.of("1", "2", "3");
+        public static final Long ATTRIBUTION_SCOPE_LIMIT = 10L;
+        public static final Long MAX_NUM_VIEW_STATES = 1000L;
+        public static final Long REINSTALL_REATTRIBUTION_WINDOW = 841839879274L;
 
         public static final String buildAggregateSource() {
             try {
@@ -182,7 +201,7 @@ public final class SourceFixture {
         TriggerSpecs triggerSpecs = new TriggerSpecs(
                 triggerSpecArrayFrom(triggerSpecsString), 3, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -199,7 +218,23 @@ public final class SourceFixture {
         TriggerSpecs triggerSpecs = new TriggerSpecs(
                 triggerSpecArrayFrom(triggerSpecsString), 1, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
+        return triggerSpecs;
+    }
+
+    /** Provides a valid TriggerSpecs with hardcoded epsilon. */
+    public static TriggerSpecs getValidTriggerSpecsWithNonDefaultEpsilon() throws JSONException {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0, "
+                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
+                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_buckets\": [1]}]";
+        Source source = getMinimalValidSourceBuilder().build();
+        double mockFlipProbability = Combinatorics.getFlipProbability(5, 3);
+        String jsonString = String.format("{\"flip_probability\": %f}", mockFlipProbability);
+        TriggerSpecs triggerSpecs = new TriggerSpecs(triggerSpecsString, "1", source, jsonString);
         return triggerSpecs;
     }
 
@@ -219,7 +254,7 @@ public final class SourceFixture {
                 maxReports,
                 source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -235,7 +270,7 @@ public final class SourceFixture {
                 /* maxReports */ 3,
                 source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -256,6 +291,20 @@ public final class SourceFixture {
             return getMinimalValidSourceBuilder()
                     .setAttributedTriggers(new ArrayList<>())
                     .setTriggerSpecs(getValidTriggerSpecsCountBasedWithFewerState())
+                    .setMaxEventLevelReports(
+                            getValidTriggerSpecsCountBasedWithFewerState().getMaxReports())
+                    .build();
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+    /** Provide a Source with hardcoded epsilon in TriggerSpecs. */
+    public static Source getValidFullFlexSourceWithNonDefaultEpsilon() {
+        try {
+            return getMinimalValidSourceBuilder()
+                    .setAttributedTriggers(new ArrayList<>())
+                    .setTriggerSpecs(getValidTriggerSpecsWithNonDefaultEpsilon())
                     .setMaxEventLevelReports(
                             getValidTriggerSpecsCountBasedWithFewerState().getMaxReports())
                     .build();

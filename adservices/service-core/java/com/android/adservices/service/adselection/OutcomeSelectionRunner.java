@@ -57,6 +57,7 @@ import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -138,7 +139,8 @@ public class OutcomeSelectionRunner {
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             final int callerUid,
             boolean shouldUseUnifiedTables,
-            @NonNull final RetryStrategy retryStrategy) {
+            @NonNull final RetryStrategy retryStrategy,
+            boolean consoleMessageInLogsEnabled) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
@@ -171,7 +173,8 @@ public class OutcomeSelectionRunner {
                                 adCounterKeyCopier,
                                 new DebugReportingScriptDisabledStrategy(),
                                 cpcBillingEnabled,
-                                retryStrategy),
+                                retryStrategy,
+                                () -> consoleMessageInLogsEnabled),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -238,9 +241,11 @@ public class OutcomeSelectionRunner {
      */
     public void runOutcomeSelection(
             @NonNull AdSelectionFromOutcomesInput inputParams,
-            @NonNull AdSelectionCallback callback) {
+            @NonNull AdSelectionCallback callback,
+            @NonNull SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger) {
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
+        Objects.requireNonNull(selectAdsFromOutcomesExecutionLogger);
         AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig =
                 inputParams.getAdSelectionFromOutcomesConfig();
         try {
@@ -275,7 +280,8 @@ public class OutcomeSelectionRunner {
                                     ignoredVoid ->
                                             orchestrateOutcomeSelection(
                                                     inputParams.getAdSelectionFromOutcomesConfig(),
-                                                    inputParams.getCallerPackageName()),
+                                                    inputParams.getCallerPackageName(),
+                                                    selectAdsFromOutcomesExecutionLogger),
                                     mLightweightExecutorService);
             Futures.addCallback(
                     adSelectionOutcomeFuture,
@@ -284,6 +290,8 @@ public class OutcomeSelectionRunner {
                         public void onSuccess(AdSelectionOutcome result) {
                             notifySuccessToCaller(
                                     inputParams.getCallerPackageName(), result, callback);
+                            selectAdsFromOutcomesExecutionLogger
+                                    .logSelectAdsFromOutcomesApiCalledStats();
                         }
 
                         @Override
@@ -298,6 +306,8 @@ public class OutcomeSelectionRunner {
                                 // Fail Silently by notifying success to caller
                                 notifyEmptySuccessToCaller(callback);
                             } else {
+                                selectAdsFromOutcomesExecutionLogger
+                                        .logSelectAdsFromOutcomesApiCalledStats();
                                 if (t.getCause() instanceof AdServicesException) {
                                     notifyFailureToCaller(
                                             inputParams.getCallerPackageName(),
@@ -319,13 +329,17 @@ public class OutcomeSelectionRunner {
     }
 
     private ListenableFuture<AdSelectionOutcome> orchestrateOutcomeSelection(
-            AdSelectionFromOutcomesConfig config, String callerPackageName) {
-        validateExistenceOfAdSelectionIds(config, callerPackageName);
+            AdSelectionFromOutcomesConfig config,
+            String callerPackageName,
+            SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger) {
+        validateExistenceOfAdSelectionIds(
+                config, callerPackageName, selectAdsFromOutcomesExecutionLogger);
         return retrieveAdSelectionIdWithBidList(config.getAdSelectionIds(), callerPackageName)
                 .transform(
                         outcomes -> {
                             FluentFuture<Long> selectedIdFuture =
-                                    mAdOutcomeSelector.runAdOutcomeSelector(outcomes, config);
+                                    mAdOutcomeSelector.runAdOutcomeSelector(
+                                            outcomes, config, selectAdsFromOutcomesExecutionLogger);
                             return Pair.create(outcomes, selectedIdFuture);
                         },
                         mLightweightExecutorService)
@@ -460,10 +474,12 @@ public class OutcomeSelectionRunner {
     }
 
     private void validateExistenceOfAdSelectionIds(
-            AdSelectionFromOutcomesConfig config, String callerPackageName) {
+            AdSelectionFromOutcomesConfig config,
+            String callerPackageName,
+            SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger) {
         Objects.requireNonNull(config.getAdSelectionIds());
 
-        ImmutableList.Builder<Long> notExistingIds = new ImmutableList.Builder<>();
+        ImmutableList.Builder<Long> notExistingIdsBuilder = new ImmutableList.Builder<>();
         List<Long> existingIds;
         if (mShouldUseUnifiedTables) {
             existingIds =
@@ -480,17 +496,19 @@ public class OutcomeSelectionRunner {
         }
         config.getAdSelectionIds().stream()
                 .filter(e -> !existingIds.contains(e))
-                .forEach(notExistingIds::add);
+                .forEach(notExistingIdsBuilder::add);
 
         // TODO(b/258912806): Current behavior is to fail if any ad selection ids are absent in the
         //  db or owned by another caller package. Investigate if this behavior needs changing due
         //  to security reasons.
-        if (!notExistingIds.build().isEmpty()) {
+        selectAdsFromOutcomesExecutionLogger.setCountIds(config.getAdSelectionIds().size());
+        List<Long> notExistingIds = notExistingIdsBuilder.build();
+        selectAdsFromOutcomesExecutionLogger.setCountNonExistingIds(notExistingIds.size());
+        if (!notExistingIds.isEmpty()) {
             String err =
                     String.format(
-                            "Ad selection ids: %s don't exists or owned by the calling "
-                                    + "package",
-                            notExistingIds.build());
+                            "Ad selection ids: %s don't exists or owned by the calling package",
+                            notExistingIds);
             sLogger.e(err);
             throw new IllegalArgumentException(err);
         }

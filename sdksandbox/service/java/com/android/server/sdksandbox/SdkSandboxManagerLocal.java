@@ -16,6 +16,7 @@
 
 package com.android.server.sdksandbox;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.SdkConstant;
 import android.annotation.SystemApi;
@@ -25,6 +26,12 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ProviderInfo;
 import android.os.IBinder;
+
+import com.android.sdksandbox.flags.Flags;
+import com.android.tools.r8.keepanno.annotations.KeepForApi;
+import com.android.tools.r8.keepanno.annotations.KeepItemKind;
+import com.android.tools.r8.keepanno.annotations.KeepTarget;
+import com.android.tools.r8.keepanno.annotations.MemberAccessFlags;
 
 /**
  * Exposes APIs to {@code system_server} components outside of the module boundaries.
@@ -38,11 +45,20 @@ public interface SdkSandboxManagerLocal {
     String SERVICE_INTERFACE = "com.android.sdksandbox.SdkSandboxService";
 
     /**
-     * Broadcast Receiver listen to sufficient verifier requests from Package Manager
-     * when install new SDK, to verifier SDK code during installation time
-     * and terminate install if SDK not compatible with privacy sandbox restrictions.
+     * Broadcast Receiver listen to sufficient verifier requests from Package Manager when install
+     * new SDK, to verifier SDK code during installation time and terminate install if SDK not
+     * compatible with privacy sandbox restrictions.
      */
     @SdkConstant(SdkConstant.SdkConstantType.BROADCAST_INTENT_ACTION)
+    @KeepForApi(
+            description =
+                    "Package Manager reflects on the class denoted by this field. See b/255754931",
+            additionalTargets = {
+                @KeepTarget(
+                        kind = KeepItemKind.CLASS_AND_MEMBERS,
+                        classConstant = SdkSandboxVerifierReceiver.class,
+                        memberAccess = {MemberAccessFlags.PUBLIC})
+            })
     String VERIFIER_RECEIVER = "com.android.server.sdksandbox.SdkSandboxVerifierReceiver";
 
     /**
@@ -72,7 +88,6 @@ public interface SdkSandboxManagerLocal {
     void enforceAllowedToStartActivity(@NonNull Intent intent);
 
     /**
-
      * Enforces that the sdk sandbox process is allowed to start or bind to a service with a given
      * intent.
      *
@@ -123,6 +138,22 @@ public interface SdkSandboxManagerLocal {
      */
     @NonNull
     String getSdkSandboxProcessNameForInstrumentation(@NonNull ApplicationInfo clientAppInfo);
+
+    /**
+     * Returns the application info of the sdk sandbox process that corresponds to the given client
+     * app.
+     *
+     * @param clientAppInfo {@link ApplicationInfo} of the client app
+     * @param isSdkInSandbox specifies whether to create an application info for the sandbox or for
+     *     an Sdk running inside the sandbox.
+     * @return {@link ApplicationInfo} of the sdk sandbox process to be instrumented
+     * @throws NameNotFoundException if the sandbox package name cannot be found.
+     */
+    @NonNull
+    @FlaggedApi(Flags.FLAG_SDK_SANDBOX_INSTRUMENTATION_INFO)
+    ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
+            @NonNull ApplicationInfo clientAppInfo, boolean isSdkInSandbox)
+            throws NameNotFoundException;
 
     /**
      * Called by the {@code ActivityManagerService} to notify that instrumentation of the

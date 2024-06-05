@@ -18,6 +18,13 @@ package com.android.adservices.spe;
 
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_BACK_COMPAT_OTA;
 import static com.android.adservices.shared.spe.JobServiceConstants.SKIP_REASON_JOB_NOT_CONFIGURED;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -65,7 +72,7 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
     public void setup() {
         assertWithMessage("The JobScheduler").that(mJobScheduler).isNotNull();
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         // By default, enable SPE.
         when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(true);
 
@@ -160,7 +167,8 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
                 .rescheduleJobWithLegacyMethod(jobId);
 
         // Disable SPE and the job should be rescheduled by the legacy scheduling method.
-        when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(false);
+        doReturn(true).when(mSpyAdServicesJobService).shouldRescheduleWithLegacyMethod(jobId);
+
         assertWithMessage("mSpyAdServicesJobService.onStartJob()")
                 .that(mSpyAdServicesJobService.onStartJob(mMockParameters))
                 .isFalse();
@@ -171,5 +179,95 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
                 .that(actualJobInfo.getMinLatencyMillis())
                 .isEqualTo(minimumLatencyMs2);
         verify(mMockLogger, never()).recordOnStartJob(anyInt());
+    }
+
+    @Test
+    public void testShouldRescheduleWithLegacyMethod_firstBatch_shouldReschedule() {
+        when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(false);
+
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()))
+                .isTrue();
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId()))
+                .isTrue();
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                MDD_CHARGING_PERIODIC_TASK_JOB.getJobId()))
+                .isTrue();
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId()))
+                .isTrue();
+    }
+
+    @Test
+    public void testShouldRescheduleWithLegacyMethod_firstBatch_shouldNotReschedule() {
+        when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(true);
+
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId()))
+                .isFalse();
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId()))
+                .isFalse();
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                MDD_CHARGING_PERIODIC_TASK_JOB.getJobId()))
+                .isFalse();
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId()))
+                .isFalse();
+    }
+
+    @Test
+    public void testShouldRescheduleWithLegacyMethod_secondBatch_shouldReschedule() {
+        testShouldRescheduleWithLegacyMethod_secondBatch(/* isSpeEnabled= */ false);
+    }
+
+    @Test
+    public void testShouldRescheduleWithLegacyMethod_secondBatch_shouldNotReschedule() {
+        testShouldRescheduleWithLegacyMethod_secondBatch(/* isSpeEnabled= */ true);
+    }
+
+    @Test
+    public void testShouldRescheduleWithLegacyMethod_otherJob() {
+        when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(false);
+        when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(false);
+        when(mMockFlags.getSpeOnBackgroundFetchJobEnabled()).thenReturn(false);
+        when(mMockFlags.getSpeOnAsyncRegistrationFallbackJobEnabled()).thenReturn(false);
+
+        int notConfiguredId = 1000000;
+
+        assertThat(mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(notConfiguredId))
+                .isFalse();
+    }
+
+    private void testShouldRescheduleWithLegacyMethod_secondBatch(boolean isSpeEnabled) {
+        when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(isSpeEnabled);
+
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                TOPICS_EPOCH_JOB.getJobId()))
+                .isEqualTo(!isSpeEnabled);
+
+        when(mMockFlags.getSpeOnBackgroundFetchJobEnabled()).thenReturn(isSpeEnabled);
+
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
+                .isEqualTo(!isSpeEnabled);
+
+        when(mMockFlags.getSpeOnAsyncRegistrationFallbackJobEnabled()).thenReturn(isSpeEnabled);
+
+        expect.that(
+                        mSpyAdServicesJobService.shouldRescheduleWithLegacyMethod(
+                                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId()))
+                .isEqualTo(!isSpeEnabled);
     }
 }

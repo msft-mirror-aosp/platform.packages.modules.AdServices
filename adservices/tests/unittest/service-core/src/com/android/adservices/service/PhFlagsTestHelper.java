@@ -53,7 +53,48 @@ public final class PhFlagsTestHelper {
         this.mExpect = Objects.requireNonNull(expect);
     }
 
-    private void testFeatureFlagBackedBySystemProperty(
+    /** Tests a featureFlag (DeviceConfig FeatureFlag) guarded by a {@code guard}. */
+    public void testGuardedFeatureFlag(
+            String flagName,
+            Boolean defaultValue,
+            FeatureFlagType type,
+            @Nullable FlagGuard guard,
+            Flaginator<Flags, Boolean> flaginator) {
+        // This is the value of the getter when it's "disabled"
+        boolean disabledValue = type.equals(FeatureFlagType.LEGACY_KILL_SWITCH);
+
+        if (guard != null) {
+            // First check the behavior when the guarding flags are in place(like kill switches on)
+            guard.setEnabled(false);
+            mExpect.withMessage(
+                            "getter of %s by default when guarding flags are off / kill switch on",
+                            flagName)
+                    .that(flaginator.getFlagValue(mPhFlags))
+                    .isEqualTo(disabledValue);
+
+            // Make sure DeviceConfig was not called
+            verifyGetBooleanDeviceConfigFlagNotCalled(flagName);
+
+            // Then enable the guarding flags [Disables the guard / turn kill switches off.]
+            guard.setEnabled(true);
+        }
+
+        // Without any overriding, the value is the hard coded constant.
+        mExpect.withMessage("getter of %s by default when guarding kill switches are off", flagName)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(defaultValue);
+
+        // Now overriding the device config flag and system properties, so the expected value
+        // is driven by the system properties one (and the feature flag type)
+        boolean deviceConfigValue = !defaultValue;
+        setAdservicesFlag(flagName, deviceConfigValue);
+
+        mExpect.withMessage("getter of %s when overridden by device config value", flagName)
+                .that(flaginator.getFlagValue(mPhFlags))
+                .isEqualTo(deviceConfigValue);
+    }
+
+    private void testGuardedFeatureFlagBackedBySystemProperty(
             String flagName,
             String defaultValueConstant,
             FeatureFlagType type,
@@ -147,9 +188,10 @@ public final class PhFlagsTestHelper {
      *     "COBALT_LOGGING_ENABLED"} defining the default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testFeatureFlagGuardedByGlobalKs(
+    public void testFeatureFlagBackedBySystemPropertyGuardedByGlobalKs(
             String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
-        testGuardedFeatureFlag(flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
+        testGuardedFeatureFlagBackedBySystemProperty(
+                flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
     }
 
     // TODO(b/326254556): remove if not used (other than by testFeatureFlagGuardedByGlobalKs()
@@ -157,6 +199,7 @@ public final class PhFlagsTestHelper {
     // TODO(b/330796095): looks like testConsentManagerDebugMode() is the only caller (other than
     // testFeatureFlagGuardedByGlobalKs() from this class), so it should be removed (or made
     // private)
+
     /**
      * Tests the behavior of a feature flag that is guarded by a "generic" guard (typically the
      * global kill switch and a per-API kill switch).
@@ -167,12 +210,12 @@ public final class PhFlagsTestHelper {
      * @param guard helper object used enable / disable the guarding flags
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testGuardedFeatureFlag(
+    public void testGuardedFeatureFlagBackedBySystemProperty(
             String flagName,
             String defaultValueConstant,
             FlagGuard guard,
             Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlagBackedBySystemProperty(
+        testGuardedFeatureFlagBackedBySystemProperty(
                 flagName, defaultValueConstant, FeatureFlagType.FEATURE_FLAG, guard, flaginator);
     }
 
@@ -180,13 +223,29 @@ public final class PhFlagsTestHelper {
      * Tests the behavior of a feature flag and verifies default value, overridden value are
      * fetched.
      */
-    public void testFeatureFlag(
+    public void testConfigFlag(
             String flagName, String defaultConstantValue, Flaginator<Flags, String> flaginator) {
+        testConfigFlag(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ "new" + defaultConstantValue);
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value and provided overridden
+     * value.
+     */
+    public void testConfigFlag(
+            String flagName,
+            String defaultConstantValue,
+            Flaginator<Flags, String> flaginator,
+            String overriddenValue) {
         testFeatureFlagDefaultOverriddenAndIllegalValue(
                 flagName,
                 defaultConstantValue,
                 flaginator,
-                /* overriddenValue= */ "new" + defaultConstantValue,
+                overriddenValue,
                 /* illegalValue= */ Optional.empty());
     }
 
@@ -417,9 +476,9 @@ public final class PhFlagsTestHelper {
      *     "MEASUREMENT_KILL_SWITCH"} defining the default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testFeatureFlagBackedByLegacyKillSwitch(
+    public void testFeatureFlagBackedBySystemPropertyGuardedByLegacyKillSwitch(
             String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlagBackedByLegacyKillSwitch(
+        testFeatureFlagBackedBySystemPropertyGuardedByLegacyKillSwitch(
                 flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
     }
 
@@ -434,15 +493,28 @@ public final class PhFlagsTestHelper {
      *     "MEASUREMENT_KILL_SWITCH"} defining the default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testFeatureFlagBackedByLegacyKillSwitch(
+    public void testFeatureFlagBackedBySystemPropertyGuardedByLegacyKillSwitch(
             String flagName,
             String defaultValueConstant,
             FlagGuard guard,
             Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlagBackedBySystemProperty(
+        testGuardedFeatureFlagBackedBySystemProperty(
                 flagName,
                 defaultValueConstant,
                 FeatureFlagType.FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH,
+                guard,
+                flaginator);
+    }
+
+    public void testLegacyKillSwitchGuardedByLegacyKillSwitch(
+            String flagName,
+            String defaultValueConstant,
+            FlagGuard guard,
+            Flaginator<Flags, Boolean> flaginator) {
+        testGuardedFeatureFlagBackedBySystemProperty(
+                flagName,
+                defaultValueConstant,
+                FeatureFlagType.LEGACY_KILL_SWITCH,
                 guard,
                 flaginator);
     }
@@ -457,9 +529,9 @@ public final class PhFlagsTestHelper {
      *     "ADID_KILL_SWITCH"} defining the default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testUnguardedLegacyKillSwitch(
+    public void testUnguardedLegacyKillSwitchBackedBySystemProperty(
             String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlagBackedBySystemProperty(
+        testGuardedFeatureFlagBackedBySystemProperty(
                 flagName,
                 defaultValueConstant,
                 FeatureFlagType.LEGACY_KILL_SWITCH,
@@ -474,9 +546,9 @@ public final class PhFlagsTestHelper {
      * @param defaultValueConstant default value of the flag
      * @param flaginator helper object used to get the value of the flag being tested
      */
-    public void testLegacyKillSwitch(
+    public void testLegacyKillSwitchBackedBySystemProperty(
             String flagName, String defaultValueConstant, Flaginator<Flags, Boolean> flaginator) {
-        testFeatureFlagBackedBySystemProperty(
+        testGuardedFeatureFlagBackedBySystemProperty(
                 flagName,
                 defaultValueConstant,
                 FeatureFlagType.LEGACY_KILL_SWITCH,

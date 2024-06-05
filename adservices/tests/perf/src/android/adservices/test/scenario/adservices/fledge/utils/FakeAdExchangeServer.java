@@ -32,23 +32,40 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Map;
 
 /** Utility class holding methods that enable Unified Flow auction */
 public class FakeAdExchangeServer {
-
-    private static final long NANO_TO_MILLISECONDS = 1000000;
     private static final String TAG = "AdSelectionDataE2ETest";
 
-    private static Gson sGson =
+    private static final Gson sGson =
             new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                     .create();
 
+    /** Runs server auction with empty http headers */
     public static SelectAdResponse runServerAuction(
             String contextualSignalFileName,
             byte[] adSelectionData,
             String sfeAddress,
             boolean loggingEnabled)
+            throws IOException {
+        return runServerAuction(
+                contextualSignalFileName,
+                adSelectionData,
+                sfeAddress,
+                loggingEnabled,
+                Collections.emptyMap());
+    }
+
+    /** Runs server auction */
+    public static SelectAdResponse runServerAuction(
+            String contextualSignalFileName,
+            byte[] adSelectionData,
+            String sfeAddress,
+            boolean loggingEnabled,
+            Map<String, String> httpHeaders)
             throws IOException {
         // Add contextual data
         SelectAdRequest selectAdRequest =
@@ -62,21 +79,24 @@ public class FakeAdExchangeServer {
         selectAdRequest.setProtectedAudienceCiphertext(
                 BaseEncoding.base64().encode(adSelectionData));
 
-        return makeSelectAdsCall(selectAdRequest, sfeAddress, loggingEnabled);
+        return makeSelectAdsCall(selectAdRequest, sfeAddress, loggingEnabled, httpHeaders);
     }
 
     private static SelectAdResponse makeSelectAdsCall(
-            SelectAdRequest request, String sfeAddress, boolean loggingEnabled) throws IOException {
+            SelectAdRequest request,
+            String sfeAddress,
+            boolean loggingEnabled,
+            Map<String, String> httpHeaders)
+            throws IOException {
         String requestPayload = getSelectAdPayload(request);
-        String response = makeHttpPostCall(sfeAddress, requestPayload, loggingEnabled);
+        String response = makeHttpPostCall(sfeAddress, requestPayload, loggingEnabled, httpHeaders);
         if (loggingEnabled) {
             Log.d(TAG, "Response from b&a : " + response);
         }
         return parseSelectAdResponse(response);
     }
 
-    private static SelectAdRequest getSelectAdRequestWithContextualSignals(String fileName)
-            throws IOException {
+    private static SelectAdRequest getSelectAdRequestWithContextualSignals(String fileName) {
         String jsonString = getJsonFromAssets(fileName);
 
         return sGson.fromJson(jsonString, SelectAdRequest.class);
@@ -91,13 +111,20 @@ public class FakeAdExchangeServer {
     }
 
     private static String makeHttpPostCall(
-            String address, String jsonInputString, boolean loggingEnabled) throws IOException {
+            String address,
+            String jsonInputString,
+            boolean loggingEnabled,
+            Map<String, String> httpHeaders)
+            throws IOException {
         URL url = new URL(address);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("Accept", "application/json");
+        httpHeaders.forEach(con::setRequestProperty);
         con.setDoOutput(true);
+        Log.d(TAG, "Call to url : " + address);
+
         try (OutputStream os = con.getOutputStream()) {
             byte[] input = jsonInputString.getBytes("utf-8");
             os.write(input, 0, input.length);
@@ -107,31 +134,40 @@ public class FakeAdExchangeServer {
             }
         }
 
-        try (BufferedReader br =
-                new BufferedReader(new InputStreamReader(con.getInputStream(), "utf-8"))) {
-            StringBuilder response = new StringBuilder();
-            String responseLine = null;
+        int responseCode = con.getResponseCode();
+        InputStream stream;
+        if (responseCode >= 200 && responseCode < 300) {
+            stream = con.getInputStream();
+        } else {
+            stream = con.getErrorStream();
+        }
+
+        StringBuilder response = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, "utf-8"))) {
+            String responseLine;
             while ((responseLine = br.readLine()) != null) {
                 response.append(responseLine.trim());
             }
-            if (loggingEnabled) {
-                Log.d(TAG, "Response from B&A : " + response.toString());
-            }
-
-            return response.toString();
         }
-    }
 
-    private static String generateLogLabel(
-            String classSimpleName, String testName, long elapsedMs) {
-        return "("
-                + "SELECT_ADS_LATENCY_"
-                + classSimpleName
-                + "#"
-                + testName
-                + ": "
-                + elapsedMs
-                + " ms)";
+        if (responseCode >= 200 && responseCode < 300) {
+            if (loggingEnabled) {
+                Log.d(TAG, "Response from server: " + response.toString());
+            }
+            return response.toString();
+        } else {
+            int grpcStatusCode = con.getHeaderFieldInt("grpc-status", /* defaultValue= */ -1);
+            String grpcMessage = con.getHeaderField("grpc-message");
+            String errorMessage =
+                    "Server call failed with status code : "
+                            + grpcStatusCode
+                            + " error : "
+                            + grpcMessage;
+            if (loggingEnabled) {
+                Log.d(TAG, errorMessage);
+            }
+            throw new IOException(errorMessage);
+        }
     }
 
     private static void largeLog(String tag, String content) {

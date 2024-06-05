@@ -116,6 +116,10 @@
     <!-- Allows JobScheduler to persist jobs across reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- Required for sending measurement events -->
+    <uses-permission android:name="android.permission.ondevicepersonalization.NOTIFY_MEASUREMENT_EVENT"/>
+
+    <!-- LINT.IfChange(adExtServicesApplication) -->
     <application
         android:name=".ExtServicesApplication"
         android:label="@string/app_name"
@@ -545,4 +549,5 @@
         <!-- Used and present only on S- -->
         <uses-library android:name="android.ext.adservices" android:required="false"/>
     </application>
+    <!-- LINT.ThenChange(adservices/service-core/java/com/android/adservices/service/common/compat/PackageManagerCompatUtils.java:activities_and_services) -->
 </manifest>

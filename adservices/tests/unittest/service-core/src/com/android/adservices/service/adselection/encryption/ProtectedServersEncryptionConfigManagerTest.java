@@ -45,7 +45,6 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionKey;
@@ -61,6 +60,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchCalledStats;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImpl;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
@@ -209,6 +209,42 @@ public class ProtectedServersEncryptionConfigManagerTest {
                                         ENCRYPTION_KEY_AUCTION_WITH_COORDINATOR
                                                 .getPublicKey()
                                                 .getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes() {
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes())
+                .containsExactly(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN);
+    }
+
+    @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes_onlyJoinInDb_AuctionKeyIsMissing() {
+        mProtectedServersEncryptionConfigDao.insertKeys(
+                ImmutableList.of(ENCRYPTION_KEY_JOIN_WITH_COORDINATOR));
+
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes())
+                .containsExactly(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION);
+    }
+
+    @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes_onlyAuctionInDb_JoinKeyIsMissing() {
+        mProtectedServersEncryptionConfigDao.insertKeys(
+                ImmutableList.of(ENCRYPTION_KEY_AUCTION_WITH_COORDINATOR));
+
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes())
+                .containsExactly(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN);
+    }
+
+    @Test
+    public void test_getAbsentAdSelectionEncryptionKeyTypes_bothKeysInDB_nothingIsMissing() {
+        mProtectedServersEncryptionConfigDao.insertKeys(
+                ImmutableList.of(
+                        ENCRYPTION_KEY_AUCTION_WITH_COORDINATOR,
+                        ENCRYPTION_KEY_JOIN_WITH_COORDINATOR));
+
+        assertThat(mKeyManager.getAbsentAdSelectionEncryptionKeyTypes()).isEmpty();
     }
 
     @Test

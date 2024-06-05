@@ -63,7 +63,7 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
         mKAnonObliviousHttpEncryptor =
                 new KAnonObliviousHttpEncryptorImpl(
                         mEncryptionKeyManagerMock, mLightweightExecutor);
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test

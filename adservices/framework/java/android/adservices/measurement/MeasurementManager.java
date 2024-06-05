@@ -44,7 +44,6 @@ import java.util.concurrent.Executor;
 
 /** MeasurementManager provides APIs to manage source and trigger registrations. */
 public class MeasurementManager {
-
     /** @hide */
     public static final String MEASUREMENT_SERVICE = "measurement_service";
 

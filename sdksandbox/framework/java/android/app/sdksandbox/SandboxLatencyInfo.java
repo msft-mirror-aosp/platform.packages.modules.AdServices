@@ -95,6 +95,28 @@ public final class SandboxLatencyInfo implements Parcelable {
     public static final int SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_SANDBOX_TO_APP = 9;
     public static final int SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_TO_APP = 10;
 
+    @IntDef(
+            prefix = "RESULT_CODE_",
+            value = {
+                RESULT_CODE_UNSPECIFIED,
+                RESULT_CODE_LOAD_SDK_NOT_FOUND,
+                RESULT_CODE_LOAD_SDK_ALREADY_LOADED,
+                RESULT_CODE_LOAD_SDK_SDK_DEFINED_ERROR,
+                RESULT_CODE_LOAD_SDK_SDK_SANDBOX_DISABLED,
+                RESULT_CODE_LOAD_SDK_INTERNAL_ERROR,
+                RESULT_CODE_SDK_SANDBOX_PROCESS_NOT_AVAILABLE
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ResultCode {}
+
+    public static final int RESULT_CODE_UNSPECIFIED = 0;
+    public static final int RESULT_CODE_LOAD_SDK_NOT_FOUND = 1;
+    public static final int RESULT_CODE_LOAD_SDK_ALREADY_LOADED = 2;
+    public static final int RESULT_CODE_LOAD_SDK_SDK_DEFINED_ERROR = 3;
+    public static final int RESULT_CODE_LOAD_SDK_SDK_SANDBOX_DISABLED = 4;
+    public static final int RESULT_CODE_LOAD_SDK_INTERNAL_ERROR = 5;
+    public static final int RESULT_CODE_SDK_SANDBOX_PROCESS_NOT_AVAILABLE = 6;
+
     private final @Method int mMethod;
     private long mTimeAppCalledSystemServer = -1;
     private long mTimeSystemServerReceivedCallFromApp = -1;
@@ -109,6 +131,7 @@ public final class SandboxLatencyInfo implements Parcelable {
     private long mTimeSystemServerCalledApp = -1;
     private long mTimeAppReceivedCallFromSystemServer = -1;
     private @SandboxStatus int mSandboxStatus = SANDBOX_STATUS_SUCCESS;
+    private @ResultCode int mResultCode = RESULT_CODE_UNSPECIFIED;
 
     public static final @NonNull Parcelable.Creator<SandboxLatencyInfo> CREATOR =
             new Parcelable.Creator<SandboxLatencyInfo>() {
@@ -145,6 +168,7 @@ public final class SandboxLatencyInfo implements Parcelable {
         mTimeSystemServerCalledApp = in.readLong();
         mTimeAppReceivedCallFromSystemServer = in.readLong();
         mSandboxStatus = in.readInt();
+        mResultCode = in.readInt();
     }
 
     @Override
@@ -167,7 +191,8 @@ public final class SandboxLatencyInfo implements Parcelable {
                         == that.mTimeSystemServerReceivedCallFromSandbox
                 && mTimeSystemServerCalledApp == that.mTimeSystemServerCalledApp
                 && mTimeAppReceivedCallFromSystemServer == that.mTimeAppReceivedCallFromSystemServer
-                && mSandboxStatus == that.mSandboxStatus;
+                && mSandboxStatus == that.mSandboxStatus
+                && mResultCode == that.mResultCode;
     }
 
     @Override
@@ -186,7 +211,8 @@ public final class SandboxLatencyInfo implements Parcelable {
                 mTimeSystemServerReceivedCallFromSandbox,
                 mTimeSystemServerCalledApp,
                 mTimeAppReceivedCallFromSystemServer,
-                mSandboxStatus);
+                mSandboxStatus,
+                mResultCode);
     }
 
     @Override
@@ -205,6 +231,7 @@ public final class SandboxLatencyInfo implements Parcelable {
         out.writeLong(mTimeSystemServerCalledApp);
         out.writeLong(mTimeAppReceivedCallFromSystemServer);
         out.writeInt(mSandboxStatus);
+        out.writeInt(mResultCode);
     }
 
     @Override
@@ -276,6 +303,10 @@ public final class SandboxLatencyInfo implements Parcelable {
 
     public void setSandboxStatus(@SandboxStatus int sandboxStatus) {
         mSandboxStatus = sandboxStatus;
+    }
+
+    public void setResultCode(@ResultCode int resultCode) {
+        mResultCode = resultCode;
     }
 
     /** Returns latency of the IPC call from App call to System Server. */
@@ -381,6 +412,10 @@ public final class SandboxLatencyInfo implements Parcelable {
 
     public boolean isTotalCallSuccessful() {
         return mSandboxStatus == SANDBOX_STATUS_SUCCESS;
+    }
+
+    public @ResultCode int getResultCode() {
+        return mResultCode;
     }
 
     @VisibleForTesting

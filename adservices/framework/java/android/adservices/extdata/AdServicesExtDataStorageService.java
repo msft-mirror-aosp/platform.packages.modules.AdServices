@@ -63,48 +63,38 @@ public abstract class AdServicesExtDataStorageService extends Service {
     public @interface AdServicesExtDataFieldId {}
 
     /** Field to represent whether AdServices consent notification has been shown on Android R. */
-    @FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
     public static final int FIELD_IS_NOTIFICATION_DISPLAYED = 0;
 
     /** Field to represent whether user provided consent for Measurement API. */
-    @FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
     public static final int FIELD_IS_MEASUREMENT_CONSENTED = 1;
 
     /** Field to represent whether account is U18. */
-    @FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
     public static final int FIELD_IS_U18_ACCOUNT = 2;
 
     /** Field to represent whether it's an adult account. */
-    @FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
     public static final int FIELD_IS_ADULT_ACCOUNT = 3;
 
     /** Field to represent whether user manually interacted with consent */
-    @FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
     public static final int FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS = 4;
 
     /** Field to represent ExtServices apex version for measurement rollback handling. */
-    @FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
     public static final int FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION = 5;
 
     /** The intent that the service must respond to. Add it to the intent filter of the service. */
     @SdkConstant(SdkConstant.SdkConstantType.SERVICE_ACTION)
-    @FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
     public static final String SERVICE_INTERFACE =
             "android.adservices.extdata.AdServicesExtDataStorageService";
 
-    @FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
     public AdServicesExtDataStorageService() {}
 
     @Nullable
     @Override
-    @FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
     public final IBinder onBind(@Nullable Intent intent) {
         return mInterface.asBinder();
     }
 
     /** Abstract onGetAdServicesExtData method to get all stored ext data values from data store. */
     @NonNull
-    @FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
     public abstract AdServicesExtDataParams onGetAdServicesExtData();
 
     /**
@@ -113,7 +103,6 @@ public abstract class AdServicesExtDataStorageService extends Service {
      * @param adServicesExtDataParams data object that stores fields to be updated.
      * @param adServicesExtDataFields explicit list of fields that need to be updated in data store.
      */
-    @FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED)
     public abstract void onPutAdServicesExtData(
             @NonNull AdServicesExtDataParams adServicesExtDataParams,
             @NonNull @AdServicesExtDataFieldId int[] adServicesExtDataFields);

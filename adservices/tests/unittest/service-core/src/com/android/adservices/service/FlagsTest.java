@@ -16,14 +16,18 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.common.AndroidSdk.RVC;
-import static com.android.adservices.common.AndroidSdk.SC;
-import static com.android.adservices.common.AndroidSdk.SC_V2;
 import static com.android.adservices.service.Flags.AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
+import static com.android.adservices.service.Flags.DEFAULT_ADEXT_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
@@ -31,18 +35,22 @@ import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_S
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
+import static com.android.adservices.shared.testing.AndroidSdk.RVC;
+import static com.android.adservices.shared.testing.AndroidSdk.SC;
+import static com.android.adservices.shared.testing.AndroidSdk.SC_V2;
 
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.adservices.common.RequiresSdkRange;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.internal.util.Preconditions;
 
 import org.junit.Test;
@@ -318,6 +326,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableHeaderErrorDebugReport() {
+        testFeatureFlagGuardedByGlobalKillSwitch(
+                "MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT",
+                Flags::getMeasurementEnableHeaderErrorDebugReport);
+    }
+
+    @Test
     public void testGetEnableBackCompat() {
         testFeatureFlag("ENABLE_BACK_COMPAT", Flags::getEnableBackCompat);
     }
@@ -334,6 +349,40 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag(
                 "FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED",
                 Flags::getFledgeAuctionServerKeyFetchMetricsEnabled);
+    }
+
+    @Test
+    public void testGetFledgeSelectAdsFromOutcomesApiMetricsEnabled() {
+        testFeatureFlag(
+                "FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED",
+                Flags::getFledgeSelectAdsFromOutcomesApiMetricsEnabled);
+    }
+
+    @Test
+    public void testGetFledgeCpcBillingMetricsEnabled() {
+        testFeatureFlag(
+                "FLEDGE_CPC_BILLING_METRICS_ENABLED", Flags::getFledgeCpcBillingMetricsEnabled);
+    }
+
+    @Test
+    public void testGetFledgeDataVersionHeaderMetricsEnabled() {
+        testFeatureFlag(
+                "FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED",
+                Flags::getFledgeDataVersionHeaderMetricsEnabled);
+    }
+
+    @Test
+    public void testGetFledgeReportImpressionApiMetricsEnabled() {
+        testFeatureFlag(
+                "FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED",
+                Flags::getFledgeReportImpressionApiMetricsEnabled);
+    }
+
+    @Test
+    public void testGetFledgeJsScriptResultCodeMetricsEnabled() {
+        testFeatureFlag(
+                "FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED",
+                Flags::getFledgeJsScriptResultCodeMetricsEnabled);
     }
 
     @Test
@@ -364,8 +413,64 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetEnableBackCompatInit() {
+        testFeatureFlag("DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
+    }
+
+    @Test
+    public void testGetMsmtEnableSeparateReportTypes() {
         testFeatureFlag(
-                "DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
+                "MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT",
+                Flags::getMeasurementEnableSeparateReportTypesForAttributionRateLimit);
+    }
+
+    @Test
+    public void testGetMeasurementEnableReinstallReattribution() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION",
+                Flags::getMeasurementEnableReinstallReattribution);
+    }
+
+    @Test
+    public void testGetCustomErrorCodeSamplingEnabled() {
+        testFeatureFlag(
+                "DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED",
+                Flags::getCustomErrorCodeSamplingEnabled);
+    }
+
+    @Test
+    public void testGetSpeOnPilotJobsBatch2Enabled() {
+        testFeatureFlag(
+                "DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED", Flags::getSpeOnPilotJobsBatch2Enabled);
+    }
+
+    @Test
+    public void testGetSpeOnEpochJobEnabled() {
+        testFeatureFlag("DEFAULT_SPE_ON_EPOCH_JOB_ENABLED", Flags::getSpeOnEpochJobEnabled);
+    }
+
+    @Test
+    public void testGetSpeOnBackgroundFetchJobEnabled() {
+        testFeatureFlag(
+                "DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED",
+                Flags::getSpeOnBackgroundFetchJobEnabled);
+    }
+
+    @Test
+    public void testGetSpeOnAsyncRegistrationFallbackJobEnabled() {
+        testFeatureFlag(
+                "DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED",
+                Flags::getSpeOnAsyncRegistrationFallbackJobEnabled);
+    }
+
+    @Test
+    public void testGetMddEnrollmentManifestFileUrl() {
+        testFlag("getMddEnrollmentManifestFileUrl()", "", Flags::getMddEnrollmentManifestFileUrl);
+    }
+
+    @Test
+    public void testGetEnrollmentProtoFileEnabled() {
+        testFeatureFlag(
+                "DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED", Flags::getEnrollmentProtoFileEnabled);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -461,6 +566,77 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getJobSchedulingLoggingSamplingRate);
     }
 
+    @Test
+    public void testGetPasScriptDownloadReadTimeoutMs() {
+        testFlag(
+                "getPasScriptDownloadReadTimeoutMs()",
+                DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS,
+                Flags::getPasScriptDownloadReadTimeoutMs);
+    }
+
+    @Test
+    public void testGetPasScriptDownloadConnectionTimeoutMs() {
+        testFlag(
+                "getPasScriptDownloadConnectionTimeoutMs()",
+                DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                Flags::getPasScriptDownloadConnectionTimeoutMs);
+    }
+
+    @Test
+    public void testGetPasSignalsDownloadReadTimeoutMs() {
+        testFlag(
+                "getPasSignalsDownloadReadTimeoutMs()",
+                DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS,
+                Flags::getPasSignalsDownloadReadTimeoutMs);
+    }
+
+    @Test
+    public void testGetPasSignalsDownloadConnectionTimeoutMs() {
+        testFlag(
+                "getPasSignalsDownloadConnectionTimeoutMs()",
+                DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS,
+                Flags::getPasSignalsDownloadConnectionTimeoutMs);
+    }
+
+    @Test
+    public void testGetPasScriptExecutionTimeoutMs() {
+        testFlag(
+                "getPasScriptExecutionTimeoutMs()",
+                DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS,
+                Flags::getPasScriptExecutionTimeoutMs);
+    }
+
+    @Test
+    public void testGetAdExtWriteTimeoutMs() {
+        testFlag(
+                "getAdExtWriteTimeoutMs()",
+                DEFAULT_ADEXT_WRITE_TIMEOUT_MS,
+                Flags::getAdExtWriteTimeoutMs);
+    }
+
+    @Test
+    public void testGetAdExtReadTimeoutMs() {
+        testFlag(
+                "getAdExtReadTimeoutMs()",
+                DEFAULT_ADEXT_READ_TIMEOUT_MS,
+                Flags::getAdExtReadTimeoutMs);
+    }
+
+    @Test
+    public void testGetAdServicesApiV2MigrationEnabled() {
+        testFeatureFlag(
+                "DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED",
+                Flags::getAdServicesConsentBusinessLogicMigrationEnabled);
+    }
+
+    @Test
+    public void testGetMeasurementMaxReinstallReattributionWindowSeconds() {
+        testFlag(
+                "getMeasurementMaxReinstallReattributionWindowSeconds",
+                MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS,
+                Flags::getMeasurementMaxReinstallReattributionWindowSeconds);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal helpers - do not add new tests following this point.                              //
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -537,8 +713,15 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 .isEqualTo(defaultValue);
     }
 
+    private void testFlag(
+            String getterName, String defaultValue, Flaginator<Flags, String> flaginator) {
+        expect.withMessage("%s", getterName)
+                .that(flaginator.getFlagValue(mFlags))
+                .isEqualTo(defaultValue);
+    }
+
     /**
-     * @deprecated TODO(b/324077542) - remove once all kill-switches have been converted
+     * @deprecated TODO(b / 324077542) - remove once all kill-switches have been converted
      */
     @Deprecated
     private void testKillSwitchBeingConvertedAndGuardedByGlobalKillSwitch(

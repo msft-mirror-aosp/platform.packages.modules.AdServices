@@ -17,14 +17,17 @@
 package com.android.adservices.service.measurement.noising;
 
 import com.android.adservices.service.measurement.PrivacyParams;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.math.DoubleMath;
 import com.google.common.math.LongMath;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.LongToDoubleFunction;
 
 /**
  * Combinatorics utilities used for randomization.
@@ -253,9 +256,8 @@ public class Combinatorics {
      * @param numOfStates Number of States
      * @return the probability to use fake reports
      */
-    public static double getFlipProbability(long numOfStates) {
-        double epsilon = (double) PrivacyParams.getPrivacyEpsilon();
-        return numOfStates / (numOfStates + Math.exp(epsilon) - 1D);
+    public static double getFlipProbability(long numOfStates, double privacyEpsilon) {
+        return (numOfStates) / (numOfStates + Math.exp(privacyEpsilon) - 1D);
     }
 
     private static double getBinaryEntropy(double x) {
@@ -282,6 +284,96 @@ public class Combinatorics {
                 - fakeProbability * DoubleMath.log2(numOfStates - 1);
     }
 
+    private static double getFakeProbability(
+            long numOfStates, long numUsedScopes, long numEventStates, double privacyEpsilon) {
+        double pickRateForSource =
+                getFlipProbability(numOfStates, privacyEpsilon) * (numOfStates - 1L) / numOfStates;
+        double pickRateForEvent =
+                getFlipProbability(numEventStates, privacyEpsilon)
+                        * (numEventStates - 1L)
+                        / numEventStates;
+        return 1 - (1 - pickRateForSource) * Math.pow(1 - pickRateForEvent, (double) numUsedScopes);
+    }
+
+    @VisibleForTesting
+    static double calculateInformationGainWithAttributionScope(
+            long numOfStates, long numUsedScopes, long numEventStates, double privacyEpsilon) {
+        BigInteger totalNumStates =
+                BigInteger.valueOf(numOfStates)
+                        .add(
+                                BigInteger.valueOf(numEventStates)
+                                        .multiply(BigInteger.valueOf(numUsedScopes)));
+        if (totalNumStates.compareTo(BigInteger.ONE) <= 0) {
+            return 0d;
+        }
+        double log2Q = DoubleMath.log2(totalNumStates.doubleValue());
+        double fakeProbability =
+                getFakeProbability(numOfStates, numUsedScopes, numEventStates, privacyEpsilon);
+        return log2Q
+                - getBinaryEntropy(fakeProbability)
+                - fakeProbability * DoubleMath.log2(totalNumStates.doubleValue() - 1);
+    }
+
+    /**
+     * Returns the max information gain given the num of trigger states, attribution scope limit and
+     * max num event states.
+     *
+     * @param numTriggerStates The number of trigger states.
+     * @param attributionScopeLimit The attribution scope limit.
+     * @param maxEventStates The maximum number of event states (expected to be positive).
+     * @return The max information gain.
+     */
+    public static double getMaxInformationGainWithAttributionScope(
+            long numTriggerStates,
+            long attributionScopeLimit,
+            long maxEventStates,
+            double privacyEpsilon) {
+        if (numTriggerStates <= 0 || maxEventStates <= 0) {
+            throw new IllegalArgumentException(
+                    "numTriggerStates and maxEventStates must be positive");
+        }
+        double maxInformationGain = 0;
+        // Choosing the smaller dimension for iteration.
+        if (attributionScopeLimit > maxEventStates) {
+            long start = 0;
+            long end = attributionScopeLimit - 1;
+            for (long numEventStates = 1; numEventStates <= maxEventStates; ++numEventStates) {
+                final long currentNumEventStates =
+                        numEventStates; // Make a final copy of the variable
+                LongToDoubleFunction infoGainFunction =
+                        (numUsedScopes) ->
+                                calculateInformationGainWithAttributionScope(
+                                        numTriggerStates,
+                                        numUsedScopes,
+                                        currentNumEventStates,
+                                        privacyEpsilon);
+                maxInformationGain =
+                        Math.max(
+                                maxInformationGain,
+                                findMaxValueUniModal(start, end, infoGainFunction));
+            }
+        } else {
+            long start = 1;
+            long end = maxEventStates;
+            for (long numUsedScopes = 0; numUsedScopes < attributionScopeLimit; ++numUsedScopes) {
+                final long currentNumUsedScopes =
+                        numUsedScopes; // Make a final copy of the variable
+                LongToDoubleFunction infoGainFunction =
+                        (numEventStates) ->
+                                calculateInformationGainWithAttributionScope(
+                                        numTriggerStates,
+                                        currentNumUsedScopes,
+                                        numEventStates,
+                                        privacyEpsilon);
+                maxInformationGain =
+                        Math.max(
+                                maxInformationGain,
+                                findMaxValueUniModal(start, end, infoGainFunction));
+            }
+        }
+        return maxInformationGain;
+    }
+
     /**
      * Generate fake report set given a trigger specification and the rank order number
      *
@@ -292,10 +384,7 @@ public class Combinatorics {
      * @return a report set based on the input rank
      */
     public static List<AtomReportState> getReportSetBasedOnRank(
-            int totalCap,
-            int[] perTypeNumWindowList,
-            int[] perTypeCapList,
-            long rank) {
+            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList, long rank) {
         int triggerTypeIndex = perTypeNumWindowList.length - 1;
         return getReportSetBasedOnRankRecursive(
                 totalCap,
@@ -305,6 +394,35 @@ public class Combinatorics {
                 rank,
                 perTypeNumWindowList,
                 perTypeCapList);
+    }
+
+    // Function to find the maximum value of a function f(x) where f(x) satisfies the following
+    // condition: for some value m, it is strictly increasing for x ≤ m and strictly decreasing
+    // for x ≥ m.
+    private static double findMaxValueUniModal(long start, long end, LongToDoubleFunction f) {
+        long left = start;
+        long right = end;
+
+        while (left < right) {
+            long mid = left + (right - left) / 2;
+
+            // Calculate f(mid) and f(mid + 1).
+            double fMid = f.applyAsDouble(mid);
+            double fMidPlus1 = f.applyAsDouble(mid + 1);
+
+            // If f(mid) < f(mid + 1), then the maximum value is to the right of mid.
+            if (fMid < fMidPlus1) {
+                left = mid + 1;
+            } else {
+                // If f(mid) >= f(mid + 1), then the maximum value is to the left of or at mid.
+                // In cases where f(mid) = f(mid + 1) due to precision loss of double
+                // and info gain is effectively 0, which also means we've passed the peak so
+                // continue searching left.
+                right = mid;
+            }
+        }
+        // At the end of the loop, left and right will converge to the maximum value of f(x).
+        return f.applyAsDouble(left);
     }
 
     private static List<AtomReportState> getReportSetBasedOnRankRecursive(

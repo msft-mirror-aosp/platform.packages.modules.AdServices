@@ -15,26 +15,28 @@
  */
 package com.android.adservices.tests.cts.topics;
 
+import static com.android.adservices.common.AdServicesCtsTestCase.LOGCAT_TAG_TOPICS;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.shared.testing.annotations.SetLogcatTag;
 
+@SetLogcatTag(tag = LOGCAT_TAG_TOPICS)
 abstract class CtsTopicsEndToEndTestCase extends AdServicesCtsTestCase {
 
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
         return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledOnClearSlateTests()
-                .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
                 .setTopicsKillSwitch(false)
                 .setTopicsOnDeviceClassifierKillSwitch(false)
                 .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)
                 .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true)
                 .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
-                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                .setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                 .setCompatModeFlags();
     }
 }

@@ -71,7 +71,6 @@ import android.os.Process;
 import android.os.RemoteException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -91,6 +90,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
@@ -105,8 +105,9 @@ import org.mockito.Mockito;
 import org.mockito.quality.Strictness;
 
 import java.util.concurrent.ExecutorService;
+
 @RequiresSdkLevelAtLeastS()
-@MockStatic(BackgroundFetchJobService.class)
+@MockStatic(BackgroundFetchJob.class)
 public final class CustomAudienceServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
@@ -190,7 +191,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verifyNoMoreInteractions(
                 mCustomAudienceImplMock,
                 mFledgeAuthorizationFilterMock,
-                staticMockMarker(BackgroundFetchJobService.class),
+                staticMockMarker(BackgroundFetchJob.class),
                 mFledgeAllowListsFilterMock,
                 mICustomAudienceCallbackMock,
                 mCustomAudienceOverrideCallbackMock,
@@ -226,10 +227,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         VALID_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.VALID_OWNER,
                         DevContext.createForDevOptionsDisabled());
-        verify(
-                () ->
-                        BackgroundFetchJobService.scheduleIfNeeded(
-                                sContext, mFlagsWithAllCheckEnabled, false));
+        verify(() -> BackgroundFetchJob.schedule(mFlagsWithAllCheckEnabled));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
@@ -505,7 +503,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         VALID_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.VALID_OWNER,
                         DevContext.createForDevOptionsDisabled());
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
+        verify(() -> BackgroundFetchJob.schedule(any()));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
@@ -559,10 +557,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         VALID_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.VALID_OWNER,
                         devContextEnabled);
-        verify(
-                () ->
-                        BackgroundFetchJobService.scheduleIfNeeded(
-                                sContext, mFlagsWithAllCheckEnabled, false));
+        verify(() -> BackgroundFetchJob.schedule(mFlagsWithAllCheckEnabled));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
@@ -1110,7 +1105,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         VALID_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.VALID_OWNER,
                         DevContext.createForDevOptionsDisabled());
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
+        verify(() -> BackgroundFetchJob.schedule(any()));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
@@ -1748,7 +1743,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         VALID_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.VALID_OWNER,
                         DevContext.createForDevOptionsDisabled());
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
+        verify(() -> BackgroundFetchJob.schedule(any()));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(

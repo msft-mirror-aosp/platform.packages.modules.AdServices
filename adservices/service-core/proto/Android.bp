@@ -40,28 +40,30 @@ java_library {
         ":adservices-proto",
         ":libprotobuf-internal-protos",
         ":act-proto",
-        ":private-join-and-compute-proto"
+        ":private-join-and-compute-proto",
     ],
     static_libs: ["libprotobuf-java-lite"],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
 }
 
 // Generate gRPC client code
-PROTO_TOOLS = [
-    "aprotoc",
-    "protoc-gen-grpc-java-plugin",
-    "soong_zip",
-]
-LITE_PROTO_CMD = "mkdir -p $(genDir)/gen && " +
-    "$(location aprotoc) --java_opt=annotate_code=false -Ipackages/modules/AdServices/adservices/service-core -Iexternal/protobuf/src " +
-    "--plugin=protoc-gen-grpc-java=$(location protoc-gen-grpc-java-plugin) --grpc-java_out=lite:$(genDir)/gen $(in) && " +
-    "$(location soong_zip) -o $(out) -C $(genDir)/gen -D $(genDir)/gen"
 genrule {
     name: "seller-frontend-service-stub-lite",
-    tools: PROTO_TOOLS,
-    cmd: LITE_PROTO_CMD,
+    tools: [
+        "aprotoc",
+        "protoc-gen-grpc-java-plugin",
+        "soong_zip",
+    ],
+    cmd: "mkdir -p $(genDir)/gen && " +
+        "$(location aprotoc) --java_opt=annotate_code=false -Ipackages/modules/AdServices/adservices/service-core -Iexternal/protobuf/src " +
+        "--plugin=protoc-gen-grpc-java=$(location protoc-gen-grpc-java-plugin) --grpc-java_out=lite:$(genDir)/gen $(locations :adservices-proto) && " +
+        "$(location soong_zip) -o $(out) -C $(genDir)/gen -D $(genDir)/gen",
     srcs: [
         ":adservices-proto",
+        ":libprotobuf-internal-protos",
     ],
     out: [
         "protos.srcjar",
@@ -71,8 +73,12 @@ genrule {
 // Package into java_library to reference in "static_libs" in "adservices-service-core"
 java_library {
     name: "adservices-grpclib-lite",
+    sdk_version: "module_current",
     min_sdk_version: "30",
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
     srcs: [
         ":seller-frontend-service-stub-lite",
         ":adservices-proto",

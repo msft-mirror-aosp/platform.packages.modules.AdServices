@@ -16,34 +16,71 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_BOOT_COMPLETED_RECEIVER_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.content.Intent;
 
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.Spy;
 
 @SmallTest
 @SpyStatic(AdServicesBackCompatInit.class)
+@MockStatic(ErrorLogUtil.class)
 public class AdExtBootCompletedReceiverTest extends AdServicesExtendedMockitoTestCase {
-
     @Mock private AdServicesBackCompatInit mMockBackCompatInit;
+    @Spy private AdExtBootCompletedReceiver mSpyReceiver;
+
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Test
-    public void testExecuteBackCompatInit() {
-        AdExtBootCompletedReceiver bootCompletedReceiver =
-                Mockito.spy(new AdExtBootCompletedReceiver());
-        doReturn(mMockBackCompatInit).when(() -> AdServicesBackCompatInit.getInstance());
+    public void testOnReceive_withNoException_executesBackCompatInit() {
+        doReturn(mMockBackCompatInit).when(AdServicesBackCompatInit::getInstance);
 
-        bootCompletedReceiver.onReceive(mContext, new Intent());
+        mSpyReceiver.onReceive(mContext, new Intent());
 
         verify(mMockBackCompatInit).initializeComponents();
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            throwable = IllegalArgumentException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_BOOT_COMPLETED_RECEIVER_FAILURE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+    public void testOnReceive_withExceptionThrown_handlesGracefully() {
+        doReturn(mMockBackCompatInit).when(AdServicesBackCompatInit::getInstance);
+        doThrow(IllegalArgumentException.class).when(mMockBackCompatInit).initializeComponents();
+
+        // No exception expected, so no need to explicitly handle any exceptions here.
+        mSpyReceiver.onReceive(mContext, new Intent());
+    }
+
+    @Test
+    public void testClassNameMatchesExpectedValue() {
+        // IMPORTANT: AdExtBootCompletedReceiver class name is hardcoded in places
+        // like AdExtServicesManifest. If the name changes, ensure changes are made in
+        // unison across all appropriate places.
+        assertWithMessage("AdExtBootCompletedReceiver class name")
+                .that(AdExtBootCompletedReceiver.class.getName())
+                .isEqualTo("com.android.adservices.service.common.AdExtBootCompletedReceiver");
     }
 }

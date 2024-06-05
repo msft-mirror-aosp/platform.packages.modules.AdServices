@@ -139,27 +139,27 @@ class AdServicesUiUtil:
                                res_type='string', res_category=ResourceCategory.Value,
                                map_start=hex(0x7f017fff))
         if args.enable_ota_layout:
-            util.update_public_xml(res_xml_dir=self.COLORS_XML_DIR,
-                                   res_type='color', res_category=ResourceCategory.Value,
-                                   map_start=hex(0x7f067fff))
             util.update_public_xml(res_xml_dir=self.DIMENS_XML_DIR,
                                    res_type='dimen', res_category=ResourceCategory.Value,
-                                   map_start=hex(0x7f077fff))
+                                   map_start=hex(0x7f027fff))
+            util.update_public_xml(res_xml_dir=self.COLORS_XML_DIR,
+                                   res_type='color', res_category=ResourceCategory.Value,
+                                   map_start=hex(0x7f037fff))
             util.update_public_xml(res_xml_dir=self.INTEGERS_XML_DIR,
                                    res_type='integer', res_category=ResourceCategory.Value,
-                                   map_start=hex(0x7f0a7fff))
+                                   map_start=hex(0x7f047fff))
             util.update_public_xml(res_xml_dir=self.STYLES_XML_DIR,
                                    res_type='style', res_category=ResourceCategory.Value,
-                                   map_start=hex(0x7f117fff))
+                                   map_start=hex(0x7f057fff))
             util.update_public_xml(res_xml_dir=self.DRAWABLE_XML_DIR,
                                    res_type='drawable', res_category=ResourceCategory.File,
-                                   map_start=hex(0x7f087fff))
+                                   map_start=hex(0x7f067fff))
             util.update_public_xml(res_xml_dir=self.LAYOUT_XML_DIR,
                                    res_type='layout', res_category=ResourceCategory.File,
-                                   map_start=hex(0x7f0c7fff))
+                                   map_start=hex(0x7f077fff))
             util.update_public_xml(res_xml_dir=self.LAYOUT_XML_DIR, res_type='id',
                                    res_category=ResourceCategory.Id,
-                                   map_start=hex(0x7f097fff))
+                                   map_start=hex(0x7f087fff))
 
 
 if __name__ == '__main__':

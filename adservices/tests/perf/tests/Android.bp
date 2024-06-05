@@ -57,11 +57,19 @@ java_defaults {
     resource_dirs: [
         "res",
     ],
-    test_suites: ["device-tests"],
+    test_suites: [
+        "device-tests",
+        "general-tests",
+    ],
     min_sdk_version: "30",
 }
 
 android_test {
     name: "AdServicesScenarioTests",
     defaults: ["AdServicesScenarioTestsDefault"],
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

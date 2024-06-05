@@ -42,7 +42,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.topics.CacheManager;
-import com.android.adservices.service.topics.EpochJobService;
+import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsServiceImpl;
 import com.android.adservices.service.topics.TopicsWorker;
@@ -82,13 +82,13 @@ public class TopicsService extends Service {
             mTopicsService =
                     new TopicsServiceImpl(
                             this,
-                            TopicsWorker.getInstance(this),
+                            TopicsWorker.getInstance(),
                             ConsentManager.getInstance(),
                             AdServicesLoggerImpl.getInstance(),
                             Clock.getInstance(),
                             FlagsFactory.getFlags(),
                             Throttler.getInstance(FlagsFactory.getFlags()),
-                            EnrollmentDao.getInstance(this),
+                            EnrollmentDao.getInstance(),
                             appImportanceFilter);
             mTopicsService.init();
         }
@@ -102,7 +102,7 @@ public class TopicsService extends Service {
         MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         EncryptionKeyJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         MddJob.scheduleAllMddJobs();
-        EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        EpochJob.schedule();
     }
 
     private boolean hasUserConsent() {
@@ -129,8 +129,8 @@ public class TopicsService extends Service {
         FlagsFactory.getFlags().dump(writer, args);
         if (BuildCompatUtils.isDebuggable()) {
             writer.println("Build is Debuggable, dumping information for TopicsService");
-            EpochManager.getInstance(this).dump(writer, args);
-            CacheManager.getInstance(this).dump(writer, args);
+            EpochManager.getInstance().dump(writer, args);
+            CacheManager.getInstance().dump(writer, args);
             MobileDataDownloadFactory.dump(writer);
             writer.println("=== User Consent State For Topics Service ===");
             writer.println("User Consent is given: " + hasUserConsent());

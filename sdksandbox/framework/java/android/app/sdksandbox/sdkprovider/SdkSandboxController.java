@@ -15,6 +15,7 @@
  */
 package android.app.sdksandbox.sdkprovider;
 
+import static android.app.sdksandbox.SdkSandboxManager.getResultCodeForLoadSdkException;
 import static android.app.sdksandbox.sdkprovider.SdkSandboxController.SDK_SANDBOX_CONTROLLER_SERVICE;
 
 import android.annotation.CallbackExecutor;
@@ -26,7 +27,6 @@ import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxLatencyInfo;
-import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
@@ -46,6 +46,7 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import com.android.modules.utils.build.SdkLevel;
+import com.android.sdksandbox.flags.Flags;
 
 import java.util.List;
 import java.util.Objects;
@@ -303,7 +304,7 @@ public class SdkSandboxController {
      * @throws UnsupportedOperationException if the controller is obtained from an unexpected
      *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context.
      */
-    @FlaggedApi("com.android.sdksandbox.flags.sandbox_client_importance_listener")
+    @FlaggedApi(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
     public void registerSdkSandboxClientImportanceListener(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull SdkSandboxClientImportanceListener listener) {
@@ -325,7 +326,7 @@ public class SdkSandboxController {
      * @throws UnsupportedOperationException if the controller is obtained from an unexpected
      *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context.
      */
-    @FlaggedApi("com.android.sdksandbox.flags.sandbox_client_importance_listener")
+    @FlaggedApi(Flags.FLAG_SANDBOX_CLIENT_IMPORTANCE_LISTENER)
     public void unregisterSdkSandboxClientImportanceListener(
             @NonNull SdkSandboxClientImportanceListener listener) {
         Objects.requireNonNull(listener, "listener should not be null");
@@ -409,6 +410,7 @@ public class SdkSandboxController {
         @Override
         public void onLoadSdkFailure(
                 LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
+            sandboxLatencyInfo.setResultCode(getResultCodeForLoadSdkException(exception));
             SdkSandboxController.this.logLatenciesFromSandbox(sandboxLatencyInfo);
             mExecutor.execute(() -> mCallback.onError(exception));
         }

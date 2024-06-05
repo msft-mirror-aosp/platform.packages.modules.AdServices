@@ -23,7 +23,7 @@
         <option name="test-file-name" value="CodeProviderWithResources.apk"/>
         <option name="test-file-name" value="CtsSdkProviderAppWithoutSdkProviderClassNameProperty.apk"/>
         <option name="test-file-name" value="SdkSandboxManagerServiceUnitTests.apk"/>
-        <option name="test-file-name" value="SampleServiceApp.apk"/>
+        <option name="test-file-name" value="SampleApp.apk"/>
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

@@ -79,6 +79,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
@@ -111,6 +112,10 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
+import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
+import com.android.adservices.service.stats.ReportImpressionExecutionLoggerFactory;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLoggerFactory;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -180,7 +185,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     private final ConsentedDebugConfigurationGeneratorFactory
             mConsentedDebugConfigurationGeneratorFactory;
 
-    @NonNull final EgressConfigurationGenerator mEgressConfigurationGenerator;
+    @NonNull private final EgressConfigurationGenerator mEgressConfigurationGenerator;
+    private final boolean mConsoleMessageInLogsEnabled;
 
     @VisibleForTesting
     public AdSelectionServiceImpl(
@@ -213,7 +219,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull
                     ConsentedDebugConfigurationGeneratorFactory
                             consentedDebugConfigurationGeneratorFactory,
-            @NonNull EgressConfigurationGenerator egressConfigurationGenerator) {
+            @NonNull EgressConfigurationGenerator egressConfigurationGenerator,
+            boolean consoleMessageInLogsEnabled) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
@@ -269,6 +276,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mRetryStrategyFactory = retryStrategyFactory;
         mConsentedDebugConfigurationGeneratorFactory = consentedDebugConfigurationGeneratorFactory;
         mEgressConfigurationGenerator = egressConfigurationGenerator;
+        mConsoleMessageInLogsEnabled = consoleMessageInLogsEnabled;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -282,10 +290,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                 SharedStorageDatabase.getInstance(context).appInstallDao(),
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                ProtectedSignalsDatabase.getInstance(context).getEncodedPayloadDao(),
+                ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                 SharedStorageDatabase.getInstance(context).frequencyCapDao(),
-                EncryptionKeyDao.getInstance(context),
-                EnrollmentDao.getInstance(context),
+                EncryptionKeyDao.getInstance(),
+                EnrollmentDao.getInstance(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.create(context, FlagsFactory.getFlags())),
@@ -340,7 +348,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new ConsentedDebugConfigurationGeneratorFactory(
                         BinderFlagReader.readFlag(
                                 () ->
-                                        FlagsFactory.getFlags()
+                                        DebugFlags.getInstance()
                                                 .getFledgeAuctionServerConsentedDebuggingEnabled()),
                         AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao()),
                 EgressConfigurationGenerator.createInstance(
@@ -357,7 +365,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getFledgeAuctionServerAdIdFetcherTimeoutMs()),
-                        AdServicesExecutors.getLightWeightExecutor()));
+                        AdServicesExecutors.getLightWeightExecutor()),
+                BinderFlagReader.readFlag(
+                        () ->
+                                DebugFlags.getInstance()
+                                        .getAdServicesJsIsolateConsoleMessagesInLogsEnabled()));
     }
 
     @Override
@@ -366,7 +378,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             CallerMetadata callerMetadata,
             GetAdSelectionDataCallback callback)
             throws RemoteException {
-        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA);
+        int e2eTraceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA);
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 
         AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
@@ -417,8 +429,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             callback,
                             callingUid,
                             devContext,
-                            adsRelevanceExecutionLogger);
-                    Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_DATA, traceCookie);
+                            adsRelevanceExecutionLogger,
+                            e2eTraceCookie);
                 });
     }
 
@@ -550,7 +562,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @Nullable AdSelectionCallback fullCallback) {
         final AdSelectionExecutionLogger adSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
-                        callerMetadata, Clock.getInstance(), mContext, mAdServicesLogger);
+                        callerMetadata, Clock.getInstance(), mContext, mAdServicesLogger, mFlags);
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 
         try {
@@ -597,7 +609,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             GetAdSelectionDataCallback callback,
             int callingUid,
             DevContext devContext,
-            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger) {
+            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
+            int e2eTraceCookie) {
         ListenableFuture<AuctionServerDebugReporting> auctionServerDebugReportingFuture =
                 AuctionServerDebugReporting.createInstance(
                         mFlags,
@@ -619,6 +632,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 GetAdSelectionDataRunner runner =
                                         new GetAdSelectionDataRunner(
                                                 mContext,
+                                                e2eTraceCookie,
                                                 mMultiCloudSupportStrategy,
                                                 mAdSelectionEntryDao,
                                                 mCustomAudienceDao,
@@ -654,6 +668,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 GetAdSelectionDataRunner runner =
                                         new GetAdSelectionDataRunner(
                                                 mContext,
+                                                e2eTraceCookie,
                                                 mMultiCloudSupportStrategy,
                                                 mAdSelectionEntryDao,
                                                 mCustomAudienceDao,
@@ -792,7 +807,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mRetryStrategyFactory.createRetryStrategy(
                                 mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()),
                         mKAnonSignJoinFactory,
-                        mAdFilteringFeatureFactory.getAppInstallAdFilterer());
+                        mAdFilteringFeatureFactory.getAppInstallAdFilterer(),
+                        mConsoleMessageInLogsEnabled);
         runner.runAdSelection(inputParams, partialCallback, devContext, fullCallback);
     }
 
@@ -811,7 +827,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throws RemoteException {
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES;
 
-        // TODO(257134800): Add telemetry
+        SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger =
+                new SelectAdsFromOutcomesExecutionLoggerFactory(
+                                Clock.getInstance(), mAdServicesLogger, mFlags)
+                        .getSelectAdsFromOutcomesExecutionLogger();
+
         try {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
@@ -853,8 +873,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     callingUid,
                                     mShouldUseUnifiedTables,
                                     mRetryStrategyFactory.createRetryStrategy(
-                                            mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()));
-                    runner.runOutcomeSelection(inputParams, callback);
+                                            mFlags.getAdServicesJsScriptEngineMaxRetryAttempts()),
+                                    mConsoleMessageInLogsEnabled);
+                    runner.runOutcomeSelection(
+                            inputParams, callback, selectAdsFromOutcomesExecutionLogger);
                 });
     }
 
@@ -882,6 +904,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
 
+        ReportImpressionExecutionLogger reportImpressionExecutionLogger =
+                new ReportImpressionExecutionLoggerFactory(mAdServicesLogger, mFlags)
+                        .getReportImpressionExecutionLogger();
+
         // ImpressionReporter enables Auction Server flow reporting and sets the stage for Phase 2
         // in go/rb-rm-unified-flow-reporting whereas ImpressionReporterLegacy is the logic before
         // Phase 1. FLEDGE_AUCTION_SERVER_REPORTING_ENABLED flag controls which logic is called.
@@ -905,7 +931,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             mRetryStrategyFactory.createRetryStrategy(
                                     BinderFlagReader.readFlag(
                                             mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)),
-                            mShouldUseUnifiedTables);
+                            mShouldUseUnifiedTables,
+                            reportImpressionExecutionLogger);
             reporter.reportImpression(requestParams, callback);
         } else {
             ImpressionReporterLegacy reporter =
@@ -927,7 +954,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             mShouldUseUnifiedTables,
                             mRetryStrategyFactory.createRetryStrategy(
                                     BinderFlagReader.readFlag(
-                                            mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)));
+                                            mFlags::getAdServicesJsScriptEngineMaxRetryAttempts)),
+                            reportImpressionExecutionLogger);
             reporter.reportImpression(requestParams, callback);
         }
     }

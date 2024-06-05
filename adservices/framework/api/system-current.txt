@@ -115,17 +115,17 @@ package android.adservices.common {
   }
 
   @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") public final class UpdateAdIdRequest implements android.os.Parcelable {
-    method @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") public int describeContents();
-    method @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") @NonNull public String getAdId();
-    method @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") public boolean isLimitAdTrackingEnabled();
-    method @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.UpdateAdIdRequest> CREATOR;
+    method public int describeContents();
+    method @NonNull public String getAdId();
+    method public boolean isLimitAdTrackingEnabled();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.UpdateAdIdRequest> CREATOR;
   }
 
-  @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") public static final class UpdateAdIdRequest.Builder {
-    ctor @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") public UpdateAdIdRequest.Builder(@NonNull String);
-    method @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") @NonNull public android.adservices.common.UpdateAdIdRequest build();
-    method @FlaggedApi("com.android.adservices.flags.ad_id_cache_enabled") @NonNull public android.adservices.common.UpdateAdIdRequest.Builder setLimitAdTrackingEnabled(boolean);
+  public static final class UpdateAdIdRequest.Builder {
+    ctor public UpdateAdIdRequest.Builder(@NonNull String);
+    method @NonNull public android.adservices.common.UpdateAdIdRequest build();
+    method @NonNull public android.adservices.common.UpdateAdIdRequest.Builder setLimitAdTrackingEnabled(boolean);
   }
 
 }
@@ -133,30 +133,30 @@ package android.adservices.common {
 package android.adservices.extdata {
 
   @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public final class AdServicesExtDataParams implements android.os.Parcelable {
-    ctor @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public AdServicesExtDataParams(int, int, int, int, int, long);
-    method @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public int describeContents();
-    method @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public int getIsAdultAccount();
-    method @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public int getIsMeasurementConsented();
-    method @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public int getIsNotificationDisplayed();
-    method @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public int getIsU18Account();
-    method @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public int getManualInteractionWithConsentStatus();
-    method @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public long getMeasurementRollbackApexVersion();
-    method @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") @NonNull public static final android.os.Parcelable.Creator<android.adservices.extdata.AdServicesExtDataParams> CREATOR;
+    ctor public AdServicesExtDataParams(int, int, int, int, int, long);
+    method public int describeContents();
+    method public int getIsAdultAccount();
+    method public int getIsMeasurementConsented();
+    method public int getIsNotificationDisplayed();
+    method public int getIsU18Account();
+    method public int getManualInteractionWithConsentStatus();
+    method public long getMeasurementRollbackApexVersion();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.extdata.AdServicesExtDataParams> CREATOR;
   }
 
   @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public abstract class AdServicesExtDataStorageService extends android.app.Service {
-    ctor @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public AdServicesExtDataStorageService();
-    method @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") @Nullable public final android.os.IBinder onBind(@Nullable android.content.Intent);
-    method @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") @NonNull public abstract android.adservices.extdata.AdServicesExtDataParams onGetAdServicesExtData();
-    method @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public abstract void onPutAdServicesExtData(@NonNull android.adservices.extdata.AdServicesExtDataParams, @NonNull int[]);
-    field @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public static final int FIELD_IS_ADULT_ACCOUNT = 3; // 0x3
-    field @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public static final int FIELD_IS_MEASUREMENT_CONSENTED = 1; // 0x1
-    field @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public static final int FIELD_IS_NOTIFICATION_DISPLAYED = 0; // 0x0
-    field @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public static final int FIELD_IS_U18_ACCOUNT = 2; // 0x2
-    field @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public static final int FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS = 4; // 0x4
-    field @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public static final int FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION = 5; // 0x5
-    field @FlaggedApi("com.android.adservices.flags.adext_data_service_apis_enabled") public static final String SERVICE_INTERFACE = "android.adservices.extdata.AdServicesExtDataStorageService";
+    ctor public AdServicesExtDataStorageService();
+    method @Nullable public final android.os.IBinder onBind(@Nullable android.content.Intent);
+    method @NonNull public abstract android.adservices.extdata.AdServicesExtDataParams onGetAdServicesExtData();
+    method public abstract void onPutAdServicesExtData(@NonNull android.adservices.extdata.AdServicesExtDataParams, @NonNull int[]);
+    field public static final int FIELD_IS_ADULT_ACCOUNT = 3; // 0x3
+    field public static final int FIELD_IS_MEASUREMENT_CONSENTED = 1; // 0x1
+    field public static final int FIELD_IS_NOTIFICATION_DISPLAYED = 0; // 0x0
+    field public static final int FIELD_IS_U18_ACCOUNT = 2; // 0x2
+    field public static final int FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS = 4; // 0x4
+    field public static final int FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION = 5; // 0x5
+    field public static final String SERVICE_INTERFACE = "android.adservices.extdata.AdServicesExtDataStorageService";
   }
 
 }

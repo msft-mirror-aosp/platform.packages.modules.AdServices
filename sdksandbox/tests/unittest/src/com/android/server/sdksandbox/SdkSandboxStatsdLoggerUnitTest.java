@@ -16,6 +16,7 @@
 
 package com.android.server.sdksandbox;
 
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__RESULT_CODE__RESULT_CODE_UNSPECIFIED;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__LOAD_SANDBOX;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SANDBOX_TO_SYSTEM_SERVER;
@@ -111,7 +112,9 @@ public class SdkSandboxStatsdLoggerUnitTest {
                                 Mockito.anyInt(),
                                 Mockito.anyBoolean(),
                                 Mockito.eq(SANDBOX_API_CALLED__STAGE__TOTAL),
-                                Mockito.eq(mClientAppUid)),
+                                Mockito.eq(mClientAppUid),
+                                Mockito.eq(
+                                        SANDBOX_API_CALLED__RESULT_CODE__RESULT_CODE_UNSPECIFIED)),
                 Mockito.never());
     }
 
@@ -134,7 +137,9 @@ public class SdkSandboxStatsdLoggerUnitTest {
                                 Mockito.anyInt(),
                                 Mockito.anyBoolean(),
                                 Mockito.eq(SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SDK),
-                                Mockito.eq(mClientAppUid)),
+                                Mockito.eq(mClientAppUid),
+                                Mockito.eq(
+                                        SANDBOX_API_CALLED__RESULT_CODE__RESULT_CODE_UNSPECIFIED)),
                 Mockito.never());
         ExtendedMockito.verify(
                 () ->
@@ -144,7 +149,9 @@ public class SdkSandboxStatsdLoggerUnitTest {
                                 Mockito.anyInt(),
                                 Mockito.anyBoolean(),
                                 Mockito.anyInt(),
-                                Mockito.anyInt()),
+                                Mockito.anyInt(),
+                                Mockito.eq(
+                                        SANDBOX_API_CALLED__RESULT_CODE__RESULT_CODE_UNSPECIFIED)),
                 Mockito.times(9));
     }
 
@@ -167,6 +174,7 @@ public class SdkSandboxStatsdLoggerUnitTest {
                                 Mockito.anyInt(),
                                 Mockito.anyBoolean(),
                                 Mockito.anyInt(),
+                                Mockito.anyInt(),
                                 Mockito.anyInt()),
                 Mockito.times(9));
         ExtendedMockito.verify(
@@ -177,7 +185,9 @@ public class SdkSandboxStatsdLoggerUnitTest {
                                 Mockito.anyInt(),
                                 Mockito.anyBoolean(),
                                 Mockito.eq(SANDBOX_API_CALLED__STAGE__TOTAL_WITH_LOAD_SANDBOX),
-                                Mockito.eq(mClientAppUid)),
+                                Mockito.eq(mClientAppUid),
+                                Mockito.eq(
+                                        SANDBOX_API_CALLED__RESULT_CODE__RESULT_CODE_UNSPECIFIED)),
                 Mockito.never());
     }
 
@@ -212,7 +222,8 @@ public class SdkSandboxStatsdLoggerUnitTest {
                                 latency,
                                 /* success= */ true,
                                 stage,
-                                mClientAppUid));
+                                mClientAppUid,
+                                SANDBOX_API_CALLED__RESULT_CODE__RESULT_CODE_UNSPECIFIED));
     }
 
     // Creates a SandboxLatencyInfo object with all start and finish times filled with consecutive

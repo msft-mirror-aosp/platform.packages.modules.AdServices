@@ -16,16 +16,22 @@
 
 package android.app.sdksandbox.sandboxactivity;
 
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
+import android.annotation.SystemApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+
+import com.android.sdksandbox.flags.Flags;
 
 /**
  * Provides information required for building the sandbox activity {@link Context}.
  *
  * @hide
  */
+@FlaggedApi(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
+@SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 public interface ActivityContextInfo {
     /**
      * Returns the {@link ApplicationInfo} of the SDK which initially requested the {@link Activity}
@@ -35,5 +41,7 @@ public interface ActivityContextInfo {
     ApplicationInfo getSdkApplicationInfo();
 
     /** The flags which should be used to build the sandbox {@link Activity} context. */
-    int CONTEXT_FLAGS = Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
+    default int getContextFlags() {
+        return Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
+    }
 }

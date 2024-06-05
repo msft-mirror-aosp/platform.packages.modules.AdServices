@@ -731,10 +731,10 @@ package android.adservices.signals {
 package android.adservices.topics {
 
   @FlaggedApi("com.android.adservices.flags.topics_encryption_enabled") public final class EncryptedTopic {
-    ctor @FlaggedApi("com.android.adservices.flags.topics_encryption_enabled") public EncryptedTopic(@NonNull byte[], @NonNull String, @NonNull byte[]);
-    method @FlaggedApi("com.android.adservices.flags.topics_encryption_enabled") @NonNull public byte[] getEncapsulatedKey();
-    method @FlaggedApi("com.android.adservices.flags.topics_encryption_enabled") @NonNull public byte[] getEncryptedTopic();
-    method @FlaggedApi("com.android.adservices.flags.topics_encryption_enabled") @NonNull public String getKeyIdentifier();
+    ctor public EncryptedTopic(@NonNull byte[], @NonNull String, @NonNull byte[]);
+    method @NonNull public byte[] getEncapsulatedKey();
+    method @NonNull public byte[] getEncryptedTopic();
+    method @NonNull public String getKeyIdentifier();
   }
 
   public final class GetTopicsRequest {

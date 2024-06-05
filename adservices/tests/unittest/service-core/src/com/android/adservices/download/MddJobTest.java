@@ -28,6 +28,7 @@ import static com.android.adservices.download.MddJob.createJobSpec;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
+import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
@@ -37,10 +38,10 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.android.libraries.mobiledatadownload.TaskScheduler.WIFI_CHARGING_PERIODIC_TASK;
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -51,14 +52,13 @@ import android.app.job.JobScheduler;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.FutureSyncCallback;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
-import com.android.adservices.shared.spe.scheduling.JobSpec;
+import com.android.adservices.shared.testing.FutureSyncCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -75,6 +75,7 @@ import org.mockito.Mock;
 @RequiresSdkLevelAtLeastS
 @SpyStatic(AdServicesJobScheduler.class)
 @SpyStatic(AdServicesJobServiceFactory.class)
+@SpyStatic(EncryptionDataDownloadManager.class)
 @SpyStatic(EnrollmentDataDownloadManager.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MddFlags.class)
@@ -87,18 +88,19 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
 
     private final MddJob mMddJob = new MddJob();
 
+    @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
     @Mock private AdServicesJobServiceFactory mMockFactory;
     @Mock private MobileDataDownload mMockMobileDataDownload;
     @Mock private EnrollmentDataDownloadManager mMockEnrollmentDataDownloadManager;
+    @Mock private EncryptionDataDownloadManager mMockEncryptionDataDownloadManager;
     @Mock private ExecutionRuntimeParameters mMockParams;
     @Mock private Flags mMockFlags;
-    @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private MddFlags mMockMddFlags;
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         mockMddFlags();
 
         doReturn(mMockFactory).when(AdServicesJobServiceFactory::getInstance);
@@ -107,6 +109,8 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
         doReturn(mMockMobileDataDownload).when(() -> MobileDataDownloadFactory.getMdd(any()));
         doReturn(mMockEnrollmentDataDownloadManager)
                 .when(EnrollmentDataDownloadManager::getInstance);
+        doReturn(mMockEncryptionDataDownloadManager)
+                .when(EncryptionDataDownloadManager::getInstance);
 
         // Assign a MDD task tag for general cases.
         PersistableBundle bundle = new PersistableBundle();
@@ -114,8 +118,7 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
         when(mMockParams.getExtras()).thenReturn(bundle);
 
         // Mock AdServicesJobScheduler to not actually schedule the jobs.
-        doReturn(mMockAdServicesJobScheduler).when(AdServicesJobScheduler::getInstance);
-        doNothing().when(mMockAdServicesJobScheduler).schedule(any(JobSpec.class));
+        mocker.mockSpeJobScheduler(mMockAdServicesJobScheduler);
     }
 
     @Test
@@ -140,14 +143,16 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
     public void testGetExecutionFuture() throws Exception {
         FutureSyncCallback<Void> mddHandleTaskCallBack = mockMddHandleTask();
         FutureSyncCallback<Void> enrollmentCallBack = mockEnrollmentReadFromMdd();
+        FutureSyncCallback<Void> encryptionCallBack = mockEncryptionReadFromMdd();
 
         ListenableFuture<ExecutionResult> unusedFuture =
                 mMddJob.getExecutionFuture(sContext, mMockParams);
         // Call it to suppress the linter.
-        unusedFuture.get();
+        assertThat(unusedFuture.get()).isEqualTo(SUCCESS);
 
         mddHandleTaskCallBack.assertResultReceived();
         enrollmentCallBack.assertResultReceived();
+        encryptionCallBack.assertResultReceived();
     }
 
     @Test
@@ -186,12 +191,12 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
     public void testScheduleAllMddJobs_legacy() {
         int resultCode = SCHEDULING_RESULT_CODE_SUCCESSFUL;
         when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(false);
-        doReturn(resultCode).when(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doReturn(resultCode).when(() -> MddJobService.scheduleIfNeeded(/* forceSchedule= */ false));
         doNothing().when(() -> MddJob.logJobSchedulingLegacy(resultCode));
 
         MddJob.scheduleAllMddJobs();
 
-        verify(() -> MddJobService.scheduleIfNeeded(any(), anyBoolean()));
+        verify(() -> MddJobService.scheduleIfNeeded(/* forceSchedule= */ false));
         verify(() -> MddJob.logJobSchedulingLegacy(resultCode));
         verifyZeroInteractions(mMockAdServicesJobScheduler);
     }
@@ -262,6 +267,21 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
                         })
                 .when(mMockEnrollmentDataDownloadManager)
                 .readAndInsertEnrollmentDataFromMdd();
+
+        return futureCallback;
+    }
+
+    private FutureSyncCallback<Void> mockEncryptionReadFromMdd() {
+        FutureSyncCallback<Void> futureCallback = new FutureSyncCallback<>();
+
+        doAnswer(
+                        invocation -> {
+                            futureCallback.onSuccess(null);
+                            return Futures.immediateFuture(
+                                    EncryptionDataDownloadManager.DownloadStatus.SUCCESS);
+                        })
+                .when(mMockEncryptionDataDownloadManager)
+                .readAndInsertEncryptionDataFromMdd();
 
         return futureCallback;
     }
