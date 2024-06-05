@@ -89,7 +89,7 @@ android_library {
         "//vendor:__subpackages__", // used by some integration tests
     ],
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
     },
     plugins: ["auto_annotation_plugin"],
 }
@@ -119,7 +119,7 @@ android_library {
         "com.android.extservices",
     ],
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
     },
 }
 
