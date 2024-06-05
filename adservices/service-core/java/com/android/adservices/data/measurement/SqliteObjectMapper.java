@@ -250,6 +250,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.DESTINATION_LIMIT_PRIORITY,
                 builder::setDestinationLimitPriority);
+        setDoubleColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_LEVEL_EPSILON,
+                builder::setEventLevelEpsilon);
 
         return builder.build();
     }
