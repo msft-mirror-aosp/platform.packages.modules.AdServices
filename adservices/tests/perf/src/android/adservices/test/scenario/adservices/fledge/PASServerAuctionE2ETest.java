@@ -16,23 +16,22 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
-
 import android.Manifest;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
 import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.customaudience.CustomAudience;
-import android.adservices.test.scenario.adservices.fledge.utils.CustomAudienceTestFixture;
+import android.adservices.test.scenario.adservices.fledge.utils.BackgroundJobFixture;
 import android.adservices.test.scenario.adservices.fledge.utils.FakeAdExchangeServer;
+import android.adservices.test.scenario.adservices.fledge.utils.ProtectedAppSignalsTestFixture;
 import android.adservices.test.scenario.adservices.fledge.utils.SelectAdResponse;
 import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
 import android.platform.test.option.StringOption;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
-import android.provider.DeviceConfig;
+import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -50,55 +49,38 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Scenario
 @RunWith(JUnit4.class)
-public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestBase {
-    private static final String TAG = "PtbM11SimulationTest";
-
-    private static final String CONTEXTUAL_SIGNALS_ONE_BUYER = "PtbContextualSignals.json";
-    private static final String CUSTOM_AUDIENCE_ONE_CA_ONE_AD = "PtbCustomAudienceOneCaOneAd.json";
-
-    @ClassRule
-    public static StringOption serverUrlOption =
-            new StringOption("server-url").setRequired(true).setDefault("");
-
-    @ClassRule
-    public static StringOption coordinatorUrlOption =
-            new StringOption("coordinator-url").setRequired(true).setDefault("");
-
-    @ClassRule
-    public static StringOption sellerOption =
-            new StringOption("seller").setRequired(true).setDefault("");
-
-    @ClassRule
-    public static StringOption winnerDomainOption =
-            new StringOption("winner-domain").setRequired(true).setDefault("");
-
+public class PASServerAuctionE2ETest extends ServerAuctionE2ETestBase {
+    private static final String TAG = PASServerAuctionE2ETest.class.getName();
     private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = true;
+    private static final int BACKGROUND_JOB_ID = 29;
+    private static final String SINGLE_BUYER_SERVER_REQUEST = "PASBuyerRequest.json";
+    private static final String CUSTOM_AUDIENCE_ONE_CA_ONE_AD = "PtbCustomAudienceOneCaOneAd.json";
+    private static final Map<String, String> HTTP_HEADERS =
+            Map.of(
+                    "X-Accept-Language", "en-US",
+                    "X-BnA-Client-IP", "192.168.0.1",
+                    "X-User-Agent", "Test-User-Agent");
 
-    private String getCoordinator() {
-        return coordinatorUrlOption.get();
-    }
+    @ClassRule
+    public static StringOption sfeAddress =
+            new StringOption("sfe-address").setRequired(true).setDefault("");
 
-    private String getServer() {
-        return serverUrlOption.get();
-    }
+    @ClassRule
+    public static StringOption encryptionKeyFetchUri =
+            new StringOption("encryption-key-fetch-uri").setRequired(true).setDefault("");
 
-    private String getSeller() {
-        return sellerOption.get();
-    }
+    @ClassRule
+    public static StringOption buyerDomain =
+            new StringOption("buyer-domain").setRequired(true).setDefault("");
 
-    private String getAdWinnerDomain() {
-        return winnerDomainOption.get();
-    }
-
-    @Override
-    protected String getTag() {
-        return TAG;
-    }
+    @ClassRule
+    public static StringOption sellerDomain =
+            new StringOption("seller-domain").setRequired(true).setDefault("");
 
     @Rule
     public RuleChain rules =
@@ -114,7 +96,7 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
                                     AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
                                     /* clearOnStarting= */ true,
                                     /* clearOnFinished= */ false))
-                    .around(new SelectAdsFlagRule());
+                    .around(new SelectAdsFlagRule(getEncryptionKeyFetchUri()));
 
     /** Perform the class-wide required setup. */
     @BeforeClass
@@ -132,29 +114,35 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
      */
     @Before
     public void warmup() throws Exception {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "fledge_auction_server_auction_key_fetch_uri",
-                getCoordinator(),
-                false);
-
-        makeWarmUpNetworkCall(getCoordinator());
-
-        byte[] getAdSelectionData =
-                warmupBiddingAuctionServer(
-                        CUSTOM_AUDIENCE_ONE_CA_ONE_AD,
-                        getSeller(),
-                        CONTEXTUAL_SIGNALS_ONE_BUYER,
-                        getServer(),
-                        SERVER_RESPONSE_LOGGING_ENABLED);
-        Thread.sleep(2000L);
-
-        runServerAuction(
-                CONTEXTUAL_SIGNALS_ONE_BUYER,
-                getAdSelectionData,
-                getServer(),
+        makeWarmUpNetworkCall(getEncryptionKeyFetchUri());
+        warmupBiddingAuctionServer(
+                CUSTOM_AUDIENCE_ONE_CA_ONE_AD,
+                getSellerDomain(),
+                SINGLE_BUYER_SERVER_REQUEST,
+                getSfeAddress(),
                 SERVER_RESPONSE_LOGGING_ENABLED);
         Thread.sleep(2000L);
+    }
+
+    private String getSfeAddress() {
+        return sfeAddress.get();
+    }
+
+    private String getEncryptionKeyFetchUri() {
+        return encryptionKeyFetchUri.get();
+    }
+
+    private String getBuyerDomain() {
+        return buyerDomain.get();
+    }
+
+    private String getSellerDomain() {
+        return sellerDomain.get();
+    }
+
+    @Override
+    protected String getTag() {
+        return TAG;
     }
 
     /**
@@ -162,39 +150,48 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
      * enrolled PTB seller, buyer and a coordinator key that's older than 45 days
      */
     @Test
-    public void runAdSelection_ptb_basicSimulation_test() throws Exception {
-        List<CustomAudience> customAudiences =
-                CustomAudienceTestFixture.readCustomAudiences(CUSTOM_AUDIENCE_ONE_CA_ONE_AD);
+    public void runAdSelection_twoSignals_success() throws Exception {
+        String clean = "e2e_clear";
+        String bid1 = "e2e_shirts_bid_1";
+        String bid2 = "e2e_shoes_bid_2";
+        boolean isUpdateSignalSuccess;
+        isUpdateSignalSuccess =
+                ProtectedAppSignalsTestFixture.updateSignals(getBuyerDomain() + clean);
+        isUpdateSignalSuccess =
+                isUpdateSignalSuccess
+                        && ProtectedAppSignalsTestFixture.updateSignals(getBuyerDomain() + bid1);
+        isUpdateSignalSuccess =
+                isUpdateSignalSuccess
+                        && ProtectedAppSignalsTestFixture.updateSignals(getBuyerDomain() + bid2);
+        Assert.assertTrue(isUpdateSignalSuccess);
 
-        CustomAudienceTestFixture.joinCustomAudiences(customAudiences);
+        boolean isBackgroundJobSuccess = BackgroundJobFixture.runJob(BACKGROUND_JOB_ID);
+        Assert.assertTrue(isBackgroundJobSuccess);
 
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder()
-                        .setSeller(AdTechIdentifier.fromString(getSeller()))
+                        .setSeller(AdTechIdentifier.fromString(getSellerDomain()))
                         .build();
-
         GetAdSelectionDataOutcome outcome =
-                retryOnCondition(
-                        () ->
-                                AD_SELECTION_CLIENT
-                                        .getAdSelectionData(request)
-                                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS),
-                        matchOnTimeoutExecutionException(),
-                        /* maxRetries= */ 3,
-                        /* retryIntervalMillis= */ 2000L,
-                        "getAdSelectionData");
+                AD_SELECTION_CLIENT
+                        .getAdSelectionData(request)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        Log.i(TAG, "asdf: seller domain: " + getSellerDomain());
+        Log.i(TAG, "GetAdSelectionData finished: " + outcome.getAdSelectionDataId());
 
         SelectAdResponse selectAdResponse =
                 FakeAdExchangeServer.runServerAuction(
-                        CONTEXTUAL_SIGNALS_ONE_BUYER,
+                        SINGLE_BUYER_SERVER_REQUEST,
                         outcome.getAdSelectionData(),
-                        getServer(),
-                        SERVER_RESPONSE_LOGGING_ENABLED);
+                        getSfeAddress(),
+                        SERVER_RESPONSE_LOGGING_ENABLED,
+                        HTTP_HEADERS);
+        Log.i(TAG, "SelectAdResponse received: " + selectAdResponse);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =
                 new PersistAdSelectionResultRequest.Builder()
-                        .setAdSelectionId(outcome.getAdSelectionId())
-                        .setSeller(AdTechIdentifier.fromString(getSeller()))
+                        .setAdSelectionDataId(outcome.getAdSelectionDataId())
+                        .setSeller(AdTechIdentifier.fromString(getSellerDomain()))
                         .setAdSelectionResult(
                                 BaseEncoding.base64()
                                         .decode(selectAdResponse.auctionResultCiphertext))
@@ -205,9 +202,7 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
                         .persistAdSelectionResult(persistAdSelectionResultRequest)
                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
-
-        Assert.assertTrue(
-                adSelectionOutcome.getRenderUri().toString().contains(getAdWinnerDomain()));
+        String renderUriString = adSelectionOutcome.getRenderUri().toString();
+        Assert.assertTrue(renderUriString.contains(getBuyerDomain()));
     }
 }
