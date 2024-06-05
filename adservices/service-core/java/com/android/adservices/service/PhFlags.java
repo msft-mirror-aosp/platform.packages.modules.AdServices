@@ -4145,11 +4145,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableSourceDeactivationAfterFiltering());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT
-                        + " = "
-                        + getMeasurementEnableScopedAttributionRateLimit());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
                         + " = "
                         + getMeasurementEnableAppPackageNameLogging());
@@ -5868,13 +5863,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
                 MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING);
-    }
-
-    @Override
-    public boolean getMeasurementEnableScopedAttributionRateLimit() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT,
-                MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT);
     }
 
     @Override
