@@ -2909,138 +2909,84 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testMddEncryptionKeysManifestFileUrl() {
-        // Assert the value before override.
-        assertThat(mPhFlags.getMddEncryptionKeysManifestFileUrl())
-                .isEqualTo(MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL);
-
-        // Now overriding with the value from PH.
         String phOverridingValue = "https://newUrl.com";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL,
-                phOverridingValue,
-                false);
-
-        assertThat(mPhFlags.getMddEncryptionKeysManifestFileUrl()).isEqualTo(phOverridingValue);
+                MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL,
+                Flags::getMddEncryptionKeysManifestFileUrl,
+                phOverridingValue);
     }
 
     @Test
     public void testGetPpapiAppAllowList() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getPpapiAppAllowList()).isEqualTo(PPAPI_APP_ALLOW_LIST);
-
-        // Now overriding with the value from PH.
         String phOverridingValue = PPAPI_APP_ALLOW_LIST + "SomePackageName,AnotherPackageName";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_PPAPI_APP_ALLOW_LIST,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getPpapiAppAllowList()).isEqualTo(phOverridingValue);
+                PPAPI_APP_ALLOW_LIST,
+                Flags::getPpapiAppAllowList,
+                phOverridingValue);
     }
 
     @Test
     public void testGetPasAppAllowList() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getPasAppAllowList()).isEqualTo(PPAPI_APP_ALLOW_LIST);
-
-        // Now overriding with the value from PH.
         String phOverridingValue = PPAPI_APP_ALLOW_LIST + "SomePackageName,AnotherPackageName";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_PAS_APP_ALLOW_LIST,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getPasAppAllowList()).isEqualTo(phOverridingValue);
+                PPAPI_APP_ALLOW_LIST,
+                Flags::getPasAppAllowList,
+                phOverridingValue);
     }
 
     @Test
     public void testGetAdIdApiAppBlockList() {
-        assertThat(mPhFlags.getAdIdApiAppBlockList()).isEqualTo(AD_ID_API_APP_BLOCK_LIST);
-
-        // Now overriding with the value from PH.
         String phOverridingValue = AD_ID_API_APP_BLOCK_LIST + "SomePackageName,AnotherPackageName";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_AD_ID_API_APP_BLOCK_LIST,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAdIdApiAppBlockList()).isEqualTo(phOverridingValue);
+                AD_ID_API_APP_BLOCK_LIST,
+                Flags::getAdIdApiAppBlockList,
+                phOverridingValue);
     }
 
     @Test
     public void testGetMsmtApiAppAllowList() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getMsmtApiAppAllowList())
-                .isEqualTo(MSMT_API_APP_ALLOW_LIST);
-
-        // Now overriding with the value from PH.
         String phOverridingValue = MSMT_API_APP_ALLOW_LIST + "SomePackageName,AnotherPackageName";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MSMT_API_APP_ALLOW_LIST,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getMsmtApiAppAllowList()).isEqualTo(phOverridingValue);
+                MSMT_API_APP_ALLOW_LIST,
+                Flags::getMsmtApiAppAllowList,
+                phOverridingValue);
     }
 
     @Test
     public void testGetMsmtApiAppBlockList() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getMsmtApiAppBlockList())
-                .isEqualTo(MSMT_API_APP_BLOCK_LIST);
-
-        // Now overriding with the value from PH.
         String phOverridingValue = MSMT_API_APP_BLOCK_LIST + "SomePackageName,AnotherPackageName";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_MSMT_API_APP_BLOCK_LIST,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getMsmtApiAppBlockList()).isEqualTo(phOverridingValue);
+                MSMT_API_APP_BLOCK_LIST,
+                Flags::getMsmtApiAppBlockList,
+                phOverridingValue);
     }
 
     @Test
     public void testGetPpapiAppSignatureAllowList() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getPpapiAppSignatureAllowList())
-                .isEqualTo(PPAPI_APP_SIGNATURE_ALLOW_LIST);
-
-        // Now overriding with the value from PH.
         String phOverridingValue =
                 PPAPI_APP_SIGNATURE_ALLOW_LIST + "SomePackageName,AnotherPackageName";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getPpapiAppSignatureAllowList()).isEqualTo(phOverridingValue);
+                PPAPI_APP_SIGNATURE_ALLOW_LIST,
+                Flags::getPpapiAppSignatureAllowList,
+                phOverridingValue);
     }
 
     @Test
     public void testGetAppsearchWriterAllowListOverride() {
-        // Without any overriding, the value is the hard coded constant.
-        assertThat(mPhFlags.getAppsearchWriterAllowListOverride())
-                .isEqualTo(APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE);
-
-        // Now overriding with the value from PH.
         String phOverridingValue =
                 APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE + "SomePackageName,AnotherPackageName";
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE,
-                phOverridingValue,
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getAppsearchWriterAllowListOverride()).isEqualTo(phOverridingValue);
+                APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE,
+                Flags::getAppsearchWriterAllowListOverride,
+                phOverridingValue);
     }
 
     @Test
@@ -3357,19 +3303,10 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetFledgeAuctionServerForceContinueWhenOwnerIsNullEnabled() {
-        assertThat(mPhFlags.getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled())
-                .isEqualTo(FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED);
-
-        boolean phOverridingValue =
-                !FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+        mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled())
-                .isEqualTo(phOverridingValue);
+                FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED,
+                Flags::getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled);
     }
 
     @Test
