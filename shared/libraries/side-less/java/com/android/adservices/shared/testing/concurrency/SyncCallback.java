@@ -17,19 +17,12 @@ package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Identifiable;
 
-import java.util.concurrent.TimeUnit;
-
+// TODO(b/337014024): explain that subclasse must provide a "setCalled" method
 /** Base interface for all testing-related sync callbacks. */
 public interface SyncCallback extends Identifiable {
 
     /** Tag used on {@code logcat} calls. */
     String LOG_TAG = "SyncCallback";
-
-    /**
-     * Indicates the callback was called, so it unblocks {@link #waitCalled()} / {@link
-     * #waitCalled(long, TimeUnit)}.
-     */
-    void setCalled();
 
     /**
      * Asserts the callback was called or throw if it times out - the timeout value is defined by
@@ -45,14 +38,4 @@ public interface SyncCallback extends Identifiable {
 
     /** Gets the callback settings. */
     SyncCallbackSettings getSettings();
-
-    /**
-     * Checks if the callback supports calls to {@link #setCalled()}.
-     *
-     * <p>Returns {@code true} by default, but some callbacks don't support it because they provide
-     * a more customized method (like {@code injectResult()}).
-     */
-    default boolean supportsSetCalled() {
-        return true;
-    }
 }

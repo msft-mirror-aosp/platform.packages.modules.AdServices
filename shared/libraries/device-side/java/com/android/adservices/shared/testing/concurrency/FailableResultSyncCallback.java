@@ -15,6 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import static com.android.adservices.shared.testing.concurrency.ResultSyncCallback.getImmutableList;
 import static com.android.adservices.shared.util.Preconditions.checkState;
 
 import android.os.IBinder;
@@ -23,16 +24,18 @@ import androidx.annotation.Nullable;
 
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * {@code SyncCallback} use to return an object (result) or a failure.
  *
- * @param <T> type of the object received on success.
+ * @param <R> type of the object received on success.
  * @param <F> type of the object received on failure.
  */
-public class FailableResultSyncCallback<T, F> extends AbstractSyncCallback
-        implements IResultSyncCallback<T> {
+public class FailableResultSyncCallback<R, F> extends AbstractSyncCallback
+        implements IResultSyncCallback<R> {
 
     @VisibleForTesting
     public static final String INJECT_RESULT_OR_FAILURE = "injectResult() or injectFailure()";
@@ -41,7 +44,7 @@ public class FailableResultSyncCallback<T, F> extends AbstractSyncCallback
     public static final String MSG_WRONG_ERROR_RECEIVED =
             "expected error of type %s, but received %s";
 
-    private final ResultSyncCallback<ResultOrFailure<T, F>> mCallback;
+    private final ResultSyncCallback<ResultOrFailure<R, F>> mCallback;
 
     public FailableResultSyncCallback() {
         this(SyncCallbackFactory.newSettingsBuilder().build());
@@ -53,15 +56,10 @@ public class FailableResultSyncCallback<T, F> extends AbstractSyncCallback
         mCallback = new ResultSyncCallback<>(settings);
     }
 
-    @Override
-    protected final String getSetCalledAlternatives() {
-        return "injectResult() or injectFailure()";
-    }
-
     /**
      * Sets a failure as the outcome of the callback.
      *
-     * @throws IllegalStateException if {@link #injectResult(T)} or {@link #injectError(F)} was
+     * @throws IllegalStateException if {@link #injectResult(R)} or {@link #injectError(F)} was
      *     already called.
      */
     public final void injectFailure(F failure) {
@@ -76,9 +74,13 @@ public class FailableResultSyncCallback<T, F> extends AbstractSyncCallback
      * Asserts that {@link #injectFailure(Object)} was called, waiting up to {@link
      * #getMaxTimeoutMs()} milliseconds before failing (if not called).
      *
-     * @return the failure
+     * <p>NOTE: it returns the result of the first call, which is sufficient for most use cases - if
+     * you're expecting multiple calls, you can get the further ones using {@link #getFailures()}.
+     *
+     * @return the first failure passed to {@link #injectFailure(Object)} or {@code null} if {@link
+     *     #injectResult(Object)} was called first.
      */
-    public final F assertFailureReceived() throws InterruptedException {
+    public final @Nullable F assertFailureReceived() throws InterruptedException {
         assertCalled();
         return getFailure();
     }
@@ -102,43 +104,53 @@ public class FailableResultSyncCallback<T, F> extends AbstractSyncCallback
     }
 
     /**
-     * Gets the failure returned by {@link #injectFailure(Object)} (or {@code null} if it was not
-     * called yet).
+     * Gets first failure returned by {@link #injectFailure(Object)} (or {@code null} if {@link
+     * #injectResult(Object)} was called first).
      */
-    public @Nullable F getFailure() {
+    public final @Nullable F getFailure() {
         var resultOrFailure = mCallback.getResult();
         return resultOrFailure == null ? null : resultOrFailure.failure;
     }
 
+    // NOTE: cannot use Guava's ImmutableList because it doesn't support null elements
+    /**
+     * Gets the result of all calls to {@link #injectFailure(Object)}, in order.
+     *
+     * @return immutable list with all failures
+     */
+    public final List<F> getFailures() {
+        return getImmutableList(
+                mCallback.getResults().stream()
+                        .filter(rof -> !rof.isResult)
+                        .map(rof -> rof.failure)
+                        .collect(Collectors.toList()));
+    }
+
     @Override
-    public final void injectResult(T result) {
+    public final void injectResult(R result) {
         mCallback.injectResult(
                 new ResultOrFailure<>(/* isResult= */ true, result, /* failure= */ null));
     }
 
     @Override
-    public final T getResult() {
+    public final R getResult() {
         var resultOrFailure = mCallback.getResult();
         return resultOrFailure == null ? null : resultOrFailure.result;
     }
 
     @Override
-    public final T assertResultReceived() throws InterruptedException {
-        assertCalled();
-        return getResult();
+    public List<R> getResults() {
+        return getImmutableList(
+                mCallback.getResults().stream()
+                        .filter(rof -> rof.isResult)
+                        .map(rof -> rof.result)
+                        .collect(Collectors.toList()));
     }
 
     @Override
-    public final void assertCalled() throws InterruptedException {
-        try {
-            mCallback.assertCalled();
-        } catch (CallbackAlreadyCalledException e) {
-            // Need to switch the message in the exception
-            throw new CallbackAlreadyCalledException(
-                    INJECT_RESULT_OR_FAILURE,
-                    getResultOrValue(e.getPreviousValue()),
-                    getResultOrValue(e.getNewValue()));
-        }
+    public final R assertResultReceived() throws InterruptedException {
+        assertCalled();
+        return getResult();
     }
 
     @Override
@@ -159,19 +171,19 @@ public class FailableResultSyncCallback<T, F> extends AbstractSyncCallback
     }
 
     private static final class ResultOrFailure<T, F> {
-        private boolean mIsResult;
-        public @Nullable T result;
-        public @Nullable F failure;
+        public final boolean isResult;
+        public final @Nullable T result;
+        public final @Nullable F failure;
 
         ResultOrFailure(boolean isResult, @Nullable T result, @Nullable F failure) {
-            mIsResult = isResult;
+            this.isResult = isResult;
             this.result = result;
             this.failure = failure;
         }
 
         @Override
         public String toString() {
-            return String.valueOf(mIsResult ? result : failure);
+            return String.valueOf(isResult ? result : failure);
         }
     }
 
@@ -180,6 +192,6 @@ public class FailableResultSyncCallback<T, F> extends AbstractSyncCallback
             return null;
         }
         ResultOrFailure<?, ?> rof = (ResultOrFailure<?, ?>) value;
-        return rof.mIsResult ? rof.result : rof.failure;
+        return rof.isResult ? rof.result : rof.failure;
     }
 }

@@ -42,7 +42,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /** Base class for all {@code SyncCallback} implementations. */
-public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends SharedSidelessTestCase {
+public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableToString>
+        extends SharedSidelessTestCase {
 
     protected static final long INJECTION_TIMEOUT_MS = 200;
     protected static final long CALLBACK_TIMEOUT_MS = INJECTION_TIMEOUT_MS + 400;
@@ -65,6 +66,38 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
      */
     protected abstract CB newCallback(SyncCallbackSettings settings);
 
+    private CB newFrozenCallback(SyncCallbackSettings settings) {
+        CB callback = newCallback(settings);
+        callback.freezeToString();
+        return callback;
+    }
+
+    /** Calls the callback and return the name of the called method. */
+    protected final String call(CB callback) {
+        String methodName = callCallback(callback);
+        if (methodName == null) {
+            throw new IllegalStateException(
+                    "Callback " + callback + " returned null to callCallback()");
+        }
+        return methodName;
+    }
+
+    /**
+     * Abstraction to "call" the callback.
+     *
+     * <p>By default it will call {@code setCalled()}, but should be overridden by subclasses that
+     * support results.
+     *
+     * @return name of the method called
+     */
+    protected String callCallback(CB callback) {
+        if (callback instanceof ResultlessSyncCallback) {
+            ((ResultlessSyncCallback) callback).setCalled();
+            return "setCalled()";
+        }
+        throw new UnsupportedOperationException(getClass() + " must override call(callback)");
+    }
+
     /**
      * Checks whether the callback supports being constructor with a {@link SyncCallbackSettings
      * settings} object that supports {@link SyncCallbackSettings#isFailIfCalledOnMainThread()
@@ -79,17 +112,17 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     /** Makes sure subclasses provide distinct callbacks, as some tests rely on that. */
     @Test
     public final void testNewCallback() {
-        CB callback1 = newCallback(mDefaultSettings);
+        CB callback1 = newFrozenCallback(mDefaultSettings);
         expect.withMessage("1st callback").that(callback1).isNotNull();
 
-        CB callback2 = newCallback(mDefaultSettings);
+        CB callback2 = newFrozenCallback(mDefaultSettings);
         expect.withMessage("2nd callback").that(callback2).isNotNull();
         expect.withMessage("2nd callback").that(callback2).isNotSameInstanceAs(callback1);
     }
 
     @Test
     public final void testHasExpectedConstructors() throws Exception {
-        CB callback = newCallback(mDefaultSettings);
+        CB callback = newFrozenCallback(mDefaultSettings);
         @SuppressWarnings("unchecked")
         Class<CB> callbackClass = (Class<CB>) callback.getClass();
 
@@ -111,7 +144,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
         SyncCallbackSettings settings =
                 mFakeLoggerSettingsBuilder.setFailIfCalledOnMainThread(true).build();
 
-        assertThrows(IllegalArgumentException.class, () -> newCallback(settings));
+        assertThrows(IllegalArgumentException.class, () -> newFrozenCallback(settings));
     }
 
     @Nullable
@@ -126,7 +159,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
     @Test
     public final void testGetSettings() {
-        CB callback = newCallback(mDefaultSettings);
+        CB callback = newFrozenCallback(mDefaultSettings);
 
         expect.withMessage("getSettings()")
                 .that(callback.getSettings())
@@ -135,11 +168,11 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
     @Test
     public final void testGetId() {
-        CB callback1 = newCallback(mDefaultSettings);
+        CB callback1 = newFrozenCallback(mDefaultSettings);
         String id1 = callback1.getId();
         expect.withMessage("id").that(id1).isNotNull();
 
-        CB callback2 = newCallback(mDefaultSettings);
+        CB callback2 = newFrozenCallback(mDefaultSettings);
         String id2 = callback2.getId();
         expect.withMessage("id2").that(id2).isNotNull();
         expect.withMessage("id2").that(id2).isNotEqualTo(id1);
@@ -147,28 +180,39 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
     @Test
     public final void testAssertCalled() throws Exception {
-        var callback = newCallback(mDefaultSettings);
+        var callback = newFrozenCallback(mDefaultSettings);
         assumeCallbackSupportsSetCalled(callback);
         var log = new LogChecker(callback);
 
         // Check state before
         expectIsCalledAndNumberCalls(callback, "before setCalled()", false, 0);
 
-        Thread t = runAsync(INJECTION_TIMEOUT_MS, () -> callback.setCalled());
+        // Note: cannot use AtomicRefecence because setCalled() might be called it might be called
+        // AFTER assertCalled()
+        ArrayBlockingQueue<String> setCalledMethodQueue = new ArrayBlockingQueue<>(1);
+
+        Thread t = runAsync(INJECTION_TIMEOUT_MS, () -> setCalledMethodQueue.offer(call(callback)));
         callback.assertCalled();
 
         // Check state after
         expectIsCalledAndNumberCalls(callback, "after setCalled()", true, 1);
-
+        String setCalled = setCalledMethodQueue.poll(CALLBACK_TIMEOUT_MS, MILLISECONDS);
+        if (setCalled == null) {
+            // Shouldn't happen...
+            throw new IllegalStateException(
+                    "Could not infer name of setCalled() method after "
+                            + CALLBACK_TIMEOUT_MS
+                            + " ms");
+        }
         expectLoggedCalls(
-                log.d("setCalled() called on " + t.getName()),
-                log.v("setCalled() returning"),
+                log.d(setCalled + " called on " + t.getName()),
+                log.v(setCalled + " returning"),
                 log.d("assertCalled() called on " + currentThread().getName()),
                 log.v("assertCalled() returning"));
 
         // Further calls - make sure number actual calls keeps increasing
         // (don't need to call on bg because it's already called)
-        callback.setCalled();
+        call(callback);
         expect.withMessage("%s.getNumberActualCalls() after 2nd call", callback)
                 .that(callback.getNumberActualCalls())
                 .isEqualTo(2);
@@ -176,7 +220,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
     @Test
     public final void testAssertCalled_neverCalled() throws Exception {
-        var callback = newCallback(mDefaultSettings);
+        var callback = newFrozenCallback(mDefaultSettings);
         assumeCallbackSupportsSetCalled(callback);
         var log = new LogChecker(callback);
 
@@ -196,7 +240,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
     @Test
     public final void testAssertCalled_interrupted() throws Exception {
-        var callback = newCallback(mDefaultSettings);
+        var callback = newFrozenCallback(mDefaultSettings);
         assumeCallbackSupportsSetCalled(callback);
         var log = new LogChecker(callback);
         ArrayBlockingQueue<Throwable> actualFailureQueue = new ArrayBlockingQueue<>(1);
@@ -227,24 +271,24 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     @Test
     public final void testAssertCalled_multipleCalls() throws Exception {
         SyncCallbackSettings settings = mDefaultSettingsBuilder.setExpectedNumberCalls(2).build();
-        CB callback = newCallback(settings);
+        CB callback = newFrozenCallback(settings);
         assumeCallbackSupportsSetCalled(callback);
 
         // 1st call
-        runAsync(INJECTION_TIMEOUT_MS, () -> callback.setCalled());
+        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback));
         assertThrows(SyncCallbackTimeoutException.class, () -> callback.assertCalled());
 
         expectIsCalledAndNumberCalls(callback, "after 1st setCalled()", false, 1);
 
         // 2nd call
-        runAsync(INJECTION_TIMEOUT_MS, () -> callback.setCalled());
+        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback));
         callback.assertCalled();
 
         expectIsCalledAndNumberCalls(callback, "after 2nd setCalled()", true, 2);
 
         // Further calls - make sure number actual calls keeps increasing
         // (don't need to call on bg because it's already called)
-        callback.setCalled();
+        call(callback);
         expectIsCalledAndNumberCalls(callback, "after 3rd setCalled()", true, 3);
     }
 
@@ -252,33 +296,33 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     public final void testAssertCalled_multipleCallsFromMultipleCallbacks_firstFinishFirst()
             throws Exception {
         SyncCallbackSettings settings = mDefaultSettingsBuilder.setExpectedNumberCalls(4).build();
-        CB callback1 = newCallback(settings);
-        CB callback2 = newCallback(settings);
+        CB callback1 = newFrozenCallback(settings);
+        CB callback2 = newFrozenCallback(settings);
         assumeCallbackSupportsSetCalled(callback1);
 
         // 1st call on 1st callback
-        runAsync(INJECTION_TIMEOUT_MS, () -> callback1.setCalled());
+        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback1));
         assertThrows(SyncCallbackTimeoutException.class, () -> callback1.assertCalled());
         assertThrows(SyncCallbackTimeoutException.class, () -> callback2.assertCalled());
         expectIsCalled(callback1, "after 1st call on 1st callback", false);
         expectIsCalled(callback2, "after 1st call on 1st callback", false);
 
         // 1st call on 2nd callback
-        runAsync(INJECTION_TIMEOUT_MS, () -> callback2.setCalled());
+        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback2));
         assertThrows(SyncCallbackTimeoutException.class, () -> callback1.assertCalled());
         assertThrows(SyncCallbackTimeoutException.class, () -> callback2.assertCalled());
         expectIsCalled(callback1, "after 1st call on 2nd callback", false);
         expectIsCalled(callback2, "after 1st call on 2nd callback", false);
 
         // 2nd call on 2nd callback
-        runAsync(INJECTION_TIMEOUT_MS, () -> callback2.setCalled());
+        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback2));
         assertThrows(SyncCallbackTimeoutException.class, () -> callback1.assertCalled());
         assertThrows(SyncCallbackTimeoutException.class, () -> callback2.assertCalled());
         expectIsCalled(callback1, "after 2nd call on 2nd callback", false);
         expectIsCalled(callback2, "after 2nd call on 2nd callback", false);
 
         // 2nd call on 1st callback
-        runAsync(INJECTION_TIMEOUT_MS, () -> callback1.setCalled());
+        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback1));
         callback1.assertCalled();
         callback2.assertCalled();
         expectIsCalledAndNumberCalls(callback1, "after 2nd call on 1st callback", true, 2);
@@ -286,10 +330,10 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
         // Further calls - make sure number actual calls keeps increasing
         // (don't need to call on bg because it's already called)
-        callback1.setCalled();
+        call(callback1);
         expectIsCalledAndNumberCalls(callback1, "after 3rd call on 1st callback", true, 3);
         expectIsCalledAndNumberCalls(callback2, "after 3rd call on 1st callback", true, 2);
-        callback2.setCalled();
+        call(callback2);
         expectIsCalledAndNumberCalls(callback1, "after 3rd call on 2nd callback", true, 3);
         expectIsCalledAndNumberCalls(callback2, "after 3rd call on 2nd callback", true, 3);
     }
@@ -298,33 +342,33 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
     public final void testAssertCalled_multipleCallsFromMultipleCallbacks_secondFinishFirst()
             throws Exception {
         SyncCallbackSettings settings = mDefaultSettingsBuilder.setExpectedNumberCalls(4).build();
-        CB callback1 = newCallback(settings);
-        CB callback2 = newCallback(settings);
+        CB callback1 = newFrozenCallback(settings);
+        CB callback2 = newFrozenCallback(settings);
         assumeCallbackSupportsSetCalled(callback1);
 
         // 1st call on 1st callback
-        runAsync(INJECTION_TIMEOUT_MS, () -> callback1.setCalled());
+        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback1));
         assertThrows(SyncCallbackTimeoutException.class, () -> callback1.assertCalled());
         assertThrows(SyncCallbackTimeoutException.class, () -> callback2.assertCalled());
         expectIsCalled(callback1, "after 1st call on 1st callback", false);
         expectIsCalled(callback2, "after 1st call on 1st callback", false);
 
         // 1st call on 2nd callback
-        runAsync(INJECTION_TIMEOUT_MS, () -> callback2.setCalled());
+        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback2));
         assertThrows(SyncCallbackTimeoutException.class, () -> callback1.assertCalled());
         assertThrows(SyncCallbackTimeoutException.class, () -> callback2.assertCalled());
         expectIsCalled(callback1, "after 1st call on 2nd callback", false);
         expectIsCalled(callback2, "after 1st call on 2nd callback", false);
 
         // 2nd call on 1st callback
-        runAsync(INJECTION_TIMEOUT_MS, () -> callback1.setCalled());
+        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback1));
         assertThrows(SyncCallbackTimeoutException.class, () -> callback1.assertCalled());
         assertThrows(SyncCallbackTimeoutException.class, () -> callback2.assertCalled());
         expectIsCalled(callback1, "after 2nd call on 1st callback", false);
         expectIsCalled(callback2, "after 2nd call on 1st callback", false);
 
         // 2nd call on 2nd callback
-        runAsync(INJECTION_TIMEOUT_MS, () -> callback2.setCalled());
+        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback2));
         callback1.assertCalled();
         callback2.assertCalled();
         expectIsCalledAndNumberCalls(callback1, "after 2nd call on 2nd callback", true, 2);
@@ -332,10 +376,10 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
         // Further calls - make sure number actual calls keeps increasing
         // (don't need to call on bg because it's already called)
-        callback1.setCalled();
+        call(callback1);
         expectIsCalledAndNumberCalls(callback1, "after 3rd call on 1st callback", true, 3);
         expectIsCalledAndNumberCalls(callback2, "after 3rd call on 1st callback", true, 2);
-        callback2.setCalled();
+        call(callback2);
         expectIsCalledAndNumberCalls(callback1, "after 3rd call on 2nd callback", true, 3);
         expectIsCalledAndNumberCalls(callback2, "after 3rd call on 2nd callback", true, 3);
     }
@@ -349,13 +393,13 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
                         .setFailIfCalledOnMainThread(true)
                         .build();
 
-        var callback = newCallback(settings);
+        var callback = newFrozenCallback(settings);
         assumeCallbackSupportsSetCalled(callback);
         var log = new LogChecker(callback);
 
         // setCalled() passes...
         // NOTE: not really the main thread, as it's emulated
-        Thread mainThread = runAsync(INJECTION_TIMEOUT_MS, () -> callback.setCalled());
+        Thread mainThread = runAsync(INJECTION_TIMEOUT_MS, () -> call(callback));
 
         // ...but then assertCalled() should fails
         var thrown = assertThrows(CalledOnMainThreadException.class, () -> callback.assertCalled());
@@ -363,9 +407,6 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
                 .that(thrown)
                 .hasMessageThat()
                 .contains("setCalled() called on main thread (" + mainThread.getName() + ")");
-        expect.withMessage("toString() after thrown")
-                .that(callback.toString())
-                .contains("onAssertCalledException=" + thrown);
 
         expectIsCalledAndNumberCalls(callback, "after setCalled()", true, 1);
 
@@ -376,11 +417,10 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
                         log.e("assertCalled() failed: " + thrown));
     }
 
-
+    // TODO(b/337014024): remove this method once ResultCallback supports injecting more than once
     /** Ignore the test if the callback supports {@code assertCalled()}. */
-    protected final void assumeCallbackSupportsSetCalled(SyncCallback callback) {
-        if (!callback.supportsSetCalled()) {
-            assertThrows(UnsupportedOperationException.class, () -> callback.setCalled());
+    protected final void assumeCallbackSupportsSetCalled(CB callback) {
+        if (!(callback instanceof ResultlessSyncCallback)) {
             throw new AssumptionViolatedException("Callback doesn't support setCalled()");
         }
     }
@@ -423,34 +463,30 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback> extends Shar
 
     /**
      * Helper class used to to assert calls to the callback {@code logX()} methods.
-     *
-     * <p><b>NOTE: </b>must be called BEFORE the callback is used, as it will change what's returned
-     * by {@code toString()}.
      */
     protected static final class LogChecker {
 
-        public final AbstractSyncCallback callback;
+        private final AbstractSyncCallback mCallback;
 
         public LogChecker(SyncCallback callback) {
             if (!(callback instanceof AbstractSyncCallback)) {
                 throw new IllegalArgumentException(
                         "Not an instance of AbstractSyncCallback: " + callback);
             }
-            this.callback = AbstractSyncCallback.class.cast(callback);
-            this.callback.setCustomizedToString(", IGNORING_VOLATILE_FIELDS");
+            this.mCallback = AbstractSyncCallback.class.cast(callback);
         }
 
         public LogEntry e(String expectedMessage) {
-            return new LogEntry(LogLevel.ERROR, LOG_TAG, callback + ": " + expectedMessage);
+            return new LogEntry(LogLevel.ERROR, LOG_TAG, mCallback + ": " + expectedMessage);
         }
 
         public LogEntry d(String expectedMessage) {
             return new LogEntry(
-                    LogLevel.DEBUG, LOG_TAG, callback.toStringLite() + ": " + expectedMessage);
+                    LogLevel.DEBUG, LOG_TAG, mCallback.toStringLite() + ": " + expectedMessage);
         }
 
         public LogEntry v(String expectedMessage) {
-            return new LogEntry(LogLevel.VERBOSE, LOG_TAG, callback + ": " + expectedMessage);
+            return new LogEntry(LogLevel.VERBOSE, LOG_TAG, mCallback + ": " + expectedMessage);
         }
     }
 }
