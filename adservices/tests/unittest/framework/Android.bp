@@ -45,6 +45,11 @@ android_test {
         "mts-adservices",
     ],
     instrumentation_for: "AdServicesApk",
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -77,4 +82,10 @@ android_test {
     ],
     test_config: "AndroidTest.ExtServices.xml",
     instrumentation_for: "ExtServices-sminus",
+    lint: {
+        extra_check_modules: ["AdServicesLintChecker"],
+        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        baseline_filename: "lint-baseline-adextservices.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

@@ -385,6 +385,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     @SpyStatic(ErrorLogUtil.class)
     public void testDeleteAllDoesNotThrowException() {
         SharedDbHelper helper = Mockito.mock(SharedDbHelper.class);
+        SQLiteDatabase readDb = mock(SQLiteDatabase.class);
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
@@ -397,6 +398,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         mLogger,
                         mEnrollmentUtil);
         when(helper.safeGetWritableDatabase()).thenReturn(db);
+        when(helper.safeGetReadableDatabase()).thenReturn(readDb);
+
         when(db.delete(eq(EnrollmentTables.EnrollmentDataContract.TABLE), eq(null), eq(null)))
                 .thenThrow(SQLiteException.class);
 

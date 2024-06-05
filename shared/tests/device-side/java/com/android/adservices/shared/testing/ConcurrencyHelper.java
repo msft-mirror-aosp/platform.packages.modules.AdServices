@@ -20,29 +20,53 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
+
+// TODO(b/I343510637): add unit tests / javadoc
 public final class ConcurrencyHelper {
 
-    private static int sThreadId;
+    private static final AtomicInteger sThreadId = new AtomicInteger();
 
     private static final String TAG = ConcurrencyHelper.class.getSimpleName();
 
-    public static void runAsync(long timeoutMs, Runnable r) {
-        Thread t =
-                new Thread(
-                        () -> {
-                            Log.v(TAG, "Sleeping " + timeoutMs + "ms on " + Thread.currentThread());
-                            SystemClock.sleep(timeoutMs);
-                            Log.v(TAG, "Woke up");
-                            r.run();
-                            Log.v(TAG, "Done");
-                        },
-                        TAG + ".runAsync()_thread#" + ++sThreadId);
-        Log.v(TAG, "Starting thread " + t);
-        t.start();
+    /**
+     * Starts a new thread and runs {@code r} on it after {@code timeoutMs} ms.
+     *
+     * @return the new thread.
+     */
+    public static Thread runAsync(long timeoutMs, Runnable r) {
+        Runnable sleepingBeauty =
+                () -> {
+                    Log.v(
+                            TAG,
+                            String.format(
+                                    Locale.ENGLISH,
+                                    "Sleeping %d ms on %s",
+                                    timeoutMs,
+                                    Thread.currentThread()));
+                    // TODO(b/I343510637): use Thread.sleep() so it can be moved to side-less
+                    SystemClock.sleep(timeoutMs);
+                    Log.v(TAG, "Woke up");
+                    r.run();
+                    Log.v(TAG, "Done");
+                };
+        return startNewThread(sleepingBeauty);
     }
 
     public static void runOnMainThread(Runnable r) {
         new Handler(Looper.getMainLooper()).post(r);
+    }
+
+    /** Start a new thread to run the given runnable. */
+    public static Thread startNewThread(Runnable r) {
+        String threadName = TAG + "-runLaterThread-" + sThreadId.incrementAndGet();
+        Thread thread = new Thread(r, threadName);
+        Log.v(
+                TAG,
+                String.format(Locale.ENGLISH, "Starting new thread (%s) to run %s", threadName, r));
+        thread.start();
+        return thread;
     }
 
     private ConcurrencyHelper() {
