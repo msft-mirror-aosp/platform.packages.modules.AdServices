@@ -17,6 +17,7 @@ package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import com.google.errorprone.annotations.concurrent.GuardedBy;
@@ -46,8 +47,19 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
     // Used to fail assertCalled() if something bad happened before
     @Nullable private RuntimeException mOnAssertCalledException;
 
+    // The "real" callback - used in cases (mostly loggin) where a callback delegates its methods
+    // to another one.
+    private final AbstractSyncCallback mRealCallback;
+
     /** Default constructor. */
     public AbstractSyncCallback(SyncCallbackSettings settings) {
+        this(/* realCallback= */ null, settings);
+    }
+
+    @VisibleForTesting
+    AbstractSyncCallback(
+            @Nullable AbstractSyncCallback realCallback, SyncCallbackSettings settings) {
+        mRealCallback = realCallback != null ? realCallback : this;
         mSettings = Objects.requireNonNull(settings, "settings cannot be null");
     }
 
@@ -87,7 +99,7 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
     @FormatMethod
     protected final void logE(@FormatString final String msgFmt, @Nullable Object... msgArgs) {
         String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
-        mSettings.getLogger().e("%s: %s", toString(), msg);
+        mSettings.getLogger().e("%s: %s", mRealCallback, msg);
     }
 
     // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
@@ -98,7 +110,7 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
     @FormatMethod
     protected final void logD(@FormatString final String msgFmt, @Nullable Object... msgArgs) {
         String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
-        mSettings.getLogger().d("%s: %s", toStringLite(), msg);
+        mSettings.getLogger().d("%s: %s", mRealCallback.toStringLite(), msg);
     }
 
     // Note: making msgFmt final to avoid [FormatStringAnnotation] errorprone warning
@@ -109,7 +121,7 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
     @FormatMethod
     protected final void logV(@FormatString final String msgFmt, @Nullable Object... msgArgs) {
         String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
-        mSettings.getLogger().v("%s: %s", toString(), msg);
+        mSettings.getLogger().v("%s: %s", mRealCallback, msg);
     }
 
     protected void setOnAssertCalledException(@Nullable RuntimeException exception) {
@@ -140,7 +152,15 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
     }
 
     @Override
-    public final void assertCalled() throws InterruptedException {
+    public void assertCalled() throws InterruptedException {
+        internalAssertCalled();
+    }
+
+    /**
+     * Real implementation of {@link #assertCalled()} - subclasses overriding {@link
+     * #assertCalled()} should call it.
+     */
+    protected final void internalAssertCalled() throws InterruptedException {
         logD("assertCalled() called on %s", Thread.currentThread().getName());
         try {
             mSettings.assertCalled(() -> toString());

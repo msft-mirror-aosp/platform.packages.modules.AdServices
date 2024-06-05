@@ -17,6 +17,7 @@ package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.util.ArrayList;
@@ -47,22 +48,29 @@ public class ResultSyncCallback<R> extends DeviceSideSyncCallback
         super(settings);
     }
 
+    @VisibleForTesting
+    ResultSyncCallback(AbstractSyncCallback realCallback, SyncCallbackSettings settings) {
+        super(realCallback, settings);
+    }
+
     @Override
     public final void injectResult(@Nullable R result) {
+        StringBuilder methodName = new StringBuilder("injectResult(").append(result);
         synchronized (mLock) {
             boolean firstCall = mResults.isEmpty();
             if (firstCall) {
-                logV("Injecting first result (%s)", result);
                 mResult = result;
             } else {
-                logV(
-                        "Injecting additional result (%s): mResult=%s, mResults=%s",
-                        result, mResult, mResults);
                 // Don't set mResult
+                methodName
+                        .append("; already called: mResult=")
+                        .append(mResult)
+                        .append(", mResults=")
+                        .append(mResults);
             }
             mResults.add(result);
         }
-        super.internalSetCalled("injectResult(" + result + ")");
+        super.internalSetCalled(methodName.append(')').toString());
     }
 
     @Override

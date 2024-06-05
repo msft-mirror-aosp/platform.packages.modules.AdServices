@@ -31,6 +31,13 @@ public final class MainThreadSyncCallbackTest extends SyncCallbackTestCase<Abstr
         return false;
     }
 
+    @Override
+    protected String callCallback(AbstractSyncCallback callback) {
+        String methodName = "callCallback()";
+        callback.internalSetCalled(methodName);
+        return methodName;
+    }
+
     private static final class MainThreadSyncCallback extends AbstractSyncCallback {
 
         @SuppressWarnings("unused") // Called by superclass using reflection
