@@ -23,17 +23,10 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.FakeLogger;
-import com.android.adservices.shared.meta_testing.LogEntry;
 import com.android.adservices.shared.testing.Logger;
-import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
-import com.google.common.collect.ImmutableList;
-
 import org.junit.Test;
-
-import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
 
@@ -55,7 +48,7 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
 
     @Test
     public void testDefaultBuilder() {
-        SyncCallbackSettings settings = newDefaultSettings().build();
+        SyncCallbackSettings settings = newDefaultBuilder().build();
         assertWithMessage("1st call").that(settings).isNotNull();
 
         expect.withMessage("getExpectedNumberCalls()")
@@ -76,14 +69,14 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
         expect.withMessage("toString()").that(toString).contains("failIfCalledOnMainThread=true");
 
         // Should always return a new instance
-        SyncCallbackSettings settings2 = newDefaultSettings().build();
+        SyncCallbackSettings settings2 = newDefaultBuilder().build();
         assertWithMessage("2nd call()").that(settings2).isNotSameInstanceAs(settings);
     }
 
     @Test
     public void testCustomBuilder() {
         SyncCallbackSettings settings =
-                newDefaultSettings()
+                newDefaultBuilder()
                         .setExpectedNumberCalls(42)
                         .setMaxTimeoutMs(108)
                         .setFailIfCalledOnMainThread(false)
@@ -105,7 +98,7 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
 
     @Test
     public void testBuildeReturnsUniqueObjects() {
-        SyncCallbackSettings.Builder builder = newDefaultSettings();
+        SyncCallbackSettings.Builder builder = newDefaultBuilder();
 
         SyncCallbackSettings settings1 = builder.build();
         SyncCallbackSettings settings2 = builder.build();
@@ -115,7 +108,7 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
 
     @Test
     public void testInvalidBuilderArgs() {
-        SyncCallbackSettings.Builder builder = newDefaultSettings();
+        SyncCallbackSettings.Builder builder = newDefaultBuilder();
 
         assertThrows(IllegalArgumentException.class, () -> builder.setExpectedNumberCalls(0));
         assertThrows(IllegalArgumentException.class, () -> builder.setExpectedNumberCalls(-1));
@@ -125,11 +118,11 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
 
     @Test
     public void testGetId() {
-        SyncCallbackSettings settings1 = newDefaultSettings().build();
+        SyncCallbackSettings settings1 = newDefaultBuilder().build();
         String id1 = settings1.getId();
         expect.withMessage("callback1.getId()").that(id1).isNotEmpty();
 
-        SyncCallbackSettings settings2 = newDefaultSettings().build();
+        SyncCallbackSettings settings2 = newDefaultBuilder().build();
         String id2 = settings2.getId();
         expect.withMessage("callback2.getId()").that(id2).isNotEmpty();
         expect.withMessage("callback2.getId()").that(id2).isNotEqualTo(id1);
@@ -140,7 +133,7 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
 
     @Test
     public void testGetLogger() {
-        SyncCallbackSettings settings = newDefaultSettings().build();
+        SyncCallbackSettings settings = newDefaultBuilder().build();
 
         Logger logger = settings.getLogger();
         expect.withMessage("getLogger()").that(logger).isNotNull();
@@ -148,52 +141,32 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testCountDown_logs() {
-        SyncCallbackSettings settings = newDefaultSettings().build();
-
-        settings.countDown();
-
-        ImmutableList<LogEntry> entries = mFakeLogger.getEntries();
-        assertWithMessage("log entries").that(entries).hasSize(2);
-        assertDebug(settings, entries.get(0), "countDown() called");
-        assertVerbose(settings, entries.get(1), "leaving countDown()");
+    public void testCheckCanFailOnMainThread_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> SyncCallbackSettings.checkCanFailOnMainThread(null));
     }
 
     @Test
-    public void testAwait_logs() throws Exception {
-        SyncCallbackSettings settings = newDefaultSettings().build();
-
-        settings.await(settings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
-
-        ImmutableList<LogEntry> entries = mFakeLogger.getEntries();
-        assertWithMessage("log entries").that(entries).hasSize(2);
-        assertDebug(settings, entries.get(0), "await() called");
-        assertVerbose(settings, entries.get(1), "leaving await()");
+    public void testCheckCanFailOnMainThread_YesItCan() {
+        SyncCallbackSettings settings =
+                SyncCallbackSettings.checkCanFailOnMainThread(
+                        newDefaultBuilder().setFailIfCalledOnMainThread(false).build());
+        expect.withMessage("isFailIfCalledOnMainThread()")
+                .that(settings.isFailIfCalledOnMainThread())
+                .isFalse();
     }
 
-    private void assertDebug(SyncCallbackSettings settings, LogEntry logEntry, String message) {
-        String expectedMessage =
-                String.format(Locale.ENGLISH, "[settingsId#%s]: %s", settings.getId(), message);
-        assertLogEntry(logEntry, LogLevel.DEBUG, expectedMessage);
+    @Test
+    public void testCheckCanFailOnMainThread_nope() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        SyncCallbackSettings.checkCanFailOnMainThread(
+                                newDefaultBuilder().setFailIfCalledOnMainThread(true).build()));
     }
 
-    private void assertVerbose(SyncCallbackSettings settings, LogEntry logEntry, String message) {
-        String expectedMessage =
-                String.format(Locale.ENGLISH, "[SyncCallbackSettings: %s]: %s", settings, message);
-        assertLogEntry(logEntry, LogLevel.VERBOSE, expectedMessage);
-    }
-
-    private void assertLogEntry(LogEntry logEntry, LogLevel expectedLevel, String expectedMessage) {
-        expect.withMessage("logEntry(%s).tag", logEntry).that(logEntry.tag).isEqualTo(LOG_TAG);
-        expect.withMessage("logEntry(%s).level", logEntry)
-                .that(logEntry.level)
-                .isEqualTo(expectedLevel);
-        expect.withMessage("logEntry(%s).message", logEntry)
-                .that(logEntry.message)
-                .isEqualTo(expectedMessage);
-    }
-
-    private SyncCallbackSettings.Builder newDefaultSettings() {
+    private SyncCallbackSettings.Builder newDefaultBuilder() {
         return new SyncCallbackSettings.Builder(mFakeLogger, () -> Boolean.FALSE);
     }
 }

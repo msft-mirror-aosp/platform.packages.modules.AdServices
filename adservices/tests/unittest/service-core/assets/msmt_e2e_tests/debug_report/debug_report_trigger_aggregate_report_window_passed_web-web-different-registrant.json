@@ -175,6 +175,7 @@
       {
         "payload": {
           "attribution_destination": "https://2d1.test",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x11",
@@ -193,6 +194,7 @@
       {
         "payload": {
           "attribution_destination": "https://2d1.test",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x11",
