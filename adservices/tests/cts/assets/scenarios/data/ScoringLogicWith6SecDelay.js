@@ -29,7 +29,7 @@ const simulateDelay = (ms) => {
  * the bid_floor changes the score to -1
  */
 function scoreAd(ad, bid, auction_config, seller_signals, trusted_scoring_signals,
-  contextual_signal, user_signal, custom_audience_signal) {
+  contextual_signal, custom_audience_signal) {
   simulateDelay(0);
   if ('bid_floor' in seller_signals && bid < seller_signals.bid_floor) {
       bid = -1;

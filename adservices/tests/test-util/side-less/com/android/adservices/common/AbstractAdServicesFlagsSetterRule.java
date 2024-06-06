@@ -171,10 +171,9 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     /**
      * Overrides the flag that sets the global AdServices kill switch.
      *
-     * @deprecated - it's cleaner to use the {@link DisableGlobalKillSwitch} annotation and this
-     *     method might be eventually removed.
+     * <p>NOTE: it's usually cleaner to use an annotation instead ({@link DisableGlobalKillSwitch}
+     * in this case), unless the test need to dynamically change the flags after it started.
      */
-    @Deprecated
     public final T setGlobalKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
     }
@@ -226,10 +225,9 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPpapiAppAllowList()}.
      *
-     * @deprecated it's cleaner to use the {@link SetPpapiAppAllowList} annotation and this method
-     *     might be eventually removed.
+     * <p>NOTE: it's usually cleaner to use an annotation instead ({@link SetPpapiAppAllowList} in
+     * this case), unless the test need to dynamically change the flags after it started.
      */
-    @Deprecated
     public final T setPpapiAppAllowList(String... value) {
         return setPpapiAppAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
     }
@@ -246,10 +244,9 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMsmtApiAppAllowList()}.
      *
-     * @deprecated - it's cleaner to use the {@link SetMsmtApiAppAllowList} annotation and this
-     *     method might be eventually removed.
+     * <p>NOTE: it's usually cleaner to use an annotation instead ({@link SetMsmtApiAppAllowList} in
+     * this case), unless the test need to dynamically change the flags after it started.
      */
-    @Deprecated
     public final T setMsmtApiAppAllowList(String... value) {
         return setMsmtApiAppAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
     }
@@ -266,8 +263,9 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getWebContextClientAppAllowList()}.
      *
-     * @deprecated - it's cleaner to use the {@link SetMsmtWebContextClientAppAllowList} annotation
-     *     and this method might be eventually removed.
+     * <p>NOTE: it's usually cleaner to use an annotation instead ({@link
+     * SetMsmtWebContextClientAppAllowList} in this case), unless the test need to dynamically
+     * change the flags after it started.
      */
     public final T setMsmtWebContextClientAllowList(String... value) {
         return setMsmtWebContextClientAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
@@ -299,10 +297,9 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * Sets all flags needed to enable compatibility mode, according to the Android version of the
      * device running the test.
      *
-     * @deprecated - it's cleaner to use the {@link SetCompatModeFlags} annotation and this method
-     *     might be eventually removed
+     * <p>NOTE: it's usually cleaner to use an annotation instead ({@link SetCompatModeFlags} in
+     * this case), unless the test need to dynamically change the flags after it started.
      */
-    @Deprecated
     public T setCompatModeFlags() {
         return runOrCache(
                 "setCompatModeFlags()",
@@ -347,11 +344,11 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * <p>This method is usually set automatically by the factory methods, but should be set again
      * (on host-side tests) after reboot.
      *
-     * @deprecated - it's cleaner to use the {@link SetDefaultLogcatTags} annotation and this method
-     *     might be eventually removed.
+     * <p>NOTE: it's usually cleaner to use an annotation instead ({@link SetDefaultLogcatTags} in
+     * this case), unless the test need to dynamically change the flags after it started.
      */
-    @Deprecated
     public T setDefaultLogcatTags() {
+        setInfraLogcatTags();
         setLogcatTag(LOGCAT_TAG_ADSERVICES, LogLevel.VERBOSE);
         setLogcatTag(LOGCAT_TAG_SHARED, LogLevel.VERBOSE);
         setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LogLevel.VERBOSE);
@@ -364,10 +361,9 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * <p>This method is usually set automatically by the factory methods, but should be set again
      * (on host-side tests) after reboot.
      *
-     * @deprecated - it's cleaner to use the {@link SetAllLogcatTags} annotation and this method
-     *     might be eventually removed.
+     * <p>NOTE: it's usually cleaner to use an annotation instead ({@link SetAllLogcatTags} in this
+     * case), unless the test need to dynamically change the flags after it started.
      */
-    @Deprecated
     public T setAllLogcatTags() {
         setDefaultLogcatTags();
         setLogcatTag(LOGCAT_TAG_TOPICS, LogLevel.VERBOSE);

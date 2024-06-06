@@ -48,4 +48,7 @@ java_library {
         "auto_value_annotations",
     ],
     plugins: ["auto_value_plugin"],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
 }
