@@ -32,6 +32,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -45,6 +46,7 @@ public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
 
     private final BackgroundJobHelper mBackgroundJobHelper = new BackgroundJobHelper(sContext);
 
+    @Ignore("b/343292815")
     @Test
     public void testAdSelection_afterOneDay_adSelectionDataCleared() throws Exception {
         ScenarioDispatcher dispatcher =

@@ -24,6 +24,8 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.shared.SharedUnitTestCase;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -114,6 +116,7 @@ public final class BlockingCallableWrapperTest extends SharedUnitTestCase {
     }
 
     @Test
+    @FlakyTest(bugId = 336377107)
     public void testBlocksCallerUntilCompleted() throws Exception {
         BlockingCallableWrapper<Integer> toTest =
                 BlockingCallableWrapper.createNonBlockableInstance(

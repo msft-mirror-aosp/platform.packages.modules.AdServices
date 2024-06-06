@@ -50,8 +50,11 @@ android_library {
         ":adservices-test-utility-sideless-sources",
         ":adservices-test-utility-sources",
         ":adservices-service-core-phflags-sources",
+        // TODO(b/345219434): should use java-defaults instead of manually including
+        // the 2 sources below
+        ":adservices-extended-mockito-rule-sources",
+        ":adservices-shared-extended-mockito-rule-sources",
     ],
-    defaults: ["adservices-extended-mockito-defaults"],
     libs: [
         "error_prone_annotations",
         "framework-adservices-lib",
@@ -69,8 +72,13 @@ android_library {
         "compatibility-device-util-axt",
         "modules-utils-preconditions",
         "adservices-shared-util", // For checkState method uses varargs.
-        // TODO(b/281577492): should use modules-utils-extended-mockito-rule instead
+        "adservices-clients",
+        // TODO(b/345219434): remove dependency below (and/or replace it by
+        // modules-utils-extended-mockito-rule) and move it to test projects
+        // instead (as it's only needed by tests that uses the static fixture)
         "modules-utils-testable-device-config",
+        // TODO(b/345219434): should use java-defaults instead of manually including
+        "adservices-shared-static-class-checker",
     ],
     apex_available: [
         "com.android.adservices",
@@ -81,7 +89,7 @@ android_library {
         "//vendor:__subpackages__", // used by some integration tests
     ],
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
     },
     plugins: ["auto_annotation_plugin"],
 }
@@ -111,7 +119,7 @@ android_library {
         "com.android.extservices",
     ],
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
     },
 }
 

@@ -7,7 +7,6 @@
       {
         "registration_request": {
           "registrant": "com.example1",
-          "attribution_src_url": "https://adtech1.test",
           "source_type": "navigation"
         },
         "responses": [
@@ -36,7 +35,6 @@
       {
         "registration_request": {
           "registrant": "com.example1",
-          "attribution_src_url": "https://adtech2.test",
           "source_type": "event"
         },
         "responses": [
@@ -66,7 +64,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://adtech2.test",
           "registrant": "com.example2"
         },
         "responses": [
