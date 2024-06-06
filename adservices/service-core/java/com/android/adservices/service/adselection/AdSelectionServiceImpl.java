@@ -782,7 +782,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         OnDeviceAdSelectionRunner runner =
                 new OnDeviceAdSelectionRunner(
-                        mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mEncryptionKeyDao,
@@ -914,7 +913,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerEnabledForReportImpression)) {
             ImpressionReporter reporter =
                     new ImpressionReporter(
-                            mContext,
                             mLightweightExecutor,
                             mBackgroundExecutor,
                             mScheduledExecutor,
@@ -937,7 +935,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         } else {
             ImpressionReporterLegacy reporter =
                     new ImpressionReporterLegacy(
-                            mContext,
                             mLightweightExecutor,
                             mBackgroundExecutor,
                             mScheduledExecutor,
@@ -1600,7 +1597,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void destroy() {
         sLogger.i("Shutting down AdSelectionService");
         try {
-            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance(mContext, sLogger);
+            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance(sLogger);
             jsScriptEngine.shutdown();
         } catch (JSSandboxIsNotAvailableException exception) {
             sLogger.i("Java script sandbox is not available, not shutting down JSScriptEngine.");
