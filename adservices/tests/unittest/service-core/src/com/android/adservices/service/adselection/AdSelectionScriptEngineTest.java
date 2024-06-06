@@ -1913,7 +1913,6 @@ public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
             DebugReportingScriptStrategy debugReportingScriptStrategy,
             boolean isCpcBillingEnabled) {
         return new AdSelectionScriptEngine(
-                sContext,
                 isolateSettings::getEnforceMaxHeapSizeFeature,
                 isolateSettings::getMaxHeapSizeBytes,
                 adCounterKeyCopier,

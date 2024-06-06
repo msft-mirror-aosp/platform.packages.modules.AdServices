@@ -167,7 +167,6 @@ public class OutcomeSelectionRunner {
         mAdOutcomeSelector =
                 new AdOutcomeSelectorImpl(
                         new AdSelectionScriptEngine(
-                                mContext,
                                 flags::getEnforceIsolateMaxHeapSize,
                                 flags::getIsolateMaxHeapSizeBytes,
                                 adCounterKeyCopier,
