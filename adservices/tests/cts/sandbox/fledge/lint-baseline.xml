@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.app.sdksandbox.SdkSandboxManager#loadSdk`"
+        errorLine1="        sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);"
+        errorLine2="                          ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/src/com/android/tests/sandbox/fledge/SandboxedFledgeManagerTest.java"
+            line="111"
+            column="27"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());"
+        errorLine2="                                                                  ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/src/com/android/tests/sandbox/fledge/SandboxedFledgeManagerTest.java"
+            line="71"
+            column="67"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());"
+        errorLine2="                                                ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/src/com/android/tests/sandbox/fledge/SandboxedFledgeManagerTest.java"
+            line="72"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        boolean isDeveloperMode = devContextFilter.isDeveloperMode();"
+        errorLine2="                                                   ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/src/com/android/tests/sandbox/fledge/SandboxedFledgeManagerTest.java"
+            line="73"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionCode` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/CtsSandboxedFledgeManagerTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionName` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/CtsSandboxedFledgeManagerTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="HardcodedDebugMode"
+        message="Avoid hardcoding the debug mode; leaving it out allows debug and release builds to automatically assign one"
+        errorLine1="        android:debuggable=&quot;true&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/CtsSandboxedFledgeManagerTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="47"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    private static final Context sContext ="
+        errorLine2="            ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/src/com/android/tests/sandbox/fledge/SandboxedFledgeManagerTest.java"
+            line="54"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        message="Should explicitly set `android:icon`, there is no default"
+        errorLine1="    &lt;application"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/CtsSandboxedFledgeManagerTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="45"
+            column="6"/>
+    </issue>
+
+</issues>

@@ -4,7 +4,6 @@
     "sources": [
       {
         "registration_request": {
-          "attribution_src_url": "https://adsrus.test",
           "source_type": "event",
           "registrant": "com.north-news"
         },
@@ -29,7 +28,6 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://adsrus.test",
           "registrant": "com.west-news"
         },
         "responses": [
@@ -59,7 +57,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://adsrus.test",
           "registrant": "com.west-news"
         },
         "responses": [
@@ -94,7 +91,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://adsrus.test",
           "registrant": "com.west-news"
         },
         "responses": [

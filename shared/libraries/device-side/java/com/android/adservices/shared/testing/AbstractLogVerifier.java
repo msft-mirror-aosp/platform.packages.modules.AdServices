@@ -22,9 +22,11 @@ import org.junit.runner.Description;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 /**
  * Abstract log verifier to hold common logic across all log verifiers.
@@ -81,6 +83,27 @@ public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerif
      */
     public void recordActualCall(T actualCall) {
         mActualCalls.put(actualCall, mActualCalls.getOrDefault(actualCall, 0) + 1);
+    }
+
+    /**
+     * Checks if a list of {@link LogCall} are unique in terms of invocation.
+     *
+     * <p>Note: {@link LogCall#isIdenticalInvocation(LogCall)} is used for invocation equality as it
+     * does not take into account number of invocations (i.e. times), by definition.
+     *
+     * @param logCalls log calls to verify
+     * @return {@code true} if all log call invocations are unique; {@code false} otherwise.
+     */
+    protected boolean containsUniqueLogInvocations(List<T> logCalls) {
+        return IntStream.range(0, logCalls.size())
+                .noneMatch(
+                        i ->
+                                IntStream.range(i + 1, logCalls.size())
+                                        .anyMatch(
+                                                n ->
+                                                        logCalls.get(i)
+                                                                .isIdenticalInvocation(
+                                                                        logCalls.get(n))));
     }
 
     private void verifyCalls(Set<T> expectedCalls, Set<T> actualCalls) {

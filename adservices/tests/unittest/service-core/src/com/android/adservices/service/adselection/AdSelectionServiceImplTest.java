@@ -6919,7 +6919,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testCloseJSScriptEngineConnectionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
-        doReturn(jsScriptEngineMock).when(() -> JSScriptEngine.getInstance(any(), any()));
+        doReturn(jsScriptEngineMock).when(() -> JSScriptEngine.getInstance(any()));
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6961,7 +6961,7 @@ public class AdSelectionServiceImplTest {
     public void testJSScriptEngineConnectionExceptionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
         doThrow(JSSandboxIsNotAvailableException.class)
-                .when(() -> JSScriptEngine.getInstance(any(), any()));
+                .when(() -> JSScriptEngine.getInstance(any()));
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -8972,7 +8972,7 @@ public class AdSelectionServiceImplTest {
         int jsScriptEngineShutdownTimeoutInSeconds = 1;
 
         // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-        JSScriptEngine.getInstance(CONTEXT, LoggerFactory.getFledgeLogger())
+        JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger())
                 .shutdown()
                 .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
 
@@ -9100,7 +9100,7 @@ public class AdSelectionServiceImplTest {
                             anyInt());
         } finally {
             // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-            JSScriptEngine.getInstance(CONTEXT, LoggerFactory.getFledgeLogger())
+            JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger())
                     .shutdown()
                     .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
         }

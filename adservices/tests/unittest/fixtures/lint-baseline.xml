@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="        return String.format("
+        errorLine2="               ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/stats/FledgeApiCallStatsMatcher.java"
+            line="49"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="        String jsonString = String.format(&quot;{\&quot;flip_probability\&quot;: %f}&quot;, mockFlipProbability);"
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/measurement/SourceFixture.java"
+            line="236"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `java.lang.String#formatted`"
+        errorLine1="            AdTechIdentifier buyer = AdTechIdentifier.fromString(&quot;buyer%d.com&quot;.formatted(b));"
+        errorLine2="                                                                               ~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/android/adservices/customaudience/CustomAudienceFixture.java"
+            line="177"
+            column="80"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `java.lang.String#formatted`"
+        errorLine1="                                .setName(&quot;testCustomAudience_%s&quot;.formatted(generateHash(b, c)))"
+        errorLine2="                                                                 ~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/android/adservices/customaudience/CustomAudienceFixture.java"
+            line="188"
+            column="66"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="            APP10_PACKAGE_NAME + DATASTORE_KEY_SEPARATOR + APP10_UID;"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/data/consent/AppConsentDaoFixture.java"
+            line="34"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="            APP20_PACKAGE_NAME + DATASTORE_KEY_SEPARATOR + APP20_UID;"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/data/consent/AppConsentDaoFixture.java"
+            line="36"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="            APP30_PACKAGE_NAME + DATASTORE_KEY_SEPARATOR + APP30_UID;"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/data/consent/AppConsentDaoFixture.java"
+            line="38"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This class should only be accessed from tests or within private scope"
+        errorLine1="    public static CustomAudienceUpdatableData.Builder getValidBuilderFullSuccessfulResponse()"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="342"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        return CustomAudienceUpdatableData.builder()"
+        errorLine2="                                           ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="344"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setUserBiddingSignals("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="345"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setTrustedBiddingData("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="350"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setAds(DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1))"
+        errorLine2="                 ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="354"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="355"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="356"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setContainsSuccessfulUpdate(true);"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="357"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This class should only be accessed from tests or within private scope"
+        errorLine1="    public static CustomAudienceUpdatableData.Builder getValidBuilderEmptySuccessfulResponse() {"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="360"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        return CustomAudienceUpdatableData.builder()"
+        errorLine2="                                           ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="361"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setUserBiddingSignals(null)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="362"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setTrustedBiddingData(null)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="363"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setAds(null)"
+        errorLine2="                 ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="364"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="365"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="366"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setContainsSuccessfulUpdate(true);"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="367"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This class should only be accessed from tests or within private scope"
+        errorLine1="    public static CustomAudienceUpdatableData.Builder getValidBuilderEmptyFailedResponse() {"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="370"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        return CustomAudienceUpdatableData.builder()"
+        errorLine2="                                           ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="371"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setUserBiddingSignals(null)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="372"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setTrustedBiddingData(null)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="373"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setAds(null)"
+        errorLine2="                 ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="374"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="375"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="376"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setContainsSuccessfulUpdate(false);"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/service/customaudience/CustomAudienceUpdatableDataFixture.java"
+            line="377"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                .computeNextEligibleUpdateTimeAfterSuccessfulUpdate("
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/customaudience/DBCustomAudienceBackgroundFetchDataFixture.java"
+            line="39"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                    client.createObliviousHttpRequest("
+        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/android/adservices/adselection/ObliviousHttpEncryptorWithSeedImpl.java"
+            line="111"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        .isConfigurableHeapSizeSupported()"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/common/WebViewSupportUtil.java"
+            line="60"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        .isConsoleCallbackSupported()"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/com/android/adservices/common/WebViewSupportUtil.java"
+            line="71"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="SupportAnnotationUsage"
+        message="Top level class can&apos;t have private or protected access level"
+        errorLine1="@VisibleForTesting"
+        errorLine2="~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/android/adservices/common/CallingAppUidSupplierFailureImpl.java"
+            line="27"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="SupportAnnotationUsage"
+        message="Top level class can&apos;t have private or protected access level"
+        errorLine1="@VisibleForTesting"
+        errorLine2="~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/fixtures/java/android/adservices/common/CallingAppUidSupplierProcessImpl.java"
+            line="26"
+            column="1"/>
+    </issue>
+
+</issues>

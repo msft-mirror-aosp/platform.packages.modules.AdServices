@@ -5,7 +5,6 @@
       {
         "timestamp": "1643235573000",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-source",
           "source_type": "navigation",
           "registrant": "source.test"
         },
@@ -30,7 +29,6 @@
       {
         "timestamp": "1643235574000",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
           "registrant": "destination.test"
         },
         "responses": [{
@@ -72,7 +70,6 @@
       {
         "timestamp": "1643321974000",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
           "registrant": "destination.test"
         },
         "responses": [{
@@ -110,6 +107,7 @@
       {
         "payload": {
           "attribution_destination": "android-app://destination.test",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x559",
@@ -124,6 +122,7 @@
       {
         "payload": {
           "attribution_destination": "android-app://destination.test",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x559",
