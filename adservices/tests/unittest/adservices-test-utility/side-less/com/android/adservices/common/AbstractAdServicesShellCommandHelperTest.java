@@ -21,9 +21,9 @@ import static android.os.Build.VERSION_CODES.TIRAMISU;
 
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.StandardStreamsLogger;
+import com.android.adservices.shared.testing.shell.CommandResult;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +59,8 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
 
     private static final String SAMPLE_DUMPSYS_UNKNOWN_COMMAND_OUTPUT =
             "Unknown command:"
-                + " com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity";
+                    + " com.google.android.ext.services/com.android.adservices.shell"
+                    + ".ShellCommandActivity";
 
     @Mock private AbstractDeviceSupportHelper mAbstractDeviceSupportHelper;
 
@@ -116,9 +117,10 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
     public void testParseResultFromDumpsys_fails() {
         String input =
                 "TASK 10145:com.google.android.ext.services id=13 userId=0\n"
-                    + "ACTIVITY"
-                    + " com.google.android.ext.services/com.android.adservices.shell.ShellCommandActivity"
-                    + " a3ccaeb pid=6721";
+                        + "ACTIVITY"
+                        + " com.google.android.ext.services/com.android.adservices.shell"
+                        + ".ShellCommandActivity"
+                        + " a3ccaeb pid=6721";
 
         CommandResult commandResult = mAdServicesShellCommandHelper.parseResultFromDumpsys(input);
 

@@ -60,10 +60,6 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initBeta() {
-    }
-
-    @Override
     public void initGA() {
         // set title
         mActivity.setTitle(R.string.settingsUI_apps_ga_title);

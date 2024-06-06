@@ -26,10 +26,6 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.js.IsolateSettings;
@@ -58,8 +54,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class SignalsScriptEngineTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String TAG = "SignalsScriptEngineTest";
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
     private static final IsolateSettings ISOLATE_SETTINGS =
             IsolateSettings.forMaxHeapSizeEnforcementDisabled(
@@ -324,7 +318,6 @@ public class SignalsScriptEngineTest {
     private SignalsScriptEngine createSignalsScriptEngine(
             IsolateSettings isolateSettings, RetryStrategy retryStrategy) {
         return new SignalsScriptEngine(
-                CONTEXT,
                 isolateSettings::getEnforceMaxHeapSizeFeature,
                 isolateSettings::getMaxHeapSizeBytes,
                 retryStrategy,

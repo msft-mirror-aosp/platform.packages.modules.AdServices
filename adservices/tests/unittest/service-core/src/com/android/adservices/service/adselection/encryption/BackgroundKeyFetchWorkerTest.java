@@ -115,6 +115,8 @@ public class BackgroundKeyFetchWorkerTest {
     @Mock
     private ProtectedServersEncryptionConfigManager mProtectedServersEncryptionConfigManagerMock;
 
+    private DevContext mDevContext;
+
     private BackgroundKeyFetchWorker mBackgroundKeyFetchWorker;
 
     @Rule(order = 0)
@@ -141,9 +143,16 @@ public class BackgroundKeyFetchWorkerTest {
                                 mExecutorService,
                                 mAdServicesLoggerMock));
 
+        mDevContext =
+                DevContext.builder()
+                        .setDevOptionsEnabled(true)
+                        .setCallingAppPackageName(
+                                ApplicationProvider.getApplicationContext().getPackageName())
+                        .build();
+
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(
-                        mKeyManagerSpy, mFlags, mClockMock, mAdServicesLoggerMock);
+                        mKeyManagerSpy, mDevContext, mFlags, mClockMock, mAdServicesLoggerMock);
         mEncryptionKeyDao.insertAllKeys(
                 DBEncryptionKeyFixture.getKeysExpiringInTtl(CommonFixture.FIXED_NOW, 1L));
         mProtectedServersEncryptionConfigDao.insertKeys(
@@ -157,6 +166,7 @@ public class BackgroundKeyFetchWorkerTest {
                 () ->
                         new BackgroundKeyFetchWorker(
                                 null,
+                                mDevContext,
                                 FakeFlagsFactory.getFlagsForTest(),
                                 mClockMock,
                                 mAdServicesLoggerMock));
@@ -165,16 +175,41 @@ public class BackgroundKeyFetchWorkerTest {
                 NullPointerException.class,
                 () ->
                         new BackgroundKeyFetchWorker(
-                                mKeyManagerSpy, null, mClockMock, mAdServicesLoggerMock));
+                                mKeyManagerSpy,
+                                null,
+                                FakeFlagsFactory.getFlagsForTest(),
+                                mClockMock,
+                                mAdServicesLoggerMock));
 
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new BackgroundKeyFetchWorker(
                                 mKeyManagerSpy,
+                                mDevContext,
+                                null,
+                                mClockMock,
+                                mAdServicesLoggerMock));
+
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new BackgroundKeyFetchWorker(
+                                mKeyManagerSpy,
+                                mDevContext,
                                 FakeFlagsFactory.getFlagsForTest(),
                                 null,
                                 mAdServicesLoggerMock));
+
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new BackgroundKeyFetchWorker(
+                                mKeyManagerSpy,
+                                mDevContext,
+                                FakeFlagsFactory.getFlagsForTest(),
+                                mClockMock,
+                                null));
     }
 
     @Test
@@ -203,6 +238,7 @@ public class BackgroundKeyFetchWorkerTest {
                     Instant keyExpiryInstant,
                     long timeoutMs,
                     Uri unusedCoordinatorUrl,
+                    DevContext devContext,
                     FetchProcessLogger keyFetchLogger) {
 
                 return FluentFuture.from(
@@ -226,6 +262,7 @@ public class BackgroundKeyFetchWorkerTest {
         BackgroundKeyFetchWorker backgroundKeyFetchWorkerThatTimesOut =
                 new BackgroundKeyFetchWorker(
                         keyManagerWithSleep,
+                        mDevContext,
                         flagsWithSmallTimeout,
                         mClockMock,
                         mAdServicesLoggerMock);
@@ -292,6 +329,7 @@ public class BackgroundKeyFetchWorkerTest {
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(
                         mKeyManagerSpy,
+                        mDevContext,
                         new FlagsWithKeyFetchDisabled(),
                         mClockMock,
                         mAdServicesLoggerMock);
@@ -302,7 +340,7 @@ public class BackgroundKeyFetchWorkerTest {
 
         verify(mKeyManagerSpy, times(1)).getExpiredAdSelectionEncryptionKeyTypes(any());
         verify(mKeyManagerSpy, never())
-                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any());
+                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any(), any());
         assertThat(mKeyManagerSpy.getExpiredAdSelectionEncryptionKeyTypes(mClockMock.instant()))
                 .containsExactly(
                         AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
@@ -338,6 +376,7 @@ public class BackgroundKeyFetchWorkerTest {
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(
                         mKeyManagerSpy,
+                        mDevContext,
                         new FlagsWithAuctionKeyFetchDisabled(),
                         mClockMock,
                         mAdServicesLoggerMock);
@@ -348,7 +387,7 @@ public class BackgroundKeyFetchWorkerTest {
 
         verify(mKeyManagerSpy).getExpiredAdSelectionEncryptionKeyTypes(any());
         verify(mKeyManagerSpy)
-                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any());
+                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any(), any());
         assertThat(mKeyManagerSpy.getExpiredAdSelectionEncryptionKeyTypes(mClockMock.instant()))
                 .doesNotContain(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN);
 
@@ -387,6 +426,7 @@ public class BackgroundKeyFetchWorkerTest {
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(
                         mKeyManagerSpy,
+                        mDevContext,
                         new FlagsWithJoinKeyFetchDisabled(),
                         mClockMock,
                         mAdServicesLoggerMock);
@@ -397,7 +437,7 @@ public class BackgroundKeyFetchWorkerTest {
 
         verify(mKeyManagerSpy).getExpiredAdSelectionEncryptionKeyTypes(any());
         verify(mKeyManagerSpy)
-                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any());
+                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any(), any());
 
         assertThat(mKeyManagerSpy.getExpiredAdSelectionEncryptionKeyTypes(mClockMock.instant()))
                 .doesNotContain(AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION);
@@ -452,7 +492,7 @@ public class BackgroundKeyFetchWorkerTest {
                         any()))
                 .thenReturn(set);
         when(mProtectedServersEncryptionConfigManagerMock.fetchAndPersistActiveKeysOfType(
-                        anyInt(), any(), anyLong(), any(), any()))
+                        anyInt(), any(), anyLong(), any(), any(), any()))
                 .thenReturn(
                         FluentFuture.from(
                                 Futures.immediateFuture(new ArrayList<DBEncryptionKey>())));
@@ -460,6 +500,7 @@ public class BackgroundKeyFetchWorkerTest {
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(
                         mProtectedServersEncryptionConfigManagerMock,
+                        mDevContext,
                         new FlagsWithMultiCloudEnabled(),
                         mClockMock,
                         mAdServicesLoggerMock);
@@ -473,7 +514,7 @@ public class BackgroundKeyFetchWorkerTest {
 
         // called once per url in allowlist
         verify(mProtectedServersEncryptionConfigManagerMock, times(3))
-                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any());
+                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any(), any());
 
         verify(mAdServicesLoggerMock)
                 .logServerAuctionBackgroundKeyFetchScheduledStats(
@@ -513,6 +554,7 @@ public class BackgroundKeyFetchWorkerTest {
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(
                         mKeyManagerSpy,
+                        mDevContext,
                         new FlagsWithOnEmptyDatabaseEnabled(),
                         mClockMock,
                         mAdServicesLoggerMock);
@@ -567,6 +609,7 @@ public class BackgroundKeyFetchWorkerTest {
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(
                         mKeyManagerSpy,
+                        mDevContext,
                         new FlagsWithFetchInAdvanceEnabled(),
                         mClockMock,
                         mAdServicesLoggerMock);
@@ -625,7 +668,7 @@ public class BackgroundKeyFetchWorkerTest {
                             return FluentFuture.from(Futures.immediateFuture(null));
                         })
                 .when(mKeyManagerSpy)
-                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any());
+                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any(), any());
 
         long delay = 100;
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW.plusSeconds(delay));
@@ -652,7 +695,7 @@ public class BackgroundKeyFetchWorkerTest {
 
         verify(mKeyManagerSpy, times(2)).getExpiredAdSelectionEncryptionKeyTypes(any());
         verify(mKeyManagerSpy, times(4))
-                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any());
+                .fetchAndPersistActiveKeysOfType(anyInt(), any(), anyLong(), any(), any(), any());
         assertThat(completionCount.get()).isEqualTo(fetchKeyCount * 2);
     }
 
