@@ -7631,6 +7631,40 @@ public class AttributionJobHandlerTest {
         verify(mTransaction, times(2)).end();
     }
 
+    @Test
+    public void performAttribution_triggerNoAggrDataNoEventTriggerData_returnAndIgnoreTrigger()
+            throws DatastoreException {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateTriggerData(null)
+                        .setAggregateValues(null)
+                        .setEventTriggers("[]")
+                        .setId(UUID.randomUUID().toString())
+                        .build();
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(new ArrayList<>());
+
+        // Execution
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
+
+        // Assertion
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
+        MeasurementAttributionStats measurementAttributionStats = getMeasurementAttributionStats();
+        assertEquals(
+                AttributionStatus.AttributionResult.NOT_ATTRIBUTED.getValue(),
+                measurementAttributionStats.getResult());
+        assertEquals(
+                AttributionStatus.FailureType.TRIGGER_IGNORED.getValue(),
+                measurementAttributionStats.getFailureType());
+
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
+    }
+
     private void testNullAggregateReport_noSource(
             Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig,
             String triggerContextId,
@@ -7953,6 +7987,7 @@ public class AttributionJobHandlerTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setAggregateTriggerData(aggregateTriggerData)
                         .setAggregateValues(aggregateValues)
+                        .setEventTriggers(EVENT_TRIGGERS)
                         .setId(UUID.randomUUID().toString())
                         .build();
 
