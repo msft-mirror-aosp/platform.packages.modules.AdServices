@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -80,8 +81,9 @@ public class SourceNoiseHandler {
             return null;
         }
 
-        List<Source.FakeReport> fakeReports;
+        List<Source.FakeReport> fakeReports = new ArrayList<>();
         TriggerSpecs triggerSpecs = source.getTriggerSpecs();
+
         if (triggerSpecs == null) {
             // There will at least be one (app or web) destination available
             ImpressionNoiseParams noiseParams = getImpressionNoiseParams(source);
@@ -108,7 +110,8 @@ public class SourceNoiseHandler {
                                                 reportingTime,
                                                 triggerTime,
                                                 resolveFakeReportDestinations(
-                                                        source, reportConfig[2]));
+                                                        source, reportConfig[2]),
+                                                /* triggerSummaryBucket = */ null);
                                     })
                             .collect(Collectors.toList());
         } else {
@@ -116,36 +119,66 @@ public class SourceNoiseHandler {
             List<int[]> fakeReportConfigs =
                     ImpressionNoiseUtil.selectFlexEventReportRandomStateAndGenerateReportConfigs(
                             triggerSpecs, destinationTypeMultiplier, rand);
-            fakeReports =
-                    fakeReportConfigs.stream()
-                            .map(
-                                    reportConfig -> {
-                                        long triggerTime = source.getEventTime();
-                                        long reportingTime =
-                                                mEventReportWindowCalcDelegate
-                                                        .getReportingTimeForNoisingFlexEventApi(
-                                                                reportConfig[1],
-                                                                reportConfig[0],
-                                                                source);
-                                        if (mFlags.getMeasurementEnableAttributionScope()) {
-                                            Pair<Long, Long> reportingAndTriggerTime =
-                                                    mEventReportWindowCalcDelegate
-                                                            .getReportingAndTriggerTimeForNoisingFlexEventApi(
-                                                                    reportConfig[1],
-                                                                    reportConfig[0],
-                                                                    source);
-                                            triggerTime = reportingAndTriggerTime.first;
-                                            reportingTime = reportingAndTriggerTime.second;
-                                        }
-                                        return new Source.FakeReport(
-                                                triggerSpecs.getTriggerDataFromIndex(
-                                                        reportConfig[0]),
-                                                reportingTime,
-                                                triggerTime,
-                                                resolveFakeReportDestinations(
-                                                        source, reportConfig[2]));
-                                    })
-                            .collect(Collectors.toList());
+
+            // Group configurations by trigger data, ordered by window index.
+            fakeReportConfigs.sort((config1, config2) -> {
+                UnsignedLong triggerData1 = triggerSpecs.getTriggerDataFromIndex(config1[0]);
+                UnsignedLong triggerData2 = triggerSpecs.getTriggerDataFromIndex(config2[0]);
+
+                if (triggerData1.equals(triggerData2)) {
+                    return Integer.valueOf(config1[1]).compareTo(Integer.valueOf(config2[1]));
+                }
+
+                return triggerData1.compareTo(triggerData2);
+            });
+
+            int bucketIndex = -1;
+            UnsignedLong currentTriggerData = null;
+            List<Long> buckets = new ArrayList<>();
+
+            for (int[] reportConfig : fakeReportConfigs) {
+                UnsignedLong triggerData = triggerSpecs.getTriggerDataFromIndex(reportConfig[0]);
+
+                // A new group of trigger data ordered by report index.
+                if (!triggerData.equals(currentTriggerData)) {
+                    buckets = triggerSpecs.getSummaryBucketsForTriggerData(triggerData);
+                    bucketIndex = 0;
+                    currentTriggerData = triggerData;
+                // The same trigger data, the next report ordered by window index will have the next
+                // trigger summary bucket.
+                } else {
+                    bucketIndex += 1;
+                }
+
+                Pair<Long, Long> triggerSummaryBucket =
+                        TriggerSpecs.getSummaryBucketFromIndex(bucketIndex, buckets);
+                long triggerTime = source.getEventTime();
+                long reportingTime =
+                        mEventReportWindowCalcDelegate
+                                .getReportingTimeForNoisingFlexEventApi(
+                                        reportConfig[1],
+                                        reportConfig[0],
+                                        source);
+
+                if (mFlags.getMeasurementEnableAttributionScope()) {
+                    Pair<Long, Long> reportingAndTriggerTime =
+                            mEventReportWindowCalcDelegate
+                                    .getReportingAndTriggerTimeForNoisingFlexEventApi(
+                                            reportConfig[1],
+                                            reportConfig[0],
+                                            source);
+                    triggerTime = reportingAndTriggerTime.first;
+                    reportingTime = reportingAndTriggerTime.second;
+                }
+
+                fakeReports.add(new Source.FakeReport(
+                        currentTriggerData,
+                        reportingTime,
+                        triggerTime,
+                        resolveFakeReportDestinations(
+                                source, reportConfig[2]),
+                        triggerSummaryBucket));
+            }
         }
         @Source.AttributionMode
         int attributionMode =

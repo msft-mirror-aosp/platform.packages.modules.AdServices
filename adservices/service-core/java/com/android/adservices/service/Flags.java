@@ -1592,7 +1592,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
-            "https://publickeyservice-v150.coordinator-a.bas-gcp.pstest.dev/.well-known/protected-auction/v1/public-keys";
+            "https://publickeyservice.pa.gcp.privacysandboxservices.com/.well-known/protected-auction/v1/public-keys";
 
     /** Returns Uri to fetch auction encryption key for fledge ad selection. */
     default String getFledgeAuctionServerAuctionKeyFetchUri() {
@@ -5464,6 +5464,26 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the default value of the enablement of adservices business logic migration. */
     default boolean getAdServicesConsentBusinessLogicMigrationEnabled() {
         return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+    }
+
+    /** Enrollment Manifest File URL, used to provide proto file for MDD download. */
+    String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
+
+    /**
+     * @return default Enrollment Manifest File URL
+     */
+    default String getMddEnrollmentManifestFileUrl() {
+        return MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL;
+    }
+
+    /** Feature flag to ramp up use of enrollment proto file. */
+    @FeatureFlag boolean DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED = false;
+
+    /**
+     * @return whether to enable use of enrollment proto file.
+     */
+    default boolean getEnrollmentProtoFileEnabled() {
+        return DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
     }
 
     /** Dump some debug info for the flags */

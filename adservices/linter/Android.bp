@@ -17,10 +17,33 @@ package {
 }
 
 java_library_host {
-    name: "AdServicesLintChecker",
+    name: "AdServicesProdLintChecker",
     srcs: [
         "java/**/*.java",
         "java/**/*.kt",
+    ],
+    exclude_srcs: [
+        "java/**/test/*.java",
+        "java/**/test/*.kt",
+    ],
+    plugins: ["auto_service_plugin"],
+    libs: [
+        "auto_service_annotations",
+        "core-xml-for-host", // For org.xmlpull.v1.*
+        "lint_api",
+    ],
+    kotlincflags: ["-Xjvm-default=all"],
+}
+
+java_library_host {
+    name: "AdServicesTestLintChecker",
+    srcs: [
+        "java/**/*.java",
+        "java/**/*.kt",
+    ],
+    exclude_srcs: [
+        "java/**/prod/*.java",
+        "java/**/prod/*.kt",
     ],
     plugins: ["auto_service_plugin"],
     libs: [
@@ -33,11 +56,13 @@ java_library_host {
 
 java_test_host {
     name: "AdServicesLintCheckerTest",
+    team: "trendy_team_android_rubidium",
     srcs: [
         "tests/java/**/*.kt",
     ],
     static_libs: [
-        "AdServicesLintChecker",
+        "AdServicesProdLintChecker",
+        "AdServicesTestLintChecker",
         "junit",
         "lint",
         "lint_tests",

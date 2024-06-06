@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.actions;
 
+import static com.android.adservices.service.measurement.E2ETest.getFirstUrl;
 import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
 import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
@@ -58,9 +59,7 @@ public final class RegisterTrigger implements Action {
         mRegistrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
-                                Uri.parse(
-                                        regParamsJson.getString(
-                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)),
+                                Uri.parse(getFirstUrl(obj)),
                                 packageName,
                                 /* sdkPackageName = */ "")
                         .setAdIdValue(regParamsJson.optString(TestFormatJsonMapping.PLATFORM_AD_ID))

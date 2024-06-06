@@ -817,6 +817,8 @@ public class AsyncRegistrationQueueRunner {
                                                 mSourceNoiseHandler.getRandomizedTriggerRate(
                                                         source))
                                         .setRegistrationOrigin(source.getRegistrationOrigin())
+                                        .setTriggerSummaryBucket(
+                                                fakeReport.getTriggerSummaryBucket())
                                         .setSourceDebugKey(getSourceDebugKeyForNoisedReport(source))
                                         .build())
                 .collect(Collectors.toList());

@@ -16,6 +16,7 @@
 package android.adservices.adid;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_ID;
+import static android.adservices.common.AdServicesStatusUtils.SERVICE_UNAVAILABLE_ERROR_MESSAGE;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStatusUtils;
@@ -32,7 +33,7 @@ import android.os.SystemClock;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -91,7 +92,7 @@ public class AdIdCompatibleManager {
 
             // Throw ServiceUnavailableException and set it to the callback.
             if (service == null) {
-                throw new ServiceUnavailableException();
+                throw new ServiceUnavailableException(SERVICE_UNAVAILABLE_ERROR_MESSAGE);
             }
         } catch (RuntimeException e) {
             LogUtil.e(e, "Failed binding to AdId service");

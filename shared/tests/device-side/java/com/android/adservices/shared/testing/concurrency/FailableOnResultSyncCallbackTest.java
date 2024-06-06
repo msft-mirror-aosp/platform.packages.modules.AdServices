@@ -22,7 +22,7 @@ public final class FailableOnResultSyncCallbackTest
     @Override
     protected FailableOnResultSyncCallback<String, Exception> newCallback(
             SyncCallbackSettings settings) {
-        return new FailableOnResultSyncCallback<>(settings) {};
+        return new ConcreteFailableOnResultSyncCallback(settings);
     }
 
     @Override
@@ -33,5 +33,18 @@ public final class FailableOnResultSyncCallbackTest
     @Override
     protected Exception newFailure() {
         return new Exception("D'OH: " + getNextUniqueId() + "!");
+    }
+
+    private static final class ConcreteFailableOnResultSyncCallback
+            extends FailableOnResultSyncCallback<String, Exception> {
+
+        @SuppressWarnings("unused") // Called by superclass using reflection
+        ConcreteFailableOnResultSyncCallback() {
+            super();
+        }
+
+        ConcreteFailableOnResultSyncCallback(SyncCallbackSettings settings) {
+            super(settings);
+        }
     }
 }
