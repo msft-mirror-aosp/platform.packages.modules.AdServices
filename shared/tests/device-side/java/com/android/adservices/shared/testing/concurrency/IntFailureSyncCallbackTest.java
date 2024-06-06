@@ -87,6 +87,8 @@ public final class IntFailureSyncCallbackTest
 
     private static final class ConcreteIntFailureSyncCallback
             extends IntFailureSyncCallback<String> {
+
+        @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteIntFailureSyncCallback() {
             super();
         }

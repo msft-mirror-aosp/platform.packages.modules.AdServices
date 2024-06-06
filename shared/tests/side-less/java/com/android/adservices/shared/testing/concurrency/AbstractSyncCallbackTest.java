@@ -108,6 +108,7 @@ public final class AbstractSyncCallbackTest extends SyncCallbackTestCase<Abstrac
 
     private static final class ConcreteSyncCallback extends AbstractSyncCallback {
 
+        @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteSyncCallback() {
             super(new SyncCallbackSettings.Builder(new FakeLogger()).build());
         }
