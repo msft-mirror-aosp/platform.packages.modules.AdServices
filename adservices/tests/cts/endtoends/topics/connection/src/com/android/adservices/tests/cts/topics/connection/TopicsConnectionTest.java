@@ -107,9 +107,17 @@ public final class TopicsConnectionTest extends AdServicesCtsTestCase {
         // Now disable the Global Kill Switch, we should be able to connect to the Service normally.
         enableGlobalKillSwitch(/* enabled */ false);
 
+        // Re-create the client after enabling the kill switch.
+        AdvertisingTopicsClient advertisingTopicsClient2 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk1")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
         // At beginning, Sdk1 receives no topic.
         GetTopicsResponse sdk1Result =
-                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient1);
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient2);
 
         assertThat(sdk1Result.getTopics()).isEmpty();
 
@@ -122,7 +130,7 @@ public final class TopicsConnectionTest extends AdServicesCtsTestCase {
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
 
         // Since the sdk1 called the Topics API in the previous Epoch, it should receive some topic.
-        sdk1Result = advertisingTopicsClient1.getTopics().get();
+        sdk1Result = advertisingTopicsClient2.getTopics().get();
         assertThat(sdk1Result.getTopics()).isNotEmpty();
 
         // We only have 1 test app which has 5 classification topics: 10147,10253,10175,10254,10333

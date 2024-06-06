@@ -37,6 +37,8 @@ public final class FailableOnResultSyncCallbackTest
 
     private static final class ConcreteFailableOnResultSyncCallback
             extends FailableOnResultSyncCallback<String, Exception> {
+
+        @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteFailableOnResultSyncCallback() {
             super();
         }

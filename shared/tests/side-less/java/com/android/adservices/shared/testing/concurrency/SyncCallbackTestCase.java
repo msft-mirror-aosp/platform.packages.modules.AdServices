@@ -67,7 +67,26 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
      *
      * <p>Each call should return a different object.
      */
-    protected abstract CB newCallback(SyncCallbackSettings settings);
+    protected CB newCallback(SyncCallbackSettings settings) {
+        SyncCallback rawCallback = newRawCallback(settings);
+        if (rawCallback == null) {
+            throw new UnsupportedOperationException(
+                    "Must override this method or return non-null on newRawCallback()");
+        }
+        @SuppressWarnings("unchecked")
+        CB castCallback = (CB) (rawCallback);
+        return castCallback;
+    }
+
+    /**
+     * Similar to {@link #newCallback(SyncCallbackSettings)}, but should be used by tests whose
+     * callback type is not available on earlier platform releases (like {@code
+     * android.os.OutcomeReceiver}).
+     */
+    @Nullable
+    protected SyncCallback newRawCallback(SyncCallbackSettings settings) {
+        return null;
+    }
 
     private CB newFrozenCallback(SyncCallbackSettings settings) {
         CB callback = newCallback(settings);

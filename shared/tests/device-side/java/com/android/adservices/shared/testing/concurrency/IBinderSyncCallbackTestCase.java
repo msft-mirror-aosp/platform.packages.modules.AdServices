@@ -15,10 +15,17 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 abstract class IBinderSyncCallbackTestCase<CB extends IBinderSyncCallback & FreezableToString>
         extends SyncCallbackTestCase<CB> {
+
+    // TODO(b/342639109): make sure it's the right order and/or move to superclass
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
 
     @Test
     public final void testAsBinder() {
