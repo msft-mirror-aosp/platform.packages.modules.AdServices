@@ -18,7 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
@@ -56,7 +56,6 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
-import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -262,8 +261,7 @@ public class OutcomeSelectionRunner {
                                                     .getEnforceForegroundStatusForFledgeRunAdSelection(),
                                             true,
                                             mCallerUid,
-                                            AdServicesStatsLog
-                                                    .AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                                            AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                                             Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                                             mDevContext);
                                     validateAdSelectionFromOutcomesConfig(inputParams);
@@ -371,10 +369,10 @@ public class OutcomeSelectionRunner {
         try {
             // Note: Success is logged before the callback to ensure deterministic testing.
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                     callerAppPackageName,
                     STATUS_SUCCESS,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             if (result == null) {
                 callback.onSuccess(null);
             } else {
@@ -418,10 +416,10 @@ public class OutcomeSelectionRunner {
             // Note: Failure is logged before the callback to ensure deterministic testing.
             if (!(t instanceof FilterException)) {
                 mAdServicesLogger.logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                         callerAppPackageName,
                         resultCode,
-                        /*latencyMs=*/ 0);
+                        /* latencyMs= */ 0);
             }
 
             FledgeErrorResponse selectionFailureResponse =
