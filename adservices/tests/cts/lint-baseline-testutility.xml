@@ -1,0 +1,1071 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="                                String.format("
+        errorLine2="                                ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/MockWebServerRule.java"
+            line="168"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="        return String.format(&quot;%s://localhost:%d&quot;, useHttps() ? &quot;https&quot; : &quot;http&quot;, mPort);"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/MockWebServerRule.java"
+            line="210"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="InlinedApi"
+        message="Field requires version 8 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.ReportEventRequest#FLAG_REPORTING_DESTINATION_SELLER`"
+        errorLine1="                                        FLAG_REPORTING_DESTINATION_SELLER"
+        errorLine2="                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="183"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="InlinedApi"
+        message="Field requires version 8 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.ReportEventRequest#FLAG_REPORTING_DESTINATION_BUYER`"
+        errorLine1="                                                | FLAG_REPORTING_DESTINATION_BUYER)"
+        errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="184"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.common.AdData.Builder`"
+        errorLine1="                    new AdData.Builder()"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="124"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#setRenderUri`"
+        errorLine1="                            .setRenderUri("
+        errorLine2="                             ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="125"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#setMetadata`"
+        errorLine1="                            .setMetadata(&quot;{\&quot;result\&quot;:&quot; + bids.get(i) + &quot;}&quot;)"
+        errorLine2="                             ~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="127"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#build`"
+        errorLine1="                            .build());"
+        errorLine2="                             ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="128"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.customaudience.CustomAudience.Builder`"
+        errorLine1="        return new CustomAudience.Builder()"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="131"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setBuyer`"
+        errorLine1="                .setBuyer(buyer)"
+        errorLine2="                 ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="132"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setName`"
+        errorLine1="                .setName(name)"
+        errorLine2="                 ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="133"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setActivationTime`"
+        errorLine1="                .setActivationTime(activationTime)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="134"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setExpirationTime`"
+        errorLine1="                .setExpirationTime(expirationTime)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="135"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setDailyUpdateUri`"
+        errorLine1="                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="136"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setUserBiddingSignals`"
+        errorLine1="                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="137"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setTrustedBiddingData`"
+        errorLine1="                .setTrustedBiddingData("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="138"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setBiddingLogicUri`"
+        errorLine1="                .setBiddingLogicUri(CommonFixture.getUri(buyer, BUYER_BIDDING_LOGIC_URI_PATH))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="140"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setAds`"
+        errorLine1="                .setAds(ads)"
+        errorLine2="                 ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="141"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#build`"
+        errorLine1="                .build();"
+        errorLine2="                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="142"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.common.AdData.Builder`"
+        errorLine1="                    new AdData.Builder()"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="159"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#setRenderUri`"
+        errorLine1="                            .setRenderUri("
+        errorLine2="                             ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="160"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#setMetadata`"
+        errorLine1="                            .setMetadata("
+        errorLine2="                             ~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="162"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#build`"
+        errorLine1="                            .build());"
+        errorLine2="                             ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="164"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.customaudience.CustomAudience.Builder`"
+        errorLine1="        return new CustomAudience.Builder()"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="167"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setBuyer`"
+        errorLine1="                .setBuyer(buyer)"
+        errorLine2="                 ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="168"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setName`"
+        errorLine1="                .setName(buyer + CustomAudienceFixture.VALID_NAME)"
+        errorLine2="                 ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="169"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setActivationTime`"
+        errorLine1="                .setActivationTime(activationTime)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="170"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setExpirationTime`"
+        errorLine1="                .setExpirationTime(expirationTime)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="171"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setDailyUpdateUri`"
+        errorLine1="                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="172"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setUserBiddingSignals`"
+        errorLine1="                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="173"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setTrustedBiddingData`"
+        errorLine1="                .setTrustedBiddingData("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="174"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setBiddingLogicUri`"
+        errorLine1="                .setBiddingLogicUri(CommonFixture.getUri(buyer, BUYER_BIDDING_LOGIC_URI_PATH))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="176"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setAds`"
+        errorLine1="                .setAds(ads)"
+        errorLine2="                 ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="177"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#build`"
+        errorLine1="                .build();"
+        errorLine2="                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="178"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.common.AdData.Builder`"
+        errorLine1="                    new AdData.Builder()"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="191"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#setRenderUri`"
+        errorLine1="                            .setRenderUri("
+        errorLine2="                             ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="192"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#setMetadata`"
+        errorLine1="                            .setMetadata(&quot;{\&quot;result\&quot;:&quot; + bids.get(i) + &quot;}&quot;)"
+        errorLine2="                             ~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="195"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#build`"
+        errorLine1="                            .build());"
+        errorLine2="                             ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="196"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setAds`"
+        errorLine1="                .setAds(ads)"
+        errorLine2="                 ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="200"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#build`"
+        errorLine1="                .build();"
+        errorLine2="                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="201"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getName`"
+        errorLine1="                        + customAudience.getName()"
+        errorLine2="                                         ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="211"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getBuyer`"
+        errorLine1="                        + customAudience.getBuyer());"
+        errorLine2="                                         ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="213"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getBuyer`"
+        errorLine1="                .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())"
+        errorLine2="                                                    ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="223"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getName`"
+        errorLine1="                .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())"
+        errorLine2="                                                                               ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="223"
+            column="80"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getName`"
+        errorLine1="        Log.d(TAG, &quot;Left Custom Audience: &quot; + customAudience.getName());"
+        errorLine2="                                                             ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="225"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getName`"
+        errorLine1="                                + customAudience.getName()"
+        errorLine2="                                                 ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="236"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getBuyer`"
+        errorLine1="                                + customAudience.getBuyer());"
+        errorLine2="                                                 ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="238"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getBuyer`"
+        errorLine1="                        .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())"
+        errorLine2="                                                            ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="240"
+            column="61"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getName`"
+        errorLine1="                        .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())"
+        errorLine2="                                                                                       ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/CustomAudienceTestFixture.java"
+            line="240"
+            column="88"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdSelectionSignals#fromString`"
+        errorLine1="        return AdSelectionSignals.fromString("
+        errorLine2="                                  ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="125"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 8 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.adselection.ReportEventRequest.Builder`"
+        errorLine1="                        new ReportEventRequest.Builder("
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="179"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 8 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.ReportEventRequest.Builder#build`"
+        errorLine1="                                .build())"
+        errorLine2="                                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="185"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.adselection.ReportImpressionRequest`"
+        errorLine1="                .reportImpression(new ReportImpressionRequest(adSelectionId, adSelectionConfig))"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="193"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.JoinCustomAudienceRequest#getCustomAudience`"
+        errorLine1="                .joinCustomAudience(joinCustomAudienceRequest.getCustomAudience())"
+        errorLine2="                                                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="203"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getName`"
+        errorLine1="        Log.d(TAG, &quot;Joined Custom Audience: &quot; + customAudience.getName());"
+        errorLine2="                                                               ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="211"
+            column="64"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#build`"
+        errorLine1="        CustomAudience customAudience = makeCustomAudience(customAudienceName).build();"
+        errorLine2="                                                                               ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="216"
+            column="80"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getBuyer`"
+        errorLine1="                .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())"
+        errorLine2="                                                    ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="218"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getName`"
+        errorLine1="                .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())"
+        errorLine2="                                                                               ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="218"
+            column="80"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.adselection.AdSelectionConfig.Builder`"
+        errorLine1="        return new AdSelectionConfig.Builder()"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="275"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setSeller`"
+        errorLine1="                .setSeller(mSeller)"
+        errorLine2="                 ~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="276"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setPerBuyerSignals`"
+        errorLine1="                .setPerBuyerSignals(ImmutableMap.of(mBuyer, signals))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="277"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setCustomAudienceBuyers`"
+        errorLine1="                .setCustomAudienceBuyers(ImmutableList.of(mBuyer))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="278"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setAdSelectionSignals`"
+        errorLine1="                .setAdSelectionSignals(signals)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="279"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setSellerSignals`"
+        errorLine1="                .setSellerSignals(signals)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="280"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setDecisionLogicUri`"
+        errorLine1="                .setDecisionLogicUri("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="281"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setTrustedScoringSignalsUri`"
+        errorLine1="                .setTrustedScoringSignalsUri("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="283"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#build`"
+        errorLine1="                .build();"
+        errorLine2="                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="285"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdTechIdentifier#fromString`"
+        errorLine1="                AdTechIdentifier.fromString("
+        errorLine2="                                 ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="294"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdTechIdentifier#fromString`"
+        errorLine1="                AdTechIdentifier.fromString("
+        errorLine2="                                 ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="297"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.customaudience.JoinCustomAudienceRequest.Builder`"
+        errorLine1="        return new JoinCustomAudienceRequest.Builder()"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="304"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#build`"
+        errorLine1="                .setCustomAudience(makeCustomAudience(customAudienceName).build())"
+        errorLine2="                                                                          ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="305"
+            column="75"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.JoinCustomAudienceRequest.Builder#setCustomAudience`"
+        errorLine1="                .setCustomAudience(makeCustomAudience(customAudienceName).build())"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="305"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.JoinCustomAudienceRequest.Builder#build`"
+        errorLine1="                .build();"
+        errorLine2="                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="306"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.customaudience.CustomAudience.Builder`"
+        errorLine1="        return new CustomAudience.Builder()"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="313"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setName`"
+        errorLine1="                .setName(customAudienceName)"
+        errorLine2="                 ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="314"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setDailyUpdateUri`"
+        errorLine1="                .setDailyUpdateUri(dailyUpdateUri)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="315"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setTrustedBiddingData`"
+        errorLine1="                .setTrustedBiddingData("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="316"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.customaudience.TrustedBiddingData.Builder`"
+        errorLine1="                        new TrustedBiddingData.Builder()"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="317"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.TrustedBiddingData.Builder#setTrustedBiddingKeys`"
+        errorLine1="                                .setTrustedBiddingKeys(ImmutableList.of())"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="318"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.TrustedBiddingData.Builder#setTrustedBiddingUri`"
+        errorLine1="                                .setTrustedBiddingUri(trustedBiddingUri)"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="319"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.TrustedBiddingData.Builder#build`"
+        errorLine1="                                .build())"
+        errorLine2="                                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="320"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdSelectionSignals#fromString`"
+        errorLine1="                .setUserBiddingSignals(AdSelectionSignals.fromString(&quot;{}&quot;))"
+        errorLine2="                                                          ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="321"
+            column="59"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setUserBiddingSignals`"
+        errorLine1="                .setUserBiddingSignals(AdSelectionSignals.fromString(&quot;{}&quot;))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="321"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setAds`"
+        errorLine1="                .setAds(makeAds(customAudienceName))"
+        errorLine2="                 ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="322"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setBiddingLogicUri`"
+        errorLine1="                .setBiddingLogicUri("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="323"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setBuyer`"
+        errorLine1="                .setBuyer(mBuyer)"
+        errorLine2="                 ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="325"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setActivationTime`"
+        errorLine1="                .setActivationTime(Instant.now())"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="326"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setExpirationTime`"
+        errorLine1="                .setExpirationTime(Instant.now().plus(5, ChronoUnit.DAYS));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="327"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.common.AdData.Builder`"
+        errorLine1="        return new AdData.Builder()"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="339"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#setMetadata`"
+        errorLine1="                .setMetadata("
+        errorLine2="                 ~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="340"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#setRenderUri`"
+        errorLine1="                .setRenderUri("
+        errorLine2="                 ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="346"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#build`"
+        errorLine1="                .build();"
+        errorLine2="                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="351"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        DevContext mDevContext = DevContextFilter.create(context).createDevContext(Process.myUid());"
+        errorLine2="                                                                  ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/DevContextUtils.java"
+            line="41"
+            column="67"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                devContextFilter.isDebuggable(mDevContext.getCallingAppPackageName());"
+        errorLine2="                                 ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/DevContextUtils.java"
+            line="43"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        boolean isDeveloperMode = devContextFilter.isDeveloperMode();"
+        errorLine2="                                                   ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/DevContextUtils.java"
+            line="44"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    protected static final Context sContext = ApplicationProvider.getApplicationContext();"
+        errorLine2="              ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="78"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();"
+        errorLine2="            ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/src/android/adservices/utils/FledgeScenarioTest.java"
+            line="84"
+            column="13"/>
+    </issue>
+
+</issues>

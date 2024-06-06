@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.adservices.shared.testing.concurrency;
 
-/**
- * Abstraction for {@code OnResultSyncCallback} and {@code FailableOnResultSyncCallback}.
- *
- * <p>This is needed because the latter is a "special" case of the former as it can receive either a
- * result OR a failure.
- *
- * @param <T> type of the result.
- */
-public interface OnResultTestSyncCallback<T> extends IResultSyncCallback<T> {
+import com.android.adservices.shared.testing.Identifiable;
 
-    /** Injects the result. */
-    void onResult(T result);
+import java.util.concurrent.TimeUnit;
+
+/** {@code SyncCallaback} that doesn't expect a result. */
+public interface ResultlessSyncCallback extends SyncCallback, Identifiable {
+
+    /**
+     * Indicates the callback was called, so it unblocks {@link #waitCalled()} / {@link
+     * #waitCalled(long, TimeUnit)}.
+     */
+    void setCalled();
 }

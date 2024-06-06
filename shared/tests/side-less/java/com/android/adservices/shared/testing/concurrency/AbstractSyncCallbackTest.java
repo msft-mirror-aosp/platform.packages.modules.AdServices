@@ -26,6 +26,13 @@ public final class AbstractSyncCallbackTest extends SyncCallbackTestCase<Abstrac
         return new ConcreteSyncCallback(settings);
     }
 
+    @Override
+    protected String callCallback(AbstractSyncCallback callback) {
+        String methodName = "callCallback()";
+        callback.internalSetCalled(methodName);
+        return methodName;
+    }
+
     @Test
     public void testToString() {
         var cb = newCallback(mDefaultSettings);
