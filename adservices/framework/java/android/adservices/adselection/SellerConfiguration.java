@@ -17,7 +17,6 @@
 package android.adservices.adselection;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.os.OutcomeReceiver;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -40,7 +39,7 @@ import java.util.concurrent.Executor;
  */
 public final class SellerConfiguration implements Parcelable {
     private final int mTargetPayloadSizeBytes;
-    @Nullable private final Set<PerBuyerConfiguration> mPerBuyerConfigurations;
+    private final Set<PerBuyerConfiguration> mPerBuyerConfigurations;
 
     private SellerConfiguration(Parcel in) {
         mTargetPayloadSizeBytes = in.readInt();
@@ -51,7 +50,7 @@ public final class SellerConfiguration implements Parcelable {
         if (Objects.nonNull(perBuyerConfigurationList)) {
             mPerBuyerConfigurations = new HashSet<>(perBuyerConfigurationList);
         } else {
-            mPerBuyerConfigurations = null;
+            mPerBuyerConfigurations = new HashSet<>();
         }
     }
 
@@ -71,8 +70,7 @@ public final class SellerConfiguration implements Parcelable {
             };
 
     private SellerConfiguration(
-            int targetPayloadSizeBytes,
-            @Nullable Set<PerBuyerConfiguration> perBuyerConfigurations) {
+            int targetPayloadSizeBytes, Set<PerBuyerConfiguration> perBuyerConfigurations) {
 
         mTargetPayloadSizeBytes = targetPayloadSizeBytes;
         mPerBuyerConfigurations = perBuyerConfigurations;
@@ -132,7 +130,7 @@ public final class SellerConfiguration implements Parcelable {
      * include the buyer data based on the ratio between that specific buyer's target and the sum of
      * {@link PerBuyerConfiguration#getTargetInputSizeBytes()}.
      */
-    @Nullable
+    @NonNull
     public Set<PerBuyerConfiguration> getPerBuyerConfigurations() {
         return mPerBuyerConfigurations;
     }
@@ -140,7 +138,7 @@ public final class SellerConfiguration implements Parcelable {
     /** Builder for {@link SellerConfiguration} objects. */
     public static final class Builder {
         private int mTargetPayloadSizeBytes;
-        @Nullable private Set<PerBuyerConfiguration> mPerBuyerConfigurations;
+        @NonNull private Set<PerBuyerConfiguration> mPerBuyerConfigurations = new HashSet<>();
 
         /**
          * Sets the target payload size in bytes. For more information see {@link
@@ -148,6 +146,10 @@ public final class SellerConfiguration implements Parcelable {
          */
         @NonNull
         public Builder setTargetPayloadSizeBytes(int targetPayloadSizeBytes) {
+            if (targetPayloadSizeBytes <= 0) {
+                throw new IllegalArgumentException("Target size must be greater than 0.");
+            }
+
             mTargetPayloadSizeBytes = targetPayloadSizeBytes;
             return this;
         }
@@ -158,16 +160,18 @@ public final class SellerConfiguration implements Parcelable {
          */
         @NonNull
         public Builder setPerBuyerConfigurations(
-                @Nullable Set<PerBuyerConfiguration> perBuyerConfigurations) {
-            mPerBuyerConfigurations = perBuyerConfigurations;
+                @NonNull Set<PerBuyerConfiguration> perBuyerConfigurations) {
+            mPerBuyerConfigurations =
+                    Objects.requireNonNull(
+                            perBuyerConfigurations, "Per Buyer Configurations cannot be null.");
             return this;
         }
 
         /** Builds a {@link SellerConfiguration} instance. */
         @NonNull
         public SellerConfiguration build() {
-            if (mTargetPayloadSizeBytes <= 0) {
-                throw new IllegalArgumentException("Target size must be greater than 0.");
+            if (mTargetPayloadSizeBytes == 0) {
+                throw new IllegalStateException("Target size must be set.");
             }
 
             return new SellerConfiguration(mTargetPayloadSizeBytes, mPerBuyerConfigurations);
