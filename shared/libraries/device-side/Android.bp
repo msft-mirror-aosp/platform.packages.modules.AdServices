@@ -206,7 +206,7 @@ java_library {
         ":adservices-shared-sideless-testing-sources",
     ],
     static_libs: [
-        // TODO(b/338132355): use defaults instead?
+        // TODO(b/345219434): use defaults instead?
         "mockito-target-extended-minus-junit4",
         "adservices-shared-common",
         "adservices-shared-util",
@@ -321,7 +321,10 @@ java_defaults {
     static_libs: [
         "adservices-shared-static-class-checker",
     ],
-    defaults: ["modules-utils-extended-mockito-rule-defaults"],
+    // TODO(b/345219434): change it back to
+    // modules-utils-extended-mockito-rule-defaults once it have
+    // compile_multilib: "both",
+    defaults: ["modules-utils-testable-device-config-defaults"],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",

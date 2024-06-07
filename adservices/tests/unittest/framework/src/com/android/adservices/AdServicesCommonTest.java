@@ -16,7 +16,12 @@
 
 package com.android.adservices;
 
+import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
+import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_SERVICE;
+
 import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
 
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
@@ -32,11 +37,12 @@ import java.util.List;
 
 @SmallTest
 public class AdServicesCommonTest extends AdServicesUnitTestCase {
-    private ResolveInfo mResolveInfo1, mResolveInfo2, mResolveInfo3, mResolveInfo4;
-    private ServiceInfo mServiceInfo1, mServiceInfo2;
+    private ResolveInfo mResolveInfo1, mResolveInfo2, mResolveInfo3, mResolveInfo4, mResolveInfoGms;
+    private ServiceInfo mServiceInfo1, mServiceInfo2, mServiceInfoGms;
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
     private static final String ADEXTSERVICES_PACKAGE_NAME = "com.android.ext.services";
     private static final String ADSERVICES_PACKAGE_NAME_NOT_SUFFIX = "com.android.adservices.api.x";
+    private static final String GMS_PACKAGE_NAME = "com.google.android.gms";
 
     @Before
     public void setUp() {
@@ -63,6 +69,11 @@ public class AdServicesCommonTest extends AdServicesUnitTestCase {
         serviceInfo4.packageName = ADSERVICES_PACKAGE_NAME_NOT_SUFFIX;
         serviceInfo4.name = serviceInfo4.packageName;
         mResolveInfo4.serviceInfo = serviceInfo4;
+
+        mResolveInfoGms = new ResolveInfo();
+        mServiceInfoGms = new ServiceInfo();
+        mServiceInfoGms.packageName = GMS_PACKAGE_NAME;
+        mResolveInfoGms.serviceInfo = mServiceInfoGms;
     }
 
     @Test
@@ -87,10 +98,45 @@ public class AdServicesCommonTest extends AdServicesUnitTestCase {
         expect.withMessage("Single item not matching AdServices package name")
                 .that(AdServicesCommon.resolveAdServicesService(List.of(mResolveInfo2), ""))
                 .isEqualTo(mServiceInfo2);
+
+        expect.withMessage("Single item matching GMS package")
+                .that(AdServicesCommon.resolveAdServicesService(List.of(mResolveInfoGms), ""))
+                .isEqualTo(mServiceInfoGms);
     }
 
     @Test
-    public void testResolveAdServicesService() {
+    public void testResolveAdServicesService_multiplePackages_adIdAndAppSetId() {
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        AdServicesCommon.resolveAdServicesService(
+                                List.of(mResolveInfoGms, mResolveInfo1),
+                                ACTION_ADID_PROVIDER_SERVICE));
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        AdServicesCommon.resolveAdServicesService(
+                                List.of(mResolveInfoGms, mResolveInfo1),
+                                ACTION_APPSETID_PROVIDER_SERVICE));
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        AdServicesCommon.resolveAdServicesService(
+                                List.of(mResolveInfoGms, mResolveInfo1, mResolveInfo2),
+                                ACTION_ADID_PROVIDER_SERVICE));
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        AdServicesCommon.resolveAdServicesService(
+                                List.of(mResolveInfoGms, mResolveInfo1, mResolveInfo2),
+                                ACTION_APPSETID_PROVIDER_SERVICE));
+    }
+
+    @Test
+    public void testResolveAdServicesService_twoPackages() {
         expect.withMessage("List with AdServices and ExtServices packages")
                 .that(
                         AdServicesCommon.resolveAdServicesService(

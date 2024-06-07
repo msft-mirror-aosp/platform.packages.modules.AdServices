@@ -18,7 +18,6 @@ package com.android.adservices.service.js;
 
 import static com.android.adservices.service.js.JSScriptEngineCommonConstants.WASM_MODULE_BYTES_ID;
 
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -37,6 +36,7 @@ import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -49,7 +49,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.Closeable;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.concurrent.GuardedBy;
@@ -75,15 +74,16 @@ public class JSScriptEngine {
     public static final String JS_EVALUATE_METHOD_NAME = "JSScriptEngine#evaluate";
     public static final Set<Class<? extends Exception>> RETRYABLE_EXCEPTIONS_FROM_JS_ENGINE =
             Set.of(JSScriptEngineConnectionException.class);
+    private static final Object sJSScriptEngineLock = new Object();
 
     @SuppressLint("StaticFieldLeak")
     private static JSScriptEngine sSingleton;
 
-    @NonNull private final Context mContext;
-    @NonNull private final JavaScriptSandboxProvider mJsSandboxProvider;
-    @NonNull private final ListeningExecutorService mExecutorService;
-    @NonNull private final Profiler mProfiler;
-    @NonNull private final LoggerFactory.Logger mLogger;
+    private final Context mContext;
+    private final JavaScriptSandboxProvider mJsSandboxProvider;
+    private final ListeningExecutorService mExecutorService;
+    private final Profiler mProfiler;
+    private final LoggerFactory.Logger mLogger;
 
     /**
      * Extracting the logic to create the JavaScriptSandbox in a factory class for better
@@ -158,7 +158,7 @@ public class JSScriptEngine {
         }
 
         public ListenableFuture<Void> destroyIfCurrentInstance(
-                @NonNull JavaScriptSandbox javaScriptSandbox) {
+                JavaScriptSandbox javaScriptSandbox) {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox != null) {
                     ListenableFuture<JavaScriptSandbox> futureSandbox = mFutureSandbox;
@@ -252,9 +252,30 @@ public class JSScriptEngine {
     /**
      * @return JSScriptEngine instance
      */
-    public static JSScriptEngine getInstance(
-            @NonNull Context context, @NonNull LoggerFactory.Logger logger) {
-        synchronized (JSScriptEngine.class) {
+    public static JSScriptEngine getInstance(LoggerFactory.Logger logger) {
+        synchronized (sJSScriptEngineLock) {
+            if (sSingleton == null) {
+                Profiler profiler = Profiler.createNoOpInstance(TAG);
+                sSingleton =
+                        new JSScriptEngine(
+                                ApplicationContextSingleton.get(),
+                                new JavaScriptSandboxProvider(profiler, logger),
+                                profiler,
+                                // There is no blocking call or IO code in the service logic
+                                AdServicesExecutors.getLightWeightExecutor(),
+                                logger);
+            }
+
+            return sSingleton;
+        }
+    }
+
+    /**
+     * @return JSScriptEngine instance
+     */
+    @VisibleForTesting
+    public static JSScriptEngine getInstance(Context context, LoggerFactory.Logger logger) {
+        synchronized (sJSScriptEngineLock) {
             if (sSingleton == null) {
                 Profiler profiler = Profiler.createNoOpInstance(TAG);
                 sSingleton =
@@ -277,8 +298,8 @@ public class JSScriptEngine {
      */
     @VisibleForTesting
     public static JSScriptEngine getInstanceForTesting(
-            @NonNull Context context, @NonNull Profiler profiler, LoggerFactory.Logger logger) {
-        synchronized (JSScriptEngine.class) {
+            Context context, Profiler profiler, LoggerFactory.Logger logger) {
+        synchronized (sJSScriptEngineLock) {
             // If there is no instance already created or the instance was shutdown
             if (sSingleton != null) {
                 throw new IllegalStateException(
@@ -306,10 +327,10 @@ public class JSScriptEngine {
      */
     @VisibleForTesting
     public static JSScriptEngine createNewInstanceForTesting(
-            @NonNull Context context,
-            @NonNull JavaScriptSandboxProvider jsSandboxProvider,
-            @NonNull Profiler profiler,
-            @NonNull LoggerFactory.Logger logger) {
+            Context context,
+            JavaScriptSandboxProvider jsSandboxProvider,
+            Profiler profiler,
+            LoggerFactory.Logger logger) {
         return new JSScriptEngine(
                 context,
                 jsSandboxProvider,
@@ -330,7 +351,7 @@ public class JSScriptEngine {
         return FluentFuture.from(mJsSandboxProvider.destroyCurrentInstance())
                 .transformAsync(
                         ignored -> {
-                            synchronized (JSScriptEngine.class) {
+                            synchronized (sJSScriptEngineLock) {
                                 sSingleton = null;
                             }
                             return Futures.immediateVoidFuture();
@@ -341,17 +362,11 @@ public class JSScriptEngine {
     @VisibleForTesting
     @SuppressWarnings("FutureReturnValueIgnored")
     JSScriptEngine(
-            @NonNull Context context,
-            @NonNull JavaScriptSandboxProvider jsSandboxProvider,
-            @NonNull Profiler profiler,
-            @NonNull ListeningExecutorService executorService,
-            @NonNull LoggerFactory.Logger logger) {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(jsSandboxProvider);
-        Objects.requireNonNull(profiler);
-        Objects.requireNonNull(executorService);
-        Objects.requireNonNull(logger);
-
+            Context context,
+            JavaScriptSandboxProvider jsSandboxProvider,
+            Profiler profiler,
+            ListeningExecutorService executorService,
+            LoggerFactory.Logger logger) {
         this.mContext = context;
         this.mJsSandboxProvider = jsSandboxProvider;
         this.mProfiler = profiler;
@@ -365,12 +380,11 @@ public class JSScriptEngine {
      * Same as {@link #evaluate(String, List, String, IsolateSettings, RetryStrategy)} where the
      * entry point function name is {@link JSScriptEngineCommonConstants#ENTRY_POINT_FUNC_NAME}.
      */
-    @NonNull
     public ListenableFuture<String> evaluate(
-            @NonNull String jsScript,
-            @NonNull List<JSScriptArgument> args,
-            @NonNull IsolateSettings isolateSettings,
-            @NonNull RetryStrategy retryStrategy) {
+            String jsScript,
+            List<JSScriptArgument> args,
+            IsolateSettings isolateSettings,
+            RetryStrategy retryStrategy) {
         return evaluate(
                 jsScript,
                 args,
@@ -390,13 +404,12 @@ public class JSScriptEngine {
      * @return A {@link ListenableFuture} containing the JS string representation of the result of
      *     {@code entryFunctionName}'s invocation
      */
-    @NonNull
     public ListenableFuture<String> evaluate(
-            @NonNull String jsScript,
-            @NonNull List<JSScriptArgument> args,
-            @NonNull String entryFunctionName,
-            @NonNull IsolateSettings isolateSettings,
-            @NonNull RetryStrategy retryStrategy) {
+            String jsScript,
+            List<JSScriptArgument> args,
+            String entryFunctionName,
+            IsolateSettings isolateSettings,
+            RetryStrategy retryStrategy) {
         return evaluateInternal(
                 jsScript, args, entryFunctionName, null, isolateSettings, retryStrategy, true);
     }
@@ -409,11 +422,8 @@ public class JSScriptEngine {
      * @return A {@link ListenableFuture} containing the JS string representation of the result of
      *     {@code entryFunctionName}'s invocation
      */
-    @NonNull
     public ListenableFuture<String> evaluate(
-            @NonNull String jsScript,
-            @NonNull IsolateSettings isolateSettings,
-            @NonNull RetryStrategy retryStrategy) {
+            String jsScript, IsolateSettings isolateSettings, RetryStrategy retryStrategy) {
         return evaluateInternal(
                 jsScript, List.of(), "", null, isolateSettings, retryStrategy, false);
     }
@@ -432,16 +442,13 @@ public class JSScriptEngine {
      * @return A {@link ListenableFuture} containing the JS string representation of the result of
      *     {@code entryFunctionName}'s invocation
      */
-    @NonNull
     public ListenableFuture<String> evaluate(
-            @NonNull String jsScript,
-            @NonNull byte[] wasmBinary,
-            @NonNull List<JSScriptArgument> args,
-            @NonNull String entryFunctionName,
-            @NonNull IsolateSettings isolateSettings,
-            @NonNull RetryStrategy retryStrategy) {
-        Objects.requireNonNull(wasmBinary);
-
+            String jsScript,
+            byte[] wasmBinary,
+            List<JSScriptArgument> args,
+            String entryFunctionName,
+            IsolateSettings isolateSettings,
+            RetryStrategy retryStrategy) {
         return evaluateInternal(
                 jsScript,
                 args,
@@ -452,19 +459,14 @@ public class JSScriptEngine {
                 true);
     }
 
-    @NonNull
     private ListenableFuture<String> evaluateInternal(
-            @NonNull String jsScript,
-            @NonNull List<JSScriptArgument> args,
-            @NonNull String entryFunctionName,
+            String jsScript,
+            List<JSScriptArgument> args,
+            String entryFunctionName,
             @Nullable byte[] wasmBinary,
-            @NonNull IsolateSettings isolateSettings,
-            @NonNull RetryStrategy retryStrategy,
+            IsolateSettings isolateSettings,
+            RetryStrategy retryStrategy,
             boolean generateEntryPointWrapper) {
-        Objects.requireNonNull(jsScript);
-        Objects.requireNonNull(args);
-        Objects.requireNonNull(entryFunctionName);
-        Objects.requireNonNull(retryStrategy);
         return retryStrategy.call(
                 () ->
                         ClosingFuture.from(mJsSandboxProvider.getFutureInstance(mContext))
@@ -486,15 +488,14 @@ public class JSScriptEngine {
                 JS_EVALUATE_METHOD_NAME);
     }
 
-    @NonNull
     private ClosingFuture<String> evaluateOnSandbox(
-            @NonNull ClosingFuture.DeferredCloser closer,
-            @NonNull JavaScriptSandbox jsSandbox,
-            @NonNull String jsScript,
-            @NonNull List<JSScriptArgument> args,
-            @NonNull String entryFunctionName,
+            ClosingFuture.DeferredCloser closer,
+            JavaScriptSandbox jsSandbox,
+            String jsScript,
+            List<JSScriptArgument> args,
+            String entryFunctionName,
             @Nullable byte[] wasmBinary,
-            @NonNull IsolateSettings isolateSettings,
+            IsolateSettings isolateSettings,
             boolean generateEntryPointWrapper) {
 
         boolean hasWasmModule = wasmBinary != null;
@@ -757,12 +758,11 @@ public class JSScriptEngine {
      * JavaScriptIsolate} into a {@link Closeable} type.
      */
     private static class CloseableIsolateWrapper implements Closeable {
-        @NonNull final JavaScriptIsolate mIsolate;
+        final JavaScriptIsolate mIsolate;
 
-        @NonNull final LoggerFactory.Logger mLogger;
+        final LoggerFactory.Logger mLogger;
 
-        CloseableIsolateWrapper(@NonNull JavaScriptIsolate isolate, LoggerFactory.Logger logger) {
-            Objects.requireNonNull(isolate);
+        CloseableIsolateWrapper(JavaScriptIsolate isolate, LoggerFactory.Logger logger) {
             mIsolate = isolate;
             mLogger = logger;
         }

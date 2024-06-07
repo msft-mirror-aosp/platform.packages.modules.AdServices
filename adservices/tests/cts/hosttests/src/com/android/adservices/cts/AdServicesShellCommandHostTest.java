@@ -22,6 +22,7 @@ import com.android.adservices.common.AbstractAdServicesShellCommandHelper;
 import com.android.adservices.common.AdServicesHostSideTestCase;
 import com.android.adservices.common.HostSideAdServicesShellCommandHelper;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.shell.CommandResult;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 
 import org.junit.Test;
@@ -45,8 +46,7 @@ public final class AdServicesShellCommandHostTest extends AdServicesHostSideTest
 
     @Test
     public void testRunCommandRwe_echoCommand() {
-        AbstractAdServicesShellCommandHelper.CommandResult out =
-                mShellCommandHelper.runCommandRwe("%s %s", CMD_ECHO, CMD_ECHO_OUT);
+        CommandResult out = mShellCommandHelper.runCommandRwe("%s %s", CMD_ECHO, CMD_ECHO_OUT);
 
         expect.withMessage("out").that(out.getOut()).isEqualTo(CMD_ECHO_OUT);
         expect.withMessage("err").that(out.getErr()).isEmpty();

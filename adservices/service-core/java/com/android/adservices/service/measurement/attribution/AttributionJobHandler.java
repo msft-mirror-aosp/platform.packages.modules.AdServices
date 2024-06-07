@@ -205,6 +205,25 @@ class AttributionJobHandler {
                         return;
                     }
 
+                    try {
+                        if (!getTriggerHasAggregatableData(trigger)
+                                && trigger.parseEventTriggers(mFlags).isEmpty()) {
+                            ignoreTrigger(trigger, measurementDao);
+                            attributionStatus.setAttributionResult(
+                                    AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
+                            attributionStatus.setFailureType(
+                                    AttributionStatus.FailureType.TRIGGER_IGNORED);
+                            return;
+                        }
+                    } catch (JSONException e) {
+                        LoggerFactory.getMeasurementLogger()
+                                .e(
+                                        e,
+                                        "JSONException when trigger attribution for"
+                                                + " trigger with ID: "
+                                                + trigger.getId());
+                    }
+
                     Optional<Pair<Source, List<Source>>> sourceOpt =
                             selectSourceToAttribute(trigger, measurementDao, attributionStatus);
 

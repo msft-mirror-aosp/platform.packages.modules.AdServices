@@ -429,7 +429,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -541,7 +540,6 @@ public class AdBidGeneratorImplTest {
 
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -660,7 +658,6 @@ public class AdBidGeneratorImplTest {
 
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -777,7 +774,6 @@ public class AdBidGeneratorImplTest {
 
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -882,7 +878,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -988,7 +983,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1102,7 +1096,6 @@ public class AdBidGeneratorImplTest {
 
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1207,7 +1200,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1328,7 +1320,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1426,7 +1417,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1526,7 +1516,6 @@ public class AdBidGeneratorImplTest {
         when(mDebugReporting.isEnabled()).thenReturn(true);
         AdBidGeneratorImpl adBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1657,7 +1646,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1758,7 +1746,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1861,7 +1848,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -1956,7 +1942,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2046,7 +2031,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2177,7 +2161,6 @@ public class AdBidGeneratorImplTest {
                         mDevContext);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2275,7 +2258,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2367,7 +2349,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2466,7 +2447,6 @@ public class AdBidGeneratorImplTest {
                 };
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2549,7 +2529,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2620,7 +2599,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2725,7 +2703,6 @@ public class AdBidGeneratorImplTest {
 
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2826,7 +2803,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2885,7 +2861,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2943,7 +2918,6 @@ public class AdBidGeneratorImplTest {
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
-                        mContext,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,

@@ -27,9 +27,11 @@ import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
+@RequiresSdkLevelAtLeastS
 public class PerBuyerConfigurationTest extends AdServicesUnitTestCase {
     @Test
     public void testPerBuyerConfiguration_success() {

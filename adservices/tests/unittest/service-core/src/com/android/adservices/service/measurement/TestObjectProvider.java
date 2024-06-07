@@ -120,7 +120,8 @@ class TestObjectProvider {
                                         new UnsignedLong(0L),
                                         source.getExpiryTime(),
                                         source.getEventTime(),
-                                        source.getAppDestinations()));
+                                        source.getAppDestinations(),
+                                        null));
                     };
             doAnswer(answerSourceEventReports)
                     .when(sourceNoiseHandler)

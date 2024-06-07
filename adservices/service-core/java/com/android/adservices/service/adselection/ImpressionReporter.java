@@ -35,7 +35,6 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
@@ -128,7 +127,6 @@ public class ImpressionReporter {
     private final boolean mShouldUseUnifiedTables;
 
     public ImpressionReporter(
-            @NonNull Context context,
             @NonNull ExecutorService lightweightExecutor,
             @NonNull ExecutorService backgroundExecutor,
             @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
@@ -145,7 +143,6 @@ public class ImpressionReporter {
             @NonNull final RetryStrategy retryStrategy,
             boolean shouldUseUnifiedTables,
             ReportImpressionExecutionLogger reportImpressionExecutionLogger) {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
         Objects.requireNonNull(scheduledExecutor);
@@ -187,7 +184,6 @@ public class ImpressionReporter {
         }
         mJsEngine =
                 new ReportImpressionScriptEngine(
-                        context,
                         flags::getEnforceIsolateMaxHeapSize,
                         flags::getIsolateMaxHeapSizeBytes,
                         registerAdBeaconScriptEngineHelper,

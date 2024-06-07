@@ -68,13 +68,15 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
     abstract FluentFuture<ObliviousHttpKeyConfig> getLatestOhttpKeyConfigOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             long timeoutMs,
-            @Nullable Uri coordinatorUrl);
+            @Nullable Uri coordinatorUrl,
+            DevContext devContext);
 
     abstract FluentFuture<List<DBEncryptionKey>> fetchAndPersistActiveKeysOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             Instant keyExpiryInstant,
             long timeoutMs,
             @Nullable Uri coordinatorUrl,
+            DevContext devContext,
             FetchProcessLogger keyFetchLogger);
 
     abstract Set<Integer> getExpiredAdSelectionEncryptionKeyTypes(Instant keyExpiryInstant);
@@ -165,19 +167,20 @@ public abstract class ProtectedServersEncryptionConfigManagerBase {
     protected ListenableFuture<AdServicesHttpClientResponse> fetchKeyPayload(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             Uri fetchUri,
+            DevContext devContext,
             FetchProcessLogger keyFetchLogger) {
         keyFetchLogger.setEncryptionKeySource(SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK);
         switch (adSelectionKeyType) {
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION:
                 return mAdServicesHttpsClient.fetchPayloadWithLogging(
-                        fetchUri, DevContext.createForDevOptionsDisabled(), keyFetchLogger);
+                        fetchUri, devContext, keyFetchLogger);
             case AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN:
                 AdServicesHttpClientRequest fetchKeyRequest =
                         AdServicesHttpClientRequest.builder()
                                 .setUri(fetchUri)
                                 .setRequestProperties(REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
                                 .setResponseHeaderKeys(RESPONSE_PROPERTIES_CONTENT_TYPE)
-                                .setDevContext(DevContext.createForDevOptionsDisabled())
+                                .setDevContext(devContext)
                                 .build();
                 return mAdServicesHttpsClient.performRequestGetResponseInBase64StringWithLogging(
                         fetchKeyRequest, keyFetchLogger);

@@ -7784,7 +7784,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         int jsScriptEngineShutdownTimeoutInSeconds = 1;
 
         // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-        JSScriptEngine.getInstance(mSpyContext, LoggerFactory.getFledgeLogger())
+        JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger())
                 .shutdown()
                 .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
 
@@ -7866,7 +7866,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             geq((int) BINDER_ELAPSED_TIME_MS));
         } finally {
             // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-            JSScriptEngine.getInstance(mSpyContext, LoggerFactory.getFledgeLogger())
+            JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger())
                     .shutdown()
                     .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
         }

@@ -276,7 +276,6 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
         mScriptEngine =
                 new SignalsScriptEngine(
-                        mContextSpy,
                         ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED
                                 ::getEnforceMaxHeapSizeFeature,
                         ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED::getMaxHeapSizeBytes,

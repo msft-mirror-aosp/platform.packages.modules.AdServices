@@ -16,6 +16,6 @@ java_library {
     sdk_version: "test_current",
 
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
     },
 }

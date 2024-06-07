@@ -202,12 +202,9 @@ public final class AppConsentForRStorageManagerTest extends AdServicesExtendedMo
     }
 
     @Test
-    public void testGAAndBetaNotificationFlag() {
+    public void testGANotificationFlag() {
         boolean gaDisplayedFlag = mAppConsentForRStorageManager.wasGaUxNotificationDisplayed();
-
-        boolean betaDisplayedFlag = mAppConsentForRStorageManager.wasNotificationDisplayed();
         assertThat(gaDisplayedFlag).isFalse();
-        assertThat(betaDisplayedFlag).isFalse();
     }
 
     @Test

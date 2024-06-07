@@ -84,8 +84,7 @@ java_defaults {
         "general-tests",
     ],
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
-        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }

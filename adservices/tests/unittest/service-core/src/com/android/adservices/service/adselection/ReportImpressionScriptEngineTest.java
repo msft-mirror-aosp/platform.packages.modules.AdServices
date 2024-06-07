@@ -1337,7 +1337,6 @@ public class ReportImpressionScriptEngineTest extends AdServicesMockitoTestCase 
                     new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperDisabled();
         }
         return new ReportImpressionScriptEngine(
-                sContext,
                 mIsolateSettings::getEnforceMaxHeapSizeFeature,
                 mIsolateSettings::getMaxHeapSizeBytes,
                 registerAdBeaconScriptEngineHelper,

@@ -63,7 +63,7 @@ public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
                 WebViewSupportUtil.isJSIsolateConsoleCallbackAvailable(mSpyContext));
         // Destroy any existing JSScriptEngine and JavascriptSandbox
         sLogger.v("Destroy any existing JSScriptEngine and JavascriptSandbox");
-        JSScriptEngine.getInstance(mSpyContext, sMockLogger).shutdown().get(1, TimeUnit.SECONDS);
+        JSScriptEngine.getInstance(sMockLogger).shutdown().get(1, TimeUnit.SECONDS);
     }
 
     @After
@@ -157,7 +157,7 @@ public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
 
     private void callAndVerifyJSScriptEngine(String jsScript) throws InterruptedException {
         sLogger.v("callAndVerifyJSScriptEngine called with script\n%s", jsScript);
-        mJSScriptEngine = JSScriptEngine.getInstance(mSpyContext, sMockLogger);
+        mJSScriptEngine = JSScriptEngine.getInstance(sMockLogger);
 
         boolean consoleMessagesInLogEnabled = true;
         IsolateSettings isolateSettings =

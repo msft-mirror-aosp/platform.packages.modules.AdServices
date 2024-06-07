@@ -17,11 +17,11 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.common.JsonUtils.getStringFromJson;
-import static com.android.adservices.service.js.JSScriptEngineCommonConstants.RESULTS_FIELD_NAME;
-import static com.android.adservices.service.js.JSScriptEngineCommonConstants.STATUS_FIELD_NAME;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.RESULTS_FIELD_NAME;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.STATUS_FIELD_NAME;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
@@ -33,7 +33,6 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -172,13 +171,12 @@ public class ReportImpressionScriptEngine {
     private final DevContext mDevContext;
 
     public ReportImpressionScriptEngine(
-            Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             RegisterAdBeaconScriptEngineHelper registerAdBeaconScriptEngineHelper,
             RetryStrategy retryStrategy,
             DevContext devContext) {
-        mJsEngine = JSScriptEngine.getInstance(context, sLogger);
+        mJsEngine = JSScriptEngine.getInstance(sLogger);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRegisterAdBeaconScriptEngineHelper = registerAdBeaconScriptEngineHelper;

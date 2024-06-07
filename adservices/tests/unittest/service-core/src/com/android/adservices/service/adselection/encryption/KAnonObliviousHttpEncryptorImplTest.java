@@ -25,11 +25,14 @@ import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
 
 import com.google.common.io.BaseEncoding;
@@ -56,6 +59,7 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
 
     private KAnonObliviousHttpEncryptorImpl mKAnonObliviousHttpEncryptor;
     private ExecutorService mLightweightExecutor;
+    private DevContext mDevContext;
 
     @Before
     public void setUp() {
@@ -63,6 +67,13 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
         mKAnonObliviousHttpEncryptor =
                 new KAnonObliviousHttpEncryptorImpl(
                         mEncryptionKeyManagerMock, mLightweightExecutor);
+        mDevContext =
+                DevContext.builder()
+                        .setDevOptionsEnabled(true)
+                        .setCallingAppPackageName(
+                                ApplicationProvider.getApplicationContext().getPackageName())
+                        .build();
+
         mocker.mockGetFlags(mMockFlags);
     }
 
@@ -72,14 +83,14 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
                 NullPointerException.class,
                 () ->
                         mKAnonObliviousHttpEncryptor.encryptBytes(
-                                null, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS, null));
+                                null, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS, null, mDevContext));
     }
 
     @Test
     public void test_encryptBytes_success() throws Exception {
         doReturn(false).when(mMockFlags).getFledgeAuctionServerMediaTypeChangeEnabled();
         when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
-                        JOIN, KEY_FETCH_TIMEOUT_MS, null))
+                        JOIN, KEY_FETCH_TIMEOUT_MS, null, mDevContext))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
@@ -94,7 +105,8 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
                                                         plainTextBytes,
                                                         UNUSED_CONTEXT_ID,
                                                         KEY_FETCH_TIMEOUT_MS,
-                                                        null)
+                                                        null,
+                                                        mDevContext)
                                                 .get()))
                 // Only the Ohttp header containing key ID and algorithm IDs is same across
                 // multiple test runs since, a random seed is used to generate rest of the
@@ -106,7 +118,7 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
     public void test_encryptBytes_success_withServerAuctionMediaTypeNoChange() throws Exception {
         doReturn(true).when(mMockFlags).getFledgeAuctionServerMediaTypeChangeEnabled();
         when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
-                        JOIN, KEY_FETCH_TIMEOUT_MS, null))
+                        JOIN, KEY_FETCH_TIMEOUT_MS, null, mDevContext))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
@@ -121,7 +133,8 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
                                                         plainTextBytes,
                                                         UNUSED_CONTEXT_ID,
                                                         KEY_FETCH_TIMEOUT_MS,
-                                                        null)
+                                                        null,
+                                                        mDevContext)
                                                 .get()))
                 // Only the Ohttp header containing key ID and algorithm IDs is same across
                 // multiple test runs since, a random seed is used to generate rest of the
@@ -159,7 +172,7 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
     public void test_decryptBytes_success() throws Exception {
         doReturn(false).when(mMockFlags).getFledgeAuctionServerMediaTypeChangeEnabled();
         when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
-                        JOIN, KEY_FETCH_TIMEOUT_MS, null))
+                        JOIN, KEY_FETCH_TIMEOUT_MS, null, mDevContext))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
@@ -167,7 +180,12 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
 
         byte[] encryptedBytes =
                 mKAnonObliviousHttpEncryptor
-                        .encryptBytes(plainTextBytes, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS, null)
+                        .encryptBytes(
+                                plainTextBytes,
+                                UNUSED_CONTEXT_ID,
+                                KEY_FETCH_TIMEOUT_MS,
+                                null,
+                                mDevContext)
                         .get();
 
         assertThat(encryptedBytes).isNotNull();
@@ -181,7 +199,7 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
     public void test_decryptBytes_success_withServerAuctionMediaTypeNoChange() throws Exception {
         doReturn(true).when(mMockFlags).getFledgeAuctionServerMediaTypeChangeEnabled();
         when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
-                        JOIN, KEY_FETCH_TIMEOUT_MS, null))
+                        JOIN, KEY_FETCH_TIMEOUT_MS, null, mDevContext))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
@@ -189,7 +207,12 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
 
         byte[] encryptedBytes =
                 mKAnonObliviousHttpEncryptor
-                        .encryptBytes(plainTextBytes, UNUSED_CONTEXT_ID, KEY_FETCH_TIMEOUT_MS, null)
+                        .encryptBytes(
+                                plainTextBytes,
+                                UNUSED_CONTEXT_ID,
+                                KEY_FETCH_TIMEOUT_MS,
+                                null,
+                                mDevContext)
                         .get();
 
         assertThat(encryptedBytes).isNotNull();

@@ -58,8 +58,7 @@ android_test {
     min_sdk_version: "Tiramisu",
     compile_multilib: "both",
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
-        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
@@ -109,8 +108,7 @@ android_test {
     manifest: "AndroidManifestRoot.xml",
     test_config: "AndroidTest.Root.xml",
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
-        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
@@ -160,8 +158,7 @@ android_test {
     manifest: "AndroidManifestExtServices.xml",
     compile_multilib: "both",
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
-        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline-adextservices-devicetestcases.xml",
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
@@ -213,8 +210,7 @@ android_test {
     manifest: "AndroidManifestDebuggable.xml",
     test_config: "AndroidTestDebuggable.xml",
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
-        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
@@ -264,8 +260,7 @@ android_test {
     test_config: "AndroidTestDebuggable.ExtServices.xml",
     manifest: "AndroidManifestDebuggableExtServices.xml",
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
-        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline-adextservices-debuggabletestcases.xml",
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
@@ -295,8 +290,7 @@ java_library {
     ],
     min_sdk_version: "Tiramisu",
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
-        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline-testutility.xml",
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },

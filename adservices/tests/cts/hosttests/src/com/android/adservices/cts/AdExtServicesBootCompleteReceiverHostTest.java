@@ -16,7 +16,6 @@
 
 package com.android.adservices.cts;
 
-import static com.android.adservices.common.AdServicesTestDeviceHelper.ADSERVICES_SETTINGS_INTENT;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.shared.testing.AndroidSdk.PRE_T;
 import static com.android.adservices.shared.testing.TestDeviceHelper.startActivity;
@@ -49,6 +48,7 @@ public final class AdExtServicesBootCompleteReceiverHostTest extends AdServicesH
 
     private static final String LOG_FROM_BOOTCOMPLETE_RECEIVER =
             "AdExtBootCompletedReceiver onReceive invoked";
+    private static final String ADSERVICES_SETTINGS_INTENT = "android.adservices.ui.SETTINGS";
 
     @Test
     public void testExtBootCompleteReceiver() throws Exception {

@@ -20,13 +20,12 @@ import com.android.adservices.shared.testing.AndroidSdk;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.Nullable;
+import com.android.adservices.shared.testing.shell.CommandResult;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Supplier;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
-
-import java.util.Objects;
 
 /** Helper to run the AdServices service side shell command and return output and error. */
 public abstract class AbstractAdServicesShellCommandHelper {
@@ -150,6 +149,7 @@ public abstract class AbstractAdServicesShellCommandHelper {
     protected abstract CommandResult runShellCommandRwe(String cmd);
 
     // TODO(b/324491709): Provide an abstraction for sdk device level.
+
     /** Gets the device API level. */
     protected abstract int getDeviceApiLevel();
 
@@ -292,44 +292,5 @@ public abstract class AbstractAdServicesShellCommandHelper {
             }
         }
         mLog.e("Timeout %dms happened, %s", maxTimeoutMillis, failureMessage);
-    }
-
-    /** Contains the result of a shell command. */
-    public static final class CommandResult {
-        private final String mOut;
-        private final String mErr;
-        private final String mCommandStatus;
-
-        CommandResult(String out, String err, String commandStatus) {
-            mOut = Objects.requireNonNull(out);
-            mErr = Objects.requireNonNull(err);
-            mCommandStatus = commandStatus;
-        }
-
-        public CommandResult(String out, String err) {
-            this(out, err, STATUS_FINISHED);
-        }
-
-        public String getOut() {
-            return mOut;
-        }
-
-        public String getErr() {
-            return mErr;
-        }
-
-        public String getCommandStatus() {
-            return mCommandStatus;
-        }
-
-        @Override
-        public String toString() {
-            return String.format(
-                    "CommandResult [out=%s, err=%s, status=%s]", mOut, mErr, mCommandStatus);
-        }
-
-        private boolean isCommandRunning() {
-            return mCommandStatus.equals(STATUS_RUNNING);
-        }
     }
 }

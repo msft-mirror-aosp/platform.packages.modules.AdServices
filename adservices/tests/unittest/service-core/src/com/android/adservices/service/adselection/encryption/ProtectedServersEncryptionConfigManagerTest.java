@@ -40,6 +40,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AuctionEncryptionKeyFixture;
+import android.content.Context;
 import android.net.Uri;
 
 import androidx.room.Room;
@@ -91,7 +92,6 @@ public class ProtectedServersEncryptionConfigManagerTest {
 
     private static final String AUCTION_KEY_FETCH_DEFAULT_URI = "https://foo.bar/auctionkey";
     private static final String JOIN_KEY_FETCH_DEFAULT_URI = "https://foo.bar/joinkey";
-    private static final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
 
     @Rule public final MockitoRule mockito = MockitoJUnit.rule();
     @Mock private AdServicesHttpsClient mMockHttpClient;
@@ -114,17 +114,18 @@ public class ProtectedServersEncryptionConfigManagerTest {
             new AuctionEncryptionKeyParser(mFlags);
     private JoinEncryptionKeyParser mJoinEncryptionKeyParser = new JoinEncryptionKeyParser(mFlags);
     private ProtectedServersEncryptionConfigManager mKeyManager;
+    private DevContext mDevContext;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
+        Context context = ApplicationProvider.getApplicationContext();
+
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();
         mProtectedServersEncryptionConfigDao =
-                Room.inMemoryDatabaseBuilder(
-                                ApplicationProvider.getApplicationContext(),
-                                AdSelectionServerDatabase.class)
+                Room.inMemoryDatabaseBuilder(context, AdSelectionServerDatabase.class)
                         .build()
                         .protectedServersEncryptionConfigDao();
         mKeyManager =
@@ -137,6 +138,11 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         mMockHttpClient,
                         mLightweightExecutor,
                         mAdServicesLoggerSpy);
+        mDevContext =
+                DevContext.builder()
+                        .setDevOptionsEnabled(true)
+                        .setCallingAppPackageName(context.getPackageName())
+                        .build();
     }
 
     @Test
@@ -252,7 +258,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
             throws Exception {
         when(mMockHttpClient.fetchPayloadWithLogging(
                         eq(Uri.parse(COORDINATOR_URL_AUCTION)),
-                        eq(DEV_CONTEXT_DISABLED),
+                        eq(mDevContext),
                         any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -270,6 +276,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 Uri.parse(COORDINATOR_URL_AUCTION),
                                 TIMEOUT_MS,
+                                mDevContext,
                                 mKeyFetchLogger)
                         .get();
 
@@ -280,7 +287,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
     public void test_fetchAndPersistAuctionKey_fetchSuccess_withLogging() throws Exception {
         when(mMockHttpClient.fetchPayloadWithLogging(
                         eq(Uri.parse(COORDINATOR_URL_AUCTION)),
-                        eq(DEV_CONTEXT_DISABLED),
+                        eq(mDevContext),
                         any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -298,6 +305,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 Uri.parse(COORDINATOR_URL_AUCTION),
                                 TIMEOUT_MS,
+                                mDevContext,
                                 mKeyFetchLogger)
                         .get();
 
@@ -312,7 +320,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
             throws Exception {
         when(mMockHttpClient.fetchPayloadWithLogging(
                         eq(Uri.parse(COORDINATOR_URL_AUCTION)),
-                        eq(DEV_CONTEXT_DISABLED),
+                        eq(mDevContext),
                         any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -320,9 +328,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
                                         AUCTION_KEY_1)));
 
         when(mMockHttpClient.fetchPayloadWithLogging(
-                        Uri.parse(AUCTION_KEY_FETCH_DEFAULT_URI),
-                        DEV_CONTEXT_DISABLED,
-                        mKeyFetchLogger))
+                        Uri.parse(AUCTION_KEY_FETCH_DEFAULT_URI), mDevContext, mKeyFetchLogger))
                 .thenReturn(
                         Futures.immediateFuture(
                                 AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(
@@ -345,6 +351,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 Uri.parse(COORDINATOR_URL_AUCTION),
                                 TIMEOUT_MS,
+                                mDevContext,
                                 mKeyFetchLogger)
                         .get();
 
@@ -356,6 +363,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 Uri.parse(AUCTION_KEY_FETCH_DEFAULT_URI),
                                 TIMEOUT_MS,
+                                mDevContext,
                                 mKeyFetchLogger)
                         .get();
 
@@ -370,7 +378,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         .setUri(Uri.parse(COORDINATOR_URL_JOIN))
                         .setRequestProperties(REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
                         .setResponseHeaderKeys(RESPONSE_PROPERTIES_CONTENT_TYPE)
-                        .setDevContext(DevContext.createForDevOptionsDisabled())
+                        .setDevContext(mDevContext)
                         .build();
         when(mMockHttpClient.performRequestGetResponseInBase64StringWithLogging(
                         fetchKeyRequest, mKeyFetchLogger))
@@ -390,6 +398,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN,
                                 Uri.parse(COORDINATOR_URL_JOIN),
                                 TIMEOUT_MS,
+                                mDevContext,
                                 mKeyFetchLogger)
                         .get();
 
@@ -403,7 +412,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
     public void test_fetchAndPersistActiveKeysOfType_persistsJey() throws Exception {
         when(mMockHttpClient.fetchPayloadWithLogging(
                         eq(Uri.parse(COORDINATOR_URL_AUCTION)),
-                        eq(DEV_CONTEXT_DISABLED),
+                        eq(mDevContext),
                         any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -433,6 +442,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
                                 mClock.instant().plusSeconds(1000L),
                                 TIMEOUT_MS,
                                 Uri.parse(COORDINATOR_URL_AUCTION),
+                                mDevContext,
                                 mKeyFetchLogger)
                         .get();
 
@@ -450,7 +460,8 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 TIMEOUT_MS,
-                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN))
+                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN),
+                                mDevContext)
                         .get();
 
         byte[] expectedPublicKey =
@@ -474,7 +485,8 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 TIMEOUT_MS,
-                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN))
+                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN),
+                                mDevContext)
                         .get();
 
         byte[] expectedPublicKey =
@@ -499,7 +511,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
     public void test_getLatestOhttpKeyConfigOfType_withNoKeys_returnsLatestKey() throws Exception {
         when(mMockHttpClient.fetchPayloadWithLogging(
                         eq(Uri.parse(COORDINATOR_URL_AUCTION)),
-                        eq(DEV_CONTEXT_DISABLED),
+                        eq(mDevContext),
                         any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -511,7 +523,8 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 TIMEOUT_MS,
-                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN))
+                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN),
+                                mDevContext)
                         .get();
 
         byte[] expectedPublicKey =
@@ -525,7 +538,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
             throws Exception {
         when(mMockHttpClient.fetchPayloadWithLogging(
                         eq(Uri.parse(COORDINATOR_URL_AUCTION)),
-                        eq(DEV_CONTEXT_DISABLED),
+                        eq(mDevContext),
                         any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -561,7 +574,8 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 TIMEOUT_MS,
-                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN))
+                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN),
+                                mDevContext)
                         .get();
 
         byte[] expectedPublicKey =
@@ -577,7 +591,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
             throws Exception {
         when(mMockHttpClient.fetchPayloadWithLogging(
                         eq(Uri.parse(COORDINATOR_URL_AUCTION)),
-                        eq(DEV_CONTEXT_DISABLED),
+                        eq(mDevContext),
                         any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -602,7 +616,8 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 TIMEOUT_MS,
-                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN))
+                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN),
+                                mDevContext)
                         .get();
 
         byte[] expectedPublicKey =
@@ -615,7 +630,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
             throws Exception {
         when(mMockHttpClient.fetchPayloadWithLogging(
                         eq(Uri.parse(COORDINATOR_URL_AUCTION)),
-                        eq(DEV_CONTEXT_DISABLED),
+                        eq(mDevContext),
                         any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -627,7 +642,8 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 TIMEOUT_MS,
-                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN))
+                                Uri.parse(COORDINATOR_URL_AUCTION_ORIGIN),
+                                mDevContext)
                         .get();
 
         byte[] expectedPublicKey =
@@ -651,7 +667,7 @@ public class ProtectedServersEncryptionConfigManagerTest {
             throws Exception {
         when(mMockHttpClient.fetchPayloadWithLogging(
                         eq(Uri.parse(AUCTION_KEY_FETCH_DEFAULT_URI)),
-                        eq(DEV_CONTEXT_DISABLED),
+                        eq(mDevContext),
                         any(FetchProcessLogger.class)))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -668,7 +684,8 @@ public class ProtectedServersEncryptionConfigManagerTest {
                         .getLatestOhttpKeyConfigOfType(
                                 AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION,
                                 TIMEOUT_MS,
-                                null)
+                                null,
+                                mDevContext)
                         .get();
 
         // Should fetch the default key

@@ -18,6 +18,7 @@ package com.android.adservices.common;
 
 import com.android.adservices.shared.testing.ConsoleLogger;
 import com.android.adservices.shared.testing.TestDeviceHelper;
+import com.android.adservices.shared.testing.shell.CommandResult;
 
 public final class HostSideAdServicesShellCommandHelper
         extends AbstractAdServicesShellCommandHelper {
@@ -32,7 +33,7 @@ public final class HostSideAdServicesShellCommandHelper
 
     @Override
     protected CommandResult runShellCommandRwe(String cmd) {
-        return AdServicesTestDeviceHelper.runShellCommandRwe("%s", cmd);
+        return TestDeviceHelper.runShellCommandRwe("%s", cmd);
     }
 
     @Override

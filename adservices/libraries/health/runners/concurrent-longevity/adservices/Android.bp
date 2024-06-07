@@ -46,7 +46,6 @@ java_library_static {
     ],
     min_sdk_version: "30",
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
-        disabled_checks: ["NewAdServicesFile"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
     },
 }

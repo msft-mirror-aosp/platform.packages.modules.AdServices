@@ -28,6 +28,7 @@ import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequest;
 import com.android.adservices.ohttp.ObliviousHttpRequestContext;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -62,9 +63,10 @@ public class KAnonObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             byte[] plainText,
             long contextId,
             long keyFetchTimeoutMs,
-            @Nullable Uri unusedCoordinatorUri) {
+            @Nullable Uri unusedCoordinatorUri,
+            DevContext devContext) {
         return mEncryptionKeyManager
-                .getLatestOhttpKeyConfigOfType(JOIN, keyFetchTimeoutMs, null)
+                .getLatestOhttpKeyConfigOfType(JOIN, keyFetchTimeoutMs, null, devContext)
                 .transform(key -> createAndSerializeRequest(key, plainText), mLightweightExecutor);
     }
 

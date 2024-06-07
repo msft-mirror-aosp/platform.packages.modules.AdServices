@@ -262,13 +262,6 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testWasNotificationDisplayed() {
-        when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
-        assertThat(mAppSearchConsentManager.wasNotificationDisplayed()).isFalse();
-        verify(mAppSearchConsentWorker).wasNotificationDisplayed();
-    }
-
-    @Test
     public void testWasGaUxNotificationDisplayed() {
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(false);
         assertThat(mAppSearchConsentManager.wasGaUxNotificationDisplayed()).isFalse();
@@ -473,27 +466,6 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
         expect.that(result).isTrue();
         verify(mDatastore).put(eq(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED), eq(true));
         verify(mAdServicesManager).setU18NotificationDisplayed(true);
-        verify(mDatastore, atLeast(5)).put(any(), anyBoolean());
-        verify(mEditor)
-                .putBoolean(eq(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED), eq(true));
-        verify(mEditor).commit();
-    }
-
-    @Test
-    public void testMigrateConsentData_betaUxNotificationDisplayed() throws IOException {
-        initConsentDataForMigration();
-        when(mFlags.getEnableU18AppsearchMigration()).thenReturn(false);
-        when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(true);
-        when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(false);
-        when(mAppSearchConsentWorker.getAppsWithConsent(any())).thenReturn(List.of());
-        when(mAppSearchConsentWorker.getPrivacySandboxFeature())
-                .thenReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
-        boolean result =
-                mAppSearchConsentManager.migrateConsentDataIfNeeded(
-                        mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
-        assertThat(result).isTrue();
-        verify(mDatastore).put(eq(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE), eq(true));
-        verify(mAdServicesManager).recordNotificationDisplayed(true);
         verify(mDatastore, atLeast(5)).put(any(), anyBoolean());
         verify(mEditor)
                 .putBoolean(eq(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED), eq(true));

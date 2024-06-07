@@ -43,6 +43,10 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
     /** {@code logcat} tag. */
     protected final String mTag = getClass().getSimpleName();
 
+    // TODO(b/342639109): make sure it's the right order
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
+
     // TODO(b/342639109): set order
     @Rule
     public final ProcessLifeguardRule processLifeguard =

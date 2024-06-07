@@ -1140,7 +1140,8 @@ public class KAnonCallerImpl implements KAnonCaller {
                                 dataInBinaryHttpMessage,
                                 message.getAdSelectionId(),
                                 mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs(),
-                                null))
+                                null,
+                                DEV_CONTEXT_DISABLED))
                 .transformAsync(
                         byteRequest ->
                                 immediateFuture(

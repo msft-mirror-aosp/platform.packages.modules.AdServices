@@ -18,7 +18,9 @@ package com.android.adservices.service.stats;
 
 
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
+import com.android.adservices.cobalt.MeasurementCobaltLogger;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
@@ -104,6 +106,9 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     public void logMeasurementRegistrationsResponseSize(
             MeasurementRegistrationResponseStats stats) {
         mStatsdAdServicesLogger.logMeasurementRegistrationsResponseSize(stats);
+
+        // Log to Cobalt system in parallel with existing logging.
+        cobaltLogMsmtRegistration(stats);
     }
 
     @Override
@@ -415,6 +420,23 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                             AppNameApiErrorLogger.getInstance();
 
                     appNameApiErrorLogger.logErrorOccurrence(appPackageName, apiName, errorCode);
+                });
+    }
+
+    /** Logs measurement registration status using {@code CobaltLogger}. */
+    private void cobaltLogMsmtRegistration(MeasurementRegistrationResponseStats stats) {
+        sBackgroundExecutor.execute(
+                () -> {
+                    MeasurementCobaltLogger measurementCobaltLogger =
+                            MeasurementCobaltLogger.getInstance();
+                    measurementCobaltLogger.logRegistrationStatus(
+                            /* appPackageName= */ stats.getSourceRegistrant(),
+                            /* surfaceType= */ stats.getSurfaceType(),
+                            /* type= */ stats.getRegistrationType(),
+                            /* sourceType= */ stats.getInteractionType(),
+                            /* statusCode= */ stats.getRegistrationStatus(),
+                            /* errorCode= */ stats.getFailureType(),
+                            /* isEeaDevice= */ FlagsFactory.getFlags().isEeaDevice());
                 });
     }
 }

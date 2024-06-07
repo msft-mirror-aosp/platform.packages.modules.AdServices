@@ -124,6 +124,9 @@ public final class AdServicesCommon {
     public static ServiceInfo resolveAdServicesService(
             @Nullable List<ResolveInfo> intentResolveInfos, String intentAction) {
         int size = intentResolveInfos == null ? 0 : intentResolveInfos.size();
+
+        enforceSingleServiceForAdIdAndAppSetId(intentAction, size);
+
         switch (size) {
             case 0:
                 LogUtil.e(
@@ -168,5 +171,19 @@ public final class AdServicesCommon {
         return serviceInfo.packageName.endsWith(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)
                 ? serviceInfo
                 : null;
+    }
+
+    // It was designed to allow OEM to override the AdId/AppSetId Provider Service in GMS Core.
+    // However, this is never available because if the device has both GMS Core and an
+    // overriding Provider, it falls into this case and returns null. Therefore, let it
+    // explicitly throw in case any OEM wants to actually override it, and we can apply
+    // a change to allow it if needed.
+    private static void enforceSingleServiceForAdIdAndAppSetId(
+            String intentAction, int numberOfResolvedServices) {
+        if ((ACTION_ADID_PROVIDER_SERVICE.equals(intentAction)
+                        || ACTION_APPSETID_PROVIDER_SERVICE.equals(intentAction))
+                && numberOfResolvedServices > 1) {
+            throw new IllegalStateException("Found multiple services for " + intentAction);
+        }
     }
 }
