@@ -113,11 +113,6 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
     }
 
     @Override
-    public void initRvc() {
-        initU18();
-    }
-
-    @Override
     public void initGaUxWithPas() {
         setContentView(R.layout.consent_notification_pas_activity);
     }
