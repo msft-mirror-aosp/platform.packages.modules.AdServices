@@ -22,9 +22,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-/** Container annotation for multiple usages of {@link ExpectErrorLogUtilCall}. */
+/** Container annotation for multiple usages of {@link ExpectErrorLogUtilWithExceptionCall}. */
 @Retention(RUNTIME)
 @Target(METHOD)
-public @interface ExpectErrorLogUtilCalls {
-    ExpectErrorLogUtilCall[] value();
+public @interface ExpectErrorLogUtilWithExceptionCalls {
+    ExpectErrorLogUtilWithExceptionCall[] value();
 }

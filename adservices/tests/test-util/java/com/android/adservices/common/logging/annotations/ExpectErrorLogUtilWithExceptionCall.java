@@ -24,26 +24,34 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Used to specify expected {@code ErrorLogUtil.e(int, int} calls over test methods.
+ * Used to specify expected {@code ErrorLogUtil.e(Throwable, int, int} calls over test methods.
  *
  * <ol>
- *   <li>To verify ErrorLogUtil.e(int, int) calls: @ExpectErrorLogUtilCall(X, Y)
- *   <li>To verify multiple same calls, use the times arg: @ExpectErrorLogUtilCall(X, Y, 5)
+ *   <li>To verify ErrorLogUtil.e(Throwable, int, int): @ExpectErrorLogUtilCall(E.class, X, Y)
+ *   <li>To verify with any exception: @ExpectErrorLogUtilCall(Any.class, X, Y)
+ *   <li>To verify multiple same calls, use the times arg: @ExpectErrorLogUtilCall(E.class, X, Y, 5)
  *   <li>To verify different invocations, use multiple annotations.
  * </ol>
  *
- * <p>See {@link ExpectErrorLogUtilWithExceptionCall} for {@code ErrorLogUtil.e(Throwable, int, int}
- * calls.
+ * <p>See {@link ExpectErrorLogUtilCall} for {@code ErrorLogUtil.e(int, int} calls.
  */
 @Retention(RUNTIME)
 @Target(METHOD)
-@Repeatable(ExpectErrorLogUtilCalls.class)
-public @interface ExpectErrorLogUtilCall {
+@Repeatable(ExpectErrorLogUtilWithExceptionCalls.class)
+public @interface ExpectErrorLogUtilWithExceptionCall {
     /** Name of annotation */
-    String NAME = ExpectErrorLogUtilCall.class.getSimpleName();
+    String NAME = ExpectErrorLogUtilWithExceptionCall.class.getSimpleName();
 
     /** Default number of times to expect log call. */
     int DEFAULT_TIMES = 1;
+
+    /** Used to verify against any exception type for ErrorLogUtil.e(Throwable, int, int) calls. */
+    class Any extends Throwable {
+        private Any() {}
+    }
+
+    /** Throwable to be logged. */
+    Class<? extends Throwable> throwable();
 
     /** Error code to be logged */
     int errorCode();
