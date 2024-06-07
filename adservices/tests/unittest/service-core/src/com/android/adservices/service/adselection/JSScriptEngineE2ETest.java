@@ -69,7 +69,7 @@ public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
     @After
     public void cleanup() throws ExecutionException, InterruptedException, TimeoutException {
         // Destroy mJSScriptEngine as part of cleanup
-        sLogger.v("Destroy mJSScriptEngine as part of cleanup");
+        sLogger.v("Destroy amJSScriptEngine as part of cleanup");
         if (mJSScriptEngine != null) {
             mJSScriptEngine.shutdown().get(1, TimeUnit.SECONDS);
         }
