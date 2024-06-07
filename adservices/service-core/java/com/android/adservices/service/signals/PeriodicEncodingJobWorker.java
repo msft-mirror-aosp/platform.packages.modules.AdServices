@@ -39,6 +39,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.SingletonRunner;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -288,7 +289,7 @@ public final class PeriodicEncodingJobWorker {
                         .map(
                                 buyer ->
                                         mEncoderLogicHandler.downloadAndUpdate(
-                                                buyer, mDevContextFilter.createDevContext()))
+                                                buyer, DevContext.createForDevOptionsDisabled()))
                         .collect(Collectors.toList());
         return FluentFuture.from(Futures.successfulAsList(encoderUpdates))
                 .transform(ignored -> null, mLightWeightExecutor);
