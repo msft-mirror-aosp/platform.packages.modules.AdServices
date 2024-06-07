@@ -701,7 +701,8 @@ public interface Flags extends ModuleSharedFlags {
      * Returns the maximum number of reporting origins per source site, reporting site,
      * reporting-origin-update-window counted per source registration.
      */
-    default int getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
+    default int
+        getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
         return MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW;
     }
 
@@ -747,13 +748,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the duration that controls the rate-limiting window for destinations. */
     default long getMeasurementDestinationRateLimitWindow() {
         return MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
-    }
-
-    boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
-
-    /** Returns true if flex lite api is enabled else false. */
-    default boolean getMeasurementFlexLiteApiEnabled() {
-        return MEASUREMENT_FLEX_LITE_API_ENABLED;
     }
 
     float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT = 6.5F;
@@ -4520,7 +4514,7 @@ public interface Flags extends ModuleSharedFlags {
 
     /** Returns true when attribution scope is enabled. */
     default boolean getMeasurementEnableAttributionScope() {
-        return getMeasurementFlexLiteApiEnabled() && MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+        return MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
     }
 
     boolean MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK = false;
