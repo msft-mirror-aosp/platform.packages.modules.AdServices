@@ -25,9 +25,12 @@ import static com.android.adservices.data.measurement.MeasurementTables.SourceCo
 import static com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import static com.android.adservices.data.measurement.MeasurementTables.XnaIgnoredSourcesContract;
 import static com.android.adservices.service.Flags.MEASUREMENT_DB_SIZE_LIMIT;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME;
 
@@ -10265,6 +10268,389 @@ public class MeasurementDaoTest {
                 .forEach(verifyAttributionScopeUnchangedFn);
     }
 
+    @Test
+    public void getLatestReportTimeInBatchWindow_singleAggregateReport_returnsSingleReportTime() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId("source1")
+                        .build();
+
+        long scheduledReportTime = 1L;
+        AggregateReport report =
+                generateMockAggregateReport(
+                        WebUtil.validUrl("https://destination-1.test"),
+                        1,
+                        "source1",
+                        scheduledReportTime);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        getAggregateReportConsumer(db).accept(report);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(scheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void testGetLatestReportTimeInBatchWindow_singleEventReport_returnsSingleReportTime() {
+        long reportTime = 1L;
+        EventReport report =
+                generateMockEventReport(
+                        WebUtil.validUrl("https://destination-1.test"), 1, reportTime);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        getEventReportConsumer(db).accept(report);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(reportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_twoAggregateReport_bothInBatchWindow_returnsTwoReportTimes() {
+        String sourceId = "source1";
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId(sourceId)
+                        .build();
+
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        - 1L;
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        List<AggregateReport> reports =
+                Arrays.asList(
+                        generateMockAggregateReport(
+                                destination, 1, sourceId, firstScheduledReportTime),
+                        generateMockAggregateReport(
+                                destination, 2, sourceId, secondScheduledReportTime));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        reports.forEach(getAggregateReportConsumer(db));
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(secondScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_twoAggReport_oneAfterBatchWindow_returnOneReportTime() {
+        String sourceId = "source1";
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId(sourceId)
+                        .build();
+
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        + 1L;
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        List<AggregateReport> reports =
+                Arrays.asList(
+                        generateMockAggregateReport(
+                                destination, 1, sourceId, firstScheduledReportTime),
+                        generateMockAggregateReport(
+                                destination, 2, sourceId, secondScheduledReportTime));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        reports.forEach(getAggregateReportConsumer(db));
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        // secondScheduledReportTime should not be returned as it was outside the batch window.
+        assertEquals(firstScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_twoEventReport_bothInBatchWindow_returnSecondReportTime() {
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        - 1L;
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        List<EventReport> reports =
+                Arrays.asList(
+                        generateMockEventReport(destination, 1, firstScheduledReportTime),
+                        generateMockEventReport(destination, 2, secondScheduledReportTime));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+
+        Consumer<EventReport> eventReportConsumer = getEventReportConsumer(db);
+        reports.forEach(eventReportConsumer);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(secondScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_twoEventReport_oneAfterBatchWindow_returnFirstReportTime() {
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        + 1L;
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        List<EventReport> reports =
+                Arrays.asList(
+                        generateMockEventReport(destination, 1, firstScheduledReportTime),
+                        generateMockEventReport(destination, 2, secondScheduledReportTime));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+
+        Consumer<EventReport> eventReportConsumer = getEventReportConsumer(db);
+        reports.forEach(eventReportConsumer);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        // secondScheduledReportTime should not be returned as it was outside the batch window.
+        assertEquals(firstScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_oneAggReport_oneEventReport_bothInBatchWindow_returnSecondReportTime() {
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        - 1L;
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId("source1")
+                        .build();
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        AggregateReport aggregateReport =
+                generateMockAggregateReport(destination, 1, "source1", firstScheduledReportTime);
+        EventReport eventReport =
+                generateMockEventReport(destination, 1, secondScheduledReportTime);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        getEventReportConsumer(db).accept(eventReport);
+        getAggregateReportConsumer(db).accept(aggregateReport);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(secondScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_oneAggReport_oneEventReport_oneAfterBatchWindow_returnFirstReportTime() {
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        + 1L;
+
+        String sourceId = "source1";
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId(sourceId)
+                        .build();
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        AggregateReport aggregateReport =
+                generateMockAggregateReport(destination, 1, sourceId, firstScheduledReportTime);
+        EventReport eventReport =
+                generateMockEventReport(destination, 1, secondScheduledReportTime);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        getEventReportConsumer(db).accept(eventReport);
+        getAggregateReportConsumer(db).accept(aggregateReport);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(firstScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_manyAggReport_manyEventReport_returnLatestReportTime() {
+        String sourceId = "source1";
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId(sourceId)
+                        .build();
+        List<EventReport> eventReports = new ArrayList<>();
+        List<AggregateReport> aggregateReports = new ArrayList<>();
+        int firstReportTime = 1;
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        for (int i = firstReportTime; i < MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION; i++) {
+            eventReports.add(
+                    generateMockEventReport(destination, /* id= */ i, /* reportTime= */ i));
+        }
+
+        for (int i = firstReportTime; i < MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE; i++) {
+            aggregateReports.add(
+                    generateMockAggregateReport(
+                            destination, /* id= */ i, sourceId, /* reportTime= */ i));
+        }
+
+        // Add one more aggregate report that is scheduled at the very edge of the batch window.
+        // The report time for this report should be returned as the report time.
+        long lastReportTime = MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
+        int lastId = MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+        aggregateReports.add(
+                generateMockAggregateReport(destination, lastId, sourceId, lastReportTime));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        eventReports.forEach(getEventReportConsumer(db));
+        aggregateReports.forEach(getAggregateReportConsumer(db));
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(lastReportTime, result.longValue());
+    }
+
+    @Test
+    public void testGetLatestReportTimeInBatchWindow_noReports_returnNull() {
+        Optional<Long> results =
+                mDatastoreManager.runInTransactionWithResult(
+                        measurementDao ->
+                                measurementDao.getLatestReportTimeInBatchWindow(
+                                        mFlags
+                                                .getMeasurementReportingJobServiceBatchWindowMillis()));
+
+        assertTrue(results.isEmpty());
+    }
+
+    private static Consumer<AggregateReport> getAggregateReportConsumer(SQLiteDatabase db) {
+        Consumer<AggregateReport> aggregateReportConsumer =
+                aggregateReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
+                    values.put(
+                            MeasurementTables.AggregateReport.SOURCE_ID,
+                            aggregateReport.getSourceId());
+                    values.put(
+                            MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                            aggregateReport.getAttributionDestination().toString());
+                    values.put(
+                            MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                            aggregateReport.getScheduledReportTime());
+                    values.put(
+                            MeasurementTables.AggregateReport.STATUS, aggregateReport.getStatus());
+                    db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
+                };
+        return aggregateReportConsumer;
+    }
+
+    private static Consumer<EventReport> getEventReportConsumer(SQLiteDatabase db) {
+        Consumer<EventReport> eventReportConsumer =
+                eventReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(EventReportContract.ID, eventReport.getId());
+                    values.put(
+                            EventReportContract.ATTRIBUTION_DESTINATION,
+                            eventReport.getAttributionDestinations().get(0).toString());
+                    values.put(EventReportContract.REPORT_TIME, eventReport.getReportTime());
+                    values.put(EventReportContract.STATUS, EventReport.Status.PENDING);
+
+                    db.insert(EventReportContract.TABLE, null, values);
+                };
+        return eventReportConsumer;
+    }
+
     private void insertInDb(SQLiteDatabase db, Source source) {
         ContentValues values = new ContentValues();
         values.put(SourceContract.ID, source.getId());
@@ -10736,10 +11122,29 @@ public class MeasurementDaoTest {
                 .build();
     }
 
+    private AggregateReport generateMockAggregateReport(
+            String attributionDestination, int id, String sourceId, long reportTime) {
+        return new AggregateReport.Builder()
+                .setId(String.valueOf(id))
+                .setSourceId(sourceId)
+                .setAttributionDestination(Uri.parse(attributionDestination))
+                .setScheduledReportTime(reportTime)
+                .build();
+    }
+
     private EventReport generateMockEventReport(String attributionDestination, int id) {
         return new EventReport.Builder()
                 .setId(String.valueOf(id))
                 .setAttributionDestinations(List.of(Uri.parse(attributionDestination)))
+                .build();
+    }
+
+    private EventReport generateMockEventReport(
+            String attributionDestination, int id, long reportTime) {
+        return new EventReport.Builder()
+                .setId(String.valueOf(id))
+                .setAttributionDestinations(List.of(Uri.parse(attributionDestination)))
+                .setReportTime(reportTime)
                 .build();
     }
 
