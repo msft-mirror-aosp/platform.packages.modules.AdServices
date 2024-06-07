@@ -55,7 +55,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.RetryStrategyImpl;
@@ -379,8 +378,7 @@ public class JSScriptEngineTest {
 
     @Test
     public void testCanHandleFailuresFromWebView() throws Exception {
-        Assume.assumeFalse(
-                WebViewSupportUtil.isEvaluationWithoutTransactionLimitSupportAvailable(sContext));
+        Assume.assumeFalse(sJSScriptEngine.isLargeTransactionsSupported().get(1, TimeUnit.SECONDS));
         // The binder can transfer at most 1MB, this is larger than needed since, once
         // converted into a JS array initialization script will be way over the limits.
         List<JSScriptNumericArgument<Integer>> tooBigForBinder =
@@ -402,6 +400,26 @@ public class JSScriptEngineTest {
                                         mDefaultIsolateSettings,
                                         mNoOpRetryStrategy));
         assertThat(outerException).hasCauseThat().isInstanceOf(JSExecutionException.class);
+        sJSScriptEngine.shutdown().get(1, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testCanHandleLargeTransactionsToWebView() throws Exception {
+        Assume.assumeTrue(sJSScriptEngine.isLargeTransactionsSupported().get(1, TimeUnit.SECONDS));
+        List<JSScriptNumericArgument<Integer>> tooBigForBinder =
+                Arrays.stream(new int[1024 * 1024])
+                        .boxed()
+                        .map(value -> numericArg("_", value))
+                        .collect(Collectors.toList());
+
+        String result =
+                callJSEngine(
+                        "function helloBigArray(array) {\n" + " return array.length;\n" + "}",
+                        ImmutableList.of(arrayArg("array", tooBigForBinder)),
+                        "helloBigArray",
+                        mDefaultIsolateSettings,
+                        mNoOpRetryStrategy);
+        assertThat(Integer.parseInt(result)).isEqualTo(1024 * 1024);
     }
 
     @Test
