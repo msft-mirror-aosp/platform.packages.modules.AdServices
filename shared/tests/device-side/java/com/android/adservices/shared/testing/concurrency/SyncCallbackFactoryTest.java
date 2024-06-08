@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.runOnMainThread;
 import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
 
 import static com.google.common.truth.Truth.assertWithMessage;

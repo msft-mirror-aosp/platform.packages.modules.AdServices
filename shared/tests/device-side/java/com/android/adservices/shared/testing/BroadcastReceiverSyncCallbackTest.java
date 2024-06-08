@@ -16,7 +16,7 @@
 
 package com.android.adservices.shared.testing;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.runOnMainThread;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
