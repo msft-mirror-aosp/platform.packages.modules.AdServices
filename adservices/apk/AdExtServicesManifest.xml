@@ -392,9 +392,16 @@
                  android:process=".adservices">
         </service>
 
-        <!-- Measurement immediate aggregate  report upload job. -->
+        <!-- Measurement immediate aggregate report upload job. -->
         <service android:name=
                      "com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
+        <!-- Measurement regular report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.ReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE"
                  android:process=".adservices">
         </service>

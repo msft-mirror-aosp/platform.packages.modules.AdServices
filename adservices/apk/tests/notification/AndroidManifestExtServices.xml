@@ -143,6 +143,13 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- Measurement regular report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.ReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+
         <!-- Attribution Job.-->
         <service android:name=
                      "com.android.adservices.service.measurement.attribution.AttributionJobService"

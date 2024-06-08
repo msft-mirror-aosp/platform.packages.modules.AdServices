@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableSet;
 import org.junit.runner.Description;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -77,7 +76,7 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
             return ImmutableSet.of();
         }
 
-        List<ErrorLogUtilCall> expectedCalls =
+        Set<ErrorLogUtilCall> expectedCalls =
                 annotations.stream()
                         .peek(this::validateAnnotation)
                         .map(
@@ -87,16 +86,15 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
                                                 annotation.errorCode(),
                                                 annotation.ppapiName(),
                                                 annotation.times()))
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toSet());
 
-        // Need to compare without taking into account times arg i.e. use invocation equality.
-        if (!containsUniqueLogInvocations(expectedCalls)) {
+        if (expectedCalls.size() != annotations.size()) {
             throw new IllegalStateException(
                     "Detected @ExpectErrorLogUtilCall annotations representing the same "
                             + "invocation! De-dupe by using times arg");
         }
 
-        return new HashSet<>(expectedCalls);
+        return expectedCalls;
     }
 
     @Override

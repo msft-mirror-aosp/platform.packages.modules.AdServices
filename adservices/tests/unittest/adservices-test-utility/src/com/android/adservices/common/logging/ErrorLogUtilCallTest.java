@@ -16,68 +16,129 @@
 
 package com.android.adservices.common.logging;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.Any;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.None;
+
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.shared.testing.EqualsTester;
 import com.android.adservices.shared.testing.LogCall;
 
 import org.junit.Test;
 
 public final class ErrorLogUtilCallTest extends AdServicesUnitTestCase {
+    private final EqualsTester mEqualsTester = new EqualsTester(expect);
+
     @Test
-    public void testIsIdenticalInvocation_withNonLogCallObject_returnsFalse() {
+    public void testEquals_withNonLogCallObject_returnsFalse() {
         ErrorLogUtilCall errorLogUtilCall =
-                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5, 1);
-        TestLogCall testLogCall = new TestLogCall(10);
+                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5);
+        TestLogCall testLogCall = new TestLogCall();
 
-        expect.that(errorLogUtilCall.isIdenticalInvocation(testLogCall)).isFalse();
+        mEqualsTester.expectObjectsAreNotEqual(errorLogUtilCall, testLogCall);
     }
 
     @Test
-    public void testIsIdenticalInvocation_withDifferentInvocation_returnsFalseDifferentHashCode() {
+    public void testEquals_withEquivalentObj_returnsTrue() {
         ErrorLogUtilCall errorLogUtilCall1 =
-                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5, 1);
+                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5);
         ErrorLogUtilCall errorLogUtilCall2 =
-                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 4, 1);
+                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5);
 
-        expect.that(errorLogUtilCall1.isIdenticalInvocation(errorLogUtilCall2)).isFalse();
-        expect.that(errorLogUtilCall1.hashCode()).isNotEqualTo(errorLogUtilCall2.hashCode());
+        mEqualsTester.expectObjectsAreEqual(errorLogUtilCall1, errorLogUtilCall2);
     }
 
     @Test
-    public void testIsIdenticalInvocation_withSameInvocation_returnsTrueSameHashCode() {
+    public void testEquals_withNonEquivalentObj_returnsFalse() {
         ErrorLogUtilCall errorLogUtilCall1 =
-                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5, 1);
+                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5);
         ErrorLogUtilCall errorLogUtilCall2 =
-                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5, 1);
+                new ErrorLogUtilCall(IllegalArgumentException.class, 5, 4);
 
-        expect.that(errorLogUtilCall1.isIdenticalInvocation(errorLogUtilCall2)).isTrue();
-        expect.that(errorLogUtilCall1.hashCode()).isEqualTo(errorLogUtilCall2.hashCode());
+        mEqualsTester.expectObjectsAreNotEqual(errorLogUtilCall1, errorLogUtilCall2);
     }
 
     @Test
-    public void testLogInvocationToString_withThrowable_returnsFormattedString() {
+    public void testIsEquivalentInvocation_withNonLogCallObject_returnsFalse() {
         ErrorLogUtilCall errorLogUtilCall =
-                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5, 1);
+                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5);
+        TestLogCall testLogCall = new TestLogCall();
 
-        expect.that(errorLogUtilCall.logInvocationToString())
-                .isEqualTo("ErrorLogUtil.e(IllegalArgumentException, 10, 5)");
+        expect.that(errorLogUtilCall.isEquivalentInvocation(testLogCall)).isFalse();
+        expect.that(testLogCall.isEquivalentInvocation(errorLogUtilCall)).isFalse();
+    }
+
+    @Test
+    public void testIsEquivalentInvocation_withDifferentApi_returnsFalse() {
+        ErrorLogUtilCall errorLogUtilCall1 = new ErrorLogUtilCall(Any.class, 10, 5);
+        ErrorLogUtilCall errorLogUtilCall2 = new ErrorLogUtilCall(None.class, 10, 5);
+
+        expect.that(errorLogUtilCall1.isEquivalentInvocation(errorLogUtilCall2)).isFalse();
+        expect.that(errorLogUtilCall2.isEquivalentInvocation(errorLogUtilCall1)).isFalse();
+    }
+
+    @Test
+    public void testIsEquivalentInvocation_withDifferentExceptions_returnsFalse() {
+        ErrorLogUtilCall errorLogUtilCall1 =
+                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5);
+        ErrorLogUtilCall errorLogUtilCall2 =
+                new ErrorLogUtilCall(NullPointerException.class, 10, 5);
+
+        expect.that(errorLogUtilCall1.isEquivalentInvocation(errorLogUtilCall2)).isFalse();
+        expect.that(errorLogUtilCall2.isEquivalentInvocation(errorLogUtilCall1)).isFalse();
+    }
+
+    @Test
+    public void testIsEquivalentInvocation_withSameExceptionsDifferentArgs_returnsFalse() {
+        ErrorLogUtilCall errorLogUtilCall1 =
+                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 5);
+        ErrorLogUtilCall errorLogUtilCall2 =
+                new ErrorLogUtilCall(IllegalArgumentException.class, 10, 4);
+
+        expect.that(errorLogUtilCall1.isEquivalentInvocation(errorLogUtilCall2)).isFalse();
+        expect.that(errorLogUtilCall2.isEquivalentInvocation(errorLogUtilCall1)).isFalse();
+    }
+
+    @Test
+    public void testIsEquivalentInvocation_withMatchExceptionUsingAny_returnsTrue() {
+        ErrorLogUtilCall errorLogUtilCall1 = new ErrorLogUtilCall(Any.class, 10, 5);
+        ErrorLogUtilCall errorLogUtilCall2 =
+                new ErrorLogUtilCall(NullPointerException.class, 10, 5);
+
+        expect.that(errorLogUtilCall1.isEquivalentInvocation(errorLogUtilCall2)).isTrue();
+        expect.that(errorLogUtilCall2.isEquivalentInvocation(errorLogUtilCall1)).isTrue();
+
+        // Equals will still be false
+        mEqualsTester.expectObjectsAreNotEqual(errorLogUtilCall1, errorLogUtilCall2);
+    }
+
+    @Test
+    public void testIsEquivalentInvocation_withNoExceptionLoggingSameArgs_returnsTrue() {
+        ErrorLogUtilCall errorLogUtilCall1 = new ErrorLogUtilCall(None.class, 10, 5);
+        ErrorLogUtilCall errorLogUtilCall2 = new ErrorLogUtilCall(None.class, 10, 5);
+
+        expect.that(errorLogUtilCall1.isEquivalentInvocation(errorLogUtilCall2)).isTrue();
+        expect.that(errorLogUtilCall2.isEquivalentInvocation(errorLogUtilCall1)).isTrue();
+    }
+
+    @Test
+    public void testIsEquivalentInvocation_withNoExceptionLoggingDifferentArgs_returnsFalse() {
+        ErrorLogUtilCall errorLogUtilCall1 = new ErrorLogUtilCall(None.class, 10, 5);
+        ErrorLogUtilCall errorLogUtilCall2 = new ErrorLogUtilCall(None.class, 2, 5);
+
+        expect.that(errorLogUtilCall1.isEquivalentInvocation(errorLogUtilCall2)).isFalse();
+        expect.that(errorLogUtilCall2.isEquivalentInvocation(errorLogUtilCall1)).isFalse();
     }
 
     @Test
     public void testLogInvocationToString_withNoThrowable_returnsFormattedString() {
-        ErrorLogUtilCall errorLogUtilCall =
-                new ErrorLogUtilCall(ExpectErrorLogUtilCall.None.class, 10, 5, 1);
+        ErrorLogUtilCall errorLogUtilCall = new ErrorLogUtilCall(None.class, 10, 5, 1);
 
         expect.that(errorLogUtilCall.logInvocationToString()).isEqualTo("ErrorLogUtil.e(10, 5)");
     }
 
     private static final class TestLogCall extends LogCall {
-        TestLogCall(int times) {
-            super(times);
-        }
-
         @Override
-        public boolean isIdenticalInvocation(LogCall other) {
+        public boolean equals(Object other) {
             return false;
         }
 

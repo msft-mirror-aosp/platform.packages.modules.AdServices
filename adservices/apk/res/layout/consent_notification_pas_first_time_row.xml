@@ -91,7 +91,7 @@
                     style="@style/MainStyle.Body1" />
                 <TextView
                     android:id="@+id/how_it_works_expander"
-                    android:drawableEnd="@drawable/ic_chevron_down"
+                    android:drawableEnd="@drawable/ic_expand"
                     android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
                     android:text="@string/notificationUI_ga_container1_control_text_v2"
                     style="@style/MainStyle.Body1" />

@@ -76,7 +76,6 @@ import java.util.stream.Stream;
 class MeasurementDao implements IMeasurementDao {
 
     private static final int MAX_COMPOUND_SELECT = 250;
-
     private Supplier<Boolean> mDbFileMaxSizeLimitReachedSupplier;
     private Supplier<Integer> mReportingRetryLimitSupplier;
     private Supplier<Boolean> mReportingRetryLimitEnabledSupplier;
@@ -1581,6 +1580,49 @@ class MeasurementDao implements IMeasurementDao {
             }
         }
         return uninstallAppNames;
+    }
+
+    @Override
+    public Long getLatestReportTimeInBatchWindow(long batchWindow) throws DatastoreException {
+        final String cte =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT %2$s AS report_time "
+                                + "FROM %1$s "
+                                + "WHERE %3$s = %4$s "
+                                + "UNION "
+                                + "SELECT %6$s AS report_time "
+                                + "FROM %5$s "
+                                + "WHERE %7$s = %8$s",
+                        MeasurementTables.AggregateReport.TABLE,
+                        MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                        MeasurementTables.AggregateReport.STATUS,
+                        AggregateReport.Status.PENDING,
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.EventReportContract.REPORT_TIME,
+                        MeasurementTables.EventReportContract.STATUS,
+                        EventReport.Status.PENDING);
+
+        final String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "WITH t AS (%1$s) SELECT MAX(t.report_time) FROM t WHERE t.report_time <="
+                                + " (SELECT MIN(t.report_time) FROM t) + %2$s",
+                        cte,
+                        batchWindow);
+
+        try (Cursor cursor =
+                mSQLTransaction.getDatabase().rawQuery(query, /* selectionArgs= */ null)) {
+            if (cursor != null && cursor.moveToNext()) {
+                long timestamp = cursor.getLong(0);
+                if (timestamp == 0) {
+                    return null;
+                }
+                return timestamp;
+            }
+
+            return null;
+        }
     }
 
     @Override

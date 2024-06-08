@@ -92,7 +92,7 @@
 
                 <TextView
                     android:id="@+id/how_it_works_expander"
-                    android:drawableEnd="@drawable/ic_chevron_down"
+                    android:drawableEnd="@drawable/ic_expand"
                     android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
                     android:text="@string/notificationUI_pas_expand_button_text1"
                     style="@style/MainStyle.Body1" />
@@ -153,7 +153,7 @@
 
                 <TextView
                     android:id="@+id/how_it_works_expander2"
-                    android:drawableEnd="@drawable/ic_chevron_down"
+                    android:drawableEnd="@drawable/ic_expand"
                     android:layout_marginTop="@dimen/adservices_content_two_thirds_padding"
                     android:text="@string/notificationUI_pas_expand_button_text2"
                     style="@style/MainStyle.Body1" />

@@ -16,8 +16,7 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.Any;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_DISABLE_RECEIVER_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_ENABLE_RECEIVER_FAILURE;
@@ -53,7 +52,6 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -202,24 +200,20 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    @SkipLoggingUsageRule(reason = "Verifying CEL calls by ignoring exception is not supported.")
-    // TODO(b/342260330) - Support verifying ErrorLogUtil without considering exception
-    //  through annotations.
+    @ExpectErrorLogUtilCall(
+            throwable = Any.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
     public void testInitializeComponents_disableScheduledBackgroundJobsException_celLogged() {
         // Mock NullPointerException when getSystemService is called before the system is ready
         when(mMockContext.getSystemService(JobScheduler.class))
                 .thenThrow(NullPointerException.class);
-        doNothingOnErrorLogUtilError();
         mockAdServicesFlags(true);
         mocker.mockIsAtLeastT(true);
         mockPackageName(TEST_PACKAGE_NAME);
 
         // No exception expected, so no need to explicitly handle any exceptions here
         mSpyCompatInit.initializeComponents();
-
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test
@@ -238,18 +232,16 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
 
     @Test
     @ExpectErrorLogUtilCall(
-            throwable = IllegalArgumentException.class,
+            throwable = Any.class,
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_SERVICE_FAILURE,
             ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
     @ExpectErrorLogUtilCall(
-            throwable = IllegalArgumentException.class,
+            throwable = Any.class,
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_ACTIVITY_FAILURE,
             ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
-    // TODO(b/342260330) - Revert back to verification with any exception style once supported via
-    //  annotations.
-    public void testInitializeComponents_updateCompomemtsThrowsException_celLogged() {
+    public void testInitializeComponents_updateComponentsThrowsException_celLogged() {
         doThrow(IllegalArgumentException.class)
                 .when(mSpyCompatInit)
                 .updateComponents(anyListOf(String.class), anyBoolean());

@@ -53,6 +53,7 @@ import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DELETE_UN
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_EVENT_MAIN_REPORTING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_REPORTING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
@@ -139,6 +140,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportingFallba
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventReportingJobService;
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.ReportingJobService;
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ConsentMigrationStats;
@@ -180,6 +182,7 @@ import java.util.stream.Collectors;
 @SpyStatic(AggregateFallbackReportingJobService.class)
 @SpyStatic(AggregateReportingJobService.class)
 @SpyStatic(ImmediateAggregateReportingJobService.class)
+@SpyStatic(ReportingJobService.class)
 @SpyStatic(AsyncRegistrationQueueJobService.class)
 @SpyStatic(AsyncRegistrationFallbackJob.class)
 @SpyStatic(AttributionJobService.class)
@@ -310,6 +313,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         () ->
                                 ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                         any(), anyBoolean()));
+        doNothing().when(() -> ReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing().when(() -> AttributionFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing().when(AsyncRegistrationFallbackJob::schedule);
         doNothing()
@@ -623,6 +627,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                 () ->
                         ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)));
+        verify(() -> ReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         verify(() -> AttributionFallbackJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         verify(AsyncRegistrationFallbackJob::schedule);
         verify(
@@ -680,6 +685,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                 any(Context.class), eq(false)),
                 never());
+        verify(() -> ReportingJobService.scheduleIfNeeded(any(Context.class), eq(false)), never());
         verify(
                 () -> AttributionFallbackJobService.scheduleIfNeeded(any(Context.class), eq(false)),
                 never());
@@ -736,6 +742,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mJobSchedulerMock).cancel(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(MEASUREMENT_REPORTING_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId());

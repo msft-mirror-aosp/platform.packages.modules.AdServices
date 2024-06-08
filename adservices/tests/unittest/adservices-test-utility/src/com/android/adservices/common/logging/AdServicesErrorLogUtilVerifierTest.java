@@ -16,6 +16,9 @@
 
 package com.android.adservices.common.logging;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.Any;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.None;
+
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -117,11 +120,13 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
         ErrorLogUtilCall errorLogUtilCall2 =
                 mockAnnotationAndInitErrorLogUtilCall(
                         mExpectErrorLogUtilCall2,
-                        /* throwable= */ ExpectErrorLogUtilCall.None.class,
-                        /* errorCode= */ 30,
-                        /* ppapiName= */ 20,
-                        /* times= */ 2);
+                        /* throwable= */ Any.class,
+                        /* errorCode= */ 15,
+                        /* ppapiName= */ 10,
+                        /* times= */ 1);
 
+        // Even though both invocations are the same, they are not equal. Therefore,
+        // no exception should be thrown calling to de-dupe annotations using times.
         expect.that(mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription))
                 .containsExactly(errorLogUtilCall1, errorLogUtilCall2);
     }
@@ -182,13 +187,13 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
                         });
         mockAnnotationAndInitErrorLogUtilCall(
                 mExpectErrorLogUtilCall1,
-                /* throwable= */ ExpectErrorLogUtilCall.None.class,
+                /* throwable= */ None.class,
                 /* errorCode= */ 30,
                 /* ppapiName= */ 20,
-                /* times= */ 2);
+                /* times= */ 1);
         mockAnnotationAndInitErrorLogUtilCall(
                 mExpectErrorLogUtilCall2,
-                /* throwable= */ ExpectErrorLogUtilCall.None.class,
+                /* throwable= */ None.class,
                 /* errorCode= */ 30,
                 /* ppapiName= */ 20,
                 /* times= */ 2);
@@ -198,6 +203,8 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
                         IllegalStateException.class,
                         () -> mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription));
 
+        // Even though times is different for both invocations, an exception is expected because
+        // the annotations can be de-duped using times arg.
         expect.that(exception)
                 .hasMessageThat()
                 .isEqualTo(
