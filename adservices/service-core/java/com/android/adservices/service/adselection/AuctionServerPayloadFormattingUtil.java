@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterV0.DATA_SIZE_PADDING_LENGTH_BYTE;
+
 import com.android.adservices.LoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -88,6 +90,17 @@ public class AuctionServerPayloadFormattingUtil {
     static int extractFormatterVersion(byte metaInfoByte) {
         // 0xFF is used to make sure the shift fills with 0s instead of sign-extending
         return (metaInfoByte & 0xFF) >>> COMPRESSION_ALGORITHM_VERSION_LENGTH_BITS;
+    }
+
+    /**
+     * Returns the amount of padded zeros from the given payload size and unformatted data length.
+     */
+    static int getNumOfPaddedZerosBytes(
+            int payloadSizeInBytes, int lengthOfUnformattedPayloadData) {
+        return (payloadSizeInBytes
+                - lengthOfUnformattedPayloadData
+                - META_INFO_LENGTH_BYTE
+                - DATA_SIZE_PADDING_LENGTH_BYTE);
     }
 
     private AuctionServerPayloadFormattingUtil() {}
