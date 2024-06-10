@@ -309,6 +309,13 @@ public class PackageChangedReceiver extends BroadcastReceiver {
             LogUtil.d("consentOnPackageFullyRemoved is not needed on Android R, returning...");
             return;
         }
+        if (SdkLevel.isAtLeastT() && packageUid == DEFAULT_PACKAGE_UID) {
+            // Event is caused by internal sdk libraries which have a UID of -1
+            LogUtil.d(
+                    "returning, as events on App Uninstallation on T+ should always"
+                            + " have valid UID");
+            return;
+        }
         Objects.requireNonNull(context);
         Objects.requireNonNull(packageUri);
 

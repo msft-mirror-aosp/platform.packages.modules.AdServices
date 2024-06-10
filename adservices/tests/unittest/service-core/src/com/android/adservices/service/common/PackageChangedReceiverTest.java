@@ -347,6 +347,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid()
             throws InterruptedException, IOException {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
@@ -364,6 +365,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
             throws InterruptedException, IOException {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
@@ -377,6 +379,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid_backCompat()
             throws InterruptedException, IOException {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.removeExtra(Intent.EXTRA_UID);
@@ -388,6 +391,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault_backCompat()
             throws InterruptedException, IOException {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
@@ -1007,5 +1011,23 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
             // On R App consent clear should not be called as it is not supported
             verify(mConsentManager, never()).clearConsentForUninstalledApp(any(), anyInt());
+    }
+
+    @Test
+    public void testClearConsentNotCalled_WhenPackageUidInvalid_OnTPlus() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
+
+        // Initialize package receiver meant for Consent
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
+        doReturn(false).when(spyReceiver).isPackageStillInstalled(any(), anyString());
+
+        // Invoke the onReceive method to test the behavior
+        spyReceiver.onReceive(sContext, intent);
+
+        verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
+        verify(mConsentManager, never()).clearConsentForUninstalledApp(anyString());
     }
 }

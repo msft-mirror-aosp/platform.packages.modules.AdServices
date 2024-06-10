@@ -17,8 +17,8 @@
 package com.android.adservices.service.js;
 
 /**
- * Represent a failure in {@link JSScriptEngine} when communicating with the separated WebView
- * process.
+ * Represent a failure in {@link JSScriptEngine} when communicating with the separated
+ * JavaScriptSandbox process.
  */
 public class JSScriptEngineConnectionException extends RuntimeException {
 
