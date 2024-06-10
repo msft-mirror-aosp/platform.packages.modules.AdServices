@@ -992,7 +992,7 @@ class AttributionJobHandler {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(numReports),
+                    String.valueOf(mFlags.getMeasurementMaxEventReportsPerDestination()),
                     measurementDao,
                     Type.TRIGGER_EVENT_STORAGE_LIMIT);
             return TriggeringStatus.DROPPED;
