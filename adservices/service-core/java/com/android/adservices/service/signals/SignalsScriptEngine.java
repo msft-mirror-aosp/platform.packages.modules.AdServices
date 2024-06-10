@@ -29,7 +29,6 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RU
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR;
 
 import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.RetryStrategy;
@@ -66,7 +65,6 @@ public final class SignalsScriptEngine {
     private final Supplier<Boolean> mIsolateConsoleMessageInLogsEnabled;
 
     public SignalsScriptEngine(
-            Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             RetryStrategy retryStrategy,
@@ -75,7 +73,7 @@ public final class SignalsScriptEngine {
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRetryStrategy = retryStrategy;
         mIsolateConsoleMessageInLogsEnabled = isolateConsoleMessageInLogsEnabled;
-        mJsEngine = JSScriptEngine.getInstance(context, sLogger);
+        mJsEngine = JSScriptEngine.getInstance(sLogger);
     }
 
     /**

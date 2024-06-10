@@ -24,13 +24,19 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import android.util.Log;
 
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCalls;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.shared.testing.AbstractLogVerifier;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 import org.junit.runner.Description;
 
-import java.util.HashSet;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Log verifier for {@link ErrorLogUtil} calls. */
 public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<ErrorLogUtilCall> {
@@ -63,33 +69,51 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
 
     @Override
     public Set<ErrorLogUtilCall> getExpectedLogCalls(Description description) {
-        // TODO(b/337042949): Support repeatable annotations
-        ExpectErrorLogUtilCall annotation = description.getAnnotation(ExpectErrorLogUtilCall.class);
+        List<ExpectErrorLogUtilCall> annotations = getAnnotations(description);
 
-        Set<ErrorLogUtilCall> expectedCalls = new HashSet<>();
-        if (annotation == null) {
+        if (annotations.isEmpty()) {
             Log.v(mTag, "No @ExpectErrorLogUtilCall found over test method.");
-            return expectedCalls;
+            return ImmutableSet.of();
         }
 
-        validateAnnotation(annotation);
+        Set<ErrorLogUtilCall> expectedCalls =
+                annotations.stream()
+                        .peek(this::validateAnnotation)
+                        .map(
+                                annotation ->
+                                        new ErrorLogUtilCall(
+                                                annotation.throwable(),
+                                                annotation.errorCode(),
+                                                annotation.ppapiName(),
+                                                annotation.times()))
+                        .collect(Collectors.toSet());
 
-        expectedCalls.add(
-                new ErrorLogUtilCall(
-                        annotation.throwable(),
-                        annotation.errorCode(),
-                        annotation.ppapiName(),
-                        annotation.times()));
+        if (expectedCalls.size() != annotations.size()) {
+            throw new IllegalStateException(
+                    "Detected @ExpectErrorLogUtilCall annotations representing the same "
+                            + "invocation! De-dupe by using times arg");
+        }
 
         return expectedCalls;
     }
 
     @Override
     public String getResolutionMessage() {
-        // TODO (b/337042949): Update message to include multiple annotation support
         // TODO (b/337043102): Update message to include info about default args
         return "Please make sure to use @ExpectErrorLogUtilCall(..) over test method to denote "
                 + "all expected ErrorLogUtil.e(..) calls.";
+    }
+
+    private List<ExpectErrorLogUtilCall> getAnnotations(Description description) {
+        // Scan for multiple annotation container
+        ExpectErrorLogUtilCalls multiple = description.getAnnotation(ExpectErrorLogUtilCalls.class);
+        if (multiple != null) {
+            return Arrays.stream(multiple.value()).collect(Collectors.toList());
+        }
+
+        // Scan for single annotation
+        ExpectErrorLogUtilCall single = description.getAnnotation(ExpectErrorLogUtilCall.class);
+        return single == null ? ImmutableList.of() : ImmutableList.of(single);
     }
 
     private void validateAnnotation(ExpectErrorLogUtilCall annotation) {

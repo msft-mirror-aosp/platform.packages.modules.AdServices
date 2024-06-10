@@ -17,6 +17,7 @@ package com.android.adservices.shared.testing;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.android.adservices.shared.testing.shell.CommandResult;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.INativeDevice;
 import com.android.tradefed.device.ITestDevice;
@@ -59,6 +60,7 @@ public final class TestDeviceHelper {
     }
 
     // cmdFmt must be final because it's being passed to a method taking @FormatString
+
     /**
      * Executes AdServices shell command and returns the standard output, using the singleton
      * device.
@@ -86,6 +88,41 @@ public final class TestDeviceHelper {
         return result;
     }
 
+    // cmdFmt must be final because it's being passed to a method taking @FormatString
+
+    /**
+     * Executes AdServices shell command and returns the standard output and standard error wrapped
+     * in a {@link CommandResult}.
+     */
+    @FormatMethod
+    public static CommandResult runShellCommandRwe(
+            @FormatString final String cmdFmt, @Nullable Object... cmdArgs) {
+        return runShellCommandRwe(TestDeviceHelper.getTestDevice(), cmdFmt, cmdArgs);
+    }
+
+    /**
+     * Executes AdServices shell command and returns the standard output and standard error wrapped
+     * in a {@link CommandResult}.
+     */
+    @FormatMethod
+    public static CommandResult runShellCommandRwe(
+            ITestDevice device, @FormatString String cmdFmt, @Nullable Object... cmdArgs) {
+        String cmd = String.format(cmdFmt, cmdArgs);
+        com.android.tradefed.util.CommandResult result;
+        try {
+            result = device.executeShellV2Command(cmd);
+        } catch (DeviceNotAvailableException e) {
+            throw new DeviceUnavailableException(e);
+        }
+        sLogger.d("runShellCommandRwe(%s): %s", cmd, result);
+        return asCommandResult(result);
+    }
+
+    private static CommandResult asCommandResult(com.android.tradefed.util.CommandResult input) {
+        String out = input.getStdout() != null ? input.getStdout().strip() : "";
+        String err = input.getStderr() != null ? input.getStderr().strip() : "";
+        return new CommandResult(out, err);
+    }
 
     /** Gets the device API level. */
     public static int getApiLevel() {
@@ -114,6 +151,17 @@ public final class TestDeviceHelper {
         assertWithMessage("result of starting %s", intent)
                 .that(startActivityMsg)
                 .doesNotContain("Error: Activity not started, unable to resolve Intent");
+    }
+
+    /**
+     * Starts an activity and ensures that the activity has fully loaded and completed. (By using
+     * the flag {@code -w})
+     *
+     * @param packageName the package name of the app to launch the activity on
+     * @param className the class name of the activity to launch
+     */
+    public static void startActivityWaitUntilCompletion(String packageName, String className) {
+        runShellCommand("am start -W -n %s/.%s", packageName, className);
     }
 
     /** Enable the given component and return the result of the shell command */

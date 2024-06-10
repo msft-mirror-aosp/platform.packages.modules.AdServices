@@ -162,6 +162,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     public static final String TEST_TOPIC_FILE_GROUP_NAME = "topics-classifier-model";
     public static final String ENCRYPTION_KEYS_FILE_GROUP_NAME = "encryption-keys";
     public static final String ENROLLMENT_FILE_GROUP_NAME = "adtech_enrollment_data";
+    public static final String ENROLLMENT_PROTO_FILE_GROUP_NAME = "adtech_enrollment_proto_data";
     public static final String UI_OTA_STRINGS_FILE_GROUP_NAME = "ui-ota-strings";
     private SynchronousFileStorage mFileStorage;
     private FileDownloader mFileDownloader;
@@ -339,7 +340,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testEnrollmentDataDownload_Production()
             throws ExecutionException, InterruptedException, TimeoutException {
-        createMddForEnrollment(PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL);
+        createMddForEnrollment(PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL, /* getProto= */ false);
 
         ClientFileGroup clientFileGroup =
                 mMdd.getFileGroup(
@@ -359,7 +360,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testEnrollmentDataDownload_OEM()
             throws ExecutionException, InterruptedException, TimeoutException {
-        createMddForEnrollment(OEM_ENROLLMENT_MANIFEST_FILE_URL);
+        createMddForEnrollment(OEM_ENROLLMENT_MANIFEST_FILE_URL, /* getProto= */ false);
 
         ClientFileGroup clientFileGroup =
                 mMdd.getFileGroup(
@@ -379,7 +380,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     public void testEnrollmentDataDownload_PTB()
             throws ExecutionException, InterruptedException, TimeoutException {
         when(mMockFlags.getEnrollmentMddRecordDeletionEnabled()).thenReturn(true);
-        createMddForEnrollment(PTB_ENROLLMENT_MANIFEST_FILE_URL);
+        createMddForEnrollment(PTB_ENROLLMENT_MANIFEST_FILE_URL, /* getProto= */ false);
 
         ClientFileGroup clientFileGroup =
                 mMdd.getFileGroup(
@@ -394,13 +395,30 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                 PTB_ENROLLMENT_ENTRIES,
                 /* clearExistingData= */ true,
                 /* clearDownloadedData= */ false);
-        createMddForEnrollment(PTB_OLD_ENROLLMENT_FILE_URL);
+        createMddForEnrollment(PTB_OLD_ENROLLMENT_FILE_URL, /* getProto= */ false);
         verifyMeasurementFileGroup(
                 clientFileGroup,
                 PTB_FILEGROUP_VERSION,
                 PTB_OLD_ENROLLMENT_ENTRIES,
                 /* clearExistingData= */ false,
                 /* clearDownloadedData= */ true);
+    }
+
+    // TODO (b/340891475): Add tests for Enrollment production proto files
+
+    /** This method verifies that the file group does not exist when an empty url is provided. */
+    @Test
+    public void testEnrollmentProtoDataDownload_emptyUrl() throws Exception {
+        createMddForEnrollment("", /* getProto= */ true);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(ENROLLMENT_PROTO_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
     }
 
     /**
@@ -414,7 +432,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))
                 .thenReturn(AdServicesApiConsent.REVOKED);
 
-        createMddForEnrollment(PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL);
+        createMddForEnrollment(PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL, /* getProto= */ false);
 
         ClientFileGroup clientFileGroup =
                 mMdd.getFileGroup(
@@ -437,7 +455,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))
                 .thenReturn(AdServicesApiConsent.GIVEN);
 
-        createMddForEnrollment(PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL);
+        createMddForEnrollment(PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL, /* getProto= */ false);
 
         ClientFileGroup clientFileGroup =
                 mMdd.getFileGroup(
@@ -754,13 +772,17 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
     // Returns MobileDataDownload using passed in enrollment manifest url.
     @NonNull
-    private void createMddForEnrollment(String enrollmentManifestFileUrl)
+    private void createMddForEnrollment(String enrollmentManifestFileUrl, boolean getProto)
             throws ExecutionException, InterruptedException, TimeoutException {
-        doReturn(enrollmentManifestFileUrl).when(mMockFlags).getMeasurementManifestFileUrl();
+        if (getProto) {
+            doReturn(enrollmentManifestFileUrl).when(mMockFlags).getMddEnrollmentManifestFileUrl();
+        } else {
+            doReturn(enrollmentManifestFileUrl).when(mMockFlags).getMeasurementManifestFileUrl();
+        }
 
         FileGroupPopulator fileGroupPopulator =
                 MobileDataDownloadFactory.getMeasurementManifestPopulator(
-                        mMockFlags, mFileStorage, mFileDownloader);
+                        mMockFlags, mFileStorage, mFileDownloader, getProto);
 
         mMdd =
                 getMddForTesting(

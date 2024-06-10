@@ -18,7 +18,12 @@ package com.android.adservices.shared.testing;
 
 /** Defines a log call type to track expected and actual log calls. */
 public abstract class LogCall {
+    private static final int DEFAULT_TIMES = 1;
     protected int mTimes;
+
+    public LogCall() {
+        this(DEFAULT_TIMES);
+    }
 
     public LogCall(int times) {
         mTimes = times;
@@ -32,54 +37,49 @@ public abstract class LogCall {
     /**
      * {@inheritDoc}
      *
-     * <p>Evaluates the equality of two LogCall objects. Two log calls are considered equal if the
-     * invocation is the same along with number of log calls made. Subclasses are not expected to
-     * change this implementation.
+     * <p>Two LogCalls should be equal if the API and arguments that are being logged are identical,
+     * regardless of mTimes. This definition is critical in that it serves two purposes:
      *
-     * @return true if two log calls are equal; false otherwise.
+     * <p>1. Expected log calls may be modeled with a wild card argument. As a result, when matching
+     * expected and actual log calls the verification happens in two scans where the first scan
+     * identifies matching LogCalls using this definition. Ideally, matching priority should be
+     * given to exactly matching LogCalls before wild card matching.
+     *
+     * <p>2. This definition may be used to identify duplicate expected LogCalls.
+     *
+     * @param o log call to compare against.
+     * @return {@code true} if two log calls are identical; {@code false} otherwise.
      */
     @Override
-    public final boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
+    public abstract boolean equals(Object o);
 
-        if (!(o instanceof LogCall other)) {
-            return false;
-        }
-
-        return mTimes == other.mTimes && isIdenticalInvocation(other);
-    }
-
-    /**
-     * Determines whether two log call invocations are identical, irrespective of number of times
-     * they have been invoked. Subclasses are expected to implement this method without taking into
-     * account mTimes. NOTE: If two log calls represent the same invocation, their hash codes must
-     * be the same.
-     *
-     * @param other other log call to compare against.
-     * @return true if two log calls represent the same invocation; false otherwise.
-     */
-    public abstract boolean isIdenticalInvocation(LogCall other);
-
-    /**
-     * {@inheritDoc}
-     *
-     * <p>Subclass must define a unique hashcode using the logging metadata it stores without taking
-     * into account mTimes. NOTE: If two log calls represent the same invocation, their hash codes
-     * must be the same.
-     *
-     * @return hashcode of log call object.
-     */
     @Override
     public abstract int hashCode();
 
     /**
+     * Expected log calls may be modeled with a wild card argument. In which case, override this to
+     * provide an equality definition for two LogCall objects taking into account wild-card
+     * modeling.
+     *
+     * <p>If LogCall does not support wild card matching of parameters, then the default
+     * implementation is the same as equals. No need to override.
+     *
+     * @param other other log call to compare against.
+     * @return {@code true} if two log calls represent the same invocation wrt to wildcard matching;
+     *     {code false} otherwise.
+     */
+    public boolean isEquivalentInvocation(LogCall other) {
+        return equals(other);
+    }
+
+    /**
      * Subclass must represent the log call invocation in readable format with any parameters, if
-     * appropriate. For example, "ErrorLogUtil.e(25, 26)", "ErrorLogUtil.e(IllegalStateException,
-     * 10, 20)". The parent class will handle formatting the invocation call string along with
-     * expected number of times. This will primarily help with providing helpful error messages in
-     * case of mismatches.
+     * appropriate.
+     *
+     * <p>For example, "ErrorLogUtil.e(25, 26)", "ErrorLogUtil.e(IllegalStateException, 10, 20)".
+     * The parent class will handle formatting the invocation call string along with expected number
+     * of times. This will primarily help with providing helpful error messages in case of
+     * mismatches.
      */
     public abstract String logInvocationToString();
 }
