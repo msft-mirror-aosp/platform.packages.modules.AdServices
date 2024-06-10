@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
-
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.testing.IntFailureSyncCallback;
@@ -87,6 +85,8 @@ public final class IntFailureSyncCallbackTest
 
     private static final class ConcreteIntFailureSyncCallback
             extends IntFailureSyncCallback<String> {
+
+        @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteIntFailureSyncCallback() {
             super();
         }

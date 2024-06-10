@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.runOnMainThread;
 
 import static org.junit.Assert.assertThrows;
 
@@ -74,6 +74,7 @@ public final class DeviceSideSyncCallbackTest
     private static final class ConcreteDeviceSideySncCallback extends DeviceSideSyncCallback
             implements ResultlessSyncCallback {
 
+        @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteDeviceSideySncCallback() {
             this(SyncCallbackFactory.newSettingsBuilder().build());
         }

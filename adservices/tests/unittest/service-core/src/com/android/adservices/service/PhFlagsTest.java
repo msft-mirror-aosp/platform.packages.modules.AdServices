@@ -465,6 +465,12 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_TRIGGER_
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
+import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_ENABLED;
+import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
+import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
+import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
@@ -939,6 +945,12 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGI
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_PERSISTED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
@@ -2325,6 +2337,16 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 FeatureFlagType.LEGACY_KILL_SWITCH,
                 mMsmtKillSwitchGuard,
                 Flags::getMeasurementJobImmediateAggregateReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementReportingJobEnabled() {
+        mFlagsTestHelper.testGuardedFeatureFlag(
+                KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED,
+                MEASUREMENT_REPORTING_JOB_ENABLED,
+                FeatureFlagType.FEATURE_FLAG,
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementReportingJobServiceEnabled);
     }
 
     @Test
@@ -4244,6 +4266,46 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED,
                 MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED,
                 Flags::getMeasurementImmediateAggregateReportingJobPersisted);
+    }
+
+    @Test
+    public void testGetMeasurementReportingJobRequiredBatteryNotLow() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
+                MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
+                Flags::getMeasurementReportingJobRequiredBatteryNotLow);
+    }
+
+    @Test
+    public void testGetMeasurementReportingJobRequiredNetworkType() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE,
+                Flags::getMeasurementReportingJobRequiredNetworkType);
+    }
+
+    @Test
+    public void testGetMeasurementReportingJobPersisted() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_REPORTING_JOB_PERSISTED,
+                MEASUREMENT_REPORTING_JOB_PERSISTED,
+                Flags::getMeasurementReportingJobPersisted);
+    }
+
+    @Test
+    public void testGetMeasurementReportingJobMinExecutionWindowMillis() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS,
+                MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS,
+                Flags::getMeasurementReportingJobServiceMinExecutionWindowMillis);
+    }
+
+    @Test
+    public void testGetMeasurementReportingJobBatchWindowMillis() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS,
+                MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS,
+                Flags::getMeasurementReportingJobServiceBatchWindowMillis);
     }
 
     @Test

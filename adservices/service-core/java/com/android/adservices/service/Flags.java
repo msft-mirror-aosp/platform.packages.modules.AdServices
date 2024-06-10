@@ -3730,9 +3730,12 @@ public interface Flags extends ModuleSharedFlags {
             "341300000,341400000,202401|341400000,341500000,202402"
                     + "|341500000,341600000,202403|341600000,341700000,202404"
                     + "|341700000,341800000,202405|341800000,341900000,202406"
-                    + "|341900000,342000000,202407|342000000,342100000,202408"
-                    + "|342100000,342200000,202409|342200000,342300000,202410"
-                    + "|342300000,342400000,202411|342400000,342500000,202412";
+                    + "|341900000,342000000,202407|350800000,350900000,202408"
+                    + "|350900000,351000000,202409|351000000,351100000,202410"
+                    + "|351100000,351200000,202411|351200000,351300000,202412"
+                    + "|351300000,351400000,202501|351400000,351500000,202502"
+                    + "|351500000,351600000,202503|351600000,351700000,202504"
+                    + "|351700000,351800000,202505|351800000,351900000,202506";
 
     /** Get adservices version mappings */
     default String getAdservicesVersionMappings() {
@@ -4261,6 +4264,67 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED;
     }
 
+    /** Default value for Reporting Job feature flag */
+    @FeatureFlag boolean MEASUREMENT_REPORTING_JOB_ENABLED = false;
+
+    /** Feature flag for Reporting Job */
+    default boolean getMeasurementReportingJobServiceEnabled() {
+        // The Measurement API should be enabled as a prerequisite.
+        return getMeasurementEnabled() && MEASUREMENT_REPORTING_JOB_ENABLED;
+    }
+
+    @ConfigFlag boolean MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW = true;
+
+    /** Returns whether to require battery not low for reporting job. */
+    default boolean getMeasurementReportingJobRequiredBatteryNotLow() {
+        return MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
+    }
+
+    @ConfigFlag int MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE = JobInfo.NETWORK_TYPE_ANY;
+
+    /** Returns the required network type for reporting job. */
+    default int getMeasurementReportingJobRequiredNetworkType() {
+        return MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+    }
+
+    @ConfigFlag boolean MEASUREMENT_REPORTING_JOB_PERSISTED = true;
+
+    /** Returns whether to persist this job across device reboots for reporting job. */
+    default boolean getMeasurementReportingJobPersisted() {
+        return MEASUREMENT_REPORTING_JOB_PERSISTED;
+    }
+
+    /**
+     * Default value for delaying reporting job service so that reports can be batched. Values are
+     * in milliseconds.
+     */
+    @ConfigFlag
+    long MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS = TimeUnit.MINUTES.toMillis(30);
+
+    /**
+     * Returns ms to defer transmission of reports in {@link
+     * com.android.adservices.service.measurement.reporting.ReportingJobService}
+     */
+    default long getMeasurementReportingJobServiceBatchWindowMillis() {
+        return MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
+    }
+
+    /**
+     * Default value for minimum amount of time to wait between executions of reporting job service.
+     * This is to throttle the service. Values are in milliseconds.
+     */
+    @ConfigFlag
+    long MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS =
+            TimeUnit.MINUTES.toMillis(30);
+
+    /**
+     * Returns minimum ms to wait between invocations of {@link
+     * com.android.adservices.service.measurement.reporting.ReportingJobService}
+     */
+    default long getMeasurementReportingJobServiceMinExecutionWindowMillis() {
+        return MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
+    }
+
     /** Default value for Null Aggregate Report feature flag. */
     boolean MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED = false;
 
@@ -4269,7 +4333,7 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
     }
 
-    /** Default value for null report rate including source registration time. */
+    /** Default value for null aggregate report rate including source registration time. */
     float MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME = .008f;
 
     /**

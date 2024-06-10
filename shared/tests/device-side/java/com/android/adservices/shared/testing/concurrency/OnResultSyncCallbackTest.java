@@ -29,6 +29,8 @@ public final class OnResultSyncCallbackTest
     }
 
     private static final class ConcreteOnResultSyncCallback extends OnResultSyncCallback<String> {
+
+        @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteOnResultSyncCallback() {
             super();
         }

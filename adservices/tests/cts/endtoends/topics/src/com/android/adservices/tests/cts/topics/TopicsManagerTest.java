@@ -135,7 +135,11 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
         Exception e =
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient.getTopics().get());
-        assertThat(e).hasCauseThat().isInstanceOf(ServiceUnavailableException.class);
+
+        // TODO(b/345835218): Create an Exception Checker for internal exceptions in tests.
+        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
+        assertThat(e.getCause().getClass().getSimpleName())
+                .isEqualTo(ServiceUnavailableException.class.getSimpleName());
     }
 
     @Test

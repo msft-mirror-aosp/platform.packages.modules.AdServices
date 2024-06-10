@@ -15,11 +15,9 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
-
 import static org.junit.Assert.assertThrows;
 
-
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
@@ -31,17 +29,21 @@ abstract class IResultSyncCallbackTestCase<R, CB extends IResultSyncCallback<R> 
 
     private static final AtomicInteger sNextId = new AtomicInteger();
 
-    protected final CB mCallback =
-            newCallback(
-                    SyncCallbackFactory.newSettingsBuilder()
-                            .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
-                            .build());
-
-    /** Gets a new instance of the callback class being test. */
-    protected abstract CB newCallback(SyncCallbackSettings settings);
+    // Must be set on @Before otherwise OutcomeReceiverForTestsTest would fail on R
+    protected CB mCallback;
 
     /** Gets a new, unique result object, preferably with a user-friendly string representation. */
     protected abstract R newResult();
+
+    @Before
+    public final void setFixtures() {
+        mCallback =
+                newCallback(
+                        SyncCallbackFactory.newSettingsBuilder()
+                                .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
+                                .build());
+        mLog.v("setFixtures(): mCallback=%s", mCallback);
+    }
 
     /**
      * Gets a unique id.
