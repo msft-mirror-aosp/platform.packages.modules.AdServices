@@ -818,4 +818,15 @@ public interface IMeasurementDao {
      */
     void deletePendingAggregateReportsAndAttributionsForSources(List<String> sourceIds)
             throws DatastoreException;
+
+    /**
+     * Return the timestamp of the latest pending report (Event or Aggregate) in the batching
+     * window. The batching window is calculated as the earliest report's timestamp + batchWindow.
+     * If there are no reports, return null.
+     *
+     * @param batchWindow Size of the batching window, in ms, starting at the next pending report.
+     * @return Latest report's timestamp, in ms, within the batching window.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    Long getLatestReportTimeInBatchWindow(long batchWindow) throws DatastoreException;
 }

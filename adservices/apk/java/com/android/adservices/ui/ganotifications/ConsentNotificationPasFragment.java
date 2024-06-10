@@ -194,11 +194,10 @@ public class ConsentNotificationPasFragment extends Fragment {
         if (expanded) {
             text.setVisibility(View.VISIBLE);
             expander.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                    0, 0, R.drawable.ic_chevron_up, 0);
+                    0, 0, R.drawable.ic_minimize, 0);
         } else {
             text.setVisibility(View.GONE);
-            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                    0, 0, R.drawable.ic_chevron_down, 0);
+            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_expand, 0);
         }
         return expanded;
     }

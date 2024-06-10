@@ -574,7 +574,7 @@ public class AuctionServerE2ETest {
                 createAndPersistDBCustomAudiences(nameAndBuyersMap);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -635,7 +635,7 @@ public class AuctionServerE2ETest {
         // new feature factory
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -769,7 +769,7 @@ public class AuctionServerE2ETest {
         // new feature factory
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -919,7 +919,7 @@ public class AuctionServerE2ETest {
         // new feature factory
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -1085,7 +1085,7 @@ public class AuctionServerE2ETest {
                 createAndPersistDBCustomAudiences(nameAndBuyersMap);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -1198,7 +1198,7 @@ public class AuctionServerE2ETest {
                 createAndPersistDBCustomAudiences(nameAndBuyersMap);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -1286,7 +1286,7 @@ public class AuctionServerE2ETest {
                 createAndPersistDBCustomAudiences(nameAndBuyersMap);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -1352,7 +1352,7 @@ public class AuctionServerE2ETest {
         namesAndCustomAudiences.put(buyer2ShirtsName, dbCustomAudienceOmitAdsEnabled);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -1402,7 +1402,7 @@ public class AuctionServerE2ETest {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -1538,7 +1538,7 @@ public class AuctionServerE2ETest {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -1605,7 +1605,7 @@ public class AuctionServerE2ETest {
         doReturn(flagWithOmitAdsEnabled).when(FlagsFactory::getFlags);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -1728,7 +1728,7 @@ public class AuctionServerE2ETest {
         final String selectionLogicPath = SELECTION_WATERFALL_LOGIC_JS_PATH;
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -1993,7 +1993,7 @@ public class AuctionServerE2ETest {
                 .postPlainText(any(Uri.class), any(String.class), any(DevContext.class));
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -2181,7 +2181,7 @@ public class AuctionServerE2ETest {
                 .postPlainText(any(Uri.class), any(String.class), any(DevContext.class));
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -2333,7 +2333,7 @@ public class AuctionServerE2ETest {
                 .getAndReadNothing(eq(Uri.parse(SELLER_REPORTING_URI)), any(DevContext.class));
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -2441,7 +2441,7 @@ public class AuctionServerE2ETest {
                 .getAndReadNothing(eq(Uri.parse(BUYER_REPORTING_URI)), any(DevContext.class));
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -2534,7 +2534,7 @@ public class AuctionServerE2ETest {
         mAdSelectionService = createAdSelectionService();
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -2609,7 +2609,7 @@ public class AuctionServerE2ETest {
         mAdSelectionService = createAdSelectionService();
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -3760,7 +3760,7 @@ public class AuctionServerE2ETest {
         createAndPersistEncodedSignals(WINNER_BUYER, encodedSignals);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
@@ -3797,7 +3797,7 @@ public class AuctionServerE2ETest {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));
