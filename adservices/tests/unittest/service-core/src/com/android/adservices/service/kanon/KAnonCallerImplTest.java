@@ -226,7 +226,7 @@ public class KAnonCallerImplTest {
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         createAndPersistKAnonMessages();
         List<KAnonMessageEntity> kanonMessageList =
@@ -267,7 +267,7 @@ public class KAnonCallerImplTest {
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         // we are persisting 2 messages and setting match size as 1
         createAndPersistKAnonMessages();
@@ -293,7 +293,7 @@ public class KAnonCallerImplTest {
         setupMockWithCountDownLatch(countDownLatch);
         createAndPersistKAnonMessages();
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         BinaryHttpMessage binaryHttpMessage =
                 BinaryHttpMessage.knownLengthResponseBuilder(
@@ -458,7 +458,7 @@ public class KAnonCallerImplTest {
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         createAndPersistKAnonMessages();
         List<KAnonMessageEntity> kanonMessageList =
@@ -500,7 +500,7 @@ public class KAnonCallerImplTest {
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         createAndPersistKAnonMessages();
         List<KAnonMessageEntity> kanonMessageList =
@@ -548,7 +548,7 @@ public class KAnonCallerImplTest {
         CountDownLatch countdownLatch = new CountDownLatch(1);
         setupMockWithCountDownLatch(countdownLatch);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(EMPTY_BODY)));
         createAndPersistKAnonMessages();
         List<KAnonMessageEntity> kanonMessageList =
@@ -816,7 +816,7 @@ public class KAnonCallerImplTest {
         when(mockAnonymousCountingTokens.generateTokensRequest(any(), any(), any(), any(), any()))
                 .thenReturn(generatedTokensRequestProto);
         when(mockKAnonOblivivousHttpEncryptorImpl.encryptBytes(
-                        any(byte[].class), anyInt(), anyInt(), any()))
+                        any(byte[].class), anyInt(), anyInt(), any(), any()))
                 .thenReturn(FluentFuture.from(immediateFuture(new byte[0])));
         when(mockKAnonOblivivousHttpEncryptorImpl.decryptBytes(any(), anyInt()))
                 .thenReturn(new byte[0]);

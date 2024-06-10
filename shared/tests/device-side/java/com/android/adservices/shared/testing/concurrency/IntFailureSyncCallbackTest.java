@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
-
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.testing.IntFailureSyncCallback;

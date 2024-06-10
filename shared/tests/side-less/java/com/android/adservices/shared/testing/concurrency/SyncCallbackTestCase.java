@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
-import static com.android.adservices.shared.testing.ConcurrencyHelper.startNewThread;
 import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
 
 import static org.junit.Assert.assertThrows;
@@ -29,8 +27,10 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import com.android.adservices.shared.meta_testing.FakeLogger;
 import com.android.adservices.shared.meta_testing.LogEntry;
 import com.android.adservices.shared.testing.Logger.LogLevel;
+import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
+import com.android.adservices.shared.testing.StandardStreamsLogger;
 
 import com.google.common.collect.ImmutableList;
 
@@ -61,6 +61,18 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     private final ArrayBlockingQueue<String> mSetCalledMethodQueue = new ArrayBlockingQueue<>(1);
 
     protected final SyncCallbackSettings mDefaultSettings = mDefaultSettingsBuilder.build();
+
+    protected final ConcurrencyHelper mConcurrencyHelper;
+
+    // TODO(b/342448771): ideally should remove it, but the class hierarchy is messed up (as some
+    // classes are defined on side-less but the test on device-side)
+    protected SyncCallbackTestCase() {
+        this(StandardStreamsLogger.getInstance());
+    }
+
+    protected SyncCallbackTestCase(RealLogger realLogger) {
+        mConcurrencyHelper = new ConcurrencyHelper(realLogger);
+    }
 
     /**
      * Gets a new callback to be used in the test.
@@ -481,6 +493,14 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     public final void expectLoggedCalls(@Nullable LogEntry... expectedEntries) {
         ImmutableList<LogEntry> entries = mFakeLogger.getEntries();
         expect.withMessage("log entries").that(entries).containsExactlyElementsIn(expectedEntries);
+    }
+
+    protected final Thread runAsync(long timeoutMs, Runnable r) {
+        return mConcurrencyHelper.runAsync(timeoutMs, r);
+    }
+
+    protected final Thread startNewThread(Runnable r) {
+        return mConcurrencyHelper.startNewThread(r);
     }
 
     private void assumeCannotFailIfCalledOnMainThread() {

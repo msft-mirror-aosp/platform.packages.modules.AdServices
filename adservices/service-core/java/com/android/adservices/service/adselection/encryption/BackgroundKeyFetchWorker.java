@@ -35,6 +35,7 @@ import com.android.adservices.service.adselection.MultiCloudSupportStrategyFacto
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.SingletonRunner;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
@@ -67,6 +68,7 @@ public class BackgroundKeyFetchWorker {
     private static final Object SINGLETON_LOCK = new Object();
     private static volatile BackgroundKeyFetchWorker sBackgroundKeyFetchWorker;
     private final ProtectedServersEncryptionConfigManagerBase mKeyConfigManager;
+    private final DevContext mDevContext;
     private final Flags mFlags;
     private final Clock mClock;
     private final AdServicesLogger mAdServicesLogger;
@@ -76,14 +78,17 @@ public class BackgroundKeyFetchWorker {
     @VisibleForTesting
     protected BackgroundKeyFetchWorker(
             @NonNull ProtectedServersEncryptionConfigManagerBase keyConfigManager,
+            @NonNull DevContext devContext,
             @NonNull Flags flags,
             @NonNull Clock clock,
             @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(keyConfigManager);
+        Objects.requireNonNull(devContext);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
         mKeyConfigManager = keyConfigManager;
+        mDevContext = devContext;
         mClock = clock;
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
@@ -115,9 +120,11 @@ public class BackgroundKeyFetchWorker {
                                             flags.getFledgeAuctionServerCoordinatorUrlAllowlist())
                                     .getEncryptionConfigManager(
                                             context, flags, adServicesHttpsClient);
+                    // TODO (b/344636522): Derive DevContext from calling environment.
                     sBackgroundKeyFetchWorker =
                             new BackgroundKeyFetchWorker(
                                     configManager,
+                                    DevContext.createForDevOptionsDisabled(),
                                     flags,
                                     Clock.systemUTC(),
                                     AdServicesLoggerImpl.getInstance());
@@ -309,6 +316,7 @@ public class BackgroundKeyFetchWorker {
                                 keyExpiryInstant,
                                 mFlags.getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs(),
                                 coordinatorUri,
+                                mDevContext,
                                 keyFetchLogger),
                 AdServicesExecutors.getBackgroundExecutor());
     }
@@ -324,6 +332,7 @@ public class BackgroundKeyFetchWorker {
                                 keyExpiryInstant,
                                 mFlags.getFledgeAuctionServerBackgroundKeyFetchJobMaxRuntimeMs(),
                                 null,
+                                mDevContext,
                                 keyFetchLogger),
                 AdServicesExecutors.getBackgroundExecutor());
     }
