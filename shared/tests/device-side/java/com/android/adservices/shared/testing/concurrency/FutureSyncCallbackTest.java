@@ -32,7 +32,7 @@ public final class FutureSyncCallbackTest
 
     @Override
     protected FutureSyncCallback<String> newCallback(SyncCallbackSettings settings) {
-        return new FutureSyncCallback<>();
+        return new FutureSyncCallback<>(settings);
     }
 
     @Override

@@ -52,7 +52,6 @@ import org.junit.runners.JUnit4;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Scenario
 @RunWith(JUnit4.class)
@@ -147,10 +146,14 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
                         getSeller(),
                         CONTEXTUAL_SIGNALS_ONE_BUYER,
                         getServer(),
-                        true);
+                        SERVER_RESPONSE_LOGGING_ENABLED);
         Thread.sleep(2000L);
 
-        runServerAuction(CONTEXTUAL_SIGNALS_ONE_BUYER, getAdSelectionData, getServer(), true);
+        runServerAuction(
+                CONTEXTUAL_SIGNALS_ONE_BUYER,
+                getAdSelectionData,
+                getServer(),
+                SERVER_RESPONSE_LOGGING_ENABLED);
         Thread.sleep(2000L);
     }
 
@@ -171,12 +174,12 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
                         .build();
 
         GetAdSelectionDataOutcome outcome =
-                retryOnException(
+                retryOnCondition(
                         () ->
                                 AD_SELECTION_CLIENT
                                         .getAdSelectionData(request)
                                         .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS),
-                        TimeoutException.class,
+                        matchOnTimeoutExecutionException(),
                         /* maxRetries= */ 3,
                         /* retryIntervalMillis= */ 2000L,
                         "getAdSelectionData");

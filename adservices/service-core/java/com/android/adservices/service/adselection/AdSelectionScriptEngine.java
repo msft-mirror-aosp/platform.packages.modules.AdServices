@@ -41,7 +41,6 @@ import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
-import android.content.Context;
 import android.net.Uri;
 import android.webkit.URLUtil;
 
@@ -249,7 +248,6 @@ public class AdSelectionScriptEngine {
     private final Supplier<Boolean> mIsolateConsoleMessageInLogsEnabled;
 
     public AdSelectionScriptEngine(
-            Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             AdCounterKeyCopier adCounterKeyCopier,
@@ -257,7 +255,7 @@ public class AdSelectionScriptEngine {
             boolean cpcBillingEnabled,
             RetryStrategy retryStrategy,
             Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
-        mJsEngine = JSScriptEngine.getInstance(context, sLogger);
+        mJsEngine = JSScriptEngine.getInstance(sLogger);
         mAdDataArgumentUtil = new AdDataArgumentUtil(adCounterKeyCopier);
         mAdWithBidArgumentUtil = new AdWithBidArgumentUtil(mAdDataArgumentUtil);
         mDebugReportingScript = debugReportingScript;

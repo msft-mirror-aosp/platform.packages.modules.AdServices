@@ -22,6 +22,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_E
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
+import static com.android.os.adservices.AdservicesExtensionAtoms.AD_SERVICES_SETTINGS_USAGE_REPORTED_FIELD_NUMBER;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -36,14 +37,15 @@ import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
-import com.android.os.AtomsProto;
-import com.android.os.AtomsProto.AdServicesSettingsUsageReported;
-import com.android.os.AtomsProto.Atom;
 import com.android.os.StatsLog.EventMetricData;
+import com.android.os.adservices.AdServicesSettingsUsageReported;
+import com.android.os.adservices.AdservicesExtensionAtoms;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner.TestMetrics;
+
+import com.google.protobuf.ExtensionRegistry;
 
 import org.junit.After;
 import org.junit.Before;
@@ -113,20 +115,24 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
     @Test
     public void testStartSettingMainActivityAndGetUiLog() throws Exception {
         ITestDevice device = getDevice();
+        ExtensionRegistry registry = ExtensionRegistry.newInstance();
+        AdservicesExtensionAtoms.registerAllExtensions(registry);
         assertNotNull("Device not set", device);
 
         rebootIfSMinus();
         startSettingMainActivity(mTargetPackage, device);
 
         // Fetch a list of happened log events and their data
-        List<EventMetricData> data = ReportUtils.getEventMetricDataList(device);
+        List<EventMetricData> data = ReportUtils.getEventMetricDataList(device, registry);
 
         // We trigger only one event from activity, should only see one event in the list
         assertThat(data).hasSize(1);
 
         // Verify the log event data
-        AtomsProto.AdServicesSettingsUsageReported adServicesSettingsUsageReported =
-                data.get(0).getAtom().getAdServicesSettingsUsageReported();
+        AdServicesSettingsUsageReported adServicesSettingsUsageReported =
+                data.get(0)
+                        .getAtom()
+                        .getExtension(AdservicesExtensionAtoms.adServicesSettingsUsageReported);
         assertThat(adServicesSettingsUsageReported.getAction())
                 .isEqualTo(
                         AdServicesSettingsUsageReported.AdServiceSettingsName
@@ -161,7 +167,7 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
         // Upload the config.
         final StatsdConfig.Builder config = ConfigUtils.createConfigBuilder(apiName);
 
-        ConfigUtils.addEventMetric(config, Atom.AD_SERVICES_SETTINGS_USAGE_REPORTED_FIELD_NUMBER);
+        ConfigUtils.addEventMetric(config, AD_SERVICES_SETTINGS_USAGE_REPORTED_FIELD_NUMBER);
         ConfigUtils.uploadConfig(device, config);
         // Start the ui main activity, it will make a ui log call
         startUiMainActivity(device);
