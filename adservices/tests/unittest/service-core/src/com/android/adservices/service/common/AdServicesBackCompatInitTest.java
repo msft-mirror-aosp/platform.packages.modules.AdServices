@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.Any;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_DISABLE_RECEIVER_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_ENABLE_RECEIVER_FAILURE;
@@ -48,6 +48,7 @@ import android.os.Build;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -200,7 +201,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
+    @ExpectErrorLogUtilWithExceptionCall(
             throwable = Any.class,
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE,
             ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
@@ -231,12 +232,12 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
+    @ExpectErrorLogUtilWithExceptionCall(
             throwable = Any.class,
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_SERVICE_FAILURE,
             ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
-    @ExpectErrorLogUtilCall(
+    @ExpectErrorLogUtilWithExceptionCall(
             throwable = Any.class,
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_ACTIVITY_FAILURE,

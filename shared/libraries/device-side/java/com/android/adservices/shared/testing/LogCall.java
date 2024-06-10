@@ -19,7 +19,7 @@ package com.android.adservices.shared.testing;
 /** Defines a log call type to track expected and actual log calls. */
 public abstract class LogCall {
     private static final int DEFAULT_TIMES = 1;
-    protected int mTimes;
+    public int mTimes;
 
     public LogCall() {
         this(DEFAULT_TIMES);
