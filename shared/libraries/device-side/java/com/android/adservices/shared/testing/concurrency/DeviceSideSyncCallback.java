@@ -17,12 +17,23 @@ package com.android.adservices.shared.testing.concurrency;
 
 import android.os.IBinder;
 
+import com.google.common.annotations.VisibleForTesting;
+
+// TODO(b/342448771): it might be better to remove this class, or split it in 2 (for result and
+// resultless); either way, we should then move most of the custom callbacks to the side-less
+// project - the only device-side dependent stuff on most of them here is the asBinder()
+
 /** Base class for device-side sync callbacks for testing. */
 public abstract class DeviceSideSyncCallback extends AbstractSyncCallback
         implements IBinderSyncCallback {
 
     protected DeviceSideSyncCallback(SyncCallbackSettings settings) {
         super(settings);
+    }
+
+    @VisibleForTesting
+    DeviceSideSyncCallback(AbstractSyncCallback realCallback, SyncCallbackSettings settings) {
+        super(realCallback, settings);
     }
 
     @Override

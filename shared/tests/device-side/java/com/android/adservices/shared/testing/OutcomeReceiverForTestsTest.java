@@ -16,15 +16,13 @@
 
 package com.android.adservices.shared.testing;
 
-import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.INJECT_RESULT_OR_FAILURE;
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
 import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.MSG_WRONG_ERROR_RECEIVED;
 
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.shared.testing.concurrency.CallbackAlreadyCalledException;
 import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallbackTestCase;
+import com.android.adservices.shared.testing.concurrency.SyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.adservices.shared.testing.junit.SafeAndroidJUnitRunner;
@@ -47,7 +45,7 @@ public final class OutcomeReceiverForTestsTest
     private final Exception mError = new UnsupportedOperationException("D'OH!");
 
     @Override
-    protected OutcomeReceiverForTests<String> newCallback(SyncCallbackSettings settings) {
+    protected SyncCallback newRawCallback(SyncCallbackSettings settings) {
         return new OutcomeReceiverForTests<>(settings);
     }
 
@@ -77,28 +75,30 @@ public final class OutcomeReceiverForTestsTest
     }
 
     @Test
-    public void testOnResult_calledTwice() {
+    public void testOnResult_calledTwice() throws Exception {
         OutcomeReceiverForTests<String> receiver = mCallback;
         receiver.onResult(RESULT);
-        String anotherError = "You Shall Not Pass!";
-        receiver.onResult(anotherError);
+        String anotherResult = "You Shall Not Pass!";
+        receiver.onResult(anotherResult);
 
-        CallbackAlreadyCalledException thrown =
-                assertThrows(CallbackAlreadyCalledException.class, () -> receiver.assertCalled());
+        receiver.assertCalled();
 
-        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, RESULT, anotherError);
+        String when = "after 2 onResult() calls";
+        assertGetResultMethods(receiver, when, RESULT, anotherResult);
+        assertGetFailureMethodsWhenNoFailure(receiver, when);
     }
 
     @Test
-    public void testOnResult_afterOnError() {
+    public void testOnResult_afterOnError() throws Exception {
         OutcomeReceiverForTests<String> receiver = mCallback;
         receiver.onError(mError);
         receiver.onResult(RESULT);
 
-        CallbackAlreadyCalledException thrown =
-                assertThrows(CallbackAlreadyCalledException.class, () -> receiver.assertCalled());
+        receiver.assertCalled();
 
-        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, mError, RESULT);
+        String when = "after onError() and onResult()";
+        assertGetResultMethodsWhenInjectFailureWasCalledFirst(receiver, when, RESULT);
+        assertGetFailureMethods(receiver, when, mError);
     }
 
     @Test
@@ -137,28 +137,30 @@ public final class OutcomeReceiverForTestsTest
     }
 
     @Test
-    public void testOnError_calledTwice() {
+    public void testOnError_calledTwice() throws Exception {
         OutcomeReceiverForTests<String> receiver = mCallback;
         receiver.onError(mError);
         Exception anotherError = new UnsupportedOperationException("Again?");
         receiver.onError(anotherError);
 
-        CallbackAlreadyCalledException thrown =
-                assertThrows(CallbackAlreadyCalledException.class, () -> receiver.assertCalled());
+        receiver.assertCalled();
 
-        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, mError, anotherError);
+        String when = "after 2 onError() calls";
+        assertGetResultMethodsWhenNoResult(receiver, when);
+        assertGetFailureMethods(receiver, when, mError, anotherError);
     }
 
     @Test
-    public void testOnError_afterOnResult() {
+    public void testOnError_afterOnResult() throws Exception {
         OutcomeReceiverForTests<String> receiver = mCallback;
         receiver.onResult(RESULT);
         receiver.onError(mError);
 
-        CallbackAlreadyCalledException thrown =
-                assertThrows(CallbackAlreadyCalledException.class, () -> receiver.assertCalled());
+        receiver.assertCalled();
 
-        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, RESULT, mError);
+        String when = "after onResult() and onError() calls";
+        assertGetResultMethods(receiver, when, RESULT);
+        assertGetFailureMethodsWhenInjectedResultWasCalledFirst(receiver, when, mError);
     }
 
     private static OutcomeReceiverForTests<String> newReceiver(long timeoutMs) {

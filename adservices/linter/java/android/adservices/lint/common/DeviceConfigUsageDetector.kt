@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.lint
+package android.adservices.lint.common
 
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector

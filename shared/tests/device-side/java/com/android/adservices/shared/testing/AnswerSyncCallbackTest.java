@@ -20,30 +20,52 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackTestCase;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.mockito.quality.Strictness;
 
 // It's testing doAnswer(), so it needs to call those methods...
 @SuppressWarnings("DirectInvocationOnMock")
-public final class AnswerSyncCallbackTest extends SharedMockitoTestCase {
+public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyncCallback<Void>> {
 
     private static final String ANSWER = "Luke's Father";
+
+    @Rule public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
 
     private final IllegalStateException mFailure = new IllegalStateException("D'OH!");
     private final SyncCallbackSettings mSettingsForTwoCalls =
             SyncCallbackFactory.newSettingsBuilder().setExpectedNumberCalls(2).build();
 
     @Mock private Voider mDarthVoider;
+    @Mock private InvocationOnMock mMockInvocation;
 
-    @Test
-    public void testUnsupportedMethods() {
-        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+    @Override
+    protected AnswerSyncCallback<Void> newCallback(SyncCallbackSettings settings) {
+        return AnswerSyncCallback.forVoidAnswers(settings);
+    }
 
-        assertThrows(UnsupportedOperationException.class, () -> callback.setCalled());
+    @Override
+    protected String callCallback(AnswerSyncCallback<Void> callback) {
+        try {
+            callback.answer(mMockInvocation);
+            return "answer()";
+        } catch (Throwable t) {
+            // Shouldn't happen
+            throw new IllegalStateException("callback.aswer() failed", t);
+        }
+    }
+
+    @Override
+    protected boolean usesFactoryApproach() {
+        return true;
     }
 
     @Test

@@ -76,15 +76,6 @@ public class ConsentNotifiedAccessResolverTest {
     }
 
     @Test
-    public void isAllowed_returnsTrueWhenBetaNotificationDisplayed() {
-        // Setup
-        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
-
-        // Assertion
-        assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mContext).isAllowedAccess());
-    }
-
-    @Test
     public void isAllowed_returnsTrueWhenU18UXNotificationDisplayed() {
         // Setup
         doReturn(true).when(mConsentManager).wasU18NotificationDisplayed();

@@ -15,13 +15,15 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
-import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.INJECT_RESULT_OR_FAILURE;
 import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.MSG_WRONG_ERROR_RECEIVED;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.testing.Nullable;
+
 import org.junit.Test;
+
+import java.util.List;
 
 // TODO(b/342448771): make it package protected (must move some subclass to this package first)
 /** Base test for classes that extend FailableResultSyncCallback. */
@@ -61,33 +63,15 @@ public abstract class FailableResultSyncCallbackTestCase<
 
     @Test
     public final void testInjectResult_checkFailure() throws Exception {
-        expect.withMessage("%s.getFailure() before injectResult()", mCallback)
-                .that(mCallback.getFailure())
-                .isNull();
-        String toStringBefore = mCallback.toString();
-        expect.withMessage("toString() before injectResult()")
-                .that(toStringBefore)
-                .contains("(no result yet)");
-        expect.withMessage("toString() before injectResult()")
-                .that(toStringBefore)
-                .contains("(no failure yet)");
+        assertInitialState(mCallback);
+        R injectedResult = null;
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(null));
+        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         mCallback.assertCalled();
 
-        expect.withMessage("%s.getFailure() after injectResult()", mCallback)
-                .that(mCallback.getFailure())
-                .isNull();
-        String toStringAfter = mCallback.toString();
-        expect.withMessage("toString() after injectResult()")
-                .that(toStringAfter)
-                .doesNotContain("(no result yet)");
-        expect.withMessage("toString() after injectResult()")
-                .that(toStringAfter)
-                .doesNotContain("(no failure yet)");
-        expect.withMessage("toString() after injectResult()")
-                .that(toStringAfter)
-                .contains("result=null");
+        String when = "after injectFailure()";
+        assertGetResultMethods(mCallback, when, injectedResult);
+        assertGetFailureMethodsWhenNoFailure(mCallback, when);
     }
 
     @Test
@@ -98,15 +82,7 @@ public abstract class FailableResultSyncCallbackTestCase<
     @Test
     public final void testInjectFailure() throws Exception {
         F failure = newFailure();
-        expect.withMessage("%s.getFailure() before injectFailure()", mCallback)
-                .that(mCallback.getFailure())
-                .isNull();
-        expect.withMessage("%s.getResult() before injectFailure()", mCallback)
-                .that(mCallback.getResult())
-                .isNull();
-        expect.withMessage("%s.isCalled() before injectFailure()", mCallback)
-                .that(mCallback.isCalled())
-                .isFalse();
+        assertInitialState(mCallback);
 
         runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectFailure(failure));
 
@@ -115,69 +91,62 @@ public abstract class FailableResultSyncCallbackTestCase<
         expect.withMessage("%s.assertFailureReceived()", mCallback)
                 .that(receivedFailure)
                 .isSameInstanceAs(failure);
-
-        expect.withMessage("%s.getFailure() after assertFailureReceived()", mCallback)
-                .that(mCallback.getFailure())
-                .isSameInstanceAs(failure);
-        expect.withMessage("%s.getResult() after assertFailureReceived()", mCallback)
-                .that(mCallback.getResult())
-                .isNull();
         expect.withMessage("%s.isCalled() after assertFailureReceived()", mCallback)
                 .that(mCallback.isCalled())
                 .isTrue();
-        String toString = mCallback.toString();
-        expect.withMessage("toString() after assertFailureReceived()")
-                .that(toString)
-                .contains("result=" + failure);
-        expect.withMessage("toString() after assertFailureReceived()")
-                .that(toString)
-                .doesNotContain("(no result yet)");
-        expect.withMessage("toString() after assertFailureReceived()")
-                .that(toString)
-                .doesNotContain("(no failure yet)");
+
+        String when = "after assertFailureReceived()";
+        assertGetFailureMethods(mCallback, when, failure);
+        assertGetResultMethodsWhenNoResult(mCallback, when);
     }
 
     @Test
-    public final void testInjectFailure_calledTwice() {
+    public final void testInjectFailure_calledTwice() throws Exception {
         F failure = newFailure();
         F anotherFailure = newFailure();
         mCallback.injectFailure(failure);
         mCallback.injectFailure(anotherFailure);
 
-        CallbackAlreadyCalledException thrown =
-                assertThrows(
-                        CallbackAlreadyCalledException.class,
-                        () -> mCallback.assertFailureReceived());
+        mCallback.assertFailureReceived();
 
-        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, failure, anotherFailure);
+        String when = "after 2 injectFailure() calls";
+        assertGetResultMethodsWhenNoResult(mCallback, when);
+        assertGetFailureMethods(mCallback, when, failure, anotherFailure);
     }
 
     @Test
-    public final void testInjectFailure_calledAfterInjectResult() {
+    public final void testInjectFailure_calledAfterInjectResult() throws Exception {
+        String when = "after injectResult() and injectFailure()";
+        R result = null;
         F failure = newFailure();
-        mCallback.injectResult(null);
+        mCallback.injectResult(result);
         mCallback.injectFailure(failure);
 
-        CallbackAlreadyCalledException thrown =
-                assertThrows(CallbackAlreadyCalledException.class, () -> mCallback.assertCalled());
+        mCallback.assertFailureReceived();
 
-        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, null, failure);
+        assertGetResultMethods(mCallback, when, result);
+        assertGetFailureMethodsWhenInjectedResultWasCalledFirst(mCallback, when, failure);
     }
 
     @Test
-    public final void testInjectResult_calledAfterInjectFailure() {
+    public final void testInjectResult_calledAfterInjectFailure() throws Exception {
+        R result = null;
         F failure = newFailure();
         mCallback.injectFailure(failure);
-        mCallback.injectResult(null);
+        mCallback.injectResult(result);
 
-        CallbackAlreadyCalledException thrown =
-                assertThrows(CallbackAlreadyCalledException.class, () -> mCallback.assertCalled());
+        F failureReceived = mCallback.assertFailureReceived();
+        expect.withMessage("%s.assertFailureReceived()", mCallback)
+                .that(failureReceived)
+                .isSameInstanceAs(failure);
 
-        thrown.assertWith(expect, INJECT_RESULT_OR_FAILURE, failure, null);
+        String when = "after injectFailure() and injectResult()";
+        assertGetFailureMethods(mCallback, when, failure);
+        assertGetResultMethods(mCallback, when, result);
     }
 
     @Test
-    public void testAssertFailureReceived_null() throws Exception {
+    public final void testAssertFailureReceived_null() throws Exception {
         assertThrows(NullPointerException.class, () -> mCallback.assertFailureReceived(null));
     }
 
@@ -211,5 +180,97 @@ public abstract class FailableResultSyncCallbackTestCase<
                 .that(thrown)
                 .hasMessageThat()
                 .isEqualTo(String.format(MSG_WRONG_ERROR_RECEIVED, subFailureClass, failure));
+    }
+
+    @Test
+    public final void testGetFailures_immutable() throws Exception {
+        List<F> failures = mCallback.getFailures();
+        expect.withMessage("%s.getFailures() initially", mCallback).that(failures).isEmpty();
+
+        assertThrows(UnsupportedOperationException.class, () -> failures.add(newFailure()));
+
+        expect.withMessage("%s.getFailures() after", mCallback)
+                .that(mCallback.getFailures())
+                .isEmpty();
+    }
+
+    @Test
+    public final void testToString_containsFailures() throws Exception {
+        // Initial state
+        String toString = mCallback.toString();
+        expect.withMessage("toString() initially").that(toString).contains("(no failure yet)");
+
+        // NOTE: failures are shown as "results" - see why on
+        // FailableResultSyncCallback.customizeToString()
+
+        // 1st call
+        F firstFailure = newFailure();
+        mCallback.injectFailure(firstFailure);
+        toString = mCallback.toString();
+        expect.withMessage("toString() after 1st call")
+                .that(toString)
+                .contains("result=" + firstFailure);
+        expect.withMessage("toString() after 1st call")
+                .that(toString)
+                .contains("results=[" + firstFailure + "]");
+
+        // 2nd call
+        F secondFailure = newFailure();
+        mCallback.injectFailure(secondFailure);
+        toString = mCallback.toString();
+        expect.withMessage("toString() after 2nd call")
+                .that(toString)
+                .contains("result=" + firstFailure);
+        expect.withMessage("toString() after 2nd call")
+                .that(toString)
+                .contains("results=[" + firstFailure + ", " + secondFailure + "]");
+    }
+
+    protected final void assertGetFailureMethodsWhenNoFailure(CB callback, String when) {
+        expect.withMessage("%s.getFailure() %s", callback, when)
+                .that(callback.getFailure())
+                .isNull();
+        expect.withMessage("%s.getFailures() %s", callback, when)
+                .that(callback.getFailures())
+                .isEmpty();
+    }
+
+    @SafeVarargs
+    protected final void assertGetFailureMethods(
+            CB callback, String when, @Nullable F... failures) {
+        expect.withMessage("%s.getFailure() %s", callback, when)
+                .that(callback.getFailure())
+                .isSameInstanceAs(failures[0]);
+        expect.withMessage("%s.getFailures() %s", callback, when)
+                .that(callback.getFailures())
+                .containsExactly(failures)
+                .inOrder();
+    }
+
+    @SafeVarargs
+    protected final void assertGetFailureMethodsWhenInjectedResultWasCalledFirst(
+            CB callback, String when, @Nullable F... failures) {
+        expect.withMessage("%s.getFailure() %s", callback, when)
+                .that(callback.getFailure())
+                .isNull();
+        expect.withMessage("%s.getFailures() %s", callback, when)
+                .that(callback.getFailures())
+                .containsExactly(failures)
+                .inOrder();
+    }
+
+    @SafeVarargs
+    protected final void assertGetResultMethodsWhenInjectFailureWasCalledFirst(
+            CB callback, String when, @Nullable R... expectedResults) {
+        expect.withMessage("%s.getResult() %s", callback, when).that(callback.getResult()).isNull();
+        expect.withMessage("%s.getResults() %s", callback, when)
+                .that(callback.getResults())
+                .containsExactly(expectedResults)
+                .inOrder();
+    }
+
+    private void assertInitialState(CB callback) {
+        assertGetResultMethodsWhenNoResult(callback, "initially");
+        assertGetFailureMethodsWhenNoFailure(callback, "initially");
     }
 }

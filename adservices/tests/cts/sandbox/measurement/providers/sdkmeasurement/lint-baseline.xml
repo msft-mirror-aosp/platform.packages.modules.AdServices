@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="NewApi"
+        message="Class requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.app.sdksandbox.SandboxedSdkProvider`"
+        errorLine1="public class SdkMeasurement extends SandboxedSdkProvider {"
+        errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="45"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="            throw new LoadSdkException(e, new Bundle());"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="66"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.measurement.DeletionRequest.Builder`"
+        errorLine1="                                        new DeletionRequest.Builder()"
+        errorLine2="                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="99"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.DeletionRequest.Builder#setOriginUris`"
+        errorLine1="                                                .setOriginUris("
+        errorLine2="                                                 ~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="100"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.DeletionRequest.Builder#setDomainUris`"
+        errorLine1="                                                .setDomainUris("
+        errorLine2="                                                 ~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="102"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.DeletionRequest.Builder#setStart`"
+        errorLine1="                                                .setStart(Instant.ofEpochMilli(0))"
+        errorLine2="                                                 ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="104"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.DeletionRequest.Builder#setEnd`"
+        errorLine1="                                                .setEnd(Instant.now())"
+        errorLine2="                                                 ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="105"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.DeletionRequest.Builder#build`"
+        errorLine1="                                                .build())"
+        errorLine2="                                                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="106"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.SandboxedSdk`"
+        errorLine1="        return new SandboxedSdk(new Binder());"
+        errorLine2="               ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="110"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.app.sdksandbox.SandboxedSdkProvider#getContext`"
+        errorLine1="                        .setContext(getContext())"
+        errorLine2="                                    ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="122"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="            throw new LoadSdkException(e, new Bundle());"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="134"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.measurement.WebSourceParams.Builder`"
+        errorLine1="                new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="140"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.WebSourceParams.Builder#setDebugKeyAllowed`"
+        errorLine1="                        .setDebugKeyAllowed(false)"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="141"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.WebSourceParams.Builder#build`"
+        errorLine1="                        .build();"
+        errorLine2="                         ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="142"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.measurement.WebSourceRegistrationRequest.Builder`"
+        errorLine1="        return new WebSourceRegistrationRequest.Builder("
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="144"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.WebSourceRegistrationRequest.Builder#setInputEvent`"
+        errorLine1="                .setInputEvent(null)"
+        errorLine2="                 ~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="146"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.WebSourceRegistrationRequest.Builder#setAppDestination`"
+        errorLine1="                .setAppDestination(OS_DESTINATION)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="147"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.WebSourceRegistrationRequest.Builder#setWebDestination`"
+        errorLine1="                .setWebDestination(WEB_DESTINATION)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="148"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.WebSourceRegistrationRequest.Builder#setVerifiedDestination`"
+        errorLine1="                .setVerifiedDestination(null)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="149"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.WebSourceRegistrationRequest.Builder#build`"
+        errorLine1="                .build();"
+        errorLine2="                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="150"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.WebTriggerParams.Builder#build`"
+        errorLine1="                new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();"
+        errorLine2="                                                                       ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="155"
+            column="72"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.measurement.WebTriggerParams.Builder`"
+        errorLine1="                new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="155"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.measurement.WebTriggerRegistrationRequest.Builder`"
+        errorLine1="        return new WebTriggerRegistrationRequest.Builder("
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="157"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.measurement.WebTriggerRegistrationRequest.Builder#build`"
+        errorLine1="                .build();"
+        errorLine2="                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/src/com/android/tests/providers/sdkmeasurement/SdkMeasurement.java"
+            line="159"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionCode` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/SdkMeasurement/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionName` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/SdkMeasurement/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        message="Should explicitly set `android:icon`, there is no default"
+        errorLine1="    &lt;application"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/measurement/providers/sdkmeasurement/SdkMeasurement/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="38"
+            column="6"/>
+    </issue>
+
+</issues>

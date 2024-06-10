@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.runOnMainThread;
 
 import static org.junit.Assert.assertThrows;
 
@@ -39,7 +39,7 @@ public final class DeviceSideSyncCallbackTest
                 .that(callback.toString())
                 .contains("failIfCalledOnMainThread=true");
 
-        runOnMainThread(() -> callback.setCalled());
+        runOnMainThread(() -> call(callback));
 
         CalledOnMainThreadException thrown =
                 assertThrows(CalledOnMainThreadException.class, () -> callback.assertCalled());
@@ -66,19 +66,26 @@ public final class DeviceSideSyncCallbackTest
                 .that(callback.toString())
                 .contains("failIfCalledOnMainThread=false");
 
-        runOnMainThread(() -> callback.setCalled());
+        runOnMainThread(() -> call(callback));
 
         callback.assertCalled();
     }
 
-    private static final class ConcreteDeviceSideySncCallback extends DeviceSideSyncCallback {
+    private static final class ConcreteDeviceSideySncCallback extends DeviceSideSyncCallback
+            implements ResultlessSyncCallback {
 
+        @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteDeviceSideySncCallback() {
             this(SyncCallbackFactory.newSettingsBuilder().build());
         }
 
         ConcreteDeviceSideySncCallback(SyncCallbackSettings settings) {
             super(settings);
+        }
+
+        @Override
+        public void setCalled() {
+            internalSetCalled("setCalled()");
         }
     }
 }
