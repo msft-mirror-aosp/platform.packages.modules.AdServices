@@ -16,16 +16,16 @@
 
 package com.android.adservices.common.logging;
 
-import static com.android.adservices.common.logging.ErrorLogUtilCall.None;
-import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.NAME;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.NAME;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 
 import android.util.Log;
 
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCalls;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCalls;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.shared.testing.AbstractLogVerifier;
 
@@ -40,28 +40,29 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Log verifier for {@link ErrorLogUtil} calls without exception by processing {@link
- * ExpectErrorLogUtilCall} annotations.
+ * Log verifier for {@link ErrorLogUtil} calls with exception by processing {@link
+ * ExpectErrorLogUtilWithExceptionCall} annotations.
  */
-public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<ErrorLogUtilCall> {
+public class AdServicesErrorLogUtilWithExceptionVerifier
+        extends AbstractLogVerifier<ErrorLogUtilCall> {
     @Override
     protected void mockLogCalls() {
-        // Mock ErrorLogUtil.e(int, int) calls and capture logging arguments.
+        // Mock ErrorLogUtil.e(Throwable, int, int) calls and capture logging arguments.
         doAnswer(
                         invocation -> {
                             recordActualCall(
                                     new ErrorLogUtilCall(
-                                            None.class,
-                                            invocation.getArgument(0),
-                                            invocation.getArgument(1)));
+                                            ((Throwable) invocation.getArgument(0)).getClass(),
+                                            invocation.getArgument(1),
+                                            invocation.getArgument(2)));
                             return null;
                         })
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
+                .when(() -> ErrorLogUtil.e(any(Throwable.class), anyInt(), anyInt()));
     }
 
     @Override
     public Set<ErrorLogUtilCall> getExpectedLogCalls(Description description) {
-        List<ExpectErrorLogUtilCall> annotations = getAnnotations(description);
+        List<ExpectErrorLogUtilWithExceptionCall> annotations = getAnnotations(description);
 
         if (annotations.isEmpty()) {
             Log.v(mTag, "No @" + NAME + " found over test method.");
@@ -71,12 +72,7 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
         Set<ErrorLogUtilCall> expectedCalls =
                 annotations.stream()
                         .peek(a -> this.validateTimes(a.times(), NAME))
-                        .map(
-                                annotation ->
-                                        ErrorLogUtilCall.createWithNoException(
-                                                annotation.errorCode(),
-                                                annotation.ppapiName(),
-                                                annotation.times()))
+                        .map(this::toErrorLogUtilCall)
                         .collect(Collectors.toSet());
 
         if (expectedCalls.size() != annotations.size()) {
@@ -96,18 +92,28 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
                 + NAME
                 + "(..) "
                 + "over test method to denote "
-                + "all expected ErrorLogUtil.e(int, int) calls.";
+                + "all expected ErrorLogUtil.e(Throwable, int, int) calls.";
     }
 
-    private List<ExpectErrorLogUtilCall> getAnnotations(Description description) {
+    private List<ExpectErrorLogUtilWithExceptionCall> getAnnotations(Description description) {
         // Scan for multiple annotation container
-        ExpectErrorLogUtilCalls multiple = description.getAnnotation(ExpectErrorLogUtilCalls.class);
+        ExpectErrorLogUtilWithExceptionCalls multiple =
+                description.getAnnotation(ExpectErrorLogUtilWithExceptionCalls.class);
         if (multiple != null) {
             return Arrays.stream(multiple.value()).collect(Collectors.toList());
         }
 
         // Scan for single annotation
-        ExpectErrorLogUtilCall single = description.getAnnotation(ExpectErrorLogUtilCall.class);
+        ExpectErrorLogUtilWithExceptionCall single =
+                description.getAnnotation(ExpectErrorLogUtilWithExceptionCall.class);
         return single == null ? ImmutableList.of() : ImmutableList.of(single);
+    }
+
+    private ErrorLogUtilCall toErrorLogUtilCall(ExpectErrorLogUtilWithExceptionCall annotation) {
+        return new ErrorLogUtilCall(
+                annotation.throwable(),
+                annotation.errorCode(),
+                annotation.ppapiName(),
+                annotation.times());
     }
 }

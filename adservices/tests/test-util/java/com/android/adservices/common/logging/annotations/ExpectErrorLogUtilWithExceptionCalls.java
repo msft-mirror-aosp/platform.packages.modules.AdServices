@@ -13,22 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing.concurrency;
 
-import android.os.Handler;
-import android.os.Looper;
+package com.android.adservices.common.logging.annotations;
 
-import java.util.Objects;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-public final class DeviceSideConcurrencyHelper {
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-    /** Runs the given runnable in the main thread. */
-    public static void runOnMainThread(Runnable r) {
-        Objects.requireNonNull(r);
-        new Handler(Looper.getMainLooper()).post(r);
-    }
-
-    private DeviceSideConcurrencyHelper() {
-        throw new UnsupportedOperationException("Contains only static members");
-    }
+/** Container annotation for multiple usages of {@link ExpectErrorLogUtilWithExceptionCall}. */
+@Retention(RUNTIME)
+@Target(METHOD)
+public @interface ExpectErrorLogUtilWithExceptionCalls {
+    ExpectErrorLogUtilWithExceptionCall[] value();
 }
