@@ -45,4 +45,7 @@ java_library_static {
         "microbenchmark-device-lib",
     ],
     min_sdk_version: "30",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+    },
 }

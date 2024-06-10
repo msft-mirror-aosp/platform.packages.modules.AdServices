@@ -76,7 +76,6 @@ import java.util.stream.Stream;
 class MeasurementDao implements IMeasurementDao {
 
     private static final int MAX_COMPOUND_SELECT = 250;
-
     private Supplier<Boolean> mDbFileMaxSizeLimitReachedSupplier;
     private Supplier<Integer> mReportingRetryLimitSupplier;
     private Supplier<Boolean> mReportingRetryLimitEnabledSupplier;
@@ -1584,6 +1583,49 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public Long getLatestReportTimeInBatchWindow(long batchWindow) throws DatastoreException {
+        final String cte =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT %2$s AS report_time "
+                                + "FROM %1$s "
+                                + "WHERE %3$s = %4$s "
+                                + "UNION "
+                                + "SELECT %6$s AS report_time "
+                                + "FROM %5$s "
+                                + "WHERE %7$s = %8$s",
+                        MeasurementTables.AggregateReport.TABLE,
+                        MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                        MeasurementTables.AggregateReport.STATUS,
+                        AggregateReport.Status.PENDING,
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.EventReportContract.REPORT_TIME,
+                        MeasurementTables.EventReportContract.STATUS,
+                        EventReport.Status.PENDING);
+
+        final String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "WITH t AS (%1$s) SELECT MAX(t.report_time) FROM t WHERE t.report_time <="
+                                + " (SELECT MIN(t.report_time) FROM t) + %2$s",
+                        cte,
+                        batchWindow);
+
+        try (Cursor cursor =
+                mSQLTransaction.getDatabase().rawQuery(query, /* selectionArgs= */ null)) {
+            if (cursor != null && cursor.moveToNext()) {
+                long timestamp = cursor.getLong(0);
+                if (timestamp == 0) {
+                    return null;
+                }
+                return timestamp;
+            }
+
+            return null;
+        }
+    }
+
+    @Override
     public Integer countDistinctReportingOriginsPerPublisherXDestInAttribution(
             Uri sourceSite,
             Uri destinationSite,
@@ -2006,7 +2048,10 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void deleteExpiredRecords(long earliestValidInsertion, int registrationRetryLimit)
+    public void deleteExpiredRecords(
+            long earliestValidInsertion,
+            int registrationRetryLimit,
+            @Nullable Long earliestValidAppReportInsertion)
             throws DatastoreException {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
         String earliestValidInsertionStr = String.valueOf(earliestValidInsertion);
@@ -2165,6 +2210,12 @@ class MeasurementDao implements IMeasurementDao {
                         + subQuery
                         + ")",
                 new String[] {});
+        if (earliestValidAppReportInsertion != null) {
+            db.delete(
+                    MeasurementTables.AppReportHistoryContract.TABLE,
+                    MeasurementTables.AppReportHistoryContract.LAST_REPORT_DELIVERED_TIME + " < ?",
+                    new String[] {String.valueOf(earliestValidAppReportInsertion)});
+        }
     }
 
     @Override
@@ -3426,6 +3477,37 @@ class MeasurementDao implements IMeasurementDao {
                                 null)
                 < 0) {
             throw new DatastoreException("Aggregate Reports deletion failed.");
+        }
+    }
+
+    @Override
+    public void insertOrUpdateAppReportHistory(
+            @NonNull Uri appDestination,
+            @NonNull Uri registrationOrigin,
+            long lastReportDeliveredTimestamp)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.AppReportHistoryContract.APP_DESTINATION,
+                appDestination.toString());
+        values.put(
+                MeasurementTables.AppReportHistoryContract.REGISTRATION_ORIGIN,
+                registrationOrigin.toString());
+        values.put(
+                MeasurementTables.AppReportHistoryContract.LAST_REPORT_DELIVERED_TIME,
+                lastReportDeliveredTimestamp);
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insertWithOnConflict(
+                                MeasurementTables.AppReportHistoryContract.TABLE,
+                                /* nullColumnHack= */ null,
+                                values,
+                                CONFLICT_REPLACE);
+        LoggerFactory.getMeasurementLogger()
+                .d("MeasurementDao: insertAppReportHistory: rowId=" + rowId);
+        if (rowId == -1) {
+            throw new DatastoreException("App report history insertion failed.");
         }
     }
 

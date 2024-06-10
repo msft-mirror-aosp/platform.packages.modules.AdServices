@@ -20,10 +20,8 @@ import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG
 import com.android.adservices.shared.testing.Identifiable;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
-import com.android.adservices.shared.testing.Nullable;
 
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -78,9 +76,7 @@ public final class SyncCallbackSettings implements Identifiable {
         return mFailIfCalledOnMainThread;
     }
 
-    // TODO(b/337014024): add unit test to check this logic (currently it's indirectly checked by
-    // AbstractTestSyncCallbackTest, but it will be refactored)
-    public boolean isMainThread() {
+    boolean isMainThread() {
         return mIsMainThreadSupplier.get();
     }
 
@@ -108,32 +104,17 @@ public final class SyncCallbackSettings implements Identifiable {
     }
 
     // NOTE: log of methods below are indirectly unit tested by the callback test - testing it again
-    // on SyncCallbackSettings would be an overkill (they're not public anyways), so
-    // SyncCallbackSettings just asserts that they're properly logged.
+    // on SyncCallbackSettings would be an overkill (they're not public anyways)
 
     void countDown() {
-        logD("countDown() called");
-        try {
-            mLatch.countDown();
-        } finally {
-            logV("leaving countDown()");
-        }
+        mLatch.countDown();
     }
 
-    /**
-     * @deprecated - TODO(b/337014024): merge with other)
-     */
-    @Deprecated
-    void await() throws InterruptedException {
-        mLatch.await();
-    }
-
-    boolean await(long timeout, TimeUnit unit) throws InterruptedException {
-        logD("await() called");
-        try {
-            return mLatch.await(timeout, unit);
-        } finally {
-            logV("leaving await()");
+    void assertCalled(Supplier<String> caller) throws InterruptedException {
+        long timeoutMs = getMaxTimeoutMs();
+        TimeUnit unit = TimeUnit.MILLISECONDS;
+        if (!mLatch.await(timeoutMs, unit)) {
+            throw new SyncCallbackTimeoutException(caller.get(), timeoutMs, unit);
         }
     }
 
@@ -141,16 +122,22 @@ public final class SyncCallbackSettings implements Identifiable {
         return mLatch.getCount() == 0;
     }
 
-    @FormatMethod
-    private void logD(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        String realMessage = String.format(msgFmt, msgArgs);
-        mLogger.d("[settingsId#%s]: %s", getId(), realMessage);
-    }
-
-    @FormatMethod
-    private void logV(@FormatString String msgFmt, @Nullable Object... msgArgs) {
-        String realMessage = String.format(msgFmt, msgArgs);
-        mLogger.v("[SyncCallbackSettings: %s]: %s", toString(), realMessage);
+    /**
+     * Checks that the given settings is not configured to {@link
+     * SyncCallbackSettings#isFailIfCalledOnMainThread() fail if called in the main thread}.
+     *
+     * @return same settings
+     * @throws IllegalArgumentException if configured to {@link
+     *     SyncCallbackSettings#isFailIfCalledOnMainThread() fail if called in the main thread}.
+     */
+    public static SyncCallbackSettings checkCanFailOnMainThread(SyncCallbackSettings settings) {
+        if (settings.isFailIfCalledOnMainThread()) {
+            throw new IllegalArgumentException(
+                    "Cannot use a SyncCallbackSettings ("
+                            + settings
+                            + ") that fails if called on main thread");
+        }
+        return settings;
     }
 
     /** Bob the Builder! */
@@ -168,6 +155,11 @@ public final class SyncCallbackSettings implements Identifiable {
             mIsMainThreadSupplier =
                     Objects.requireNonNull(
                             isMainThreadSupplier, "isMainThreadSupplier cannot be null");
+        }
+
+        @VisibleForTesting
+        Builder(RealLogger realLogger) {
+            this(realLogger, () -> Boolean.FALSE);
         }
 
         /** See {@link SyncCallbackSettings#getExpectedNumberCalls()}. */

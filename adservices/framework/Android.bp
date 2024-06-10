@@ -78,6 +78,9 @@ java_library {
     ],
     min_sdk_version: "30",
     defaults: ["framework-module-defaults"],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
 }
 
 java_library {

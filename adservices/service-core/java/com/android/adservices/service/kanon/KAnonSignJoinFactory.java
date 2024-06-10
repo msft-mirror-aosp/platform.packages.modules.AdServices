@@ -38,8 +38,7 @@ import java.time.Clock;
 /** A factory class used to create an instance of {@link KAnonSignJoinManager}. */
 @RequiresApi(Build.VERSION_CODES.S)
 public class KAnonSignJoinFactory {
-
-    private static Context mContext;
+    private final Context mContext;
 
     /**
      * Returns an instance for this class. Once you have the instance you can use {@link
