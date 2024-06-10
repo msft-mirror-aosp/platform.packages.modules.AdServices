@@ -31,6 +31,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_FILE_DOWNLOADED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_MATCHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ENROLLMENT_TRANSACTION_STATS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_GET_TOP_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_GET_TOPICS_REPORTED;
@@ -543,6 +544,20 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 mEnrollmentRecordCountInTable,
                 mQueryParameter,
                 mErrorCause);
+    }
+
+    @Override
+    public void logEnrollmentTransactionStats(AdServicesEnrollmentTransactionStats stats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_ENROLLMENT_TRANSACTION_STATS,
+                stats.transactionType().getValue(),
+                stats.transactionStatus().getValue(),
+                stats.transactionParameterCount(),
+                stats.transactionResultCount(),
+                stats.queryResultCount(),
+                stats.dataSourceRecordCountPre(),
+                stats.dataSourceRecordCountPost(),
+                stats.enrollmentFileBuildId());
     }
 
     /** Logs encryption key fetch stats. */

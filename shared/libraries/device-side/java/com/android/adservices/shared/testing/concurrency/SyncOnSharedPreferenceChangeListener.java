@@ -22,6 +22,14 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 public final class SyncOnSharedPreferenceChangeListener extends ResultSyncCallback<String>
         implements OnSharedPreferenceChangeListener {
 
+    public SyncOnSharedPreferenceChangeListener() {
+        super();
+    }
+
+    public SyncOnSharedPreferenceChangeListener(SyncCallbackSettings settings) {
+        super(settings);
+    }
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         injectResult(key);

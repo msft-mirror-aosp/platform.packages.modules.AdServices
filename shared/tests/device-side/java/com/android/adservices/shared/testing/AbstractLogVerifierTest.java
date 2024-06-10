@@ -46,14 +46,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
-    private static final String UNEXPECTED_ACTUAL_CALLS_MESSAGE_PREFIX =
-            "Detected logging calls that were actually made but not expected via annotations:\n"
-                    + "Unexpected Actual Calls:\n"
-                    + "[\n";
-    private static final String UNEXPECTED_CALLS_MESSAGE_PREFIX =
-            "Detected logging calls that were expected but not actually made:\n"
-                    + "Unexpected Calls:\n"
-                    + "[\n";
+    private static final String HEADER =
+            "Detected mismatch in logging calls between expected and actual:\n";
     private static final String EXPECTED_CALLS_PREFIX = "Expected Calls:\n" + "[\n";
     private static final String ACTUAL_CALLS_PREFIX = "Actual Calls:\n" + "[\n";
     private static final String RESOLUTION_MESSAGE = "Use appropriate annotations over test method";
@@ -100,13 +94,14 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         // Build error message
         StringBuilder expectedErrorMessage = new StringBuilder();
         // Header message
-        expectedErrorMessage.append(UNEXPECTED_ACTUAL_CALLS_MESSAGE_PREFIX);
-        // Unverified actual calls
+        expectedErrorMessage.append(HEADER);
+        // List empty expected calls
+        expectedErrorMessage.append(EXPECTED_CALLS_PREFIX).append("]\n");
+        // List actual calls
         expectedErrorMessage
+                .append(ACTUAL_CALLS_PREFIX)
                 .append("\tTestLogCall(2), times = 2\n")
                 .append("\tTestLogCall(3), times = 1\n]\n");
-        // List empty expected calls
-        expectedErrorMessage.append(EXPECTED_CALLS_PREFIX).append("]");
 
         expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
         expect.that(exception).hasMessageThat().contains(RESOLUTION_MESSAGE);
@@ -128,16 +123,17 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         // Build error message
         StringBuilder expectedErrorMessage = new StringBuilder();
         // Header message
-        expectedErrorMessage.append(UNEXPECTED_CALLS_MESSAGE_PREFIX);
-        // List unexpected calls
+        expectedErrorMessage.append(HEADER);
+        // List expected calls
         expectedErrorMessage
+                .append(EXPECTED_CALLS_PREFIX)
                 .append("\tTestLogCall(2), times = 2\n")
                 .append("\tTestLogCall(3), times = 1\n]\n");
         // List empty actual calls
         expectedErrorMessage.append(ACTUAL_CALLS_PREFIX).append("]");
 
         expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
-        expect.that(exception).hasMessageThat().doesNotContain(RESOLUTION_MESSAGE);
+        expect.that(exception).hasMessageThat().contains(RESOLUTION_MESSAGE);
     }
 
     @Test
@@ -167,14 +163,18 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         // Build error message
         StringBuilder expectedErrorMessage = new StringBuilder();
         // Header message
-        expectedErrorMessage.append(UNEXPECTED_ACTUAL_CALLS_MESSAGE_PREFIX);
-        // List unexpected actual calls
-        expectedErrorMessage.append("\tTestLogCall(5), times = 2\n]\n");
-        // List all expected calls
+        expectedErrorMessage.append(HEADER);
+        // List expected calls
         expectedErrorMessage
                 .append(EXPECTED_CALLS_PREFIX)
                 .append("\tTestLogCall(2), times = 3\n")
-                .append("\tTestLogCall(4), times = 2\n]");
+                .append("\tTestLogCall(4), times = 2\n]\n");
+        // List actual calls
+        expectedErrorMessage
+                .append(ACTUAL_CALLS_PREFIX)
+                .append("\tTestLogCall(2), times = 3\n")
+                .append("\tTestLogCall(4), times = 2\n")
+                .append("\tTestLogCall(5), times = 2\n]");
 
         expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
         expect.that(exception).hasMessageThat().contains(RESOLUTION_MESSAGE);
@@ -202,9 +202,11 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         // Build error message
         StringBuilder expectedErrorMessage = new StringBuilder();
         // Header message
-        expectedErrorMessage.append(UNEXPECTED_CALLS_MESSAGE_PREFIX);
+        expectedErrorMessage.append(HEADER);
         // List unexpected calls
         expectedErrorMessage
+                .append(EXPECTED_CALLS_PREFIX)
+                .append("\tTestLogCall(1), times = 2\n")
                 .append("\tTestLogCall(2), times = 4\n")
                 .append("\tTestLogCall(3), times = 1\n]\n");
         // List all actual calls
@@ -214,7 +216,193 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
                 .append("\tTestLogCall(2), times = 1\n]");
 
         expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
-        expect.that(exception).hasMessageThat().doesNotContain(RESOLUTION_MESSAGE);
+        expect.that(exception).hasMessageThat().contains(RESOLUTION_MESSAGE);
+    }
+
+    @Test
+    public void testVerify_withAnyMatchingAllActualCalls_throwsNoException() {
+        // Init verifier with expected calls
+        TestLogVerifier testLogVerifier =
+                new TestLogVerifier(
+                        ImmutableSet.of(
+                                new TestLogCall(/* times= */ 2, /* param= */ TestLogCall.ANY)));
+
+        // Record one actual call at a time to mimic mocking of log call invocations
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 2));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 5));
+
+        testLogVerifier.verify(mDescription);
+    }
+
+    @Test
+    public void testVerify_withIdenticalExpectedInvocationsMatchesActual_throwsNoException() {
+        // Init verifier with expected calls
+        TestLogVerifier testLogVerifier =
+                new TestLogVerifier(
+                        ImmutableSet.of(
+                                new TestLogCall(/* times= */ 1, /* param= */ 4),
+                                new TestLogCall(/* times= */ 2, /* param= */ TestLogCall.ANY)));
+
+        // Record one actual call at a time to mimic mocking of log call invocations
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 2));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 4));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 2));
+
+        testLogVerifier.verify(mDescription);
+    }
+
+    @Test
+    public void testVerify_withActualCallMatchingAnyAndIdenticalExpectedCall_throwsNoException() {
+        // Init verifier with expected calls
+        TestLogVerifier testLogVerifier =
+                new TestLogVerifier(
+                        ImmutableSet.of(
+                                new TestLogCall(/* times= */ 1, /* param= */ TestLogCall.ANY),
+                                new TestLogCall(/* times= */ 2, /* param= */ 5)));
+
+        // Record one actual call at a time to mimic mocking of log call invocations
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 5));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 4));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 5));
+
+        testLogVerifier.verify(mDescription);
+    }
+
+    @Test
+    public void testVerify_withLongActualExpectedList_throwsNoException() {
+        // Init verifier with expected calls
+        TestLogVerifier testLogVerifier =
+                new TestLogVerifier(
+                        ImmutableSet.of(
+                                new TestLogCall(/* times= */ 2, /* param= */ 10),
+                                new TestLogCall(/* times= */ 1, /* param= */ 6),
+                                new TestLogCall(/* times= */ 3, /* param= */ TestLogCall.ANY),
+                                new TestLogCall(/* times= */ 1, /* param= */ 5)));
+
+        // Record one actual call at a time to mimic mocking of log call invocations
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 10));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 6));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 100));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 10));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 5));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 100));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 10));
+
+        testLogVerifier.verify(mDescription);
+    }
+
+    @Test
+    public void testVerify_withAdditionalAnyCalls_throwsException() {
+        // Init verifier with expected calls
+        TestLogVerifier testLogVerifier =
+                new TestLogVerifier(
+                        ImmutableSet.of(
+                                new TestLogCall(/* times= */ 2, /* param= */ TestLogCall.ANY)));
+
+        // Record one actual call at a time to mimic mocking of log call invocations
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 5));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 4));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 5));
+
+        Exception exception =
+                assertThrows(
+                        IllegalStateException.class, () -> testLogVerifier.verify(mDescription));
+
+        // Build error message
+        StringBuilder expectedErrorMessage = new StringBuilder();
+        // Header message
+        expectedErrorMessage.append(HEADER);
+        // List unexpected calls
+        expectedErrorMessage
+                .append(EXPECTED_CALLS_PREFIX)
+                .append("\tTestLogCall(*), times = 2\n]\n");
+        // List all actual calls
+        expectedErrorMessage
+                .append(ACTUAL_CALLS_PREFIX)
+                .append("\tTestLogCall(5), times = 2\n")
+                .append("\tTestLogCall(4), times = 1\n]");
+
+        expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
+        expect.that(exception).hasMessageThat().contains(RESOLUTION_MESSAGE);
+    }
+
+    @Test
+    public void testVerify_withAdditionalAnyCallsWithActualCallMatchingMultiple_throwsException() {
+        // Init verifier with expected calls
+        TestLogVerifier testLogVerifier =
+                new TestLogVerifier(
+                        ImmutableSet.of(
+                                new TestLogCall(/* times= */ 2, /* param= */ 20),
+                                new TestLogCall(/* times= */ 1, /* param= */ TestLogCall.ANY)));
+
+        // Record one actual call at a time to mimic mocking of log call invocations
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 20));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 20));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 20));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 20));
+
+        Exception exception =
+                assertThrows(
+                        IllegalStateException.class, () -> testLogVerifier.verify(mDescription));
+
+        // Build error message
+        StringBuilder expectedErrorMessage = new StringBuilder();
+        // Header message
+        expectedErrorMessage.append(HEADER);
+        // List unexpected calls
+        expectedErrorMessage
+                .append(EXPECTED_CALLS_PREFIX)
+                .append("\tTestLogCall(20), times = 2\n")
+                .append("\tTestLogCall(*), times = 1\n]\n");
+        // List all actual calls
+        expectedErrorMessage.append(ACTUAL_CALLS_PREFIX).append("\tTestLogCall(20), times = 4\n]");
+
+        expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
+        expect.that(exception).hasMessageThat().contains(RESOLUTION_MESSAGE);
+    }
+
+    @Test
+    public void testVerify_withMismatchInLongList_throwsException() {
+        // Init verifier with expected calls
+        TestLogVerifier testLogVerifier =
+                new TestLogVerifier(
+                        ImmutableSet.of(
+                                new TestLogCall(/* times= */ 1, /* param= */ 10),
+                                new TestLogCall(/* times= */ 3, /* param= */ 20),
+                                new TestLogCall(/* times= */ 2, /* param= */ TestLogCall.ANY)));
+
+        // Record one actual call at a time to mimic mocking of log call invocations
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 20));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 20));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 20));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 20));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 75));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 75));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 75));
+        testLogVerifier.recordActualCall(new TestLogCall(/* times= */ 1, /* param= */ 75));
+
+        Exception exception =
+                assertThrows(
+                        IllegalStateException.class, () -> testLogVerifier.verify(mDescription));
+
+        // Build error message
+        StringBuilder expectedErrorMessage = new StringBuilder();
+        // Header message
+        expectedErrorMessage.append(HEADER);
+        // List unexpected calls
+        expectedErrorMessage
+                .append(EXPECTED_CALLS_PREFIX)
+                .append("\tTestLogCall(10), times = 1\n")
+                .append("\tTestLogCall(20), times = 3\n")
+                .append("\tTestLogCall(*), times = 2\n]\n");
+        // List all actual calls
+        expectedErrorMessage
+                .append(ACTUAL_CALLS_PREFIX)
+                .append("\tTestLogCall(20), times = 4\n")
+                .append("\tTestLogCall(75), times = 4\n]");
+
+        expect.that(exception).hasMessageThat().contains(expectedErrorMessage);
+        expect.that(exception).hasMessageThat().contains(RESOLUTION_MESSAGE);
     }
 
     // Simple log verifier for testing
@@ -241,6 +429,7 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
 
     // Simple log call that takes in an integer value for testing.
     private static final class TestLogCall extends LogCall {
+        private static final int ANY = Integer.MIN_VALUE;
         private final int mParam;
 
         TestLogCall(int times, int param) {
@@ -249,8 +438,15 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
         }
 
         @Override
-        public boolean isIdenticalInvocation(LogCall other) {
-            return other instanceof TestLogCall && ((TestLogCall) other).mParam == mParam;
+        public boolean equals(Object o) {
+            return (o instanceof TestLogCall other) && other.mParam == mParam;
+        }
+
+        @Override
+        public boolean isEquivalentInvocation(LogCall o) {
+            // Skip comparison of param if ANY is used in either log call
+            return (o instanceof TestLogCall other)
+                    && (mParam == ANY || other.mParam == ANY || other.mParam == mParam);
         }
 
         @Override
@@ -260,7 +456,7 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
 
         @Override
         public String logInvocationToString() {
-            return "TestLogCall(" + mParam + ")";
+            return "TestLogCall(" + (mParam == ANY ? "*" : mParam) + ")";
         }
     }
 }

@@ -55,9 +55,6 @@ abstract class AdServicesTestCase extends DeviceSideTestCase {
     private static final String PROP_EXCEPTION_THROWN_FREQUENCY =
             "debug.adservices.test.postTestThrownFrequency";
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
-
     @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();

@@ -28,7 +28,6 @@ android_test {
         "truth",
         "adservices-clients",
         "adservices-test-utility",
-        "adservices-topics-cts-test-util",
     ],
     libs: [
         "android.test.base",
@@ -43,6 +42,10 @@ android_test {
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -56,7 +59,6 @@ android_test {
         "truth",
         "adservices-clients",
         "adservices-test-utility",
-        "adservices-topics-cts-test-util",
     ],
     libs: [
         "android.ext.adservices",
@@ -75,4 +77,8 @@ android_test {
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

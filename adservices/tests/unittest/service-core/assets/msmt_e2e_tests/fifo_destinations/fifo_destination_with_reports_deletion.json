@@ -14,7 +14,6 @@
       {
         "timestamp": "800000000001",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.publisher1.test",
           "platform_ad_id": "12345678-1234-1234-1234-123456789012"
@@ -45,7 +44,6 @@
       {
         "timestamp": "800000000003",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.publisher1.test",
           "platform_ad_id": "12345678-1234-1234-1234-123456789012"
@@ -80,7 +78,6 @@
       {
         "timestamp": "800000000005",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.publisher2.test",
           "platform_ad_id": "12345678-1234-1234-1234-123456789012"
@@ -115,7 +112,6 @@
       {
         "timestamp": "800000000006",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.publisher1.test",
           "platform_ad_id": "12345678-1234-1234-1234-123456789012"
@@ -149,7 +145,6 @@
       {
         "timestamp": "800000000011",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.publisher1.test",
           "platform_ad_id": "12345678-1234-1234-1234-123456789012"
@@ -179,7 +174,6 @@
       {
         "timestamp": "800000000012",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.publisher1.test",
           "platform_ad_id": "12345678-1234-1234-1234-123456789012"
@@ -299,7 +293,6 @@
       {
         "timestamp": "800000000007",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.destinationS1.test"
         },
         "responses": [{
@@ -332,7 +325,6 @@
       {
         "timestamp": "800000000008",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.destinationS4.test"
         },
         "responses": [{
@@ -365,7 +357,6 @@
       {
         "timestamp": "800000000009",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.destinationS2.test"
         },
         "responses": [{
@@ -398,7 +389,6 @@
       {
         "timestamp": "800000000010",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.destinationS3.test"
         },
         "responses": [{
@@ -431,7 +421,6 @@
       {
         "timestamp": "800000000013",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.destinationS1.test"
         },
         "responses": [{
@@ -469,6 +458,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.destinationS4.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x44",
@@ -485,6 +475,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.destinationS3.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x67",
@@ -503,6 +494,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.destinationS1.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x33",
@@ -519,6 +511,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "https://webdestinations21.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x22",
@@ -535,6 +528,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.destinationS4.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x44",
@@ -551,6 +545,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "https://webdestinations1ands4.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x11",
@@ -567,6 +562,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.destinationS3.com",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x67",

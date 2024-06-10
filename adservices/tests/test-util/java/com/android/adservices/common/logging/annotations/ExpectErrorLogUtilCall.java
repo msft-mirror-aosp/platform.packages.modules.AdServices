@@ -21,20 +21,36 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
 
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-/** Used to specify expected {@link ErrorLogUtil} calls. */
-// TODO(b/337042949): Support repeatable annotations.
+/**
+ * Used to specify expected {@link ErrorLogUtil} calls over test methods.
+ *
+ * <ol>
+ *   <li>To verify ErrorLogUtil.e(int, int) calls: @ExpectErrorLogUtilCall(X, Y)
+ *   <li>To verify ErrorLogUtil.e(Throwable, int, int): @ExpectErrorLogUtilCall(E.class, X, Y)
+ *   <li>To verify with any exception: @ExpectErrorLogUtilCall(Any.class, X, Y)
+ *   <li>To verify multiple same calls, use the times arg: @ExpectErrorLogUtilCall(X, Y, 5)
+ *   <li>To verify different invocations, use multiple annotations.
+ * </ol>
+ */
 @Retention(RUNTIME)
 @Target(METHOD)
+@Repeatable(ExpectErrorLogUtilCalls.class)
 public @interface ExpectErrorLogUtilCall {
     /** Default number of times to expect log call. */
     int DEFAULT_TIMES = 1;
 
-    /** Default empty exception. */
+    /** Default empty exception. Used to represent ErrorLogUtil.e(int, int) calls. */
     class None extends Throwable {
         private None() {}
+    }
+
+    /** Used to verify against any exception type for ErrorLogUtil.e(Throwable, int, int) calls. */
+    class Any extends Throwable {
+        private Any() {}
     }
 
     /**
