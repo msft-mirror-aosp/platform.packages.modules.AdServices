@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.META_INFO_LENGTH_BYTE;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.getMetaInfoByte;
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.getNumOfPaddedZerosBytes;
 
 import android.adservices.exceptions.UnsupportedPayloadSizeException;
 import android.annotation.NonNull;
@@ -100,6 +101,9 @@ public class AuctionServerPayloadFormatterV0
                 payload,
                 META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE,
                 data.length);
+        sLogger.v(
+                "Amount of padded zeros in bytes: %d",
+                getNumOfPaddedZerosBytes(getPayloadBucketSizeInBytes(data.length), data.length));
 
         AuctionServerPayloadFormattedData formattedData =
                 AuctionServerPayloadFormattedData.create(payload);

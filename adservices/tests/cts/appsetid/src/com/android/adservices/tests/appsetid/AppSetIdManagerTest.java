@@ -17,6 +17,7 @@ package com.android.adservices.tests.appsetid;
 
 import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_SERVICE;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertFalse;
@@ -127,7 +128,11 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
         OutcomeReceiverForTests<AppSetId> receiver = new OutcomeReceiverForTests<>();
 
         appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, receiver);
-        receiver.assertFailure(ServiceUnavailableException.class);
+
+        // TODO(b/345835218): Create an Exception Checker for internal exceptions in tests.
+        Exception e = receiver.assertFailure(IllegalStateException.class);
+        assertThat(e.getCause().getClass().getSimpleName())
+                .isEqualTo(ServiceUnavailableException.class.getSimpleName());
     }
 
     private boolean getAppSetIdAndVerifyRateLimitReached(AppSetIdManager manager)

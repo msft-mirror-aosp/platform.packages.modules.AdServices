@@ -169,7 +169,7 @@ public class BuyerInputGenerator {
         int encodedSignalsCount = 0;
         int encodedSignalsTotalSizeInBytes = 0;
         int encodedSignalsMaxSizeInBytes = 0;
-        int encodedSignalsMinSizeInBytes = 0;
+        int encodedSignalsMinSizeInBytes = Integer.MAX_VALUE;
 
         // Creating a distinct loop over signals as buyers with CAs and Signals could be mutually
         // exclusive
@@ -213,6 +213,10 @@ public class BuyerInputGenerator {
 
         // Log per buyer stats if feature is enabled
         if (mPasExtendedMetricsEnabled) {
+            // Sets encodedSignalsMinSizeInBytes as 0 if no encoded signal is found.
+            if (encodedSignalsMinSizeInBytes == Integer.MAX_VALUE) {
+                encodedSignalsMinSizeInBytes = 0;
+            }
             mAuctionServerPayloadMetricsStrategy
                     .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
                             perBuyerStats,
