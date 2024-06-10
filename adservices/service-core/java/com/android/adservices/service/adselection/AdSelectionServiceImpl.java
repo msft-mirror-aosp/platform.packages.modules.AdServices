@@ -456,6 +456,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
 
         if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName,
+                    inputParams.getCallerPackageName(),
+                    STATUS_KILLSWITCH_ENABLED,
+                    /* latencyMs= */ 0);
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
         }
 
