@@ -136,8 +136,8 @@ public final class SourceFixture {
                 WebUtil.validUri("https://subdomain.example.test");
         public static final UnsignedLong SHARED_DEBUG_KEY = new UnsignedLong(834690L);
         public static final List<String> ATTRIBUTION_SCOPES = List.of("1", "2", "3");
-        public static final Long ATTRIBUTION_SCOPE_LIMIT = 10L;
-        public static final Long MAX_NUM_VIEW_STATES = 1000L;
+        public static final Long ATTRIBUTION_SCOPE_LIMIT = 5L;
+        public static final Long MAX_NUM_VIEW_STATES = 10L;
         public static final Long REINSTALL_REATTRIBUTION_WINDOW = 841839879274L;
 
         public static final String buildAggregateSource() {
