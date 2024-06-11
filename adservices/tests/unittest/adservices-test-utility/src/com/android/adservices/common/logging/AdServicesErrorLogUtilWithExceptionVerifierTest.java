@@ -16,26 +16,29 @@
 
 package com.android.adservices.common.logging;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
+
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCalls;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCalls;
 
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.mockito.Mock;
 
-public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoTestCase {
+public class AdServicesErrorLogUtilWithExceptionVerifierTest extends AdServicesMockitoTestCase {
     @Mock private Description mMockDescription;
-    @Mock private ExpectErrorLogUtilCall mExpectErrorLogUtilCall1;
-    @Mock private ExpectErrorLogUtilCall mExpectErrorLogUtilCall2;
-    @Mock private ExpectErrorLogUtilCalls mExpectErrorLogUtilCalls;
+    @Mock private ExpectErrorLogUtilWithExceptionCall mExpectErrorLogUtilWithExceptionCall1;
+    @Mock private ExpectErrorLogUtilWithExceptionCall mExpectErrorLogUtilWithExceptionCall2;
+    @Mock private ExpectErrorLogUtilWithExceptionCalls mExpectErrorLogUtilWithExceptionCalls;
 
-    private final AdServicesErrorLogUtilVerifier mErrorLogUtilVerifier =
-            new AdServicesErrorLogUtilVerifier();
+    private final AdServicesErrorLogUtilWithExceptionVerifier mErrorLogUtilVerifier =
+            new AdServicesErrorLogUtilWithExceptionVerifier();
 
     @Test
     public void testGetExpectedLogCalls_withNoAnnotations_returnsEmptySet() {
@@ -46,11 +49,12 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
 
     @Test
     public void testGetExpectedLogCalls_withSingleAnnotation_returnsNonEmptyList() {
-        when(mMockDescription.getAnnotation(ExpectErrorLogUtilCall.class))
-                .thenReturn(mExpectErrorLogUtilCall1);
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCall.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCall1);
         ErrorLogUtilCall errorLogUtilCall =
                 mockAnnotationAndInitErrorLogUtilCall(
-                        mExpectErrorLogUtilCall1,
+                        mExpectErrorLogUtilWithExceptionCall1,
+                        /* throwable= */ IllegalArgumentException.class,
                         /* errorCode= */ 15,
                         /* ppapiName= */ 10,
                         /* times= */ 1);
@@ -61,9 +65,9 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
 
     @Test
     public void testGetExpectedLogCalls_withSingleAnnotationNegativeTimes_throwsException() {
-        when(mMockDescription.getAnnotation(ExpectErrorLogUtilCall.class))
-                .thenReturn(mExpectErrorLogUtilCall1);
-        when(mExpectErrorLogUtilCall1.times()).thenReturn(-1);
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCall.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCall1);
+        when(mExpectErrorLogUtilWithExceptionCall1.times()).thenReturn(-1);
 
         Exception exception =
                 assertThrows(
@@ -72,14 +76,14 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
 
         expect.that(exception)
                 .hasMessageThat()
-                .isEqualTo("Detected @ExpectErrorLogUtilCall with times < 0!");
+                .isEqualTo("Detected @ExpectErrorLogUtilWithExceptionCall with times < 0!");
     }
 
     @Test
     public void testGetExpectedLogCalls_withSingleAnnotationZeroTimes_throwsException() {
-        when(mMockDescription.getAnnotation(ExpectErrorLogUtilCall.class))
-                .thenReturn(mExpectErrorLogUtilCall1);
-        when(mExpectErrorLogUtilCall1.times()).thenReturn(0);
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCall.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCall1);
+        when(mExpectErrorLogUtilWithExceptionCall1.times()).thenReturn(0);
 
         Exception exception =
                 assertThrows(
@@ -89,47 +93,54 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
         expect.that(exception)
                 .hasMessageThat()
                 .isEqualTo(
-                        "Detected @ExpectErrorLogUtilCall with times = 0. Remove annotation as the "
-                                + "test will automatically fail if any log calls are detected.");
+                        "Detected @ExpectErrorLogUtilWithExceptionCall with times = 0. Remove "
+                                + "annotation as the test will automatically fail if any log "
+                                + "calls are detected.");
     }
 
     @Test
     public void testGetExpectedLogCalls_withMultipleValidAnnotations_returnsNonEmptyList() {
-        when(mMockDescription.getAnnotation(ExpectErrorLogUtilCalls.class))
-                .thenReturn(mExpectErrorLogUtilCalls);
-        when(mExpectErrorLogUtilCalls.value())
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCalls.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCalls);
+        when(mExpectErrorLogUtilWithExceptionCalls.value())
                 .thenReturn(
-                        new ExpectErrorLogUtilCall[] {
-                            mExpectErrorLogUtilCall1, mExpectErrorLogUtilCall2
+                        new ExpectErrorLogUtilWithExceptionCall[] {
+                            mExpectErrorLogUtilWithExceptionCall1,
+                            mExpectErrorLogUtilWithExceptionCall2
                         });
         ErrorLogUtilCall errorLogUtilCall1 =
                 mockAnnotationAndInitErrorLogUtilCall(
-                        mExpectErrorLogUtilCall1,
+                        mExpectErrorLogUtilWithExceptionCall1,
+                        /* throwable= */ IllegalArgumentException.class,
                         /* errorCode= */ 15,
                         /* ppapiName= */ 10,
                         /* times= */ 1);
         ErrorLogUtilCall errorLogUtilCall2 =
                 mockAnnotationAndInitErrorLogUtilCall(
-                        mExpectErrorLogUtilCall2,
+                        mExpectErrorLogUtilWithExceptionCall2,
+                        /* throwable= */ Any.class,
                         /* errorCode= */ 15,
-                        /* ppapiName= */ 20,
+                        /* ppapiName= */ 10,
                         /* times= */ 1);
 
+        // Even though both invocations are the same, they are not equal. Therefore,
+        // no exception should be thrown calling to de-dupe annotations using times.
         expect.that(mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription))
                 .containsExactly(errorLogUtilCall1, errorLogUtilCall2);
     }
 
     @Test
     public void testGetExpectedLogCalls_withMultipleAnnotationZeroTimes_throwsException() {
-        when(mMockDescription.getAnnotation(ExpectErrorLogUtilCalls.class))
-                .thenReturn(mExpectErrorLogUtilCalls);
-        when(mExpectErrorLogUtilCalls.value())
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCalls.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCalls);
+        when(mExpectErrorLogUtilWithExceptionCalls.value())
                 .thenReturn(
-                        new ExpectErrorLogUtilCall[] {
-                            mExpectErrorLogUtilCall1, mExpectErrorLogUtilCall2
+                        new ExpectErrorLogUtilWithExceptionCall[] {
+                            mExpectErrorLogUtilWithExceptionCall1,
+                            mExpectErrorLogUtilWithExceptionCall2
                         });
-        when(mExpectErrorLogUtilCall1.times()).thenReturn(1);
-        when(mExpectErrorLogUtilCall2.times()).thenReturn(0);
+        when(mExpectErrorLogUtilWithExceptionCall1.times()).thenReturn(1);
+        when(mExpectErrorLogUtilWithExceptionCall2.times()).thenReturn(0);
 
         Exception exception =
                 assertThrows(
@@ -139,20 +150,22 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
         expect.that(exception)
                 .hasMessageThat()
                 .isEqualTo(
-                        "Detected @ExpectErrorLogUtilCall with times = 0. Remove annotation as the "
-                                + "test will automatically fail if any log calls are detected.");
+                        "Detected @ExpectErrorLogUtilWithExceptionCall with times = 0. Remove "
+                                + "annotation as the test will automatically fail if any log "
+                                + "calls are detected.");
     }
 
     @Test
     public void testGetExpectedLogCalls_withMultipleAnnotationNegativeTimes_throwsException() {
-        when(mMockDescription.getAnnotation(ExpectErrorLogUtilCalls.class))
-                .thenReturn(mExpectErrorLogUtilCalls);
-        when(mExpectErrorLogUtilCalls.value())
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCalls.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCalls);
+        when(mExpectErrorLogUtilWithExceptionCalls.value())
                 .thenReturn(
-                        new ExpectErrorLogUtilCall[] {
-                            mExpectErrorLogUtilCall1, mExpectErrorLogUtilCall2
+                        new ExpectErrorLogUtilWithExceptionCall[] {
+                            mExpectErrorLogUtilWithExceptionCall1,
+                            mExpectErrorLogUtilWithExceptionCall2
                         });
-        when(mExpectErrorLogUtilCall1.times()).thenReturn(-2);
+        when(mExpectErrorLogUtilWithExceptionCall1.times()).thenReturn(-2);
 
         Exception exception =
                 assertThrows(
@@ -161,25 +174,28 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
 
         expect.that(exception)
                 .hasMessageThat()
-                .isEqualTo("Detected @ExpectErrorLogUtilCall with times < 0!");
+                .isEqualTo("Detected @ExpectErrorLogUtilWithExceptionCall with times < 0!");
     }
 
     @Test
     public void testGetExpectedLogCalls_withMultipleAnnotationsSameInvocation_throwsException() {
-        when(mMockDescription.getAnnotation(ExpectErrorLogUtilCalls.class))
-                .thenReturn(mExpectErrorLogUtilCalls);
-        when(mExpectErrorLogUtilCalls.value())
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCalls.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCalls);
+        when(mExpectErrorLogUtilWithExceptionCalls.value())
                 .thenReturn(
-                        new ExpectErrorLogUtilCall[] {
-                            mExpectErrorLogUtilCall1, mExpectErrorLogUtilCall2
+                        new ExpectErrorLogUtilWithExceptionCall[] {
+                            mExpectErrorLogUtilWithExceptionCall1,
+                            mExpectErrorLogUtilWithExceptionCall2
                         });
         mockAnnotationAndInitErrorLogUtilCall(
-                mExpectErrorLogUtilCall1,
+                mExpectErrorLogUtilWithExceptionCall1,
+                /* throwable= */ IllegalArgumentException.class,
                 /* errorCode= */ 30,
                 /* ppapiName= */ 20,
                 /* times= */ 1);
         mockAnnotationAndInitErrorLogUtilCall(
-                mExpectErrorLogUtilCall2,
+                mExpectErrorLogUtilWithExceptionCall2,
+                /* throwable= */ IllegalArgumentException.class,
                 /* errorCode= */ 30,
                 /* ppapiName= */ 20,
                 /* times= */ 2);
@@ -194,29 +210,32 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
         expect.that(exception)
                 .hasMessageThat()
                 .isEqualTo(
-                        "Detected @ExpectErrorLogUtilCall annotations representing the same "
-                                + "invocation! De-dupe by using times arg");
+                        "Detected @ExpectErrorLogUtilWithExceptionCall annotations representing "
+                                + "the same invocation! De-dupe by using times arg");
     }
 
     @Test
     public void testResolutionMessage() {
         expect.that(mErrorLogUtilVerifier.getResolutionMessage())
                 .isEqualTo(
-                        "Please make sure to use @ExpectErrorLogUtilCall(..) over test method to"
-                                + " denote all expected ErrorLogUtil.e(int, int) calls.");
+                        "Please make sure to use @ExpectErrorLogUtilWithExceptionCall(..) over "
+                                + "test method to denote all expected ErrorLogUtil.e(Throwable, "
+                                + "int, int) calls.");
     }
 
     private ErrorLogUtilCall mockAnnotationAndInitErrorLogUtilCall(
-            ExpectErrorLogUtilCall annotation,
+            ExpectErrorLogUtilWithExceptionCall annotation,
+            Class<? extends Throwable> throwable,
             int errorCode,
             int ppapiName,
             int times) {
         // Mock annotation
+        doReturn(throwable).when(annotation).throwable();
         when(annotation.errorCode()).thenReturn(errorCode);
         when(annotation.ppapiName()).thenReturn(ppapiName);
         when(annotation.times()).thenReturn(times);
 
         // Return corresponding ErrorLogUtilCall object that is usually needed for verification
-        return ErrorLogUtilCall.createWithNoException(errorCode, ppapiName, times);
+        return new ErrorLogUtilCall(throwable, errorCode, ppapiName, times);
     }
 }

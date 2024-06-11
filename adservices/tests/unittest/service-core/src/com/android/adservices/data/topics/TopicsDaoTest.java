@@ -19,6 +19,8 @@ package com.android.adservices.data.topics;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -29,28 +31,22 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Pair;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.MediumTest;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -65,9 +61,9 @@ import java.util.stream.Stream;
 
 /** Unit tests for {@link com.android.adservices.data.topics.TopicsDao} */
 @MediumTest
-public final class TopicsDaoTest {
-    @SuppressWarnings({"unused"})
-    private static final String TAG = "TopicsDaoTest";
+@SpyStatic(ErrorLogUtil.class)
+@RequiresSdkLevelAtLeastS
+public final class TopicsDaoTest extends AdServicesExtendedMockitoTestCase {
     // TODO: (b/232807776) Replace below hardcoded taxonomy version and model version
     private static final long TAXONOMY_VERSION = 1L;
     private static final long MODEL_VERSION = 1L;
@@ -75,25 +71,11 @@ public final class TopicsDaoTest {
     private static final byte[] ENCAPSULATED_KEY =
             "encapsulatedKey".getBytes(StandardCharsets.UTF_8);
 
-    @SuppressWarnings({"unused"})
-    private final Context mContext = ApplicationProvider.getApplicationContext();
-
-    private MockitoSession mStaticMockSession;
-
     private final DbHelper mDBHelper = DbTestUtil.getDbHelperForTest();
     private final TopicsDao mTopicsDao = new TopicsDao(mDBHelper);
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(ErrorLogUtil.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
 
         // Erase all existing data.
         DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
@@ -109,18 +91,13 @@ public final class TopicsDaoTest {
         DbTestUtil.deleteTable(TopicsTables.TopicContributorsContract.TABLE);
     }
 
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
-    }
-
     @Test
     public void testPersistAndGetAppClassificationTopics() {
-        final long epochId1 = 1L;
-        final long epochId2 = 2L;
+        long epochId1 = 1L;
+        long epochId2 = 2L;
 
-        final String app1 = "app1";
-        final String app2 = "app2";
+        String app1 = "app1";
+        String app2 = "app2";
 
         // Initialize appClassificationTopicsMap and topics
         Map<String, List<Topic>> appClassificationTopicsMap1 = new HashMap<>();
@@ -155,7 +132,7 @@ public final class TopicsDaoTest {
         assertThat(topicsMapFromDb2).isEqualTo(expectedTopicsMap2);
 
         // to test non-existed epoch ID
-        final long epochId3 = 3L;
+        long epochId3 = 3L;
         assertThat(mTopicsDao.retrieveAppClassificationTopics(epochId3)).isEmpty();
     }
 
@@ -229,7 +206,7 @@ public final class TopicsDaoTest {
 
     @Test
     public void testGetTopTopicsAndPersistTopics_multiPersistWithSameEpoch() {
-        final long epochId = 1L;
+        long epochId = 1L;
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -777,9 +754,9 @@ public final class TopicsDaoTest {
 
     @Test
     public void testRecordBlockedTopicAndRetrieveBlockedTopics() {
-        final int topicId = 1;
-        final long taxonomyVersion = 1L;
-        final long modelVersion = 1L;
+        int topicId = 1;
+        long taxonomyVersion = 1L;
+        long modelVersion = 1L;
         Topic topicToBlock = Topic.create(topicId, taxonomyVersion, modelVersion);
         mTopicsDao.recordBlockedTopic(topicToBlock);
 
@@ -792,9 +769,9 @@ public final class TopicsDaoTest {
 
     @Test
     public void testRecordBlockedTopicAndRemoveBlockedTopic() {
-        final int topicId = 1;
-        final long taxonomyVersion = 1L;
-        final long modelVersion = 1L;
+        int topicId = 1;
+        long taxonomyVersion = 1L;
+        long modelVersion = 1L;
         Topic topicToBlock = Topic.create(topicId, taxonomyVersion, modelVersion);
         mTopicsDao.recordBlockedTopic(topicToBlock);
 
@@ -813,8 +790,8 @@ public final class TopicsDaoTest {
 
     @Test
     public void testEraseDataOfOldEpochs() {
-        final long epochToDeleteFrom = 1L;
-        final long currentEpoch = 4L;
+        long epochToDeleteFrom = 1L;
+        long currentEpoch = 4L;
 
         List<Topic> topTopics_epoch_1 =
                 Stream.of(11, 12, 13, 14, 15, 16)
@@ -858,7 +835,7 @@ public final class TopicsDaoTest {
         TopicsDao topicsDao = new TopicsDao(mockDbHelper);
 
         // Do nothing for ErrorLogUtil calls.
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         // Throw exception on deletion of any table.
         when(mockDbHelper.safeGetWritableDatabase()).thenReturn(mockDatabase);
         when(mockDatabase.delete(any(), any(), any())).thenThrow(SQLException.class);
@@ -867,11 +844,12 @@ public final class TopicsDaoTest {
         topicsDao.deleteAllTopicsTables(/*tablesToExclude*/ List.of());
 
         // Verify the correct client error log is reported for all 11 tables.
-        ExtendedMockito.verify(
+        verify(
                 () ->
                         ErrorLogUtil.e(
-                                any(Throwable.class),
-                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE),
+                                any(),
+                                eq(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE),
                                 eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)),
                 times(11));
     }
@@ -893,12 +871,12 @@ public final class TopicsDaoTest {
         EncryptedTopic encryptedTopic1 = buildEncryptedTopic(topic1);
         EncryptedTopic encryptedTopic2 = buildEncryptedTopic(topic2);
 
-        final String app1 = "app1";
-        final String app2 = "app2";
-        final String sdk1 = "sdk1";
-        final String sdk2 = "sdk2";
-        final long epochId1 = 1L;
-        final long epochId2 = 1L;
+        String app1 = "app1";
+        String app2 = "app2";
+        String sdk1 = "sdk1";
+        String sdk2 = "sdk2";
+        long epochId1 = 1L;
+        long epochId2 = 1L;
 
         List<String> tableExclusionList = List.of(TopicsTables.BlockedTopicsContract.TABLE);
 
@@ -975,12 +953,12 @@ public final class TopicsDaoTest {
     @Test
     public void testDeleteFromTableByColumn() {
         // Test with AppClassificationTopics Contract
-        final long epochId = 1L;
+        long epochId = 1L;
 
-        final String app1 = "app1";
-        final String app2 = "app2";
-        final String app3 = "app3";
-        final String sdk = "sdk";
+        String app1 = "app1";
+        String app2 = "app2";
+        String app3 = "app3";
+        String sdk = "sdk";
 
         // Initialize appClassificationTopicsMap and topics
         Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
@@ -1090,10 +1068,10 @@ public final class TopicsDaoTest {
 
     @Test
     public void testDeleteEntriesFromTableByColumnWithEqualCondition() {
-        final long epochId1 = 1L;
-        final long epochId2 = 2L;
-        final String app = "app";
-        final String sdk = "sdk";
+        long epochId1 = 1L;
+        long epochId2 = 2L;
+        String app = "app";
+        String sdk = "sdk";
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -1182,12 +1160,12 @@ public final class TopicsDaoTest {
 
     @Test
     public void testDeleteEntriesFromTableByColumnWithEqualCondition_nonExistingArguments() {
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         // Persist an entry to Returned Topics Table
-        final long epochId1 = 1L;
-        final int numberOfLookBackEpochs = 1;
-        final String app = "app";
-        final String sdk = "sdk";
+        long epochId1 = 1L;
+        int numberOfLookBackEpochs = 1;
+        String app = "app";
+        String sdk = "sdk";
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         mTopicsDao.persistReturnedAppTopicsMap(epochId1, Map.of(Pair.create(app, sdk), topic1));
         Map<Long, Map<Pair<String, String>, Topic>> expectedReturnedTopicsMap =
@@ -1225,10 +1203,10 @@ public final class TopicsDaoTest {
                 /* isStringEqualConditionColumnValue */ false);
         assertThat(mTopicsDao.retrieveReturnedTopics(epochId1, numberOfLookBackEpochs))
                 .isEqualTo(expectedReturnedTopicsMap);
-        ExtendedMockito.verify(
+        verify(
                 () ->
                         ErrorLogUtil.e(
-                                any(Throwable.class),
+                                any(),
                                 eq(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE),
                                 eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)),
@@ -1238,10 +1216,10 @@ public final class TopicsDaoTest {
     @Test
     public void testDeleteEntriesFromTableByColumnWithEqualCondition_emptyValuesToDelete() {
         // Persist an entry to Returned Topics Table
-        final long epochId1 = 1L;
-        final int numberOfLookBackEpochs = 1;
-        final String app = "app";
-        final String sdk = "sdk";
+        long epochId1 = 1L;
+        int numberOfLookBackEpochs = 1;
+        String app = "app";
+        String sdk = "sdk";
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         mTopicsDao.persistReturnedAppTopicsMap(epochId1, Map.of(Pair.create(app, sdk), topic1));
         Map<Long, Map<Pair<String, String>, Topic>> expectedReturnedTopicsMap =
@@ -1263,10 +1241,10 @@ public final class TopicsDaoTest {
     @Test
     public void testDeleteFromTableByColumn_mismatchedTableAndColumnName() {
         // Test with AppClassificationTopics Contract
-        final long taxonomyVersion = 1L;
-        final long modelVersion = 1L;
-        final long epochId1 = 1L;
-        final String app1 = "app1";
+        long taxonomyVersion = 1L;
+        long modelVersion = 1L;
+        long epochId1 = 1L;
+        String app1 = "app1";
 
         Topic topic1 = Topic.create(/* topic */ 1, taxonomyVersion, modelVersion);
 
@@ -1277,7 +1255,7 @@ public final class TopicsDaoTest {
         appClassificationTopicsMap1.put(app1, List.of(topic1));
 
         mTopicsDao.persistAppClassificationTopics(epochId1, appClassificationTopicsMap1);
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         // Justify the status before erasing data
         // MapEpoch1: app1 -> topic1
@@ -1307,10 +1285,10 @@ public final class TopicsDaoTest {
                 List.of(app1));
         // Nothing will happen as no satisfied entry to delete
         assertThat(topicsMapFromDb1).isEqualTo(expectedTopicsMap1);
-        ExtendedMockito.verify(
+        verify(
                 () ->
                         ErrorLogUtil.e(
-                                any(Throwable.class),
+                                any(),
                                 eq(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE),
                                 eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)),
@@ -1320,8 +1298,8 @@ public final class TopicsDaoTest {
     @Test
     public void testDeleteFromTableByColumn_emptyListToDelete() {
         // Test with AppClassificationTopics Contract
-        final long epochId1 = 1L;
-        final String app = "app";
+        long epochId1 = 1L;
+        String app = "app";
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
 
@@ -1348,7 +1326,7 @@ public final class TopicsDaoTest {
 
     @Test
     public void testPersistAndRetrieveEpochOrigin() {
-        final long epochOrigin = 1234567890L;
+        long epochOrigin = 1234567890L;
 
         mTopicsDao.persistEpochOrigin(epochOrigin);
         assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(epochOrigin);
@@ -1357,8 +1335,8 @@ public final class TopicsDaoTest {
     // TODO(b/230669931): Add test to check SQLException when it's enabled in TopicsDao.
     @Test
     public void testPersistAndRetrieveEpochOrigin_multipleInsertion() {
-        final long epochOrigin1 = 1L;
-        final long epochOrigin2 = 2L;
+        long epochOrigin1 = 1L;
+        long epochOrigin2 = 2L;
 
         mTopicsDao.persistEpochOrigin(epochOrigin1);
         assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(epochOrigin1);
@@ -1381,12 +1359,12 @@ public final class TopicsDaoTest {
 
     @Test
     public void testPersistAndRetrieveTopicContributors() {
-        final long epochId = 1L;
-        final int topicId1 = 1;
-        final int topicId2 = 2;
-        final int topicId3 = 3;
-        final String app1 = "app1";
-        final String app2 = "app2";
+        long epochId = 1L;
+        int topicId1 = 1;
+        int topicId2 = 2;
+        int topicId3 = 3;
+        String app1 = "app1";
+        String app2 = "app2";
 
         Map<Integer, Set<String>> topicToContributorsMap =
                 Map.of(
@@ -1412,7 +1390,7 @@ public final class TopicsDaoTest {
 
     @Test
     public void testPersistAndRetrieveTopicContributors_emptyMap() {
-        final long epochId = 1L;
+        long epochId = 1L;
 
         mTopicsDao.persistTopicContributors(epochId, Map.of());
 

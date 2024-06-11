@@ -43,49 +43,27 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.DevContextUtils;
-import com.android.adservices.common.annotations.SetCompatModeFlags;
-import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /** In the manifest file, no API permissions are declared for this test. */
-@RunWith(AndroidJUnit4.class)
-@SetCompatModeFlags
-@SetPpapiAppAllowList
 // TODO: Add tests for measurement (b/238194122).
-public final class PermissionsNoPermTest {
+public final class PermissionsNoPermTest extends CtsAdServicesPermissionsNoPermEndToEndTestCase {
     private static final String TAG = "PermissionsNoPermTest";
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String CALLER_NOT_AUTHORIZED =
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Permission was not requested.";
-
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAllApisEnabledTests();
 
     private boolean mHasAccessToDevOverrides;
 
@@ -111,7 +89,7 @@ public final class PermissionsNoPermTest {
         ExecutionException exception =
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -134,7 +112,7 @@ public final class PermissionsNoPermTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> customAudienceClient.joinCustomAudience(customAudience).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -155,7 +133,7 @@ public final class PermissionsNoPermTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> customAudienceClient.fetchAndJoinCustomAudience(request).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -175,7 +153,7 @@ public final class PermissionsNoPermTest {
                                                 AdTechIdentifier.fromString("buyer.example.com"),
                                                 "exampleCustomAudience")
                                         .get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -203,7 +181,7 @@ public final class PermissionsNoPermTest {
                                 testCustomAudienceClient
                                         .overrideCustomAudienceRemoteInfo(request)
                                         .get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -229,7 +207,7 @@ public final class PermissionsNoPermTest {
                                 testCustomAudienceClient
                                         .removeCustomAudienceRemoteInfoOverride(request)
                                         .get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -246,7 +224,7 @@ public final class PermissionsNoPermTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> testCustomAudienceClient.resetAllCustomAudienceOverrides().get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -263,7 +241,7 @@ public final class PermissionsNoPermTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -280,7 +258,7 @@ public final class PermissionsNoPermTest {
         ExecutionException exception =
                 assertThrows(
                         ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -302,7 +280,7 @@ public final class PermissionsNoPermTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.reportImpression(request).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -330,7 +308,7 @@ public final class PermissionsNoPermTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.reportEvent(request).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -346,10 +324,11 @@ public final class PermissionsNoPermTest {
         String decisionLogicJs = "function test() { return \"hello world\"; }";
         AdSelectionSignals trustedScoringSignals =
                 AdSelectionSignals.fromString(
-                        "{\n"
-                                + "\t\"render_uri_1\": \"signals_for_1\",\n"
-                                + "\t\"render_uri_2\": \"signals_for_2\"\n"
-                                + "}");
+                        """
+                        {
+                        \t"render_uri_1": "signals_for_1",
+                        \t"render_uri_2": "signals_for_2"
+                        }""");
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -360,12 +339,11 @@ public final class PermissionsNoPermTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            testAdSelectionClient
-                                    .overrideAdSelectionConfigRemoteInfo(request)
-                                    .get();
-                        });
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+                        () ->
+                                testAdSelectionClient
+                                        .overrideAdSelectionConfigRemoteInfo(request)
+                                        .get());
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -386,12 +364,11 @@ public final class PermissionsNoPermTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            testAdSelectionClient
-                                    .removeAdSelectionConfigRemoteInfoOverride(request)
-                                    .get();
-                        });
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+                        () ->
+                                testAdSelectionClient
+                                        .removeAdSelectionConfigRemoteInfoOverride(request)
+                                        .get());
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -407,10 +384,11 @@ public final class PermissionsNoPermTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            testAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides().get();
-                        });
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+                        () ->
+                                testAdSelectionClient
+                                        .resetAllAdSelectionConfigRemoteOverrides()
+                                        .get());
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -434,7 +412,7 @@ public final class PermissionsNoPermTest {
                         ExecutionException.class,
                         () -> mAdSelectionClient.updateAdCounterHistogram(request).get());
 
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -460,12 +438,11 @@ public final class PermissionsNoPermTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            testAdSelectionClient
-                                    .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
-                                    .get();
-                        });
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+                        () ->
+                                testAdSelectionClient
+                                        .overrideAdSelectionFromOutcomesConfigRemoteInfo(request)
+                                        .get());
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -487,12 +464,12 @@ public final class PermissionsNoPermTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            testAdSelectionClient
-                                    .removeAdSelectionFromOutcomesConfigRemoteInfoOverride(request)
-                                    .get();
-                        });
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+                        () ->
+                                testAdSelectionClient
+                                        .removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
+                                                request)
+                                        .get());
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -508,11 +485,10 @@ public final class PermissionsNoPermTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            testAdSelectionClient
-                                    .resetAllAdSelectionFromOutcomesConfigRemoteOverrides()
-                                    .get();
-                        });
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+                        () ->
+                                testAdSelectionClient
+                                        .resetAllAdSelectionFromOutcomesConfigRemoteOverrides()
+                                        .get());
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 }

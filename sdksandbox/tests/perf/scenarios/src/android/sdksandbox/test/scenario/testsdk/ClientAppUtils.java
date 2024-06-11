@@ -45,6 +45,7 @@ final class ClientAppUtils {
     // Client app must use these resource ids for their buttons to be identified in test.
     private static final String INITIALIZE_SDK_BUTTON = "initializeSdkButton";
     private static final String LOAD_AD_BUTTON = "loadAdButton";
+    private static final String RESIZE_AD_CONTAINER_BUTTON = "resizeAdContainerButton";
     private static final long UI_NAVIGATION_WAIT_MS = 1000;
     private static final int UI_WAIT_INITIALIZE_MS = 1000;
     private static final int UI_WAIT_LOAD_AD_MS = 1000;
@@ -144,6 +145,26 @@ final class ClientAppUtils {
             retries++;
         }
         throw new AssertionError("Ad not loaded");
+    }
+
+    /**
+     * Triggers resize of ad container by finding the resizeAdContainer button and clicking on it.
+     *
+     * @throws RuntimeException if button is not found.
+     */
+    public void resizeAdContainer() {
+        UiObject2 resizeAdContainerButton = getResizeAdContainerButton();
+        if (resizeAdContainerButton != null) {
+            resizeAdContainerButton.click();
+        } else {
+            throw new RuntimeException("Did not find 'Resize Ad Container' button.");
+        }
+    }
+
+    private UiObject2 getResizeAdContainerButton() {
+        return mUiDevice.wait(
+                Until.findObject(By.res(mPackageName, RESIZE_AD_CONTAINER_BUTTON)),
+                UI_NAVIGATION_WAIT_MS);
     }
 
     /** Gets the client app package name. */

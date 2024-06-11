@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package android.sdksandbox.test.scenario.testsdk;
 
-package com.android.adservices.common.logging.annotations;
+import android.platform.test.microbenchmark.Microbenchmark;
+import android.platform.test.rule.DropCachesRule;
+import android.platform.test.rule.KillAppsRule;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.junit.Rule;
+import org.junit.rules.RuleChain;
+import org.junit.runner.RunWith;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-/** Container annotation for multiple usages of {@link ExpectErrorLogUtilCall}. */
-@Retention(RUNTIME)
-@Target(METHOD)
-public @interface ExpectErrorLogUtilCalls {
-    ExpectErrorLogUtilCall[] value();
+@RunWith(Microbenchmark.class)
+public class LoadAdWithResizeMicrobenchmark extends LoadAdWithResize {
+    @Rule
+    public RuleChain rules =
+            RuleChain.outerRule(new KillAppsRule(sPackageName)).around(new DropCachesRule());
 }

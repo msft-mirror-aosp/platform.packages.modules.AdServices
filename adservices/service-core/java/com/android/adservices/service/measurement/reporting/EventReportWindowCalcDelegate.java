@@ -75,8 +75,7 @@ public class EventReportWindowCalcDelegate {
     }
 
     private int getMaxReportCount(@NonNull Source source, boolean isInstallCase) {
-        // TODO(b/290101531): Cleanup flags
-        if (mFlags.getMeasurementFlexLiteApiEnabled() && source.getMaxEventLevelReports() != null) {
+        if (source.getMaxEventLevelReports() != null) {
             return source.getMaxEventLevelReports();
         }
 
@@ -321,7 +320,7 @@ public class EventReportWindowCalcDelegate {
     private List<Pair<Long, Long>> getEffectiveReportingWindows(Source source,
             boolean installState) {
         // TODO(b/290221611) Remove early reporting windows from code, only use them for flags.
-        if (mFlags.getMeasurementFlexLiteApiEnabled() && source.hasManualEventReportWindows()) {
+        if (source.hasManualEventReportWindows()) {
             return source.parsedProcessedEventReportWindows();
         }
         List<Long> defaultEarlyWindowEnds =

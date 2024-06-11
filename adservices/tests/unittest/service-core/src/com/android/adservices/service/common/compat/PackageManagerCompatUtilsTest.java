@@ -41,7 +41,7 @@ import android.content.pm.PackageManager;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.modules.utils.build.SdkLevel;
@@ -272,7 +272,7 @@ public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMocki
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
+    @ExpectErrorLogUtilWithExceptionCall(
             throwable = NameNotFoundException.class,
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
             ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)

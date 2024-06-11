@@ -1,8 +1,5 @@
 {
   "description": "One source with source type \"navigation\" with event report windows: [1day, 7day], expiry: 10 days & max reports: 3. Triggers at 0.5day, 8 day. 1 Report should be generated",
-  "phflags_override": {
-    "measurement_flex_lite_api_enabled": "true"
-  },
   "input": {
     "sources": [{
       "registration_request": {

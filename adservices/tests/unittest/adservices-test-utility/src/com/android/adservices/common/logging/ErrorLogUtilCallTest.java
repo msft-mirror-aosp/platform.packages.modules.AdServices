@@ -16,8 +16,8 @@
 
 package com.android.adservices.common.logging;
 
-import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.Any;
-import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.None;
+import static com.android.adservices.common.logging.ErrorLogUtilCall.None;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
@@ -27,6 +27,14 @@ import org.junit.Test;
 
 public final class ErrorLogUtilCallTest extends AdServicesUnitTestCase {
     private final EqualsTester mEqualsTester = new EqualsTester(expect);
+
+    @Test
+    public void testCreateWithNoException() {
+        ErrorLogUtilCall actual = ErrorLogUtilCall.createWithNoException(1, 2, 3);
+
+        expect.that(actual).isEqualTo(new ErrorLogUtilCall(None.class, 1, 2, 3));
+        expect.that(actual.mTimes).isEqualTo(3);
+    }
 
     @Test
     public void testEquals_withNonLogCallObject_returnsFalse() {

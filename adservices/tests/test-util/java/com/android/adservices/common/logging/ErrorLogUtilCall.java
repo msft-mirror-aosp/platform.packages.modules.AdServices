@@ -16,9 +16,8 @@
 
 package com.android.adservices.common.logging;
 
-import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.Any;
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.DEFAULT_TIMES;
-import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.None;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.shared.testing.LogCall;
@@ -49,6 +48,14 @@ public final class ErrorLogUtilCall extends LogCall {
         mThrowable = throwable;
         mErrorCode = errorCode;
         mPpapiName = ppapiName;
+    }
+
+    /**
+     * Creates an appropriate object to represent {@code ErrorLogUtil.e(int, int)} with appropriate
+     * number of invocation times.
+     */
+    public static ErrorLogUtilCall createWithNoException(int errorCode, int ppapiName, int times) {
+        return new ErrorLogUtilCall(None.class, errorCode, ppapiName, times);
     }
 
     @Override
@@ -116,5 +123,10 @@ public final class ErrorLogUtilCall extends LogCall {
 
     private boolean isCallWithAnyException() {
         return Objects.equals(mThrowable, Any.class);
+    }
+
+    /** Placeholder exception used to represent {@code ErrorLogUtil.e(int, int)} calls. */
+    static final class None extends Throwable {
+        private None() {}
     }
 }

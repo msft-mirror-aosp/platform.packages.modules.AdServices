@@ -1,8 +1,5 @@
 {
   "description": "One source with source type \"navigation\" with maximum report windows and event report quota, rejected for too many report states.",
-  "phflags_override": {
-    "measurement_flex_lite_api_enabled": "true"
-  },
   "input": {
     "sources": [{
       "registration_request": {

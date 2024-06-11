@@ -20,23 +20,27 @@ import static com.android.adservices.shared.testing.common.DumpHelper.assertDump
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.server.adservices.data.topics.TopicsDbTestUtil.doesTableExistAndColumnCountMatch;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
-
 /** Unit test to test class {@link TopicsDbHelper} */
-public class TopicsDbHelperTest {
+public final class TopicsDbHelperTest extends AdServicesUnitTestCase {
+
     @Test
     public void testOnCreate() {
         SQLiteDatabase db = TopicsDbTestUtil.getDbHelperForTest().safeGetReadableDatabase();
-        assertNotNull(db);
-        assertTrue(doesTableExistAndColumnCountMatch(db, "blocked_topics", 4));
+
+        assertWithMessage("db").that(db).isNotNull();
+        assertWithMessage("doesTableExistAndColumnCountMatch()")
+                .that(doesTableExistAndColumnCountMatch(db, "blocked_topics", 4))
+                .isTrue();
     }
 
     @Test

@@ -1,8 +1,5 @@
 {
   "description": "Interplay of the source field, coarse_event_report_destinations, with information gain. See comments on the registrations.",
-  "phflags_override": {
-    "measurement_flex_lite_api_enabled": "true"
-  },
   "input": {
     "sources": [
       // Source is registered - it has a single destination type.

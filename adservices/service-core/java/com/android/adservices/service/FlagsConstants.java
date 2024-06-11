@@ -1182,9 +1182,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING =
             "measurement_enable_trigger_data_matching";
 
-    public static final String KEY_MEASUREMENT_FLEX_LITE_API_ENABLED =
-            "measurement_flex_lite_api_enabled";
-
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT =
             "measurement_flex_api_max_information_gain_event";
 

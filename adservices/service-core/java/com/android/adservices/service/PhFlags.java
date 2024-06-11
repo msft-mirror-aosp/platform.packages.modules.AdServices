@@ -2953,13 +2953,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementFlexLiteApiEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
-                MEASUREMENT_FLEX_LITE_API_ENABLED);
-    }
-
-    @Override
     public float getMeasurementFlexApiMaxInformationGainEvent() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT,
@@ -3175,8 +3168,7 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getMeasurementEnableAttributionScope() {
-        return getMeasurementFlexLiteApiEnabled()
-                && getDeviceConfigFlag(
+        return getDeviceConfigFlag(
                         FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
                         MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE);
     }
@@ -3807,11 +3799,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING
                         + " = "
                         + getMeasurementEnableTriggerDataMatching());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_FLEX_LITE_API_ENABLED
-                        + " = "
-                        + getMeasurementFlexLiteApiEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT
