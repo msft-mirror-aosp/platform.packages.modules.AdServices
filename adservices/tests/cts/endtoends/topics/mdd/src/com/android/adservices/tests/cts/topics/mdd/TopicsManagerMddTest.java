@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.tests.cts.topics;
+package com.android.adservices.tests.cts.topics.mdd;
 
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
@@ -25,21 +25,17 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
-import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.AdServicesSupportHelper;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
+import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
@@ -53,60 +49,48 @@ import java.util.concurrent.Executors;
  * <li>Unbind and re-bind AdvertisingTopicsClient to pick new downloaded assets.
  * <li>Verify topics are from the downloaded assets.
  */
-@RunWith(JUnit4.class)
-public class TopicsManagerMddTest {
-    private static final String TAG = "TopicsManagerMddTest";
+@SetIntegerFlag(
+        name = KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+        value = TopicsManagerMddTest.TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC)
+@SetLongFlag(
+        name = KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
+        value = TopicsManagerMddTest.TEST_EPOCH_JOB_PERIOD_MS)
+@SetStringFlag(
+        name = KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL,
+        value = TopicsManagerMddTest.TEST_MDD_MANIFEST_FILE_URL)
+public final class TopicsManagerMddTest extends CtsAdServicesMddTestCase {
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
     // Job ID for Mdd Wifi Charging Task.
     public static final int MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID = 14;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
-    // Waiting time for assets to be downloaded after triggering MDD job.
-    private static final long TEST_MDD_DOWNLOAD_WAIT_TIME_MS = 45000;
-    // Waiting time for the AdvertisingTopicsClient to unbind.
-    private static final long TEST_UNBIND_WAIT_TIME = 3000;
+    static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
 
-    // Default Epoch Period.
-    private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
+    // Use 0 percent for random topic in the test so that we can verify the returned topic.
+    static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
 
     // Manifest file that points to CTS test assets:
     // http://google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
     // These assets are have asset version set to 0 for verification in tests.
-    private static final String TEST_MDD_MANIFEST_FILE_URL =
+    static final String TEST_MDD_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/2055/f8026ab834d1a287920b9a4ffe7bb1f04d200885";
 
-    // Use 0 percent for random topic in the test so that we can verify the returned topic.
-    private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
-    private static final int TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
+    // Waiting time for assets to be downloaded after triggering MDD job.
+    private static final long TEST_MDD_DOWNLOAD_WAIT_TIME_MS = 45000;
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+    // Waiting time for the AdvertisingTopicsClient to unbind.
+    private static final long TEST_UNBIND_WAIT_TIME = 3000;
+
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
-
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    // We need to turn off random topic so that we can verify the returned topic.
-                    .setFlag(
-                            KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
-                            TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC)
-                    .setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS)
-                    .setFlag(
-                            KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL, TEST_MDD_MANIFEST_FILE_URL)
-                    .setCompatModeFlags();
+    private final String mAdServicesPackageName =
+            AdServicesSupportHelper.getInstance().getAdServicesPackageName();
 
     @Before
     public void setup() throws Exception {
         // Kill AdServices process.
-        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
+        AdservicesTestHelper.killAdservicesProcess(mAdServicesPackageName);
 
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
@@ -137,7 +121,7 @@ public class TopicsManagerMddTest {
         triggerAndWaitForMddToFinishDownload();
 
         // Kill AdServices API to unbind TOPICS_SERVICE.
-        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
+        AdservicesTestHelper.killAdservicesProcess(mAdServicesPackageName);
 
         // Wait for AdvertisingTopicsClient to unbind.
         Thread.sleep(TEST_UNBIND_WAIT_TIME);
@@ -188,7 +172,7 @@ public class TopicsManagerMddTest {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f"
                         + " "
-                        + ADSERVICES_PACKAGE_NAME
+                        + mAdServicesPackageName
                         + " "
                         + MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
 
@@ -199,6 +183,6 @@ public class TopicsManagerMddTest {
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
+                "cmd jobscheduler run -f" + " " + mAdServicesPackageName + " " + EPOCH_JOB_ID);
     }
 }
