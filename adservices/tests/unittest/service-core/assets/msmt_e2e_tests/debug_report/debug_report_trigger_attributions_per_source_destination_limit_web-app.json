@@ -41,8 +41,7 @@
     "triggers": [
       {
         "registration_request": {
-          "registrant": "com.example.2d1",
-          "attribution_src_url": "https://www.ad-tech1.test"
+          "registrant": "com.example.2d1"
         },
         "responses": [{
           "url": "https://www.ad-tech1.test",
@@ -65,8 +64,7 @@
       },
       {
         "registration_request": {
-          "registrant": "com.example.2d1",
-          "attribution_src_url": "https://www.ad-tech1.test"
+          "registrant": "com.example.2d1"
         },
         "responses": [{
           "url": "https://www.ad-tech1.test",

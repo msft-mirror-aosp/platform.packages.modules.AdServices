@@ -71,7 +71,7 @@ java_sdk_library {
     apex_available: ["com.android.adservices"],
     installable: true,
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
+        extra_check_modules: ["AdServicesProdLintChecker"],
         disabled_checks: ["NewAdServicesFile"], // This library is T+ only. It doesn't need BackCompat Lint check.
     },
 }

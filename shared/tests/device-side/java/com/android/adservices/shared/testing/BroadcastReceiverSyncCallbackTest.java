@@ -16,7 +16,7 @@
 
 package com.android.adservices.shared.testing;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.runOnMainThread;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,15 +29,35 @@ import android.content.Intent;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback.ResultBroadcastReceiver;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 
 import org.junit.Test;
 
+// TODO(b/344032694): should extend SyncCallbackTestCase instead (it might require changing
+// BroadcastReceiverSyncCallback to implement SyncCallback)
 public final class BroadcastReceiverSyncCallbackTest extends SharedMockitoTestCase {
     private static final int TIMEOUT_MS = 200;
     private static final String ACTION = "android.cts.ACTION_1";
     private static final Intent INTENT = new Intent(ACTION);
 
-    private final ResultBroadcastReceiver mReceiver = new ResultBroadcastReceiver(TIMEOUT_MS);
+    private final ResultBroadcastReceiver mReceiver =
+            new ResultBroadcastReceiver(
+                    SyncCallbackFactory.newSettingsBuilder()
+                            .setMaxTimeoutMs(TIMEOUT_MS)
+                            .setFailIfCalledOnMainThread(false)
+                            .build());
+
+    @Test
+    public void testInvalidConstructor() {
+        assertThrows(NullPointerException.class, () -> new ResultBroadcastReceiver(null));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new ResultBroadcastReceiver(
+                                SyncCallbackFactory.newSettingsBuilder()
+                                        .setFailIfCalledOnMainThread(true)
+                                        .build()));
+    }
 
     @Test
     public void testPrepare() {

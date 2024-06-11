@@ -87,6 +87,7 @@ public class MobileDataDownloadFactory {
     private static final String ENCRYPTION_KEYS_MANIFEST_ID = "EncryptionKeysManifestId";
     private static final String UI_OTA_STRINGS_MANIFEST_ID = "UiOtaStringsManifestId";
     private static final String UI_OTA_RESOURCES_MANIFEST_ID = "UiOtaResourcesManifestId";
+    private static final String ENROLLMENT_PROTO_MANIFEST_ID = "EnrollmentProtoManifestId";
 
     private static final int MAX_ADB_LOGCAT_SIZE = 4000;
 
@@ -117,7 +118,7 @@ public class MobileDataDownloadFactory {
                                 }
                             });
 
-                sSingletonMdd =
+                MobileDataDownloadBuilder mobileDataDownloadBuilder =
                         MobileDataDownloadBuilder.newBuilder()
                                 .setContext(context)
                                 .setControlExecutor(getControlExecutor())
@@ -129,7 +130,10 @@ public class MobileDataDownloadFactory {
                                                 flags, fileStorage, fileDownloader))
                                 .addFileGroupPopulator(
                                         getMeasurementManifestPopulator(
-                                                flags, fileStorage, fileDownloader))
+                                                flags,
+                                                fileStorage,
+                                                fileDownloader,
+                                                /* getProto= */ false))
                                 .addFileGroupPopulator(
                                         getEncryptionKeysManifestPopulator(
                                                 context, flags, fileStorage, fileDownloader))
@@ -137,8 +141,15 @@ public class MobileDataDownloadFactory {
                                         getUiOtaResourcesManifestPopulator(
                                                 flags, fileStorage, fileDownloader))
                                 .setLoggerOptional(getMddLogger(flags))
-                                .setFlagsOptional(Optional.of(MddFlags.getInstance()))
-                                .build();
+                                .setFlagsOptional(Optional.of(MddFlags.getInstance()));
+
+                if (flags.getEnrollmentProtoFileEnabled()) {
+                    mobileDataDownloadBuilder.addFileGroupPopulator(
+                            getMeasurementManifestPopulator(
+                                    flags, fileStorage, fileDownloader, /* getProto= */ true));
+                }
+
+                sSingletonMdd = mobileDataDownloadBuilder.build();
             }
 
             return sSingletonMdd;
@@ -373,13 +384,22 @@ public class MobileDataDownloadFactory {
 
     @VisibleForTesting
     static ManifestFileGroupPopulator getMeasurementManifestPopulator(
-            Flags flags, SynchronousFileStorage fileStorage, FileDownloader fileDownloader) {
+            Flags flags,
+            SynchronousFileStorage fileStorage,
+            FileDownloader fileDownloader,
+            boolean getProto) {
         Context context = ApplicationContextSingleton.get();
+
+        String manifestId = getProto ? ENROLLMENT_PROTO_MANIFEST_ID : MEASUREMENT_MANIFEST_ID;
+        String fileUrl =
+                getProto
+                        ? flags.getMddEnrollmentManifestFileUrl()
+                        : flags.getMeasurementManifestFileUrl();
 
         ManifestFileFlag manifestFileFlag =
                 ManifestFileFlag.newBuilder()
-                        .setManifestId(MEASUREMENT_MANIFEST_ID)
-                        .setManifestFileUrl(flags.getMeasurementManifestFileUrl())
+                        .setManifestId(manifestId)
+                        .setManifestFileUrl(fileUrl)
                         .build();
 
         ManifestConfigFileParser manifestConfigFileParser =

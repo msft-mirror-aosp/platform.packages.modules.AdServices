@@ -238,7 +238,6 @@ public final class AppImportanceFilter {
         mAdServicesLogger.logApiCallStats(
                 new ApiCallStats.Builder()
                         .setCode(AD_SERVICES_API_CALLED)
-                        .setApiClass(mApiClass)
                         .setApiName(apiNameLoggingId)
                         .setResultCode(resultCode)
                         .setSdkPackageName(sdkName != null ? sdkName : "")

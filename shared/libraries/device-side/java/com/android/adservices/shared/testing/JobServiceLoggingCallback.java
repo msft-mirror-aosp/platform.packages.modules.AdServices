@@ -22,6 +22,7 @@ import com.android.adservices.shared.testing.concurrency.DeviceSideSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 
+// TODO(b/344610522): add unit test
 /**
  * A synchronized callback used for logging {@link JobService} on testing purpose.
  *
@@ -41,7 +42,7 @@ public final class JobServiceLoggingCallback extends DeviceSideSyncCallback {
 
     /** This is used for checking a stub method is called. */
     public void onLoggingMethodCalled() {
-        setCalled();
+        internalSetCalled("onLoggingMethodCalled()");
     }
 
     /** Assert the corresponding logging method has happened. */
