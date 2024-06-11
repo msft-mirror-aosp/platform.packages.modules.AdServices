@@ -8,7 +8,6 @@
       // S1: max_event_states -> 10, attribution scopes-> ["1", "2", "3"]  destinations -> [D1]
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -49,7 +48,6 @@
       // S1 will be deactivated due to different max_event_states.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -90,7 +88,6 @@
       // Given S1 was deactivated, this should match to S2.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -162,7 +159,6 @@
       // Given S1 was deactivated, this should match to S2.
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [

@@ -44,6 +44,7 @@ import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -58,9 +59,11 @@ import java.util.concurrent.Executors;
 
 /** Unit tests for {@link android.adservices.customaudience.CustomAudience} */
 public final class CustomAudienceTest {
+    // TODO(b/342332791): add to these tests with CA priority
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
+    private static final double PRIORITY = 5.3;
 
     // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
     @Rule(order = 0)
@@ -100,6 +103,74 @@ public final class CustomAudienceTest {
         assertEquals(
                 AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1),
                 validCustomAudience.getAds());
+    }
+
+    @Ignore("b/344757062")
+    @Test
+    public void testBuildValidCustomAudienceSuccessWithPriority() {
+        CustomAudience validCustomAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        .setPriority(PRIORITY)
+                        .build();
+
+        assertEquals(CommonFixture.VALID_BUYER_1, validCustomAudience.getBuyer());
+        assertEquals(CustomAudienceFixture.VALID_NAME, validCustomAudience.getName());
+        assertEquals(
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                validCustomAudience.getActivationTime());
+        assertEquals(
+                CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                validCustomAudience.getExpirationTime());
+        assertEquals(
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER_1),
+                validCustomAudience.getDailyUpdateUri());
+        assertEquals(
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS,
+                validCustomAudience.getUserBiddingSignals());
+        assertEquals(
+                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                        CommonFixture.VALID_BUYER_1),
+                validCustomAudience.getTrustedBiddingData());
+        assertEquals(
+                CustomAudienceFixture.getValidBiddingLogicUriByBuyer(CommonFixture.VALID_BUYER_1),
+                validCustomAudience.getBiddingLogicUri());
+        assertEquals(
+                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1),
+                validCustomAudience.getAds());
+        assertEquals(PRIORITY, validCustomAudience.getPriority(), 0);
+    }
+
+    @Ignore("b/344757062")
+    @Test
+    public void testBuildValidCustomAudienceSuccessWithoutPriority() {
+        CustomAudience validCustomAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
+
+        assertEquals(CommonFixture.VALID_BUYER_1, validCustomAudience.getBuyer());
+        assertEquals(CustomAudienceFixture.VALID_NAME, validCustomAudience.getName());
+        assertEquals(
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                validCustomAudience.getActivationTime());
+        assertEquals(
+                CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                validCustomAudience.getExpirationTime());
+        assertEquals(
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER_1),
+                validCustomAudience.getDailyUpdateUri());
+        assertEquals(
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS,
+                validCustomAudience.getUserBiddingSignals());
+        assertEquals(
+                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                        CommonFixture.VALID_BUYER_1),
+                validCustomAudience.getTrustedBiddingData());
+        assertEquals(
+                CustomAudienceFixture.getValidBiddingLogicUriByBuyer(CommonFixture.VALID_BUYER_1),
+                validCustomAudience.getBiddingLogicUri());
+        assertEquals(
+                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1),
+                validCustomAudience.getAds());
+        assertEquals(0, validCustomAudience.getPriority(), 0);
     }
 
     @Test
@@ -173,6 +244,22 @@ public final class CustomAudienceTest {
     public void testParcelValidCustomAudienceSuccess() {
         CustomAudience validCustomAudience =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
+
+        Parcel p = Parcel.obtain();
+        validCustomAudience.writeToParcel(p, 0);
+        p.setDataPosition(0);
+        CustomAudience fromParcel = CustomAudience.CREATOR.createFromParcel(p);
+
+        assertEquals(validCustomAudience, fromParcel);
+    }
+
+    /** @hide */
+    @Test
+    public void testParcelValidCustomAudienceSuccessWithPriority() {
+        CustomAudience validCustomAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        .setPriority(PRIORITY)
+                        .build();
 
         Parcel p = Parcel.obtain();
         validCustomAudience.writeToParcel(p, 0);

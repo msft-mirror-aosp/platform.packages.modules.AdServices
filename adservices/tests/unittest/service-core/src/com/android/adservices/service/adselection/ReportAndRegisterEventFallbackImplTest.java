@@ -96,7 +96,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -1610,9 +1610,10 @@ public class ReportAndRegisterEventFallbackImplTest {
         return callback;
     }
 
-    // TODO(b/337014024): extend FailableOnSuccessyncCallback instead
+    // TODO(b/344677163): there's no result and FailableResultSyncCallback<Void> wouldn't work; if
+    // more tests need something like this, we should create a FailableOnSuccessSyncCallback class.
     private static final class ReportEventTestCallback
-            extends FailableResultSyncCallback<Boolean, FledgeErrorResponse>
+            extends FailableOnResultSyncCallback<Boolean, FledgeErrorResponse>
             implements ReportInteractionCallback {
 
         ReportEventTestCallback(SyncCallbackSettings settings) {
@@ -1622,11 +1623,6 @@ public class ReportAndRegisterEventFallbackImplTest {
         @Override
         public void onSuccess() throws RemoteException {
             injectResult(Boolean.TRUE);
-        }
-
-        @Override
-        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
-            injectFailure(fledgeErrorResponse);
         }
 
         void assertSuccess() throws InterruptedException {

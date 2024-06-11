@@ -1,0 +1,961 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="InlinedApi"
+        message="Field requires version 8 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.ReportEventRequest#FLAG_REPORTING_DESTINATION_BUYER`"
+        errorLine1="            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="142"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="InlinedApi"
+        message="Field requires version 8 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.ReportEventRequest#FLAG_REPORTING_DESTINATION_SELLER`"
+        errorLine1="            ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="144"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="InlinedApi"
+        message="Field requires version 8 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.FrequencyCapFilters#AD_EVENT_TYPE_CLICK`"
+        errorLine1="                                    FrequencyCapFilters.AD_EVENT_TYPE_CLICK,"
+        errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="413"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.app.sdksandbox.SandboxedSdkProvider`"
+        errorLine1="public class SdkFledge extends SandboxedSdkProvider {"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="62"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdTechIdentifier#fromString`"
+        errorLine1="    private static final AdTechIdentifier SELLER = AdTechIdentifier.fromString(&quot;test.com&quot;);"
+        errorLine2="                                                                    ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="66"
+            column="69"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdTechIdentifier#fromString`"
+        errorLine1="    private static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString(&quot;test2.com&quot;);"
+        errorLine2="                                                                     ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="68"
+            column="70"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdTechIdentifier#fromString`"
+        errorLine1="    private static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString(&quot;test3.com&quot;);"
+        errorLine2="                                                                     ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="69"
+            column="70"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdSelectionSignals#fromString`"
+        errorLine1="            AdSelectionSignals.fromString("
+        errorLine2="                               ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="109"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdSelectionSignals#fromString`"
+        errorLine1="            AdSelectionSignals.fromString("
+        errorLine2="                               ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="116"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setCustomAudienceBuyers`"
+        errorLine1="                    .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="127"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setDecisionLogicUri`"
+        errorLine1="                    .setDecisionLogicUri("
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="128"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setTrustedScoringSignalsUri`"
+        errorLine1="                    .setTrustedScoringSignalsUri("
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="133"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#build`"
+        errorLine1="                    .build();"
+        errorLine2="                     ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="138"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="            throw new LoadSdkException(e, new Bundle());"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="163"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="            throw new LoadSdkException(e, new Bundle());"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="281"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.adselection.AddAdSelectionOverrideRequest`"
+        errorLine1="                    new AddAdSelectionOverrideRequest("
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="286"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="            throw new LoadSdkException(e, new Bundle());"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="296"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder`"
+        errorLine1="                    new AddCustomAudienceOverrideRequest.Builder()"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="301"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder#setBuyer`"
+        errorLine1="                            .setBuyer(customAudience1.getBuyer())"
+        errorLine2="                             ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="302"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getBuyer`"
+        errorLine1="                            .setBuyer(customAudience1.getBuyer())"
+        errorLine2="                                                      ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="302"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder#setName`"
+        errorLine1="                            .setName(customAudience1.getName())"
+        errorLine2="                             ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="303"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getName`"
+        errorLine1="                            .setName(customAudience1.getName())"
+        errorLine2="                                                     ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="303"
+            column="54"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder#setBiddingLogicJs`"
+        errorLine1="                            .setBiddingLogicJs(biddingLogicJsBuyer1)"
+        errorLine2="                             ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="304"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder#setTrustedBiddingSignals`"
+        errorLine1="                            .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)"
+        errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="305"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder#build`"
+        errorLine1="                            .build();"
+        errorLine2="                             ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="306"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder`"
+        errorLine1="                    new AddCustomAudienceOverrideRequest.Builder()"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="308"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder#setBuyer`"
+        errorLine1="                            .setBuyer(customAudience2.getBuyer())"
+        errorLine2="                             ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="309"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getBuyer`"
+        errorLine1="                            .setBuyer(customAudience2.getBuyer())"
+        errorLine2="                                                      ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="309"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder#setName`"
+        errorLine1="                            .setName(customAudience2.getName())"
+        errorLine2="                             ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="310"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience#getName`"
+        errorLine1="                            .setName(customAudience2.getName())"
+        errorLine2="                                                     ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="310"
+            column="54"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder#setBiddingLogicJs`"
+        errorLine1="                            .setBiddingLogicJs(biddingLogicJsBuyer2)"
+        errorLine2="                             ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="311"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder#setTrustedBiddingSignals`"
+        errorLine1="                            .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)"
+        errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="312"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder#build`"
+        errorLine1="                            .build();"
+        errorLine2="                             ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="313"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="            throw new LoadSdkException(e, new Bundle());"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="326"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig#getDecisionLogicUri`"
+        errorLine1="                &quot;Running ad selection with logic URI &quot; + AD_SELECTION_CONFIG.getDecisionLogicUri());"
+        errorLine2="                                                                             ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="331"
+            column="78"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig#getDecisionLogicUri`"
+        errorLine1="                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="335"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionOutcome#getAdSelectionId`"
+        errorLine1="            adSelectionId = outcome.getAdSelectionId();"
+        errorLine2="                                    ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="343"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionOutcome#getRenderUri`"
+        errorLine1="            if (!outcome.getRenderUri()"
+        errorLine2="                         ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="345"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionOutcome#getRenderUri`"
+        errorLine1="                                outcome.getRenderUri().toString());"
+        errorLine2="                                        ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="350"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="                throw new LoadSdkException(new Exception(errorMessage), new Bundle());"
+        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="352"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="            throw new LoadSdkException(e, new Bundle());"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="359"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.adselection.ReportImpressionRequest`"
+        errorLine1="                    new ReportImpressionRequest(adSelectionId, AD_SELECTION_CONFIG);"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="364"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="            throw new LoadSdkException(e, new Bundle());"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="373"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 8 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.adselection.UpdateAdCounterHistogramRequest.Builder`"
+        errorLine1="                    new UpdateAdCounterHistogramRequest.Builder("
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="411"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig#getSeller`"
+        errorLine1="                                    AD_SELECTION_CONFIG.getSeller())"
+        errorLine2="                                                        ~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="414"
+            column="57"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 8 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.UpdateAdCounterHistogramRequest.Builder#build`"
+        errorLine1="                            .build();"
+        errorLine2="                             ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="415"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.LoadSdkException`"
+        errorLine1="            throw new LoadSdkException(exception, new Bundle());"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="425"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.app.sdksandbox.SandboxedSdk`"
+        errorLine1="        return new SandboxedSdk(new Binder());"
+        errorLine2="               ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="429"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.app.sdksandbox.SandboxedSdkProvider#getContext`"
+        errorLine1="                        .setContext(getContext())"
+        errorLine2="                                    ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="441"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.app.sdksandbox.SandboxedSdkProvider#getContext`"
+        errorLine1="                        .setContext(getContext())"
+        errorLine2="                                    ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="446"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.app.sdksandbox.SandboxedSdkProvider#getContext`"
+        errorLine1="                        .setContext(getContext())"
+        errorLine2="                                    ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="451"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.app.sdksandbox.SandboxedSdkProvider#getContext`"
+        errorLine1="                        .setContext(getContext())"
+        errorLine2="                                    ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="456"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.common.AdData.Builder`"
+        errorLine1="                    new AdData.Builder()"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="476"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#setRenderUri`"
+        errorLine1="                            .setRenderUri(getUri(buyer.toString(), AD_URI_PREFIX + &quot;/ad&quot; + (i + 1)))"
+        errorLine2="                             ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="477"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#setMetadata`"
+        errorLine1="                            .setMetadata(&quot;{\&quot;result\&quot;:&quot; + bids.get(i) + &quot;}&quot;)"
+        errorLine2="                             ~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="478"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdData.Builder#build`"
+        errorLine1="                            .build());"
+        errorLine2="                             ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="479"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.customaudience.CustomAudience.Builder`"
+        errorLine1="        return new CustomAudience.Builder()"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="482"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setBuyer`"
+        errorLine1="                .setBuyer(buyer)"
+        errorLine2="                 ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="483"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setName`"
+        errorLine1="                .setName(buyer + &quot;testCustomAudienceName&quot;)"
+        errorLine2="                 ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="484"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setActivationTime`"
+        errorLine1="                .setActivationTime(Instant.now().truncatedTo(ChronoUnit.MILLIS))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="485"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setExpirationTime`"
+        errorLine1="                .setExpirationTime(Instant.now().plus(Duration.ofDays(40)))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="486"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setDailyUpdateUri`"
+        errorLine1="                .setDailyUpdateUri(getUri(buyer.toString(), &quot;/update&quot;))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="487"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setUserBiddingSignals`"
+        errorLine1="                .setUserBiddingSignals("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="488"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdSelectionSignals#fromString`"
+        errorLine1="                        AdSelectionSignals.fromString(&quot;{&apos;valid&apos;: &apos;yep&apos;, &apos;opaque&apos;: &apos;definitely&apos;}&quot;))"
+        errorLine2="                                           ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="489"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setTrustedBiddingData`"
+        errorLine1="                .setTrustedBiddingData("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="490"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.customaudience.TrustedBiddingData.Builder`"
+        errorLine1="                        new TrustedBiddingData.Builder()"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="491"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.TrustedBiddingData.Builder#setTrustedBiddingKeys`"
+        errorLine1="                                .setTrustedBiddingKeys("
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="492"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.TrustedBiddingData.Builder#setTrustedBiddingUri`"
+        errorLine1="                                .setTrustedBiddingUri(getUri(buyer.toString(), &quot;/trusted/bidding&quot;))"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="494"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.TrustedBiddingData.Builder#build`"
+        errorLine1="                                .build())"
+        errorLine2="                                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="495"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setBiddingLogicUri`"
+        errorLine1="                .setBiddingLogicUri(getUri(buyer.toString(), BUYER_BIDDING_LOGIC_URI_PATH))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="496"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#setAds`"
+        errorLine1="                .setAds(ads)"
+        errorLine2="                 ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="497"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.customaudience.CustomAudience.Builder#build`"
+        errorLine1="                .build();"
+        errorLine2="                 ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="498"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `new android.adservices.adselection.AdSelectionConfig.Builder`"
+        errorLine1="        return new AdSelectionConfig.Builder()"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="502"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setSeller`"
+        errorLine1="                .setSeller(SELLER)"
+        errorLine2="                 ~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="503"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setDecisionLogicUri`"
+        errorLine1="                .setDecisionLogicUri(getUri(SELLER.toString(), &quot;/update&quot;))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="504"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setCustomAudienceBuyers`"
+        errorLine1="                .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="505"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setAdSelectionSignals`"
+        errorLine1="                .setAdSelectionSignals(AdSelectionSignals.EMPTY)"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="506"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Field requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdSelectionSignals#EMPTY`"
+        errorLine1="                .setAdSelectionSignals(AdSelectionSignals.EMPTY)"
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="506"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setSellerSignals`"
+        errorLine1="                .setSellerSignals(AdSelectionSignals.fromString(&quot;{\&quot;test_seller_signals\&quot;:1}&quot;))"
+        errorLine2="                 ~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="507"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdSelectionSignals#fromString`"
+        errorLine1="                .setSellerSignals(AdSelectionSignals.fromString(&quot;{\&quot;test_seller_signals\&quot;:1}&quot;))"
+        errorLine2="                                                     ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="507"
+            column="54"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setPerBuyerSignals`"
+        errorLine1="                .setPerBuyerSignals("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="508"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdSelectionSignals#fromString`"
+        errorLine1="                                AdSelectionSignals.fromString(&quot;{\&quot;buyer_signals\&quot;:1}&quot;),"
+        errorLine2="                                                   ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="511"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.common.AdSelectionSignals#fromString`"
+        errorLine1="                                AdSelectionSignals.fromString(&quot;{\&quot;buyer_signals\&quot;:2}&quot;)))"
+        errorLine2="                                                   ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="513"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires version 4 of the Ad Services Extensions SDK (current min is 0): `android.adservices.adselection.AdSelectionConfig.Builder#setTrustedScoringSignalsUri`"
+        errorLine1="                .setTrustedScoringSignalsUri(getUri(SELLER.toString(), &quot;/trusted/scoring&quot;));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/src/com/android/tests/providers/sdkfledge/SdkFledge.java"
+            line="514"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionCode` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; package=&quot;com.android.tests.providers.sdkfledge&quot;>"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/SdkFledge/android_common/e18b8e8d84cb9f664aa09a397b08c165/manifest_fixer/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionName` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; package=&quot;com.android.tests.providers.sdkfledge&quot;>"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/SdkFledge/android_common/e18b8e8d84cb9f664aa09a397b08c165/manifest_fixer/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        message="Should explicitly set `android:icon`, there is no default"
+        errorLine1="    &lt;application android:usesNonSdkApi=&quot;true&quot; android:extractNativeLibs=&quot;false&quot;>"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/sandbox/fledge/providers/sdkFledge/SdkFledge/android_common/e18b8e8d84cb9f664aa09a397b08c165/manifest_fixer/AndroidManifest.xml"
+            line="21"
+            column="6"/>
+    </issue>
+
+</issues>
