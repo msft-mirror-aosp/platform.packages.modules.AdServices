@@ -62,7 +62,7 @@ public class SellerConfigurationTest extends AdServicesUnitTestCase {
 
         expect.that(sellerConfiguration.getTargetPayloadSizeBytes())
                 .isEqualTo(SELLER_TARGET_SIZE_B);
-        expect.that(sellerConfiguration.getPerBuyerConfigurations()).isNull();
+        expect.that(sellerConfiguration.getPerBuyerConfigurations()).isEmpty();
     }
 
     @Test
@@ -106,27 +106,31 @@ public class SellerConfigurationTest extends AdServicesUnitTestCase {
         SellerConfiguration fromParcel = SellerConfiguration.CREATOR.createFromParcel(p);
 
         expect.that(fromParcel.getTargetPayloadSizeBytes()).isEqualTo(SELLER_TARGET_SIZE_B);
-        expect.that(fromParcel.getPerBuyerConfigurations()).isNull();
+        expect.that(fromParcel.getPerBuyerConfigurations()).isEmpty();
     }
 
     @Test
     public void testSellerConfiguration_withNegativeTargetSize_throws() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SellerConfiguration.Builder().setTargetPayloadSizeBytes(-1).build());
+                () -> new SellerConfiguration.Builder().setTargetPayloadSizeBytes(-1));
     }
 
     @Test
-    public void testSellerConfiguration_withZeroTargetSize_throws() {
+    public void testSellerConfiguration_withNullPerBuyerConfiguration_throws() {
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new SellerConfiguration.Builder().setTargetPayloadSizeBytes(0).build());
+                NullPointerException.class,
+                () ->
+                        new SellerConfiguration.Builder()
+                                .setTargetPayloadSizeBytes(SELLER_TARGET_SIZE_B)
+                                .setPerBuyerConfigurations(null)
+                                .build());
     }
 
     @Test
     public void testSellerConfiguration_withTargetSizeNotSet_throws() {
         assertThrows(
-                IllegalArgumentException.class,
+                IllegalStateException.class,
                 () ->
                         new SellerConfiguration.Builder()
                                 .setPerBuyerConfigurations(PER_BUYER_CONFIGURATIONS)

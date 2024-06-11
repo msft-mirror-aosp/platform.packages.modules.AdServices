@@ -543,13 +543,15 @@ package android.adservices.customaudience {
     method @NonNull public java.time.Duration getMinDelay();
     method @NonNull public java.util.List<android.adservices.customaudience.PartialCustomAudience> getPartialCustomAudienceList();
     method @NonNull public android.net.Uri getUpdateUri();
+    method public boolean shouldReplacePendingUpdates();
   }
 
-  public static final class ScheduleCustomAudienceUpdateRequest.Builder {
+  @FlaggedApi("com.android.adservices.flags.fledge_schedule_custom_audience_update_enabled") public static final class ScheduleCustomAudienceUpdateRequest.Builder {
     ctor public ScheduleCustomAudienceUpdateRequest.Builder(@NonNull android.net.Uri, @NonNull java.time.Duration, @NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest build();
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setMinDelay(@NonNull java.time.Duration);
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setPartialCustomAudienceList(@NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);
+    method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setShouldReplacePendingUpdates(boolean);
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setUpdateUri(@NonNull android.net.Uri);
   }
 

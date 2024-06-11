@@ -992,7 +992,7 @@ class AttributionJobHandler {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(numReports),
+                    String.valueOf(mFlags.getMeasurementMaxEventReportsPerDestination()),
                     measurementDao,
                     Type.TRIGGER_EVENT_STORAGE_LIMIT);
             return TriggeringStatus.DROPPED;
@@ -1642,7 +1642,7 @@ class AttributionJobHandler {
                 newAggregateContributions =
                         Math.addExact(newAggregateContributions, contribution.getValue());
                 if (newAggregateContributions
-                        >= PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
+                        > PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
                     // When histogram value is >= 65536 (aggregatable_budget_per_source),
                     // generate verbose debug report, record the actual histogram value.
                     mDebugReportApi.scheduleTriggerDebugReport(
