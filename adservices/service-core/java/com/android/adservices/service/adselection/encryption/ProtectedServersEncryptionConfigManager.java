@@ -35,6 +35,7 @@ import com.android.adservices.data.adselection.ProtectedServersEncryptionConfigD
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.FetchProcessLogger;
@@ -106,7 +107,8 @@ public class ProtectedServersEncryptionConfigManager
     public FluentFuture<ObliviousHttpKeyConfig> getLatestOhttpKeyConfigOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             long timeoutMs,
-            @Nullable Uri coordinatorUrl) {
+            @Nullable Uri coordinatorUrl,
+            DevContext devContext) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_LATEST_OHTTP_KEY_CONFIG);
 
         ServerAuctionKeyFetchExecutionLoggerFactory serverAuctionKeyFetchExecutionLoggerFactory =
@@ -149,6 +151,7 @@ public class ProtectedServersEncryptionConfigManager
                                                 adSelectionEncryptionKeyType,
                                                 fetchUri,
                                                 timeoutMs,
+                                                devContext,
                                                 keyFetchLogger)
                                         : immediateFuture(encryptionKey),
                         mLightweightExecutor)
@@ -242,11 +245,17 @@ public class ProtectedServersEncryptionConfigManager
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             Uri coordinatorUrl,
             long timeoutMs,
+            DevContext devContext,
             FetchProcessLogger keyFetchLogger) {
         sLogger.d("Fetching keys");
         Instant fetchInstant = mClock.instant();
         return fetchAndPersistActiveKeysOfType(
-                        adSelectionKeyType, fetchInstant, timeoutMs, coordinatorUrl, keyFetchLogger)
+                        adSelectionKeyType,
+                        fetchInstant,
+                        timeoutMs,
+                        coordinatorUrl,
+                        devContext,
+                        keyFetchLogger)
                 .transform(keys -> selectRandomDbKeyAndParse(keys), mLightweightExecutor);
     }
 
@@ -261,8 +270,10 @@ public class ProtectedServersEncryptionConfigManager
             Instant keyExpiryInstant,
             long timeoutMs,
             Uri fetchUri,
+            DevContext devContext,
             FetchProcessLogger keyFetchLogger) {
-        return FluentFuture.from(fetchKeyPayload(adSelectionKeyType, fetchUri, keyFetchLogger))
+        return FluentFuture.from(
+                        fetchKeyPayload(adSelectionKeyType, fetchUri, devContext, keyFetchLogger))
                 .transform(
                         response -> parseKeyResponse(response, adSelectionKeyType),
                         mLightweightExecutor)

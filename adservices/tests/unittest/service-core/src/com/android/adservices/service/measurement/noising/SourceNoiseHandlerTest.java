@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.noising;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -38,6 +39,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -148,8 +150,101 @@ public class SourceNoiseHandlerTest {
     }
 
     @Test
+    public void fakeReports_flexEventReport_correctlyOrdersTriggerSummaryBucket()
+            throws JSONException {
+        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
+        TriggerSpecs triggerSpecs =
+                SourceFixture.getValidTriggerSpecsValueSumWithStartTime(TimeUnit.HOURS.toMillis(5));
+        long baseTime = System.currentTimeMillis();
+        Source source =
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(baseTime)
+                        .setTriggerSpecs(triggerSpecs)
+                        .build();
+        // Force increase the probability of random attribution.
+        doReturn(1D).when(mSourceNoiseHandler).getRandomizedSourceResponsePickRate(source);
+        int orderedSummaryBucketsCount = 0;
+        for (int i = 0; i < 500; i++) {
+            List<Source.FakeReport> fakeReports =
+                    mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(source);
+            if (source.getAttributionMode() == Source.AttributionMode.FALSELY) {
+                assertNotEquals(0, fakeReports.size());
+
+                // Group reports by trigger data, then sort by summary bucket.
+                fakeReports.sort(
+                        Comparator.comparing(Source.FakeReport::getTriggerData)
+                                .thenComparing(
+                                        fakeReport -> fakeReport.getTriggerSummaryBucket().first));
+
+                for (int j = 1; j < fakeReports.size(); j++) {
+                    Source.FakeReport prev = fakeReports.get(j - 1);
+                    Source.FakeReport curr = fakeReports.get(j);
+
+                    // Assert summary buckets are sequential and report time is ordered for each
+                    // group of trigger data.
+                    if (prev.getTriggerData().equals(curr.getTriggerData())) {
+                        assertEquals(
+                                Long.valueOf(prev.getTriggerSummaryBucket().second + 1L),
+                                curr.getTriggerSummaryBucket().first);
+                        assertTrue(prev.getReportingTime() <= curr.getReportingTime());
+                        orderedSummaryBucketsCount += 1;
+                    }
+                }
+            }
+        }
+        assertNotEquals(0, orderedSummaryBucketsCount);
+    }
+
+    @Test
+    public void fakeReports_flexEventReport_ordersTriggerSummaryBucket_attributionScopeOff()
+            throws JSONException {
+        doReturn(false).when(mFlags).getMeasurementEnableAttributionScope();
+        TriggerSpecs triggerSpecs =
+                SourceFixture.getValidTriggerSpecsValueSumWithStartTime(TimeUnit.HOURS.toMillis(5));
+        long baseTime = System.currentTimeMillis();
+        Source source =
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(baseTime)
+                        .setTriggerSpecs(triggerSpecs)
+                        .build();
+        // Force increase the probability of random attribution.
+        doReturn(1D).when(mSourceNoiseHandler).getRandomizedSourceResponsePickRate(source);
+        int orderedSummaryBucketsCount = 0;
+        for (int i = 0; i < 500; i++) {
+            List<Source.FakeReport> fakeReports =
+                    mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(source);
+            if (source.getAttributionMode() == Source.AttributionMode.FALSELY) {
+                assertNotEquals(0, fakeReports.size());
+
+                // Group reports by trigger data, then sort by summary bucket.
+                fakeReports.sort(
+                        Comparator.comparing(Source.FakeReport::getTriggerData)
+                                .thenComparing(
+                                        fakeReport -> fakeReport.getTriggerSummaryBucket().first));
+
+                for (int j = 1; j < fakeReports.size(); j++) {
+                    Source.FakeReport prev = fakeReports.get(j - 1);
+                    Source.FakeReport curr = fakeReports.get(j);
+
+                    // Assert summary buckets are sequential and report time is ordered for each
+                    // group of trigger data.
+                    if (prev.getTriggerData().equals(curr.getTriggerData())) {
+                        assertEquals(
+                                Long.valueOf(prev.getTriggerSummaryBucket().second + 1L),
+                                curr.getTriggerSummaryBucket().first);
+                        assertTrue(prev.getReportingTime() <= curr.getReportingTime());
+                        orderedSummaryBucketsCount += 1;
+                    }
+                }
+            }
+        }
+        assertNotEquals(0, orderedSummaryBucketsCount);
+    }
+
+    @Test
     public void fakeReports_flexLiteEventReport_setsTriggerTime() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
         long baseTime = System.currentTimeMillis();
         Source source =
@@ -281,7 +376,6 @@ public class SourceNoiseHandlerTest {
 
     @Test
     public void impressionNoiseParamGeneration_flexLiteAPI() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long eventTime = System.currentTimeMillis();
         Source eventSource2Windows =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -609,6 +703,7 @@ public class SourceNoiseHandlerTest {
                                     >= report.getReportingTime());
                     Long triggerData = report.getTriggerData().getValue();
                     assertTrue(0 <= triggerData && triggerData < expectedCardinality);
+                    assertNull(report.getTriggerSummaryBucket());
                 }
             } else if (source.getAttributionMode() == Source.AttributionMode.NEVER) {
                 neverCount++;
