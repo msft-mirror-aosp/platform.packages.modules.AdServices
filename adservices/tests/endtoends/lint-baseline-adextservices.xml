@@ -1,0 +1,1555 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `get`"
+        errorLine1="        CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);"
+        errorLine2="                                                              ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/customaudience/CustomAudienceManagerTest.java"
+            line="201"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `fetchAndJoinCustomAudience`"
+        errorLine1="        manager.fetchAndJoinCustomAudience("
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/customaudience/CustomAudienceManagerTest.java"
+            line="204"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `get`"
+        errorLine1="        CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);"
+        errorLine2="                                                              ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/customaudience/CustomAudienceManagerTest.java"
+            line="219"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `leaveCustomAudience`"
+        errorLine1="        manager.leaveCustomAudience("
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/customaudience/CustomAudienceManagerTest.java"
+            line="222"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerSource`"
+        errorLine1="        mm.registerSource("
+        errorLine2="           ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="88"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                new OutcomeReceiver&lt;>() {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="92"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerWebSource`"
+        errorLine1="        mm.registerWebSource("
+        errorLine2="           ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="153"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                new OutcomeReceiver&lt;>() {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="156"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerWebTrigger`"
+        errorLine1="        mm.registerWebTrigger("
+        errorLine2="           ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="212"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                new OutcomeReceiver&lt;>() {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="215"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerTrigger`"
+        errorLine1="        mm.registerTrigger("
+        errorLine2="           ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="260"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                new OutcomeReceiver&lt;>() {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="263"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `deleteRegistrations`"
+        errorLine1="                        mm.deleteRegistrations("
+        errorLine2="                           ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="309"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `deleteRegistrations`"
+        errorLine1="                        mm.deleteRegistrations("
+        errorLine2="                           ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="338"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="                new OutcomeReceiver&lt;>() {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="367"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMeasurementApiStatus`"
+        errorLine1="        mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="379"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMeasurementApiStatus`"
+        errorLine1="                        mm.getMeasurementApiStatus("
+        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="418"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMeasurementApiStatus`"
+        errorLine1="                        mm.getMeasurementApiStatus("
+        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="447"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerSource`"
+        errorLine1="        mm.registerSource("
+        errorLine2="           ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="489"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerSource`"
+        errorLine1="        mm.registerSource("
+        errorLine2="           ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="518"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Cast to `OutcomeReceiver` requires API level 31 (current min is 30)"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="547"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                           ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="547"
+            column="60"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerSource`"
+        errorLine1="        mm.registerSource(uri, /* inputEvent= */ null, /* executor= */ null, callback);"
+        errorLine2="           ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="548"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Cast to `OutcomeReceiver` requires API level 31 (current min is 30)"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="578"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                           ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="578"
+            column="60"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerWebSource`"
+        errorLine1="        mm.registerWebSource(request, CALLBACK_EXECUTOR, callback);"
+        errorLine2="           ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="580"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Cast to `OutcomeReceiver` requires API level 31 (current min is 30)"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="610"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                           ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="610"
+            column="60"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerWebTrigger`"
+        errorLine1="        mm.registerWebTrigger(request, CALLBACK_EXECUTOR, callback);"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="612"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Cast to `OutcomeReceiver` requires API level 31 (current min is 30)"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="642"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                           ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="642"
+            column="60"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerTrigger`"
+        errorLine1="        mm.registerTrigger(uri, CALLBACK_EXECUTOR, callback);"
+        errorLine2="           ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="644"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Cast to `OutcomeReceiver` requires API level 31 (current min is 30)"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="674"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                           ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="674"
+            column="60"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `deleteRegistrations`"
+        errorLine1="        mm.deleteRegistrations(request, CALLBACK_EXECUTOR, callback);"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="676"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Cast to `OutcomeReceiver` requires API level 31 (current min is 30)"
+        errorLine1="        OutcomeReceiver&lt;Integer, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="704"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="        OutcomeReceiver&lt;Integer, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                            ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="704"
+            column="61"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMeasurementApiStatus`"
+        errorLine1="        mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="706"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `android.os.OutcomeReceiver#onResult`"
+        errorLine1="        verify(callback).onResult(1);"
+        errorLine2="                         ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="714"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Cast to `OutcomeReceiver` requires API level 31 (current min is 30)"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="743"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = mock(OutcomeReceiver.class);"
+        errorLine2="                                                           ~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="743"
+            column="60"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `registerSource`"
+        errorLine1="        mm.registerSource(request, CALLBACK_EXECUTOR, callback);"
+        errorLine2="           ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="745"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.os.OutcomeReceiver`"
+        errorLine1="        OutcomeReceiver&lt;Object, Exception> callback = (OutcomeReceiver&lt;Object, Exception>) expected;"
+        errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="779"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `android.os.OutcomeReceiver#onResult`"
+        errorLine1="        verify(callback).onResult(&quot;Test&quot;);"
+        errorLine2="                         ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="781"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `android.os.OutcomeReceiver#onError`"
+        errorLine1="        verify(callback).onError(eq(ex));"
+        errorLine2="                         ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="785"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mMeasurementManager = spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                               ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerSandboxTest.java"
+            line="107"
+            column="64"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mMockMeasurementService).when(mMeasurementManager).getService();"
+        errorLine2="                                                                    ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerSandboxTest.java"
+            line="108"
+            column="69"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(mm).getService();"
+        errorLine2="                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="126"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doThrow(new IllegalStateException()).when(measurementManager).getService();"
+        errorLine2="                                                                      ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="151"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="166"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="169"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="205"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="208"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="243"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="246"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="282"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="285"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doThrow(new IllegalStateException()).when(measurementManager).getService();"
+        errorLine2="                                                                      ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="318"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doThrow(new IllegalStateException()).when(measurementManager).getService();"
+        errorLine2="                                                                      ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="332"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doThrow(new IllegalStateException()).when(measurementManager).getService();"
+        errorLine2="                                                                      ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="346"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(mm).getService();"
+        errorLine2="                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="363"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(mm).getService();"
+        errorLine2="                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="429"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(mm).getService();"
+        errorLine2="                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="456"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="504"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="507"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="542"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="545"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="579"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="582"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="617"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="620"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(mm).getService();"
+        errorLine2="                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="664"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(mm).getService();"
+        errorLine2="                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="691"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="739"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="742"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="777"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="780"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="814"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="817"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="852"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="855"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(mm).getService();"
+        errorLine2="                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="888"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(mm).getService();"
+        errorLine2="                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="913"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="959"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="962"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="995"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="998"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1030"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1033"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1066"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1069"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(mm).getService();"
+        errorLine2="                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1100"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(mm).getService();"
+        errorLine2="                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1119"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doThrow(new IllegalStateException()).when(mm).getService();"
+        errorLine2="                                                      ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1189"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doThrow(new RuntimeException()).when(mm).getService();"
+        errorLine2="                                                 ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1198"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockMeasurementService).when(mm).getService();"
+        errorLine2="                                                  ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1223"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockMeasurementService).when(mm).getService();"
+        errorLine2="                                                  ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1235"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1264"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1267"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1301"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1304"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1336"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1339"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(MeasurementCompatibleManager.get(sContext, adIdManager));"
+        errorLine2="                                                 ~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1372"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(measurementManager).getService();"
+        errorLine2="                                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1375"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doThrow(new IllegalStateException()).when(measurementManager).getService();"
+        errorLine2="                                                                      ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1407"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doThrow(new IllegalStateException()).when(measurementManager).getService();"
+        errorLine2="                                                                      ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1422"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(mockService).when(mm).getService();"
+        errorLine2="                                       ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1438"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doThrow(new IllegalStateException()).when(measurementManager).getService();"
+        errorLine2="                                                                      ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1461"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doThrow(new IllegalStateException()).when(measurementManager).getService();"
+        errorLine2="                                                                      ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1477"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doThrow(new IllegalStateException()).when(measurementManager).getService();"
+        errorLine2="                                                                      ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="1492"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="472"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="487"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="501"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="516"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="530"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="545"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="560"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="576"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="592"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="608"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="624"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="640"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="656"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="672"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="688"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="703"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="725"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="741"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        MeasurementManager mm = new MeasurementManager(impl);"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="766"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mm.unbindFromService();"
+        errorLine2="           ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="768"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(impl).unbindFromService();"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="770"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionCode` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/endtoends/AdExtServicesEndToEndTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionName` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/endtoends/AdExtServicesEndToEndTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();"
+        errorLine2="            ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/customaudience/CustomAudienceManagerTest.java"
+            line="64"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    protected static final Context sContext = ApplicationProvider.getApplicationContext();"
+        errorLine2="              ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerSandboxTest.java"
+            line="68"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    protected static final Context sSandboxedSdkContext ="
+        errorLine2="              ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerSandboxTest.java"
+            line="69"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    protected static final Context sContext = ApplicationProvider.getApplicationContext();"
+        errorLine2="              ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="89"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    private static final SandboxedSdkContext sSandboxedSdkContext ="
+        errorLine2="            ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementCompatibleManagerTest.java"
+            line="91"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    protected static final Context sContext = ApplicationProvider.getApplicationContext();"
+        errorLine2="              ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/endtoends/src/com/android/adservices/measurement/MeasurementManagerTest.java"
+            line="64"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        message="Should explicitly set `android:icon`, there is no default"
+        errorLine1="    &lt;application"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/endtoends/AdExtServicesEndToEndTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="47"
+            column="6"/>
+    </issue>
+
+</issues>

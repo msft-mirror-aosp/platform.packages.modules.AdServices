@@ -460,7 +460,8 @@ public class GetAdSelectionDataRunner {
                                     formatted.getData(),
                                     adSelectionId,
                                     keyFetchTimeout,
-                                    coordinatorUrl);
+                                    coordinatorUrl,
+                                    mDevContext);
                         },
                         mLightweightExecutorService)
                 .transformAsync(

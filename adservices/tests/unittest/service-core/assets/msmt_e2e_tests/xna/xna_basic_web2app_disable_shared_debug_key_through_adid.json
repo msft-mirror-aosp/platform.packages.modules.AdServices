@@ -106,7 +106,6 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test",
           "platform_ad_id": "12345678-1234-1234-1234-123456789012"
         },
@@ -207,6 +206,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "source_site": "android-app://example.1s2.test",
           "histograms": [
             {

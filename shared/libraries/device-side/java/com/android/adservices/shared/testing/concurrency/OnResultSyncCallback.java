@@ -22,7 +22,7 @@ package com.android.adservices.shared.testing.concurrency;
  * @param <T> type of the result.
  */
 public abstract class OnResultSyncCallback<T> extends ResultSyncCallback<T>
-        implements OnResultTestSyncCallback<T> {
+        implements IOnResultSyncCallback<T> {
 
     protected OnResultSyncCallback() {
         super();
