@@ -43,6 +43,11 @@ android_test {
     ],
     min_sdk_version: "33",
     manifest: "AndroidManifest.xml",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -75,4 +80,8 @@ android_test {
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

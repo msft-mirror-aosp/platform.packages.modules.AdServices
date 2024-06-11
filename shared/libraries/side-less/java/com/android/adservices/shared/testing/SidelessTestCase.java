@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.testing;
 
+import com.android.adservices.shared.testing.Logger.RealLogger;
+
 import com.google.common.truth.Expect;
 
 import org.junit.Rule;
@@ -39,6 +41,18 @@ public abstract class SidelessTestCase implements TestNamer {
     // TODO(b/285014040): log test number / to String on constructor (will require logV()).
     // Something like (which used to be on AdServicesTestCase):
     // Log.d(TAG, "setTestNumber(): " + getTestName() + " is test #" + mTestNumber);
+
+    protected final Logger mLogger;
+    protected final RealLogger mRealLogger;
+
+    public SidelessTestCase() {
+        this(StandardStreamsLogger.getInstance());
+    }
+
+    public SidelessTestCase(RealLogger realLogger) {
+        mRealLogger = realLogger;
+        mLogger = new Logger(realLogger, getClass());
+    }
 
     @Override
     public String getTestName() {

@@ -33,7 +33,6 @@ import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollectio
 public interface UxSelector {
     enum EndUserUx {
         UNKNOWN,
-        BETA,
         GA,
         U18,
         RVC,
@@ -67,9 +66,6 @@ public interface UxSelector {
                 break;
             case GA:
                 initGA();
-                break;
-            case BETA:
-                initBeta();
                 break;
             case RVC:
                 initRvc();
@@ -111,8 +107,6 @@ public interface UxSelector {
                     return EndUserUx.GA_WITH_PAS;
                 }
                 return EndUserUx.GA;
-            case BETA_UX:
-                return EndUserUx.BETA;
             case RVC_UX:
                 return EndUserUx.RVC;
             default:
@@ -120,12 +114,6 @@ public interface UxSelector {
                 return EndUserUx.GA;
         }
     }
-
-    /**
-     * This method will be called in {@link #initWithUx} if app is in {@link
-     * PrivacySandboxUxCollection#BETA_UX} mode.
-     */
-    void initBeta();
 
     /**
      * This method will be called in {@link #initWithUx} if app is in {@link

@@ -64,8 +64,7 @@ public class SignalsScriptGeneratorTest extends AdServicesUnitTestCase {
 
     @Before
     public void setUp() {
-        this.mJSScriptEngine =
-                JSScriptEngine.getInstance(appContext.get(), LoggerFactory.getFledgeLogger());
+        this.mJSScriptEngine = JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger());
     }
 
     @Test

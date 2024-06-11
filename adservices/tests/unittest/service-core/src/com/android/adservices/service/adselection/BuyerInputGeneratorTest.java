@@ -662,7 +662,7 @@ public class BuyerInputGeneratorTest {
 
         assertThat(stats.getNumEncodedSignals()).isEqualTo(2);
         assertThat(stats.getEncodedSignalsSizeMean()).isEqualTo(4);
-        assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(0);
+        assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(4);
         assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(4);
         assertThat(stats.getNumCustomAudiencesOmitAds()).isEqualTo(FIELD_UNSET);
         assertThat(stats.getNumCustomAudiences()).isEqualTo(FIELD_UNSET);
@@ -752,7 +752,7 @@ public class BuyerInputGeneratorTest {
 
         assertThat(stats.getNumEncodedSignals()).isEqualTo(2);
         assertThat(stats.getEncodedSignalsSizeMean()).isEqualTo(4);
-        assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(0);
+        assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(4);
         assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(4);
         assertThat(stats.getNumCustomAudiencesOmitAds()).isEqualTo(0);
         assertThat(stats.getNumCustomAudiences()).isEqualTo(1);

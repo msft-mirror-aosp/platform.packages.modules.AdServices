@@ -39,7 +39,6 @@
       {
         "timestamp": "1643235575000",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "com.example.2d1"
         },
         "responses": [{
@@ -64,7 +63,6 @@
       {
         "timestamp": "1643235576000",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "com.example.2d1"
         },
         "responses": [{
@@ -89,7 +87,6 @@
       {
         "timestamp": "1643235577000",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "com.example.2d1"
         },
         "responses": [{
@@ -114,7 +111,6 @@
       {
         "timestamp": "1643235578000",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "com.example.2d1"
         },
         "responses": [{
