@@ -62,8 +62,9 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
-import com.android.adservices.shared.testing.JobServiceCallback;
+import com.android.adservices.service.measurement.reporting.ReportingJobService;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
+import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -80,13 +81,12 @@ import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Unit test for {@link AttributionJobService
- */
+/** Unit test for {@link AttributionJobService} */
 @SpyStatic(AttributionJobService.class)
 @SpyStatic(DatastoreManagerFactory.class)
 @SpyStatic(DebugReportingJobService.class)
 @SpyStatic(ImmediateAggregateReportingJobService.class)
+@SpyStatic(ReportingJobService.class)
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ServiceCompatUtils.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
@@ -201,6 +201,8 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
 
                     // Validate
                     assertTrue(result);
+
+                    mSpyService.getFutureForTesting().get();
 
                     // Verify the job ran successfully twice
                     ExtendedMockito.verify(
@@ -323,6 +325,9 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
                                     ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                             any(), eq(false)),
                             timeout(WAIT_IN_MILLIS).times(1));
+                    ExtendedMockito.verify(
+                            () -> ReportingJobService.scheduleIfNeeded(any(), eq(false)),
+                            timeout(WAIT_IN_MILLIS).times(1));
                     verify(mSpyService, never()).scheduleImmediately(any());
                 });
     }
@@ -367,6 +372,9 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
                             () ->
                                     ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                             any(), eq(false)),
+                            timeout(WAIT_IN_MILLIS).times(1));
+                    ExtendedMockito.verify(
+                            () -> ReportingJobService.scheduleIfNeeded(any(), eq(false)),
                             timeout(WAIT_IN_MILLIS).times(1));
                 });
     }
@@ -703,6 +711,8 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
                         () ->
                                 ImmediateAggregateReportingJobService.scheduleIfNeeded(
                                         any(), anyBoolean()));
+        ExtendedMockito.doNothing()
+                .when(() -> ReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
         mockGetAdServicesJobServiceLogger(mSpyLogger);
 
         // Execute

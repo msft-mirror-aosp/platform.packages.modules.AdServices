@@ -67,6 +67,7 @@ public final class CustomAudience implements Parcelable {
     @NonNull private final Uri mBiddingLogicUri;
     @NonNull private final List<AdData> mAds;
     @AuctionServerRequestFlag private final int mAuctionServerRequestFlags;
+    private final double mPriority;
 
     /** @hide */
     @IntDef(
@@ -104,6 +105,7 @@ public final class CustomAudience implements Parcelable {
         mBiddingLogicUri = builder.mBiddingLogicUri;
         mAds = builder.mAds;
         mAuctionServerRequestFlags = builder.mAuctionServerRequestFlags;
+        mPriority = builder.mPriority;
     }
 
     private CustomAudience(@NonNull Parcel in) {
@@ -127,6 +129,7 @@ public final class CustomAudience implements Parcelable {
         mBiddingLogicUri = Uri.CREATOR.createFromParcel(in);
         mAds = in.createTypedArrayList(AdData.CREATOR);
         mAuctionServerRequestFlags = in.readInt();
+        mPriority = in.readDouble();
     }
 
     @Override
@@ -157,6 +160,7 @@ public final class CustomAudience implements Parcelable {
         mBiddingLogicUri.writeToParcel(dest, flags);
         dest.writeTypedList(mAds);
         dest.writeInt(mAuctionServerRequestFlags);
+        dest.writeDouble(mPriority);
     }
 
     @Override
@@ -182,6 +186,8 @@ public final class CustomAudience implements Parcelable {
                 + mAds
                 + ", mAuctionServerRequestFlags="
                 + mAuctionServerRequestFlags
+                + ", mPriority="
+                + mPriority
                 + '}';
     }
 
@@ -347,6 +353,19 @@ public final class CustomAudience implements Parcelable {
     }
 
     /**
+     * Returns the priority of this CustomAudience with respect to other CustomAudiences for this
+     * buyer. This means if there is insufficient space during buyer input generation in the {@link
+     * android.adservices.adselection.AdSelectionManager#getAdSelectionData(GetAdSelectionDataRequest,
+     * Executor, OutcomeReceiver)} call, the service will attempt to include the highest priority
+     * custom audiences first.
+     *
+     * @hide
+     */
+    public double getPriority() {
+        return mPriority;
+    }
+
+    /**
      * Checks whether two {@link CustomAudience} objects contain the same information.
      */
     @Override
@@ -363,7 +382,8 @@ public final class CustomAudience implements Parcelable {
                 && Objects.equals(mTrustedBiddingData, that.mTrustedBiddingData)
                 && mBiddingLogicUri.equals(that.mBiddingLogicUri)
                 && mAds.equals(that.mAds)
-                && mAuctionServerRequestFlags == that.mAuctionServerRequestFlags;
+                && mAuctionServerRequestFlags == that.mAuctionServerRequestFlags
+                && mPriority == that.mPriority;
     }
 
     /**
@@ -381,7 +401,8 @@ public final class CustomAudience implements Parcelable {
                 mTrustedBiddingData,
                 mBiddingLogicUri,
                 mAds,
-                mAuctionServerRequestFlags);
+                mAuctionServerRequestFlags,
+                mPriority);
     }
 
     /** Builder for {@link CustomAudience} objects. */
@@ -396,6 +417,7 @@ public final class CustomAudience implements Parcelable {
         @Nullable private Uri mBiddingLogicUri;
         @Nullable private List<AdData> mAds;
         @AuctionServerRequestFlag private int mAuctionServerRequestFlags;
+        private double mPriority;
 
         // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {
@@ -524,6 +546,18 @@ public final class CustomAudience implements Parcelable {
         public CustomAudience.Builder setAuctionServerRequestFlags(
                 @AuctionServerRequestFlag int auctionServerRequestFlags) {
             mAuctionServerRequestFlags = auctionServerRequestFlags;
+            return this;
+        }
+
+        /**
+         * Sets the priority for this custom audience. See {@link #getPriority()} for further
+         * details.
+         *
+         * @hide
+         */
+        @NonNull
+        public CustomAudience.Builder setPriority(double priority) {
+            mPriority = priority;
             return this;
         }
 

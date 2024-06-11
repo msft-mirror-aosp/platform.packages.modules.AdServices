@@ -1842,7 +1842,7 @@ public class KAnonE2ETest {
         mAdSelectionService = createAdSelectionService();
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
-                        any(byte[].class), anyLong(), anyLong(), any()))
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         invocation ->
                                 FluentFuture.from(immediateFuture(invocation.getArgument(0))));

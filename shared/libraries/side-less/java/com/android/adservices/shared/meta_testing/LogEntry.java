@@ -20,6 +20,8 @@ import com.android.adservices.shared.testing.Nullable;
 
 import com.google.common.truth.FailureMetadata;
 
+import java.util.Objects;
+
 /** Abstracts a log entry. */
 public final class LogEntry {
 
@@ -35,11 +37,32 @@ public final class LogEntry {
     /** Message itself. */
     public final String message;
 
-    LogEntry(LogLevel level, String tag, @Nullable Throwable throwable, String message) {
+    public LogEntry(LogLevel level, String tag, @Nullable Throwable throwable, String message) {
         this.level = level;
         this.tag = tag;
         this.throwable = throwable;
         this.message = message;
+    }
+
+    public LogEntry(LogLevel level, String tag, String message) {
+        this(level, tag, /* throwable= */ null, message);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(level, message, tag, throwable);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        LogEntry other = (LogEntry) obj;
+        return level == other.level
+                && Objects.equals(message, other.message)
+                && Objects.equals(tag, other.tag)
+                && Objects.equals(throwable, other.throwable);
     }
 
     @Override
