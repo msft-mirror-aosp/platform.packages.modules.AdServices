@@ -605,7 +605,10 @@ public class ConsentManagerV2 {
         mConsentCompositeStorage.setConsentForApp(app.getPackageName(), true);
 
         asyncExecute(
-                () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
+                () ->
+                        mCustomAudienceDao.deleteCustomAudienceDataByOwner(
+                                app.getPackageName(),
+                                mFlags.getFledgeScheduleCustomAudienceUpdateEnabled()));
         if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(
                     () -> mFrequencyCapDao.deleteHistogramDataBySourceApp(app.getPackageName()));
@@ -635,7 +638,10 @@ public class ConsentManagerV2 {
     public void resetAppsAndBlockedApps() throws IOException {
         mConsentCompositeStorage.clearAllAppConsentData();
 
-        asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
+        asyncExecute(
+                () ->
+                        mCustomAudienceDao.deleteAllCustomAudienceData(
+                                mFlags.getFledgeScheduleCustomAudienceUpdateEnabled()));
         if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
         }
@@ -656,7 +662,10 @@ public class ConsentManagerV2 {
      */
     public void resetApps() throws IOException {
         mConsentCompositeStorage.clearKnownAppsWithConsent();
-        asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
+        asyncExecute(
+                () ->
+                        mCustomAudienceDao.deleteAllCustomAudienceData(
+                                mFlags.getFledgeScheduleCustomAudienceUpdateEnabled()));
         if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
         }
