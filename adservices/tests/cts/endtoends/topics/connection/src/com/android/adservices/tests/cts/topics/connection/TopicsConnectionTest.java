@@ -144,6 +144,7 @@ public final class TopicsConnectionTest extends CtsAdServicesTopicsConnectionTes
     // Override global_kill_switch to ignore the effect of actual PH values.
     // If enabled = true, override global_kill_switch to ON to turn off Adservices.
     // If enabled = false, the AdServices is enabled.
+    // TODO(b/346825347) Inline this method when the bug is fixed
     private void enableGlobalKillSwitch(boolean enabled) {
         if (SdkLevel.isAtLeastT()) {
             flags.setGlobalKillSwitch(enabled);
@@ -155,6 +156,6 @@ public final class TopicsConnectionTest extends CtsAdServicesTopicsConnectionTes
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + mAdServicesPackageName + " " + EPOCH_JOB_ID);
+                "cmd jobscheduler run -f %s %d", mAdServicesPackageName, EPOCH_JOB_ID);
     }
 }
