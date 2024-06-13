@@ -20,15 +20,15 @@ import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_S
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assume.assumeTrue;
-
 import android.adservices.appsetid.AppSetId;
 import android.adservices.appsetid.AppSetIdManager;
 import android.os.LimitExceededException;
+import android.os.OutcomeReceiver;
 import android.os.SystemProperties;
 import android.text.TextUtils;
+import android.util.Log;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
@@ -42,13 +42,17 @@ import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @RequiresAndroidServiceAvailable(intentAction = ACTION_APPSETID_PROVIDER_SERVICE)
 @SetCompatModeFlags
@@ -68,26 +72,38 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
     @Test
     @FlakyTest(bugId = 271656209)
     public void testAppSetIdManager() throws Exception {
-        assumeOnline();
+        Assume.assumeTrue(ConnectivityUtils.isNetworkConnected(sContext));
+
         AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
         CompletableFuture<AppSetId> future = new CompletableFuture<>();
-        OutcomeReceiverForTests<AppSetId> callback = new OutcomeReceiverForTests<AppSetId>();
+        OutcomeReceiver<AppSetId, Exception> callback =
+                new OutcomeReceiver<>() {
+                    @Override
+                    public void onResult(AppSetId result) {
+                        future.complete(result);
+                    }
 
+                    @Override
+                    public void onError(Exception error) {
+                        Log.e(mTag, "Failed to get AppSet Id!", error);
+                        Assert.fail();
+                    }
+                };
         appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, callback);
-
-        AppSetId resultAppSetId = callback.assertResultReceived();
-        assertWithMessage("id on result").that(resultAppSetId.getId()).isNotNull();
+        AppSetId resultAppSetId = future.get();
+        assertThat(resultAppSetId.getId()).isNotNull();
     }
 
     @Test
     @FlakyTest(bugId = 271656209)
     public void testAppSetIdManager_verifyRateLimitReached() throws Exception {
-        assumeOnline();
-        AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
+        Assume.assumeTrue(ConnectivityUtils.isNetworkConnected(sContext));
+
+        final AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
 
         // Rate limit hasn't reached yet
-        long nowInMillis = System.currentTimeMillis();
-        float requestPerSecond = getAppSetIdRequestPerSecond();
+        final long nowInMillis = System.currentTimeMillis();
+        final float requestPerSecond = getAppSetIdRequestPerSecond();
         for (int i = 0; i < requestPerSecond; i++) {
             assertThat(getAppSetIdAndVerifyRateLimitReached(appSetIdManager)).isFalse();
         }
@@ -99,8 +115,8 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        boolean reachedLimit = getAppSetIdAndVerifyRateLimitReached(appSetIdManager);
-        boolean executedInLessThanOneSec =
+        final boolean reachedLimit = getAppSetIdAndVerifyRateLimitReached(appSetIdManager);
+        final boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
             assertThat(reachedLimit).isTrue();
@@ -123,16 +139,33 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
 
     private boolean getAppSetIdAndVerifyRateLimitReached(AppSetIdManager manager)
             throws InterruptedException {
-        OutcomeReceiverForTests<AppSetId> callback = new OutcomeReceiverForTests<AppSetId>();
-        manager.getAppSetId(CALLBACK_EXECUTOR, callback);
-        callback.assertCalled();
+        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
 
-        Exception error = callback.getError();
-        boolean reachedLimit = error instanceof LimitExceededException;
-        mLogger.d(
-                "Callback returned: result=%s, error=%s, reachedLimit=%b",
-                toString(callback.getResult()), error, reachedLimit);
-        return reachedLimit;
+        manager.getAppSetId(
+                CALLBACK_EXECUTOR,
+                createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
+
+        countDownLatch.await();
+        return reachedLimit.get();
+    }
+
+    private OutcomeReceiver<AppSetId, Exception> createCallbackWithCountdownOnLimitExceeded(
+            CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
+        return new OutcomeReceiver<>() {
+            @Override
+            public void onResult(@NonNull AppSetId result) {
+                countDownLatch.countDown();
+            }
+
+            @Override
+            public void onError(@NonNull Exception error) {
+                if (error instanceof LimitExceededException) {
+                    reachedLimit.set(true);
+                }
+                countDownLatch.countDown();
+            }
+        };
     }
 
     private float getAppSetIdRequestPerSecond() {
@@ -153,14 +186,5 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
         } catch (Exception e) {
             return DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND;
         }
-    }
-
-    private static String toString(@Nullable AppSetId appSetId) {
-        return appSetId == null ? "N/A" : appSetId.getId();
-    }
-
-    // TODO(b/346854625): remove this dependency
-    private void assumeOnline() {
-        assumeTrue("device must be online", ConnectivityUtils.isNetworkConnected(sContext));
     }
 }
