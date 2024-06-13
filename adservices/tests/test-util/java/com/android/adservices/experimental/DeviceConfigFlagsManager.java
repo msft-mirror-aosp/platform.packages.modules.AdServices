@@ -89,7 +89,6 @@ public final class DeviceConfigFlagsManager implements FlagsManager {
             setFlag(flag.name, flag.value);
         }
         Log.v(TAG, "setFlags(): mInitialValues=" + mInitialValues);
-        return;
     }
 
     private void setFlag(String name, boolean value) {

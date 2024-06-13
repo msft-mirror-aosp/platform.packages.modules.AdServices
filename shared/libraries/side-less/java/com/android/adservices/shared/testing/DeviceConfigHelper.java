@@ -23,6 +23,7 @@ import com.android.adservices.shared.testing.Logger.RealLogger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -176,7 +177,7 @@ public final class DeviceConfigHelper {
 
         /** Sets the synchronization mode. */
         public void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
-            String value = mode.name().toLowerCase();
+            String value = mode.name().toLowerCase(Locale.ENGLISH);
             mLog.v("SyncDisabledModeForTest(%s)", value);
 
             // TODO(b/294423183): figure out a solution for R when needed

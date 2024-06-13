@@ -53,7 +53,7 @@ import android.provider.DeviceConfig;
  *     {@code @SetFlagEnabled(FlagsConstants.MY_FEATURE_FLAG}} or
  *     {@code @SetIntegerFlag(name=FlagsConstants.MY_CONFIG_FLAG}, value=42)} or call the {@code
  *     setFlag()} method of the rule when the value is not static (for example, if the rule
- *     reference is called @{code flags}, simply call {@code
+ *     reference is called {@code flags}, simply call {@code
  *     flags.setFlag(FlagsConstant.MY_PGK_ALLOWLIST_FLAG, pkgNames)}).
  */
 @Deprecated

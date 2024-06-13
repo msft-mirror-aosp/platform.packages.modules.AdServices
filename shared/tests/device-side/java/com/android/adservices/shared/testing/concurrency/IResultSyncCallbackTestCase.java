@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Base test for classes that extend ResultTestSyncCallback. */
-abstract class IResultSyncCallbackTestCase<R, CB extends IResultSyncCallback<R> & FreezableToString>
+public abstract class IResultSyncCallbackTestCase<
+                R, CB extends IResultSyncCallback<R> & FreezableToString>
         extends IBinderSyncCallbackTestCase<CB> {
 
     private static final AtomicInteger sNextId = new AtomicInteger();
@@ -37,11 +38,7 @@ abstract class IResultSyncCallbackTestCase<R, CB extends IResultSyncCallback<R> 
 
     @Before
     public final void setFixtures() {
-        mCallback =
-                newCallback(
-                        SyncCallbackFactory.newSettingsBuilder()
-                                .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
-                                .build());
+        mCallback = newCallback(mDefaultSettings);
         mLog.v("setFixtures(): mCallback=%s", mCallback);
     }
 

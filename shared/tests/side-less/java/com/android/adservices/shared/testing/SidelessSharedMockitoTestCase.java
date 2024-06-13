@@ -15,29 +15,17 @@
  */
 package com.android.adservices.shared.testing;
 
-import com.android.adservices.shared.testing.Logger.RealLogger;
+import org.junit.Rule;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.mockito.quality.Strictness;
 
-/** Base class for all tests on shared testing infra. */
-public abstract class SharedSidelessTestCase extends SidelessTestCase {
+/** Base class for all tests on shared testing infra that uses Mockito. */
+public abstract class SidelessSharedMockitoTestCase extends SharedSidelessTestCase {
 
     // TODO(b/342639109): set order / move to superclass (which should rely on an abstract method
     // to get it, so it would be properly implemented by host/device-side)
-    public final AbstractProcessLifeguardRule processLifeguard =
-            new AbstractProcessLifeguardRule(
-                    StandardStreamsLogger.getInstance(), AbstractProcessLifeguardRule.Mode.FAIL) {
+    @Rule public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
 
-                @Override
-                protected boolean isMainThread() {
-                    mLog.i("isMainThread(): undefined on sideless, returning false");
-                    return false;
-                }
-            };
-
-    protected SharedSidelessTestCase() {
-        this(DynamicLogger.getInstance());
-    }
-
-    protected SharedSidelessTestCase(RealLogger realLogger) {
-        super(realLogger);
-    }
+    // NOTE: doesn't need a mocker for now...
 }

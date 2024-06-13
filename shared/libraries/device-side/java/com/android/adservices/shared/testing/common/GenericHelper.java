@@ -22,8 +22,6 @@ import java.util.Objects;
 
 public final class GenericHelper {
 
-    private static final String UNIQUE_ID_TEMPLATE = "%s[%d]";
-
     /** Gets a user-friendly, unique id for a given object. */
     public static String getUniqueId(Object object) {
         Objects.requireNonNull(object, "object cannot be null");
@@ -32,7 +30,7 @@ public final class GenericHelper {
                 ? ((Identifiable) object).getId()
                 : String.format(
                         Locale.ENGLISH,
-                        UNIQUE_ID_TEMPLATE,
+                        "%s[%d]",
                         object.getClass().getSimpleName(),
                         System.identityHashCode(object));
     }

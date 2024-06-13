@@ -43,7 +43,6 @@ public abstract class AbstractAdServicesShellCommandHelper {
     private static final String COMMAND_OUT = "CommandOut:";
     private static final String COMMAND_ERR = "CommandErr:";
     private static final String COMMAND_STATUS = "CommandStatus:";
-    private static final String STATUS_RUNNING = "RUNNING";
     private static final String STATUS_FINISHED = "FINISHED";
 
     private static final String CMD_ARGS = "cmd-args";

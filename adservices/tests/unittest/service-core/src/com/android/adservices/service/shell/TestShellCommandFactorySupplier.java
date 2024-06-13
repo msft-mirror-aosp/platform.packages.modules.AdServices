@@ -19,6 +19,7 @@ package com.android.adservices.service.shell;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
@@ -43,6 +44,7 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
     private final ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
     private final ProtectedSignalsDao mProtectedSignalsDao;
     private final BuyerInputGenerator mBuyerInputGenerator;
+    private final AuctionServerDataCompressor mAuctionServerDataCompressor;
 
     TestShellCommandFactorySupplier(
             boolean isCustomAudienceCLiEnabled,
@@ -52,7 +54,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
             CustomAudienceDao customAudienceDao,
             ConsentedDebugConfigurationDao consentedDebugConfigurationDao,
             ProtectedSignalsDao protectedSignalsDao,
-            BuyerInputGenerator buyerInputGenerator) {
+            BuyerInputGenerator buyerInputGenerator,
+            AuctionServerDataCompressor auctionServerDataCompressor) {
         mIsCustomAudienceCliEnabled = isCustomAudienceCLiEnabled;
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
         mIsSignalsCliEnabled = isSignalsCliEnabled;
@@ -69,6 +72,9 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                 Objects.requireNonNull(protectedSignalsDao, "ProtectedSignalsDao cannot be null");
         mBuyerInputGenerator =
                 Objects.requireNonNull(buyerInputGenerator, "BuyerInputGenerator cannot be null");
+        mAuctionServerDataCompressor =
+                Objects.requireNonNull(
+                        auctionServerDataCompressor, "AuctionServerDataCompressor cannot be null");
     }
 
     @Override
@@ -80,7 +86,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                         mIsConsentedDebugCliEnabled,
                         true,
                         mConsentedDebugConfigurationDao,
-                        mBuyerInputGenerator),
+                        mBuyerInputGenerator,
+                        mAuctionServerDataCompressor),
                 new SignalsShellCommandFactory(mIsSignalsCliEnabled, mProtectedSignalsDao));
     }
 }

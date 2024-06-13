@@ -1172,16 +1172,32 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void deleteEventReport(EventReport eventReport) throws DatastoreException {
-        long rows =
+    public void deleteEventReportAndAttribution(EventReport eventReport) throws DatastoreException {
+        long eventReportRows =
                 mSQLTransaction
                         .getDatabase()
                         .delete(
                                 MeasurementTables.EventReportContract.TABLE,
                                 MeasurementTables.EventReportContract.ID + " = ?",
                                 new String[] {eventReport.getId()});
-        if (rows != 1) {
-            throw new DatastoreException("EventReport deletion failed.");
+
+        long attributionRows =
+                mSQLTransaction
+                        .getDatabase()
+                        .delete(
+                                MeasurementTables.AttributionContract.TABLE,
+                                MeasurementTables.AttributionContract.SCOPE + " = ? "
+                                + "AND " + MeasurementTables.AttributionContract.SOURCE_ID
+                                        + " = ? "
+                                + "AND " + MeasurementTables.AttributionContract.TRIGGER_ID
+                                        + " = ?",
+                                new String[] {
+                                        String.valueOf(Attribution.Scope.EVENT),
+                                        eventReport.getSourceId(),
+                                        eventReport.getTriggerId()});
+
+        if (eventReportRows != 1 || attributionRows != 1) {
+            throw new DatastoreException("EventReport and/or Attribution deletion failed.");
         }
     }
 
@@ -1431,53 +1447,6 @@ class MeasurementDao implements IMeasurementDao {
         if (rowId == -1) {
             throw new DatastoreException("Attribution insertion failed.");
         }
-    }
-
-    @Override
-    public long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
-            throws DatastoreException {
-        Optional<Uri> publisherBaseUri =
-                extractBaseUri(source.getPublisher(), source.getPublisherType());
-        Optional<Uri> destinationBaseUri =
-                extractBaseUri(trigger.getAttributionDestination(), trigger.getDestinationType());
-
-        if (publisherBaseUri.isEmpty() || destinationBaseUri.isEmpty()) {
-            throw new IllegalArgumentException(
-                    String.format(
-                            Locale.ENGLISH,
-                            "getAttributionsPerRateLimitWindow:"
-                                    + " getSourceAndDestinationTopPrivateDomains failed. Publisher:"
-                                    + " %s; Attribution destination: %s",
-                            source.getPublisher().toString(),
-                            trigger.getAttributionDestination().toString()));
-        }
-
-        String publisherTopPrivateDomain = publisherBaseUri.get().toString();
-        String triggerDestinationTopPrivateDomain = destinationBaseUri.get().toString();
-
-        return DatabaseUtils.queryNumEntries(
-                mSQLTransaction.getDatabase(),
-                MeasurementTables.AttributionContract.TABLE,
-                MeasurementTables.AttributionContract.SOURCE_SITE
-                        + " = ? AND "
-                        + MeasurementTables.AttributionContract.DESTINATION_SITE
-                        + " = ? AND "
-                        + MeasurementTables.AttributionContract.ENROLLMENT_ID
-                        + " = ? AND "
-                        + MeasurementTables.AttributionContract.TRIGGER_TIME
-                        + " > ? AND "
-                        + MeasurementTables.AttributionContract.TRIGGER_TIME
-                        + " <= ? ",
-                new String[] {
-                    publisherTopPrivateDomain,
-                    triggerDestinationTopPrivateDomain,
-                    trigger.getEnrollmentId(),
-                    String.valueOf(
-                            trigger.getTriggerTime()
-                                    - FlagsFactory.getFlags()
-                                            .getMeasurementRateLimitWindowMilliseconds()),
-                    String.valueOf(trigger.getTriggerTime())
-                });
     }
 
     @Override

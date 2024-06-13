@@ -42,9 +42,6 @@ public final class FakeSharedPreferences implements SharedPreferences {
 
     private static final String TAG = FakeSharedPreferences.class.getSimpleName();
 
-    private static final IllegalStateException EDIT_DISABLED_EXCEPTION =
-            new IllegalStateException("edit() is not available");
-
     private final FakeEditor mEditor = new FakeEditor();
 
     @Nullable private RuntimeException mEditException;
@@ -55,7 +52,7 @@ public final class FakeSharedPreferences implements SharedPreferences {
      * @return the exception that will be thrown by {@link #edit()}.
      */
     public RuntimeException onEditThrows() {
-        mEditException = EDIT_DISABLED_EXCEPTION;
+        mEditException = new IllegalStateException("edit() is not available");
         Log.v(TAG, "onEditThrows(): edit() will return " + mEditException);
         return mEditException;
     }

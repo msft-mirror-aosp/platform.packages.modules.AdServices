@@ -25,6 +25,7 @@ import static com.google.cobalt.ReportDefinition.ReportType.STRING_COUNTS;
 
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.ReportDefinition;
@@ -66,9 +67,12 @@ public final class RegistryValidator {
             return false;
         }
 
+        if (!validateIntegerBuckets(report.getIntBuckets())) {
+            return false;
+        }
+
         // TODO(b/343722587): Add remaining validations from the Cobalt config validator. This
         // includes:
-        //   * integer buckets
         //   * poisson fields for different privacy mechanisms
         //   * min and max values for different privacy mechansims and report types
         //   * max count (is unset)
@@ -107,6 +111,11 @@ public final class RegistryValidator {
         }
 
         return allowedPrivacyMechanisms.contains(privacyMechanism);
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateIntegerBuckets(IntegerBuckets intBuckets) {
+        return intBuckets.equals(IntegerBuckets.getDefaultInstance());
     }
 
     private RegistryValidator() {}

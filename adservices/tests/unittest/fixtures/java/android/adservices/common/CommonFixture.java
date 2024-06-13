@@ -101,7 +101,8 @@ public class CommonFixture {
             try {
                 Thread.sleep(wakeupTime - currentTime);
             } catch (InterruptedException ignored) {
-
+                Log.w(LOG_TAG, "Interrupted while sleeping");
+                Thread.currentThread().interrupt();
             }
             currentTime = System.currentTimeMillis();
         }

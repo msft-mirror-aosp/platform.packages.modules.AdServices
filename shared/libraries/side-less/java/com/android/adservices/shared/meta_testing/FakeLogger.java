@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.meta_testing;
 
+import com.android.adservices.shared.testing.DynamicLogger;
+import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.Nullable;
@@ -33,6 +35,9 @@ import java.util.List;
 public final class FakeLogger implements RealLogger {
 
     private final List<LogEntry> mEntries = new ArrayList<>();
+
+    private static final Logger sRealLogger =
+            new Logger(DynamicLogger.getInstance(), FakeLogger.class);
 
     @Override
     @FormatMethod
@@ -71,7 +76,8 @@ public final class FakeLogger implements RealLogger {
         String message = String.format(msgFmt, msgArgs);
         LogEntry logEntry = new LogEntry(level, tag, throwable, message);
 
-        System.out.printf("FakeLogger: %s\n", logEntry);
+        // Also log "for real"
+        sRealLogger.v("Adding entry: %s", logEntry);
         mEntries.add(logEntry);
     }
 }

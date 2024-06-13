@@ -16,96 +16,96 @@
 
 package com.android.adservices.shared.testing;
 
-import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.runOnMainThread;
-
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.Intent;
 
-import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback.ResultBroadcastReceiver;
-import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
+import com.android.adservices.shared.testing.concurrency.IResultSyncCallbackTestCase;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.mockito.quality.Strictness;
 
-// TODO(b/344032694): should extend SyncCallbackTestCase instead (it might require changing
-// BroadcastReceiverSyncCallback to implement SyncCallback)
-public final class BroadcastReceiverSyncCallbackTest extends SharedMockitoTestCase {
-    private static final int TIMEOUT_MS = 200;
-    private static final String ACTION = "android.cts.ACTION_1";
-    private static final Intent INTENT = new Intent(ACTION);
+import java.util.HashMap;
+import java.util.Map;
 
-    private final ResultBroadcastReceiver mReceiver =
-            new ResultBroadcastReceiver(
-                    SyncCallbackFactory.newSettingsBuilder()
-                            .setMaxTimeoutMs(TIMEOUT_MS)
-                            .setFailIfCalledOnMainThread(false)
-                            .build());
+// NOTE: this is the only subclass of SyncCallbackTestCase that uses mocks, so
+// SyncCallbackTestCase doesn't extend a SharedMockitoTestCase superclass.
+// Once more subclasses use them, we should get rid of rule and mock context.
+public final class BroadcastReceiverSyncCallbackTest
+        extends IResultSyncCallbackTestCase<Intent, BroadcastReceiverSyncCallback> {
+    private static final String ACTION = "android.cts.ACTION_";
+
+    private final Map<BroadcastReceiverSyncCallback, ResultBroadcastReceiver>
+            mCallBackToReceiverMap = new HashMap<>();
+    private final Map<BroadcastReceiverSyncCallback, Intent> mCallBackToIntentMap = new HashMap<>();
+
+    @Rule(order = 10)
+    public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
+
+    @Mock private Context mMockContext;
 
     @Test
     public void testInvalidConstructor() {
         assertThrows(NullPointerException.class, () -> new ResultBroadcastReceiver(null));
+
+        assertThrows(NullPointerException.class, () -> new BroadcastReceiverSyncCallback(null, ""));
         assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new ResultBroadcastReceiver(
-                                SyncCallbackFactory.newSettingsBuilder()
-                                        .setFailIfCalledOnMainThread(true)
-                                        .build()));
+                NullPointerException.class,
+                () -> new BroadcastReceiverSyncCallback(mMockContext, null));
     }
 
-    @Test
-    public void testPrepare() {
-        when(mMockContext.registerReceiver(any(), any(), eq(Context.RECEIVER_EXPORTED)))
-                .thenReturn(INTENT);
+    @Override
+    protected BroadcastReceiverSyncCallback newCallback(SyncCallbackSettings settings) {
+        Intent intent = newResult();
+        ArgumentCaptor<ResultBroadcastReceiver> receiverCaptor =
+                ArgumentCaptor.forClass(ResultBroadcastReceiver.class);
+        when(mMockContext.registerReceiver(
+                        receiverCaptor.capture(), any(), eq(Context.RECEIVER_EXPORTED)))
+                .thenReturn(intent);
+
         BroadcastReceiverSyncCallback callback =
-                new BroadcastReceiverSyncCallback(mMockContext, mReceiver);
+                new BroadcastReceiverSyncCallback(mMockContext, intent.getAction(), settings);
 
-        callback.prepare(ACTION);
+        ResultBroadcastReceiver receiver = receiverCaptor.getValue();
 
-        verify(mMockContext).registerReceiver(any(), any(), eq(Context.RECEIVER_EXPORTED));
+        mCallBackToReceiverMap.put(callback, receiver);
+        mCallBackToIntentMap.put(callback, intent);
 
-        // calling prepare again
-        IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> callback.prepare(ACTION));
-        expect.withMessage("exception")
-                .that(exception)
-                .hasMessageThat()
-                .contains("BroadcastReceiverCallback.prepared() already called");
+        return callback;
     }
 
-    @Test
-    public void testAssertResultReceived_prepareNotCalled() {
-        BroadcastReceiverSyncCallback callback =
-                new BroadcastReceiverSyncCallback(mMockContext, mReceiver);
-
-        IllegalStateException exception =
-                assertThrows(IllegalStateException.class, () -> callback.assertResultReceived());
-        expect.withMessage("exception")
-                .that(exception)
-                .hasMessageThat()
-                .contains("Call BroadcastReceiverCallback.prepare() before this method");
+    @Override
+    protected Intent newResult() {
+        return new Intent(ACTION + getNextUniqueId());
     }
 
-    @Test
-    public void testAssertResultReceived() throws Exception {
-        when(mMockContext.registerReceiver(any(), any(), eq(Context.RECEIVER_EXPORTED)))
-                .thenReturn(INTENT);
-        BroadcastReceiverSyncCallback callback =
-                new BroadcastReceiverSyncCallback(mMockContext, mReceiver);
+    @Override
+    protected String callCallback(BroadcastReceiverSyncCallback callback) {
+        ResultBroadcastReceiver receiver = mCallBackToReceiverMap.get(callback);
 
-        callback.prepare(ACTION);
+        Intent intent = mCallBackToIntentMap.get(callback);
+        receiver.onReceive(mMockContext, intent);
+        return "onReceive(" + intent + ")";
+    }
 
-        runOnMainThread(() -> mReceiver.onReceive(mMockContext, INTENT));
+    @Override
+    protected boolean providesExpectedConstructors() {
+        return false;
+    }
 
-        Intent actualResult = callback.assertResultReceived();
-
-        expect.that(actualResult).isEqualTo(INTENT);
-        verify(mMockContext).unregisterReceiver(mReceiver);
+    @Override
+    protected boolean supportsFailIfCalledOnMainThread() {
+        return false;
     }
 }

@@ -42,7 +42,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -53,17 +52,14 @@ import static org.mockito.Mockito.times;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.DataHandlersFixture;
 import android.adservices.adselection.ReportEventRequest;
-import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
-import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.Process;
-import android.os.RemoteException;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -96,7 +92,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -1395,8 +1390,7 @@ public class ReportAndRegisterEventFallbackImplTest {
 
         // Re init interaction reporter
         mEventReporter = getReportAndRegisterEventFallbackImpl(flags);
-        ReportAndRegisterEventFallbackImplTest.ReportEventTestCallback callback =
-                callReportEvent(inputParams, true);
+        ReportEventTestCallback callback = callReportEvent(inputParams, true);
 
         callback.assertErrorReceived(STATUS_INVALID_ARGUMENT);
 
@@ -1438,8 +1432,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                         .build();
 
         // Count down callback + log interaction.
-        ReportAndRegisterEventFallbackImplTest.ReportEventTestCallback callback =
-                callReportEvent(inputParams, true);
+        ReportEventTestCallback callback = callReportEvent(inputParams, true);
 
         callback.assertSuccess();
 
@@ -1610,42 +1603,7 @@ public class ReportAndRegisterEventFallbackImplTest {
         return callback;
     }
 
-    // TODO(b/344677163): there's no result and FailableResultSyncCallback<Void> wouldn't work; if
-    // more tests need something like this, we should create a FailableOnSuccessSyncCallback class.
-    private static final class ReportEventTestCallback
-            extends FailableOnResultSyncCallback<Boolean, FledgeErrorResponse>
-            implements ReportInteractionCallback {
 
-        ReportEventTestCallback(SyncCallbackSettings settings) {
-            super(settings);
-        }
-
-        @Override
-        public void onSuccess() throws RemoteException {
-            injectResult(Boolean.TRUE);
-        }
-
-        void assertSuccess() throws InterruptedException {
-            assertResultReceived();
-        }
-
-        private void assertErrorReceived(int expectedCode, String expectedMessage)
-                throws InterruptedException {
-            FledgeErrorResponse response = assertErrorReceived(expectedCode);
-            assertWithMessage("error message on %s", response)
-                    .that(response.getErrorMessage())
-                    .isEqualTo(expectedMessage);
-        }
-
-        private FledgeErrorResponse assertErrorReceived(int expectedCode)
-                throws InterruptedException {
-            FledgeErrorResponse response = assertFailureReceived();
-            assertWithMessage("status code on %s", response)
-                    .that(response.getStatusCode())
-                    .isEqualTo(expectedCode);
-            return response;
-        }
-    }
 
     private static class ReportEventTestFlags implements Flags {
         @Override

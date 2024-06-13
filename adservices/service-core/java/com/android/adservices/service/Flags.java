@@ -1843,6 +1843,20 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
     }
 
+    @FeatureFlag boolean FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED = false;
+
+    /** Returns whether the seller configuration feature for getAdSelectionData is enabled. */
+    default boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+        return FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
+    }
+
+    @FeatureFlag int FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION = 0;
+
+    /** Returns the getAdSelectionData data buyer input creator version */
+    default int getFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
+        return FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
+    }
+
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 
@@ -3917,14 +3931,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether Measurement source deactivation after filtering feature is enabled. */
     default boolean getMeasurementEnableSourceDeactivationAfterFiltering() {
         return MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING;
-    }
-
-    /** Default Measurement scoped attribution rate limit feature flag. */
-    boolean MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT = true;
-
-    /** Returns whether Measurement scoped attribution rate limit feature is enabled. */
-    default boolean getMeasurementEnableScopedAttributionRateLimit() {
-        return MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT;
     }
 
     /** Default Measurement app package name logging flag. */

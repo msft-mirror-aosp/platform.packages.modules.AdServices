@@ -40,6 +40,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
@@ -89,6 +90,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     @Mock private AdServicesLogger mAdServicesLogger;
     @Mock private Clock mClock;
     @Mock private BuyerInputGenerator mBuyerInputGenerator;
+    @Mock private AuctionServerDataCompressor mAuctionServerDataCompressor;
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
     @Before
@@ -103,7 +105,8 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                         mCustomAudienceDao,
                         mConsentedDebugConfigurationDao,
                         mProtectedSignalsDao,
-                        mBuyerInputGenerator);
+                        mBuyerInputGenerator,
+                        mAuctionServerDataCompressor);
         mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
     }
 

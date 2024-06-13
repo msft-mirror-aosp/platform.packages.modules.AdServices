@@ -44,7 +44,6 @@ import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
-import java.util.Objects;
 
 // TODO(b/294423183): add unit tests for the most relevant / less repetitive stuff (don't need to
 // test all setters / getters, for example)
@@ -402,9 +401,5 @@ public abstract class AbstractAdServicesFlagsSetterRule<
             values = new String[] {testPkg};
         }
         return setFlag(name, values, ARRAY_SPLITTER_COMMA);
-    }
-
-    private T setOrCacheFlagWithSeparator(String name, String value, String separator) {
-        return setOrCacheFlag(name, value, Objects.requireNonNull(separator));
     }
 }

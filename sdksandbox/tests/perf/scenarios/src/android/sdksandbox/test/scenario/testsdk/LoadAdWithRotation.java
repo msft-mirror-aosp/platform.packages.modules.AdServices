@@ -45,7 +45,8 @@ public class LoadAdWithRotation {
     private static ClientAppUtils sClientAppUtils;
 
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws RemoteException {
+        sUiDevice.setOrientationNatural();
         sClientAppUtils = new ClientAppUtils(sUiDevice, sArgsBundle);
         sPackageName = sClientAppUtils.getClientPackageName();
     }
@@ -53,6 +54,7 @@ public class LoadAdWithRotation {
     @AfterClass
     public static void tearDownClass() throws IOException, RemoteException {
         sUiDevice.setOrientationNatural();
+        sUiDevice.unfreezeRotation();
         if (sClientAppUtils != null) {
             sUiDevice.executeShellCommand(sClientAppUtils.getStopAppCommand());
         }

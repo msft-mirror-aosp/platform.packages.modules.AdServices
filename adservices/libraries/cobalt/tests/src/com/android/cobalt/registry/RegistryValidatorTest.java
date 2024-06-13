@@ -24,6 +24,7 @@ import static com.google.cobalt.ReportDefinition.ReportType.FLEETWIDE_OCCURRENCE
 import static com.google.cobalt.ReportDefinition.ReportType.STRING_COUNTS;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
@@ -34,7 +35,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+// TODO(b/343722587): Switch assertThat in test cases with multiple checks to expect.
 public final class RegistryValidatorTest {
+
     @Test
     public void testValidateReportType_occurrenceMetric_onlySupportsFleetwideOccurrenceCounts() {
         for (ReportType reportType : ReportType.values()) {
@@ -107,6 +110,20 @@ public final class RegistryValidatorTest {
     }
 
     @Test
+    public void testValidateIntegerBuckets_defaultInstancePasses() {
+        assertThat(RegistryValidator.validateIntegerBuckets(IntegerBuckets.getDefaultInstance()))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateIntegerBuckets_nonDefaultInstanceFails() {
+        assertThat(
+                        RegistryValidator.validateIntegerBuckets(
+                                IntegerBuckets.newBuilder().setSparseOutput(true).build()))
+                .isFalse();
+    }
+
+    @Test
     public void testIsValidReportTypeAndPrivacyMechanism_privateFleetwideOccurrenceCounts() {
         MetricDefinition metric = MetricDefinition.newBuilder().setMetricType(OCCURRENCE).build();
         ReportDefinition report =
@@ -137,5 +154,48 @@ public final class RegistryValidatorTest {
                         .setPrivacyMechanism(DE_IDENTIFICATION)
                         .build();
         assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+    }
+
+    @Test
+    public void
+            testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_unsetIntegerBuckets() {
+        MetricDefinition metric = MetricDefinition.newBuilder().setMetricType(OCCURRENCE).build();
+        ReportDefinition report =
+                ReportDefinition.newBuilder()
+                        .setReportType(FLEETWIDE_OCCURRENCE_COUNTS)
+                        .setPrivacyMechanism(DE_IDENTIFICATION)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setIntBuckets(
+                                                IntegerBuckets.newBuilder()
+                                                        .setSparseOutput(true)
+                                                        .build())
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_stringCounts_defaultIntegerBuckets() {
+        MetricDefinition metric = MetricDefinition.newBuilder().setMetricType(STRING).build();
+        ReportDefinition report =
+                ReportDefinition.newBuilder()
+                        .setReportType(STRING_COUNTS)
+                        .setPrivacyMechanism(DE_IDENTIFICATION)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setIntBuckets(
+                                                IntegerBuckets.newBuilder()
+                                                        .setSparseOutput(true)
+                                                        .build())
+                                        .build()))
+                .isFalse();
     }
 }
