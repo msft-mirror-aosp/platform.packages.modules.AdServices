@@ -142,40 +142,59 @@
       {
         "payload": {
           "attribution_destination": "android-app://destination.test",
+           "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "1643239174",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x559",
               "value": 123
             }
-          ],
-          "source_registration_time": "1643155200"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239174000"
       },
       {
         "payload": {
-           "attribution_destination": "android-app://destination.test",
+           "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "1643325572",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
            "aggregation_coordinator_origin": "https://coordinator.test",
            "histograms": [ {
               "key": "0x559",
               "value": 456
-           } ],
-           "source_registration_time": "1643155200"
+           } ]
         },
         "report_time": "1643325572000",
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution"
       },
       {
         "payload": {
-          "attribution_destination": "android-app://destination.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "1643325574",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [ {
             "key": "0x559",
             "value": 789
-          } ],
-          "source_registration_time": "1643155200"
+          } ]
         },
         "report_time": "1643325574000",
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution"

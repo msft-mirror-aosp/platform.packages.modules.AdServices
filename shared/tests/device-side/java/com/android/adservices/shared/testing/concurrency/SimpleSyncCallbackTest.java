@@ -21,4 +21,10 @@ public final class SimpleSyncCallbackTest extends SyncCallbackTestCase<SimpleSyn
     protected SimpleSyncCallback newCallback(SyncCallbackSettings settings) {
         return new SimpleSyncCallback(settings);
     }
+
+    @Override
+    protected String callCallback(SimpleSyncCallback callback) {
+        callback.setCalled();
+        return "setCalled()";
+    }
 }

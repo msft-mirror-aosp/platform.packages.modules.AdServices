@@ -45,7 +45,7 @@ public class SellerConfigurationFixture {
 
     public static final SellerConfiguration SELLER_CONFIGURATION =
             new SellerConfiguration.Builder()
-                    .setTargetPayloadSizeBytes(SELLER_TARGET_SIZE_B)
+                    .setMaximumPayloadSizeBytes(SELLER_TARGET_SIZE_B)
                     .setPerBuyerConfigurations(
                             ImmutableSet.of(PER_BUYER_CONFIGURATION_1, PER_BUYER_CONFIGURATION_2))
                     .build();

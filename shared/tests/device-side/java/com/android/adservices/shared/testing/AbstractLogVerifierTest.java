@@ -60,7 +60,7 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
 
         Exception exception =
                 assertThrows(
-                        IllegalStateException.class,
+                        IllegalArgumentException.class,
                         () -> testLogVerifier.validateTimes(-1, "TestAnnotation"));
 
         expect.that(exception)
@@ -74,7 +74,7 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
 
         Exception exception =
                 assertThrows(
-                        IllegalStateException.class,
+                        IllegalArgumentException.class,
                         () -> testLogVerifier.validateTimes(0, "TestAnnotation"));
 
         expect.that(exception)

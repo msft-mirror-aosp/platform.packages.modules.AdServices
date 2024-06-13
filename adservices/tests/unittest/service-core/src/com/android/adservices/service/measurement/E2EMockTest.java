@@ -151,7 +151,7 @@ public abstract class E2EMockTest extends E2ETest {
                             "true"),
                     entry(
                             FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
-                            "0,0"),
+                            AGGREGATE_REPORT_DELAY + ",0"),
                     entry(
                             FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
                             WebUtil.validUrl("https://coordinator.test")));
@@ -582,8 +582,7 @@ public abstract class E2EMockTest extends E2ETest {
             List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> aggregateReportObjects =
-                getActualAggregateReportObjects(aggregateReports, destinations, payloads,
-                        TimeUnit.HOURS.toMillis(1));
+                getActualAggregateReportObjects(aggregateReports, destinations, payloads, 0L);
         mActualOutput.mAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
@@ -593,7 +592,8 @@ public abstract class E2EMockTest extends E2ETest {
             List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> aggregateReportObjects =
-                getActualAggregateReportObjects(aggregateReports, destinations, payloads, 0L);
+                getActualAggregateReportObjects(aggregateReports, destinations, payloads,
+                        TimeUnit.HOURS.toMillis(1));
         mActualOutput.mDebugAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
@@ -606,15 +606,16 @@ public abstract class E2EMockTest extends E2ETest {
         List<JSONObject> result = new ArrayList<>();
         for (int i = 0; i < destinations.size(); i++) {
             JSONObject sharedInfo = new JSONObject(payloads.get(i).getString("shared_info"));
-            long optionalDelay =
-                    aggregateReports.get(i).getTriggerContextId() == null ? reportDelay : 0;
             result.add(
                     new JSONObject()
                             .put(
                                     TestFormatJsonMapping.REPORT_TIME_KEY,
                                     String.valueOf(
                                             aggregateReports.get(i).getScheduledReportTime()
-                                                    + optionalDelay))
+                                                // Debug aggregate reports have the same scheduled
+                                                // report time as regular aggregate reports but are
+                                                // sent without delay.
+                                                - reportDelay))
                             .put(
                                     TestFormatJsonMapping.REPORT_TO_KEY,
                                     destinations.get(i).toString())
@@ -642,11 +643,19 @@ public abstract class E2EMockTest extends E2ETest {
 
         String sourceDebugKey = data.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY);
         String triggerDebugKey = data.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY);
+
+        JSONObject sharedInfoJson = new JSONObject();
+        for (String key : sAggregateReportSharedInfoKeys) {
+            if (sharedInfo.has(key)) {
+                sharedInfoJson.put(key, sharedInfo.getString(key));
+            }
+        }
+
         JSONObject aggregateJson =
                 new JSONObject()
                         .put(
-                                AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION,
-                                sharedInfo.getString("attribution_destination"))
+                                AggregateReportPayloadKeys.SHARED_INFO,
+                                sharedInfoJson)
                         .put(
                                 AggregateReportPayloadKeys.AGGREGATION_COORDINATOR_ORIGIN,
                                 data.optString("aggregation_coordinator_origin", ""))
@@ -658,11 +667,6 @@ public abstract class E2EMockTest extends E2ETest {
         }
         if (!triggerDebugKey.isEmpty()) {
             aggregateJson.put(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, triggerDebugKey);
-        }
-        if (sharedInfo.has(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME)) {
-            aggregateJson.put(
-                    AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME,
-                    sharedInfo.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME));
         }
         if (!data.isNull(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID)) {
             aggregateJson.put(

@@ -99,6 +99,8 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     // Extenders of the class populate in their own ways this container for actual output.
     final ReportObjects mActualOutput;
 
+    public static final long AGGREGATE_REPORT_DELAY = TimeUnit.HOURS.toMillis(1);
+
     enum ReportType {
         EVENT,
         AGGREGATE,
@@ -129,14 +131,23 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     }
 
     interface AggregateReportPayloadKeys {
-        String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String SHARED_INFO = "shared_info";
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
         String HISTOGRAMS = "histograms";
         String SOURCE_DEBUG_KEY = "source_debug_key";
-        String SOURCE_REGISTRATION_TIME = "source_registration_time";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
     }
+
+    static List<String> sAggregateReportSharedInfoKeys =
+            ImmutableList.of(
+                    "api",
+                    "attribution_destination",
+                    "debug_mode",
+                    "reporting_origin",
+                    "scheduled_report_time",
+                    "version",
+                    "source_registration_time");
 
     interface DebugReportPayloadKeys {
         String TYPE = "type";
@@ -551,30 +562,6 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         return Arrays.hashCode(objArray);
     }
 
-    private static int hashForAggregateReportObject(OutputType outputType, JSONObject obj) {
-        Object[] objArray = new Object[9];
-        objArray[0] = obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
-        String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
-        objArray[1] =
-                outputType == OutputType.EXPECTED ? url : getReportUrl(ReportType.AGGREGATE, url);
-        JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        objArray[2] = payload.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "");
-        objArray[3] = payload.optString(
-                AggregateReportPayloadKeys.AGGREGATION_COORDINATOR_ORIGIN, "");
-        // To compare histograms, we already converted them to an ordered string of value pairs.
-        objArray[4] = getComparableHistograms(
-                payload.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS));
-        objArray[5] = payload.optString(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, "");
-        objArray[6] = payload.optString(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, "");
-        objArray[7] = payload.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, "");
-        objArray[8] = payload.optString(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID, "");
-        return Arrays.hashCode(objArray);
-    }
-
-    private static long reportTimeFrom(JSONObject obj) {
-        return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
-    }
-
     // 'obj1' is the expected result, 'obj2' is the actual result.
     private boolean matchReportTimeAndReportTo(ReportType reportType, JSONObject obj1,
             JSONObject obj2) throws JSONException {
@@ -583,9 +570,13 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
             log("Report-time mismatch. Report type: " + reportType.name());
             return false;
         }
-        if (!obj1.getString(TestFormatJsonMapping.REPORT_TO_KEY).equals(
-                getReportUrl(reportType, obj2.getString(TestFormatJsonMapping.REPORT_TO_KEY)))) {
-            log("Report-to mismatch. Report type: " + reportType.name());
+        String reportTo1 = obj1.getString(TestFormatJsonMapping.REPORT_TO_KEY);
+        String reportTo2 = getReportUrl(reportType,
+                obj2.getString(TestFormatJsonMapping.REPORT_TO_KEY));
+        if (!reportTo1.equals(reportTo2)) {
+            log(String.format(
+                    "Report-to mismatch. Report type: %s Report-to-1: %s Report-to-2: %s",
+                    reportType.name(), reportTo1, reportTo2));
             return false;
         }
         return true;
@@ -659,13 +650,23 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         return matchReportTimeAndReportTo(reportType, expected, actual);
     }
 
+    private boolean areEqualSharedInfoJsons(JSONObject obj1, JSONObject obj2) throws JSONException {
+        for (String key : sAggregateReportSharedInfoKeys) {
+            if (!obj1.optString(key, "").equals(obj2.optString(key, ""))) {
+                log("Aggregate shared_info mismatch for key " + key);
+                return false;
+            }
+        }
+        return true;
+    }
+
     private boolean areEqualAggregateReportJsons(
             ReportType reportType, JSONObject expected, JSONObject actual) throws JSONException {
         JSONObject payload1 = expected.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         JSONObject payload2 = actual.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        if (!payload1.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "").equals(
-                payload2.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, ""))) {
-            log("Aggregate attribution destination mismatch");
+        if (!areEqualSharedInfoJsons(payload1.getJSONObject(AggregateReportPayloadKeys.SHARED_INFO),
+                payload2.getJSONObject(AggregateReportPayloadKeys.SHARED_INFO))) {
+            log("Aggregate report shared_info mismatch");
             return false;
         }
         if (!payload1.optString(
@@ -689,13 +690,6 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         JSONArray histograms2 = payload2.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS);
         if (!getComparableHistograms(histograms1).equals(getComparableHistograms(histograms2))) {
             log("Aggregate histogram mismatch");
-            return false;
-        }
-        if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, "")
-                .equals(
-                        payload2.optString(
-                                AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME, ""))) {
-            log("Source registration time mismatch");
             return false;
         }
         if (!payload1.optString(AggregateReportPayloadKeys.TRIGGER_CONTEXT_ID, "")
@@ -771,6 +765,23 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         }
     }
 
+    private static long reportTimeFrom(JSONObject obj) {
+        return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0L);
+    }
+
+    private static String aggregateReportToFrom(OutputType outputType, JSONObject obj) {
+        String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
+        return outputType == OutputType.EXPECTED
+                ? url
+                : getReportUrl(ReportType.AGGREGATE, url);
+    }
+
+    private static String sourceRegistrationTimeFrom(JSONObject obj) {
+        JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        return payload.optJSONObject(AggregateReportPayloadKeys.SHARED_INFO)
+                .optString("source_registration_time", "");
+    }
+
     private static void sortEventReportObjects(OutputType outputType,
             List<JSONObject> eventReportObjects) {
         eventReportObjects.sort(
@@ -783,12 +794,9 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     private static void sortAggregateReportObjects(OutputType outputType,
             List<JSONObject> aggregateReportObjects) {
         aggregateReportObjects.sort(
-                // Unlike event reports (sorted elsewhere in this file), aggregate reports are
-                // scheduled with randomised times, and using report time for sorting can result
-                // in unexpected variations in the sort order, depending on test timing. Without
-                // time ordering, we rely on other data across the reports to yield different
-                // hash codes.
-                Comparator.comparing(obj -> hashForAggregateReportObject(outputType, obj)));
+                Comparator.comparing(E2ETest::reportTimeFrom)
+                        .thenComparing(E2ETest::sourceRegistrationTimeFrom)
+                        .thenComparing(obj -> aggregateReportToFrom(outputType, obj)));
     }
 
     private boolean areEqual(ReportObjects expected, ReportObjects actual) throws JSONException {
@@ -1291,9 +1299,6 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         List<Action> actions = new ArrayList<>();
         List<Action> aggregateReportingJobActions = new ArrayList<>();
 
-        long aggregateReportMaxDelay = PrivacyParams.AGGREGATE_REPORT_MIN_DELAY
-                + PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
-
         // Interop tests have all registration types in one list
         if (!input.isNull(TestFormatJsonMapping.REGISTRATIONS_KEY)) {
             JSONArray registrationArray = input.getJSONArray(
@@ -1307,7 +1312,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                     RegisterTrigger triggerRegistration = new RegisterTrigger(obj);
                     actions.add(triggerRegistration);
                     aggregateReportingJobActions.add(new AggregateReportingJob(
-                            triggerRegistration.mTimestamp + aggregateReportMaxDelay));
+                            triggerRegistration.mTimestamp + AGGREGATE_REPORT_DELAY));
                 }
             }
         }
@@ -1320,7 +1325,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                         new RegisterTrigger(triggerRegistrationArray.getJSONObject(j));
                 actions.add(triggerRegistration);
                 aggregateReportingJobActions.add(new AggregateReportingJob(
-                        triggerRegistration.mTimestamp + aggregateReportMaxDelay));
+                        triggerRegistration.mTimestamp + AGGREGATE_REPORT_DELAY));
             }
         }
 
@@ -1332,7 +1337,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                         new RegisterWebTrigger(webTriggerRegistrationArray.getJSONObject(j));
                 actions.add(webTrigger);
                 aggregateReportingJobActions.add(new AggregateReportingJob(
-                        webTrigger.mTimestamp + aggregateReportMaxDelay));
+                        webTrigger.mTimestamp + AGGREGATE_REPORT_DELAY));
             }
         }
 

@@ -641,7 +641,7 @@ public abstract class CustomAudienceDao {
      * Deletes ALL custom audiences from the table.
      *
      * <p>This method is not intended to be called on its own. Please use {@link
-     * #deleteAllCustomAudienceData()} instead.
+     * #deleteAllCustomAudienceData(boolean)} instead.
      */
     @Query("DELETE FROM custom_audience")
     protected abstract void deleteAllCustomAudiences();
@@ -650,7 +650,7 @@ public abstract class CustomAudienceDao {
      * Deletes ALL custom audience background fetch data from the table.
      *
      * <p>This method is not intended to be called on its own. Please use {@link
-     * #deleteAllCustomAudienceData()} instead.
+     * #deleteAllCustomAudienceData(boolean)} instead.
      */
     @Query("DELETE FROM custom_audience_background_fetch_data")
     protected abstract void deleteAllCustomAudienceBackgroundFetchData();
@@ -659,24 +659,27 @@ public abstract class CustomAudienceDao {
      * Deletes ALL custom audience overrides from the table.
      *
      * <p>This method is not intended to be called on its own. Please use {@link
-     * #deleteAllCustomAudienceData()} instead.
+     * #deleteAllCustomAudienceData(boolean)} instead.
      */
     @Query("DELETE FROM custom_audience_overrides")
     protected abstract void deleteAllCustomAudienceOverrides();
 
     /** Deletes ALL custom audience data from the database in a single transaction. */
     @Transaction
-    public void deleteAllCustomAudienceData() {
+    public void deleteAllCustomAudienceData(boolean scheduleCustomAudienceEnabled) {
         deleteAllCustomAudiences();
         deleteAllCustomAudienceBackgroundFetchData();
         deleteAllCustomAudienceOverrides();
+        if (scheduleCustomAudienceEnabled) {
+            deleteAllScheduledCustomAudienceUpdates();
+        }
     }
 
     /**
      * Deletes all custom audiences belonging to the {@code owner} application from the table.
      *
      * <p>This method is not intended to be called on its own. Please use {@link
-     * #deleteCustomAudienceDataByOwner(String)} instead.
+     * #deleteCustomAudienceDataByOwner(String, boolean)} instead.
      */
     @Query("DELETE FROM custom_audience WHERE owner = :owner")
     protected abstract void deleteCustomAudiencesByOwner(@NonNull String owner);
@@ -686,7 +689,7 @@ public abstract class CustomAudienceDao {
      * from the table.
      *
      * <p>This method is not intended to be called on its own. Please use {@link
-     * #deleteCustomAudienceDataByOwner(String)} instead.
+     * #deleteCustomAudienceDataByOwner(String, boolean)} instead.
      */
     @Query("DELETE FROM custom_audience_background_fetch_data WHERE owner = :owner")
     protected abstract void deleteCustomAudienceBackgroundFetchDataByOwner(@NonNull String owner);
@@ -696,7 +699,7 @@ public abstract class CustomAudienceDao {
      * table.
      *
      * <p>This method is not intended to be called on its own. Please use {@link
-     * #deleteCustomAudienceDataByOwner(String)} instead.
+     * #deleteCustomAudienceDataByOwner(String, boolean)} instead.
      */
     @Query("DELETE FROM custom_audience_overrides WHERE owner = :owner")
     protected abstract void deleteCustomAudienceOverridesByOwner(@NonNull String owner);
@@ -706,10 +709,14 @@ public abstract class CustomAudienceDao {
      * in a single transaction.
      */
     @Transaction
-    public void deleteCustomAudienceDataByOwner(@NonNull String owner) {
+    public void deleteCustomAudienceDataByOwner(
+            @NonNull String owner, boolean scheduleCustomAudienceEnabled) {
         deleteCustomAudiencesByOwner(owner);
         deleteCustomAudienceBackgroundFetchDataByOwner(owner);
         deleteCustomAudienceOverridesByOwner(owner);
+        if (scheduleCustomAudienceEnabled) {
+            deleteScheduledCustomAudienceUpdatesByOwner(owner);
+        }
     }
 
     /** Clean up selected custom audience override data by its primary key */
@@ -858,9 +865,27 @@ public abstract class CustomAudienceDao {
     public abstract List<DBScheduledCustomAudienceUpdate>
             getCustomAudienceUpdatesScheduledBeforeTime(Instant timestamp);
 
+    /** Gets list of delayed Custom Audience Updates scheduled by owner */
+    @Query("SELECT * FROM scheduled_custom_audience_update WHERE owner = :owner")
+    public abstract List<DBScheduledCustomAudienceUpdate> getCustomAudienceUpdatesScheduledByOwner(
+            String owner);
+
     /** Gets list of delayed Custom Audience Updates created before the given time */
     @Query("DELETE FROM scheduled_custom_audience_update WHERE creation_time <= :timestamp")
     public abstract void deleteScheduledCustomAudienceUpdatesCreatedBeforeTime(Instant timestamp);
+
+    /** Removes all the Custom Audience Update with the given owner */
+    @Query("DELETE FROM scheduled_custom_audience_update WHERE owner = :owner")
+    protected abstract void deleteScheduledCustomAudienceUpdatesByOwner(String owner);
+
+    /**
+     * Deletes all the Custom Audience Updates data
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllCustomAudienceData(boolean)} instead.
+     */
+    @Query("DELETE FROM scheduled_custom_audience_update")
+    protected abstract void deleteAllScheduledCustomAudienceUpdates();
 
     /**
      * Removes a Custom Audience Update from storage and cascades the deletion to associated Partial

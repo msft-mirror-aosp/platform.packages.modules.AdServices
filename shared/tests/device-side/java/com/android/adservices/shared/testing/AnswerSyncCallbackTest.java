@@ -64,8 +64,8 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
     }
 
     @Override
-    protected boolean usesFactoryApproach() {
-        return true;
+    protected boolean providesExpectedConstructors() {
+        return false;
     }
 
     @Test

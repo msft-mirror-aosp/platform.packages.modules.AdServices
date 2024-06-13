@@ -132,8 +132,10 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
     /**
      * Real implementation of {@code setCalled()}, should be called by subclass to "unblock" the
      * callback.
+     *
+     * @return {@code methodName}
      */
-    public final void internalSetCalled(String methodName) {
+    public final String internalSetCalled(String methodName) {
         logD("%s called on %s", methodName, Thread.currentThread().getName());
         if (mSettings.isFailIfCalledOnMainThread() && mSettings.isMainThread()) {
             String errorMsg =
@@ -143,12 +145,13 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
                             + ")";
             setOnAssertCalledException(new CalledOnMainThreadException(errorMsg));
         }
-        logV("%s returning", methodName);
 
         synchronized (mLock) {
             mNumberCalls++;
         }
         mSettings.countDown();
+        logV("%s returning", methodName);
+        return methodName;
     }
 
     @Override

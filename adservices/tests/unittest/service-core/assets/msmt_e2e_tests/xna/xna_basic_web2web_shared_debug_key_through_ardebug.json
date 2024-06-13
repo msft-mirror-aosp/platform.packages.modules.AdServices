@@ -1,8 +1,8 @@
 {
   "description": "An app registered source shares debug key with derived source. Both source and trigger debug keys are added to the report because adId is enabled on both.",
   "phflags_override": {
-    "measurement_enable_xna" : "true",
-    "web_context_client_allow_list" : "*",
+    "measurement_enable_xna": "true",
+    "web_context_client_allow_list": "*",
     "measurement_enable_shared_source_debug_key": "true"
   },
   "input": {
@@ -13,9 +13,11 @@
           "source_type": "navigation",
           "destination": "android-app://example.2d1.test",
           "registrant": "android-app://example.1s1.test",
-          "source_params": [{
-            "attribution_src_url": "https://www.ad-tech1.test"
-          }]
+          "source_params": [
+            {
+              "attribution_src_url": "https://www.ad-tech1.test"
+            }
+          ]
         },
         "responses": [
           {
@@ -57,9 +59,11 @@
           "source_type": "navigation",
           "destination": "android-app://example.2d1.test",
           "registrant": "android-app://example.1s1.test",
-          "source_params": [{
-            "attribution_src_url": "https://www.ad-tech2.test"
-          }]
+          "source_params": [
+            {
+              "attribution_src_url": "https://www.ad-tech2.test"
+            }
+          ]
         },
         "responses": [
           {
@@ -208,7 +212,15 @@
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "https://2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "source_registration_time": "799977600",
+            "version": "0.1",
+            "debug_mode": "enabled"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "source_site": "android-app://example.1s2.test",
           "histograms": [
@@ -222,8 +234,7 @@
             }
           ],
           "source_debug_key": "112",
-          "trigger_debug_key": "211",
-          "source_registration_time": "799977600"
+          "trigger_debug_key": "211"
         }
       }
     ],
@@ -232,7 +243,15 @@
         "report_time": "800000600001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "https://2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "source_registration_time": "799977600",
+            "version": "0.1",
+            "debug_mode": "enabled"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "source_site": "android-app://example.1s2.test",
           "histograms": [
@@ -246,8 +265,7 @@
             }
           ],
           "source_debug_key": "112",
-          "trigger_debug_key": "211",
-          "source_registration_time": "799977600"
+          "trigger_debug_key": "211"
         }
       }
     ]

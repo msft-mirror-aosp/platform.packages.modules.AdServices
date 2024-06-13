@@ -28,9 +28,7 @@ public final class AbstractSyncCallbackTest extends SyncCallbackTestCase<Abstrac
 
     @Override
     protected String callCallback(AbstractSyncCallback callback) {
-        String methodName = "callCallback()";
-        callback.internalSetCalled(methodName);
-        return methodName;
+        return callback.internalSetCalled("internalSetCalled()");
     }
 
     @Test

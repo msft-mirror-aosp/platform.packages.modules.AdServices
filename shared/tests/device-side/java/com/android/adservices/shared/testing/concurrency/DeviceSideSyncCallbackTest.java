@@ -29,6 +29,11 @@ public final class DeviceSideSyncCallbackTest
         return new ConcreteDeviceSideySncCallback(settings);
     }
 
+    @Override
+    protected String callCallback(DeviceSideSyncCallback callback) {
+        return callback.internalSetCalled("internalSetCalled()");
+    }
+
     // Note: SyncCallbackTestCase already tests what happens when called on main thread, but it's
     // not the "real" main thread, as it's emulated by the SyncCallbackSettings supplier
     @Test
@@ -47,7 +52,7 @@ public final class DeviceSideSyncCallbackTest
         expect.withMessage("thrown")
                 .that(thrown)
                 .hasMessageThat()
-                .contains("setCalled() called on main thread");
+                .contains("internalSetCalled() called on main thread");
         expect.withMessage("toString() after thrown")
                 .that(callback.toString())
                 .contains("onAssertCalledException=" + thrown);
@@ -71,8 +76,7 @@ public final class DeviceSideSyncCallbackTest
         callback.assertCalled();
     }
 
-    private static final class ConcreteDeviceSideySncCallback extends DeviceSideSyncCallback
-            implements ResultlessSyncCallback {
+    private static final class ConcreteDeviceSideySncCallback extends DeviceSideSyncCallback {
 
         @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteDeviceSideySncCallback() {
@@ -81,11 +85,6 @@ public final class DeviceSideSyncCallbackTest
 
         ConcreteDeviceSideySncCallback(SyncCallbackSettings settings) {
             super(settings);
-        }
-
-        @Override
-        public void setCalled() {
-            internalSetCalled("setCalled()");
         }
     }
 }

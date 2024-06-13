@@ -15,23 +15,23 @@
  */
 package com.android.adservices.tests.cts.topics.appupdate;
 
+import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
+
 import com.android.adservices.common.AdServicesCtsTestCase;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.EnableAllApis;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
-abstract class CtsAdServicesTopicsAppUpdateTestCase extends AdServicesCtsTestCase {
-
-    // Override the Epoch Job Period to this value to speed up the epoch computation.
-    protected static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
-
-    // As adb commands and broadcast processing require time to execute, add this waiting time to
-    // allow them to have enough time to be executed. This helps to reduce the test flaky.
-    protected static final long EXECUTION_WAITING_TIME = 2000;
-
-    // Use 0 percent for random topic in the test so that we can verify the returned topic.
-    protected static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
-
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
-    }
-}
+@EnableAllApis
+@EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
+@SetAllLogcatTags
+@SetCompatModeFlags
+@SetFlagEnabled(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED)
+@SetFlagEnabled(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES)
+@SetFlagEnabled(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK)
+abstract class CtsAdServicesTopicsAppUpdateTestCase extends AdServicesCtsTestCase {}

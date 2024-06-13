@@ -742,7 +742,10 @@ public class ConsentManager {
                 /* errorLogger= */ null);
 
         asyncExecute(
-                () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
+                () ->
+                        mCustomAudienceDao.deleteCustomAudienceDataByOwner(
+                                app.getPackageName(),
+                                mFlags.getFledgeScheduleCustomAudienceUpdateEnabled()));
         if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(
                     () -> mFrequencyCapDao.deleteHistogramDataBySourceApp(app.getPackageName()));
@@ -812,7 +815,10 @@ public class ConsentManager {
                 },
                 /* errorLogger= */ null);
 
-        asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
+        asyncExecute(
+                () ->
+                        mCustomAudienceDao.deleteAllCustomAudienceData(
+                                mFlags.getFledgeScheduleCustomAudienceUpdateEnabled()));
         if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
         }
@@ -848,7 +854,10 @@ public class ConsentManager {
                 },
                 /* errorLogger= */ null);
 
-        asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
+        asyncExecute(
+                () ->
+                        mCustomAudienceDao.deleteAllCustomAudienceData(
+                                mFlags.getFledgeScheduleCustomAudienceUpdateEnabled()));
         if (mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             asyncExecute(mFrequencyCapDao::deleteAllHistogramData);
         }

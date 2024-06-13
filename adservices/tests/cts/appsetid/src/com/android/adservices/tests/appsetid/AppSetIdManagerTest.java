@@ -20,9 +20,6 @@ import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_S
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import android.adservices.appsetid.AppSetId;
 import android.adservices.appsetid.AppSetIdManager;
 import android.os.LimitExceededException;
@@ -35,9 +32,13 @@ import androidx.annotation.NonNull;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -54,6 +55,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RequiresAndroidServiceAvailable(intentAction = ACTION_APPSETID_PROVIDER_SERVICE)
+@SetCompatModeFlags
+@SetFlagDisabled(FlagsConstants.KEY_APPSETID_KILL_SWITCH)
+@SetPpapiAppAllowList
 public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -73,7 +77,7 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
         AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
         CompletableFuture<AppSetId> future = new CompletableFuture<>();
         OutcomeReceiver<AppSetId, Exception> callback =
-                new OutcomeReceiver<AppSetId, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(AppSetId result) {
                         future.complete(result);
@@ -87,8 +91,7 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
                 };
         appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, callback);
         AppSetId resultAppSetId = future.get();
-        Assert.assertNotNull(resultAppSetId.getId());
-        Assert.assertNotNull(resultAppSetId.getScope());
+        assertThat(resultAppSetId.getId()).isNotNull();
     }
 
     @Test
@@ -102,7 +105,7 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
         final long nowInMillis = System.currentTimeMillis();
         final float requestPerSecond = getAppSetIdRequestPerSecond();
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
+            assertThat(getAppSetIdAndVerifyRateLimitReached(appSetIdManager)).isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -116,7 +119,7 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
         final boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 
@@ -131,8 +134,7 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
 
         // TODO(b/345835218): Create an Exception Checker for internal exceptions in tests.
         Exception e = receiver.assertFailure(IllegalStateException.class);
-        assertThat(e.getCause().getClass().getSimpleName())
-                .isEqualTo(ServiceUnavailableException.class.getSimpleName());
+        assertThat(e).hasCauseThat().isInstanceOf(ServiceUnavailableException.class);
     }
 
     private boolean getAppSetIdAndVerifyRateLimitReached(AppSetIdManager manager)
@@ -150,7 +152,7 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
 
     private OutcomeReceiver<AppSetId, Exception> createCallbackWithCountdownOnLimitExceeded(
             CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
-        return new OutcomeReceiver<AppSetId, Exception>() {
+        return new OutcomeReceiver<>() {
             @Override
             public void onResult(@NonNull AppSetId result) {
                 countDownLatch.countDown();

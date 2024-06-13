@@ -202,7 +202,15 @@
     "aggregatable_results": [
       {
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "1643239174",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -211,15 +219,21 @@
             }
           ],
           "source_debug_key": "111",
-          "trigger_debug_key": "333",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "333"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239174000"
       },
       {
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "1643239175",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -227,15 +241,22 @@
               "value": 222
             }
           ],
-          "source_debug_key": "111",
-          "source_registration_time": "1643155200"
+          "source_debug_key": "111"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239175000"
       },
       {
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "1643239176",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -244,15 +265,21 @@
             }
           ],
           "source_debug_key": "111",
-          "trigger_debug_key": "444",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "444"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239176000"
       },
       {
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech2.test",
+            "scheduled_report_time": "1643239177",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -260,15 +287,21 @@
               "value": 444
             }
           ],
-          "trigger_debug_key": "555",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "555"
         },
         "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239177000"
       },
       {
         "payload": {
-          "attribution_destination": "android-app://example.2d2.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d2.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "1643239178",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -276,8 +309,7 @@
               "value": 555
             }
           ],
-          "trigger_debug_key": "666",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "666"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239178000"
@@ -286,7 +318,15 @@
     "debug_aggregatable_results": [
       {
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "1643239174",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -303,7 +343,15 @@
       },
       {
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "1643239176",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {

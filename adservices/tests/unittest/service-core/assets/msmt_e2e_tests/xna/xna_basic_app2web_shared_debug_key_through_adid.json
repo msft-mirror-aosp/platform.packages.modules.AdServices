@@ -201,7 +201,15 @@
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "https://2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "source_registration_time": "799977600",
+            "version": "0.1",
+            "debug_mode": "enabled"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "source_site": "android-app://example.1s2.test",
           "histograms": [
@@ -215,8 +223,7 @@
             }
           ],
           "source_debug_key": "112",
-          "trigger_debug_key": "211",
-          "source_registration_time": "799977600"
+          "trigger_debug_key": "211"
         }
       }
     ],
@@ -225,7 +232,15 @@
         "report_time": "800000600001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "https://2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "source_registration_time": "799977600",
+            "version": "0.1",
+            "debug_mode": "enabled"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "source_site": "android-app://example.1s2.test",
           "histograms": [
@@ -239,8 +254,7 @@
             }
           ],
           "source_debug_key": "112",
-          "trigger_debug_key": "211",
-          "source_registration_time": "799977600"
+          "trigger_debug_key": "211"
         }
       }
     ]

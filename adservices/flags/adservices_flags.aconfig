@@ -79,6 +79,13 @@ flag {
 }
 
 flag {
+    name: "fledge_get_ad_selection_data_seller_configuration_enabled"
+    namespace: "adservices"
+    bug: "342332791"
+    description: "Enable the seller configuration feature for the getAdSelectionData API"
+}
+
+flag {
     name: "get_adservices_common_states_api_enabled"
     namespace: "adservices"
     bug: "322635374"

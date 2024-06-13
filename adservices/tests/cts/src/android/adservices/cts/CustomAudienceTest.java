@@ -44,7 +44,6 @@ import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -105,7 +104,6 @@ public final class CustomAudienceTest {
                 validCustomAudience.getAds());
     }
 
-    @Ignore("b/344757062")
     @Test
     public void testBuildValidCustomAudienceSuccessWithPriority() {
         CustomAudience validCustomAudience =
@@ -140,7 +138,6 @@ public final class CustomAudienceTest {
         assertEquals(PRIORITY, validCustomAudience.getPriority(), 0);
     }
 
-    @Ignore("b/344757062")
     @Test
     public void testBuildValidCustomAudienceSuccessWithoutPriority() {
         CustomAudience validCustomAudience =

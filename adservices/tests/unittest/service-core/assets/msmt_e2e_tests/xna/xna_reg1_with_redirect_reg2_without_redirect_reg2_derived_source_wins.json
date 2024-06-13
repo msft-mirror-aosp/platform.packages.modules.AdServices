@@ -1,8 +1,8 @@
 {
   "description": "First registration has XNA adtech source(ad-tech2) in the redirect chain, so creating derived source from ad-tech1 source is ignored. Source from second registration is used to create derived source and that wins.",
   "phflags_override": {
-    "measurement_enable_xna" : "true",
-    "web_context_client_allow_list" : "*"
+    "measurement_enable_xna": "true",
+    "web_context_client_allow_list": "*"
   },
   "input": {
     "sources": [
@@ -37,7 +37,8 @@
                   "geoValue": "0x5"
                 },
                 "shared_aggregation_keys": [
-                  "campaignCounts", "geoValue"
+                  "campaignCounts",
+                  "geoValue"
                 ]
               },
               "Location": null,
@@ -108,7 +109,8 @@
                   "geoValue": "0x5"
                 },
                 "shared_aggregation_keys": [
-                  "campaignCounts", "geoValue"
+                  "campaignCounts",
+                  "geoValue"
                 ]
               },
               "Location": null,
@@ -217,7 +219,14 @@
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech2.test",
+            "scheduled_report_time": "800004200",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "source_site": "android-app://example.1s1.test",
           "histograms": [
@@ -226,11 +235,10 @@
               "value": 32768
             },
             {
-              "key":"0xb85",
-              "value":1664
+              "key": "0xb85",
+              "value": 1664
             }
-          ],
-          "source_registration_time": "799977600"
+          ]
         }
       }
     ]

@@ -269,6 +269,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         doReturn(true).when(mMockFlags).getEnrollmentEnableLimitedLogging();
+        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
+
         doReturn(mAdServicesLoggerImplMock).when(AdServicesLoggerImpl::getInstance);
         doNothing().when(EpochJob::schedule);
         doReturn(true)
@@ -782,7 +784,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mEnrollmentDaoSpy).deleteAll();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
@@ -802,7 +805,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mEnrollmentDaoSpy).deleteAll();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verifyZeroInteractions(mProtectedSignalsDaoMock);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
@@ -823,7 +827,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mEnrollmentDaoSpy).deleteAll();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verifyZeroInteractions(mFrequencyCapDaoMock);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
@@ -844,7 +849,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mEnrollmentDaoSpy).deleteAll();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verifyZeroInteractions(mAppInstallDaoMock);
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
@@ -862,7 +868,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         // TODO(b/240988406): change to test for correct method call
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
@@ -883,7 +890,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         // TODO(b/240988406): change to test for correct method call
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verifyZeroInteractions(mFrequencyCapDaoMock);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mUserProfileIdManagerMock).deleteId();
@@ -902,7 +910,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         // TODO(b/240988406): change to test for correct method call
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verifyZeroInteractions(mAppInstallDaoMock);
         verify(mUserProfileIdManagerMock).deleteId();
@@ -921,7 +930,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         // TODO(b/240988406): change to test for correct method call
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verifyZeroInteractions(mProtectedSignalsDaoMock);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
@@ -1612,8 +1622,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevoked_ppApiOnly()
             throws IOException, PackageManager.NameNotFoundException {
-        doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
-
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteCustomAudienceDataByOwner(any(), anyBoolean());
         mConsentManager.enable(mSpyContext);
         assertTrue(mConsentManager.getConsent().isGiven());
 
@@ -1647,7 +1658,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
+        verify(mCustomAudienceDaoMock)
+                .deleteCustomAudienceDataByOwner(
+                        app.getPackageName(), /* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteByPackageName(app.getPackageName());
         verify(mProtectedSignalsDaoMock)
                 .deleteSignalsByPackage(eq(Collections.singletonList(app.getPackageName())));
@@ -1657,7 +1670,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevokedAndRestored_ppApiOnly()
             throws IOException, PackageManager.NameNotFoundException {
-        doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteCustomAudienceDataByOwner(any(), anyBoolean());
 
         mConsentManager.enable(mSpyContext);
         assertTrue(mConsentManager.getConsent().isGiven());
@@ -1691,7 +1706,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
+        verify(mCustomAudienceDaoMock)
+                .deleteCustomAudienceDataByOwner(
+                        app.getPackageName(), /* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteByPackageName(app.getPackageName());
         verify(mProtectedSignalsDaoMock)
                 .deleteSignalsByPackage(eq(Collections.singletonList(app.getPackageName())));
@@ -1961,7 +1978,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testResetAllAppConsentAndAppData_ppApiOnly()
             throws IOException, PackageManager.NameNotFoundException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         // Prepopulate with consent data for some apps
         mConsentManager.enable(mSpyContext);
@@ -1998,7 +2017,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         assertThat(appsWithRevokedConsent).isEmpty();
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock, times(2))
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
@@ -2007,7 +2027,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testResetAllAppConsentAndAppData_systemServerOnly()
             throws IOException, RemoteException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
 
@@ -2016,7 +2038,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMockIAdServicesManager).clearAllAppConsentData();
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
@@ -2025,7 +2048,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testResetAllAppConsentAndAppData_ppApiAndSystemServer()
             throws IOException, PackageManager.NameNotFoundException, RemoteException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         // Prepopulate with consent data for some apps
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
@@ -2073,7 +2098,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMockIAdServicesManager, times(2)).clearAllAppConsentData();
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock, times(2))
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
@@ -2099,7 +2125,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testResetAllowedAppConsentAndAppData_ppApiOnly()
             throws IOException, PackageManager.NameNotFoundException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         // Prepopulate with consent data for some apps
         mConsentManager.enable(mSpyContext);
@@ -2147,7 +2175,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                                 .collect(Collectors.toList()));
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock, times(2))
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
@@ -2156,7 +2185,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testResetAllowedAppConsentAndAppData_systemServerOnly()
             throws IOException, RemoteException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         // Prepopulate with consent data for some apps
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
@@ -2165,7 +2196,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMockIAdServicesManager).clearKnownAppsWithConsent();
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
@@ -2174,7 +2206,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void testResetAllowedAppConsentAndAppData_ppApiAndSystemServer()
             throws IOException, PackageManager.NameNotFoundException, RemoteException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         // Prepopulate with consent data for some apps
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
@@ -2224,7 +2258,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMockIAdServicesManager).clearKnownAppsWithConsent();
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();

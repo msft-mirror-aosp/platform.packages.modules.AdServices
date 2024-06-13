@@ -15,15 +15,16 @@
  */
 package com.android.adservices.tests.appsetid;
 
+import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_REQUEST_PERMITS_PER_SECOND;
+
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
-import com.android.adservices.common.annotations.SetPpapiAppAllowList;
-import com.android.adservices.service.FlagsConstants;
-import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFloatFlag;
 
-@SetCompatModeFlags
-@SetPpapiAppAllowList
 @DisableGlobalKillSwitch
-@SetFlagDisabled(FlagsConstants.KEY_APPSETID_KILL_SWITCH)
+@SetAllLogcatTags
+@SetCompatModeFlags
+@SetFloatFlag(name = KEY_APPSETID_REQUEST_PERMITS_PER_SECOND, value = 5f)
 abstract class CtsAppSetIdEndToEndTestCase extends AdServicesCtsTestCase {}

@@ -27,4 +27,12 @@ public final class SimpleSyncCallback extends AbstractResultlessSyncCallback {
     public SimpleSyncCallback(SyncCallbackSettings settings) {
         super(settings);
     }
+
+    /**
+     * Indicates the callback was called, so it unblocks {@link #waitCalled()} / {@link
+     * #waitCalled(long, TimeUnit)}.
+     */
+    public void setCalled() {
+        internalSetCalled("setCalled()");
+    }
 }

@@ -16,6 +16,9 @@
 
 package com.android.adservices.common.logging.annotations;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.DEFAULT_TIMES;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.UNDEFINED_INT_PARAM;
+
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -24,40 +27,58 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Used to specify expected {@code ErrorLogUtil.e(Throwable, int, int} calls over test methods.
+ * Used to specify expected {@code ErrorLogUtil.e(Throwable, int, int)} calls over test methods.
  *
  * <ol>
  *   <li>To verify ErrorLogUtil.e(Throwable, int, int): @ExpectErrorLogUtilCall(E.class, X, Y)
  *   <li>To verify with any exception: @ExpectErrorLogUtilCall(Any.class, X, Y)
  *   <li>To verify multiple same calls, use the times arg: @ExpectErrorLogUtilCall(E.class, X, Y, 5)
  *   <li>To verify different invocations, use multiple annotations.
+ *   <li>See {@link SetErrorLogUtilDefaultParams} to specify default params at the class level.
  * </ol>
  *
- * <p>See {@link ExpectErrorLogUtilCall} for {@code ErrorLogUtil.e(int, int} calls.
+ * <p>See {@link ExpectErrorLogUtilCall} for verifying {@code ErrorLogUtil.e(int, int)} calls.
  */
 @Retention(RUNTIME)
 @Target(METHOD)
 @Repeatable(ExpectErrorLogUtilWithExceptionCalls.class)
 public @interface ExpectErrorLogUtilWithExceptionCall {
     /** Name of annotation */
-    String NAME = ExpectErrorLogUtilWithExceptionCall.class.getSimpleName();
-
-    /** Default number of times to expect log call. */
-    int DEFAULT_TIMES = 1;
+    String ANNOTATION_NAME = ExpectErrorLogUtilWithExceptionCall.class.getSimpleName();
 
     /** Used to verify against any exception type for ErrorLogUtil.e(Throwable, int, int) calls. */
     class Any extends Throwable {
         private Any() {}
     }
 
-    /** Throwable to be logged. */
-    Class<? extends Throwable> throwable();
+    /** Internal exception type to represent unspecified exception. */
+    class Undefined extends Throwable {
+        private Undefined() {}
+    }
 
-    /** Error code to be logged */
-    int errorCode();
+    /**
+     * Throwable to be logged.
+     *
+     * <p>It's required to define this using {@link SetErrorLogUtilDefaultParams} at the class level
+     * if it is not defined within this annotation.
+     */
+    Class<? extends Throwable> throwable() default Undefined.class;
 
-    /** PPAPI name code to be logged */
-    int ppapiName();
+    /**
+     * Error code to be logged.
+     *
+     * <p>It's required to define this using {@link SetErrorLogUtilDefaultParams} at the class level
+     * if it is not defined within this annotation.
+     */
+    int errorCode() default UNDEFINED_INT_PARAM;
+
+    /**
+     * PPAPI name code to be logged.
+     *
+     * <p>It's required to define this using {@link SetErrorLogUtilDefaultParams} at the class level
+     * if it is not defined within this annotation.
+     */
+    int ppapiName() default UNDEFINED_INT_PARAM;
 
     /** Number of log calls, default set to 1 */
     int times() default DEFAULT_TIMES;
