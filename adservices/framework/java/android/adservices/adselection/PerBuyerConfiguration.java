@@ -20,6 +20,7 @@ import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DA
 
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.FlaggedApi;
+import android.annotation.IntRange;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 import android.os.Parcel;
@@ -91,6 +92,7 @@ public final class PerBuyerConfiguration implements Parcelable {
      * <p>If this is zero this buyer will share remaining space after other buyers' target sizes are
      * respected.
      */
+    @IntRange(from = 0, to = Integer.MAX_VALUE)
     public int getTargetInputSizeBytes() {
         return mTargetInputSizeBytes;
     }
@@ -134,7 +136,8 @@ public final class PerBuyerConfiguration implements Parcelable {
          * details.
          */
         @NonNull
-        public Builder setTargetInputSizeBytes(int targetInputSizeB) {
+        public Builder setTargetInputSizeBytes(
+                @IntRange(from = 0, to = Integer.MAX_VALUE) int targetInputSizeB) {
             mTargetInputSizeBytes = targetInputSizeB;
             return this;
         }

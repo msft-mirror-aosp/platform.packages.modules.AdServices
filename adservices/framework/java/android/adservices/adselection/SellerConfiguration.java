@@ -19,6 +19,7 @@ package android.adservices.adselection;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
 
 import android.annotation.FlaggedApi;
+import android.annotation.IntRange;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 import android.os.Parcel;
@@ -114,6 +115,7 @@ public final class SellerConfiguration implements Parcelable {
     }
 
     /** Returns the maximum size of the payload in bytes that the service will return. */
+    @IntRange(from = 1, to = Integer.MAX_VALUE)
     public int getMaximumPayloadSizeBytes() {
         return mMaximumPayloadSizeBytes;
     }
@@ -145,7 +147,8 @@ public final class SellerConfiguration implements Parcelable {
          * #getMaximumPayloadSizeBytes()}
          */
         @NonNull
-        public Builder setMaximumPayloadSizeBytes(int maximumPayloadSizeBytes) {
+        public Builder setMaximumPayloadSizeBytes(
+                @IntRange(from = 1, to = Integer.MAX_VALUE) int maximumPayloadSizeBytes) {
             mMaximumPayloadSizeBytes = maximumPayloadSizeBytes;
 
             Preconditions.checkArgument(

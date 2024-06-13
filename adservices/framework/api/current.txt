@@ -155,7 +155,7 @@ package android.adservices.adselection {
   @FlaggedApi("com.android.adservices.flags.fledge_get_ad_selection_data_seller_configuration_enabled") public final class PerBuyerConfiguration implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
-    method public int getTargetInputSizeBytes();
+    method @IntRange(from=0, to=java.lang.Integer.MAX_VALUE) public int getTargetInputSizeBytes();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.PerBuyerConfiguration> CREATOR;
   }
@@ -164,7 +164,7 @@ package android.adservices.adselection {
     ctor public PerBuyerConfiguration.Builder();
     method @NonNull public android.adservices.adselection.PerBuyerConfiguration build();
     method @NonNull public android.adservices.adselection.PerBuyerConfiguration.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
-    method @NonNull public android.adservices.adselection.PerBuyerConfiguration.Builder setTargetInputSizeBytes(int);
+    method @NonNull public android.adservices.adselection.PerBuyerConfiguration.Builder setTargetInputSizeBytes(@IntRange(from=0, to=java.lang.Integer.MAX_VALUE) int);
   }
 
   @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public final class PerBuyerDecisionLogic implements android.os.Parcelable {
@@ -231,7 +231,7 @@ package android.adservices.adselection {
 
   @FlaggedApi("com.android.adservices.flags.fledge_get_ad_selection_data_seller_configuration_enabled") public final class SellerConfiguration implements android.os.Parcelable {
     method public int describeContents();
-    method public int getMaximumPayloadSizeBytes();
+    method @IntRange(from=1, to=java.lang.Integer.MAX_VALUE) public int getMaximumPayloadSizeBytes();
     method @NonNull public java.util.Set<android.adservices.adselection.PerBuyerConfiguration> getPerBuyerConfigurations();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.SellerConfiguration> CREATOR;
@@ -240,7 +240,7 @@ package android.adservices.adselection {
   public static final class SellerConfiguration.Builder {
     ctor public SellerConfiguration.Builder();
     method @NonNull public android.adservices.adselection.SellerConfiguration build();
-    method @NonNull public android.adservices.adselection.SellerConfiguration.Builder setMaximumPayloadSizeBytes(int);
+    method @NonNull public android.adservices.adselection.SellerConfiguration.Builder setMaximumPayloadSizeBytes(@IntRange(from=1, to=java.lang.Integer.MAX_VALUE) int);
     method @NonNull public android.adservices.adselection.SellerConfiguration.Builder setPerBuyerConfigurations(@NonNull java.util.Set<android.adservices.adselection.PerBuyerConfiguration>);
   }
 
