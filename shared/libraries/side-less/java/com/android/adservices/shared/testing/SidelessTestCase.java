@@ -42,7 +42,7 @@ public abstract class SidelessTestCase implements TestNamer {
     // Something like (which used to be on AdServicesTestCase):
     // Log.d(TAG, "setTestNumber(): " + getTestName() + " is test #" + mTestNumber);
 
-    protected final Logger mLogger;
+    protected final Logger mLog;
     protected final RealLogger mRealLogger;
 
     public SidelessTestCase() {
@@ -51,7 +51,7 @@ public abstract class SidelessTestCase implements TestNamer {
 
     public SidelessTestCase(RealLogger realLogger) {
         mRealLogger = realLogger;
-        mLogger = new Logger(realLogger, getClass());
+        mLog = new Logger(realLogger, getClass());
     }
 
     @Override
