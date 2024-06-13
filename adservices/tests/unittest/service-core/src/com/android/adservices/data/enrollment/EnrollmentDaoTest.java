@@ -16,6 +16,11 @@
 
 package com.android.adservices.data.enrollment;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -38,6 +43,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.database.DatabaseUtils;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
@@ -45,6 +51,7 @@ import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -52,23 +59,24 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
+import com.android.adservices.service.proto.PrivacySandboxApi;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-public class EnrollmentDaoTest {
+public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private SharedDbHelper mDbHelper;
@@ -79,10 +87,13 @@ public class EnrollmentDaoTest {
     @Mock private EnrollmentUtil mEnrollmentUtil;
     @Mock private SharedDbHelper mMockDbHelper;
 
-    private static final EnrollmentData ENROLLMENT_DATA1 =
+    public static final EnrollmentData ENROLLMENT_DATA1 =
             new EnrollmentData.Builder()
                     .setEnrollmentId("1")
-                    .setCompanyId("1001")
+                    .setEnrolledAPIs(
+                            "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING"
+                                    + " PRIVACY_SANDBOX_API_TOPICS"
+                                    + " PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS")
                     .setSdkNames("1sdk")
                     .setAttributionSourceRegistrationUrl(Arrays.asList("https://1test.com/source"))
                     .setAttributionTriggerRegistrationUrl(
@@ -95,7 +106,9 @@ public class EnrollmentDaoTest {
     private static final EnrollmentData ENROLLMENT_DATA2 =
             new EnrollmentData.Builder()
                     .setEnrollmentId("2")
-                    .setCompanyId("1002")
+                    .setEnrolledAPIs(
+                            "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING"
+                                    + " PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE")
                     .setSdkNames(Arrays.asList("2sdk", "anotherSdk"))
                     .setAttributionSourceRegistrationUrl(
                             Arrays.asList(
@@ -114,7 +127,9 @@ public class EnrollmentDaoTest {
     private static final EnrollmentData ENROLLMENT_DATA3 =
             new EnrollmentData.Builder()
                     .setEnrollmentId("3")
-                    .setCompanyId("1003")
+                    .setEnrolledAPIs(
+                            "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_TOPICS"
+                                    + " PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION")
                     .setSdkNames("3sdk 31sdk")
                     .setAttributionSourceRegistrationUrl(
                             Arrays.asList("https://2test.com/source", "https://2test2.com/source"))
@@ -128,7 +143,9 @@ public class EnrollmentDaoTest {
     private static final EnrollmentData ENROLLMENT_DATA4 =
             new EnrollmentData.Builder()
                     .setEnrollmentId("4")
-                    .setCompanyId("1004")
+                    .setEnrolledAPIs(
+                            "PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS"
+                                    + " PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS")
                     .setSdkNames("4sdk 41sdk")
                     .setAttributionSourceRegistrationUrl(
                             Arrays.asList("https://4test.com", "https://prefix.test-prefix.com"))
@@ -141,7 +158,7 @@ public class EnrollmentDaoTest {
     private static final EnrollmentData ENROLLMENT_DATA5 =
             new EnrollmentData.Builder()
                     .setEnrollmentId("5")
-                    .setCompanyId("1005")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                     .setSdkNames("5sdk 51sdk")
                     .setAttributionSourceRegistrationUrl(
                             Arrays.asList(
@@ -161,7 +178,7 @@ public class EnrollmentDaoTest {
     private static final EnrollmentData DUPLICATE_ID_ENROLLMENT_DATA =
             new EnrollmentData.Builder()
                     .setEnrollmentId("1")
-                    .setCompanyId("1004")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                     .setSdkNames("4sdk")
                     .setAttributionSourceRegistrationUrl(Arrays.asList("https://4test.com/source"))
                     .setAttributionTriggerRegistrationUrl(
@@ -174,7 +191,7 @@ public class EnrollmentDaoTest {
     private static final EnrollmentData ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR =
             new EnrollmentData.Builder()
                     .setEnrollmentId("6")
-                    .setCompanyId("1006")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE")
                     .setSdkNames("6sdk")
                     .setAttributionSourceRegistrationUrl(Arrays.asList("https://6test.com/source"))
                     .setAttributionTriggerRegistrationUrl(
@@ -191,7 +208,6 @@ public class EnrollmentDaoTest {
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
         mDbHelper = DbTestUtil.getSharedDbHelperForTest();
         when(mMockFlags.isEnableEnrollmentTestSeed()).thenReturn(false);
         when(mEnrollmentUtil.getBuildId()).thenReturn(1);
@@ -317,14 +333,10 @@ public class EnrollmentDaoTest {
     }
 
     @Test
+    @SpyStatic(ErrorLogUtil.class)
     public void testDeleteAllDoesNotThrowException() {
         SharedDbHelper helper = Mockito.mock(SharedDbHelper.class);
         SQLiteDatabase db = mock(SQLiteDatabase.class);
-        MockitoSession mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(ErrorLogUtil.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
 
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         EnrollmentDao enrollmentDao =
@@ -341,7 +353,6 @@ public class EnrollmentDaoTest {
 
         boolean result = enrollmentDao.deleteAll();
         assertFalse(result);
-        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -810,7 +821,7 @@ public class EnrollmentDaoTest {
         EnrollmentData data =
                 new EnrollmentData.Builder()
                         .setEnrollmentId("5")
-                        .setCompanyId("1005")
+                        .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                         .setSdkNames("5sdk 51sdk")
                         .setAttributionSourceRegistrationUrl(
                                 Arrays.asList("https://prefix.test-prefix.com"))
@@ -857,7 +868,7 @@ public class EnrollmentDaoTest {
         EnrollmentData data =
                 new EnrollmentData.Builder()
                         .setEnrollmentId("4")
-                        .setCompanyId("1004")
+                        .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                         .setSdkNames("4sdk 41sdk")
                         .setAttributionSourceRegistrationUrl(
                                 Arrays.asList("http://4test.com", "https://prefix.test-prefix.com"))
@@ -1025,7 +1036,7 @@ public class EnrollmentDaoTest {
         EnrollmentData enrollmentData =
                 new EnrollmentData.Builder()
                         .setEnrollmentId("4")
-                        .setCompanyId("1004")
+                        .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                         .setSdkNames("4sdk 41sdk")
                         .setAttributionSourceRegistrationUrl(Arrays.asList("https://4test.invalid"))
                         .setAttributionTriggerRegistrationUrl(
@@ -1354,5 +1365,228 @@ public class EnrollmentDaoTest {
         when(mMockDbHelper.safeGetWritableDatabase()).thenReturn(null);
         int enrollmentRecordsCount = enrollmentDao.getEnrollmentRecordCountForLogging();
         assertEquals(-1, enrollmentRecordsCount);
+    }
+
+    @Test
+    @SpyStatic(ErrorLogUtil.class)
+    public void testInsert_throwsSQLException_logsCEL() throws Exception {
+        SQLiteDatabase db = mock(SQLiteDatabase.class);
+        EnrollmentData enrollmentData = mock(EnrollmentData.class);
+
+        doNothingOnErrorLogUtilError();
+
+        when(mMockDbHelper.safeGetWritableDatabase()).thenReturn(db);
+        when(db.insertWithOnConflict(
+                        eq(EnrollmentTables.EnrollmentDataContract.TABLE), any(), any(), anyInt()))
+                .thenThrow(new SQLException());
+
+        assertThat(mEnrollmentDao.insert(enrollmentData)).isFalse();
+
+        verifyErrorLogUtilErrorWithAnyException(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+    }
+
+    @Test
+    public void testGetEnrollmentData_enrollmentDataGetEnrolledAPIs() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        mEnrollmentDao.insert(ENROLLMENT_DATA3);
+        // Checking ENROLLMENT_DATA2
+        EnrollmentData enrollmentData2 = mEnrollmentDao.getEnrollmentData("2");
+
+        String enrolledAPIsString2 =
+                "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING"
+                        + " PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE";
+        assertEquals(enrolledAPIsString2, enrollmentData2.getEnrolledAPIsString());
+
+        List<PrivacySandboxApi> enrolledAPIs2 =
+                ImmutableList.of(
+                        PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,
+                        PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING);
+        assertEquals(2, enrollmentData2.getEnrolledAPIs().size());
+        assertThat(enrollmentData2.getEnrolledAPIs()).containsExactlyElementsIn(enrolledAPIs2);
+
+        // Checking ENROLLMENT_DATA3
+        EnrollmentData enrollmentData3 = mEnrollmentDao.getEnrollmentData("3");
+
+        String enrolledAPIsString3 =
+                "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_TOPICS"
+                        + " PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION";
+        assertEquals(enrolledAPIsString3, enrollmentData3.getEnrolledAPIsString());
+
+        List<PrivacySandboxApi> enrolledAPIs3 =
+                ImmutableList.of(
+                        PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS,
+                        PrivacySandboxApi.PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION,
+                        PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING);
+        assertEquals(3, enrollmentData3.getEnrolledAPIs().size());
+        assertThat(enrollmentData3.getEnrolledAPIs()).containsExactlyElementsIn(enrolledAPIs3);
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByMatchingAdTechIdentifier_uriIsMatch() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        mEnrollmentDao.insert(ENROLLMENT_DATA4);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
+        Pair<AdTechIdentifier, EnrollmentData> paired =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
+                        Uri.parse("https://4test.com/"));
+
+        assertEquals(paired.first, AdTechIdentifier.fromString("4test.com"));
+        assertEquals(paired.second, ENROLLMENT_DATA4);
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByMatchingAdTechIdentifier_uriIsNotMatch() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
+                        Uri.parse("https://2test.com/"));
+        assertWithMessage("Returned enrollment result").that(enrollmentResult).isNull();
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByMatchingAdTechIdentifier_uriIsMatchWithSubdomain() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        mEnrollmentDao.insert(ENROLLMENT_DATA4);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        Uri subdomainMatchUri = Uri.parse("https://example.abc.4test.com/path/for/resource");
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(subdomainMatchUri);
+
+        assertEquals(enrollmentResult.first, AdTechIdentifier.fromString("4test.com"));
+        assertEquals(enrollmentResult.second, ENROLLMENT_DATA4);
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByMatchingAdTechIdentifier_uriIsMatchNoPASEnrollments() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA3);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
+                        Uri.parse("https://2test.com"));
+        assertWithMessage("Returned enrollment result").that(enrollmentResult).isNull();
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByMatchingAdTechIdentifier_uriIsNotMatchPASEnrollments() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
+                        Uri.parse("https://test2.com"));
+        assertWithMessage("Returned enrollment result").that(enrollmentResult).isNull();
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByAdTechIdentifier_isMatch() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        AdTechIdentifier adTechIdentifier = AdTechIdentifier.fromString("1test.com");
+        EnrollmentData enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(adTechIdentifier);
+        assertEquals(ENROLLMENT_DATA1, enrollmentResult);
+    }
+
+    @Test
+    public void getEnrollmentDataForPASByAdTechIdentifier_isNotMatch() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+        AdTechIdentifier adTechIdentifier = AdTechIdentifier.fromString("2test.com");
+        EnrollmentData enrollmentResult =
+                mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(adTechIdentifier);
+        assertNull(enrollmentResult);
+    }
+
+    @Test
+    public void getAllPASEnrolledAdTechs_multipleEntries() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        mEnrollmentDao.insert(ENROLLMENT_DATA3);
+        mEnrollmentDao.insert(ENROLLMENT_DATA4);
+        verify(mEnrollmentUtil, times(4))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
+        Set<AdTechIdentifier> enrolledPASAdTechIdentifiers =
+                mEnrollmentDao.getAllPASEnrolledAdTechs();
+
+        assertThat(enrolledPASAdTechIdentifiers).hasSize(2);
+        assertThat(enrolledPASAdTechIdentifiers)
+                .containsExactly(
+                        AdTechIdentifier.fromString("1test.com"),
+                        AdTechIdentifier.fromString("4test.com"));
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+    }
+
+    @Test
+    public void getAllPASEnrolledAdTechs_noEntries() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        mEnrollmentDao.insert(ENROLLMENT_DATA3);
+        verify(mEnrollmentUtil, times(2))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
+
+        Set<AdTechIdentifier> enrolledPASAdTechIdentifiers =
+                mEnrollmentDao.getAllPASEnrolledAdTechs();
+
+        assertThat(enrolledPASAdTechIdentifiers).isEmpty();
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentDataStats(
+                        eq(mLogger),
+                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
+                        eq(true),
+                        eq(1));
     }
 }

@@ -19,9 +19,8 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_library_import {
-    name: "androidx.privacysandbox.ads_ads-adservices-java-beta01-nodeps",
-    aars: ["ads-adservices-java-1.0.0-beta01.aar"],
+java_defaults {
+    name: "common_defaults",
     sdk_version: "31",
     apex_available: [
         "//apex_available:platform",
@@ -30,535 +29,298 @@ android_library_import {
     min_sdk_version: "19",
     static_libs: [
         "androidx.annotation_annotation",
+        "kotlin-stdlib",
+        "kotlinx_coroutines",
+        "androidx.core_core-ktx",
+    ],
+}
+
+java_defaults {
+    name: "ads_adservices_java_import_defaults",
+    defaults: ["common_defaults"],
+    static_libs: [
         "androidx.concurrent_concurrent-futures",
         "guava",
         "guava-listenablefuture-prebuilt-jar",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-        "androidx.privacysandbox.ads_ads-adservices-beta01",
     ],
 }
 
-android_library {
-    name: "androidx.privacysandbox.ads_ads-adservices-java-beta01",
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
+java_defaults {
+    name: "ads_adservices_java_library_defaults",
+    defaults: ["ads_adservices_java_import_defaults"],
+    java_version: "1.7",
+}
+
+java_defaults {
+    name: "ads_adservices_library_defaults",
+    defaults: ["common_defaults"],
+    java_version: "1.7",
+}
+
+java_defaults {
+    name: "android_test_defaults",
+    srcs: [
+        "src/**/*.java",
     ],
-    min_sdk_version: "19",
+    sdk_version: "module_current",
     static_libs: [
-        "androidx.privacysandbox.ads_ads-adservices-java-beta01-nodeps",
-        "androidx.annotation_annotation",
+        "adservices-clients",
         "androidx.concurrent_concurrent-futures",
-        "guava",
-        "guava-listenablefuture-prebuilt-jar",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-        "androidx.privacysandbox.ads_ads-adservices-beta01",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "kotlinx-coroutines-android",
+        "mockito-target-extended-minus-junit4",
+        "truth",
+        "framework-adservices.impl",
+        "framework-sdksandbox.impl",
+        "adservices-test-fixtures",
+        "adservices-test-utility",
     ],
-    java_version: "1.7",
+    libs: [
+        "android.test.base",
+        "framework-sdkextensions",
+    ],
+    test_suites: [
+        "general-tests",
+    ],
 }
 
 android_library_import {
-    name: "androidx.privacysandbox.ads_ads-adservices-beta01-nodeps",
-    aars: ["ads-adservices-1.0.0-beta01.aar"],
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.annotation_annotation",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-    ],
-}
-
-android_library {
-    name: "androidx.privacysandbox.ads_ads-adservices-beta01",
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.privacysandbox.ads_ads-adservices-beta01-nodeps",
-        "androidx.annotation_annotation",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-    ],
-    java_version: "1.7",
-}
-
-android_library_import {
-    name: "androidx.privacysandbox.ads_ads-adservices-java-beta02-nodeps",
-    aars: ["ads-adservices-java-1.0.0-beta02.aar"],
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.annotation_annotation",
-        "androidx.concurrent_concurrent-futures",
-        "guava",
-        "guava-listenablefuture-prebuilt-jar",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-        "androidx.privacysandbox.ads_ads-adservices-beta02",
-    ],
-}
-
-android_library {
-    name: "androidx.privacysandbox.ads_ads-adservices-java-beta02",
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.privacysandbox.ads_ads-adservices-java-beta02-nodeps",
-        "androidx.annotation_annotation",
-        "androidx.concurrent_concurrent-futures",
-        "guava",
-        "guava-listenablefuture-prebuilt-jar",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-        "androidx.privacysandbox.ads_ads-adservices-beta02",
-    ],
-    java_version: "1.7",
-}
-
-android_library_import {
-    name: "androidx.privacysandbox.ads_ads-adservices-beta02-nodeps",
-    aars: ["ads-adservices-1.0.0-beta02.aar"],
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.annotation_annotation",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-    ],
-}
-
-android_library {
-    name: "androidx.privacysandbox.ads_ads-adservices-beta02",
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.privacysandbox.ads_ads-adservices-beta02-nodeps",
-        "androidx.annotation_annotation",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-    ],
-    java_version: "1.7",
-}
-
-android_library_import {
-    name: "androidx.privacysandbox.ads_ads-adservices-java-beta03-nodeps",
-    aars: ["ads-adservices-java-1.0.0-beta03.aar"],
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.annotation_annotation",
-        "androidx.concurrent_concurrent-futures",
-        "guava",
-        "guava-listenablefuture-prebuilt-jar",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-        "androidx.privacysandbox.ads_ads-adservices-beta03",
-    ],
-}
-
-android_library {
-    name: "androidx.privacysandbox.ads_ads-adservices-java-beta03",
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.privacysandbox.ads_ads-adservices-java-beta03-nodeps",
-        "androidx.annotation_annotation",
-        "androidx.concurrent_concurrent-futures",
-        "guava",
-        "guava-listenablefuture-prebuilt-jar",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-        "androidx.privacysandbox.ads_ads-adservices-beta03",
-    ],
-    java_version: "1.7",
-}
-
-android_library_import {
-    name: "androidx.privacysandbox.ads_ads-adservices-beta03-nodeps",
-    aars: ["ads-adservices-1.0.0-beta03.aar"],
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.annotation_annotation",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-    ],
-}
-
-android_library {
-    name: "androidx.privacysandbox.ads_ads-adservices-beta03",
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.privacysandbox.ads_ads-adservices-beta03-nodeps",
-        "androidx.annotation_annotation",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-    ],
-    java_version: "1.7",
-}
-
-android_library_import {
-    name: "androidx.privacysandbox.ads_ads-adservices-java-beta04-nodeps",
-    aars: ["ads-adservices-java-1.0.0-beta04.aar"],
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.annotation_annotation",
-        "androidx.concurrent_concurrent-futures",
-        "guava",
-        "guava-listenablefuture-prebuilt-jar",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-        "androidx.privacysandbox.ads_ads-adservices-beta04",
-    ],
-}
-
-android_library {
-    name: "androidx.privacysandbox.ads_ads-adservices-java-beta04",
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.privacysandbox.ads_ads-adservices-java-beta04-nodeps",
-        "androidx.annotation_annotation",
-        "androidx.concurrent_concurrent-futures",
-        "guava",
-        "guava-listenablefuture-prebuilt-jar",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-        "androidx.privacysandbox.ads_ads-adservices-beta04",
-    ],
-    java_version: "1.7",
-}
-
-android_library_import {
-    name: "androidx.privacysandbox.ads_ads-adservices-beta04-nodeps",
-    aars: ["ads-adservices-1.0.0-beta04.aar"],
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.annotation_annotation",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-    ],
-}
-
-android_library {
-    name: "androidx.privacysandbox.ads_ads-adservices-beta04",
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.privacysandbox.ads_ads-adservices-beta04-nodeps",
-        "androidx.annotation_annotation",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-    ],
-    java_version: "1.7",
-}
-
-android_library_import {
-    name: "androidx.privacysandbox.ads_ads-adservices-java-beta05-nodeps",
+    name: "androidx.privacysandbox.ads_ads-adservices-java-1.0.0-beta05-nodeps",
     aars: ["ads-adservices-java-1.0.0-beta05.aar"],
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
     static_libs: [
-        "androidx.annotation_annotation",
-        "androidx.concurrent_concurrent-futures",
-        "guava",
-        "guava-listenablefuture-prebuilt-jar",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-        "androidx.privacysandbox.ads_ads-adservices-beta05",
+        "androidx.privacysandbox.ads_ads-adservices-1.0.0-beta05",
     ],
+    defaults: ["ads_adservices_java_import_defaults"],
 }
 
 android_library {
-    name: "androidx.privacysandbox.ads_ads-adservices-java-beta05",
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
+    name: "androidx.privacysandbox.ads_ads-adservices-java-1.0.0-beta05",
     static_libs: [
-        "androidx.privacysandbox.ads_ads-adservices-java-beta05-nodeps",
-        "androidx.annotation_annotation",
-        "androidx.concurrent_concurrent-futures",
-        "guava",
-        "guava-listenablefuture-prebuilt-jar",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-        "androidx.privacysandbox.ads_ads-adservices-beta05",
+        "androidx.privacysandbox.ads_ads-adservices-java-1.0.0-beta05-nodeps",
+        "androidx.privacysandbox.ads_ads-adservices-1.0.0-beta05",
     ],
-    java_version: "1.7",
+    defaults: ["ads_adservices_java_library_defaults"],
 }
 
 android_library_import {
-    name: "androidx.privacysandbox.ads_ads-adservices-beta05-nodeps",
+    name: "androidx.privacysandbox.ads_ads-adservices-1.0.0-beta05-nodeps",
     aars: ["ads-adservices-1.0.0-beta05.aar"],
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
-    static_libs: [
-        "androidx.annotation_annotation",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
-    ],
+    defaults: ["common_defaults"],
 }
 
 android_library {
-    name: "androidx.privacysandbox.ads_ads-adservices-beta05",
-    sdk_version: "31",
-    apex_available: [
-        "//apex_available:platform",
-        "//apex_available:anyapex",
-    ],
-    min_sdk_version: "19",
+    name: "androidx.privacysandbox.ads_ads-adservices-1.0.0-beta05",
     static_libs: [
-        "androidx.privacysandbox.ads_ads-adservices-beta05-nodeps",
+        "androidx.privacysandbox.ads_ads-adservices-1.0.0-beta05-nodeps",
+    ],
+    defaults: ["ads_adservices_library_defaults"],
+}
+
+android_library_import {
+    name: "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta01-nodeps",
+    aars: ["ads-adservices-java-1.1.0-beta01.aar"],
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta01",
+    ],
+    defaults: ["ads_adservices_java_import_defaults"],
+}
+
+android_library {
+    name: "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta01",
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta01-nodeps",
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta01",
+    ],
+    defaults: ["ads_adservices_java_library_defaults"],
+}
+
+android_library_import {
+    name: "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta01-nodeps",
+    aars: ["ads-adservices-1.1.0-beta01.aar"],
+    defaults: ["common_defaults"],
+}
+
+android_library {
+    name: "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta01",
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta01-nodeps",
+    ],
+    defaults: ["ads_adservices_library_defaults"],
+}
+
+android_library_import {
+    name: "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta02-nodeps",
+    aars: ["ads-adservices-java-1.1.0-beta02.aar"],
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta02",
+    ],
+    defaults: ["ads_adservices_java_import_defaults"],
+}
+
+android_library {
+    name: "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta02",
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta02-nodeps",
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta02",
+    ],
+    defaults: ["ads_adservices_java_library_defaults"],
+}
+
+android_library_import {
+    name: "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta02-nodeps",
+    aars: ["ads-adservices-1.1.0-beta02.aar"],
+    defaults: ["common_defaults"],
+}
+
+android_library {
+    name: "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta02",
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta02-nodeps",
+    ],
+    defaults: ["ads_adservices_library_defaults"],
+}
+
+android_library_import {
+    name: "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta03-nodeps",
+    aars: ["ads-adservices-java-1.1.0-beta03.aar"],
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta03",
+    ],
+    defaults: ["ads_adservices_java_import_defaults"],
+}
+
+android_library {
+    name: "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta03",
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta03-nodeps",
         "androidx.annotation_annotation",
-        "kotlin-stdlib",
-        "kotlinx_coroutines",
-        "androidx.core_core-ktx",
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta03",
     ],
-    java_version: "1.7",
+    defaults: ["ads_adservices_java_library_defaults"],
+}
+
+android_library_import {
+    name: "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta03-nodeps",
+    aars: ["ads-adservices-1.1.0-beta03.aar"],
+    defaults: ["common_defaults"],
+}
+
+android_library {
+    name: "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta03",
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta03-nodeps",
+    ],
+    defaults: ["ads_adservices_library_defaults"],
+}
+
+android_library_import {
+    name: "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta04-nodeps",
+    aars: ["ads-adservices-java-1.1.0-beta04.aar"],
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta04",
+    ],
+    defaults: ["ads_adservices_java_import_defaults"],
+}
+
+android_library {
+    name: "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta04",
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta04-nodeps",
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta04",
+    ],
+    defaults: ["ads_adservices_java_library_defaults"],
+}
+
+android_library_import {
+    name: "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta04-nodeps",
+    aars: ["ads-adservices-1.1.0-beta04.aar"],
+    defaults: ["common_defaults"],
+}
+
+android_library {
+    name: "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta04",
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta04-nodeps",
+    ],
+    defaults: ["ads_adservices_library_defaults"],
 }
 
 android_test {
-    name: "AdServicesJetpackTests-beta01",
-    srcs: [
-        "src/**/*.java",
-    ],
-    exclude_srcs: [
-        // jetpack beta01 release has broken AdTechIdentifier toString, causing failures in ad selection
-        "src/com/android/adservices/protectedaudience/FledgeCtsDebuggableJetpackTest.java",
-    ],
-    sdk_version: "module_current",
+    name: "AdServicesJetpackTests-1.0.0-beta05",
+    min_sdk_version: "Tiramisu",
     static_libs: [
-        "adservices-clients",
-        "androidx.privacysandbox.ads_ads-adservices-beta01",
-        "androidx.privacysandbox.ads_ads-adservices-java-beta01",
-        "androidx.concurrent_concurrent-futures",
-        "androidx.test.rules",
-        "compatibility-device-util-axt",
-        "kotlinx-coroutines-android",
-        "mockito-target-extended-minus-junit4",
-        "truth",
-        "framework-adservices.impl",
-        "framework-sdksandbox.impl",
-        "adservices-test-fixtures",
-        "adservices-test-utility",
+        "androidx.privacysandbox.ads_ads-adservices-1.0.0-beta05",
+        "androidx.privacysandbox.ads_ads-adservices-java-1.0.0-beta05",
     ],
-    libs: [
-        "android.test.base",
-    ],
-    test_suites: [
-        "general-tests",
-    ],
-    test_config: "AndroidTest-beta01.xml",
+    test_config: "AndroidTest-1.0.0-beta05.xml",
+    defaults: ["android_test_defaults"],
 }
 
 android_test {
-    name: "AdServicesJetpackTests-beta02",
-    srcs: [
-        "src/**/*.java",
-    ],
-    sdk_version: "module_current",
+    name: "AdServicesJetpackTests-1.1.0-beta01",
+    min_sdk_version: "Tiramisu",
     static_libs: [
-        "adservices-clients",
-        "androidx.privacysandbox.ads_ads-adservices-beta02",
-        "androidx.privacysandbox.ads_ads-adservices-java-beta02",
-        "androidx.concurrent_concurrent-futures",
-        "androidx.test.rules",
-        "compatibility-device-util-axt",
-        "kotlinx-coroutines-android",
-        "mockito-target-extended-minus-junit4",
-        "truth",
-        "framework-adservices.impl",
-        "framework-sdksandbox.impl",
-        "adservices-test-fixtures",
-        "adservices-test-utility",
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta01",
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta01",
     ],
-    libs: [
-        "android.test.base",
-    ],
-    test_suites: [
-        "general-tests",
-    ],
-    test_config: "AndroidTest-beta02.xml",
+    test_config: "AndroidTest-1.1.0-beta01.xml",
+    defaults: ["android_test_defaults"],
 }
 
 android_test {
-    name: "AdServicesJetpackTests-beta03",
-    srcs: [
-        "src/**/*.java",
-    ],
-    sdk_version: "module_current",
+    name: "AdServicesJetpackTests-1.1.0-beta02",
+    min_sdk_version: "Tiramisu",
     static_libs: [
-        "adservices-clients",
-        "androidx.privacysandbox.ads_ads-adservices-beta03",
-        "androidx.privacysandbox.ads_ads-adservices-java-beta03",
-        "androidx.concurrent_concurrent-futures",
-        "androidx.test.rules",
-        "compatibility-device-util-axt",
-        "kotlinx-coroutines-android",
-        "mockito-target-extended-minus-junit4",
-        "truth",
-        "framework-adservices.impl",
-        "framework-sdksandbox.impl",
-        "adservices-test-fixtures",
-        "adservices-test-utility",
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta02",
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta02",
     ],
-    libs: [
-        "android.test.base",
-    ],
-    test_suites: [
-        "general-tests",
-    ],
-    test_config: "AndroidTest-beta03.xml",
+    test_config: "AndroidTest-1.1.0-beta02.xml",
+    defaults: ["android_test_defaults"],
 }
 
 android_test {
-    name: "AdServicesJetpackTests-beta04",
-    srcs: [
-        "src/**/*.java",
-    ],
-    sdk_version: "module_current",
+    name: "AdServicesJetpackTests-1.1.0-beta03",
+    min_sdk_version: "Tiramisu",
     static_libs: [
-        "adservices-clients",
-        "androidx.privacysandbox.ads_ads-adservices-beta04",
-        "androidx.privacysandbox.ads_ads-adservices-java-beta04",
-        "androidx.concurrent_concurrent-futures",
-        "androidx.test.rules",
-        "compatibility-device-util-axt",
-        "kotlinx-coroutines-android",
-        "mockito-target-extended-minus-junit4",
-        "truth",
-        "framework-adservices.impl",
-        "framework-sdksandbox.impl",
-        "adservices-test-fixtures",
-        "adservices-test-utility",
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta03",
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta03",
     ],
-    libs: [
-        "android.test.base",
-    ],
-    test_suites: [
-        "general-tests",
-    ],
-    test_config: "AndroidTest-beta04.xml",
+    test_config: "AndroidTest-1.1.0-beta03.xml",
+    defaults: ["android_test_defaults"],
 }
 
 android_test {
-    name: "AdServicesJetpackTests-beta05",
-    srcs: [
-        "src/**/*.java",
-    ],
-    sdk_version: "module_current",
+    name: "AdServicesJetpackTests-1.1.0-beta04",
+    min_sdk_version: "Tiramisu",
     static_libs: [
-        "adservices-clients",
-        "androidx.privacysandbox.ads_ads-adservices-beta05",
-        "androidx.privacysandbox.ads_ads-adservices-java-beta05",
-        "androidx.concurrent_concurrent-futures",
-        "androidx.test.rules",
-        "compatibility-device-util-axt",
-        "kotlinx-coroutines-android",
-        "mockito-target-extended-minus-junit4",
-        "truth",
-        "framework-adservices.impl",
-        "framework-sdksandbox.impl",
-        "adservices-test-fixtures",
-        "adservices-test-utility",
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta04",
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta04",
     ],
-    libs: [
-        "android.test.base",
+    test_config: "AndroidTest-1.1.0-beta04.xml",
+    defaults: ["android_test_defaults"],
+}
+
+android_test {
+    name: "AdServicesJetpackTests-1.1.0-beta03-S",
+    min_sdk_version: "31",
+    max_sdk_version: "32",
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta03",
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta03",
     ],
-    test_suites: [
-        "general-tests",
+    test_config: "AndroidTest-1.1.0-beta03-S.xml",
+    defaults: ["android_test_defaults"],
+}
+
+android_test {
+    name: "AdServicesJetpackTests-1.1.0-beta04-S",
+    min_sdk_version: "31",
+    max_sdk_version: "32",
+    static_libs: [
+        "androidx.privacysandbox.ads_ads-adservices-1.1.0-beta04",
+        "androidx.privacysandbox.ads_ads-adservices-java-1.1.0-beta04",
     ],
-    test_config: "AndroidTest-beta05.xml",
+    test_config: "AndroidTest-1.1.0-beta04-S.xml",
+    defaults: ["android_test_defaults"],
 }

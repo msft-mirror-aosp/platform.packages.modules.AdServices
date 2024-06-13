@@ -34,6 +34,8 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -97,6 +99,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final EncryptionKeyDao encryptionKeyDao,
+            @NonNull final EnrollmentDao enrollmentDao,
             @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
@@ -116,6 +120,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 context,
                 customAudienceDao,
                 adSelectionEntryDao,
+                encryptionKeyDao,
+                enrollmentDao,
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,
@@ -146,6 +152,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final EncryptionKeyDao encryptionKeyDao,
+            @NonNull final EnrollmentDao enrollmentDao,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
@@ -165,6 +173,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 context,
                 customAudienceDao,
                 adSelectionEntryDao,
+                encryptionKeyDao,
+                enrollmentDao,
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,

@@ -18,6 +18,7 @@ package {
 
 android_library {
     name: "adservices-cobalt",
+    sdk_version: "module_current",
     min_sdk_version: "30",
     srcs: [
         "java/**/*.java",
@@ -32,11 +33,13 @@ android_library {
     ],
     libs: [
         "androidx.room_room-runtime",
-        "auto_value_annotations"
+        "auto_value_annotations",
+        "framework-annotations-lib",
     ],
     static_libs: [
         "adservices-cobalt-proto-lite",
         "androidx.annotation_annotation",
+        "androidx.sqlite_sqlite",
         "guava",
         "libprotobuf-java-lite",
     ],

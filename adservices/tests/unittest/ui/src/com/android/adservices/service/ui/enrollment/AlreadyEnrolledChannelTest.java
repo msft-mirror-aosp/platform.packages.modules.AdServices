@@ -151,15 +151,4 @@ public final class AlreadyEnrolledChannelTest extends AdServicesExtendedMockitoT
                                 mUxStatesManager))
                 .isFalse();
     }
-
-    //    @Test
-    //    public void enrollTest_enrollDoesNotTriggerNotification() {
-    //        mAlreadyEnrolledChannel.enroll(appContext.get(), mConsentManager);
-    //        verify(
-    //                () ->
-    //                        ConsentNotificationJobService.schedule(
-    //                                any(Context.class), anyBoolean(), anyBoolean()),
-    //                never());
-    //    }
-
 }

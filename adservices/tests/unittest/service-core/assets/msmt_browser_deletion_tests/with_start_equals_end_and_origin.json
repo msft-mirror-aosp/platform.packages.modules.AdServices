@@ -77,7 +77,8 @@
           }
         ],
         "triggerTime": 1648665733600,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T2",
@@ -96,7 +97,8 @@
           }
         ],
         "triggerTime": 1648665733605,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T3",
@@ -115,7 +117,8 @@
           }
         ],
         "triggerTime": 1648665733600,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [
@@ -234,7 +237,8 @@
         "retryCount": 1,
         "verifiedDestination": "https://foo.com",
         "webDestination": "https://foo.com",
-        "sourceType": 1
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       },
       {
         "registrationId": "AR2",
@@ -251,7 +255,8 @@
         "retryCount": 1,
         "verifiedDestination": "https://foo.com",
         "webDestination": "https://foo.com",
-        "sourceType": 1
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       }
     ]
   },
@@ -314,7 +319,8 @@
           }
         ],
         "triggerTime": 1648665733605,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T3",
@@ -333,7 +339,8 @@
           }
         ],
         "triggerTime": 1648665733600,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [
@@ -397,7 +404,8 @@
         "retryCount": 1,
         "verifiedDestination": "https://foo.com",
         "webDestination": "https://foo.com",
-        "sourceType": 1
+        "sourceType": 1,
+        "redirectBehavior": "AS_IS"
       }
     ]
   },

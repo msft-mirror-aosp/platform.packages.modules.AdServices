@@ -19,6 +19,7 @@ package com.android.adservices.service.stats;
 import android.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.shared.util.Clock;
 
 import java.util.Objects;
 

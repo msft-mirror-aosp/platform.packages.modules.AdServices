@@ -127,6 +127,7 @@ public class MeasurementCtsDebuggableTest {
     public void setup() throws Exception {
         mMeasurementManager = MeasurementManager.get(sContext);
         Objects.requireNonNull(mMeasurementManager);
+        executeDeleteRegistrations();
     }
 
     @Test
@@ -615,8 +616,7 @@ public class MeasurementCtsDebuggableTest {
                 "device_config put adservices global_kill_switch false");
 
         // Override Ad ID kill switch.
-        getUiDevice().executeShellCommand(
-                "setprop debug.adservices.adid_kill_switch false");
+        getUiDevice().executeShellCommand("device_config put adservices adid_kill_switch false");
 
         // Override measurement kill switch.
         getUiDevice().executeShellCommand(
@@ -659,10 +659,6 @@ public class MeasurementCtsDebuggableTest {
         // Assume trigger registration can happen within 8 seconds of source registration.
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
-                + "measurement_enable_configurable_event_reporting_windows true");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
                 + "measurement_event_reports_vtc_early_reporting_windows 8,15");
 
         getUiDevice().executeShellCommand(
@@ -697,8 +693,7 @@ public class MeasurementCtsDebuggableTest {
                 "device_config put adservices global_kill_switch null");
 
         // Reset Ad ID kill switch.
-        getUiDevice().executeShellCommand(
-                "setprop debug.adservices.adid_kill_switch null");
+        getUiDevice().executeShellCommand("device_config put adservices adid_kill_switch null");
 
         // Reset measurement kill switch.
         getUiDevice().executeShellCommand(
@@ -729,11 +724,6 @@ public class MeasurementCtsDebuggableTest {
                                 + "measurement_aggregation_coordinator_path null");
 
         // Reset reporting windows
-        // Assume trigger registration can happen within 8 seconds of source registration.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_enable_configurable_event_reporting_windows null");
-
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
                 + "measurement_event_reports_vtc_early_reporting_windows null");

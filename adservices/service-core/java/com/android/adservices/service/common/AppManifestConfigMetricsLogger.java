@@ -15,9 +15,13 @@
  */
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_UNSPECIFIED;
+import static com.android.adservices.service.common.AppManifestConfigCall.apiToString;
+import static com.android.adservices.service.common.AppManifestConfigCall.resultToString;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_LOGGING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -27,12 +31,16 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
+import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -45,39 +53,39 @@ public final class AppManifestConfigMetricsLogger {
     static final String PREFS_NAME =
             FileCompatUtils.getAdservicesFilename("AppManifestConfigMetricsLogger");
 
-    private static final int NOT_SET = -1;
-    private static final int FLAG_APP_EXISTS = 0x1;
-    private static final int FLAG_APP_HAS_CONFIG = 0x2;
-    private static final int FLAG_ENABLED_BY_DEFAULT = 0x4;
+    @VisibleForTesting static final String PREFS_KEY_TEMPLATE = "%s-%d";
 
+    // TODO(b/310270746): make it package-protected when TopicsServiceImplTest is refactored
+    /** Represents a call to a public {@link AppManifestConfigHelper} method. */
     /** Logs the app usage. */
-    @VisibleForTesting // TODO(b/310270746): remove public when TopicsServiceImplTest is refactored
     public static void logUsage(AppManifestConfigCall call) {
         Objects.requireNonNull(call, "call cannot be null");
+
+        // Cannot be RESULT_UNSPECIFIED because that's used to check if the shared preferences value
+        // doesn't exist yet
+        if (call.result == RESULT_UNSPECIFIED) {
+            LogUtil.e("invalid call result: %s", call);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_LOGGING_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+            return;
+        }
         AdServicesExecutors.getBackgroundExecutor().execute(() -> handleLogUsage(call));
     }
 
     private static void handleLogUsage(AppManifestConfigCall call) {
         Context context = ApplicationContextSingleton.get();
         try {
-            int newValue =
-                    (call.appExists ? FLAG_APP_EXISTS : 0)
-                            | (call.appHasConfig ? FLAG_APP_HAS_CONFIG : 0)
-                            | (call.enabledByDefault ? FLAG_ENABLED_BY_DEFAULT : 0);
+            @Result int newValue = call.result;
             LogUtil.d(
-                    "AppManifestConfigMetricsLogger.logUsage(): app=[name=%s, exists=%b,"
-                            + " hasConfig=%b], enabledByDefault=%b, newValue=%d",
-                    call.packageName,
-                    call.appExists,
-                    call.appHasConfig,
-                    call.enabledByDefault,
-                    newValue);
+                    "AppManifestConfigMetricsLogger.logUsage(): call=%s, newValue=%d",
+                    call, newValue);
 
             SharedPreferences prefs = getPrefs(context);
-            String key = call.packageName;
+            String key = String.format(Locale.US, PREFS_KEY_TEMPLATE, call.packageName, call.api);
 
-            int currentValue = prefs.getInt(key, NOT_SET);
-            if (currentValue == NOT_SET) {
+            @Result int currentValue = prefs.getInt(key, RESULT_UNSPECIFIED);
+            if (currentValue == RESULT_UNSPECIFIED) {
                 LogUtil.v("Logging for the first time (value=%d)", newValue);
             } else if (currentValue != newValue) {
                 LogUtil.v("Logging as value change (was %d)", currentValue);
@@ -86,36 +94,24 @@ public final class AppManifestConfigMetricsLogger {
                 return;
             }
 
-            // TODO(b/306417555): upload metrics first (and unit test it) - it should mask the
-            // package name
+            // Send metrics to statsd first...
+            StatsdAdServicesLogger.getInstance().logAppManifestConfigCall(call);
+
+            // ...then "mark" as sent
             Editor editor = prefs.edit().putInt(key, newValue);
 
             if (editor.commit()) {
                 LogUtil.v("Changes committed");
             } else {
                 LogUtil.e(
-                        "logUsage(ctx, file=%s, app=%s, appExist=%b, appHasConfig=%b,"
-                                + " enabledByDefault=%b, newValue=%d): failed to commit",
-                        PREFS_NAME,
-                        call.packageName,
-                        call.appExists,
-                        call.appHasConfig,
-                        call.enabledByDefault,
-                        newValue);
+                        "logUsage(ctx, file=%s, call=%s, newValue=%d): failed to commit",
+                        PREFS_NAME, call, newValue);
                 ErrorLogUtil.e(
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             }
         } catch (Exception e) {
-            LogUtil.e(
-                    e,
-                    "logUsage(ctx, file=%s, app=%s, appExist=%b, appHasConfig=%b,"
-                            + " enabledByDefault=%b) failed",
-                    PREFS_NAME,
-                    call.packageName,
-                    call.appExists,
-                    call.appHasConfig,
-                    call.enabledByDefault);
+            LogUtil.e(e, "logUsage(ctx, file=%s, call=%s) failed", PREFS_NAME, call);
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION,
@@ -125,13 +121,13 @@ public final class AppManifestConfigMetricsLogger {
 
     /** Dumps the internal state. */
     public static void dump(Context context, PrintWriter pw) {
+        String prefix = "  ";
         pw.println("AppManifestConfigMetricsLogger");
 
-        String prefix = "  ";
-        @SuppressWarnings("NewAdServicesFile") // PREFS_NAME already called FileCompatUtils
         // NOTE: shared_prefs is hard-coded on ContextImpl, but unfortunately Context doesn't offer
         // any API we could use here to get that path (getSharedPreferencesPath() is @removed and
         // the available APIs return a SharedPreferences, not a File).
+        @SuppressWarnings("NewAdServicesFile") // PREFS_NAME already called FileCompatUtils
         String path =
                 new File(context.getDataDir() + "/shared_prefs", PREFS_NAME).getAbsolutePath();
         pw.printf("%sPreferences file: %s.xml\n", prefix, path);
@@ -146,19 +142,25 @@ public final class AppManifestConfigMetricsLogger {
 
         String prefix2 = prefix + "  ";
         for (Entry<String, ?> pref : appPrefs.entrySet()) {
-            String app = pref.getKey();
+            String key = pref.getKey();
+            String appAndApi = key;
+            try {
+                String[] keyParts = key.split("-");
+                String app = keyParts[0];
+                @ApiType int api = Integer.parseInt(keyParts[1]);
+                appAndApi = app + "-" + apiToString(api);
+            } catch (Exception e) {
+                LogUtil.e(e, "failed to parse key %s", key);
+            }
             Object value = pref.getValue();
             if (value instanceof Integer) {
-                int flags = (Integer) value;
-                boolean appExists = (flags & FLAG_APP_EXISTS) != 0;
-                boolean appHasConfig = (flags & FLAG_APP_HAS_CONFIG) != 0;
-                boolean enabledByDefault = (flags & FLAG_ENABLED_BY_DEFAULT) != 0;
-                pw.printf(
-                        "%s%s: rawValue=%d, appExists=%b, appHasConfig=%b, enabledByDefault=%b\n",
-                        prefix2, app, flags, appExists, appHasConfig, enabledByDefault);
+                @Result int result = (Integer) value;
+                pw.printf("%s%s: %s\n", prefix2, appAndApi, resultToString(result));
             } else {
                 // Shouldn't happen
-                pw.printf("  %s: unexpected value %s (class %s):\n", app, value, value.getClass());
+                pw.printf(
+                        "  %s: unexpected value %s (class %s):\n",
+                        appAndApi, value, value.getClass());
             }
         }
     }

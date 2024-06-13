@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection.encryption;
 
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
@@ -24,6 +25,7 @@ import android.adservices.common.CommonFixture;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionContext;
 import com.android.adservices.data.adselection.EncryptionContextDao;
@@ -35,6 +37,7 @@ import com.android.adservices.ohttp.ObliviousHttpRequestContext;
 import com.google.common.io.BaseEncoding;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -66,6 +69,9 @@ public class ObliviousHttpRequestContextMarshallerTest {
     private EncryptionContextDao mEncryptionContextDao;
     private ObliviousHttpRequestContextMarshaller mObliviousHttpRequestContextMarshaller;
     private Clock mClock;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

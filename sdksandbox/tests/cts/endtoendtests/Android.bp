@@ -32,6 +32,7 @@ android_test {
         "CtsSdkProviderApi",
         "CtsMediationTestSdkApi",
         "sdk_sandbox_flags_lib",
+        "android.content.pm.flags-aconfig-java",
         "flag-junit",
     ],
     libs: [
@@ -44,6 +45,7 @@ android_test {
         ":EmptySdkProviderApp",
         ":SdkSandboxManagerCtsProvider",
         ":SdkSandboxMediationTestProvider",
+        ":CtsSdkProviderAppWithoutSdkProviderClassNameProperty",
     ],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",
@@ -51,6 +53,7 @@ android_test {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
 }
 
@@ -81,5 +84,6 @@ android_test {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
 }

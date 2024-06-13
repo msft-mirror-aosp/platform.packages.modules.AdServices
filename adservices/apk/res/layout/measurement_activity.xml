@@ -31,11 +31,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+            <View
+                android:id="@+id/adservices_ppapi_title_spacing"
+                android:visibility="@integer/adservices_ppapi_title_spacing"
+                android:layout_height="18dp"
+                android:layout_width="match_parent"/>
             <TextView
-                android:layout_marginTop="18dp"
                 android:paddingHorizontal="24dp"
                 android:text="@string/settingsUI_measurement_view_intro_text"
                 style="@style/MainStyle.Body2" />
+            <View
+                android:id="@+id/measurement_switch_bar_spacing"
+                android:visibility="@integer/measurement_switch_bar_spacing"
+                android:layout_height="18dp"
+                android:layout_width="match_parent"/>
 
             <com.android.settingslib.widget.MainSwitchBar
             android:id="@+id/measurement_switch_bar"

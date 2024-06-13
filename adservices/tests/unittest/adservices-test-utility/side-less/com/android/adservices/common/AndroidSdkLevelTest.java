@@ -15,16 +15,16 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.ANY;
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.R;
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.S;
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.S2;
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.T;
-import static com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel.U;
+import static com.android.adservices.common.AndroidSdk.Level.ANY;
+import static com.android.adservices.common.AndroidSdk.Level.R;
+import static com.android.adservices.common.AndroidSdk.Level.S;
+import static com.android.adservices.common.AndroidSdk.Level.S2;
+import static com.android.adservices.common.AndroidSdk.Level.T;
+import static com.android.adservices.common.AndroidSdk.Level.U;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkLevel;
+import com.android.adservices.common.AndroidSdk.Level;
 
 import com.google.common.truth.Expect;
 
@@ -37,23 +37,23 @@ public final class AndroidSdkLevelTest {
 
     @Test
     public void testFactoryMethod() {
-        AndroidSdkLevel for30 = AndroidSdkLevel.forLevel(30);
+        Level for30 = Level.forLevel(30);
         expect.withMessage("level 30").that(for30).isSameInstanceAs(R);
 
-        AndroidSdkLevel for31 = AndroidSdkLevel.forLevel(31);
+        Level for31 = Level.forLevel(31);
         expect.withMessage("level 31").that(for31).isSameInstanceAs(S);
 
-        AndroidSdkLevel for32 = AndroidSdkLevel.forLevel(32);
+        Level for32 = Level.forLevel(32);
         expect.withMessage("level 32").that(for32).isSameInstanceAs(S2);
 
-        AndroidSdkLevel for33 = AndroidSdkLevel.forLevel(33);
+        Level for33 = Level.forLevel(33);
         expect.withMessage("level 33").that(for33).isSameInstanceAs(T);
 
-        AndroidSdkLevel for34 = AndroidSdkLevel.forLevel(34);
+        Level for34 = Level.forLevel(34);
         expect.withMessage("level 34").that(for34).isSameInstanceAs(U);
 
         IllegalArgumentException e =
-                assertThrows(IllegalArgumentException.class, () -> AndroidSdkLevel.forLevel(29));
+                assertThrows(IllegalArgumentException.class, () -> Level.forLevel(29));
         expect.that(e).hasMessageThat().contains("29");
     }
 

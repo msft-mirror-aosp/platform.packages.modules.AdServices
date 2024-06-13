@@ -16,8 +16,17 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_test {
-    name: "AdServicesScenarioTests",
+filegroup {
+    name: "adservices-scenario-tests-sources",
+    srcs: ["src/**/*.java"],
+    visibility: [
+        "//packages/modules/AdServices/adservices/tests/perf:__subpackages__",
+        "//vendor:__subpackages__",
+    ],
+}
+
+java_defaults {
+    name: "AdServicesScenarioTestsDefault",
     static_libs: [
         "androidx.test.runner",
         "androidx.test.rules",
@@ -43,11 +52,16 @@ android_test {
     // Certificate and platform api is needed for collector-device-lib-platform.
     certificate: "platform",
     platform_apis: true,
-    srcs: ["src/**/*.java"],
+    srcs: [":adservices-scenario-tests-sources"],
     data: [":perfetto_artifacts"],
     resource_dirs: [
         "res",
     ],
     test_suites: ["device-tests"],
     min_sdk_version: "30",
+}
+
+android_test {
+    name: "AdServicesScenarioTests",
+    defaults: ["AdServicesScenarioTestsDefault"],
 }

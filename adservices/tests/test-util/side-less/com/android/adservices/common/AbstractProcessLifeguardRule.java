@@ -297,7 +297,7 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
 
     // TODO(b/302757068): copied from AbstractAdServicesFlagsSetterRule, move out / reuse (its main
     // purpose is to show the original's exception stack trace)
-    @SuppressWarnings("serial")
+    @SuppressWarnings({"serial", "OverrideThrowableToString"})
     public static final class UncaughtBackgroundException extends Exception {
 
         UncaughtBackgroundException(Throwable cause, String message) {
@@ -305,6 +305,7 @@ abstract class AbstractProcessLifeguardRule implements TestRule {
             setStackTrace(cause.getStackTrace());
         }
 
+        // Overriding so it only shows the base class name - there's no need for the full package
         @Override
         public String toString() {
             return getClass().getSimpleName() + ": " + getMessage();

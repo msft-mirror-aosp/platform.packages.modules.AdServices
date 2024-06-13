@@ -39,13 +39,13 @@ import androidx.appsearch.platformstorage.PlatformStorage;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
-import com.android.adservices.service.consent.ConsentConstants;
 
-import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Before;
@@ -56,9 +56,7 @@ import org.mockito.Mock;
 import org.mockito.quality.Strictness;
 
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 
 @SmallTest
 public class AppSearchMeasurementRollbackWorkerTest {
@@ -66,7 +64,7 @@ public class AppSearchMeasurementRollbackWorkerTest {
             FileCompatUtils.getAdservicesFilename("measurement_rollback");
     private static final String USERID = "user1";
     private static final long APEX_VERSION = 100L;
-    private static final int FUTURE_TIMEOUT_MILLISECONDS = 3000;
+    private static final int APPSEARCH_WRITE_TIMEOUT_MS = 1000;
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final String mAdServicesPackageName =
@@ -74,17 +72,26 @@ public class AppSearchMeasurementRollbackWorkerTest {
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
     private AppSearchMeasurementRollbackWorker mWorker;
     @Mock private ListenableFuture<AppSearchSession> mAppSearchSession;
+    @Mock private Flags mMockFlags;
 
-    @Rule
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .mockStatic(PlatformStorage.class)
                     .mockStatic(AppSearchDao.class)
+                    .mockStatic(FlagsFactory.class)
                     .setStrictness(Strictness.LENIENT)
                     .build();
 
     @Before
     public void setup() {
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(APPSEARCH_WRITE_TIMEOUT_MS).when(mMockFlags).getAppSearchWriteTimeout();
+
         ArgumentCaptor<PlatformStorage.SearchContext> cap =
                 ArgumentCaptor.forClass(PlatformStorage.SearchContext.class);
         doReturn(mAppSearchSession)
@@ -107,10 +114,8 @@ public class AppSearchMeasurementRollbackWorkerTest {
     @SuppressWarnings("FutureReturnValueIgnored")
     @Test
     public void testClearAdServicesDeletionOccurred() {
-        FluentFuture mockResult =
-                FluentFuture.from(
-                        Futures.immediateFuture(
-                                new AppSearchBatchResult.Builder<String, Void>().build()));
+        AppSearchBatchResult<String, Void> mockResult =
+                new AppSearchBatchResult.Builder<String, Void>().build();
         doReturn(mockResult).when(() -> AppSearchDao.deleteData(any(), any(), any(), any(), any()));
 
         String mockRowId = "mock_row_id";
@@ -127,24 +132,6 @@ public class AppSearchMeasurementRollbackWorkerTest {
     }
 
     @Test
-    public void testClearAdServicesDeletionOccurred_throwsChecked() {
-        Callable<Void> callable =
-                () -> {
-                    TimeUnit.MILLISECONDS.sleep(FUTURE_TIMEOUT_MILLISECONDS);
-                    return null;
-                };
-
-        FluentFuture mockResult = FluentFuture.from(Futures.submit(callable, mExecutor));
-        doReturn(mockResult).when(() -> AppSearchDao.deleteData(any(), any(), any(), any(), any()));
-
-        RuntimeException e =
-                assertThrows(
-                        RuntimeException.class,
-                        () -> mWorker.clearAdServicesDeletionOccurred("mock_row_id"));
-        assertThat(e).hasMessageThat().contains(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-    }
-
-    @Test
     public void testClearAdServicesDeletionOccurred_throwsUnchecked() {
         IllegalStateException exception = new IllegalStateException("test exception");
         doThrow(exception).when(() -> AppSearchDao.deleteData(any(), any(), any(), any(), any()));
@@ -153,9 +140,7 @@ public class AppSearchMeasurementRollbackWorkerTest {
                 assertThrows(
                         IllegalStateException.class,
                         () -> mWorker.clearAdServicesDeletionOccurred("mock_row_id"));
-        assertThat(e)
-                .hasMessageThat()
-                .doesNotContain(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e).isSameInstanceAs(exception);
     }
 
     @Test
@@ -216,9 +201,9 @@ public class AppSearchMeasurementRollbackWorkerTest {
     @SuppressWarnings("FutureReturnValueIgnored")
     @Test
     public void testRecordAdServicesDeletionOccurred() {
-        FluentFuture mockFuture = FluentFuture.from(Futures.immediateVoidFuture());
+        AppSearchBatchResult<String, Void> mockResult = mock(AppSearchBatchResult.class);
         AppSearchMeasurementRollbackDao dao = mock(AppSearchMeasurementRollbackDao.class);
-        doReturn(mockFuture).when(dao).writeData(any(), any(), any());
+        doReturn(mockResult).when(dao).writeData(any(), any(), any());
 
         AppSearchMeasurementRollbackWorker spyWorker = spy(mWorker);
         doReturn(dao)
@@ -230,37 +215,6 @@ public class AppSearchMeasurementRollbackWorkerTest {
                 AdServicesManager.MEASUREMENT_DELETION, APEX_VERSION);
         verify(dao).writeData(eq(mAppSearchSession), eq(List.of()), any());
         verifyNoMoreInteractions(dao);
-    }
-
-    @Test
-    public void testRecordAdServicesDeletionOccurred_throwsChecked() {
-        // The manager class waits for 2 seconds on the future.get() call before timing out. So
-        // creating a future that takes longer than 2 sec to resolve, in order to create a
-        // TimeoutException.
-        Callable<Void> callable =
-                () -> {
-                    TimeUnit.MILLISECONDS.sleep(FUTURE_TIMEOUT_MILLISECONDS);
-                    return null;
-                };
-
-        ListenableFuture<Void> future = Futures.submit(callable, mExecutor);
-        FluentFuture mockFuture = FluentFuture.from(future);
-        AppSearchMeasurementRollbackDao dao = mock(AppSearchMeasurementRollbackDao.class);
-        doReturn(mockFuture).when(dao).writeData(any(), any(), any());
-
-        AppSearchMeasurementRollbackWorker spyWorker = spy(mWorker);
-        doReturn(dao)
-                .when(spyWorker)
-                .createAppSearchMeasurementRollbackDao(
-                        AdServicesManager.MEASUREMENT_DELETION, APEX_VERSION);
-
-        RuntimeException e =
-                assertThrows(
-                        RuntimeException.class,
-                        () ->
-                                spyWorker.recordAdServicesDeletionOccurred(
-                                        AdServicesManager.MEASUREMENT_DELETION, APEX_VERSION));
-        assertThat(e).hasMessageThat().contains(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
 
     @Test
@@ -281,9 +235,7 @@ public class AppSearchMeasurementRollbackWorkerTest {
                         () ->
                                 spyWorker.recordAdServicesDeletionOccurred(
                                         AdServicesManager.MEASUREMENT_DELETION, APEX_VERSION));
-        assertThat(e)
-                .hasMessageThat()
-                .doesNotContain(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        assertThat(e).isSameInstanceAs(exceptionToThrow);
     }
 
     @Test

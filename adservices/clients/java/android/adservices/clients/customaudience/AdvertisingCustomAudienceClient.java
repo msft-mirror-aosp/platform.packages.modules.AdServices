@@ -16,12 +16,14 @@
 
 package android.adservices.clients.customaudience;
 
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceManager;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.LeaveCustomAudienceRequest;
+import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.Build;
@@ -120,6 +122,32 @@ public class AdvertisingCustomAudienceClient {
                     // This value is used only for debug purposes: it will be used in toString()
                     // of returned future or error cases.
                     return "fetchAndjoinCustomAudience";
+                });
+    }
+
+    /** Schedules a delayed update for Custom Audience */
+    @NonNull
+    public ListenableFuture<Void> scheduleCustomAudienceUpdate(
+            ScheduleCustomAudienceUpdateRequest request) {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mCustomAudienceManager.scheduleCustomAudienceUpdate(
+                            request,
+                            mExecutor,
+                            new AdServicesOutcomeReceiver<Object, Exception>() {
+                                @Override
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    // This value is used only for debug purposes: it will be used in toString()
+                    // of returned future or error cases.
+                    return "scheduleCustomAudienceUpdate";
                 });
     }
 

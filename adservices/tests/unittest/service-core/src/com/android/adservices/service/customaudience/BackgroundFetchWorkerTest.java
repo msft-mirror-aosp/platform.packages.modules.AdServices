@@ -19,9 +19,8 @@ package com.android.adservices.service.customaudience;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
-import static com.android.adservices.service.stats.Clock.SYSTEM_CLOCK;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -51,6 +50,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -99,10 +99,13 @@ public class BackgroundFetchWorkerTest {
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
 
     @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesDeviceSupportedRule deviceSupportRule =
             new AdServicesDeviceSupportedRule();
 
-    @Rule(order = 1)
+    @Rule(order = 2)
     public final MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Mock private PackageManager mPackageManagerMock;
@@ -125,7 +128,8 @@ public class BackgroundFetchWorkerTest {
         mBackgroundFetchExecutionLoggerSpy =
                 Mockito.spy(
                         new BackgroundFetchExecutionLogger(
-                                SYSTEM_CLOCK, mAdServicesLoggerImplMock));
+                                com.android.adservices.shared.util.Clock.getInstance(),
+                                mAdServicesLoggerImplMock));
         when(mCustomAudienceLoggerFactoryMock.getBackgroundFetchExecutionLogger())
                 .thenReturn(mBackgroundFetchExecutionLoggerSpy);
 
@@ -239,7 +243,7 @@ public class BackgroundFetchWorkerTest {
             }
 
             @Override
-            public FluentFuture<?> updateCustomAudience(
+            public FluentFuture<Integer> updateCustomAudience(
                     @NonNull Instant jobStartTime,
                     @NonNull DBCustomAudienceBackgroundFetchData fetchData) {
 
@@ -572,6 +576,7 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 316155251)
     public void testStopWorkPreemptsDataUpdates() throws Exception {
         int numEligibleCustomAudiences = 16;
         CountDownLatch beforeUpdatingCasLatch = new CountDownLatch(numEligibleCustomAudiences / 4);

@@ -27,6 +27,8 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
+import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.TriggerSpecsUtil;
@@ -61,6 +63,9 @@ public class EventReportWindowCalcDelegateTest {
     private static final String EVENT_REPORT_WINDOWS_2_WINDOWS_NO_START =
             "{'end_times': [172800000, 432000000]}";
 
+    private static final String EVENT_REPORT_WINDOWS_2_WINDOWS_WITH_START =
+            "{ 'start_time': 3600000, 'end_times': [86400000, 1728000000]}";
+
     private static final String EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START =
             "{'start_time': 86400000, 'end_times': [172800000, 432000000, 604800000, 864000000,"
                     + " 1728000000]}";
@@ -71,9 +76,14 @@ public class EventReportWindowCalcDelegateTest {
 
     @Before
     public void setup() {
-        doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS)
                 .when(mFlags).getMeasurementMinEventReportDelayMillis();
+        doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
+                .when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS)
+                .when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
+        doReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS)
+                .when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
         mEventReportWindowCalcDelegate = new EventReportWindowCalcDelegate(mFlags);
     }
 
@@ -85,6 +95,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -104,6 +115,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -121,6 +133,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -141,6 +154,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -159,6 +173,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -177,6 +192,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -195,6 +211,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -212,6 +229,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -231,6 +249,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -250,6 +269,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -267,6 +287,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -278,6 +299,9 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void testMaxReportCount() {
+        doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
+                .when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+
         Source eventSourceInstallNotAttributed =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
@@ -285,12 +309,7 @@ public class EventReportWindowCalcDelegateTest {
                         .build();
         assertEquals(
                 PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
-                mEventReportWindowCalcDelegate.getMaxReportCount(
-                        eventSourceInstallNotAttributed, false));
-        assertEquals(
-                PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
-                mEventReportWindowCalcDelegate.getMaxReportCount(
-                        eventSourceInstallNotAttributed, false));
+                mEventReportWindowCalcDelegate.getMaxReportCount(eventSourceInstallNotAttributed));
 
         Source navigationSourceInstallNotAttributed =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -300,46 +319,33 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
                 mEventReportWindowCalcDelegate.getMaxReportCount(
-                        navigationSourceInstallNotAttributed, false));
-        assertEquals(
-                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                mEventReportWindowCalcDelegate.getMaxReportCount(
-                        navigationSourceInstallNotAttributed, false));
+                        navigationSourceInstallNotAttributed));
 
         Source eventSourceInstallAttributed =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallAttributed(true)
+                        .setInstallCooldownWindow(1L)
                         .build();
         assertEquals(
                 PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS,
-                mEventReportWindowCalcDelegate.getMaxReportCount(
-                        eventSourceInstallAttributed, true));
-        // Install attribution state does not matter for web destination
-        assertEquals(
-                PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
-                mEventReportWindowCalcDelegate.getMaxReportCount(
-                        eventSourceInstallAttributed, false));
+                mEventReportWindowCalcDelegate.getMaxReportCount(eventSourceInstallAttributed));
 
         Source navigationSourceInstallAttributed =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallAttributed(true)
+                        .setInstallCooldownWindow(1L)
                         .build();
         assertEquals(
                 PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
                 mEventReportWindowCalcDelegate.getMaxReportCount(
-                        navigationSourceInstallAttributed, true));
-        assertEquals(
-                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                mEventReportWindowCalcDelegate.getMaxReportCount(
-                        navigationSourceInstallAttributed, true));
+                        navigationSourceInstallAttributed));
     }
 
     @Test
     public void getMaxReportCount_configuredConversionsNonInstall_returnsConfiguredCount() {
         // Setup
-        doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
         doReturn(3).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source nonInstallEventSource =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -349,13 +355,12 @@ public class EventReportWindowCalcDelegateTest {
 
         // Execution & assertion
         Assert.assertEquals(
-                3, mEventReportWindowCalcDelegate.getMaxReportCount(nonInstallEventSource, false));
+                3, mEventReportWindowCalcDelegate.getMaxReportCount(nonInstallEventSource));
     }
 
     @Test
     public void getMaxReportCount_configuredConversionsInstallCase_returnsConfiguredCount() {
         // Setup
-        doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
         doReturn(2).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source installEventSource =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -365,29 +370,28 @@ public class EventReportWindowCalcDelegateTest {
 
         // Execution & assertion
         Assert.assertEquals(
-                2, mEventReportWindowCalcDelegate.getMaxReportCount(installEventSource, true));
+                2, mEventReportWindowCalcDelegate.getMaxReportCount(installEventSource));
     }
 
     @Test
     public void getMaxReportCount_configuredConversionsToOneInstallCase_incrementConfiguredCount() {
         // Setup
-        doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
         doReturn(1).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source installEventSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallAttributed(true)
+                        .setInstallCooldownWindow(1L)
                         .build();
 
         // Execution & assertion
         Assert.assertEquals(
-                2, mEventReportWindowCalcDelegate.getMaxReportCount(installEventSource, true));
+                2, mEventReportWindowCalcDelegate.getMaxReportCount(installEventSource));
     }
 
     @Test
     public void getMaxReportCount_configuredConversionsToOneInstallCase_noEffectOnCtc() {
         // Setup
-        doReturn(true).when(mFlags).getMeasurementEnableVtcConfigurableMaxEventReports();
         doReturn(2).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source navigationSource =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -397,7 +401,7 @@ public class EventReportWindowCalcDelegateTest {
 
         // Execution & assertion
         Assert.assertEquals(
-                3, mEventReportWindowCalcDelegate.getMaxReportCount(navigationSource, false));
+                3, mEventReportWindowCalcDelegate.getMaxReportCount(navigationSource));
     }
 
     @Test
@@ -409,48 +413,51 @@ public class EventReportWindowCalcDelegateTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        eventSource10d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ false));
+                        eventSource10d, /* windowIndex= */ 1));
 
         // Expected: 1 window at expiry
         Source eventSource7d =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource7d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        eventSource7d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource7d, /* windowIndex= */ 1, /* isInstallCase */ false));
+                        eventSource7d, /* windowIndex= */ 1));
 
         // Expected: 1 window at expiry
         Source eventSource2d =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource2d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        eventSource2d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource2d, /* windowIndex= */ 1, /* isInstallCase */ false));
+                        eventSource2d, /* windowIndex= */ 1));
     }
 
     @Test
@@ -465,21 +472,21 @@ public class EventReportWindowCalcDelegateTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(10) + minDelayMillis,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        eventSource10d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(10) + minDelayMillis,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ false));
+                        eventSource10d, /* windowIndex= */ 1));
     }
 
     @Test
     public void getReportingTimeForNoising_eventSrcWithConfiguredReportingWindows() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -493,27 +500,27 @@ public class EventReportWindowCalcDelegateTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.HOURS.toMillis(1) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        eventSource10d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(1) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ false));
+                        eventSource10d, /* windowIndex= */ 1));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 2, /* isInstallCase */ false));
+                        eventSource10d, /* windowIndex= */ 2));
     }
 
     @Test
     public void getReportingTimeForNoising_eventSrcInstallAttWithConfiguredReportingWindows() {
         // Addition another window for install attribution is ignored when configurable windows
         // are applied.
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -528,28 +535,28 @@ public class EventReportWindowCalcDelegateTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
+                        .setExpiryTime(expiry)
                         .setEventReportWindow(expiry)
                         .setInstallCooldownWindow(expiry)
                         .build();
         assertEquals(
                 eventTime + TimeUnit.HOURS.toMillis(1) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ true));
+                        eventSource10d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(1) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ true));
+                        eventSource10d, /* windowIndex= */ 1));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 2, /* isInstallCase */ true));
+                        eventSource10d, /* windowIndex= */ 2));
     }
 
     @Test
     public void getReportingTimeForNoising_navigationSrcWithConfiguredReportingWindows() {
         // Addition another window for install attribution is ignored when configurable windows
         // are applied.
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -563,27 +570,27 @@ public class EventReportWindowCalcDelegateTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.HOURS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        eventSource10d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ false));
+                        eventSource10d, /* windowIndex= */ 1));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 2, /* isInstallCase */ false));
+                        eventSource10d, /* windowIndex= */ 2));
     }
 
     @Test
     public void getReportingTimeForNoising_navigationSrcInstallAttWithConfiguredReportingWindows() {
         // Addition another window for install attribution is ignored when configurable windows
         // are applied.
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -598,21 +605,22 @@ public class EventReportWindowCalcDelegateTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
+                        .setExpiryTime(expiry)
                         .setEventReportWindow(expiry)
                         .setInstallCooldownWindow(expiry)
                         .build();
         assertEquals(
                 eventTime + TimeUnit.HOURS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ true));
+                        eventSource10d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ true));
+                        eventSource10d, /* windowIndex= */ 1));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 2, /* isInstallCase */ true));
+                        eventSource10d, /* windowIndex= */ 2));
     }
 
     @Test
@@ -625,36 +633,38 @@ public class EventReportWindowCalcDelegateTest {
                         .setSourceType(Source.SourceType.EVENT)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 0, /* isInstallCase */ true));
+                        eventSource10d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 1, /* isInstallCase */ true));
+                        eventSource10d, /* windowIndex= */ 1));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource10d, /* windowIndex= */ 2, /* isInstallCase */ true));
+                        eventSource10d, /* windowIndex= */ 2));
 
         // Expected: 1 window at 2d(expiry)
         Source eventSource2d =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource2d, /* windowIndex= */ 0, /* isInstallCase */ true));
+                        eventSource2d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        eventSource2d, /* windowIndex= */ 1, /* isInstallCase */ true));
+                        eventSource2d, /* windowIndex= */ 1));
     }
 
     @Test
@@ -666,56 +676,59 @@ public class EventReportWindowCalcDelegateTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(20))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource20d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        navigationSource20d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource20d, /* windowIndex= */ 1, /* isInstallCase */ false));
+                        navigationSource20d, /* windowIndex= */ 1));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(20) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource20d, /* windowIndex= */ 2, /* isInstallCase */ false));
+                        navigationSource20d, /* windowIndex= */ 2));
 
         // Expected: 2 windows at 2d & expiry(7d)
         Source navigationSource7d =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource7d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        navigationSource7d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource7d, /* windowIndex= */ 1, /* isInstallCase */ false));
+                        navigationSource7d, /* windowIndex= */ 1));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource7d, /* windowIndex= */ 2, /* isInstallCase */ false));
+                        navigationSource7d, /* windowIndex= */ 2));
 
         // Expected: 1 window at 2d(expiry)
         Source navigationSource2d =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource2d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        navigationSource2d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource2d, /* windowIndex= */ 1, /* isInstallCase */ false));
+                        navigationSource2d, /* windowIndex= */ 1));
     }
 
     @Test
@@ -728,20 +741,21 @@ public class EventReportWindowCalcDelegateTest {
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(20))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource20d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        navigationSource20d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource20d, /* windowIndex= */ 1, /* isInstallCase */ false));
+                        navigationSource20d, /* windowIndex= */ 1));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(20) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource20d, /* windowIndex= */ 2, /* isInstallCase */ false));
+                        navigationSource20d, /* windowIndex= */ 2));
 
         // Expected: 2 windows at 2d & expiry(7d)
         Source navigationSource7d =
@@ -749,20 +763,21 @@ public class EventReportWindowCalcDelegateTest {
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource7d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        navigationSource7d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource7d, /* windowIndex= */ 1, /* isInstallCase */ false));
+                        navigationSource7d, /* windowIndex= */ 1));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource7d, /* windowIndex= */ 2, /* isInstallCase */ false));
+                        navigationSource7d, /* windowIndex= */ 2));
 
         // Expected: 1 window at 2d(expiry)
         Source navigationSource2d =
@@ -770,169 +785,21 @@ public class EventReportWindowCalcDelegateTest {
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
                         .setEventTime(eventTime)
+                        .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                         .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
                         .build();
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource2d, /* windowIndex= */ 0, /* isInstallCase */ false));
+                        navigationSource2d, /* windowIndex= */ 0));
         assertEquals(
                 eventTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        navigationSource2d, /* windowIndex= */ 1, /* isInstallCase */ false));
-    }
-
-    @Test
-    public void getReportingTime_nullWindowConfigEventSrcAppDest_fallbackToDefault() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                mEventReportWindowCalcDelegate.getReportingTime(
-                        source, triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
-    public void getReportingTime_nullWindowConfigEventSrcInstallAttAppDestTrigger1stWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .setInstallAttributed(true)
-                        .build();
-        assertEquals(
-                sourceEventTime
-                        + PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                mEventReportWindowCalcDelegate.getReportingTime(
-                        source, triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
-    public void getReportingTime_nullWindowConfigEventSrcInstallAttAppDestTrigger2ndWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
-        Source source =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .setInstallAttributed(true)
-                        .build();
-        assertEquals(
-                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                mEventReportWindowCalcDelegate.getReportingTime(
-                        source, triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
-    public void getReportingTime_nullWindowConfigEventSrcInstallAttWebDestTrigger1stWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .setInstallAttributed(true)
-                        .build();
-        assertEquals(
-                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                mEventReportWindowCalcDelegate.getReportingTime(
-                        source, triggerTime, EventSurfaceType.WEB));
-    }
-
-    @Test
-    public void getReportingTime_nullWindowConfigEventSrcInstallAttWebDestTrigger2ndWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
-        Source source =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .setInstallAttributed(true)
-                        .build();
-        assertEquals(
-                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                mEventReportWindowCalcDelegate.getReportingTime(
-                        source, triggerTime, EventSurfaceType.WEB));
-    }
-
-    @Test
-    public void getReportingTime_nullWindowConfigEventSourceWebDestination_fallbackToDefault() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                expiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                mEventReportWindowCalcDelegate.getReportingTime(
-                        source, triggerTime, EventSurfaceType.WEB));
-    }
-
-    @Test
-    public void getReportingTime_nullWindowConfigNavigationSourceTriggerInFirstWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
-        long triggerTime = System.currentTimeMillis();
-        long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setEventReportWindow(sourceExpiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                sourceEventTime
-                        + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                mEventReportWindowCalcDelegate.getReportingTime(
-                        source, triggerTime, EventSurfaceType.APP));
+                        navigationSource2d, /* windowIndex= */ 1));
     }
 
     @Test
     public void getReportingTime_emptyWindowConfigNavigationSourceTriggerNextHour() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn("").when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn("").when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
@@ -941,6 +808,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -952,7 +820,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_emptyWindowConfigEventSrcTriggerNextHour() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn("").when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn("").when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
@@ -963,6 +830,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setAppDestinations(
                                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -974,7 +842,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_emptyWindowConfigEventSrcInstallAttTriggerNextHour() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn("").when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn("").when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
@@ -985,6 +852,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setAppDestinations(
                                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -999,7 +867,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_emptyWindowConfigNavigationSrcInstallAttTriggerNextHour() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn("").when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn("").when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
@@ -1010,6 +877,7 @@ public class EventReportWindowCalcDelegateTest {
                         .setAppDestinations(
                                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -1021,70 +889,7 @@ public class EventReportWindowCalcDelegateTest {
     }
 
     @Test
-    public void getReportingTime_nullWindowConfigNavigationSourceTriggerInSecondWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
-        long triggerTime = System.currentTimeMillis();
-        long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
-        Source source =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setEventReportWindow(sourceExpiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                sourceEventTime
-                        + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[1]
-                        + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                mEventReportWindowCalcDelegate.getReportingTime(
-                        source, triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
-    public void getReportingTime_nullWindowConfigNavigationSecondExpiry() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
-        long triggerTime = System.currentTimeMillis();
-        long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(2);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
-        Source source =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setEventReportWindow(sourceExpiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                sourceExpiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                mEventReportWindowCalcDelegate.getReportingTime(
-                        source, triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
-    public void getReportingTime_nullWindowConfigNavigationLast_fallbackToDefault() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn(null).when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
-        long triggerTime = System.currentTimeMillis();
-        long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(1);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(20);
-        Source source =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setEventReportWindow(sourceExpiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                sourceExpiryTime + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                mEventReportWindowCalcDelegate.getReportingTime(
-                        source, triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
     public void getReportingTime_MalformedWindowConfigEventSourceAppDestination_returnsDefault() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1097,6 +902,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1108,7 +914,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_MalformedWindowConfigEventSrcInstallAttAppDestTrigger1stWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1121,6 +926,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -1135,7 +941,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_MalformedWindowConfigEventSrcInstallAttAppDestTrigger2ndWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1148,6 +953,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -1160,7 +966,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_MalformedWindowConfigEventSrcInstallAttWebDestTrigger1stWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1173,6 +978,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -1185,7 +991,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_MalformedWindowConfigEventSrcInstallAttWebDestTrigger2ndWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1198,6 +1003,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -1210,7 +1016,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_MalformedWindowConfigEventSourceWebDestination() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1223,6 +1028,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1234,7 +1040,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_MalformedWindowConfigNavigationSourceTriggerInFirstWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1247,6 +1052,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1260,7 +1066,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_MalformedWindowConfigNavigationSourceTriggerInSecondWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1273,6 +1078,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1286,7 +1092,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_MalformedWindowConfigNavigationSecondExpiry_fallbackToDefault() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1299,6 +1104,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1310,7 +1116,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_MalformedWindowConfigNavigationLast_fallbackToDefault() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1323,6 +1128,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
                         .setEventReportWindow(sourceExpiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1334,7 +1140,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_validWindowConfigEventSourceTriggerIn1stWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1347,6 +1152,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1358,7 +1164,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_validWindowConfigEventSourceTriggerIn2ndWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1371,6 +1176,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1383,7 +1189,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_validWindowConfigEventSourceTriggerInLastWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1396,6 +1201,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -1408,7 +1214,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_validWindowConfigNavigationSourceTriggerIn1stWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1421,6 +1226,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1432,7 +1238,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_validWindowConfigNavigationSourceTriggerIn2ndWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1445,6 +1250,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1457,7 +1263,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_validWindowConfigNavigationSourceTriggerInLastWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1470,6 +1275,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .setInstallAttributed(true)
@@ -1482,7 +1288,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_invalidWindowConfigEventSourceTriggerIn1stWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(INVALID_1H_1D_2D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1495,6 +1300,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1506,7 +1312,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_invalidWindowConfigNavigationSourceTriggerIn1stWindow() {
-        doReturn(true).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
                 .when(mFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
@@ -1519,6 +1324,7 @@ public class EventReportWindowCalcDelegateTest {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(expiryTime)
                         .setEventReportWindow(expiryTime)
                         .setEventTime(sourceEventTime)
                         .build();
@@ -1532,7 +1338,7 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTimeForNoisingFlexEventApi_validTime_equal() throws JSONException {
         TriggerSpecs testObject1 = new TriggerSpecs(
-                SourceFixture.getTriggerSpecValueCountJSONTwoTriggerSpecs(), 3, null);
+                SourceFixture.getTriggerSpecValueCountJsonTwoTriggerSpecs(), 3, null);
         // Assertion
         assertEquals(new UnsignedLong(1L), testObject1.getTriggerDataFromIndex(0));
         assertEquals(new UnsignedLong(3L), testObject1.getTriggerDataFromIndex(2));
@@ -1713,49 +1519,49 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        oneWindowNoStart, 0, false));
+                        oneWindowNoStart, 0));
         // InstallCase doesn't affect the report time
         assertEquals(
                 sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        oneWindowNoStart, 0, true));
+                        oneWindowNoStart, 0));
 
         assertEquals(
                 sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        oneWindowWithStart, 0, false));
+                        oneWindowWithStart, 0));
 
         assertEquals(
                 sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        twoWindowsNoStart, 0, false));
+                        twoWindowsNoStart, 0));
         assertEquals(
                 sourceTime + TimeUnit.DAYS.toMillis(5) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        twoWindowsNoStart, 1, false));
+                        twoWindowsNoStart, 1));
 
         assertEquals(
                 sourceTime + TimeUnit.DAYS.toMillis(2) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        fiveWindowsWithStart, 0, false));
+                        fiveWindowsWithStart, 0));
         assertEquals(
                 sourceTime + TimeUnit.DAYS.toMillis(5) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        fiveWindowsWithStart, 1, false));
+                        fiveWindowsWithStart, 1));
 
         assertEquals(
                 sourceTime + TimeUnit.DAYS.toMillis(7) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        fiveWindowsWithStart, 2, false));
+                        fiveWindowsWithStart, 2));
         assertEquals(
                 sourceTime + TimeUnit.DAYS.toMillis(10) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        fiveWindowsWithStart, 3, false));
+                        fiveWindowsWithStart, 3));
 
         assertEquals(
                 sourceTime + TimeUnit.DAYS.toMillis(20) + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                 mEventReportWindowCalcDelegate.getReportingTimeForNoising(
-                        fiveWindowsWithStart, 4, false));
+                        fiveWindowsWithStart, 4));
     }
 
     @Test
@@ -1863,7 +1669,8 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getMaxReportCount_flexLiteApi() {
         doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
-        doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
+        doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
+                .when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         long sourceTime = System.currentTimeMillis();
         Source source10Reports =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1871,10 +1678,20 @@ public class EventReportWindowCalcDelegateTest {
                         .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
                         .setEventTime(sourceTime)
                         .build();
-        assertEquals(10, mEventReportWindowCalcDelegate.getMaxReportCount(source10Reports, true));
-        assertEquals(10, mEventReportWindowCalcDelegate.getMaxReportCount(source10Reports, false));
+        assertEquals(10, mEventReportWindowCalcDelegate.getMaxReportCount(source10Reports));
+        assertEquals(10, mEventReportWindowCalcDelegate.getMaxReportCount(source10Reports));
 
-        Source sourceDefaultEvent =
+        Source eventSourceInstallAttributed =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setInstallAttributed(true)
+                        .setInstallCooldownWindow(1L)
+                        .build();
+
+        Source eventSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventReportWindows(EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START)
                         .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
@@ -1884,12 +1701,23 @@ public class EventReportWindowCalcDelegateTest {
 
         assertEquals(
                 PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS,
-                mEventReportWindowCalcDelegate.getMaxReportCount(sourceDefaultEvent, true));
+                mEventReportWindowCalcDelegate.getMaxReportCount(
+                        eventSourceInstallAttributed));
         assertEquals(
                 PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
-                mEventReportWindowCalcDelegate.getMaxReportCount(sourceDefaultEvent, false));
+                mEventReportWindowCalcDelegate.getMaxReportCount(eventSource));
 
-        Source sourceDefaultNavigation =
+        Source navigationSourceInstallAttributed =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setInstallAttributed(true)
+                        .setInstallCooldownWindow(1L)
+                        .build();
+
+        Source navigationSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventReportWindows(EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START)
                         .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
@@ -1898,18 +1726,27 @@ public class EventReportWindowCalcDelegateTest {
                         .build();
 
         assertEquals(
-                PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS,
-                mEventReportWindowCalcDelegate.getMaxReportCount(sourceDefaultNavigation, true));
+                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
+                mEventReportWindowCalcDelegate.getMaxReportCount(
+                        navigationSourceInstallAttributed));
         assertEquals(
                 PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                mEventReportWindowCalcDelegate.getMaxReportCount(sourceDefaultNavigation, false));
+                mEventReportWindowCalcDelegate.getMaxReportCount(navigationSource));
     }
 
     @Test
     public void getReportingWindowCountForNoising_flexLiteApi() {
         doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
-        doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
         long sourceTime = System.currentTimeMillis();
+        Source defaultSourceEventInstallAttributed =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
+                        .setEventTime(sourceTime)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setInstallAttributed(true)
+                        .setInstallCooldownWindow(1L)
+                        .build();
+
         Source defaultSourceEvent =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(30))
@@ -1952,56 +1789,218 @@ public class EventReportWindowCalcDelegateTest {
         assertEquals(
                 2,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        defaultSourceEvent, true));
+                        defaultSourceEventInstallAttributed));
         assertEquals(
                 1,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        defaultSourceEvent, false));
+                        defaultSourceEvent));
 
         assertEquals(
                 3,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        defaultSourceNavigation, true));
+                        defaultSourceNavigation));
         assertEquals(
                 3,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        defaultSourceNavigation, false));
+                        defaultSourceNavigation));
 
         // InstallCase doesn't affect the report count
         assertEquals(
                 1,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        oneWindowNoStart, true));
+                        oneWindowNoStart));
         assertEquals(
                 1,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        oneWindowNoStart, false));
+                        oneWindowNoStart));
 
         assertEquals(
                 1,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        oneWindowWithStart, true));
+                        oneWindowWithStart));
         assertEquals(
                 1,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        oneWindowWithStart, false));
+                        oneWindowWithStart));
 
         assertEquals(
                 2,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        twoWindowsNoStart, true));
+                        twoWindowsNoStart));
         assertEquals(
                 2,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        twoWindowsNoStart, false));
+                        twoWindowsNoStart));
 
         assertEquals(
                 5,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        fiveWindowsWithStart, true));
+                        fiveWindowsWithStart));
         assertEquals(
                 5,
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
-                        fiveWindowsWithStart, false));
+                        fiveWindowsWithStart));
+    }
+
+    @Test
+    public void fallsWithinWindow_windowNotStarted() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
+        long sourceTime = System.currentTimeMillis();
+        long triggerTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1) - 1;
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(triggerTime)
+                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(sourceTime)
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_2_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(25))
+                        .build();
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.BEFORE,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, trigger, new UnsignedLong(0L)));
+    }
+
+    @Test
+    public void fallsWithinWindow_flexApi_windowNotStarted()
+            throws JSONException {
+        JSONObject jsonTriggerSpec = new JSONObject();
+        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 1000);
+        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000, 40000}));
+        jsonTriggerSpec.put("event_report_windows", windows);
+        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
+        TriggerSpec[] triggerSpecArray = TriggerSpecsUtil.triggerSpecArrayFrom(
+                new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString());
+        TriggerSpecs testTriggerSpecs = new TriggerSpecs(triggerSpecArray, 3, null);
+        Source source = SourceFixture.getMinimalValidSourceBuilder()
+                .setEventTime(10000L)
+                .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                .setMaxEventLevelReports(3)
+                .setPrivacyParameters("{\"flip_probability\" :0.0024}")
+                .build();
+        source.buildTriggerSpecs();
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(10999L)
+                .build();
+
+        // Assertion
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.BEFORE,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, trigger, new UnsignedLong(1L)));
+    }
+
+    @Test
+    public void fallsWithinWindow_windowWithin() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
+        long sourceTime = System.currentTimeMillis();
+        long triggerTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1);
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(triggerTime)
+                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(sourceTime)
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_2_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(25))
+                        .build();
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.WITHIN,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, trigger, new UnsignedLong(0L)));
+    }
+
+    @Test
+    public void fallsWithinWindow_flexApi_windowWithin()
+            throws JSONException {
+        JSONObject jsonTriggerSpec = new JSONObject();
+        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 1000);
+        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000, 40000}));
+        jsonTriggerSpec.put("event_report_windows", windows);
+        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
+        TriggerSpec[] triggerSpecArray = TriggerSpecsUtil.triggerSpecArrayFrom(
+                new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString());
+        TriggerSpecs testTriggerSpecs = new TriggerSpecs(triggerSpecArray, 3, null);
+
+        Source source = SourceFixture.getMinimalValidSourceBuilder()
+                .setEventTime(10000L)
+                .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                .setMaxEventLevelReports(3)
+                .setPrivacyParameters("{\"flip_probability\" :0.0024}")
+                .build();
+
+        source.buildTriggerSpecs();
+
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(11000L)
+                .build();
+
+        // Assertion
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.WITHIN,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, trigger, new UnsignedLong(1L)));
+    }
+
+    @Test
+    public void fallsWithinWindow_windowPassed() {
+        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
+        long sourceTime = System.currentTimeMillis();
+        long triggerTime = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(20);
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(triggerTime)
+                .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(sourceTime)
+                        .setEventReportWindows(EVENT_REPORT_WINDOWS_2_WINDOWS_WITH_START)
+                        .setExpiryTime(sourceTime + TimeUnit.DAYS.toMillis(25))
+                        .build();
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.AFTER,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, trigger, new UnsignedLong(0L)));
+    }
+
+    @Test
+    public void fallsWithinWindow_flexApi_windowPassed()
+            throws JSONException {
+        JSONObject jsonTriggerSpec = new JSONObject();
+        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 1000);
+        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000, 40000}));
+        jsonTriggerSpec.put("event_report_windows", windows);
+        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 10, 100}));
+        TriggerSpec[] triggerSpecArray = TriggerSpecsUtil.triggerSpecArrayFrom(
+                new JSONArray(new JSONObject[] {jsonTriggerSpec}).toString());
+        TriggerSpecs testTriggerSpecs = new TriggerSpecs(triggerSpecArray, 3, null);
+
+        Source source = SourceFixture.getMinimalValidSourceBuilder()
+                .setEventTime(10000L)
+                .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                .setMaxEventLevelReports(3)
+                .setPrivacyParameters("{\"flip_probability\" :0.0024}")
+                .build();
+
+        source.buildTriggerSpecs();
+
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setTriggerTime(50000L)
+                .build();
+
+        // Assertion
+        assertEquals(
+                EventReportWindowCalcDelegate.MomentPlacement.AFTER,
+                mEventReportWindowCalcDelegate.fallsWithinWindow(
+                        source, trigger, new UnsignedLong(1L)));
     }
 }

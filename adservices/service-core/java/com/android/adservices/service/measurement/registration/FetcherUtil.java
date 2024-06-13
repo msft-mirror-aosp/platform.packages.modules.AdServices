@@ -47,16 +47,13 @@ import java.util.regex.Pattern;
  *
  * @hide
  */
-class FetcherUtil {
-    static final String REDIRECT_LIST_HEADER_KEY = "Attribution-Reporting-Redirect";
-    static final String REDIRECT_LOCATION_HEADER_KEY = "Location";
+public class FetcherUtil {
     static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
 
     /**
      * Determine all redirects.
      *
-     * <p>Generates a list of: (url, allows_regular_redirects) tuples. Returns true if all steps
-     * succeed. Returns false if there are any failures.
+     * <p>Generates a map of: (redirectType, List&lt;Uri&gt;)
      */
     static Map<AsyncRegistration.RedirectType, List<Uri>> parseRedirects(
             @NonNull Map<String, List<String>> headers) {
@@ -156,6 +153,7 @@ class FetcherUtil {
      */
     static boolean isValidAggregateKeyId(String id) {
         return id != null
+                && !id.isEmpty()
                 && id.getBytes().length
                         <= FlagsFactory.getFlags()
                                 .getMeasurementMaxBytesPerAttributionAggregateKeyId();
@@ -163,7 +161,7 @@ class FetcherUtil {
 
     /** Validate aggregate deduplication key. */
     static boolean isValidAggregateDeduplicationKey(String deduplicationKey) {
-        if (deduplicationKey == null) {
+        if (deduplicationKey == null || deduplicationKey.isEmpty()) {
             return false;
         }
         try {
@@ -178,7 +176,7 @@ class FetcherUtil {
      * Validate aggregate key-piece.
      */
     static boolean isValidAggregateKeyPiece(String keyPiece, Flags flags) {
-        if (keyPiece == null) {
+        if (keyPiece == null || keyPiece.isEmpty()) {
             return false;
         }
         int length = keyPiece.getBytes().length;
@@ -205,14 +203,20 @@ class FetcherUtil {
 
     /** Validate attribution filters JSONArray. */
     static boolean areValidAttributionFilters(
-            @NonNull JSONArray filterSet, Flags flags, boolean canIncludeLookbackWindow) {
+            @NonNull JSONArray filterSet,
+            Flags flags,
+            boolean canIncludeLookbackWindow,
+            boolean shouldCheckFilterSize) throws JSONException {
         if (filterSet.length()
                 > FlagsFactory.getFlags().getMeasurementMaxFilterMapsPerFilterSet()) {
             return false;
         }
         for (int i = 0; i < filterSet.length(); i++) {
             if (!areValidAttributionFilters(
-                    filterSet.optJSONObject(i), flags, canIncludeLookbackWindow)) {
+                    filterSet.optJSONObject(i),
+                    flags,
+                    canIncludeLookbackWindow,
+                    shouldCheckFilterSize)) {
                 return false;
             }
         }
@@ -221,7 +225,10 @@ class FetcherUtil {
 
     /** Validate attribution filters JSONObject. */
     static boolean areValidAttributionFilters(
-            JSONObject filtersObj, Flags flags, boolean canIncludeLookbackWindow) {
+            JSONObject filtersObj,
+            Flags flags,
+            boolean canIncludeLookbackWindow,
+            boolean shouldCheckFilterSize) throws JSONException {
         if (filtersObj == null
                 || filtersObj.length()
                         > FlagsFactory.getFlags().getMeasurementMaxAttributionFilters()) {
@@ -230,10 +237,14 @@ class FetcherUtil {
         Iterator<String> keys = filtersObj.keys();
         while (keys.hasNext()) {
             String key = keys.next();
-            if (key.getBytes().length
-                    > FlagsFactory.getFlags().getMeasurementMaxBytesPerAttributionFilterString()) {
+            if (shouldCheckFilterSize
+                    && key.getBytes().length
+                            > FlagsFactory.getFlags()
+                                    .getMeasurementMaxBytesPerAttributionFilterString()) {
                 return false;
             }
+            // Process known reserved keys that start with underscore first, then invalidate on
+            // catch-all.
             if (flags.getMeasurementEnableLookbackWindowFilter()
                     && FilterMap.LOOKBACK_WINDOW.equals(key)) {
                 if (!canIncludeLookbackWindow || extractLookbackWindow(filtersObj).isEmpty()) {
@@ -241,17 +252,27 @@ class FetcherUtil {
                 }
                 continue;
             }
+            // Invalidate catch-all reserved prefix.
+            if (key.startsWith(FilterMap.RESERVED_PREFIX)) {
+                return false;
+            }
             JSONArray values = filtersObj.optJSONArray(key);
-            if (values == null
-                    || values.length()
+            if (values == null) {
+                return false;
+            }
+            if (shouldCheckFilterSize
+                    && values.length()
                             > FlagsFactory.getFlags()
                                     .getMeasurementMaxValuesPerAttributionFilter()) {
                 return false;
             }
             for (int i = 0; i < values.length(); i++) {
-                String value = values.optString(i);
-                if (value == null
-                        || value.getBytes().length
+                Object value = values.get(i);
+                if (!(value instanceof String)) {
+                    return false;
+                }
+                if (shouldCheckFilterSize
+                        && ((String) value).getBytes().length
                                 > FlagsFactory.getFlags()
                                         .getMeasurementMaxBytesPerAttributionFilterString()) {
                     return false;
@@ -270,15 +291,14 @@ class FetcherUtil {
     }
 
     static void emitHeaderMetrics(
-            Flags flags,
+            long headerSizeLimitBytes,
             AdServicesLogger logger,
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus) {
         long headerSize = asyncFetchStatus.getResponseSize();
-        long maxSize = flags.getMaxResponseBasedRegistrationPayloadSizeBytes();
         String adTechDomain = null;
 
-        if (headerSize > maxSize) {
+        if (headerSize > headerSizeLimitBytes) {
             adTechDomain =
                     WebAddresses.topPrivateDomainAndScheme(asyncRegistration.getRegistrationUri())
                             .map(Uri::toString)
@@ -304,7 +324,7 @@ class FetcherUtil {
 
     private static List<Uri> parseListRedirects(Map<String, List<String>> headers) {
         List<Uri> redirects = new ArrayList<>();
-        List<String> field = headers.get(REDIRECT_LIST_HEADER_KEY);
+        List<String> field = headers.get(AsyncRedirects.REDIRECT_LIST_HEADER_KEY);
         int maxRedirects = FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects();
         if (field != null) {
             for (int i = 0; i < Math.min(field.size(), maxRedirects); i++) {
@@ -316,7 +336,7 @@ class FetcherUtil {
 
     private static List<Uri> parseLocationRedirects(Map<String, List<String>> headers) {
         List<Uri> redirects = new ArrayList<>();
-        List<String> field = headers.get(REDIRECT_LOCATION_HEADER_KEY);
+        List<String> field = headers.get(AsyncRedirects.REDIRECT_LOCATION_HEADER_KEY);
         if (field != null && !field.isEmpty()) {
             redirects.add(Uri.parse(field.get(0)));
             if (field.size() > 1) {
@@ -400,6 +420,9 @@ class FetcherUtil {
                 || asyncFetchStatus.getResponseStatus()
                         == AsyncFetchStatus.ResponseStatus.INVALID_URL) {
             return RegistrationEnumsValues.FAILURE_TYPE_NETWORK;
+        } else if (asyncFetchStatus.getResponseStatus()
+                == AsyncFetchStatus.ResponseStatus.HEADER_SIZE_LIMIT_EXCEEDED) {
+            return RegistrationEnumsValues.FAILURE_TYPE_HEADER_SIZE_LIMIT_EXCEEDED;
         } else if (asyncFetchStatus.getEntityStatus()
                 == AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT) {
             return RegistrationEnumsValues.FAILURE_TYPE_ENROLLMENT;
@@ -439,5 +462,6 @@ class FetcherUtil {
         int FAILURE_TYPE_ENROLLMENT = 3;
         int FAILURE_TYPE_REDIRECT = 4;
         int FAILURE_TYPE_STORAGE = 5;
+        int FAILURE_TYPE_HEADER_SIZE_LIMIT_EXCEEDED = 7;
     }
 }

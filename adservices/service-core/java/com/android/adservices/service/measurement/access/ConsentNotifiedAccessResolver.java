@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 import android.os.Build;
@@ -28,8 +30,8 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.CachedFlags;
 
 /**
- * API access gate on whether consent notification was displayed. {@link #isAllowed(Context)} will
- * return true if the consent notification was displayed, false otherwise. {@link
+ * API access gate on whether consent notification was displayed. {@link #getAccessInfo(Context)}
+ * will return true if the consent notification was displayed, false otherwise. {@link
  * UserConsentAccessResolver} should be applied after this to get the true user consent value.
  */
 // TODO(b/269798827): Enable for R.
@@ -56,19 +58,21 @@ public class ConsentNotifiedAccessResolver implements IAccessResolver {
     }
 
     @Override
-    public boolean isAllowed(@NonNull Context context) {
+    public AccessInfo getAccessInfo(@NonNull Context context) {
         if (mFlags.getConsentNotifiedDebugMode()) {
-            return true;
+            return new AccessInfo(true, FAILURE_REASON_UNSET);
         }
 
         // If the user has already consented, don't check whether the notification was shown
-        if (mUserConsentAccessResolver.isAllowed(context)) {
-            return true;
+        if (mUserConsentAccessResolver.getAccessInfo(context).isAllowedAccess()) {
+            return new AccessInfo(true, FAILURE_REASON_UNSET);
         }
 
-        return mConsentManager.wasNotificationDisplayed()
-                || mConsentManager.wasGaUxNotificationDisplayed()
-                || mConsentManager.wasU18NotificationDisplayed();
+        boolean wasDisplayed =
+                mConsentManager.wasNotificationDisplayed()
+                        || mConsentManager.wasGaUxNotificationDisplayed()
+                        || mConsentManager.wasU18NotificationDisplayed();
+        return new AccessInfo(wasDisplayed, FAILURE_REASON_UNSET);
     }
 
     @Override

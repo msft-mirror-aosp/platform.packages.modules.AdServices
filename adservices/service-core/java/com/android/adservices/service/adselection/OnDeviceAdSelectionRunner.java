@@ -35,10 +35,13 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -79,6 +82,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final EncryptionKeyDao encryptionKeyDao,
+            @NonNull final EnrollmentDao enrollmentDao,
             @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
@@ -94,11 +99,14 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull final DebugReporting debugReporting,
             final int callerUid,
-            boolean shouldUseUnifiedTables) {
+            boolean shouldUseUnifiedTables,
+            @NonNull final RetryStrategy retryStrategy) {
         super(
                 context,
                 customAudienceDao,
                 adSelectionEntryDao,
+                encryptionKeyDao,
+                enrollmentDao,
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,
@@ -115,6 +123,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(adCounterKeyCopier);
+        Objects.requireNonNull(retryStrategy);
 
         mAdServicesHttpsClient = adServicesHttpsClient;
         mAdFilterer = adFilterer;
@@ -130,7 +139,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 () -> flags.getIsolateMaxHeapSizeBytes(),
                                 mAdCounterKeyCopier,
                                 mDebugReporting.getScriptStrategy(),
-                                cpcBillingEnabled),
+                                cpcBillingEnabled,
+                                retryStrategy),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -155,7 +165,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 flags,
                                 mDebugReporting,
                                 cpcBillingEnabled,
-                                dataVersionHeaderEnabled),
+                                dataVersionHeaderEnabled,
+                                retryStrategy),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
                                 devContext,
@@ -172,6 +183,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final EncryptionKeyDao encryptionKeyDao,
+            @NonNull final EnrollmentDao enrollmentDao,
             @NonNull final AdServicesHttpsClient adServicesHttpsClient,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
@@ -195,6 +208,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 context,
                 customAudienceDao,
                 adSelectionEntryDao,
+                encryptionKeyDao,
+                enrollmentDao,
                 lightweightExecutorService,
                 backgroundExecutorService,
                 scheduledExecutor,
@@ -348,7 +363,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         sLogger.v("Got %d valid bidding outcomes", validBiddingOutcomes.size());
 
         if (validBiddingOutcomes.isEmpty()
-                && adSelectionConfig.getBuyerSignedContextualAds().isEmpty()) {
+                && adSelectionConfig.getPerBuyerSignedContextualAds().isEmpty()) {
             sLogger.w("Received empty list of successful bidding outcomes and contextual ads");
             throw new IllegalStateException(ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING);
         }
@@ -360,7 +375,10 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                             .filter(Objects::nonNull)
                             .collect(Collectors.toList()));
         }
-
+        sLogger.v(
+                "Invoking score generator with %s bids and %s contextual ads.",
+                validBiddingOutcomes.size(),
+                adSelectionConfig.getPerBuyerSignedContextualAds().size());
         return mAdsScoreGenerator
                 .runAdScoring(validBiddingOutcomes, adSelectionConfig)
                 .transform(
@@ -503,7 +521,9 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
      * clean up cache.
      */
     private void cleanUpCache() {
-        mAdServicesHttpsClient.getAssociatedCache().cleanUp();
+        ListenableFuture<?> unused =
+                mBackgroundExecutorService.submit(
+                        () -> mAdServicesHttpsClient.getAssociatedCache().cleanUp());
     }
 
     private static class AdSelectionContext {

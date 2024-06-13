@@ -28,7 +28,7 @@ import com.android.adservices.service.appsetid.AppSetIdWorker;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -61,7 +61,7 @@ public class AppSetIdService extends Service {
                             this,
                             AppSetIdWorker.getInstance(),
                             AdServicesLoggerImpl.getInstance(),
-                            Clock.SYSTEM_CLOCK,
+                            Clock.getInstance(),
                             FlagsFactory.getFlags(),
                             Throttler.getInstance(FlagsFactory.getFlags()),
                             appImportanceFilter);

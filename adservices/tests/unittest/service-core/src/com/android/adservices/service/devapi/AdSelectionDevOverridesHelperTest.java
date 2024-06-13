@@ -29,6 +29,7 @@ import android.adservices.common.CommonFixture;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
@@ -37,6 +38,7 @@ import com.android.adservices.data.adselection.DBBuyerDecisionOverride;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class AdSelectionDevOverridesHelperTest {
@@ -70,6 +72,9 @@ public class AdSelectionDevOverridesHelperTest {
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setUp() {
         mAdSelectionEntryDao =
@@ -102,7 +107,7 @@ public class AdSelectionDevOverridesHelperTest {
     @Test
     public void testGetDecisionLogicOverrideFindsMatchingOverride() {
         mAdSelectionEntryDao.persistAdSelectionOverride(OVERRIDE);
-        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(
+        mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(
                 ImmutableList.of(DB_BUYER_DECISION_OVERRIDE));
 
         DevContext devContext =
@@ -119,14 +124,14 @@ public class AdSelectionDevOverridesHelperTest {
         assertThat(helper.getTrustedScoringSignalsOverride(AD_SELECTION_CONFIG))
                 .isEqualTo(TRUSTED_SCORING_SIGNALS);
 
-        assertThat(helper.getBuyersDecisionLogicOverride(AD_SELECTION_CONFIG))
+        assertThat(helper.getPerBuyerDecisionLogicOverride(AD_SELECTION_CONFIG))
                 .containsEntry(CommonFixture.VALID_BUYER_1, DECISION_LOGIC_JS);
     }
 
     @Test
     public void testGetDecisionLogicOverrideReturnsNullIfDevOptionsAreDisabled() {
         mAdSelectionEntryDao.persistAdSelectionOverride(OVERRIDE);
-        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(
+        mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(
                 ImmutableList.of(DB_BUYER_DECISION_OVERRIDE));
 
         DevContext devContext = DevContext.createForDevOptionsDisabled();
@@ -136,13 +141,13 @@ public class AdSelectionDevOverridesHelperTest {
 
         assertThat(helper.getDecisionLogicOverride(AD_SELECTION_CONFIG)).isNull();
         assertThat(helper.getTrustedScoringSignalsOverride(AD_SELECTION_CONFIG)).isNull();
-        assertThat(helper.getBuyersDecisionLogicOverride(AD_SELECTION_CONFIG)).isNull();
+        assertThat(helper.getPerBuyerDecisionLogicOverride(AD_SELECTION_CONFIG)).isNull();
     }
 
     @Test
     public void testGetDecisionLogicOverrideReturnsNullIfTheOverrideBelongsToAnotherApp() {
         mAdSelectionEntryDao.persistAdSelectionOverride(OVERRIDE);
-        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(
+        mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(
                 ImmutableList.of(DB_BUYER_DECISION_OVERRIDE));
 
         DevContext devContext =
@@ -156,6 +161,6 @@ public class AdSelectionDevOverridesHelperTest {
 
         assertThat(helper.getDecisionLogicOverride(AD_SELECTION_CONFIG)).isNull();
         assertThat(helper.getTrustedScoringSignalsOverride(AD_SELECTION_CONFIG)).isNull();
-        assertThat(helper.getBuyersDecisionLogicOverride(AD_SELECTION_CONFIG)).isEmpty();
+        assertThat(helper.getPerBuyerDecisionLogicOverride(AD_SELECTION_CONFIG)).isEmpty();
     }
 }

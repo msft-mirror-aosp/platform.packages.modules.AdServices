@@ -26,9 +26,9 @@ import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.net.Uri;
 import android.os.Parcel;
-import android.test.suitebuilder.annotation.SmallTest;
 import android.view.KeyEvent;
 
+import androidx.test.filters.SmallTest;
 import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.WebUtil;

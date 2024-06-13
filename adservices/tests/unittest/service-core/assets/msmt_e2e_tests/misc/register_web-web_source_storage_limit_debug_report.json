@@ -100,11 +100,12 @@
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263
+        "randomized_trigger_rate": 0.0008051
       }
     }],
     "verbose_debug_reports": [
       {
+        "report_time": "800000000001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
         "payload": [
           {
@@ -119,6 +120,7 @@
         ]
       },
       {
+        "report_time": "800000000001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
         "payload": [
           {

@@ -28,7 +28,10 @@ import android.content.Context;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -46,6 +49,9 @@ public class EncodedPayloadDaoTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private EncodedPayloadDao mEncodedPayloadDao;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

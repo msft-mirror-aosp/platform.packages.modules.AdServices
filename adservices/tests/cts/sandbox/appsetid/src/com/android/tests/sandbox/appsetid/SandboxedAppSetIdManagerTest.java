@@ -120,6 +120,6 @@ public class SandboxedAppSetIdManagerTest {
     private void overrideAdservicesAppSetIdKillSwitch(boolean shouldOverride) {
         String overrideString = shouldOverride ? "false" : "null";
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.appsetid_kill_switch " + overrideString);
+                "device_config put adservices appsetid_kill_switch " + overrideString);
     }
 }

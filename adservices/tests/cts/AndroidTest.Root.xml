@@ -20,6 +20,11 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
+
+    <!-- For this test suite to get picked up in mainline presubmit -->
+    <option name="config-descriptor:metadata" key="mainline-param"
+        value="com.google.android.adservices.apex" />
+
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
         <option name="test-file-name" value="CtsAdServicesRootTestCases.apk" />
@@ -32,9 +37,9 @@
         <option name="run-command" value="setprop log.tag.adservices.measurement VERBOSE"/>
 
         <!-- Disable kill switches to ignore the effect of actual PH values. -->
-        <option name="run-command" value="setprop debug.adservices.global_kill_switch false" />
-        <option name="run-command" value="setprop debug.adservices.fledge_select_ads_kill_switch false" />
-        <option name="run-command" value="setprop debug.adservices.fledge_custom_audience_service_kill_switch false" />
+        <option name="run-command" value="device_config put adservices global_kill_switch false" />
+        <option name="run-command" value="device_config put adservices fledge_select_ads_kill_switch false" />
+        <option name="run-command" value="device_config put adservices fledge_custom_audience_service_kill_switch false" />
 
         <!-- Override Consent notification to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_notified_debug_mode true"/>
@@ -44,12 +49,18 @@
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
 
+        <!-- Override MDD background job to avoid race condition. -->
+        <option name="run-command"
+                value="device_config put adservices mdd_background_task_kill_switch true"/>
+        <option name="teardown-command"
+                value="device_config put adservices mdd_background_task_kill_switch false"/>
+
         <!-- Force enable enrollment checks for FLEDGE when testing enrollment -->
-        <option name="run-command" value="setprop debug.adservices.disable_fledge_enrollment_check false" />
+        <option name="run-command" value="device_config put adservices disable_fledge_enrollment_check false" />
 
         <!-- Increase the allowed API queries per second -->
-        <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 100000" />
-        <option name="teardown-command" value="setprop debug.adservices.sdk_request_permits_per_second 1" />
+        <option name="run-command" value="device_config put adservices sdk_request_permits_per_second 100000" />
+        <option name="teardown-command" value="device_config put adservices sdk_request_permits_per_second 1" />
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
@@ -68,7 +79,7 @@
                 value="device_config put adservices app_config_returns_enabled_by_detault false" />
 
         <!-- Disable Register Ad Beacon Feature -->
-        <option name="run-command" value="setprop debug.adservices.fledge_register_ad_beacon_enabled false" />
+        <option name="run-command" value="device_config put adservices fledge_register_ad_beacon_enabled false" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest" >

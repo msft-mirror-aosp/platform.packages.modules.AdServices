@@ -16,14 +16,20 @@
 
 package com.android.adservices.service.adselection;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class AuctionServerDataCompressorGzipTest {
     private static final String COMPRESSIBLE_STRING =
             "repetitive test string repetitive test string repetitive test string";
     private AuctionServerDataCompressorGzip mDataCompressorV0;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

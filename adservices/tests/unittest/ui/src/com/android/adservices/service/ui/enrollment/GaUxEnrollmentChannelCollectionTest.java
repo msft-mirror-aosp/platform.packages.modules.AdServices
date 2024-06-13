@@ -27,7 +27,7 @@ import org.junit.Test;
 public class GaUxEnrollmentChannelCollectionTest {
     @Test
     public void gaUxEnrollmentChannelCollectionTest_cardinalityCheck() {
-        assertEquals(7, GaUxEnrollmentChannelCollection.values().length);
+        assertEquals(9, GaUxEnrollmentChannelCollection.values().length);
     }
 
     @Test
@@ -45,17 +45,23 @@ public class GaUxEnrollmentChannelCollectionTest {
                 GaUxEnrollmentChannelCollection.ALREADY_ENROLLED_CHANNEL,
                 enrollmentChannelCollection[2]);
         assertEquals(
-                GaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL,
+                GaUxEnrollmentChannelCollection.PAS_FIRST_CONSENT_NOTIFICATION_CHANNEL,
                 enrollmentChannelCollection[3]);
         assertEquals(
-                GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL,
+                GaUxEnrollmentChannelCollection.PAS_RECONSENT_NOTIFICATION_CHANNEL,
                 enrollmentChannelCollection[4]);
         assertEquals(
-                GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL,
+                GaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL,
                 enrollmentChannelCollection[5]);
         assertEquals(
-                GaUxEnrollmentChannelCollection.RVC_POST_OTA_CHANNEL,
+                GaUxEnrollmentChannelCollection.RECONSENT_NOTIFICATION_CHANNEL,
                 enrollmentChannelCollection[6]);
+        assertEquals(
+                GaUxEnrollmentChannelCollection.GA_GRADUATION_CHANNEL,
+                enrollmentChannelCollection[7]);
+        assertEquals(
+                GaUxEnrollmentChannelCollection.RVC_POST_OTA_CHANNEL,
+                enrollmentChannelCollection[8]);
     }
 
     @Test

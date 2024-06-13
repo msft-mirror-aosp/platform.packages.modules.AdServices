@@ -20,7 +20,7 @@ import static com.android.adservices.service.enrollment.EnrollmentUtil.BUILD_ID;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.FILE_GROUP_STATUS;
 import static com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType.MDD_DOWNLOAD_JOB;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
@@ -225,7 +225,7 @@ public class EnrollmentDataDownloadManager {
                     EnrollmentData enrollmentData =
                             new EnrollmentData.Builder()
                                     .setEnrollmentId(enrollmentId)
-                                    .setCompanyId(data[1])
+                                    .setEnrolledAPIs(data[1])
                                     .setSdkNames(data[2])
                                     .setAttributionSourceRegistrationUrl(
                                             data[3].contains(" ")
@@ -246,6 +246,11 @@ public class EnrollmentDataDownloadManager {
                                     .setEncryptionKeyUrl(data[7])
                                     .build();
                     newEnrollments.add(enrollmentData);
+                } else {
+                    LogUtil.e("Incorrect number of elements in row.");
+                    ErrorLogUtil.e(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
                 }
             }
             if (trimTable) {
@@ -259,7 +264,7 @@ public class EnrollmentDataDownloadManager {
         } catch (IOException e) {
             ErrorLogUtil.e(
                     e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return Optional.empty();
         }

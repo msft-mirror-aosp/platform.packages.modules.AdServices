@@ -19,7 +19,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -30,7 +29,7 @@ import java.util.Objects;
 public final class DumpHelper {
 
     /** Calls {@code dump()} in the given dumper, and return its output. */
-    public static String dump(Dumper dumper) throws IOException {
+    public static String dump(Dumper dumper) throws Exception {
         Objects.requireNonNull(dumper);
         try (StringWriter sw = new StringWriter()) {
             PrintWriter pw = new PrintWriter(sw);
@@ -67,7 +66,7 @@ public final class DumpHelper {
     /** Helper to dump an object. */
     public interface Dumper {
         /** Ah, might as well dump (dump!) */
-        void dump(PrintWriter printWriter);
+        void dump(PrintWriter printWriter) throws Exception;
     }
 
     private DumpHelper() {

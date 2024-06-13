@@ -39,6 +39,7 @@ import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
@@ -48,6 +49,7 @@ import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -76,6 +78,9 @@ public class CustomAudienceAdsValidatorTest {
                     CUSTOM_AUDIENCE_MAX_NUM_ADS);
 
     private final List<AdData> mValidAds = AdDataFixture.getValidFilterAdsByBuyer(VALID_BUYER_1);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testConstructor_nullFrequencyCapAdDataValidator_throws() {

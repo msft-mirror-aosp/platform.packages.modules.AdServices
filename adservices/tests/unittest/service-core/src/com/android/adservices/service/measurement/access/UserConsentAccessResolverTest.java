@@ -77,7 +77,7 @@ public class UserConsentAccessResolverTest {
         mClassUnderTest = new UserConsentAccessResolver(mConsentManager);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -90,7 +90,7 @@ public class UserConsentAccessResolverTest {
         mClassUnderTest = new UserConsentAccessResolver(mConsentManager);
 
         // Execution
-        assertFalse(mClassUnderTest.isAllowed(mContext));
+        assertFalse(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test

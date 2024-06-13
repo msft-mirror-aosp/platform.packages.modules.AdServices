@@ -26,6 +26,8 @@ import com.android.adservices.service.ui.enrollment.impl.ConsentNotificationDebu
 import com.android.adservices.service.ui.enrollment.impl.ConsentNotificationResetChannel;
 import com.android.adservices.service.ui.enrollment.impl.FirstConsentNotificationChannel;
 import com.android.adservices.service.ui.enrollment.impl.GaGraduationChannel;
+import com.android.adservices.service.ui.enrollment.impl.PasFirstConsentNotificationChannel;
+import com.android.adservices.service.ui.enrollment.impl.PasReconsentNotificationChannel;
 import com.android.adservices.service.ui.enrollment.impl.ReconsentNotificationChannel;
 import com.android.adservices.service.ui.enrollment.impl.RvcPostOTAChannel;
 
@@ -38,13 +40,18 @@ public enum GaUxEnrollmentChannelCollection implements PrivacySandboxEnrollmentC
 
     ALREADY_ENROLLED_CHANNEL(/* priority= */ 2, new AlreadyEnrolledChannel()),
 
-    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 3, new FirstConsentNotificationChannel()),
+    PAS_FIRST_CONSENT_NOTIFICATION_CHANNEL(
+            /* priority= */ 3, new PasFirstConsentNotificationChannel()),
 
-    RECONSENT_NOTIFICATION_CHANNEL(/* priority= */ 4, new ReconsentNotificationChannel()),
+    PAS_RECONSENT_NOTIFICATION_CHANNEL(/* priority= */ 4, new PasReconsentNotificationChannel()),
 
-    GA_GRADUATION_CHANNEL(/* priority= */ 5, new GaGraduationChannel()),
+    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 5, new FirstConsentNotificationChannel()),
 
-    RVC_POST_OTA_CHANNEL(/* priority= */ 6, new RvcPostOTAChannel());
+    RECONSENT_NOTIFICATION_CHANNEL(/* priority= */ 6, new ReconsentNotificationChannel()),
+
+    GA_GRADUATION_CHANNEL(/* priority= */ 7, new GaGraduationChannel()),
+
+    RVC_POST_OTA_CHANNEL(/* priority= */ 8, new RvcPostOTAChannel());
 
     private final int mPriority;
 

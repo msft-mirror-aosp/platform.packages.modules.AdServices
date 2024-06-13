@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISdkToServiceCallback;
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.os.Binder;
 import android.os.Bundle;
@@ -48,16 +49,16 @@ public class StubSdkToServiceLink extends ISdkToServiceCallback.Stub {
     public void loadSdk(
             String callingPackageName,
             String sdkName,
-            long timeAppCalledSystemServer,
+            SandboxLatencyInfo sandboxLatencyInfo,
             Bundle params,
             ILoadSdkCallback callback) {
         return;
     }
 
     @Override
-    public void logLatenciesFromSandbox(
-            int latencyFromSystemServerToSandboxMillis,
-            int latencySandboxMillis,
-            int method,
-            boolean success) {}
+    public void logLatenciesFromSandbox(SandboxLatencyInfo sandboxLatencyInfo) {}
+
+    @Override
+    public void logSandboxActivityApiLatencyFromSandbox(
+            int method, int callResult, int latencyMillis) {}
 }

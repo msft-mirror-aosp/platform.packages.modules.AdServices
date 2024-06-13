@@ -50,14 +50,14 @@ public class ConsentCompositeStorageTest {
     }
 
     @Test
-    public void testAllReadMethodsAppStorage() {
+    public void testAllReadMethodsAppStorage() throws IOException {
         ConsentCompositeStorage consentCompositeStorage =
                 new ConsentCompositeStorage(ImmutableList.of(mAppConsentStorageManager));
         testAllReadMethods(consentCompositeStorage);
     }
 
     @Test
-    public void testAllReadMethodsPPAPIAndSystem() {
+    public void testAllReadMethodsPPAPIAndSystem() throws IOException {
         ConsentCompositeStorage consentCompositeStorage =
                 new ConsentCompositeStorage(
                         ImmutableList.of(mAppConsentStorageManager, mAdServicesStorageManager));
@@ -79,14 +79,15 @@ public class ConsentCompositeStorageTest {
         testAllWriteMethods(consentCompositeStorage);
     }
 
-    private void testAllReadMethods(ConsentCompositeStorage consentCompositeStorage) {
+    private void testAllReadMethods(ConsentCompositeStorage consentCompositeStorage)
+            throws IOException {
         consentCompositeStorage.isAdIdEnabled();
         consentCompositeStorage.isAdultAccount();
         consentCompositeStorage.isConsentRevokedForApp(MOCK_PACKAGE_NAME);
         consentCompositeStorage.isEntryPointEnabled();
         consentCompositeStorage.isU18Account();
 
-        verifyReadMethods(consentCompositeStorage.getPrimaryStorage());
+        verifyReadMethods(consentCompositeStorage.getConsentStorageList().get(0));
     }
 
     private void testAllWriteMethods(ConsentCompositeStorage consentCompositeStorage)
@@ -96,8 +97,6 @@ public class ConsentCompositeStorageTest {
         consentCompositeStorage.clearConsentForUninstalledApp(MOCK_PACKAGE_NAME, MOCK_PACKAGE_UID);
         consentCompositeStorage.clearKnownAppsWithConsent();
 
-        consentCompositeStorage.recordDefaultAdIdState(true);
-        consentCompositeStorage.recordDefaultConsent(AdServicesApiType.TOPICS, false);
         consentCompositeStorage.recordGaUxNotificationDisplayed(true);
         consentCompositeStorage.recordNotificationDisplayed(false);
         consentCompositeStorage.recordUserManualInteractionWithConsent(1);
@@ -122,7 +121,7 @@ public class ConsentCompositeStorageTest {
         }
     }
 
-    private void verifyReadMethods(IConsentStorage consentStorage) {
+    private void verifyReadMethods(IConsentStorage consentStorage) throws IOException {
         Mockito.verify(consentStorage).isAdIdEnabled();
         Mockito.verify(consentStorage).isAdultAccount();
         Mockito.verify(consentStorage).isConsentRevokedForApp(eq(MOCK_PACKAGE_NAME));
@@ -138,9 +137,6 @@ public class ConsentCompositeStorageTest {
                 .clearConsentForUninstalledApp(eq(MOCK_PACKAGE_NAME), eq(MOCK_PACKAGE_UID));
         Mockito.verify(consentStorage).clearKnownAppsWithConsent();
 
-        Mockito.verify(consentStorage).recordDefaultAdIdState(eq(true));
-        Mockito.verify(consentStorage)
-                .recordDefaultConsent(eq(AdServicesApiType.TOPICS), eq(false));
         Mockito.verify(consentStorage).recordGaUxNotificationDisplayed(eq(true));
         Mockito.verify(consentStorage).recordNotificationDisplayed(eq(false));
         Mockito.verify(consentStorage).recordUserManualInteractionWithConsent(eq(1));

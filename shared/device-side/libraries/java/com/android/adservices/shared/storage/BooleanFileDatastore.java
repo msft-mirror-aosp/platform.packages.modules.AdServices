@@ -16,11 +16,14 @@
 
 package com.android.adservices.shared.storage;
 
+import static com.android.adservices.shared.util.LogUtil.DEBUG;
+import static com.android.adservices.shared.util.LogUtil.VERBOSE;
+
 import android.annotation.Nullable;
 import android.os.PersistableBundle;
 import android.util.AtomicFile;
-import android.util.Log;
 
+import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -56,12 +59,6 @@ import java.util.stream.Collectors;
  * @threadsafe
  */
 public class BooleanFileDatastore {
-
-    // TODO(b/280460130): use adservice helpers for tag name / logging methods
-    private static final String TAG = BooleanFileDatastore.class.getSimpleName();
-    private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
-    private static final boolean VERBOSE = Log.isLoggable(TAG, Log.VERBOSE);
-
     public static final int NO_PREVIOUS_VERSION = -1;
 
     private final int mDatastoreVersion;
@@ -97,7 +94,7 @@ public class BooleanFileDatastore {
      */
     public final void initialize() throws IOException {
         if (DEBUG) {
-            Log.d(TAG, "Reading from store file: " + mAtomicFile.getBaseFile());
+            LogUtil.d("Reading from store file: %s", mAtomicFile.getBaseFile());
         }
         mReadLock.lock();
         try {
@@ -132,7 +129,7 @@ public class BooleanFileDatastore {
             if (out != null) {
                 mAtomicFile.failWrite(out);
             }
-            Log.e(TAG, "Write to file failed", e);
+            LogUtil.e(e, "Write to file failed");
             throw e;
         }
     }
@@ -154,12 +151,12 @@ public class BooleanFileDatastore {
             }
         } catch (FileNotFoundException e) {
             if (VERBOSE) {
-                Log.v(TAG, "File not found; continuing with clear database");
+                LogUtil.v("File not found; continuing with clear database");
             }
             mPreviousStoredVersion = NO_PREVIOUS_VERSION;
             mLocalMap.clear();
         } catch (IOException e) {
-            Log.e(TAG, "Read from store file failed", e);
+            LogUtil.e(e, "Read from store file failed");
             throw e;
         }
     }
@@ -337,7 +334,7 @@ public class BooleanFileDatastore {
      */
     public final void clear() throws IOException {
         if (DEBUG) {
-            Log.d(TAG, "Clearing all entries from datastore");
+            LogUtil.d("Clearing all entries from datastore");
         }
 
         mWriteLock.lock();

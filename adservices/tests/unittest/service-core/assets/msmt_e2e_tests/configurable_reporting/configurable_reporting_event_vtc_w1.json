@@ -1,7 +1,6 @@
 {
   "description": "Three reporting windows configured for VTC - 1h (w1), 1d (w2) and expiry (w3). Source has trigger attributed in W1.",
   "phflags_override": {
-    "measurement_enable_configurable_event_reporting_windows": "true",
     "measurement_event_reports_vtc_early_reporting_windows": "3600,86400"
   },
   "input": {

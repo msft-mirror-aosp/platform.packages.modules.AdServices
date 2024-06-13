@@ -26,6 +26,7 @@ import java.util.List;
 
 // TODO(b/295321663): need to split constants into AdServicesCommonConstants so they can be used by
 // host-side test artifacts.
+
 /**
  * Common constants for AdServices
  *
@@ -45,13 +46,9 @@ public class AdServicesCommon {
     public static final String ACTION_AD_SELECTION_SERVICE =
             "android.adservices.adselection.AD_SELECTION_SERVICE";
 
-    /**
-     * Intent action to discover the protected signals service in the APK.
-     *
-     * @hide
-     */
+    /** Intent action to discover the protected signals service in the APK. */
     public static final String ACTION_PROTECTED_SIGNALS_SERVICE =
-            "android.adservices.adselection.PROTECTED_SIGNALS_SERVICE";
+            "android.adservices.signals.PROTECTED_SIGNALS_SERVICE";
 
     /** Intent action to discover the Measurement service in the APK. */
     public static final String ACTION_MEASUREMENT_SERVICE =
@@ -82,12 +79,19 @@ public class AdServicesCommon {
     public static final String ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE =
             AdServicesCobaltUploadService.SERVICE_INTERFACE;
 
+    /** Intent action to discover the Shell Command service in the APK. */
+    public static final String ACTION_SHELL_COMMAND_SERVICE =
+            "android.adservices.SHELL_COMMAND_SERVICE";
+
     // Used to differentiate between AdServices APK package name and AdExtServices APK package name.
     // The AdExtServices APK package name suffix is android.ext.services.
     public static final String ADSERVICES_APK_PACKAGE_NAME_SUFFIX = "android.adservices.api";
 
     /** The package name suffix of the ExtServices APK on R/S */
     public static final String ADEXTSERVICES_PACKAGE_NAME_SUFFIX = "android.ext.services";
+
+    /** Suffix for the AdServices APEX package name. */
+    public static final String ADSERVICES_APEX_NAME_SUFFIX = "android.adservices";
 
     /**
      * Suffix for the ExtServices APEX Package name. Used to figure out the installed apex version.

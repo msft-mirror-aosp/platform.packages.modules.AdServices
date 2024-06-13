@@ -16,6 +16,8 @@
 
 package android.adservices.cts;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -101,6 +103,39 @@ public final class CustomAudienceTest {
     }
 
     @Test
+    public void testBuildValidCustomAudienceSuccessWithAuctionServerRequestFlags() {
+        CustomAudience validCustomAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                        .build();
+
+        assertThat(validCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        assertThat(validCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(validCustomAudience.getActivationTime())
+                .isEqualTo(CustomAudienceFixture.VALID_ACTIVATION_TIME);
+        assertThat(validCustomAudience.getExpirationTime())
+                .isEqualTo(CustomAudienceFixture.VALID_EXPIRATION_TIME);
+        assertThat(validCustomAudience.getDailyUpdateUri())
+                .isEqualTo(
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        assertThat(validCustomAudience.getUserBiddingSignals())
+                .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+        assertThat(validCustomAudience.getTrustedBiddingData())
+                .isEqualTo(
+                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        assertThat(validCustomAudience.getBiddingLogicUri())
+                .isEqualTo(
+                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        assertThat(validCustomAudience.getAds())
+                .isEqualTo(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1));
+        assertThat(validCustomAudience.getAuctionServerRequestFlags())
+                .isEqualTo(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS);
+    }
+
+    @Test
     public void testBuildValidDelayedActivationCustomAudienceSuccess() {
         CustomAudience validDelayedActivationCustomAudience =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
@@ -145,6 +180,25 @@ public final class CustomAudienceTest {
         CustomAudience fromParcel = CustomAudience.CREATOR.createFromParcel(p);
 
         assertEquals(validCustomAudience, fromParcel);
+    }
+
+    @Test
+    public void testParcelValidCustomAudienceSuccessWithAuctionServerRequestFlags() {
+        CustomAudience validCustomAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                        .build();
+
+        Parcel p = Parcel.obtain();
+        try {
+            validCustomAudience.writeToParcel(p, 0);
+            p.setDataPosition(0);
+            CustomAudience fromParcel = CustomAudience.CREATOR.createFromParcel(p);
+
+            assertEquals(validCustomAudience, fromParcel);
+        } finally {
+            p.recycle();
+        }
     }
 
     @Test

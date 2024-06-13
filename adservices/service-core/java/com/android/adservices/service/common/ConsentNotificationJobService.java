@@ -19,8 +19,8 @@ package com.android.adservices.service.common;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.FIRST_ENTRY_REQUEST_TIMESTAMP;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
-import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
+import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -45,7 +45,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
@@ -211,13 +211,13 @@ public class ConsentNotificationJobService extends JobService {
         }
 
         LogUtil.d("ConsentNotificationJobService.onStartJob");
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
+        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
 
         if (mConsentManager == null) {
-            setConsentManager(ConsentManager.getInstance(getApplicationContext()));
+            setConsentManager(ConsentManager.getInstance());
         }
         if (mUxStatesManager == null) {
-            setUxStatesManager(UxStatesManager.getInstance(getApplicationContext()));
+            setUxStatesManager(UxStatesManager.getInstance());
         }
 
         mConsentManager.recordDefaultAdIdState(mConsentManager.isAdIdEnabled());
@@ -263,7 +263,7 @@ public class ConsentNotificationJobService extends JobService {
                                 }
                             } finally {
                                 boolean shouldRetry = false;
-                                AdservicesJobServiceLogger.getInstance(
+                                AdServicesJobServiceLogger.getInstance(
                                                 ConsentNotificationJobService.this)
                                         .recordJobFinished(
                                                 CONSENT_NOTIFICATION_JOB_ID,
@@ -282,7 +282,7 @@ public class ConsentNotificationJobService extends JobService {
 
         boolean shouldRetry = true;
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, CONSENT_NOTIFICATION_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -296,7 +296,7 @@ public class ConsentNotificationJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance(this)
                     .recordJobSkipped(CONSENT_NOTIFICATION_JOB_ID, skipReason);
         }
 

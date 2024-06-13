@@ -23,7 +23,6 @@ import static org.mockito.Mockito.when;
 import android.net.Uri;
 
 import com.android.adservices.data.DbTestUtil;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
@@ -55,7 +54,6 @@ import java.util.Objects;
 @RunWith(Parameterized.class)
 public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
     private final JSONObject mParam;
-    private final EnrollmentDao mEnrollmentDao;
     private final AdServicesLogger mLogger;
     private final AdServicesErrorLogger mErrorLogger;
 
@@ -76,7 +74,6 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
             String name) {
         super(input, output, flagsMap);
         mParam = param;
-        mEnrollmentDao = Mockito.mock(EnrollmentDao.class);
         mLogger = Mockito.mock(AdServicesLogger.class);
         mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
@@ -108,7 +105,6 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         AggregateReportingJobHandler spyReportingService =
                 Mockito.spy(
                         new AggregateReportingJobHandler(
-                                mEnrollmentDao,
                                 datastoreManager,
                                 mockKeyManager,
                                 FlagsFactory.getFlagsForTest(),

@@ -22,9 +22,11 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -39,6 +41,9 @@ public class FifoSignalEvictorTest {
     private static final int MAX_ALLOWED_SIGNAL_SIZE_WITH_OVERSUBSCRIPTION = 200;
 
     SignalEvictor mFifoSignalEvictor = new FifoSignalEvictor();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testFifoEvict_signalNotLargeEnoughForEviction() {

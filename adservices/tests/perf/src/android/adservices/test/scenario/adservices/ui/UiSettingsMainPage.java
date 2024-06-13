@@ -17,8 +17,9 @@
 package android.adservices.test.scenario.adservices.ui;
 
 import android.content.Context;
+import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
-import android.util.Log;
+import android.os.Trace;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -26,9 +27,11 @@ import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,7 +40,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Crystalball test for Topics API to collect System Heath metrics. */
 @Scenario
 @RunWith(JUnit4.class)
 public class UiSettingsMainPage {
@@ -49,7 +51,10 @@ public class UiSettingsMainPage {
 
     @Rule
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setCompatModeFlags()
+                    .setDebugUxFlagsForRvcUx()
+                    .setFlag(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY, "false");
 
     @Before
     public void setup() throws Exception {
@@ -69,15 +74,19 @@ public class UiSettingsMainPage {
 
     @Test
     public void testSettingsPage() throws Exception {
-        final long start = System.currentTimeMillis();
+        UiConstants.UX ux = UiConstants.UX.GA_UX;
+        if( SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS() ) {
+            ux = UiConstants.UX.RVC_UX;
+        }
+
+        Trace.beginSection("NotificationTriggerEvent");
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 sDevice,
-                UiConstants.UX.GA_UX,
+                ux,
                 /* isOptIn= */ true,
                 /* isFlipConsent= */ true,
                 /* assertOptIn= */ false);
-        final long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "(" + UI_SETTINGS_LATENCY_METRIC + ": " + duration + ")");
+        Trace.endSection();
     }
 }

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.access;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -32,8 +33,8 @@ public class PermissionAccessResolver implements IAccessResolver {
     }
 
     @Override
-    public boolean isAllowed(@NonNull Context context) {
-        return mAllowed;
+    public AccessInfo getAccessInfo(@NonNull Context context) {
+        return new AccessInfo(mAllowed, FAILURE_REASON_UNSET);
     }
 
     @NonNull

@@ -352,7 +352,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
-                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
@@ -366,7 +367,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
-                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
     }
 
     @Test
@@ -384,7 +386,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
-                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
     }
 
     @Test
@@ -402,7 +405,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
-                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
@@ -416,7 +420,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
-                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
     }
 
     @Test
@@ -434,6 +439,26 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
                 TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                null,
+                TriggerFixture.ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
+    }
+
+    @Test
+    public void testTriggerBuilder_validateArgumentSourceRegistrationTimeConfig() {
+        assertInvalidTriggerArguments(
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
+                TriggerFixture.ValidTriggerParams.REGISTRANT,
+                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
+                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 null);
     }
 
@@ -869,7 +894,8 @@ public class TriggerTest {
             UnsignedLong debugKey,
             String mAttributionConfig,
             String mAdtechBitMapping,
-            Uri registrationOrigin) {
+            Uri registrationOrigin,
+            Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -887,6 +913,8 @@ public class TriggerTest {
                                 .setAttributionConfig(mAttributionConfig)
                                 .setAdtechBitMapping(mAdtechBitMapping)
                                 .setRegistrationOrigin(registrationOrigin)
+                                .setAggregatableSourceRegistrationTimeConfig(
+                                        sourceRegistrationTimeConfig)
                                 .build());
     }
 

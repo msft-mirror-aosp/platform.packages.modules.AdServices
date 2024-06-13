@@ -17,7 +17,7 @@
 package com.android.adservices.service.measurement;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_EXPIRED_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DELETE_EXPIRED_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -33,7 +33,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.spe.AdservicesJobServiceLogger;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -56,7 +56,7 @@ public final class DeleteExpiredJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStartJob(MEASUREMENT_DELETE_EXPIRED_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDeleteExpiredKillSwitch()) {
@@ -73,15 +73,17 @@ public final class DeleteExpiredJobService extends JobService {
                     long earliestValidInsertion =
                             System.currentTimeMillis()
                                     - FlagsFactory.getFlags().getMeasurementDataExpiryWindowMs();
-                    int retryLimit = FlagsFactory.getFlags()
-                            .getMeasurementMaxRetriesPerRegistrationRequest();
+                    int retryLimit =
+                            FlagsFactory.getFlags()
+                                    .getMeasurementMaxRetriesPerRegistrationRequest();
                     DatastoreManagerFactory.getDatastoreManager(this)
                             .runInTransaction(
-                                    dao -> dao.deleteExpiredRecords(
-                                            earliestValidInsertion, retryLimit));
+                                    dao ->
+                                            dao.deleteExpiredRecords(
+                                                    earliestValidInsertion, retryLimit));
 
                     boolean shouldRetry = false;
-                    AdservicesJobServiceLogger.getInstance(DeleteExpiredJobService.this)
+                    AdServicesJobServiceLogger.getInstance(DeleteExpiredJobService.this)
                             .recordJobFinished(
                                     MEASUREMENT_DELETE_EXPIRED_JOB_ID,
                                     /* isSuccessful */ true,
@@ -97,7 +99,7 @@ public final class DeleteExpiredJobService extends JobService {
         LoggerFactory.getMeasurementLogger().d("DeleteExpiredJobService.onStopJob");
         boolean shouldRetry = false;
 
-        AdservicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance(this)
                 .recordOnStopJob(params, MEASUREMENT_DELETE_EXPIRED_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -158,7 +160,7 @@ public final class DeleteExpiredJobService extends JobService {
         }
 
         if (doRecord) {
-            AdservicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance(this)
                     .recordJobSkipped(MEASUREMENT_DELETE_EXPIRED_JOB_ID, skipReason);
         }
 
