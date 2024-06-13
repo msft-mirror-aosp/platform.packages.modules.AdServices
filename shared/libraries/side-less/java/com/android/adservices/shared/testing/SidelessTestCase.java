@@ -46,7 +46,7 @@ public abstract class SidelessTestCase implements TestNamer {
     protected final RealLogger mRealLogger;
 
     public SidelessTestCase() {
-        this(StandardStreamsLogger.getInstance());
+        this(DynamicLogger.getInstance());
     }
 
     public SidelessTestCase(RealLogger realLogger) {

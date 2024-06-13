@@ -38,7 +38,7 @@ public abstract class SharedSidelessTestCase extends SidelessTestCase {
             };
 
     protected SharedSidelessTestCase() {
-        this(StandardStreamsLogger.getInstance());
+        this(DynamicLogger.getInstance());
     }
 
     protected SharedSidelessTestCase(RealLogger realLogger) {
