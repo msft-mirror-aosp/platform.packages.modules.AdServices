@@ -3933,14 +3933,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING;
     }
 
-    /** Default Measurement scoped attribution rate limit feature flag. */
-    boolean MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT = true;
-
-    /** Returns whether Measurement scoped attribution rate limit feature is enabled. */
-    default boolean getMeasurementEnableScopedAttributionRateLimit() {
-        return MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT;
-    }
-
     /** Default Measurement app package name logging flag. */
     boolean MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING = true;
 

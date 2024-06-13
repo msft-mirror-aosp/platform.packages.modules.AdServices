@@ -4935,45 +4935,6 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testGetAttributionsPerRateLimitWindow_atTimeWindow() {
-        // Setup
-        Source source = SourceFixture.getValidSource();
-        Trigger trigger =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(source.getEventTime() + TimeUnit.HOURS.toMillis(1))
-                        .build();
-        Attribution attribution =
-                new Attribution.Builder()
-                        .setEnrollmentId(source.getEnrollmentId())
-                        .setDestinationOrigin(source.getWebDestinations().get(0).toString())
-                        .setDestinationSite(source.getAppDestinations().get(0).toString())
-                        .setSourceOrigin(source.getPublisher().toString())
-                        .setSourceSite(source.getPublisher().toString())
-                        .setRegistrant(source.getRegistrant().toString())
-                        .setTriggerTime(
-                                trigger.getTriggerTime()
-                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
-                                        + 1)
-                        .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                        .build();
-
-        // Execution
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    dao.insertAttribution(attribution);
-                });
-
-        // Assertion
-        AtomicLong attributionsCount = new AtomicLong();
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    attributionsCount.set(dao.getAttributionsPerRateLimitWindow(source, trigger));
-                });
-
-        assertEquals(1L, attributionsCount.get());
-    }
-
-    @Test
     public void getAttributionsPerRateLimitWindow_atTimeWindowScoped_countsAttribution() {
         // Setup
         Source source = SourceFixture.getValidSource();
@@ -5064,44 +5025,6 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testGetAttributionsPerRateLimitWindow_beyondTimeWindow() {
-        // Setup
-        Source source = SourceFixture.getValidSource();
-        Trigger trigger =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(source.getEventTime() + TimeUnit.HOURS.toMillis(1))
-                        .build();
-        Attribution attribution =
-                new Attribution.Builder()
-                        .setEnrollmentId(source.getEnrollmentId())
-                        .setDestinationOrigin(source.getWebDestinations().get(0).toString())
-                        .setDestinationSite(source.getAppDestinations().get(0).toString())
-                        .setSourceOrigin(source.getPublisher().toString())
-                        .setSourceSite(source.getPublisher().toString())
-                        .setRegistrant(source.getRegistrant().toString())
-                        .setTriggerTime(
-                                trigger.getTriggerTime()
-                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS)
-                        .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                        .build();
-
-        // Execution
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    dao.insertAttribution(attribution);
-                });
-
-        // Assertion
-        AtomicLong attributionsCount = new AtomicLong();
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    attributionsCount.set(dao.getAttributionsPerRateLimitWindow(source, trigger));
-                });
-
-        assertEquals(0L, attributionsCount.get());
-    }
-
-    @Test
     public void testTransactionRollbackForRuntimeException() {
         assertThrows(
                 IllegalArgumentException.class,
@@ -5131,6 +5054,107 @@ public class MeasurementDaoTest {
                                 null,
                                 null)
                         .getCount());
+    }
+
+    @Test
+    public void testDeleteEventReportAndAttribution() throws JSONException {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Source s1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId("S1")
+                        .build();
+        Trigger t1 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("T1")
+                        .build();
+        Trigger t2 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("T2")
+                        .build();
+        EventReport e11 = createEventReportForSourceAndTrigger("E11", s1, t1);
+        EventReport e12 = createEventReportForSourceAndTrigger("E12", s1, t2);
+
+        Attribution aggregateAttribution11 =
+                createAttribution(
+                        "ATT11_aggregate",
+                        Attribution.Scope.AGGREGATE,
+                        s1.getId(),
+                        t1.getId(),
+                        "E11");
+        Attribution aggregateAttribution12 =
+                createAttribution(
+                        "ATT12_aggregate",
+                        Attribution.Scope.AGGREGATE,
+                        s1.getId(),
+                        t2.getId(),
+                        "E12");
+        Attribution eventAttribution11 =
+                createAttribution(
+                        "ATT11_event",
+                        Attribution.Scope.EVENT,
+                        s1.getId(),
+                        t1.getId(),
+                        "E11");
+        Attribution eventAttribution12 =
+                createAttribution(
+                        "ATT12_event",
+                        Attribution.Scope.EVENT,
+                        s1.getId(),
+                        t2.getId(),
+                        "E12");
+
+        insertSource(s1, s1.getId());
+        AbstractDbIntegrationTest.insertToDb(t1, db);
+        AbstractDbIntegrationTest.insertToDb(t2, db);
+        AbstractDbIntegrationTest.insertToDb(e11, db);
+        AbstractDbIntegrationTest.insertToDb(e12, db);
+        AbstractDbIntegrationTest.insertToDb(aggregateAttribution11, db);
+        AbstractDbIntegrationTest.insertToDb(aggregateAttribution12, db);
+        AbstractDbIntegrationTest.insertToDb(eventAttribution11, db);
+        AbstractDbIntegrationTest.insertToDb(eventAttribution12, db);
+
+        // Assert attributions present
+        assertNotNull(getAttribution("ATT11_aggregate", db));
+        assertNotNull(getAttribution("ATT12_aggregate", db));
+        assertNotNull(getAttribution("ATT11_event", db));
+        assertNotNull(getAttribution("ATT12_event", db));
+
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    // Assert sources and triggers present
+                    assertNotNull(measurementDao.getSource("S1"));
+                    assertNotNull(measurementDao.getTrigger("T1"));
+                    assertNotNull(measurementDao.getTrigger("T2"));
+
+                    // Validate presence of event reports
+                    measurementDao.getEventReport("E11");
+                    measurementDao.getEventReport("E12");
+
+                    // Deletion
+                    measurementDao.deleteEventReportAndAttribution(e11);
+
+                    // Validate event report deletion
+                    assertThrows(
+                            DatastoreException.class,
+                            () -> {
+                                measurementDao.getEventReport("E11");
+                            });
+                    assertNotNull(measurementDao.getEventReport("E12"));
+
+                    // Validate sources and triggers present
+                    assertNotNull(measurementDao.getSource("S1"));
+                    assertNotNull(measurementDao.getTrigger("T1"));
+                    assertNotNull(measurementDao.getTrigger("T2"));
+                });
+
+        // Validate attribution deletion
+        assertNotNull(getAttribution("ATT11_aggregate", db));
+        assertNotNull(getAttribution("ATT12_aggregate", db));
+        assertNull(getAttribution("ATT11_event", db));
+        assertNotNull(getAttribution("ATT12_event", db));
     }
 
     @Test
