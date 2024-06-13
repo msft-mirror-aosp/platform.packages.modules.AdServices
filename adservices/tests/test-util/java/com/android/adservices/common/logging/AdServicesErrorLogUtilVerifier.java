@@ -16,9 +16,10 @@
 
 package com.android.adservices.common.logging;
 
+import static com.android.adservices.common.logging.ErrorLogUtilCall.None;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.NAME;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 
 import android.util.Log;
@@ -38,7 +39,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** Log verifier for {@link ErrorLogUtil} calls. */
+/**
+ * Log verifier for {@link ErrorLogUtil} calls without exception by processing {@link
+ * ExpectErrorLogUtilCall} annotations.
+ */
 public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<ErrorLogUtilCall> {
     @Override
     protected void mockLogCalls() {
@@ -47,24 +51,12 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
                         invocation -> {
                             recordActualCall(
                                     new ErrorLogUtilCall(
-                                            ExpectErrorLogUtilCall.None.class,
+                                            None.class,
                                             invocation.getArgument(0),
                                             invocation.getArgument(1)));
                             return null;
                         })
                 .when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
-
-        // Mock ErrorLogUtil.e(Throwable, int, int) calls and capture logging arguments.
-        doAnswer(
-                        invocation -> {
-                            recordActualCall(
-                                    new ErrorLogUtilCall(
-                                            ((Throwable) invocation.getArgument(0)).getClass(),
-                                            invocation.getArgument(1),
-                                            invocation.getArgument(2)));
-                            return null;
-                        })
-                .when(() -> ErrorLogUtil.e(any(Throwable.class), anyInt(), anyInt()));
     }
 
     @Override
@@ -72,17 +64,16 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
         List<ExpectErrorLogUtilCall> annotations = getAnnotations(description);
 
         if (annotations.isEmpty()) {
-            Log.v(mTag, "No @ExpectErrorLogUtilCall found over test method.");
+            Log.v(mTag, "No @" + NAME + " found over test method.");
             return ImmutableSet.of();
         }
 
         Set<ErrorLogUtilCall> expectedCalls =
                 annotations.stream()
-                        .peek(this::validateAnnotation)
+                        .peek(a -> this.validateTimes(a.times(), NAME))
                         .map(
                                 annotation ->
-                                        new ErrorLogUtilCall(
-                                                annotation.throwable(),
+                                        ErrorLogUtilCall.createWithNoException(
                                                 annotation.errorCode(),
                                                 annotation.ppapiName(),
                                                 annotation.times()))
@@ -90,7 +81,9 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
 
         if (expectedCalls.size() != annotations.size()) {
             throw new IllegalStateException(
-                    "Detected @ExpectErrorLogUtilCall annotations representing the same "
+                    "Detected @"
+                            + NAME
+                            + " annotations representing the same "
                             + "invocation! De-dupe by using times arg");
         }
 
@@ -99,9 +92,11 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
 
     @Override
     public String getResolutionMessage() {
-        // TODO (b/337043102): Update message to include info about default args
-        return "Please make sure to use @ExpectErrorLogUtilCall(..) over test method to denote "
-                + "all expected ErrorLogUtil.e(..) calls.";
+        return "Please make sure to use @"
+                + NAME
+                + "(..) "
+                + "over test method to denote "
+                + "all expected ErrorLogUtil.e(int, int) calls.";
     }
 
     private List<ExpectErrorLogUtilCall> getAnnotations(Description description) {
@@ -114,18 +109,5 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
         // Scan for single annotation
         ExpectErrorLogUtilCall single = description.getAnnotation(ExpectErrorLogUtilCall.class);
         return single == null ? ImmutableList.of() : ImmutableList.of(single);
-    }
-
-    private void validateAnnotation(ExpectErrorLogUtilCall annotation) {
-        int times = annotation.times();
-
-        if (times == 0) {
-            throw new IllegalStateException(
-                    "Detected @ExpectErrorLogUtilCall with times = 0. Remove annotation as the "
-                            + "test will automatically fail if any log calls are detected.");
-        }
-        if (times < 0) {
-            throw new IllegalStateException("Detected @ExpectErrorLogUtilCall with times < 0!");
-        }
     }
 }

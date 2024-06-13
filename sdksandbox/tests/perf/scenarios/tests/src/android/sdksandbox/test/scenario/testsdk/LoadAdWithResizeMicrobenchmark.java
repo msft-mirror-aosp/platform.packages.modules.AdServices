@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing.concurrency;
+package android.sdksandbox.test.scenario.testsdk;
 
-import com.android.adservices.shared.testing.Identifiable;
+import android.platform.test.microbenchmark.Microbenchmark;
+import android.platform.test.rule.DropCachesRule;
+import android.platform.test.rule.KillAppsRule;
 
-import java.util.concurrent.TimeUnit;
+import org.junit.Rule;
+import org.junit.rules.RuleChain;
+import org.junit.runner.RunWith;
 
-/** {@code SyncCallaback} that doesn't expect a result. */
-public interface ResultlessSyncCallback extends SyncCallback, Identifiable {
-
-    /**
-     * Indicates the callback was called, so it unblocks {@link #waitCalled()} / {@link
-     * #waitCalled(long, TimeUnit)}.
-     */
-    void setCalled();
+@RunWith(Microbenchmark.class)
+public class LoadAdWithResizeMicrobenchmark extends LoadAdWithResize {
+    @Rule
+    public RuleChain rules =
+            RuleChain.outerRule(new KillAppsRule(sPackageName)).around(new DropCachesRule());
 }

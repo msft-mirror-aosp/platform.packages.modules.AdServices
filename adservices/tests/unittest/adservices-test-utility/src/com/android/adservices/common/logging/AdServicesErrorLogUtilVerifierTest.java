@@ -16,12 +16,8 @@
 
 package com.android.adservices.common.logging;
 
-import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.Any;
-import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.None;
-
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
@@ -50,13 +46,11 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
 
     @Test
     public void testGetExpectedLogCalls_withSingleAnnotation_returnsNonEmptyList() {
-        when(mMockDescription.getAnnotation(ExpectErrorLogUtilCalls.class)).thenReturn(null);
         when(mMockDescription.getAnnotation(ExpectErrorLogUtilCall.class))
                 .thenReturn(mExpectErrorLogUtilCall1);
         ErrorLogUtilCall errorLogUtilCall =
                 mockAnnotationAndInitErrorLogUtilCall(
                         mExpectErrorLogUtilCall1,
-                        /* throwable= */ IllegalArgumentException.class,
                         /* errorCode= */ 15,
                         /* ppapiName= */ 10,
                         /* times= */ 1);
@@ -67,7 +61,6 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
 
     @Test
     public void testGetExpectedLogCalls_withSingleAnnotationNegativeTimes_throwsException() {
-        when(mMockDescription.getAnnotation(ExpectErrorLogUtilCalls.class)).thenReturn(null);
         when(mMockDescription.getAnnotation(ExpectErrorLogUtilCall.class))
                 .thenReturn(mExpectErrorLogUtilCall1);
         when(mExpectErrorLogUtilCall1.times()).thenReturn(-1);
@@ -84,7 +77,6 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
 
     @Test
     public void testGetExpectedLogCalls_withSingleAnnotationZeroTimes_throwsException() {
-        when(mMockDescription.getAnnotation(ExpectErrorLogUtilCalls.class)).thenReturn(null);
         when(mMockDescription.getAnnotation(ExpectErrorLogUtilCall.class))
                 .thenReturn(mExpectErrorLogUtilCall1);
         when(mExpectErrorLogUtilCall1.times()).thenReturn(0);
@@ -113,20 +105,16 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
         ErrorLogUtilCall errorLogUtilCall1 =
                 mockAnnotationAndInitErrorLogUtilCall(
                         mExpectErrorLogUtilCall1,
-                        /* throwable= */ IllegalArgumentException.class,
                         /* errorCode= */ 15,
                         /* ppapiName= */ 10,
                         /* times= */ 1);
         ErrorLogUtilCall errorLogUtilCall2 =
                 mockAnnotationAndInitErrorLogUtilCall(
                         mExpectErrorLogUtilCall2,
-                        /* throwable= */ Any.class,
                         /* errorCode= */ 15,
-                        /* ppapiName= */ 10,
+                        /* ppapiName= */ 20,
                         /* times= */ 1);
 
-        // Even though both invocations are the same, they are not equal. Therefore,
-        // no exception should be thrown calling to de-dupe annotations using times.
         expect.that(mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription))
                 .containsExactly(errorLogUtilCall1, errorLogUtilCall2);
     }
@@ -187,13 +175,11 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
                         });
         mockAnnotationAndInitErrorLogUtilCall(
                 mExpectErrorLogUtilCall1,
-                /* throwable= */ None.class,
                 /* errorCode= */ 30,
                 /* ppapiName= */ 20,
                 /* times= */ 1);
         mockAnnotationAndInitErrorLogUtilCall(
                 mExpectErrorLogUtilCall2,
-                /* throwable= */ None.class,
                 /* errorCode= */ 30,
                 /* ppapiName= */ 20,
                 /* times= */ 2);
@@ -217,22 +203,20 @@ public final class AdServicesErrorLogUtilVerifierTest extends AdServicesMockitoT
         expect.that(mErrorLogUtilVerifier.getResolutionMessage())
                 .isEqualTo(
                         "Please make sure to use @ExpectErrorLogUtilCall(..) over test method to"
-                                + " denote all expected ErrorLogUtil.e(..) calls.");
+                                + " denote all expected ErrorLogUtil.e(int, int) calls.");
     }
 
     private ErrorLogUtilCall mockAnnotationAndInitErrorLogUtilCall(
             ExpectErrorLogUtilCall annotation,
-            Class<? extends Throwable> throwable,
             int errorCode,
             int ppapiName,
             int times) {
         // Mock annotation
-        doReturn(throwable).when(annotation).throwable();
         when(annotation.errorCode()).thenReturn(errorCode);
         when(annotation.ppapiName()).thenReturn(ppapiName);
         when(annotation.times()).thenReturn(times);
 
         // Return corresponding ErrorLogUtilCall object that is usually needed for verification
-        return new ErrorLogUtilCall(throwable, errorCode, ppapiName, times);
+        return ErrorLogUtilCall.createWithNoException(errorCode, ppapiName, times);
     }
 }

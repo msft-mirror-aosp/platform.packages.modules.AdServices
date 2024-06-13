@@ -18,6 +18,7 @@ package com.android.adservices.shared.testing.concurrency;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 // TODO(b/I343510637): add unit tests / javadoc
@@ -37,6 +38,7 @@ public final class ConcurrencyHelper {
      * @return the new thread.
      */
     public Thread runAsync(long timeoutMs, Runnable r) {
+        Objects.requireNonNull(r);
         Runnable sleepingBeauty =
                 () -> {
                     String threadName = Thread.currentThread().getName();
@@ -57,6 +59,7 @@ public final class ConcurrencyHelper {
 
     /** Starts a new thread to run the given runnable. */
     public Thread startNewThread(Runnable r) {
+        Objects.requireNonNull(r);
         String threadName = "ConcurrencyHelper-runLaterThread-" + sThreadId.incrementAndGet();
         Thread thread = new Thread(r, threadName);
         mLogger.v("Starting new thread (%s) to run %s", threadName, r);

@@ -29,17 +29,11 @@ import android.adservices.extdata.IGetAdServicesExtDataCallback;
 import android.content.Intent;
 import android.os.IBinder;
 
-import androidx.test.runner.AndroidJUnit4;
-
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 
-import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
-public class AdServicesExtDataServiceCtsTest {
-
+public final class AdServicesExtDataServiceCtsTest {
     /** Fake AdServicesExtDataStorageService implementation for testing. */
     private static final class AdServicesExtDataStorageServiceTestProxy
             extends AdServicesExtDataStorageService {
@@ -65,11 +59,11 @@ public class AdServicesExtDataServiceCtsTest {
         Intent intent = new Intent();
         intent.setAction(AdServicesExtDataStorageService.SERVICE_INTERFACE);
         IBinder remoteObject = proxy.onBind(intent);
-        Assert.assertNotNull(remoteObject);
+        assertThat(remoteObject).isNotNull();
 
         IAdServicesExtDataStorageService service =
                 IAdServicesExtDataStorageService.Stub.asInterface(remoteObject);
-        Assert.assertNotNull(service);
+        assertThat(service).isNotNull();
 
         // Update AdExt data
         AdServicesExtDataParams paramsToUpdate =
@@ -94,6 +88,7 @@ public class AdServicesExtDataServiceCtsTest {
         service.getAdServicesExtData(getReceiver);
 
         GetAdServicesExtDataResult result = getReceiver.assertResultReceived();
+        assertThat(result).isNotNull();
         assertThat(result.getAdServicesExtDataParams()).isEqualTo(paramsToUpdate);
     }
 
