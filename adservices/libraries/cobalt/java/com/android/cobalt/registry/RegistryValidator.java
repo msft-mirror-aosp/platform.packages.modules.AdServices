@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /** Validates that Cobalt registry objects are valid and supported by the Cobalt client. */
+// TODO(b/343722587): Add logging on validation failures to identify where issues occur.
 public final class RegistryValidator {
     private static final ImmutableMap<MetricType, ImmutableSet<ReportType>> ALLOWED_REPORT_TYPES =
             ImmutableMap.of(
@@ -71,11 +72,21 @@ public final class RegistryValidator {
             return false;
         }
 
+        if (!validateMinAndMaxValues(
+                report.getReportType(),
+                report.getPrivacyMechanism(),
+                report.getMinValue(),
+                report.getMaxValue())) {
+            return false;
+        }
+
+        if (!validateMaxCount(report.getMaxCount())) {
+            return false;
+        }
+
         // TODO(b/343722587): Add remaining validations from the Cobalt config validator. This
         // includes:
         //   * poisson fields for different privacy mechanisms
-        //   * min and max values for different privacy mechansims and report types
-        //   * max count (is unset)
         //   * local aggregation period (is WINDOW_DAYS_1)
         //   * local aggregation procedure (is unset)
         //   * local aggregation procedure percentile n (is unset)
@@ -116,6 +127,25 @@ public final class RegistryValidator {
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static boolean validateIntegerBuckets(IntegerBuckets intBuckets) {
         return intBuckets.equals(IntegerBuckets.getDefaultInstance());
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateMinAndMaxValues(
+            ReportType reportType,
+            PrivacyMechanism privacyMechanism,
+            long minValue,
+            long maxValue) {
+        if (reportType.equals(FLEETWIDE_OCCURRENCE_COUNTS)
+                && privacyMechanism.equals(SHUFFLED_DIFFERENTIAL_PRIVACY)) {
+            return minValue > 0 && maxValue >= minValue;
+        }
+
+        return minValue == 0 && maxValue == 0;
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateMaxCount(long maxCount) {
+        return maxCount == 0;
     }
 
     private RegistryValidator() {}
