@@ -118,6 +118,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     }
 
     // NOTE: currently it just need one method, so we're always returning poll()
+
     /** Gets the name of the method returned by {@link #call(SyncCallback)}. */
     private String getSetCalledMethodName() throws InterruptedException {
         String methodName = mSetCalledMethodQueue.poll(CALLBACK_TIMEOUT_MS, MILLISECONDS);
@@ -147,7 +148,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
      *
      * <p><b>Note:</b> must just call the callback right away, not in a background thread.
      *
-     * @return representation of the method called (like "setcalled()" or "inject(foo)").
+     * @return representation of the method called (like "setCalled()" or "inject(foo)").
      */
     protected abstract String callCallback(CB callback);
 
@@ -462,9 +463,9 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
         expectLoggedCalls(
                 log.d(setCalled + " called on " + mainThread.getName()),
-                        log.v(setCalled + " returning"),
+                log.v(setCalled + " returning"),
                 log.d("assertCalled() called on " + currentThread().getName()),
-                        log.e("assertCalled() failed: " + thrown));
+                log.e("assertCalled() failed: " + thrown));
     }
 
     /** Helper method to assert the value of {@code isCalled()}. */

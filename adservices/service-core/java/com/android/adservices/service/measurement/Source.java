@@ -321,7 +321,7 @@ public class Source {
      * @param flipProbability the flip probability, used only if attribution scope is not enabled.
      * @param numTriggerStates num of trigger states.
      */
-    public double getInformationGain(Flags flags, long numTriggerStates, double flipProbability) {
+    double getInformationGain(Flags flags, long numTriggerStates, double flipProbability) {
         if (flags.getMeasurementEnableAttributionScope()) {
             long attributionScopeLimit =
                     getAttributionScopeLimit() == null ? 1L : getAttributionScopeLimit();

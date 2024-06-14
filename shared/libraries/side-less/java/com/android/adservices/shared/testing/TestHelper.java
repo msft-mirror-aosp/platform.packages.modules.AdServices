@@ -24,9 +24,7 @@ import java.util.Objects;
 public final class TestHelper {
     private static final boolean VERBOSE = false; // Should NEVER be merged as true
 
-    // TODO(b/338232806): use proper logger
-    private static final Logger sLogger =
-            new Logger(StandardStreamsLogger.getInstance(), TestHelper.class);
+    private static final Logger sLogger = new Logger(DynamicLogger.getInstance(), TestHelper.class);
 
     // TODO(b/315339283): use in other places
     /** Gets the given annotation from the test, its class, or its ancestors. */

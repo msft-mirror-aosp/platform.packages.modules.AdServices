@@ -16,7 +16,9 @@
 
 package com.android.adservices.common.logging;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.UNDEFINED_INT_PARAM;
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Undefined;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,16 +28,19 @@ import static org.mockito.Mockito.when;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCalls;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.mockito.Mock;
 
-public class AdServicesErrorLogUtilWithExceptionVerifierTest extends AdServicesMockitoTestCase {
+public final class AdServicesErrorLogUtilWithExceptionVerifierTest
+        extends AdServicesMockitoTestCase {
     @Mock private Description mMockDescription;
     @Mock private ExpectErrorLogUtilWithExceptionCall mExpectErrorLogUtilWithExceptionCall1;
     @Mock private ExpectErrorLogUtilWithExceptionCall mExpectErrorLogUtilWithExceptionCall2;
     @Mock private ExpectErrorLogUtilWithExceptionCalls mExpectErrorLogUtilWithExceptionCalls;
+    @Mock private SetErrorLogUtilDefaultParams mDefaultParams;
 
     private final AdServicesErrorLogUtilWithExceptionVerifier mErrorLogUtilVerifier =
             new AdServicesErrorLogUtilWithExceptionVerifier();
@@ -71,7 +76,7 @@ public class AdServicesErrorLogUtilWithExceptionVerifierTest extends AdServicesM
 
         Exception exception =
                 assertThrows(
-                        IllegalStateException.class,
+                        IllegalArgumentException.class,
                         () -> mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription));
 
         expect.that(exception)
@@ -87,7 +92,7 @@ public class AdServicesErrorLogUtilWithExceptionVerifierTest extends AdServicesM
 
         Exception exception =
                 assertThrows(
-                        IllegalStateException.class,
+                        IllegalArgumentException.class,
                         () -> mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription));
 
         expect.that(exception)
@@ -96,6 +101,95 @@ public class AdServicesErrorLogUtilWithExceptionVerifierTest extends AdServicesM
                         "Detected @ExpectErrorLogUtilWithExceptionCall with times = 0. Remove "
                                 + "annotation as the test will automatically fail if any log "
                                 + "calls are detected.");
+    }
+
+    @Test
+    public void testGetExpectedLogCalls_withSingleAnnotationMissingThrowable_throwsException() {
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCall.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCall1);
+        mockAnnotationAndInitErrorLogUtilCall(
+                mExpectErrorLogUtilWithExceptionCall1,
+                /* throwable= */ Undefined.class,
+                /* errorCode= */ 20,
+                /* ppapiName= */ 2,
+                /* times= */ 1);
+
+        Exception exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription));
+
+        expect.that(exception)
+                .hasMessageThat()
+                .isEqualTo("Cannot resolve throwable for @ExpectErrorLogUtilWithExceptionCall");
+    }
+
+    @Test
+    public void testGetExpectedLogCalls_withSingleAnnotationMissingErrorCode_throwsException() {
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCall.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCall1);
+        mockAnnotationAndInitErrorLogUtilCall(
+                mExpectErrorLogUtilWithExceptionCall1,
+                /* throwable= */ Any.class,
+                /* errorCode= */ UNDEFINED_INT_PARAM,
+                /* ppapiName= */ 2,
+                /* times= */ 1);
+
+        Exception exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription));
+
+        expect.that(exception)
+                .hasMessageThat()
+                .isEqualTo("Cannot resolve errorCode for @ExpectErrorLogUtilWithExceptionCall");
+    }
+
+    @Test
+    public void testGetExpectedLogCalls_withSingleAnnotationMissingPpapiName_throwsException() {
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCall.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCall1);
+        mockAnnotationAndInitErrorLogUtilCall(
+                mExpectErrorLogUtilWithExceptionCall1,
+                /* throwable= */ Any.class,
+                /* errorCode= */ 2,
+                /* ppapiName= */ UNDEFINED_INT_PARAM,
+                /* times= */ 1);
+
+        Exception exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription));
+
+        expect.that(exception)
+                .hasMessageThat()
+                .isEqualTo("Cannot resolve ppapiName for @ExpectErrorLogUtilWithExceptionCall");
+    }
+
+    @Test
+    public void testGetExpectedLogCalls_withSingleAnnotationAndDefaultParams_returnsNonEmptyList() {
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCall.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCall1);
+        when(mMockDescription.getAnnotation(SetErrorLogUtilDefaultParams.class))
+                .thenReturn(mDefaultParams);
+        mockAnnotationAndInitErrorLogUtilCall(
+                mExpectErrorLogUtilWithExceptionCall1,
+                /* throwable= */ Undefined.class,
+                /* errorCode= */ UNDEFINED_INT_PARAM,
+                /* ppapiName= */ 30,
+                /* times= */ 1);
+        mockDefaultParams(
+                /* throwable= */ Any.class,
+                /* errorCode= */ 90,
+                /* ppapiName= */ UNDEFINED_INT_PARAM);
+
+        mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription);
+
+        ErrorLogUtilCall errorLogUtilCall =
+                new ErrorLogUtilCall(
+                        /* throwable= */ Any.class, /* errorCode= */ 90, /* ppapiName= */ 30);
+        expect.that(mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription))
+                .containsExactly(errorLogUtilCall);
     }
 
     @Test
@@ -144,7 +238,7 @@ public class AdServicesErrorLogUtilWithExceptionVerifierTest extends AdServicesM
 
         Exception exception =
                 assertThrows(
-                        IllegalStateException.class,
+                        IllegalArgumentException.class,
                         () -> mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription));
 
         expect.that(exception)
@@ -169,7 +263,7 @@ public class AdServicesErrorLogUtilWithExceptionVerifierTest extends AdServicesM
 
         Exception exception =
                 assertThrows(
-                        IllegalStateException.class,
+                        IllegalArgumentException.class,
                         () -> mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription));
 
         expect.that(exception)
@@ -215,6 +309,56 @@ public class AdServicesErrorLogUtilWithExceptionVerifierTest extends AdServicesM
     }
 
     @Test
+    public void testGetExpectedLogCalls_withMultipleAnnotationsAndDefaultParams_returnsList() {
+        when(mMockDescription.getAnnotation(ExpectErrorLogUtilWithExceptionCalls.class))
+                .thenReturn(mExpectErrorLogUtilWithExceptionCalls);
+        when(mExpectErrorLogUtilWithExceptionCalls.value())
+                .thenReturn(
+                        new ExpectErrorLogUtilWithExceptionCall[] {
+                            mExpectErrorLogUtilWithExceptionCall1,
+                            mExpectErrorLogUtilWithExceptionCall2
+                        });
+        when(mMockDescription.getAnnotation(SetErrorLogUtilDefaultParams.class))
+                .thenReturn(mDefaultParams);
+        // First annotation missing throwable
+        mockAnnotationAndInitErrorLogUtilCall(
+                mExpectErrorLogUtilWithExceptionCall1,
+                /* throwable= */ Undefined.class,
+                /* errorCode= */ 30,
+                /* ppapiName= */ 20,
+                /* times= */ 1);
+        // Second annotation missing errorCode
+        mockAnnotationAndInitErrorLogUtilCall(
+                mExpectErrorLogUtilWithExceptionCall2,
+                /* throwable= */ Any.class,
+                /* errorCode= */ UNDEFINED_INT_PARAM,
+                /* ppapiName= */ 30,
+                /* times= */ 1);
+        // Set default params
+        mockDefaultParams(
+                /* throwable= */ NullPointerException.class,
+                /* errorCode= */ 90,
+                /* ppapiName= */ 100);
+
+        mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription);
+
+        ErrorLogUtilCall errorLogUtilCall1 =
+                new ErrorLogUtilCall(
+                        /* throwable= */ NullPointerException.class,
+                        /* errorCode= */ 30,
+                        /* ppapiName= */ 20,
+                        /* times= */ 1);
+        ErrorLogUtilCall errorLogUtilCall2 =
+                new ErrorLogUtilCall(
+                        /* throwable= */ Any.class,
+                        /* errorCode= */ 90,
+                        /* ppapiName= */ 30,
+                        /* times= */ 1);
+        expect.that(mErrorLogUtilVerifier.getExpectedLogCalls(mMockDescription))
+                .containsExactly(errorLogUtilCall1, errorLogUtilCall2);
+    }
+
+    @Test
     public void testResolutionMessage() {
         expect.that(mErrorLogUtilVerifier.getResolutionMessage())
                 .isEqualTo(
@@ -237,5 +381,12 @@ public class AdServicesErrorLogUtilWithExceptionVerifierTest extends AdServicesM
 
         // Return corresponding ErrorLogUtilCall object that is usually needed for verification
         return new ErrorLogUtilCall(throwable, errorCode, ppapiName, times);
+    }
+
+    private void mockDefaultParams(
+            Class<? extends Throwable> throwable, int errorCode, int ppapiName) {
+        doReturn(throwable).when(mDefaultParams).throwable();
+        when(mDefaultParams.errorCode()).thenReturn(errorCode);
+        when(mDefaultParams.ppapiName()).thenReturn(ppapiName);
     }
 }

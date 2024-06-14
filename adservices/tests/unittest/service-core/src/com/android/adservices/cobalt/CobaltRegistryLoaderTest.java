@@ -24,7 +24,6 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 import com.android.cobalt.domain.Project;
 import com.android.cobalt.registry.RegistryValidator;
 
-import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
@@ -77,7 +76,6 @@ public final class CobaltRegistryLoaderTest extends AdServicesUnitTestCase {
                         .isEqualTo(SystemProfileSelectionPolicy.REPORT_ALL);
                 assertThat(report.getStringSketchParams())
                         .isEqualTo(StringSketchParameters.getDefaultInstance());
-                assertThat(report.getIntBuckets()).isEqualTo(IntegerBuckets.getDefaultInstance());
                 assertThat(report.getLocalAggregationProcedurePercentileN()).isEqualTo(0);
                 assertThat(report.getExpeditedSending()).isFalse();
                 assertThat(report.getExperimentIdList()).isEmpty();
