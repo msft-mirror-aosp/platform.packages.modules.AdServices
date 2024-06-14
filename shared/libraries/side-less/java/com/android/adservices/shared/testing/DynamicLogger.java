@@ -18,11 +18,13 @@ package com.android.adservices.shared.testing;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * {@link RealLogger} implementation that uses reflection to delegate to the proper logger.
@@ -53,9 +55,7 @@ public final class DynamicLogger implements RealLogger {
         // while device-side are less likely to include tradefed
         Class<?> hostSideClass = getClass(loggerClass);
         if (hostSideClass != null) {
-            // TODO(b/338232806): use HostSideRealLogger instead (next CL)
-            realLogger = sFallbackLogger;
-            loggerClass = "System.out / System.err";
+            realLogger = new HostSideRealLogger(hostSideClass);
         } else {
             loggerClass = DeviceSideRealLogger.DELEGATE_CLASS;
             Class<?> deviceSideClass = getClass(loggerClass);
@@ -160,6 +160,11 @@ public final class DynamicLogger implements RealLogger {
         }
     }
 
+    @VisibleForTesting
+    static String getMessageWithFlattenedException(String msg, @Nullable Throwable t) {
+        return t == null ? msg : String.format(Locale.ENGLISH, "message=%s, exception=%s", msg, t);
+    }
+
     // To test it, run: atest AdServicesSharedLibrariesUnitTests:DeviceSideDynamicLoggerTest
     private static final class DeviceSideRealLogger implements RealLogger {
 
@@ -197,7 +202,7 @@ public final class DynamicLogger implements RealLogger {
         @FormatMethod
         public void log(
                 LogLevel level, String tag, @FormatString String msgFmt, Object... msgArgs) {
-            String msg = String.format(msgFmt, msgArgs);
+            String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
             switch (level) {
                 case WTF:
                     call(level, tag, mWtf, tag, msg);
@@ -230,7 +235,7 @@ public final class DynamicLogger implements RealLogger {
                 Throwable throwable,
                 @FormatString String msgFmt,
                 Object... msgArgs) {
-            String msg = String.format(msgFmt, msgArgs);
+            String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
             switch (level) {
                 case WTF:
                     call(level, tag, throwable, mExcWtf, tag, msg, throwable);
@@ -268,7 +273,98 @@ public final class DynamicLogger implements RealLogger {
     }
 
     // To test it, run: atest AdServicesSharedLibrariesHostTests:DeviceSideDynamicLoggerTest
-    private static final class HostSideRealLogger {
+    private static final class HostSideRealLogger implements RealLogger {
         private static final String DELEGATE_CLASS = "com.android.tradefed.log.LogUtil$CLog";
+
+        private final Method mWtf;
+        private final Method mExcWtf;
+        private final Method mE;
+        private final Method mExcE;
+        private final Method mW;
+        private final Method mExcW;
+        private final Method mI;
+        private final Method mD;
+        private final Method mV;
+
+        HostSideRealLogger(Class<?> logClass) {
+            System.out.println("YO: " + logClass);
+            mWtf = getMethod(logClass, "wtf", String.class);
+            mExcWtf = getMethod(logClass, "wtf", String.class, Throwable.class);
+            mE = getMethod(logClass, "e", String.class);
+            mExcE = getMethod(logClass, "e", Throwable.class);
+            mW = getMethod(logClass, "w", String.class);
+            mExcW = getMethod(logClass, "w", Throwable.class);
+            mI = getMethod(logClass, "i", String.class);
+            mD = getMethod(logClass, "d", String.class);
+            mV = getMethod(logClass, "v", String.class);
+        }
+
+        @FormatMethod
+        public void log(
+                LogLevel level, String tag, @FormatString String msgFmt, Object... msgArgs) {
+            log(level, tag, /* throwable= */ null, msgFmt, msgArgs);
+        }
+
+        @Override
+        @FormatMethod
+        public void log(
+                LogLevel level,
+                String tag,
+                @Nullable Throwable throwable,
+                @FormatString String msgFmt,
+                Object... msgArgs) {
+            String tagPrefix = "[" + tag + "]: ";
+            String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
+
+            switch (level) {
+                case WTF:
+                    if (throwable == null) {
+                        call(level, tag, mWtf, tagPrefix + msg);
+                    } else {
+                        call(level, tag, throwable, mExcWtf, tagPrefix + msg, throwable);
+                    }
+                    return;
+                case ERROR:
+                    // NOTE: CLog.e() and CLog.d() don't take a throwable and a message, so we need
+                    // to call both separately
+                    call(level, tag, mE, tagPrefix + msg);
+                    if (throwable != null) {
+                        call(level, tag, throwable, mExcE, throwable);
+                    }
+                    return;
+                case WARNING:
+                    call(level, tag, mW, tagPrefix + msg);
+                    if (throwable != null) {
+                        call(level, tag, throwable, mExcW, throwable);
+                    }
+                    return;
+                case INFO:
+                    // NOTE: CLog.i(), CLog.d(), and CLog.V() don't take a throwable at all, so
+                    // we need to "flatten" it (i.e., log just the exception, without the stack
+                    // trace)
+                    call(
+                            level,
+                            tag,
+                            mI,
+                            tagPrefix + getMessageWithFlattenedException(msg, throwable));
+                    return;
+                case DEBUG:
+                    call(
+                            level,
+                            tag,
+                            mD,
+                            tagPrefix + getMessageWithFlattenedException(msg, throwable));
+                    return;
+                case VERBOSE:
+                    call(
+                            level,
+                            tag,
+                            mV,
+                            tagPrefix + getMessageWithFlattenedException(msg, throwable));
+                    return;
+                default:
+                    call(LogLevel.WTF, tag, mWtf, tag, "invalid level (" + level + "): " + msg);
+            }
+        }
     }
 }
