@@ -89,13 +89,20 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @Before
     public void setUp() throws Exception {
         assumeTrue(mDeviceSupportUtils.isSdkSandboxSupported());
-        uninstallPackage(TEST_APP_STORAGE_PACKAGE);
+        try {
+            uninstallPackage(TEST_APP_STORAGE_PACKAGE);
+        } finally {
+            mUserUtils.removeSecondaryUserIfNecessary();
+        }
     }
 
     @After
     public void tearDown() throws Exception {
-        mUserUtils.removeSecondaryUserIfNecessary();
-        uninstallPackage(TEST_APP_STORAGE_PACKAGE);
+        try {
+            mUserUtils.removeSecondaryUserIfNecessary();
+        } finally {
+            uninstallPackage(TEST_APP_STORAGE_PACKAGE);
+        }
     }
 
     @Test
@@ -159,7 +166,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         // delete the new user
         final int newUser = mUserUtils.createAndStartSecondaryUser();
-        mUserUtils.removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ true);
+        mUserUtils.removeSecondaryUserIfNecessary();
 
         // Sdk Sandbox root directories should not exist as the user was removed
         final String ceSdkSandboxDataRootPath = getSdkDataRootPath(newUser, true);
@@ -703,8 +710,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertThat(getDevice().isDirectory(deAppPath)).isTrue();
         assertThat(getDevice().isDirectory(cePath)).isTrue();
         assertThat(getDevice().isDirectory(dePath)).isTrue();
-
-        mUserUtils.removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ true);
     }
 
     @Test
