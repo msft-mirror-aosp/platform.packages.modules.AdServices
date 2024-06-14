@@ -40,6 +40,8 @@ import androidx.test.uiautomator.UiDevice;
 
 import com.android.tests.codeprovider.storagetest_1.IStorageTestSdk1Api;
 
+import junit.framework.AssertionFailedError;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -146,16 +148,20 @@ public class SdkSandboxStorageTestApp {
         final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();
         final long appSizeUserStats =
                 finalUserStats.getDataBytes() - initialUserStats.getDataBytes();
-        assertThat(appSizeAppStats).isAtLeast(deltaAppSize);
-        assertThat(appSizeUserStats).isAtLeast(deltaAppSize);
+
+        // We can't guarantee that the initial app/user size we captured will not increase/decrease
+        // in between final capture. For exampel, some of use cache can be deleted by system in
+        // need of space. We therefore check for delta with some margin of error.
+        assertMostlyEquals("App size", deltaAppSize, appSizeAppStats, 10);
+        assertMostlyEquals("User size", deltaAppSize, appSizeUserStats, 20);
 
         // Assert cache size is same
         final long cacheSizeAppStats =
                 finalAppStats.getCacheBytes() - initialAppStats.getCacheBytes();
         final long cacheSizeUserStats =
                 finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes();
-        assertThat(cacheSizeAppStats).isAtLeast(deltaCacheSize);
-        assertThat(cacheSizeUserStats).isAtLeast(deltaCacheSize);
+        assertMostlyEquals("App cache", deltaCacheSize, cacheSizeAppStats, 10);
+        assertMostlyEquals("User cache", deltaCacheSize, cacheSizeUserStats, 20);
     }
 
     private static void assertDirIsNotAccessible(String path) {
@@ -168,5 +174,21 @@ public class SdkSandboxStorageTestApp {
         assertThat(exception.getMessage()).doesNotContain(JAVA_FILE_NOT_FOUND_MSG);
 
         assertThat(new File(path).canExecute()).isFalse();
+    }
+
+    private static void assertMostlyEquals(
+            String noun, long expected, long actual, long errorMarginInPercentage) {
+        final double diffInSize = Math.abs(expected - actual);
+        final double diffInPercentage = (diffInSize / expected) * 100;
+        if (diffInPercentage > errorMarginInPercentage) {
+            throw new AssertionFailedError(
+                    noun
+                            + " was expected to be roughly "
+                            + expected
+                            + " but was "
+                            + actual
+                            + ". Diff in percentage: "
+                            + Math.round(diffInPercentage * 100) / 100.00);
+        }
     }
 }
