@@ -19,17 +19,17 @@ package com.android.adservices.service.signals;
 import static com.android.adservices.service.signals.SignalsFixture.assertSignalsUnorderedListEqualsExceptIdAndTime;
 import static com.android.adservices.service.signals.SignalsFixture.intToBase64;
 import static com.android.adservices.service.signals.SignalsFixture.intToBytes;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
@@ -62,11 +62,12 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
+import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FledgeConsentFilter;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
 import com.android.adservices.service.common.RetryStrategy;
-import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
@@ -132,8 +133,9 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
-    @Mock private Throttler mMockThrottler;
+    @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
     @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImplMock;
 
@@ -233,17 +235,14 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         mProtectedSignalsServiceFilter =
                 new ProtectedSignalsServiceFilter(
                         mContextSpy,
-                        mConsentManagerMock,
+                        mFledgeConsentFilterMock,
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
                         mAppImportanceFilterMock,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilterSpy,
-                        mMockThrottler);
-        when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
-                .thenReturn(false);
+                        mFledgeApiThrottleFilterMock);
         when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
 
-        when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true);
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
                 .createDevContext();
