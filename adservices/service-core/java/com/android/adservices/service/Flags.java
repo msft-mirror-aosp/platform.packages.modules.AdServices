@@ -437,8 +437,8 @@ public interface Flags extends ModuleSharedFlags {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2867"
-                    + "/799a2e308daf8ccaa2fe9c9ef71b115a7f4a41c8";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/4503"
+                    + "/fecd522d3dcfbe1b3b1f1054947be8528be43e97";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
@@ -701,7 +701,8 @@ public interface Flags extends ModuleSharedFlags {
      * Returns the maximum number of reporting origins per source site, reporting site,
      * reporting-origin-update-window counted per source registration.
      */
-    default int getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
+    default int
+        getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
         return MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW;
     }
 
@@ -747,13 +748,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the duration that controls the rate-limiting window for destinations. */
     default long getMeasurementDestinationRateLimitWindow() {
         return MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
-    }
-
-    boolean MEASUREMENT_FLEX_LITE_API_ENABLED = true;
-
-    /** Returns true if flex lite api is enabled else false. */
-    default boolean getMeasurementFlexLiteApiEnabled() {
-        return MEASUREMENT_FLEX_LITE_API_ENABLED;
     }
 
     float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT = 6.5F;
@@ -1847,6 +1841,20 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether the fledge GetAdSelectionData payload metrics are enabled. */
     default boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
         return FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED;
+    }
+
+    @FeatureFlag boolean FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED = false;
+
+    /** Returns whether the seller configuration feature for getAdSelectionData is enabled. */
+    default boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+        return FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
+    }
+
+    @FeatureFlag int FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION = 0;
+
+    /** Returns the getAdSelectionData data buyer input creator version */
+    default int getFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
+        return FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
     }
 
     // Protected signals cleanup feature flag disabled by default
@@ -3925,14 +3933,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING;
     }
 
-    /** Default Measurement scoped attribution rate limit feature flag. */
-    boolean MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT = true;
-
-    /** Returns whether Measurement scoped attribution rate limit feature is enabled. */
-    default boolean getMeasurementEnableScopedAttributionRateLimit() {
-        return MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT;
-    }
-
     /** Default Measurement app package name logging flag. */
     boolean MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING = true;
 
@@ -4520,7 +4520,7 @@ public interface Flags extends ModuleSharedFlags {
 
     /** Returns true when attribution scope is enabled. */
     default boolean getMeasurementEnableAttributionScope() {
-        return getMeasurementFlexLiteApiEnabled() && MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
+        return MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
     }
 
     boolean MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK = false;
@@ -4601,7 +4601,7 @@ public interface Flags extends ModuleSharedFlags {
      * Default value of whether cobalt logging feature is enabled for source and trigger
      * registrations in measurement service.
      */
-    boolean MSMT_REGISTRATION_COBALT_LOGGING_ENABLED = false;
+    @FeatureFlag boolean MSMT_REGISTRATION_COBALT_LOGGING_ENABLED = false;
 
     /**
      * Returns whether the cobalt logging feature is enabled for source and trigger registration in
@@ -4613,6 +4613,40 @@ public interface Flags extends ModuleSharedFlags {
      */
     default boolean getMsmtRegistrationCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled() && MSMT_REGISTRATION_COBALT_LOGGING_ENABLED;
+    }
+
+    /**
+     * Default value of whether cobalt logging feature is enabled for attribution metrics in
+     * measurement service.
+     */
+    @FeatureFlag boolean MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns whether the cobalt logging feature is enabled for attribution metrics in measurement
+     * service .
+     *
+     * <p>The cobalt logging for measurement registration will be disabled either the {@code
+     * getCobaltLoggingEnabled} or {@code MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED} is {@code false}.
+     */
+    default boolean getMsmtAttributionCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled() && MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED;
+    }
+
+    /**
+     * Default value of whether cobalt logging feature is enabled for reporting metrics in
+     * measurement service.
+     */
+    @FeatureFlag boolean MSMT_REPORTING_COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns whether the cobalt logging feature is enabled for reporting metrics in measurement
+     * service .
+     *
+     * <p>The cobalt logging for measurement registration will be disabled either the {@code
+     * getCobaltLoggingEnabled} or {@code MSMT_REPORTING_COBALT_LOGGING_ENABLED} is {@code false}.
+     */
+    default boolean getMsmtReportingCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled() && MSMT_REPORTING_COBALT_LOGGING_ENABLED;
     }
 
     /** Default value of whether app name and api error cobalt logging feature is enabled. */

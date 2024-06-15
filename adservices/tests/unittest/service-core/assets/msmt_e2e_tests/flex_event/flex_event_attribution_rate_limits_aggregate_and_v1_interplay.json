@@ -177,15 +177,21 @@
     "reports": [
       {
         "payload": {
-          "attribution_destination": "android-app://com.destination",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://com.destination",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "3601",
+            "source_registration_time": "0",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x559",
               "value": 123
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601000"

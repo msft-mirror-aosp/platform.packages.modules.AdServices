@@ -25,7 +25,7 @@ import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.android.adservices.shared.meta_testing.FakeLogger;
-import com.android.adservices.shared.meta_testing.LogEntry;
+import com.android.adservices.shared.testing.LogEntry;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.Nullable;
@@ -118,6 +118,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     }
 
     // NOTE: currently it just need one method, so we're always returning poll()
+
     /** Gets the name of the method returned by {@link #call(SyncCallback)}. */
     private String getSetCalledMethodName() throws InterruptedException {
         String methodName = mSetCalledMethodQueue.poll(CALLBACK_TIMEOUT_MS, MILLISECONDS);
@@ -132,28 +133,24 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     }
 
     /**
-     * {@code testHasExpectedConstructors} expects that the callback class has 2 constructors; if it
-     * uses a factory approach instead, it should override this method to return {@code true}.
+     * {@code SyncCallback}s are expected to have 2 constructors (1 that doesn't take any parameter
+     * and 1 that takes a {@link SyncCallbackSettings}), so this methods return {@code true} by
+     * default, but should be overridden to return {@code false} if that's not the case (for
+     * example, if the {@code SyncCallback} uses a factory method or if it needs extra parameters
+     * like a {@code Context}.
      */
-    protected boolean usesFactoryApproach() {
-        return false;
+    protected boolean providesExpectedConstructors() {
+        return true;
     }
 
     /**
      * Abstraction to "call" the callback.
      *
-     * <p>By default it will call {@code setCalled()}, but should be overridden by subclasses that
-     * support results.
+     * <p><b>Note:</b> must just call the callback right away, not in a background thread.
      *
-     * @return name of the method called
+     * @return representation of the method called (like "setCalled()" or "inject(foo)").
      */
-    protected String callCallback(CB callback) {
-        if (callback instanceof ResultlessSyncCallback) {
-            ((ResultlessSyncCallback) callback).setCalled();
-            return "setCalled()";
-        }
-        throw new UnsupportedOperationException(getClass() + " must override call(callback)");
-    }
+    protected abstract String callCallback(CB callback);
 
     /**
      * Checks whether the callback supports being constructor with a {@link SyncCallbackSettings
@@ -179,7 +176,8 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
     @Test
     public final void testHasExpectedConstructors() throws Exception {
-        assumeFalse("callback uses factory approach", usesFactoryApproach());
+        assumeTrue(
+                "callback doesn't provide expected constructors", providesExpectedConstructors());
 
         CB callback = newFrozenCallback(mDefaultSettings);
         @SuppressWarnings("unchecked")
@@ -465,9 +463,9 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
         expectLoggedCalls(
                 log.d(setCalled + " called on " + mainThread.getName()),
-                        log.v(setCalled + " returning"),
+                log.v(setCalled + " returning"),
                 log.d("assertCalled() called on " + currentThread().getName()),
-                        log.e("assertCalled() failed: " + thrown));
+                log.e("assertCalled() failed: " + thrown));
     }
 
     /** Helper method to assert the value of {@code isCalled()}. */

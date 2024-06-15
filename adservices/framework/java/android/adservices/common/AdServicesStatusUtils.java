@@ -242,6 +242,14 @@ public final class AdServicesStatusUtils {
      */
     public static final int STATUS_PROVIDER_SERVICE_INTERNAL_ERROR = 28;
 
+    /**
+     * The scheduleCustomAudienceUpdate() request failed because an existing update has not been
+     * executed yet and should be explicitly replaced by the caller.
+     *
+     * <p>This error throws an {@link IllegalStateException}.
+     */
+    public static final int STATUS_UPDATE_ALREADY_PENDING_ERROR = 29;
+
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
 
@@ -304,6 +312,13 @@ public final class AdServicesStatusUtils {
     /** The error message to be returned along with {@link ServiceUnavailableException}. */
     public static final String SERVICE_UNAVAILABLE_ERROR_MESSAGE = "Service is not available.";
 
+    /**
+     * The error message returned when a call to schedule a custom audience update fails because of
+     * an existing pending update.
+     */
+    public static final String UPDATE_ALREADY_PENDING_ERROR_MESSAGE =
+            "Failed to schedule update. A request is already pending.";
+
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
         return statusCode == STATUS_SUCCESS;
@@ -345,6 +360,8 @@ public final class AdServicesStatusUtils {
                 return new IllegalStateException(ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
             case STATUS_ADSERVICES_ACTIVITY_DISABLED:
                 return new IllegalStateException(ILLEGAL_STATE_ACTIVITY_DISABLED_ERROR_MESSAGE);
+            case STATUS_UPDATE_ALREADY_PENDING_ERROR:
+                return new IllegalStateException(UPDATE_ALREADY_PENDING_ERROR_MESSAGE);
             case STATUS_UNAUTHORIZED:
                 return new SecurityException(
                         SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
@@ -407,6 +424,7 @@ public final class AdServicesStatusUtils {
                 STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
                 STATUS_CALLBACK_SHUTDOWN,
                 STATUS_PROVIDER_SERVICE_INTERNAL_ERROR,
+                STATUS_UPDATE_ALREADY_PENDING_ERROR,
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}
