@@ -32,28 +32,12 @@
         <option name="package" value="com.android.adservices.tests.cts.topics.mdd"/>
     </test>
 
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
-        <option name="run-command" value="device_config put adservices global_kill_switch false" />
-        <option name="run-command" value="device_config put adservices topics_kill_switch false" />
-        <!-- Override Consent Manager to debug mode to grant user consent -->
-        <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
-        <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
-        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE" />
-        <!-- Override the flag to disable Topics enrollment check. -->
-        <option name="run-command" value="device_config put adservices disable_topics_enrollment_check true" />
-
-        <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
-        <option name="teardown-command" value="device_config put adservices disable_topics_enrollment_check false" />
-
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-    </target_preparer>
-
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
         <option name="mainline-module-package-name" value="com.google.android.adservices"/>
     </object>
+
     <option name="config-descriptor:metadata" key="mainline-param" value="com.google.android.adservices.apex" />
+
+    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
 </configuration>

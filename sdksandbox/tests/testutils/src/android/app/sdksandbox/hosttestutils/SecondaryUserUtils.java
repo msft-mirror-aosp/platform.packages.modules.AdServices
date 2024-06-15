@@ -17,6 +17,7 @@
 package android.app.sdksandbox.hosttestutils;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.fail;
 
@@ -53,10 +54,6 @@ public class SecondaryUserUtils {
     }
 
     public void removeSecondaryUserIfNecessary() throws Exception {
-        removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ false);
-    }
-
-    public void removeSecondaryUserIfNecessary(boolean waitForUserDataDeletion) throws Exception {
         if (mSecondaryUserId == -1) {
             return;
         }
@@ -68,10 +65,8 @@ public class SecondaryUserUtils {
         if (mOriginalUserId != -1 && userBeingRemoved != -1) {
             // Can't remove the 2nd user without switching out of it
             assertThat(mTest.getDevice().switchUser(mOriginalUserId)).isTrue();
-            mTest.getDevice().removeUser(userBeingRemoved);
-            if (waitForUserDataDeletion) {
-                waitForUserDataDeletion(userBeingRemoved);
-            }
+            removeUser(userBeingRemoved);
+            waitForUserDataDeletion(userBeingRemoved);
         }
     }
 
@@ -84,6 +79,13 @@ public class SecondaryUserUtils {
             Thread.sleep(POLL_INTERVAL_IN_MILLIS);
         }
         fail("Could not switch to user " + mSecondaryUserId);
+    }
+
+    // TODO(b/346794242): Remove this method once tradefed adds api for removing user with wait.
+    private void removeUser(int userId) throws Exception {
+        assertWithMessage("Remove user command output")
+                .that(mTest.getDevice().executeShellCommand("pm remove-user --wait " + userId))
+                .contains("Success: removed user");
     }
 
     private void waitForUserDataDeletion(int userId) throws Exception {

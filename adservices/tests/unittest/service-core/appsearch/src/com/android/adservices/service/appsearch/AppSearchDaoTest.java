@@ -78,9 +78,7 @@ public class AppSearchDaoTest {
     @Mock Flags mFlags;
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final String mAdServicesPackageName =
-            AppSearchConsentWorker.getAdServicesPackageName(mContext);
-
+    private String mAdServicesPackageName;
     private static final String ID = "1";
     private static final String NAMESPACE = "consent";
     private static final String API_TYPE = "CONSENT-TOPICS";
@@ -106,6 +104,9 @@ public class AppSearchDaoTest {
 
     @Before
     public void before() {
+        // TODO(b/347043278): must be set inside @Before so it's not called when device is not
+        // supported
+        mAdServicesPackageName = AppSearchConsentWorker.getAdServicesPackageName(mContext);
         MockitoAnnotations.initMocks(this);
         when(mFlags.getAppsearchWriterAllowListOverride()).thenReturn("");
         when(mFlags.getAppSearchReadTimeout()).thenReturn(APPSEARCH_READ_TIMEOUT_MS);

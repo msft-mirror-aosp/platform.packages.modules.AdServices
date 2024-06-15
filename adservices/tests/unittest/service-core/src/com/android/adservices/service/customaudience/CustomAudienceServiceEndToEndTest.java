@@ -25,10 +25,6 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
 
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponse;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseString;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ACTIVATION_TIME;
@@ -67,7 +63,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesPermissions;
@@ -118,7 +113,9 @@ import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
+import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FledgeConsentFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
 import com.android.adservices.service.common.Throttler;
@@ -233,12 +230,13 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private MockitoSession mStaticMockSession = null;
 
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
     @Mock private CustomAudienceQuantityChecker mCustomAudienceQuantityCheckerMock;
     @Mock private CustomAudienceValidator mCustomAudienceValidatorMock;
 
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilter;
-    @Mock private Throttler mMockThrottler;
+    @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilter;
 
     private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy;
@@ -318,7 +316,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 CONTEXT,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
@@ -327,26 +325,12 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
                                         COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDao,
                                 mFrequencyCapDao,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED));
 
-        Mockito.lenient()
-                .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
-                .thenReturn(true);
-        Mockito.lenient()
-                .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_FETCH_CUSTOM_AUDIENCE), anyString()))
-                .thenReturn(true);
-        Mockito.lenient()
-                .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
-                .thenReturn(true);
-        Mockito.lenient()
-                .when(
-                        mMockThrottler.tryAcquire(
-                                eq(FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE), anyString()))
-                .thenReturn(true);
         Mockito.doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilter)
                 .createDevContext();
@@ -408,7 +392,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 CONTEXT,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
@@ -417,7 +401,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
                                         COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDao,
                                 mFrequencyCapDao,
@@ -1134,7 +1118,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 CONTEXT,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
@@ -1143,7 +1127,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
                                         COMMON_FLAGS_WITH_FILTERS_ENABLED, mAdServicesLoggerMock),
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDao,
                                 mFrequencyCapDao,
@@ -2976,7 +2960,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     CallingAppUidSupplierProcessImpl.create(),
                                     new CustomAudienceServiceFilter(
                                             CONTEXT,
-                                            mConsentManagerMock,
+                                            mFledgeConsentFilterMock,
                                             flagsWithLowRateLimit,
                                             mAppImportanceFilter,
                                             new FledgeAuthorizationFilter(
@@ -2985,7 +2969,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                                     mAdServicesLoggerMock),
                                             new FledgeAllowListsFilter(
                                                     flagsWithLowRateLimit, mAdServicesLoggerMock),
-                                            Throttler.getInstance(flagsWithLowRateLimit)),
+                                            new FledgeApiThrottleFilter(
+                                                    Throttler.getInstance(flagsWithLowRateLimit),
+                                                    mAdServicesLoggerMock)),
                                     new AdFilteringFeatureFactory(
                                             mAppInstallDao,
                                             mFrequencyCapDao,
@@ -3199,7 +3185,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 CONTEXT,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 flags,
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
@@ -3207,7 +3193,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(flags, mAdServicesLoggerMock),
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags));
     }
 

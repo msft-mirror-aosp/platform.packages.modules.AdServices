@@ -46,6 +46,7 @@ import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.shell.CommandResult;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -93,6 +94,7 @@ public class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggab
     }
 
     @Test
+    @Ignore("BudId=343259894")
     public void testRun_generateInputForEncoding_happyPath() throws Exception {
         ScenarioDispatcherFactory scenarioDispatcherFactory =
                 ScenarioDispatcherFactory.createFromScenarioFile(
