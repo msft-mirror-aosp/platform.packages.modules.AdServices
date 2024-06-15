@@ -25,7 +25,7 @@ import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.android.adservices.shared.meta_testing.FakeLogger;
-import com.android.adservices.shared.meta_testing.LogEntry;
+import com.android.adservices.shared.testing.LogEntry;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.Nullable;

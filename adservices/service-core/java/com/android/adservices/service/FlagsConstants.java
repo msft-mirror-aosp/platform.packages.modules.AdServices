@@ -122,6 +122,10 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_COBALT_LOGGING_ENABLED = "topics_cobalt_logging_enabled";
     public static final String KEY_MSMT_REGISTRATION_COBALT_LOGGING_ENABLED =
             "msmt_registration_cobalt_logging_enabled";
+    public static final String KEY_MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED =
+            "msmt_attribution_cobalt_logging_enabled";
+    public static final String KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED =
+            "msmt_reporting_cobalt_logging_enabled";
     public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED =
             "app_name_api_error_cobalt_logging_enabled";
     public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE =

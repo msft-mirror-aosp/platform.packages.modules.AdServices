@@ -4601,7 +4601,7 @@ public interface Flags extends ModuleSharedFlags {
      * Default value of whether cobalt logging feature is enabled for source and trigger
      * registrations in measurement service.
      */
-    boolean MSMT_REGISTRATION_COBALT_LOGGING_ENABLED = false;
+    @FeatureFlag boolean MSMT_REGISTRATION_COBALT_LOGGING_ENABLED = false;
 
     /**
      * Returns whether the cobalt logging feature is enabled for source and trigger registration in
@@ -4613,6 +4613,40 @@ public interface Flags extends ModuleSharedFlags {
      */
     default boolean getMsmtRegistrationCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled() && MSMT_REGISTRATION_COBALT_LOGGING_ENABLED;
+    }
+
+    /**
+     * Default value of whether cobalt logging feature is enabled for attribution metrics in
+     * measurement service.
+     */
+    @FeatureFlag boolean MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns whether the cobalt logging feature is enabled for attribution metrics in measurement
+     * service .
+     *
+     * <p>The cobalt logging for measurement registration will be disabled either the {@code
+     * getCobaltLoggingEnabled} or {@code MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED} is {@code false}.
+     */
+    default boolean getMsmtAttributionCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled() && MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED;
+    }
+
+    /**
+     * Default value of whether cobalt logging feature is enabled for reporting metrics in
+     * measurement service.
+     */
+    @FeatureFlag boolean MSMT_REPORTING_COBALT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns whether the cobalt logging feature is enabled for reporting metrics in measurement
+     * service .
+     *
+     * <p>The cobalt logging for measurement registration will be disabled either the {@code
+     * getCobaltLoggingEnabled} or {@code MSMT_REPORTING_COBALT_LOGGING_ENABLED} is {@code false}.
+     */
+    default boolean getMsmtReportingCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled() && MSMT_REPORTING_COBALT_LOGGING_ENABLED;
     }
 
     /** Default value of whether app name and api error cobalt logging feature is enabled. */
