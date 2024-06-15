@@ -15,15 +15,9 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-public abstract class AbstractResultlessSyncCallback extends AbstractSyncCallback
-        implements ResultlessSyncCallback {
+public abstract class AbstractResultlessSyncCallback extends AbstractSyncCallback {
 
     public AbstractResultlessSyncCallback(SyncCallbackSettings settings) {
         super(settings);
-    }
-
-    @Override
-    public final void setCalled() {
-        internalSetCalled("setCalled()");
     }
 }

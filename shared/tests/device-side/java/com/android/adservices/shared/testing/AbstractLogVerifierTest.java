@@ -55,6 +55,44 @@ public final class AbstractLogVerifierTest extends SharedMockitoTestCase {
     @Mock private Description mDescription;
 
     @Test
+    public void testValidateTimes_withLessThanZeroTimes_throwsException() {
+        TestLogVerifier testLogVerifier = new TestLogVerifier(ImmutableSet.of());
+
+        Exception exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> testLogVerifier.validateTimes(-1, "TestAnnotation"));
+
+        expect.that(exception)
+                .hasMessageThat()
+                .contains("Detected @TestAnnotation with times < 0!");
+    }
+
+    @Test
+    public void testValidateTimes_withZeroTimes_throwsException() {
+        TestLogVerifier testLogVerifier = new TestLogVerifier(ImmutableSet.of());
+
+        Exception exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> testLogVerifier.validateTimes(0, "TestAnnotation"));
+
+        expect.that(exception)
+                .hasMessageThat()
+                .contains(
+                        "Detected @TestAnnotation with times = 0. Remove annotation as the test"
+                                + " will automatically fail if any log calls are detected.");
+    }
+
+    @Test
+    public void testValidateTimes_withGreaterThanZeroTimes_throwsNoException() {
+        TestLogVerifier testLogVerifier = new TestLogVerifier(ImmutableSet.of());
+        testLogVerifier.validateTimes(1, "TestAnnotation");
+
+        testLogVerifier.verify(mDescription);
+    }
+
+    @Test
     public void testVerify_withNoExpectedAndActualCalls_throwsNoException() {
         TestLogVerifier testLogVerifier = new TestLogVerifier(ImmutableSet.of());
         testLogVerifier.verify(mDescription);

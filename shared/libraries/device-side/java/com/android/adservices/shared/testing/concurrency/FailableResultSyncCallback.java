@@ -196,12 +196,4 @@ public class FailableResultSyncCallback<R, F> extends AbstractSyncCallback
             return String.valueOf(isResult ? result : failure);
         }
     }
-
-    private static @Nullable Object getResultOrValue(Object value) {
-        if (!(value instanceof ResultOrFailure)) {
-            return null;
-        }
-        ResultOrFailure<?, ?> rof = (ResultOrFailure<?, ?>) value;
-        return rof.isResult ? rof.result : rof.failure;
-    }
 }
