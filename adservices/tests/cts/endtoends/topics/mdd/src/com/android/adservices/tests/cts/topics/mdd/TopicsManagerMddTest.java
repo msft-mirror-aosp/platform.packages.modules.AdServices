@@ -19,6 +19,7 @@ package com.android.adservices.tests.cts.topics.mdd;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.compatibility.common.util.ShellUtils.runShellCommand;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -31,7 +32,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -169,7 +169,7 @@ public final class TopicsManagerMddTest extends CtsAdServicesMddTestCase {
 
     private void triggerAndWaitForMddToFinishDownload() throws InterruptedException {
         // Forces JobScheduler to run Mdd.
-        ShellUtils.runShellCommand(
+        runShellCommand(
                 "cmd jobscheduler run -f"
                         + " "
                         + mAdServicesPackageName
@@ -182,7 +182,6 @@ public final class TopicsManagerMddTest extends CtsAdServicesMddTestCase {
 
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
-        ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + mAdServicesPackageName + " " + EPOCH_JOB_ID);
+        runShellCommand("cmd jobscheduler run -f %s %d", mAdServicesPackageName, EPOCH_JOB_ID);
     }
 }

@@ -46,15 +46,22 @@ public final class DynamicLogger implements RealLogger {
 
     private DynamicLogger() {
         RealLogger realLogger = null;
-        String loggerClass = DeviceSideRealLogger.DELEGATE_CLASS;
+        String loggerClass = HostSideRealLogger.DELEGATE_CLASS;
 
-        // Try device-side first, as it's the most common case
-        Class<?> deviceSideClass = getClass(loggerClass);
-        if (deviceSideClass != null) {
-            realLogger = new DeviceSideRealLogger(deviceSideClass);
-            // TODO(b/338232806): add else statement that tries to create a ConsoleLogger
-            // (using "com.android.tradefed.log.LogUtil.CLog"); would require setting a new project
-            // for host-side tests first (so we can have a HostSideDynamicLoggerTest)
+        // Ideally we should check for device-side first as that's the most common case, but it's
+        // possible that host-side tests included the Android SDK in their classpath somehow,
+        // while device-side are less likely to include tradefed
+        Class<?> hostSideClass = getClass(loggerClass);
+        if (hostSideClass != null) {
+            // TODO(b/338232806): use HostSideRealLogger instead (next CL)
+            realLogger = sFallbackLogger;
+            loggerClass = "System.out / System.err";
+        } else {
+            loggerClass = DeviceSideRealLogger.DELEGATE_CLASS;
+            Class<?> deviceSideClass = getClass(loggerClass);
+            if (deviceSideClass != null) {
+                realLogger = new DeviceSideRealLogger(deviceSideClass);
+            }
         }
         if (realLogger == null) {
             // Worst-case scenario, fall back to standard streams...
@@ -258,5 +265,10 @@ public final class DynamicLogger implements RealLogger {
         public String toString() {
             return getClass().getSimpleName() + "[" + DELEGATE_CLASS + "]";
         }
+    }
+
+    // To test it, run: atest AdServicesSharedLibrariesHostTests:DeviceSideDynamicLoggerTest
+    private static final class HostSideRealLogger {
+        private static final String DELEGATE_CLASS = "com.android.tradefed.log.LogUtil$CLog";
     }
 }
