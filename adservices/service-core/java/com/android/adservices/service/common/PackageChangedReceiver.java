@@ -279,7 +279,10 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 () ->
                         getCustomAudienceDatabase(context)
                                 .customAudienceDao()
-                                .deleteCustomAudienceDataByOwner(packageUri.toString()));
+                                .deleteCustomAudienceDataByOwner(
+                                        packageUri.toString(),
+                                        FlagsFactory.getFlags()
+                                                .getFledgeFetchCustomAudienceEnabled()));
         if (sFrequencyCapFilteringEnabled) {
             LogUtil.d("Deleting frequency cap histogram data for package: " + packageUri);
             sBackgroundExecutor.execute(

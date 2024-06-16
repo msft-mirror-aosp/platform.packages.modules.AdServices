@@ -36,6 +36,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -49,10 +50,16 @@ public final class AppSearchMeasurementRollbackDaoTest extends AdServicesExtende
     private static final long APEX_VERSION = 100L;
 
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
-    private final String mAdServicePackageName =
-            AppSearchConsentWorker.getAdServicesPackageName(mContext);
+    private String mAdServicePackageName;
     private final ListenableFuture<AppSearchSession> mAppSearchSession =
             Futures.immediateFuture(null);
+
+    @Before
+    public void setup() {
+        // TODO(b/347043278): must be set inside @Before so it's not called when device is not
+        // supported
+        mAdServicePackageName = AppSearchConsentWorker.getAdServicesPackageName(mContext);
+    }
 
     @Test
     public void testGetProperties() {
