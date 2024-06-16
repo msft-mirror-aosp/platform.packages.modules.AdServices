@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.cts;
 
 import static android.adservices.adselection.SellerConfigurationFixture.PER_BUYER_CONFIGURATION_1;
 import static android.adservices.adselection.SellerConfigurationFixture.PER_BUYER_CONFIGURATION_2;
@@ -23,9 +23,11 @@ import static android.adservices.adselection.SellerConfigurationFixture.SELLER_T
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.adselection.PerBuyerConfiguration;
+import android.adservices.adselection.SellerConfiguration;
 import android.os.Parcel;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesCtsTestCase;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -33,8 +35,7 @@ import org.junit.Test;
 
 import java.util.Set;
 
-// TODO(b/342332791): move these tests to cts after unhiding
-public class SellerConfigurationTest extends AdServicesUnitTestCase {
+public class SellerConfigurationTest extends AdServicesCtsTestCase {
 
     public static final Set<PerBuyerConfiguration> PER_BUYER_CONFIGURATIONS =
             ImmutableSet.of(PER_BUYER_CONFIGURATION_1, PER_BUYER_CONFIGURATION_2);
@@ -44,10 +45,10 @@ public class SellerConfigurationTest extends AdServicesUnitTestCase {
         SellerConfiguration sellerConfiguration =
                 new SellerConfiguration.Builder()
                         .setPerBuyerConfigurations(PER_BUYER_CONFIGURATIONS)
-                        .setTargetPayloadSizeBytes(SELLER_TARGET_SIZE_B)
+                        .setMaximumPayloadSizeBytes(SELLER_TARGET_SIZE_B)
                         .build();
 
-        expect.that(sellerConfiguration.getTargetPayloadSizeBytes())
+        expect.that(sellerConfiguration.getMaximumPayloadSizeBytes())
                 .isEqualTo(SELLER_TARGET_SIZE_B);
         expect.that(sellerConfiguration.getPerBuyerConfigurations())
                 .isEqualTo(PER_BUYER_CONFIGURATIONS);
@@ -57,12 +58,12 @@ public class SellerConfigurationTest extends AdServicesUnitTestCase {
     public void testSellerConfiguration_withoutPerBuyerConfigurations_success() {
         SellerConfiguration sellerConfiguration =
                 new SellerConfiguration.Builder()
-                        .setTargetPayloadSizeBytes(SELLER_TARGET_SIZE_B)
+                        .setMaximumPayloadSizeBytes(SELLER_TARGET_SIZE_B)
                         .build();
 
-        expect.that(sellerConfiguration.getTargetPayloadSizeBytes())
+        expect.that(sellerConfiguration.getMaximumPayloadSizeBytes())
                 .isEqualTo(SELLER_TARGET_SIZE_B);
-        expect.that(sellerConfiguration.getPerBuyerConfigurations()).isNull();
+        expect.that(sellerConfiguration.getPerBuyerConfigurations()).isEmpty();
     }
 
     @Test
@@ -70,7 +71,7 @@ public class SellerConfigurationTest extends AdServicesUnitTestCase {
         SellerConfiguration sellerConfiguration =
                 new SellerConfiguration.Builder()
                         .setPerBuyerConfigurations(PER_BUYER_CONFIGURATIONS)
-                        .setTargetPayloadSizeBytes(SELLER_TARGET_SIZE_B)
+                        .setMaximumPayloadSizeBytes(SELLER_TARGET_SIZE_B)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -78,7 +79,7 @@ public class SellerConfigurationTest extends AdServicesUnitTestCase {
         p.setDataPosition(0);
         SellerConfiguration fromParcel = SellerConfiguration.CREATOR.createFromParcel(p);
 
-        expect.that(fromParcel.getTargetPayloadSizeBytes()).isEqualTo(SELLER_TARGET_SIZE_B);
+        expect.that(fromParcel.getMaximumPayloadSizeBytes()).isEqualTo(SELLER_TARGET_SIZE_B);
         expect.that(fromParcel.getPerBuyerConfigurations()).isEqualTo(PER_BUYER_CONFIGURATIONS);
     }
 
@@ -87,7 +88,7 @@ public class SellerConfigurationTest extends AdServicesUnitTestCase {
         SellerConfiguration sellerConfiguration =
                 new SellerConfiguration.Builder()
                         .setPerBuyerConfigurations(PER_BUYER_CONFIGURATIONS)
-                        .setTargetPayloadSizeBytes(SELLER_TARGET_SIZE_B)
+                        .setMaximumPayloadSizeBytes(SELLER_TARGET_SIZE_B)
                         .build();
 
         assertThrows(NullPointerException.class, () -> sellerConfiguration.writeToParcel(null, 0));
@@ -97,7 +98,7 @@ public class SellerConfigurationTest extends AdServicesUnitTestCase {
     public void testParcelSellerConfigurationWithoutPerBuyerConfiguration() {
         SellerConfiguration sellerConfiguration =
                 new SellerConfiguration.Builder()
-                        .setTargetPayloadSizeBytes(SELLER_TARGET_SIZE_B)
+                        .setMaximumPayloadSizeBytes(SELLER_TARGET_SIZE_B)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -105,28 +106,39 @@ public class SellerConfigurationTest extends AdServicesUnitTestCase {
         p.setDataPosition(0);
         SellerConfiguration fromParcel = SellerConfiguration.CREATOR.createFromParcel(p);
 
-        expect.that(fromParcel.getTargetPayloadSizeBytes()).isEqualTo(SELLER_TARGET_SIZE_B);
-        expect.that(fromParcel.getPerBuyerConfigurations()).isNull();
+        expect.that(fromParcel.getMaximumPayloadSizeBytes()).isEqualTo(SELLER_TARGET_SIZE_B);
+        expect.that(fromParcel.getPerBuyerConfigurations()).isEmpty();
     }
 
     @Test
     public void testSellerConfiguration_withNegativeTargetSize_throws() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SellerConfiguration.Builder().setTargetPayloadSizeBytes(-1).build());
+                () -> new SellerConfiguration.Builder().setMaximumPayloadSizeBytes(-1).build());
     }
 
     @Test
     public void testSellerConfiguration_withZeroTargetSize_throws() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SellerConfiguration.Builder().setTargetPayloadSizeBytes(0).build());
+                () -> new SellerConfiguration.Builder().setMaximumPayloadSizeBytes(0).build());
+    }
+
+    @Test
+    public void testSellerConfiguration_withNullPerBuyerConfiguration_throws() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new SellerConfiguration.Builder()
+                                .setMaximumPayloadSizeBytes(SELLER_TARGET_SIZE_B)
+                                .setPerBuyerConfigurations(null)
+                                .build());
     }
 
     @Test
     public void testSellerConfiguration_withTargetSizeNotSet_throws() {
         assertThrows(
-                IllegalArgumentException.class,
+                IllegalStateException.class,
                 () ->
                         new SellerConfiguration.Builder()
                                 .setPerBuyerConfigurations(PER_BUYER_CONFIGURATIONS)

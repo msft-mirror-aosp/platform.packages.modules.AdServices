@@ -55,7 +55,12 @@ public class ResultSyncCallback<R> extends DeviceSideSyncCallback
 
     @Override
     public final void injectResult(@Nullable R result) {
-        StringBuilder methodName = new StringBuilder("injectResult(").append(result);
+        internalInjectResult("injectResult", result);
+    }
+
+    // TODO(b/342448771): Make this method package protected
+    protected final void internalInjectResult(String name, @Nullable R result) {
+        StringBuilder methodName = new StringBuilder(name).append("(").append(result);
         synchronized (mLock) {
             boolean firstCall = mResults.isEmpty();
             if (firstCall) {
@@ -74,7 +79,7 @@ public class ResultSyncCallback<R> extends DeviceSideSyncCallback
     }
 
     @Override
-    public final @Nullable R assertResultReceived() throws InterruptedException {
+    public @Nullable R assertResultReceived() throws InterruptedException {
         super.assertCalled();
         return getResult();
     }

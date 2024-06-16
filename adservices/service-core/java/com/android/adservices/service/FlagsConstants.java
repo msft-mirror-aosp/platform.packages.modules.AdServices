@@ -122,6 +122,10 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_COBALT_LOGGING_ENABLED = "topics_cobalt_logging_enabled";
     public static final String KEY_MSMT_REGISTRATION_COBALT_LOGGING_ENABLED =
             "msmt_registration_cobalt_logging_enabled";
+    public static final String KEY_MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED =
+            "msmt_attribution_cobalt_logging_enabled";
+    public static final String KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED =
+            "msmt_reporting_cobalt_logging_enabled";
     public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED =
             "app_name_api_error_cobalt_logging_enabled";
     public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE =
@@ -330,9 +334,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING =
             "measurement_enable_source_deactivation_after_filtering";
-
-    public static final String KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT =
-            "measurement_enable_scoped_attribution_rate_limit";
 
     public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_debug_reporting_fallback_job_period_ms";
@@ -784,6 +785,13 @@ public final class FlagsConstants {
     public static final String
             KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED =
                     "fledge_auction_server_get_ad_selection_data_payload_metrics_enabled";
+
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED =
+            "fledge_get_ad_selection_data_seller_configuration_enabled";
+
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION =
+            "fledge_get_ad_selection_data_buyer_input_creator_version";
+
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
@@ -1181,9 +1189,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING =
             "measurement_enable_trigger_data_matching";
-
-    public static final String KEY_MEASUREMENT_FLEX_LITE_API_ENABLED =
-            "measurement_flex_lite_api_enabled";
 
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT =
             "measurement_flex_api_max_information_gain_event";

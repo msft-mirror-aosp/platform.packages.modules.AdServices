@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.Any;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_DISABLE_RECEIVER_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_ENABLE_RECEIVER_FAILURE;
@@ -48,6 +48,8 @@ import android.os.Build;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -70,7 +72,9 @@ import java.util.List;
 @SpyStatic(SdkLevel.class)
 @SpyStatic(PackageChangedReceiver.class)
 @SpyStatic(AdServicesBackCompatInit.class)
-// TODO (b/337963152) - Set default CEL verification parameters that are common across the file.
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
 public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_PACKAGE_NAME = "test";
     private static final String AD_SERVICES_APK_PKG_SUFFIX = "android.adservices.api";
@@ -200,10 +204,8 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
-            throwable = Any.class,
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_CANCEL_JOB_FAILURE)
     public void testInitializeComponents_disableScheduledBackgroundJobsException_celLogged() {
         // Mock NullPointerException when getSystemService is called before the system is ready
         when(mMockContext.getSystemService(JobScheduler.class))
@@ -218,8 +220,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
 
     @Test
     @ExpectErrorLogUtilCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__JOB_SCHEDULER_IS_UNAVAILABLE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__JOB_SCHEDULER_IS_UNAVAILABLE)
     public void testInitializeComponents_jobSchedulerIsNull_celLogged() {
         when(mMockContext.getSystemService(JobScheduler.class)).thenReturn(null);
         mocker.mockIsAtLeastT(true);
@@ -231,16 +232,12 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
-            throwable = Any.class,
+    @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_SERVICE_FAILURE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
-    @ExpectErrorLogUtilCall(
-            throwable = Any.class,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_SERVICE_FAILURE)
+    @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_ACTIVITY_FAILURE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_UPDATE_ACTIVITY_FAILURE)
     public void testInitializeComponents_updateComponentsThrowsException_celLogged() {
         doThrow(IllegalArgumentException.class)
                 .when(mSpyCompatInit)
@@ -256,8 +253,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
     @Test
     @ExpectErrorLogUtilCall(
             errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_DISABLE_RECEIVER_FAILURE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_DISABLE_RECEIVER_FAILURE)
     public void testInitializeComponents_disableReceiverFailure_celLogged() {
         doReturn(false).when(() -> PackageChangedReceiver.disableReceiver(any(), any()));
         mocker.mockIsAtLeastT(true);
@@ -273,8 +269,7 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
     @Test
     @ExpectErrorLogUtilCall(
             errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_ENABLE_RECEIVER_FAILURE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_ENABLE_RECEIVER_FAILURE)
     public void testInitializeComponents_enableReceiverFailure_celLogged() {
         doReturn(false).when(() -> PackageChangedReceiver.enableReceiver(any(), any()));
         mocker.mockIsAtLeastT(false);

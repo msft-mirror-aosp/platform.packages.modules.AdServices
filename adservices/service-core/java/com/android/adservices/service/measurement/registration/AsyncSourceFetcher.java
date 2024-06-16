@@ -385,41 +385,38 @@ public class AsyncSourceFetcher {
 
         JSONObject eventReportWindows = null;
         Integer maxEventLevelReports = null;
-        if (mFlags.getMeasurementFlexLiteApiEnabled()
-                || mFlags.getMeasurementFlexibleEventReportingApiEnabled()) {
-            if (!json.isNull(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS)) {
-                Object maxEventLevelReportsObj = json.get(
-                        SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
-                maxEventLevelReports =
-                        json.getInt(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
-                if (!FetcherUtil.is64BitInteger(maxEventLevelReportsObj) || maxEventLevelReports < 0
-                        || maxEventLevelReports > mFlags.getMeasurementFlexApiMaxEventReports()) {
-                    return false;
-                }
-                builder.setMaxEventLevelReports(maxEventLevelReports);
+        if (!json.isNull(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS)) {
+            Object maxEventLevelReportsObj = json.get(
+                    SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
+            maxEventLevelReports =
+                    json.getInt(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
+            if (!FetcherUtil.is64BitInteger(maxEventLevelReportsObj) || maxEventLevelReports < 0
+                    || maxEventLevelReports > mFlags.getMeasurementFlexApiMaxEventReports()) {
+                return false;
             }
+            builder.setMaxEventLevelReports(maxEventLevelReports);
+        }
 
-            if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOWS)) {
-                if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
-                    LoggerFactory.getMeasurementLogger()
-                            .d(
-                                    "Only one of event_report_window and event_report_windows is"
-                                            + " expected");
-                    return false;
-                }
-                Optional<JSONObject> maybeEventReportWindows =
-                        getValidEventReportWindows(
-                                new JSONObject(
-                                        json.getString(SourceHeaderContract.EVENT_REPORT_WINDOWS)),
-                                expiry);
-                if (!maybeEventReportWindows.isPresent()) {
-                    LoggerFactory.getMeasurementLogger()
-                            .d("Invalid value for event_report_windows");
-                    return false;
-                }
-                eventReportWindows = maybeEventReportWindows.get();
-                builder.setEventReportWindows(eventReportWindows.toString());
+        if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOWS)) {
+            if (!json.isNull(SourceHeaderContract.EVENT_REPORT_WINDOW)) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "Only one of event_report_window and event_report_windows is"
+                                        + " expected");
+                return false;
             }
+            Optional<JSONObject> maybeEventReportWindows =
+                    getValidEventReportWindows(
+                            new JSONObject(
+                                    json.getString(SourceHeaderContract.EVENT_REPORT_WINDOWS)),
+                            expiry);
+            if (!maybeEventReportWindows.isPresent()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Invalid value for event_report_windows");
+                return false;
+            }
+            eventReportWindows = maybeEventReportWindows.get();
+            builder.setEventReportWindows(eventReportWindows.toString());
         }
 
         if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()
