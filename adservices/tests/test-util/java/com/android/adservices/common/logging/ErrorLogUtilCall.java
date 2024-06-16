@@ -17,15 +17,22 @@
 package com.android.adservices.common.logging;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.DEFAULT_TIMES;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.UNDEFINED_INT_PARAM;
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Undefined;
+
+import android.annotation.Nullable;
 
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.shared.testing.LogCall;
 
 import java.util.Objects;
 
 /**
- * Corresponding class for {@link ExpectErrorLogUtilCall}.
+ * Corresponding class for {@link ExpectErrorLogUtilCall} and {@link
+ * ExpectErrorLogUtilWithExceptionCall}.
  *
  * <p>Class is modeled to represent {@code ErrorLogUtil.e(int, int)}, {@code
  * ErrorLogUtil.e(Throwable, int, int)} calls, including the case where the Throwable parameter
@@ -51,11 +58,89 @@ public final class ErrorLogUtilCall extends LogCall {
     }
 
     /**
-     * Creates an appropriate object to represent {@code ErrorLogUtil.e(int, int)} with appropriate
-     * number of invocation times.
+     * Creates {@link ErrorLogUtilCall} object to represent {@code ErrorLogUtil.e(int, int)} with
+     * appropriate number of invocation times.
      */
     public static ErrorLogUtilCall createWithNoException(int errorCode, int ppapiName, int times) {
         return new ErrorLogUtilCall(None.class, errorCode, ppapiName, times);
+    }
+
+    /**
+     * Creates {@link ErrorLogUtilCall} object to represent {@code ErrorLogUtil.e(int, int)} from
+     * {@link ExpectErrorLogUtilCall} annotation by deriving any missing values from {@link
+     * SetErrorLogUtilDefaultParams}.
+     *
+     * <p>If a value cannot be deduced, {@link IllegalArgumentException} is thrown.
+     */
+    public static ErrorLogUtilCall createFrom(
+            ExpectErrorLogUtilCall annotation,
+            @Nullable SetErrorLogUtilDefaultParams defaultParamsAnnotation) {
+        ErrorLogUtilCall defaultParams = createFrom(defaultParamsAnnotation);
+
+        ErrorLogUtilCall call =
+                createWithNoException(
+                        annotation.errorCode() == UNDEFINED_INT_PARAM
+                                ? defaultParams.mErrorCode
+                                : annotation.errorCode(),
+                        annotation.ppapiName() == UNDEFINED_INT_PARAM
+                                ? defaultParams.mPpapiName
+                                : annotation.ppapiName(),
+                        annotation.times());
+        validateAllParamsDefined(call, ExpectErrorLogUtilCall.ANNOTATION_NAME);
+
+        return call;
+    }
+
+    /**
+     * Creates {@link ErrorLogUtilCall} object to represent {@code ErrorLogUtil.e(Throwable, int,
+     * int)} from {@link ExpectErrorLogUtilWithExceptionCall} annotation by deriving any missing
+     * values from {@link SetErrorLogUtilDefaultParams}.
+     *
+     * <p>If a value cannot be deduced, {@link IllegalArgumentException} is thrown.
+     */
+    public static ErrorLogUtilCall createFrom(
+            ExpectErrorLogUtilWithExceptionCall annotation,
+            @Nullable SetErrorLogUtilDefaultParams defaultParamsAnnotation) {
+        ErrorLogUtilCall defaultParams = createFrom(defaultParamsAnnotation);
+
+        ErrorLogUtilCall call =
+                new ErrorLogUtilCall(
+                        Objects.equals(annotation.throwable(), Undefined.class)
+                                ? defaultParams.mThrowable
+                                : annotation.throwable(),
+                        annotation.errorCode() == UNDEFINED_INT_PARAM
+                                ? defaultParams.mErrorCode
+                                : annotation.errorCode(),
+                        annotation.ppapiName() == UNDEFINED_INT_PARAM
+                                ? defaultParams.mPpapiName
+                                : annotation.ppapiName(),
+                        annotation.times());
+        validateAllParamsDefined(call, ExpectErrorLogUtilWithExceptionCall.ANNOTATION_NAME);
+
+        return call;
+    }
+
+    private static ErrorLogUtilCall createFrom(SetErrorLogUtilDefaultParams defaultParams) {
+        return defaultParams == null
+                ? new ErrorLogUtilCall(Undefined.class, UNDEFINED_INT_PARAM, UNDEFINED_INT_PARAM)
+                : new ErrorLogUtilCall(
+                        defaultParams.throwable(),
+                        defaultParams.errorCode(),
+                        defaultParams.ppapiName());
+    }
+
+    private static void validateAllParamsDefined(ErrorLogUtilCall call, String annotationName) {
+        if (Objects.equals(call.mThrowable, Undefined.class)) {
+            throw new IllegalArgumentException("Cannot resolve throwable for @" + annotationName);
+        }
+
+        if (call.mErrorCode == UNDEFINED_INT_PARAM) {
+            throw new IllegalArgumentException("Cannot resolve errorCode for @" + annotationName);
+        }
+
+        if (call.mPpapiName == UNDEFINED_INT_PARAM) {
+            throw new IllegalArgumentException("Cannot resolve ppapiName for @" + annotationName);
+        }
     }
 
     @Override

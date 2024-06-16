@@ -103,7 +103,15 @@
     "aggregatable_results": [
       {
         "payload": {
-          "attribution_destination": "https://2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "1643239175",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -112,8 +120,7 @@
             }
           ],
           "source_debug_key" : "347982378",
-          "trigger_debug_key": "8971346782",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "8971346782"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239175000"
@@ -122,7 +129,15 @@
     "debug_aggregatable_results": [
       {
         "payload": {
-          "attribution_destination": "https://2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "1643239175",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -131,8 +146,7 @@
             }
           ],
           "source_debug_key" : "347982378",
-          "trigger_debug_key": "8971346782",
-          "source_registration_time": "1643155200"
+          "trigger_debug_key": "8971346782"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "report_time": "1643235575000"

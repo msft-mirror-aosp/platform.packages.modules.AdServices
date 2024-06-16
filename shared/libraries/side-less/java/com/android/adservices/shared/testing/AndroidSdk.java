@@ -24,6 +24,8 @@ import java.util.Objects;
 /** Abstraction for Android SDK levels (so it can be used both on device and host side tests). */
 public final class AndroidSdk {
 
+    private static final Logger sLogger = new Logger(DynamicLogger.getInstance(), AndroidSdk.class);
+
     /** Android version {@code RVC}. */
     public static final int RVC = 30;
 
@@ -102,10 +104,9 @@ public final class AndroidSdk {
                     return V;
             }
             if (level > VIC) {
-                // TODO(338232806): use a proper Logger object
-                System.err.printf(
+                sLogger.e(
                         "WARNING: Level.forLevel() called with unsupported / unreleased level (%d);"
-                                + " returning DEV (%d)\n",
+                                + " returning DEV (%d)",
                         level, DEV.mLevel);
                 return DEV;
             }

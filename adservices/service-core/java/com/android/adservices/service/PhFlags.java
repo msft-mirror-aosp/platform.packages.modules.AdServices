@@ -355,6 +355,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMsmtAttributionCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED,
+                        MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED);
+    }
+
+    @Override
+    public boolean getMsmtReportingCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED,
+                        MSMT_REPORTING_COBALT_LOGGING_ENABLED);
+    }
+
+    @Override
     public boolean getAppNameApiErrorCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled()
                 && getDeviceConfigFlag(
@@ -2431,6 +2447,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED,
+                FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED);
+    }
+
+    @Override
+    public int getFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION,
+                FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerMultiCloudEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
@@ -4145,11 +4175,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableSourceDeactivationAfterFiltering());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT
-                        + " = "
-                        + getMeasurementEnableScopedAttributionRateLimit());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
                         + " = "
                         + getMeasurementEnableAppPackageNameLogging());
@@ -4987,6 +5012,16 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MSMT_REGISTRATION_COBALT_LOGGING_ENABLED
                         + " = "
                         + getMsmtRegistrationCobaltLoggingEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED
+                        + " = "
+                        + getMsmtAttributionCobaltLoggingEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED
+                        + " = "
+                        + getMsmtReportingCobaltLoggingEnabled());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println(
                 "\t" + FlagsConstants.KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
@@ -5868,13 +5903,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
                 MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING);
-    }
-
-    @Override
-    public boolean getMeasurementEnableScopedAttributionRateLimit() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT,
-                MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT);
     }
 
     @Override
