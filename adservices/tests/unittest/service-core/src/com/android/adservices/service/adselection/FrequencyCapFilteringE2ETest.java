@@ -79,7 +79,9 @@ import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryp
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
+import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FledgeConsentFilter;
 import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.HttpCache;
@@ -187,6 +189,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     @Mock private AdSelectionServiceFilter mServiceFilterMock;
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
     @Mock private CallerMetadata mCallerMetadataMock;
     @Mock private File mAdSelectionDbFileMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
@@ -539,12 +542,14 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                             mFledgeAuthorizationFilterSpy,
                             new AdSelectionServiceFilter(
                                     mSpyContext,
-                                    mConsentManagerMock,
+                                    mFledgeConsentFilterMock,
                                     flagsWithLowRateLimit,
                                     mAppImportanceFilterMock,
                                     mFledgeAuthorizationFilterSpy,
                                     mFledgeAllowListsFilterMock,
-                                    Throttler.getInstance(flagsWithLowRateLimit)),
+                                    new FledgeApiThrottleFilter(
+                                            Throttler.getInstance(flagsWithLowRateLimit),
+                                            mAdServicesLoggerMock)),
                             mAdFilteringFeatureFactory,
                             mConsentManagerMock,
                             mMultiCloudSupportStrategy,

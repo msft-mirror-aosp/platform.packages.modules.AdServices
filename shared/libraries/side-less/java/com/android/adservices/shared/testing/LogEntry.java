@@ -13,39 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.meta_testing;
+package com.android.adservices.shared.testing;
 
 import com.android.adservices.shared.testing.Logger.LogLevel;
-import com.android.adservices.shared.testing.Nullable;
 
 import com.google.common.truth.FailureMetadata;
 
 import java.util.Objects;
 
-/** Abstracts a log entry. */
+/**
+ * Represents a call to a static method in a logging class {like @code android.util.Log or
+ * com.android.tradefed.log.LogUtil.CLog}.
+ */
 public final class LogEntry {
-
-    /** Level of the message. */
     public final LogLevel level;
-
-    /** Tag of the message. */
     public final String tag;
-
-    /** Throable of the message. */
-    @Nullable public final Throwable throwable;
-
-    /** Message itself. */
     public final String message;
-
-    public LogEntry(LogLevel level, String tag, @Nullable Throwable throwable, String message) {
-        this.level = level;
-        this.tag = tag;
-        this.throwable = throwable;
-        this.message = message;
-    }
+    public final @Nullable Throwable throwable;
 
     public LogEntry(LogLevel level, String tag, String message) {
-        this(level, tag, /* throwable= */ null, message);
+        this(level, tag, message, /* throwable= */ null);
+    }
+
+    public LogEntry(LogLevel level, String tag, String message, @Nullable Throwable throwable) {
+        this.level = Objects.requireNonNull(level, "level cannot be null");
+        this.tag = Objects.requireNonNull(tag, "tag cannot be null");
+        this.message = Objects.requireNonNull(message, "message cannot be null");
+        this.throwable = throwable;
     }
 
     @Override

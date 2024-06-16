@@ -331,6 +331,27 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMsmtRegistrationCobaltLoggingEnabled() {
+        testFeatureFlagGuardedByGlobalKillSwitch(
+                "MSMT_REGISTRATION_COBALT_LOGGING_ENABLED",
+                Flags::getMsmtRegistrationCobaltLoggingEnabled);
+    }
+
+    @Test
+    public void testGetMsmtAttributionCobaltLoggingEnabled() {
+        testFeatureFlagGuardedByGlobalKillSwitch(
+                "MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED",
+                Flags::getMsmtAttributionCobaltLoggingEnabled);
+    }
+
+    @Test
+    public void testGetMsmtReportigCobaltLoggingEnabled() {
+        testFeatureFlagGuardedByGlobalKillSwitch(
+                "MSMT_REPORTING_COBALT_LOGGING_ENABLED",
+                Flags::getMsmtReportingCobaltLoggingEnabled);
+    }
+
+    @Test
     public void testGetMeasurementEnableHeaderErrorDebugReport() {
         testFeatureFlagGuardedByGlobalKillSwitch(
                 "MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT",
