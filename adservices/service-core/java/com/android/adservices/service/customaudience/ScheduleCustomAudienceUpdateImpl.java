@@ -192,17 +192,12 @@ public class ScheduleCustomAudienceUpdateImpl {
 
                         validateDelayTime(input.getMinDelay());
 
-                    } catch (FledgeAuthorizationFilter.CallerMismatchException t) {
-                        throw new FilterException(t);
-                    } catch (AppImportanceFilter.WrongCallingApplicationStateException t) {
-                        throw new FilterException(t);
-                    } catch (FledgeAuthorizationFilter.AdTechNotAllowedException t) {
-                        throw new FilterException(t);
-                    } catch (FledgeAllowListsFilter.AppNotAllowedException t) {
-                        throw new FilterException(t);
-                    } catch (LimitExceededException t) {
-                        throw new FilterException(t);
-                    } catch (ConsentManager.RevokedConsentException t) {
+                    } catch (FledgeAuthorizationFilter.CallerMismatchException
+                            | AppImportanceFilter.WrongCallingApplicationStateException
+                            | FledgeAuthorizationFilter.AdTechNotAllowedException
+                            | FledgeAllowListsFilter.AppNotAllowedException
+                            | LimitExceededException
+                            | ConsentManager.RevokedConsentException t) {
                         throw new FilterException(t);
                     }
                     sLogger.v("Completed scheduleCustomAudienceUpdate filterAndValidateRequest");

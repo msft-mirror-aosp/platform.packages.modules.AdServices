@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runOnMainThread;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.runOnMainThread;
 
 import static org.junit.Assert.assertThrows;
 
@@ -29,6 +29,11 @@ public final class DeviceSideSyncCallbackTest
         return new ConcreteDeviceSideySncCallback(settings);
     }
 
+    @Override
+    protected String callCallback(DeviceSideSyncCallback callback) {
+        return callback.internalSetCalled("internalSetCalled()");
+    }
+
     // Note: SyncCallbackTestCase already tests what happens when called on main thread, but it's
     // not the "real" main thread, as it's emulated by the SyncCallbackSettings supplier
     @Test
@@ -39,7 +44,7 @@ public final class DeviceSideSyncCallbackTest
                 .that(callback.toString())
                 .contains("failIfCalledOnMainThread=true");
 
-        runOnMainThread(() -> callback.setCalled());
+        runOnMainThread(() -> call(callback));
 
         CalledOnMainThreadException thrown =
                 assertThrows(CalledOnMainThreadException.class, () -> callback.assertCalled());
@@ -47,7 +52,7 @@ public final class DeviceSideSyncCallbackTest
         expect.withMessage("thrown")
                 .that(thrown)
                 .hasMessageThat()
-                .contains("setCalled() called on main thread");
+                .contains("internalSetCalled() called on main thread");
         expect.withMessage("toString() after thrown")
                 .that(callback.toString())
                 .contains("onAssertCalledException=" + thrown);
@@ -66,13 +71,14 @@ public final class DeviceSideSyncCallbackTest
                 .that(callback.toString())
                 .contains("failIfCalledOnMainThread=false");
 
-        runOnMainThread(() -> callback.setCalled());
+        runOnMainThread(() -> call(callback));
 
         callback.assertCalled();
     }
 
     private static final class ConcreteDeviceSideySncCallback extends DeviceSideSyncCallback {
 
+        @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteDeviceSideySncCallback() {
             this(SyncCallbackFactory.newSettingsBuilder().build());
         }

@@ -15,10 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static org.junit.Assert.assertThrows;
-
-import org.junit.Test;
-
 public final class FailableResultSyncCallbackTest
         extends FailableResultSyncCallbackTestCase<
                 String, RuntimeException, FailableResultSyncCallback<String, RuntimeException>> {
@@ -43,10 +39,5 @@ public final class FailableResultSyncCallbackTest
     protected FailableResultSyncCallback<String, RuntimeException> newCallback(
             SyncCallbackSettings settings) {
         return new FailableResultSyncCallback<String, RuntimeException>(settings);
-    }
-
-    @Test
-    public void testUnsupportedMethods() {
-        assertThrows(UnsupportedOperationException.class, () -> mCallback.setCalled());
     }
 }

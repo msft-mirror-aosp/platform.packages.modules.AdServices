@@ -46,7 +46,9 @@ public final class AdServicesLogVerifierFactory {
 
         switch (logType) {
             case ERROR_LOG_UTIL:
-                return ImmutableList.of(new AdServicesErrorLogUtilVerifier());
+                return ImmutableList.of(
+                        new AdServicesErrorLogUtilVerifier(),
+                        new AdServicesErrorLogUtilWithExceptionVerifier());
             default:
                 throw new IllegalArgumentException("Unsupported logType: " + logType);
         }

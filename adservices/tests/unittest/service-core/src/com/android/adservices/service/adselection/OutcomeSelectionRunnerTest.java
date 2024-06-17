@@ -23,7 +23,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
@@ -71,7 +71,6 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -183,7 +182,7 @@ public class OutcomeSelectionRunnerTest {
                         true,
                         true,
                         CALLER_UID,
-                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                         DevContext.createForDevOptionsDisabled());
     }
@@ -227,7 +226,7 @@ public class OutcomeSelectionRunnerTest {
         assertEquals(STATUS_INVALID_ARGUMENT, resultsCallback.mFledgeErrorResponse.getStatusCode());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES),
                         eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
@@ -243,7 +242,7 @@ public class OutcomeSelectionRunnerTest {
                         true,
                         true,
                         CALLER_UID,
-                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                         DevContext.createForDevOptionsDisabled());
 
@@ -278,7 +277,7 @@ public class OutcomeSelectionRunnerTest {
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES),
                         eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
@@ -358,7 +357,7 @@ public class OutcomeSelectionRunnerTest {
         assertEquals(STATUS_TIMEOUT, resultsCallback.mFledgeErrorResponse.getStatusCode());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES),
                         eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_TIMEOUT),
                         anyInt());

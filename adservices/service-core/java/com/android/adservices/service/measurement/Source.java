@@ -321,7 +321,7 @@ public class Source {
      * @param flipProbability the flip probability, used only if attribution scope is not enabled.
      * @param numTriggerStates num of trigger states.
      */
-    public double getInformationGain(Flags flags, long numTriggerStates, double flipProbability) {
+    double getInformationGain(Flags flags, long numTriggerStates, double flipProbability) {
         if (flags.getMeasurementEnableAttributionScope()) {
             long attributionScopeLimit =
                     getAttributionScopeLimit() == null ? 1L : getAttributionScopeLimit();
@@ -336,9 +336,6 @@ public class Source {
     }
 
     private boolean isFlexLiteApiValueValid(Flags flags) {
-        if (!flags.getMeasurementFlexLiteApiEnabled()) {
-            return true;
-        }
         return getInformationGain(flags, getNumStates(flags), getFlipProbability(flags))
                 <= getInformationGainThreshold(flags);
     }
@@ -443,16 +440,19 @@ public class Source {
         private final long mReportingTime;
         private final long mTriggerTime;
         private final List<Uri> mDestinations;
+        private final Pair<Long, Long> mTriggerSummaryBucket;
 
         public FakeReport(
                 UnsignedLong triggerData,
                 long reportingTime,
                 long triggerTime,
-                List<Uri> destinations) {
+                List<Uri> destinations,
+                @Nullable Pair<Long, Long> triggerSummaryBucket) {
             mTriggerData = triggerData;
             mReportingTime = reportingTime;
             mDestinations = destinations;
             mTriggerTime = triggerTime;
+            mTriggerSummaryBucket = triggerSummaryBucket;
         }
 
         @Override
@@ -463,12 +463,18 @@ public class Source {
             return Objects.equals(mTriggerData, that.mTriggerData)
                     && mReportingTime == that.mReportingTime
                     && mTriggerTime == that.mTriggerTime
-                    && Objects.equals(mDestinations, that.mDestinations);
+                    && Objects.equals(mDestinations, that.mDestinations)
+                    && Objects.equals(mTriggerSummaryBucket, that.mTriggerSummaryBucket);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(mTriggerData, mReportingTime, mTriggerTime, mDestinations);
+            return Objects.hash(
+                    mTriggerData,
+                    mReportingTime,
+                    mTriggerTime,
+                    mDestinations,
+                    mTriggerSummaryBucket);
         }
 
         public long getReportingTime() {
@@ -485,6 +491,11 @@ public class Source {
 
         public List<Uri> getDestinations() {
             return mDestinations;
+        }
+
+        @Nullable
+        public Pair<Long, Long> getTriggerSummaryBucket() {
+            return mTriggerSummaryBucket;
         }
     }
 

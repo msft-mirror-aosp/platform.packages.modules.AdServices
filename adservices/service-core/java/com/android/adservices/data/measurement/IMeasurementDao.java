@@ -395,8 +395,8 @@ public interface IMeasurementDao {
     /** Saves the {@link EventReport} to the datastore. */
     void insertEventReport(EventReport eventReport) throws DatastoreException;
 
-    /** Deletes the {@link EventReport} from the datastore. */
-    void deleteEventReport(EventReport eventReport) throws DatastoreException;
+    /** Deletes the {@link EventReport} and associated {@link Attribution} from the datastore. */
+    void deleteEventReportAndAttribution(EventReport eventReport) throws DatastoreException;
 
     /** Deletes the {@link DebugReport} from the datastore. */
     void deleteDebugReport(String debugReportId) throws DatastoreException;
@@ -424,15 +424,6 @@ public interface IMeasurementDao {
 
     /** Returns list of all pending event reports for a given app right away. */
     List<String> getPendingEventReportIdsForGivenApp(Uri appName) throws DatastoreException;
-
-    /**
-     * Find the number of entries for a rate limit window using the {@link Source} and {@link
-     * Trigger}. Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
-     *
-     * @return the number of entries for the window.
-     */
-    long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
-            throws DatastoreException;
 
     /**
      * Find the number of entries for a rate limit window, scoped to event- or aggregate-level using
@@ -818,4 +809,15 @@ public interface IMeasurementDao {
      */
     void deletePendingAggregateReportsAndAttributionsForSources(List<String> sourceIds)
             throws DatastoreException;
+
+    /**
+     * Return the timestamp of the latest pending report (Event or Aggregate) in the batching
+     * window. The batching window is calculated as the earliest report's timestamp + batchWindow.
+     * If there are no reports, return null.
+     *
+     * @param batchWindow Size of the batching window, in ms, starting at the next pending report.
+     * @return Latest report's timestamp, in ms, within the batching window.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    Long getLatestReportTimeInBatchWindow(long batchWindow) throws DatastoreException;
 }
