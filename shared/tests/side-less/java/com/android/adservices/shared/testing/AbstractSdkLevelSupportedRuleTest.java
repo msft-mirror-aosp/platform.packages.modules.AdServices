@@ -49,7 +49,6 @@ import org.junit.runner.Description;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 
-// TODO(b/315542995): provide host-side implementation
 /**
  * Test case for {@link AbstractSdkLevelSupportedRule} implementations.
  *
@@ -960,7 +959,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
         }
 
         @Override
-        public Level getDeviceApiLevel() {
+        public Level getRawDeviceApiLevel() {
             if (mDeviceLevel == null) {
                 throw new UnsupportedOperationException(
                         "Rule created with constructor that doesn't provide the device level");
