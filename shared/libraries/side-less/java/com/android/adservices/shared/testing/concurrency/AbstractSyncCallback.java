@@ -45,7 +45,9 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
     private String mFrozenToString;
 
     // Used to fail assertCalled() if something bad happened before
-    @Nullable private RuntimeException mOnAssertCalledException;
+    @GuardedBy("mLock")
+    @Nullable
+    private RuntimeException mOnAssertCalledException;
 
     // The "real" callback - used in cases (mostly loggin) where a callback delegates its methods
     // to another one.
@@ -124,10 +126,6 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
         mSettings.getLogger().v("%s: %s", mRealCallback, msg);
     }
 
-    protected void setOnAssertCalledException(@Nullable RuntimeException exception) {
-        mOnAssertCalledException = exception;
-    }
-
     // TODO(b/342448771): make it package protected once classes are moved
     /**
      * Real implementation of {@code setCalled()}, should be called by subclass to "unblock" the
@@ -137,16 +135,15 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
      */
     public final String internalSetCalled(String methodName) {
         logD("%s called on %s", methodName, Thread.currentThread().getName());
-        if (mSettings.isFailIfCalledOnMainThread() && mSettings.isMainThread()) {
-            String errorMsg =
-                    methodName
-                            + " called on main thread ("
-                            + Thread.currentThread().getName()
-                            + ")";
-            setOnAssertCalledException(new CalledOnMainThreadException(errorMsg));
-        }
-
         synchronized (mLock) {
+            if (mSettings.isFailIfCalledOnMainThread() && mSettings.isMainThread()) {
+                String errorMsg =
+                        methodName
+                                + " called on main thread ("
+                                + Thread.currentThread().getName()
+                                + ")";
+                mOnAssertCalledException = new CalledOnMainThreadException(errorMsg);
+            }
             mNumberCalls++;
         }
         mSettings.countDown();
@@ -156,24 +153,27 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
 
     @Override
     public void assertCalled() throws InterruptedException {
-        internalAssertCalled();
+        internalAssertCalled(mSettings.getMaxTimeoutMs());
     }
 
+    // TODO(b/342448771): make it package protected once classes are moved
     /**
-     * Real implementation of {@link #assertCalled()} - subclasses overriding {@link
-     * #assertCalled()} should call it.
+     * Real implementation of {@link #assertCalled(timeoutMs)} - subclasses overriding {@link
+     * #assertCalled(timeoutMs)} should call it.
      */
-    protected final void internalAssertCalled() throws InterruptedException {
+    public final void internalAssertCalled(long timeoutMs) throws InterruptedException {
         logD("assertCalled() called on %s", Thread.currentThread().getName());
         try {
-            mSettings.assertCalled(() -> toString());
+            mSettings.assertCalled(timeoutMs, () -> toString());
         } catch (Exception e) {
             logE("assertCalled() failed: %s", e);
             throw e;
         }
-        if (mOnAssertCalledException != null) {
-            logE("assertCalled() failed: %s", mOnAssertCalledException);
-            throw mOnAssertCalledException;
+        synchronized (mLock) {
+            if (mOnAssertCalledException != null) {
+                logE("assertCalled() failed: %s", mOnAssertCalledException);
+                throw mOnAssertCalledException;
+            }
         }
         logV("assertCalled() returning");
     }
@@ -196,16 +196,16 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
             if (mFrozenToString != null) {
                 return mFrozenToString;
             }
+            StringBuilder string =
+                    new StringBuilder("[")
+                            .append(getClass().getSimpleName())
+                            .append(": id=")
+                            .append(mId)
+                            .append(", onAssertCalledException=")
+                            .append(mOnAssertCalledException);
+            customizeToString(string);
+            return string.append(']').toString();
         }
-        StringBuilder string =
-                new StringBuilder("[")
-                        .append(getClass().getSimpleName())
-                        .append(": id=")
-                        .append(mId)
-                        .append(", onAssertCalledException=")
-                        .append(mOnAssertCalledException);
-        customizeToString(string);
-        return string.append(']').toString();
     }
 
     /** Gets a simpler representation of the callback. */
