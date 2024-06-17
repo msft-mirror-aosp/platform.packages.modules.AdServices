@@ -57,9 +57,6 @@ public class BlockedTopicsActivity extends AdServicesBaseActivity {
     @Override
     public void initU18() {}
 
-    @Override
-    public void initRvc() {}
-
     private void initFragment() {
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()

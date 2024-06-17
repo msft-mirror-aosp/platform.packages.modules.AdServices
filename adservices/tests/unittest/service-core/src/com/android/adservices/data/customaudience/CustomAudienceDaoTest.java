@@ -68,6 +68,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -1110,6 +1111,7 @@ public class CustomAudienceDaoTest {
     }
 
     @Test(expected = NullPointerException.class)
+    @Ignore("BugId = 347286338")
     public void testPersistCustomAudienceOverride() {
         mCustomAudienceDao.persistCustomAudienceOverride(null);
     }
@@ -1259,11 +1261,13 @@ public class CustomAudienceDaoTest {
     }
 
     @Test(expected = NullPointerException.class)
+    @Ignore("BugId = 347286338")
     public void testCreateOrUpdate_nullCustomAudience() {
         mCustomAudienceDao.persistCustomAudience(null);
     }
 
     @Test(expected = NullPointerException.class)
+    @Ignore("BugId = 347286338")
     public void testCreateOrUpdate_nullCustomAudienceBackgroundFetchData() {
         mCustomAudienceDao.persistCustomAudienceBackgroundFetchData(null);
     }

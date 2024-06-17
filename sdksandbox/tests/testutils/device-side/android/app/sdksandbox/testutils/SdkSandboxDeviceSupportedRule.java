@@ -15,6 +15,8 @@
  */
 package android.app.sdksandbox.testutils;
 
+import android.app.sdksandbox.common.AbstractSdkSandboxDeviceSupportedRule;
+
 import com.android.adservices.common.AdServicesSupportHelper;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.modules.utils.build.SdkLevel;

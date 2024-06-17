@@ -24,7 +24,6 @@ import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
@@ -66,7 +65,6 @@ public class SdkSandboxStorageTest extends SandboxKillerBeforeTest {
     @Before
     public void setup() {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        assumeTrue(DeviceSupportUtils.isSdkSandboxSupported(context));
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
         mRule.getScenario();
     }
