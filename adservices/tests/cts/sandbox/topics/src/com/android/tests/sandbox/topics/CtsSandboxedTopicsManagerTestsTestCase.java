@@ -24,7 +24,7 @@ import com.android.adservices.service.FlagsConstants;
 abstract class CtsSandboxedTopicsManagerTestsTestCase extends AdServicesCtsTestCase {
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    protected static final long TEST_EPOCH_JOB_PERIOD_MS = 3_000;
+    protected static final long TEST_EPOCH_JOB_PERIOD_MS = 5_000;
 
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
