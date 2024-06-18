@@ -15,13 +15,11 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
-
 import org.junit.Test;
 
 abstract class OnFailableResultSyncCallbackTestCase<
-                T, F, C extends FailableOnResultSyncCallback<T, F>>
-        extends OnResultSyncCallbackTestCase<T, C> {
+                R, F, CB extends FailableOnResultSyncCallback<R, F>>
+        extends OnResultSyncCallbackTestCase<R, CB> {
 
     /** Gets a new, unique failure object, preferably with a user-friendly string representation. */
     protected abstract F newFailure();
@@ -49,7 +47,7 @@ abstract class OnFailableResultSyncCallbackTestCase<
                 .contains("(no failure yet)");
         F injectedFailure = newFailure();
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.onFailure(injectedFailure));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.onFailure(injectedFailure));
         F receivedFailure = mCallback.assertFailureReceived();
 
         expect.withMessage("%s.assertFailureReceived()", mCallback)

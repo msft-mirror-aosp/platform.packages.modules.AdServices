@@ -1,12 +1,8 @@
 {
   "description": "One source with source type \"navigation\" with maximum report windows and event report quota, rejected for too many report states.",
-  "phflags_override": {
-    "measurement_flex_lite_api_enabled": "true"
-  },
   "input": {
     "sources": [{
       "registration_request": {
-        "attribution_src_url": "https://www.ad-tech1.test",
         "source_type": "navigation",
         "registrant": "example.1s1.test"
       },
@@ -31,7 +27,6 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [{

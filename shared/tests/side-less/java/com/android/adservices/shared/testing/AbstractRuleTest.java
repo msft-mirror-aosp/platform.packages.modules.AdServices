@@ -15,12 +15,11 @@
  */
 package com.android.adservices.shared.testing;
 
-import static com.android.adservices.shared.meta_testing.LogEntry.Subject.logEntry;
+import static com.android.adservices.shared.testing.LogEntry.Subject.logEntry;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.android.adservices.shared.meta_testing.FakeLogger;
-import com.android.adservices.shared.meta_testing.LogEntry;
 import com.android.adservices.shared.meta_testing.SimpleStatement;
 import com.android.adservices.shared.meta_testing.TestNamerRuleTester;
 import com.android.adservices.shared.testing.Logger.LogLevel;
@@ -58,7 +57,7 @@ public final class AbstractRuleTest extends SharedSidelessTestCase {
     public void testRunSafely_noErrors() {
         List<Throwable> errors = new ArrayList<>();
 
-        mRule.runSafely(errors, () -> System.out.println("I'm fine"));
+        mRule.runSafely(errors, () -> mLog.v("I'm fine"));
 
         expect.withMessage("errors").that(errors).isEmpty();
     }

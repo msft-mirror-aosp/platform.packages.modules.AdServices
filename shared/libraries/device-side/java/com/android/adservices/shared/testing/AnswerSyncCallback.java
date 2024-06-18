@@ -21,6 +21,7 @@ import android.util.Log;
 import com.android.adservices.shared.testing.concurrency.DeviceSideSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
+import com.android.adservices.shared.testing.mockito.MockitoHelper;
 
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -114,17 +115,12 @@ public final class AnswerSyncCallback<T> extends DeviceSideSyncCallback implemen
 
     @Override
     public T answer(InvocationOnMock invocation) throws Throwable {
-        super.setCalled();
+        super.internalSetCalled(MockitoHelper.toString(invocation));
         if (mFailure != null) {
             Log.v(TAG, "Throwing '" + mFailure + "' on " + invocation);
             throw mFailure;
         }
         Log.v(TAG, "Answering '" + mAnswer + "' on " + invocation);
         return mAnswer;
-    }
-
-    @Override
-    public void setCalled() {
-        throw new UnsupportedOperationException("should only be called by the Answer itself");
     }
 }

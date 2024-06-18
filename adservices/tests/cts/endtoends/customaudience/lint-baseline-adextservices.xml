@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="InlinedApi"
+        message="Field requires API level 33 (current min is 30): `android.content.Context#RECEIVER_EXPORTED`"
+        errorLine1="                Context.RECEIVER_EXPORTED);"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/customaudience/src/com/android/adservices/tests/cts/customaudience/CustomAudienceTest.java"
+            line="545"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="InlinedApi"
+        message="Field requires API level 33 (current min is 30): `android.content.Context#RECEIVER_EXPORTED`"
+        errorLine1="                Context.RECEIVER_EXPORTED /*UNAUDITED*/);"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/customaudience/src/com/android/adservices/tests/cts/customaudience/CustomAudienceTest.java"
+            line="582"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="InlinedApi"
+        message="Field requires API level 33 (current min is 30): `android.content.Context#RECEIVER_EXPORTED`"
+        errorLine1="                Context.RECEIVER_EXPORTED /*UNAUDITED*/);"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/customaudience/src/com/android/adservices/tests/cts/customaudience/CustomAudienceTest.java"
+            line="620"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 33 (current min is 30): `android.content.Intent#getParcelableArrayListExtra`"
+        errorLine1="                                        intent.getParcelableArrayListExtra("
+        errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/cts/endtoends/customaudience/src/com/android/adservices/tests/cts/customaudience/CustomAudienceTest.java"
+            line="516"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionCode` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/endtoends/customaudience/CtsAdExtServicesCustomAudienceTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionName` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/endtoends/customaudience/CtsAdExtServicesCustomAudienceTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="HardcodedDebugMode"
+        message="Avoid hardcoding the debug mode; leaving it out allows debug and release builds to automatically assign one"
+        errorLine1="        android:debuggable=&quot;true&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/endtoends/customaudience/CtsAdExtServicesCustomAudienceTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="48"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="QueryAllPackagesPermission"
+        message="A `&lt;queries>` declaration should generally be used instead of QUERY_ALL_PACKAGES; see https://g.co/dev/packagevisibility for details"
+        errorLine1="    &lt;uses-permission android:name=&quot;android.permission.QUERY_ALL_PACKAGES&quot; />"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/endtoends/customaudience/CtsAdExtServicesCustomAudienceTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="25"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        message="Should explicitly set `android:icon`, there is no default"
+        errorLine1="    &lt;application"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/cts/endtoends/customaudience/CtsAdExtServicesCustomAudienceTests/android_common/737f09fcc0b17bc4650c68e8a26b3dd4/manifest_merger/AndroidManifest.xml"
+            line="46"
+            column="6"/>
+    </issue>
+
+</issues>

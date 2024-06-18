@@ -86,6 +86,10 @@ android_test {
         "-0 .lite",
         "-0 .tflite",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -155,4 +159,9 @@ android_test {
         "-0 .lite",
         "-0 .tflite",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline-adextservices.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

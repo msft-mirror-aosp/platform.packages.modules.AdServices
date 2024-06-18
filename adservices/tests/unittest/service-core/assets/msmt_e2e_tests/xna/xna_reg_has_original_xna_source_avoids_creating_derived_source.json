@@ -1,14 +1,13 @@
 {
   "description": "If a registration involves registering a source with XNA AdTech (ad-tech2), do not pick original sources (from ad-tech1) to create derived source from that registration. The original source registered by adtech-2 wins.",
   "phflags_override": {
-    "measurement_enable_xna" : "true",
-    "web_context_client_allow_list" : "*"
+    "measurement_enable_xna": "true",
+    "web_context_client_allow_list": "*"
   },
   "input": {
     "sources": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -38,7 +37,8 @@
                   "geoValue": "0x5"
                 },
                 "shared_aggregation_keys": [
-                  "campaignCounts", "geoValue"
+                  "campaignCounts",
+                  "geoValue"
                 ]
               },
               "Location": null,
@@ -82,7 +82,6 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech2.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -192,15 +191,22 @@
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech2.test",
+            "scheduled_report_time": "800004200",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "source_site": "android-app://example.1s1.test",
           "histograms": [
             {
               "key": "0x559",
               "value": 32768
             }
-          ],
-          "source_registration_time": "799977600"
+          ]
         }
       }
     ]
