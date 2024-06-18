@@ -28,6 +28,7 @@ import com.android.adservices.ui.settings.activitydelegates.MeasurementActivityA
 import com.android.adservices.ui.settings.delegates.MeasurementActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
+import com.android.modules.utils.build.SdkLevel;
 
 /** Android application activity provides functionality to control measurement data and consent. */
 // TODO(b/269798827): Enable for R.
@@ -49,11 +50,6 @@ public class MeasurementActivity extends AdServicesBaseActivity {
     }
 
     @Override
-    public void initBeta() {
-        initActivity();
-    }
-
-    @Override
     public void initGA() {
         initActivity();
     }
@@ -61,13 +57,6 @@ public class MeasurementActivity extends AdServicesBaseActivity {
     @Override
     public void initU18() {
         initActivity();
-    }
-
-    @Override
-    public void initRvc() {
-        setContentView(R.layout.measurement_activity_v30);
-        new MeasurementActivityActionDelegate(
-                this, new ViewModelProvider(this).get(MeasurementViewModel.class));
     }
 
     private void initFragment() {
@@ -86,7 +75,11 @@ public class MeasurementActivity extends AdServicesBaseActivity {
     }
 
     private void initActivity() {
-        setContentView(R.layout.measurement_activity);
+        if (SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS()) {
+            setContentView(R.layout.measurement_activity_v30);
+        } else {
+            setContentView(R.layout.measurement_activity);
+        }
         // no need to store since not using
         new MeasurementActivityActionDelegate(
                 this, new ViewModelProvider(this).get(MeasurementViewModel.class));

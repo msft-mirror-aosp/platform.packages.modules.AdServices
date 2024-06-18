@@ -122,6 +122,10 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_COBALT_LOGGING_ENABLED = "topics_cobalt_logging_enabled";
     public static final String KEY_MSMT_REGISTRATION_COBALT_LOGGING_ENABLED =
             "msmt_registration_cobalt_logging_enabled";
+    public static final String KEY_MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED =
+            "msmt_attribution_cobalt_logging_enabled";
+    public static final String KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED =
+            "msmt_reporting_cobalt_logging_enabled";
     public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED =
             "app_name_api_error_cobalt_logging_enabled";
     public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE =
@@ -331,9 +335,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING =
             "measurement_enable_source_deactivation_after_filtering";
 
-    public static final String KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT =
-            "measurement_enable_scoped_attribution_rate_limit";
-
     public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_debug_reporting_fallback_job_period_ms";
 
@@ -470,6 +471,15 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED =
             "measurement_immediate_aggregate_reporting_job_persisted";
 
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+            "measurement_reporting_job_required_battery_not_low";
+
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_PERSISTED =
+            "measurement_reporting_job_persisted";
+
     public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
             "measurement_enable_aggregatable_report_payload_padding";
 
@@ -487,7 +497,10 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS =
             "measurement_enable_fifo_destinations_delete_aggregate_reports";
-
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS =
+            "measurement_reporting_job_service_batch_window_millis";
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS =
+            "measurement_reporting_job_service_min_execution_window_millis";
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -772,6 +785,13 @@ public final class FlagsConstants {
     public static final String
             KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED =
                     "fledge_auction_server_get_ad_selection_data_payload_metrics_enabled";
+
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED =
+            "fledge_get_ad_selection_data_seller_configuration_enabled";
+
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION =
+            "fledge_get_ad_selection_data_buyer_input_creator_version";
+
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
@@ -852,6 +872,8 @@ public final class FlagsConstants {
             "measurement_job_event_fallback_reporting_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH =
             "measurement_job_event_reporting_kill_switch";
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED =
+            "measurement_reporting_job_service_enabled";
     public static final String KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH =
             "measurement_receiver_install_attribution_kill_switch";
     public static final String KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH =
@@ -1108,6 +1130,9 @@ public final class FlagsConstants {
             "enrollment_enable_limited_logging";
     public static final String KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED =
             "enrollment_api_based_schema_enabled";
+    public static final String KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL =
+            "mdd_enrollment_manifest_file_url";
+    public static final String KEY_ENROLLMENT_PROTO_FILE_ENABLED = "enrollment_proto_file_enabled";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
@@ -1164,9 +1189,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING =
             "measurement_enable_trigger_data_matching";
-
-    public static final String KEY_MEASUREMENT_FLEX_LITE_API_ENABLED =
-            "measurement_flex_lite_api_enabled";
 
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT =
             "measurement_flex_api_max_information_gain_event";

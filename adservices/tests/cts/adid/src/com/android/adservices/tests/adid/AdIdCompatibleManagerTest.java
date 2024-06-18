@@ -28,7 +28,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 
 import org.junit.Assert;
@@ -114,6 +114,9 @@ public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
 
         adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
 
-        callback.assertFailure(ServiceUnavailableException.class);
+        // TODO(b/345835218): Create an Exception Checker for internal exceptions in tests.
+        Exception e = callback.assertFailure(IllegalStateException.class);
+        assertThat(e.getClass().getSimpleName())
+                .isEqualTo(ServiceUnavailableException.class.getSimpleName());
     }
 }

@@ -20,6 +20,8 @@ import static com.android.adservices.data.measurement.MeasurementTables.Aggregat
 import static com.android.adservices.data.measurement.MeasurementTables.AggregateReport;
 import static com.android.adservices.data.measurement.MeasurementTables.AsyncRegistrationContract;
 import static com.android.adservices.data.measurement.MeasurementTables.AttributionContract;
+import static com.android.adservices.data.measurement.MeasurementTables.CREATE_TABLE_APP_REPORT_HISTORY_LATEST;
+import static com.android.adservices.data.measurement.MeasurementTables.AppReportHistoryContract;
 import static com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.INDEX_PREFIX;
@@ -2902,6 +2904,30 @@ public class MeasurementDbSchemaTrail {
                             + "("
                             + SourceContract.MAX_EVENT_STATES
                             + ")");
+    private static final Map<String, String> CREATE_INDEXES_V36_V37 =
+            ImmutableMap.of(
+                    INDEX_PREFIX + MeasurementTables.AppReportHistoryContract.TABLE + "_lrdt",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + AppReportHistoryContract.TABLE
+                            + "_lrdt"
+                            + " ON "
+                            + AppReportHistoryContract.TABLE
+                            + "("
+                            + AppReportHistoryContract.LAST_REPORT_DELIVERED_TIME
+                            + ")",
+                    INDEX_PREFIX + MeasurementTables.AppReportHistoryContract.TABLE + "_ro_ad",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + AppReportHistoryContract.TABLE
+                            + "_ro_ad "
+                            + "ON "
+                            + AppReportHistoryContract.TABLE
+                            + "("
+                            + AppReportHistoryContract.REGISTRATION_ORIGIN
+                            + ", "
+                            + AppReportHistoryContract.APP_DESTINATION
+                            + ")");
 
     private static Map<String, String> getCreateStatementByTableV7() {
         return CREATE_STATEMENT_BY_TABLE_V6;
@@ -3096,6 +3122,14 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV37() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV36());
+        createStatements.put(
+                MeasurementTables.AppReportHistoryContract.TABLE,
+                CREATE_TABLE_APP_REPORT_HISTORY_LATEST);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -3228,6 +3262,12 @@ public class MeasurementDbSchemaTrail {
         return getCreateIndexesV35();
     }
 
+    private static Map<String, String> getCreateIndexesV37() {
+        Map<String, String> createIndexes = getCreateIndexesV36();
+        createIndexes.putAll(CREATE_INDEXES_V36_V37);
+        return createIndexes;
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -3261,6 +3301,7 @@ public class MeasurementDbSchemaTrail {
                     .put(34, getCreateStatementByTableV34().values())
                     .put(35, getCreateStatementByTableV35().values())
                     .put(36, getCreateStatementByTableV36().values())
+                    .put(37, getCreateStatementByTableV37().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -3296,6 +3337,7 @@ public class MeasurementDbSchemaTrail {
                     .put(34, getCreateIndexesV34().values())
                     .put(35, getCreateIndexesV35().values())
                     .put(36, getCreateIndexesV36().values())
+                    .put(37, getCreateIndexesV37().values())
                     .build();
 
     /**

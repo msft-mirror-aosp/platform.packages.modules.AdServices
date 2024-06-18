@@ -48,6 +48,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
+import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.AuctionServerDataCompressorFactory;
 import com.android.adservices.service.adselection.AuctionServerPayloadMetricsStrategyDisabled;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
@@ -78,6 +79,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     private static final boolean CUSTOM_AUDIENCE_CLI_ENABLED = true;
     private static final boolean CONSENTED_DEBUG_CLI_ENABLED = true;
     private static final boolean SIGNALS_CLI_ENABLED = true;
+    private static final long MAX_COMMAND_DURATION_MILLIS = 3000L;
 
     @Mock private AdServicesLogger mAdServicesLogger;
 
@@ -120,6 +122,9 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         new EnrollmentDao(mContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
                         mFlags,
                         CustomAudienceLoggerFactory.getNoOpInstance());
+        AuctionServerDataCompressor auctionServerDataCompressor =
+                AuctionServerDataCompressorFactory.getDataCompressor(
+                        mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
                         customAudienceDao,
@@ -130,8 +135,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
                         mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
                         mFlags.getProtectedSignalsPeriodicEncodingEnabled(),
-                        AuctionServerDataCompressorFactory.getDataCompressor(
-                                mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()),
+                        auctionServerDataCompressor,
                         mFlags.getFledgeAuctionServerOmitAdsEnabled(),
                         new AuctionServerPayloadMetricsStrategyDisabled(),
                         mFlags,
@@ -146,14 +150,14 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         customAudienceDao,
                         consentedDebugConfigurationDao,
                         protectedSignalsDao,
-                        buyerInputGenerator);
+                        buyerInputGenerator,
+                        auctionServerDataCompressor);
         mShellCommandService =
                 new ShellCommandServiceImpl(
                         adServicesShellCommandHandlerFactory,
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler(),
-                        mAdServicesLogger,
-                        3000L);
+                        mAdServicesLogger);
         mSyncIShellCommandCallback = new SyncIShellCommandCallback();
         doNothing().when(mAdServicesLogger).logShellCommandStats(any());
     }
@@ -161,7 +165,8 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     @Test
     public void testRunShellCommand() throws Exception {
         mShellCommandService.runShellCommand(
-                new ShellCommandParam("echo", "xxx"), mSyncIShellCommandCallback);
+                new ShellCommandParam(MAX_COMMAND_DURATION_MILLIS, "echo", "xxx"),
+                mSyncIShellCommandCallback);
 
         ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
         expect.withMessage("result").that(response.getResultCode()).isEqualTo(0);
@@ -173,7 +178,8 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     @Test
     public void testRunShellCommand_invalidCommand() throws Exception {
         mShellCommandService.runShellCommand(
-                new ShellCommandParam("invalid-cmd"), mSyncIShellCommandCallback);
+                new ShellCommandParam(MAX_COMMAND_DURATION_MILLIS, "invalid-cmd"),
+                mSyncIShellCommandCallback);
 
         ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
         expect.withMessage("result").that(response.getResultCode()).isEqualTo(-1);
@@ -185,6 +191,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     public void testRunShellCommand_customAudienceList() throws Exception {
         mShellCommandService.runShellCommand(
                 new ShellCommandParam(
+                        MAX_COMMAND_DURATION_MILLIS,
                         CustomAudienceShellCommandFactory.COMMAND_PREFIX,
                         CustomAudienceListCommand.CMD,
                         "--owner",
@@ -203,6 +210,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     public void testRunShellCommand_consentDebug_view() throws Exception {
         mShellCommandService.runShellCommand(
                 new ShellCommandParam(
+                        MAX_COMMAND_DURATION_MILLIS,
                         AdSelectionShellCommandFactory.COMMAND_PREFIX,
                         ConsentedDebugShellCommand.CMD,
                         ConsentedDebugShellCommand.VIEW_SUB_CMD),
@@ -263,10 +271,10 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         injectCommandToService(shellCommand, commandPrefix),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler(),
-                        mAdServicesLogger,
-                        3000L);
+                        mAdServicesLogger);
         shellCommandService.runShellCommand(
-                new ShellCommandParam(commandPrefix, commandName, "param"),
+                new ShellCommandParam(
+                        MAX_COMMAND_DURATION_MILLIS, commandPrefix, commandName, "param"),
                 mSyncIShellCommandCallback);
 
         // If we are here the command is running in a different thread and is still blocked
@@ -324,10 +332,10 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         injectCommandToService(shellCommand, commandPrefix),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler(),
-                        mAdServicesLogger,
-                        500L);
+                        mAdServicesLogger);
         shellCommandService.runShellCommand(
-                new ShellCommandParam(commandPrefix, "cmd", "param"), mSyncIShellCommandCallback);
+                new ShellCommandParam(500L, commandPrefix, "cmd", "param"),
+                mSyncIShellCommandCallback);
 
         // If we are here the command is running in a different thread and is still blocked
         expect.that(mSyncIShellCommandCallback.getResult()).isNull();
@@ -374,10 +382,10 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         injectCommandToService(shellCommand, commandPrefix),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler(),
-                        mAdServicesLogger,
-                        500L);
+                        mAdServicesLogger);
         shellCommandService.runShellCommand(
-                new ShellCommandParam(commandPrefix, "cmd", "param"), mSyncIShellCommandCallback);
+                new ShellCommandParam(500L, commandPrefix, "cmd", "param"),
+                mSyncIShellCommandCallback);
 
         ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
 

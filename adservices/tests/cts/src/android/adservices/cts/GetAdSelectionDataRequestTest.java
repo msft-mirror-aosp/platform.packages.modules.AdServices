@@ -20,15 +20,17 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.GetAdSelectionDataRequest;
+import android.adservices.adselection.SellerConfigurationFixture;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-public class GetAdSelectionDataRequestTest {
+public class GetAdSelectionDataRequestTest extends AdServicesCtsTestCase {
 
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final Uri COORDINATOR_URI = Uri.parse("http://foo.bar/gcp");
@@ -66,5 +68,27 @@ public class GetAdSelectionDataRequestTest {
 
         assertThat(request.getSeller()).isNull();
         assertThat(request.getCoordinatorOriginUri()).isEqualTo(COORDINATOR_URI);
+    }
+
+    @Test
+    public void testGetAdSelectionDataRequest_sellerConfiguration_success() {
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(SELLER)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
+                        .build();
+
+        expect.that(request.getSeller()).isEqualTo(SELLER);
+        expect.that(request.getSellerConfiguration())
+                .isEqualTo(SellerConfigurationFixture.SELLER_CONFIGURATION);
+    }
+
+    @Test
+    public void testGetAdSelectionDataRequest_withoutSellerConfiguration_success() {
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();
+
+        expect.that(request.getSeller()).isEqualTo(SELLER);
+        expect.that(request.getSellerConfiguration()).isNull();
     }
 }

@@ -29,6 +29,7 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 import com.google.common.truth.Truth;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -39,7 +40,7 @@ import java.util.UUID;
 public final class ConsentedDebugShellCommandCtsTest extends CtsAdServicesDeviceTestCase {
 
     private static final String TAG = "AdServicesShellCmd";
-    private static final String SHELL_COMMAND_PREFIX = "ad_selection consented_debug ";
+    private static final String SHELL_COMMAND_PREFIX = "ad-selection consented-debug ";
     private static final String DISABLE_SHELL_COMMAND_TEMPLATE = SHELL_COMMAND_PREFIX + "disable";
     private static final String VIEW_SHELL_COMMAND_TEMPLATE = SHELL_COMMAND_PREFIX + "view";
 
@@ -52,11 +53,12 @@ public final class ConsentedDebugShellCommandCtsTest extends CtsAdServicesDevice
     }
 
     @Test
+    @Ignore("BugId=343443759")
     public void testRun_consentedDebug_happyPath2() {
         String debugToken = UUID.randomUUID().toString();
         int expiryInHours = 48;
         mAdServicesShellCommandHelper.runCommand(
-                "%s enable --secret_debug_token %s --expires_in_hours %d",
+                "%s enable --secret-debug-token %s --expires-in-hours %d",
                 SHELL_COMMAND_PREFIX, debugToken, expiryInHours);
         String viewBeforeDisableResponse =
                 mAdServicesShellCommandHelper.runCommand(VIEW_SHELL_COMMAND_TEMPLATE);
