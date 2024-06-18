@@ -74,7 +74,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
     private final SimpleStatement mBaseStatement = new SimpleStatement();
 
     public AbstractSdkLevelSupportedRuleTest() {
-        this(StandardStreamsLogger.getInstance());
+        this(DynamicLogger.getInstance());
     }
 
     protected AbstractSdkLevelSupportedRuleTest(RealLogger realLogger) {
@@ -954,7 +954,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
         }
 
         private FakeSdkLevelSupportedRule(Range ruleRange, Level deviceLevel) {
-            super(StandardStreamsLogger.getInstance(), ruleRange);
+            super(DynamicLogger.getInstance(), ruleRange);
             mDeviceLevel = deviceLevel;
         }
 

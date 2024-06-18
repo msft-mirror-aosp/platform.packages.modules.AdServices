@@ -24,7 +24,7 @@ public abstract class SharedSidelessTestCase extends SidelessTestCase {
     // to get it, so it would be properly implemented by host/device-side)
     public final AbstractProcessLifeguardRule processLifeguard =
             new AbstractProcessLifeguardRule(
-                    StandardStreamsLogger.getInstance(), AbstractProcessLifeguardRule.Mode.FAIL) {
+                    DynamicLogger.getInstance(), AbstractProcessLifeguardRule.Mode.FAIL) {
 
                 @Override
                 protected boolean isMainThread() {

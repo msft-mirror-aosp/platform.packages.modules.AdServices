@@ -25,12 +25,12 @@ import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.android.adservices.shared.meta_testing.FakeLogger;
+import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.LogEntry;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
-import com.android.adservices.shared.testing.StandardStreamsLogger;
 
 import com.google.common.collect.ImmutableList;
 
@@ -81,7 +81,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     // TODO(b/342448771): ideally should remove it, but the class hierarchy is messed up (as some
     // classes are defined on side-less but the test on device-side)
     protected SyncCallbackTestCase() {
-        this(StandardStreamsLogger.getInstance());
+        this(DynamicLogger.getInstance());
     }
 
     protected SyncCallbackTestCase(RealLogger realLogger) {

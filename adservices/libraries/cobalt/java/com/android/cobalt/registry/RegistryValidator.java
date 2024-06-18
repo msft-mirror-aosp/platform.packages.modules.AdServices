@@ -23,6 +23,8 @@ import static com.google.cobalt.ReportDefinition.PrivacyMechanism.SHUFFLED_DIFFE
 import static com.google.cobalt.ReportDefinition.ReportType.FLEETWIDE_OCCURRENCE_COUNTS;
 import static com.google.cobalt.ReportDefinition.ReportType.STRING_COUNTS;
 
+import android.util.Log;
+
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.cobalt.IntegerBuckets;
@@ -34,8 +36,11 @@ import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Locale;
+
 /** Validates that Cobalt registry objects are valid and supported by the Cobalt client. */
 public final class RegistryValidator {
+    private static final String TAG = "cobalt.registry";
     private static final ImmutableMap<MetricType, ImmutableSet<ReportType>> ALLOWED_REPORT_TYPES =
             ImmutableMap.of(
                     OCCURRENCE, ImmutableSet.of(FLEETWIDE_OCCURRENCE_COUNTS),
@@ -60,22 +65,47 @@ public final class RegistryValidator {
     public static boolean isValidReportTypeAndPrivacyMechanism(
             MetricDefinition metric, ReportDefinition report) {
         if (!validateReportType(metric.getMetricType(), report.getReportType())) {
+            logValidationFailure(
+                    "Metric type (%s) and report type (%s) failed validation",
+                    metric.getMetricType(), report.getReportType());
             return false;
         }
 
         if (!validatePrivacyMechanism(report.getReportType(), report.getPrivacyMechanism())) {
+            logValidationFailure(
+                    "Report type (%s) and privacy mechanism (%s) failed validation",
+                    report.getReportType(), report.getPrivacyMechanism());
             return false;
         }
 
         if (!validateIntegerBuckets(report.getIntBuckets())) {
+            logValidationFailure("Integer buckets failed validation");
+            return false;
+        }
+
+        if (!validateMinAndMaxValues(
+                report.getReportType(),
+                report.getPrivacyMechanism(),
+                report.getMinValue(),
+                report.getMaxValue())) {
+            logValidationFailure(
+                    "Report type (%s), privacy mechanism (%s), min value (%d), and max value (%d)"
+                            + " failed validation",
+                    report.getReportType(),
+                    report.getPrivacyMechanism(),
+                    report.getMinValue(),
+                    report.getMaxValue());
+            return false;
+        }
+
+        if (!validateMaxCount(report.getMaxCount())) {
+            logValidationFailure("Max count (%d) failed validation", report.getMaxCount());
             return false;
         }
 
         // TODO(b/343722587): Add remaining validations from the Cobalt config validator. This
         // includes:
         //   * poisson fields for different privacy mechanisms
-        //   * min and max values for different privacy mechansims and report types
-        //   * max count (is unset)
         //   * local aggregation period (is WINDOW_DAYS_1)
         //   * local aggregation procedure (is unset)
         //   * local aggregation procedure percentile n (is unset)
@@ -116,6 +146,31 @@ public final class RegistryValidator {
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static boolean validateIntegerBuckets(IntegerBuckets intBuckets) {
         return intBuckets.equals(IntegerBuckets.getDefaultInstance());
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateMinAndMaxValues(
+            ReportType reportType,
+            PrivacyMechanism privacyMechanism,
+            long minValue,
+            long maxValue) {
+        if (reportType.equals(FLEETWIDE_OCCURRENCE_COUNTS)
+                && privacyMechanism.equals(SHUFFLED_DIFFERENTIAL_PRIVACY)) {
+            return minValue > 0 && maxValue >= minValue;
+        }
+
+        return minValue == 0 && maxValue == 0;
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateMaxCount(long maxCount) {
+        return maxCount == 0;
+    }
+
+    private static void logValidationFailure(String format, Object... params) {
+        if (Log.isLoggable(TAG, Log.WARN)) {
+            Log.w(TAG, String.format(Locale.US, format, params));
+        }
     }
 
     private RegistryValidator() {}
