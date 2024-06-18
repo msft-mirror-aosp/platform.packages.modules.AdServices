@@ -57,7 +57,8 @@ public class U18UxDetentionChannelTest {
     public void setUp() throws Exception {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
+        UiUtils.setBinderTimeout();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.resetAdServicesConsentData(sContext);
         UiUtils.enableNotificationPermission();
         UiUtils.enableGa();
@@ -146,49 +147,6 @@ public class U18UxDetentionChannelTest {
                 /* isDisplayed= */ true,
                 /* isEuTest= */ false,
                 UiConstants.UX.GA_UX);
-
-        AdServicesStates adServicesU18States =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(true)
-                        .setAdultAccount(false)
-                        .setU18Account(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .setPrivacySandboxUiRequest(false)
-                        .build();
-
-        mCommonManager.enableAdServices(adServicesU18States, CALLBACK_EXECUTOR, mCallback);
-
-        // Verify no U18 UX notification can be triggered.
-        AdservicesWorkflows.verifyNotification(
-                sContext,
-                mDevice,
-                /* isDisplayed= */ false,
-                /* isEuTest= */ false,
-                UiConstants.UX.U18_UX);
-    }
-
-    @Test
-    public void testBetaUxU18DetentionChannel() throws Exception {
-        UiUtils.enableBeta();
-        UiUtils.setAsRowDevice();
-
-        AdServicesStates adServicesAdultStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(true)
-                        .setAdultAccount(true)
-                        .setU18Account(false)
-                        .setPrivacySandboxUiEnabled(true)
-                        .setPrivacySandboxUiRequest(false)
-                        .build();
-
-        mCommonManager.enableAdServices(adServicesAdultStates, CALLBACK_EXECUTOR, mCallback);
-
-        AdservicesWorkflows.verifyNotification(
-                sContext,
-                mDevice,
-                /* isDisplayed= */ true,
-                /* isEuTest= */ false,
-                UiConstants.UX.BETA_UX);
 
         AdServicesStates adServicesU18States =
                 new AdServicesStates.Builder()

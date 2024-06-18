@@ -16,6 +16,7 @@
 package com.android.adservices.ui.settings.activitydelegates;
 
 import android.os.Build;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -47,12 +48,6 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initBeta() {
-        mActivity.setTitle(R.string.settingsUI_measurement_view_title);
-        configureSharedElements();
-    }
-
-    @Override
     public void initGA() {
         mActivity.setTitle(R.string.settingsUI_measurement_ga_title);
         configureSharedElements();
@@ -66,7 +61,18 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
 
     @Override
     public void initRvc() {
-        initU18();
+        mActivity.setTitle(R.string.settingsUI_measurement_ga_title);
+        configureElement(
+                R.id.measurement_switch_bar,
+                switchBar -> mMeasurementViewModel.consentSwitchClickHandlerOnR((Switch) switchBar),
+                mMeasurementViewModel.getMeasurementConsent(),
+                switchBar -> ((Switch) switchBar)::setChecked);
+        // reset msmt button
+        configureElement(
+                R.id.reset_measurement_button,
+                view -> mMeasurementViewModel.resetMeasurementButtonClickHandler());
+        // privacy policy link
+        configureLink(R.id.measurement_footer);
     }
 
     @Override
@@ -84,6 +90,7 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
                         mMeasurementViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar),
                 mMeasurementViewModel.getMeasurementConsent(),
                 switchBar -> ((MainSwitchBar) switchBar)::setChecked);
+
         // reset msmt button
         configureElement(
                 R.id.reset_measurement_button,

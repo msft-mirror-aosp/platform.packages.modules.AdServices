@@ -15,19 +15,27 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.common.AbstractDeviceSupportHelper.GMS_CORE_PACKAGE;
-import static com.android.adservices.common.AbstractDeviceSupportHelper.PLAY_STORE_PACKAGE;
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.compatibility.common.util.PackageUtil;
 import com.android.compatibility.common.util.PropertyUtil;
+import com.android.internal.annotations.VisibleForTesting;
+
+import java.util.List;
 
 // TODO(b/297248322): move this class to sideless as the logic is duplicated on hostside
 /** Helper to check if AdServices is supported / enabled in a device. */
@@ -36,6 +44,9 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
     private static final String PLAY_STORE_USER_CERT =
             "F0:FD:6C:5B:41:0F:25:CB:25:C3:B5:33:46:C8:97:2F:"
                     + "AE:30:F8:EE:74:11:DF:91:04:80:AD:6B:2D:60:DB:83";
+
+    /** The minimum screen width for a 7-inch large screen device. */
+    public static final int SEVEN_INCH_TABLET_MINIMUM_SCREEN_WIDTH_DP = 600;
 
     private static final AdServicesSupportHelper sInstance = new AdServicesSupportHelper();
 
@@ -51,6 +62,34 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
         boolean value = invokeStaticMethodWithShellPermissions(() -> flags.getGlobalKillSwitch());
         sInstance.mLog.v("getGlobalKillSwitch(): %b", value);
         return value;
+    }
+
+    @Override
+    protected boolean isAndroidServiceAvailable(String intentAction) {
+        Intent intent = new Intent(intentAction);
+
+        try {
+            List<ResolveInfo> resolveInfos =
+                    mContext.getPackageManager()
+                            .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
+            if (resolveInfos == null) {
+                mLog.d("Returns null when query ResolveInfo for Intent %s", intent.getAction());
+                return false;
+            }
+
+            mLog.v(
+                    "The number of ResolveInfo for Intent %s is %d",
+                    intent.getAction(), resolveInfos.size());
+
+            if (resolveInfos.size() == 1) {
+                return true;
+            }
+        } catch (Exception e) {
+            mLog.e("Error when query ResolveInfo for Intent %s", intent.getAction());
+            return false;
+        }
+
+        return false;
     }
 
     @Override
@@ -76,13 +115,48 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
     }
 
     @Override
+    protected boolean isLargeScreenDeviceByDefault() {
+        return isLargeScreen(mContext.getResources());
+    }
+
+    @Override
     protected boolean isDebuggable() {
         return AdservicesTestHelper.isDebuggable();
+    }
+
+    // TODO(b/308009734): Add tests for getAdServicesPackageName().
+    @Override
+    @Nullable
+    public String getAdServicesPackageName() {
+        return AdservicesTestHelper.getAdServicesPackageName(mContext);
     }
 
     private AdServicesSupportHelper() {
         super(AndroidLogger.getInstance(), DeviceSideSystemPropertiesHelper.getInstance());
 
         mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    }
+
+    @VisibleForTesting
+    AdServicesSupportHelper(Context context) {
+        super(AndroidLogger.getInstance(), DeviceSideSystemPropertiesHelper.getInstance());
+
+        mContext = context;
+    }
+
+    private boolean isLargeScreen(Resources resources) {
+        if (resources == null) {
+            return false;
+        }
+        // Consider it to be large screen if it's either a) xlarge, or b) sw600dp.
+        boolean isXlarge =
+                (resources.getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK)
+                        > Configuration.SCREENLAYOUT_SIZE_LARGE;
+        boolean isSevenInchLargeScreen =
+                (resources.getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK)
+                                <= Configuration.SCREENLAYOUT_SIZE_LARGE
+                        && resources.getConfiguration().smallestScreenWidthDp
+                                >= SEVEN_INCH_TABLET_MINIMUM_SCREEN_WIDTH_DP;
+        return isXlarge || isSevenInchLargeScreen;
     }
 }

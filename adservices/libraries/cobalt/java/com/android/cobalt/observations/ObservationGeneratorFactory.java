@@ -72,16 +72,14 @@ public final class ObservationGeneratorFactory {
      */
     public ObservationGenerator getObservationGenerator(
             MetricDefinition metric, ReportDefinition report, int dayIndex) {
-        switch (report.getPrivacyLevel()) {
-            case NO_ADDED_PRIVACY:
+        switch (report.getPrivacyMechanism()) {
+            case DE_IDENTIFICATION:
                 return getNonPrivateObservationGenerator(metric, report, dayIndex);
-            case LOW_PRIVACY:
-            case MEDIUM_PRIVACY:
-            case HIGH_PRIVACY:
+            case SHUFFLED_DIFFERENTIAL_PRIVACY:
                 return getPrivateObservationGenerator(metric, report);
             default:
                 throw new AssertionError(
-                        "Unknown or unset privacy level: " + report.getPrivacyLevelValue());
+                        "Unknown or unset privacy mechanism: " + report.getPrivacyMechanismValue());
         }
     }
 

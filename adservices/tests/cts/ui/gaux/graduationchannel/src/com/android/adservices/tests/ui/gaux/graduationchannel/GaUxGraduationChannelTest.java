@@ -24,7 +24,6 @@ import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -36,18 +35,15 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
-@RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class GaUxGraduationChannelTest {
+public final class GaUxGraduationChannelTest extends AdServicesGaUxGraduationChannelTestCase {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -64,8 +60,8 @@ public class GaUxGraduationChannelTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
+        UiUtils.setBinderTimeout();
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.resetAdServicesConsentData(sContext);
 
         UiUtils.enableNotificationPermission();
@@ -79,7 +75,7 @@ public class GaUxGraduationChannelTest {
 
         // General purpose callback used for expected success calls.
         mCallback =
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
@@ -103,7 +99,7 @@ public class GaUxGraduationChannelTest {
                         .setPrivacySandboxUiEnabled(true)
                         .build(),
                 Executors.newCachedThreadPool(),
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         responseFuture.set(result);
@@ -123,8 +119,6 @@ public class GaUxGraduationChannelTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -136,7 +130,7 @@ public class GaUxGraduationChannelTest {
      */
     @Test
     public void testRowU18ToGaAdIdEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         UiUtils.setAsRowDevice();
         UiUtils.enableU18();
@@ -179,7 +173,7 @@ public class GaUxGraduationChannelTest {
      */
     @Test
     public void testRowU18ToBetaAdIdEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         UiUtils.setAsRowDevice();
         UiUtils.enableU18();

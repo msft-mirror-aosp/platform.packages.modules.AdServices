@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
 
 import org.junit.Before;
@@ -58,12 +57,5 @@ public class KillSwitchAccessResolverTest {
     @Test
     public void testGetErrorMessage() {
         assertEquals(ERROR_MESSAGE, new KillSwitchAccessResolver(() -> false).getErrorMessage());
-    }
-
-    @Test
-    public void testGetErrorStatusCode() {
-        assertEquals(
-                AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED,
-                new KillSwitchAccessResolver(() -> false).getErrorStatusCode());
     }
 }

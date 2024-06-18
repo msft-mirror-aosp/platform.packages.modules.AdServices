@@ -159,8 +159,18 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         mAdSelectionExecutionLogger.startRunAdScoring(adBiddingOutcomes);
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SCORING);
 
-        final List<SignedContextualAds> contextualAds =
-                new ArrayList<>(adSelectionConfig.getPerBuyerSignedContextualAds().values());
+        List<SignedContextualAds> contextualAds;
+        if (mFlags.getFledgeAdSelectionContextualAdsEnabled()) {
+            // Only collect  all contextual ads if the feature is enabled
+            sLogger.v(
+                    "Contextual flow is enabled, reading the per buyer signed contextual ads from"
+                            + " ad selection config");
+            contextualAds =
+                    new ArrayList<>(adSelectionConfig.getPerBuyerSignedContextualAds().values());
+        } else {
+            sLogger.v("Contextual flow is disabled,setting contextual ads as empty list");
+            contextualAds = new ArrayList<>();
+        }
 
         AdServicesHttpClientRequest scoringLogicUriHttpRequest =
                 AdServicesHttpClientRequest.builder()
@@ -287,6 +297,9 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         trustedSignals -> {
                             SellerContextualSignals contextualSignals =
                                     getContextualSignals(trustedSignals.second);
+                            mAdSelectionExecutionLogger
+                                    .setScoreAdSellerAdditionalSignalsContainedDataVersion(
+                                            contextualSignals.getDataVersion() != null);
                             sLogger.v("Invoking JS engine to generate Ad Scores");
                             return FluentFuture.from(
                                             mAdSelectionScriptEngine.scoreAds(

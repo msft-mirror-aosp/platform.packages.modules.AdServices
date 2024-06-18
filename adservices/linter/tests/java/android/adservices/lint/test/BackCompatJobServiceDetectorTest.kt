@@ -16,7 +16,7 @@
 
 package android.adservices.lint.test
 
-import android.adservices.lint.BackCompatJobServiceDetector
+import android.adservices.lint.prod.BackCompatJobServiceDetector
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestLintTask
@@ -175,7 +175,7 @@ public final class EpochJobService extends JobService {
                         " NoClassDefFoundError. NoClassDefFoundError can happen when new class" +
                         " is used in ExtServices build, and the error happens when the device" +
                         " OTA to old AdServices build on T which does not contain the new class" +
-                        " definition (go/rbc-jobservice-lint). [InvalidAdServicesJobService]\n" +
+                        " definition. [InvalidAdServicesJobService]\n" +
                         "    private static final LoggerFactory.Logger sLogger =" +
                         " LoggerFactory.getTopicsLogger();\n" +
                         "                                                       " +
@@ -216,7 +216,7 @@ public final class EpochJobService extends JobService {
                         " NoClassDefFoundError. NoClassDefFoundError can happen when new class" +
                         " is used in ExtServices build, and the error happens when the device" +
                         " OTA to old AdServices build on T which does not contain the new class" +
-                        " definition (go/rbc-jobservice-lint). [InvalidAdServicesJobService]\n" +
+                        " definition. [InvalidAdServicesJobService]\n" +
                         "    private static final LoggerFactory.Logger sLogger =" +
                         " LoggerFactory.getLogger();\n" +
                         "                                                       " +

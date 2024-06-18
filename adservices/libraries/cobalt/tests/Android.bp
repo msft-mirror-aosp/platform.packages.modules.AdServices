@@ -28,6 +28,7 @@ android_test {
         "adservices-service-core",
         "adservices-test-utility",
         "adservices-cobalt-schema",
+        "adservices-cobalt-testing",
         "androidx.test.core",
         "androidx.test.runner",
         "androidx.room_room-runtime",
@@ -64,6 +65,7 @@ android_test {
         "adservices-service-core",
         "adservices-test-utility",
         "adservices-cobalt-schema",
+        "adservices-cobalt-testing",
         "androidx.test.core",
         "androidx.test.runner",
         "androidx.room_room-runtime",
@@ -85,6 +87,6 @@ android_test {
     max_sdk_version: "32",
     test_suites: [
         "general-tests",
-        "mts-extservices"
+        "mts-extservices",
     ],
 }

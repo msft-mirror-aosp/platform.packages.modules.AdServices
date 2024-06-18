@@ -66,7 +66,9 @@ import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
+import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FledgeConsentFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -83,7 +85,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of the Custom Audience service. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -122,7 +123,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 CallingAppUidSupplierBinderImpl.create(),
                 new CustomAudienceServiceFilter(
                         context,
-                        ConsentManager.getInstance(),
+                        new FledgeConsentFilter(
+                                ConsentManager.getInstance(), AdServicesLoggerImpl.getInstance()),
                         FlagsFactory.getFlags(),
                         AppImportanceFilter.create(
                                 context,
@@ -134,7 +136,9 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
-                        Throttler.getInstance(FlagsFactory.getFlags())),
+                        new FledgeApiThrottleFilter(
+                                Throttler.getInstance(FlagsFactory.getFlags()),
+                                AdServicesLoggerImpl.getInstance())),
                 new AdFilteringFeatureFactory(
                         SharedStorageDatabase.getInstance(context).appInstallDao(),
                         SharedStorageDatabase.getInstance(context).frequencyCapDao(),
@@ -240,7 +244,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
-        int failureReason = AdServicesStatusUtils.FAILURE_REASON_UNSET;
         // The filters log internally, so don't accidentally log again
         boolean shouldLog = false;
         try {
@@ -264,7 +267,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     sLogger.v("Joining custom audience");
                     mCustomAudienceImpl.joinCustomAudience(
                             customAudience, ownerPackageName, devContext);
-                    BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
+                    BackgroundFetchJob.schedule(mFlags);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
                     sLogger.v("Consent revoked");
@@ -339,7 +342,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                     mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                                     AdRenderIdValidator.createInstance(mFlags),
                                     AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                                            mFlags.getFledgeAdSelectionFilteringEnabled(),
+                                            mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                                            mFlags.getFledgeAppInstallFilteringEnabled(),
                                             mFlags.getFledgeAuctionServerAdRenderIdEnabled()));
 
                     impl.doFetchCustomAudience(input, callback, devContext);
@@ -478,7 +482,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
-        int failureReason = AdServicesStatusUtils.FAILURE_REASON_UNSET;
         // The filters log internally, so don't accidentally log again
         boolean shouldLog = false;
         try {

@@ -37,8 +37,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.json.JSONObject;
 import org.junit.Rule;

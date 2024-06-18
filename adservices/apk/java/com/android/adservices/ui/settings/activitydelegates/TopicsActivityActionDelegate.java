@@ -48,11 +48,6 @@ import java.util.function.Function;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsActivityActionDelegate extends BaseActionDelegate {
-    private static final int[] BetaOnlyElements =
-            new int[] {R.id.topics_introduction, R.id.topics_view_footer};
-    private static final int[] GaOnlyElements =
-            new int[] {R.id.topics_ga_introduction, R.id.topics_view_ga_footer};
-
     private final TopicsViewModel mTopicsViewModel;
 
     public TopicsActivityActionDelegate(
@@ -64,46 +59,7 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initBeta() {
-        // hidden elements
-        hideElements(GaOnlyElements);
-        // show elements
-        showElements(BetaOnlyElements);
-
-        // set title
-        mActivity.setTitle(R.string.settingsUI_topics_ga_title);
-        // set text
-        configureElement(
-                R.id.blocked_topics_button_child, R.string.settingsUI_blocked_topics_title);
-        configureElement(R.id.reset_topics_button_child, R.string.settingsUI_reset_topics_title);
-        configureElement(R.id.no_topics_state, R.string.settingsUI_topics_view_no_topics_text);
-        // empty state blocked topics button
-        Function<View, Observer<ImmutableList<Topic>>> observerProvider = controls -> list -> {
-            if (list.isEmpty()) {
-                controls.setEnabled(false);
-                controls.setAlpha(mActivity.getResources().getFloat(R.dimen.disabled_button_alpha));
-                ((Button) controls).setText(R.string.settingsUI_topics_view_no_blocked_topics_text);
-            } else {
-                controls.setEnabled(true);
-                controls.setAlpha(mActivity.getResources().getFloat(R.dimen.enabled_button_alpha));
-                ((Button) controls).setText(R.string.settingsUI_blocked_topics_title);
-            }
-        };
-        configureElement(
-                R.id.blocked_topics_when_empty_state_button,
-                mTopicsViewModel.getBlockedTopics(),
-                observerProvider);
-        // buttons
-        configureSharedElements();
-    }
-
-    @Override
     public void initGA() {
-        // hidden elements
-        hideElements(BetaOnlyElements);
-        // show elements
-        showElements(GaOnlyElements);
-
         // set title
         mActivity.setTitle(R.string.settingsUI_topics_ga_title);
         // consent switch

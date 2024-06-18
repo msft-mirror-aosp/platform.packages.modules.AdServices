@@ -71,6 +71,31 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}'s attribution scopes.
+     *
+     * @param sourceId ID of the requested Source.
+     * @return a list of attribution scopes.
+     */
+    List<String> getSourceAttributionScopes(@NonNull String sourceId) throws DatastoreException;
+
+    /**
+     * Updates existing sources based on the following criteria for attribution scope:
+     *
+     * <ol>
+     *   <li>Deactivates sources with {@link Source#getMaxEventStates()} different from {@code
+     *       pendingSource}.
+     *   <li>Deactivates sources with {@link Source#getAttributionScopeLimit()} smaller than {@code
+     *       pendingSource}.
+     *   <li>Removes attribution scopes for existing sources not selected as the latest k
+     *       attribution scopes, where k = {@code pendingSource#getAttributionScopeLimit()}.
+     * </ol>
+     *
+     * @param pendingSource The pending source to compare against existing sources.
+     * @throws DatastoreException If an error occurs while processing the data in the datastore.
+     */
+    void updateSourcesForAttributionScope(@NonNull Source pendingSource) throws DatastoreException;
+
+    /**
      * Queries and returns the {@link Source}.
      *
      * @param sourceId ID of the requested Source
@@ -370,8 +395,8 @@ public interface IMeasurementDao {
     /** Saves the {@link EventReport} to the datastore. */
     void insertEventReport(EventReport eventReport) throws DatastoreException;
 
-    /** Deletes the {@link EventReport} from the datastore. */
-    void deleteEventReport(EventReport eventReport) throws DatastoreException;
+    /** Deletes the {@link EventReport} and associated {@link Attribution} from the datastore. */
+    void deleteEventReportAndAttribution(EventReport eventReport) throws DatastoreException;
 
     /** Deletes the {@link DebugReport} from the datastore. */
     void deleteDebugReport(String debugReportId) throws DatastoreException;
@@ -401,15 +426,6 @@ public interface IMeasurementDao {
     List<String> getPendingEventReportIdsForGivenApp(Uri appName) throws DatastoreException;
 
     /**
-     * Find the number of entries for a rate limit window using the {@link Source} and {@link
-     * Trigger}. Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
-     *
-     * @return the number of entries for the window.
-     */
-    long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
-            throws DatastoreException;
-
-    /**
      * Find the number of entries for a rate limit window, scoped to event- or aggregate-level using
      * the {@link Source} and {@link Trigger}. Rate-Limit Window: (Scope, Source Site, Destination
      * Site, Window) from triggerTime.
@@ -423,7 +439,10 @@ public interface IMeasurementDao {
     void insertAttribution(@NonNull Attribution attribution) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords(long earliestValidInsertion, int registrationRetryLimit)
+    void deleteExpiredRecords(
+            long earliestValidInsertion,
+            int registrationRetryLimit,
+            @Nullable Long earliestValidAppReportInsertion)
             throws DatastoreException;
 
     /**
@@ -730,4 +749,75 @@ public interface IMeasurementDao {
      */
     long countDistinctDebugAdIdsUsedByEnrollment(@NonNull String enrollmentId)
             throws DatastoreException;
+
+    /**
+     * Inserts an entry of app report history with enrollment ID into the {@link
+     * MeasurementTables.AppReportHistoryContract#TABLE}. It means that event / aggregate reports
+     * for the given app destination have been delivered to the registration origin.
+     *
+     * @param appDestination app destination
+     * @param registrationOrigin source registration origin
+     * @param lastReportDeliveredTimestamp last deliver time for the report
+     * @throws DatastoreException when SQLite issue occurs.
+     */
+    void insertOrUpdateAppReportHistory(
+            @NonNull Uri appDestination,
+            @NonNull Uri registrationOrigin,
+            long lastReportDeliveredTimestamp)
+            throws DatastoreException;
+
+    /**
+     * Returns the number of unique navigation sources by reporting origin and registration id.
+     *
+     * @param reportingOrigin the reporting origin to match.
+     * @param registrationId the registration id to match.
+     * @return the number of matched navigation sources.
+     * @throws DatastoreException
+     */
+    long countNavigationSourcesPerReportingOrigin(
+            @NonNull Uri reportingOrigin, @NonNull String registrationId) throws DatastoreException;
+
+    /**
+     * Let matchingSources be unexpired sources that match the provided publisher, publisher type
+     * destination surface type and enrollmentId. Pick and return the sources that have the least
+     * recently used destination excluding the provided list of destinations.
+     *
+     * @param publisher publisher to match
+     * @param publisherType publisher surface type, i.e. app/web to match
+     * @param enrollmentId matching enrollment
+     * @param excludedDestinations destinations to exclude while matching
+     * @param destinationType destination type app/web
+     * @param windowEndTime selected sources' expiry needs to be greater than this time
+     * @return sources with least recently used destination
+     * @throws DatastoreException when accessing the DB fails
+     */
+    List<String> fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+            Uri publisher,
+            int publisherType,
+            String enrollmentId,
+            List<Uri> excludedDestinations,
+            int destinationType,
+            long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Deletes pending aggregate reports for the provided sources. Also delete the attributions that
+     * are associated to those reports.
+     *
+     * @param sourceIds sources to consider to query the pending reports
+     * @throws DatastoreException when accessing the DB fails
+     */
+    void deletePendingAggregateReportsAndAttributionsForSources(List<String> sourceIds)
+            throws DatastoreException;
+
+    /**
+     * Return the timestamp of the latest pending report (Event or Aggregate) in the batching
+     * window. The batching window is calculated as the earliest report's timestamp + batchWindow.
+     * If there are no reports, return null.
+     *
+     * @param batchWindow Size of the batching window, in ms, starting at the next pending report.
+     * @return Latest report's timestamp, in ms, within the batching window.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    Long getLatestReportTimeInBatchWindow(long batchWindow) throws DatastoreException;
 }

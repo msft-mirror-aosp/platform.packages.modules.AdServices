@@ -22,9 +22,9 @@ import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableMap;
 

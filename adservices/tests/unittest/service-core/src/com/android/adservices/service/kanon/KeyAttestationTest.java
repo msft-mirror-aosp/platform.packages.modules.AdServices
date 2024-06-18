@@ -23,25 +23,25 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.spy;
-
-import android.security.keystore.KeyProperties;
+import static org.mockito.Mockito.doNothing;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.KeyAttestationSupportedRule;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.After;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 
 public final class KeyAttestationTest {
@@ -56,9 +56,13 @@ public final class KeyAttestationTest {
 
     private KeyAttestation mKeyAttestation;
 
-    private KeyStore mSpyKeyStore;
+    @Mock private KeyStore mMockKeyStore;
 
-    private KeyPairGenerator mSpyKeyPairGenerator;
+    @Mock private KeyPair mMockKeyPair;
+
+    @Mock private Certificate mMockCertificate;
+
+    @Mock private KeyPairGenerator mMockKeyPairGenerator;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -67,30 +71,21 @@ public final class KeyAttestationTest {
     public final AdServicesDeviceSupportedRule deviceSupportRule =
             new AdServicesDeviceSupportedRule();
 
-    @Rule(order = 2)
-    public final KeyAttestationSupportedRule keyAttestationSupportedRule =
-            new KeyAttestationSupportedRule();
+    @Rule public final MockitoRule mockito = MockitoJUnit.rule();
 
     @Before
     public void setUp() throws Exception {
-        mSpyKeyStore = spy(KeyStore.getInstance(ANDROID_KEY_STORE));
-        mSpyKeyPairGenerator =
-                spy(
-                        KeyPairGenerator.getInstance(
-                                KeyProperties.KEY_ALGORITHM_EC, ANDROID_KEY_STORE));
         mKeyAttestation =
-                new KeyAttestation(/* useStrongBox= */ false, mSpyKeyStore, mSpyKeyPairGenerator);
-    }
+                new KeyAttestation(/* useStrongBox= */ false, mMockKeyStore, mMockKeyPairGenerator);
 
-    @After
-    public void tearDown() throws Exception {
-        KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
-        keyStore.load(null);
-        if (keyStore.containsAlias(KEY_ALIAS)) {
-            keyStore.deleteEntry(KEY_ALIAS);
-        }
+        doReturn(new byte[] {1, 1}).when(mMockCertificate).getEncoded();
+        doNothing().when(mMockKeyPairGenerator).initialize(any());
+        doReturn(mMockKeyPair).when(mMockKeyPairGenerator).generateKeyPair();
 
-        Mockito.reset(mSpyKeyStore, mSpyKeyPairGenerator);
+        doNothing().when(mMockKeyStore).load(any());
+        doReturn(new Certificate[] {mMockCertificate})
+                .when(mMockKeyStore)
+                .getCertificateChain(any());
     }
 
     @Test
@@ -103,7 +98,7 @@ public final class KeyAttestationTest {
 
     @Test
     public void testGenerateAttestationRecord_nullKey_throwsException() {
-        doReturn(null).when(mSpyKeyPairGenerator).generateKeyPair();
+        doReturn(null).when(mMockKeyPairGenerator).generateKeyPair();
 
         assertThrows(
                 IllegalStateException.class,
@@ -111,18 +106,9 @@ public final class KeyAttestationTest {
     }
 
     @Test
-    public void testGenerateHybridKey_success() {
-        KeyPair keyPair = mKeyAttestation.generateHybridKey(CHALLENGE, KEY_ALIAS);
-
-        assertThat(keyPair).isNotNull();
-        assertThat(keyPair.getPublic()).isNotNull();
-        assertThat(keyPair.getPrivate()).isNotNull();
-    }
-
-    @Test
     public void testGenerateHybridKey_initFailure() throws Exception {
         doThrow(new InvalidAlgorithmParameterException("Invalid Parameters"))
-                .when(mSpyKeyPairGenerator)
+                .when(mMockKeyPairGenerator)
                 .initialize(any());
 
         assertThrows(
@@ -142,7 +128,7 @@ public final class KeyAttestationTest {
 
     @Test
     public void testGetAttestationRecordFromKeyAlias_certFailure() throws Exception {
-        doThrow(new CertificateException("Cert Exception")).when(mSpyKeyStore).load(any());
+        doThrow(new CertificateException("Cert Exception")).when(mMockKeyStore).load(any());
 
         KeyAttestationCertificateChainRecord record =
                 mKeyAttestation.getAttestationRecordFromKeyAlias(KEY_ALIAS);
@@ -153,7 +139,7 @@ public final class KeyAttestationTest {
     @Test
     public void testGetAttestationRecordFromKeyAlias_keyStoreFailure() throws Exception {
         doThrow(new KeyStoreException("Key Store Exception"))
-                .when(mSpyKeyStore)
+                .when(mMockKeyStore)
                 .getCertificateChain(any());
 
         KeyAttestationCertificateChainRecord record =
@@ -165,7 +151,7 @@ public final class KeyAttestationTest {
     @Test
     public void testGetAttestationRecordFromKeyAlias_keyStoreReturnsNullChain_Failure()
             throws Exception {
-        doReturn(null).when(mSpyKeyStore).getCertificateChain(any());
+        doReturn(null).when(mMockKeyStore).getCertificateChain(any());
 
         assertThrows(
                 IllegalStateException.class,

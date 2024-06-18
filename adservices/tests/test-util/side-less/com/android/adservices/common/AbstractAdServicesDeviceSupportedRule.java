@@ -15,7 +15,16 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.common.Logger.RealLogger;
+import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
+import com.android.adservices.shared.testing.AndroidDevicePropertiesHelper;
+import com.android.adservices.shared.testing.DeviceConditionsViolatedException;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.Nullable;
+import com.android.adservices.shared.testing.ScreenSize;
+import com.android.adservices.shared.testing.annotations.RequiresGoDevice;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
+import com.android.adservices.shared.testing.annotations.RequiresScreenSizeDevice;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -24,8 +33,10 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 // NOTE: this class is used by device and host side, so it cannot have any Android dependency
@@ -48,6 +59,9 @@ import java.util.Objects;
  * <p>This rule can also be used to run tests only on devices that have {@link
  * android.content.pm.PackageManager#FEATURE_RAM_LOW low memory}, by annotating them with {@link
  * RequiresLowRamDevice}.
+ *
+ * <p>This rule can also be used to run tests only on devices that have certain screen size, by
+ * annotating them with {@link RequiresScreenSizeDevice}.
  *
  * <p>When used with another similar rules, you should organize them using the order of feature
  * dependency. For example, if the test also requires a given SDK level, you should check use that
@@ -76,8 +90,17 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
             "Test annotated with @RequiresLowRamDevice and device is not.";
 
     @VisibleForTesting
+    static final String REQUIRES_SCREEN_SIZE_ASSUMPTION_FAILED_ERROR_MESSAGE =
+            "Test annotated with @RequiresScreenSizeDevice(size=%s) and device is not.";
+
+    @VisibleForTesting
     static final String REQUIRES_GO_DEVICE_ASSUMPTION_FAILED_ERROR_MESSAGE =
             "Test annotated with @RequiresGoDevice and device is not a Go device.";
+
+    @VisibleForTesting
+    static final String REQUIRES_ANDROID_SERVICE_ASSUMPTION_FAILED_ERROR_MSG =
+            "Test annotated with @RequiresAndroidServiceAvailable and device doesn't have the"
+                    + " android service %s";
 
     /** Default constructor. */
     public AbstractAdServicesDeviceSupportedRule(
@@ -101,11 +124,32 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
         return isLowRamDevice;
     }
 
+    /** Checks whether the device has large screen. */
+    public final boolean isLargeScreenDevice() {
+        boolean isLargeScreenDevice = mDeviceSupportHelper.isLargeScreenDevice();
+        mLog.v("isLargeScreenDevice(): %b", isLargeScreenDevice);
+        return isLargeScreenDevice;
+    }
+
     /** Checks whether the device is a go device. */
     public final boolean isGoDevice() {
         boolean isGoDevice = mDeviceSupportHelper.isGoDevice();
         mLog.v("isGoDevice(): %b", isGoDevice);
         return isGoDevice;
+    }
+
+    /**
+     * Check whether the device has a service.
+     *
+     * @return {@code true} when it has and only has one service.
+     */
+    public final boolean isAndroidServiceAvailable(String intentAction) {
+        boolean isAndroidServiceAvailable =
+                mDeviceSupportHelper.isAndroidServiceAvailable(intentAction);
+        mLog.v(
+                "isAndroidServiceAvailable() for Intent action %s: %b",
+                intentAction, isAndroidServiceAvailable);
+        return isAndroidServiceAvailable;
     }
 
     @Override
@@ -121,20 +165,30 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                 String testName = description.getDisplayName();
                 boolean isDeviceSupported = isAdServicesSupportedOnDevice();
                 boolean isLowRamDevice = isLowRamDevice();
+                boolean isLargeScreenDevice = isLargeScreenDevice();
                 boolean isGoDevice = isGoDevice();
                 RequiresLowRamDevice requiresLowRamDevice =
                         description.getAnnotation(RequiresLowRamDevice.class);
+                ScreenSize requiresScreenDevice = getRequiresScreenDevice(description);
                 RequiresGoDevice requiresGoDevice =
                         description.getAnnotation(RequiresGoDevice.class);
+                RequiresAndroidServiceAvailable requiresAndroidServiceAvailable =
+                        getRequiresAndroidServiceAvailable(description);
+
                 mLog.d(
                         "apply(): testName=%s, isDeviceSupported=%b, isLowRamDevice=%b,"
-                                + " requiresLowRamDevice=%s",
-                        testName, isDeviceSupported, isLowRamDevice, requiresLowRamDevice);
+                                + " requiresLowRamDevice=%s, requiresAndroidServiceAvailable=%s",
+                        testName,
+                        isDeviceSupported,
+                        isLowRamDevice,
+                        requiresLowRamDevice,
+                        requiresAndroidServiceAvailable);
                 List<String> assumptionViolatedReasons = new ArrayList<>();
 
                 if (!isDeviceSupported
                         && requiresLowRamDevice == null
-                        && requiresGoDevice == null) {
+                        && requiresGoDevice == null
+                        && requiresScreenDevice == null) {
                     // Low-ram devices is a sub-set of unsupported, hence we cannot skip it right
                     // away as the test might be annotated with @RequiresLowRamDevice (which is
                     // checked below)
@@ -148,6 +202,24 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                         assumptionViolatedReasons.add(
                                 REQUIRES_GO_DEVICE_ASSUMPTION_FAILED_ERROR_MESSAGE);
                     }
+                    if (requiresScreenDevice != null
+                            && !AndroidDevicePropertiesHelper.matchScreenSize(
+                                    requiresScreenDevice, isLargeScreenDevice)) {
+                        assumptionViolatedReasons.add(
+                                String.format(
+                                        REQUIRES_SCREEN_SIZE_ASSUMPTION_FAILED_ERROR_MESSAGE,
+                                        requiresScreenDevice));
+                    }
+                    if (requiresAndroidServiceAvailable != null) {
+                        String intentAction = requiresAndroidServiceAvailable.intentAction();
+                        if (!isAndroidServiceAvailable(intentAction)) {
+                            assumptionViolatedReasons.add(
+                                    String.format(
+                                            Locale.ENGLISH,
+                                            REQUIRES_ANDROID_SERVICE_ASSUMPTION_FAILED_ERROR_MSG,
+                                            intentAction));
+                        }
+                    }
                 }
 
                 // Throw exception in case any of the assumption was violated.
@@ -158,5 +230,40 @@ public abstract class AbstractAdServicesDeviceSupportedRule implements TestRule 
                 base.evaluate();
             }
         };
+    }
+
+    @Nullable
+    private ScreenSize getRequiresScreenDevice(Description description) {
+        RequiresScreenSizeDevice requiresLargeScreenDevice =
+                description.getAnnotation(RequiresScreenSizeDevice.class);
+        if (requiresLargeScreenDevice != null) {
+            return requiresLargeScreenDevice.value();
+        }
+        return null;
+    }
+
+    // Check both class and the method for the annotation RequiresAndroidServiceAvailable, while the
+    // method's annotation prevails.
+    @Nullable
+    private RequiresAndroidServiceAvailable getRequiresAndroidServiceAvailable(
+            Description description) {
+        Annotation[] annotations = description.getTestClass().getAnnotations();
+
+        RequiresAndroidServiceAvailable classAnnotation = null;
+        for (Annotation annotation : annotations) {
+            if (annotation instanceof RequiresAndroidServiceAvailable) {
+                classAnnotation = (RequiresAndroidServiceAvailable) annotation;
+                break;
+            }
+        }
+
+        RequiresAndroidServiceAvailable methodAnnotation =
+                description.getAnnotation(RequiresAndroidServiceAvailable.class);
+
+        if (methodAnnotation == null) {
+            return classAnnotation;
+        }
+
+        return methodAnnotation;
     }
 }

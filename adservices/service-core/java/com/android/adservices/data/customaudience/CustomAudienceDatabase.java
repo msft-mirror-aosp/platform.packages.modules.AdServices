@@ -50,8 +50,7 @@ import java.util.Objects;
             @AutoMigration(from = 3, to = 4),
             @AutoMigration(from = 4, to = 5),
             @AutoMigration(from = 5, to = 6),
-            @AutoMigration(from = 6, to = 7),
-            @AutoMigration(from = 7, to = 8, spec = CustomAudienceDatabase.AutoMigration7To8.class),
+            @AutoMigration(from = 7, to = 8),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
@@ -76,8 +75,6 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
             toColumnName = "daily_update_uri")
     static class AutoMigration1To2 implements AutoMigrationSpec {}
 
-    static class AutoMigration7To8 implements AutoMigrationSpec {}
-
     private static volatile CustomAudienceDatabase sSingleton;
 
     // TODO: How we want handle synchronized situation (b/228101878).
@@ -97,16 +94,19 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
                                 BinderFlagReader.readFlag(
                                         () ->
                                                 FlagsFactory.getFlags()
-                                                        .getFledgeAdSelectionFilteringEnabled()),
+                                                        .getFledgeFrequencyCapFilteringEnabled()),
                                 BinderFlagReader.readFlag(
                                         () ->
                                                 FlagsFactory.getFlags()
-                                                        .getFledgeAuctionServerAdRenderIdEnabled())
-                        );
+                                                        .getFledgeAppInstallFilteringEnabled()),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeAuctionServerAdRenderIdEnabled()));
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, CustomAudienceDatabase.class, DATABASE_NAME)
-                                .fallbackToDestructiveMigration()
+                                .fallbackToDestructiveMigration(true)
                                 .addTypeConverter(converters)
                                 .build();
             }

@@ -33,6 +33,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.DebugFlagsConstants;
 import com.android.adservices.service.FlagsConstants;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -167,16 +168,16 @@ public class AbstractMeasurementLatencyTest {
         }
 
         // Override consent manager behavior to give user consent.
-        flags.setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true);
+        flags.setDebugFlag(DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true);
 
         // Override adid kill switch.
         flags.setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
 
         // Override the flag to allow current package to call APIs.
-        flags.setPpapiAppAllowList("*");
+        flags.setPpapiAppAllowList(FlagsConstants.ALLOWLIST_ALL);
 
         // Override the flag to allow current package to call delete API.
-        flags.setMsmtWebContextClientAllowList("*");
+        flags.setMsmtWebContextClientAllowList(FlagsConstants.ALLOWLIST_ALL);
 
         // Override the flag for the global kill switch.
         flags.setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, false);

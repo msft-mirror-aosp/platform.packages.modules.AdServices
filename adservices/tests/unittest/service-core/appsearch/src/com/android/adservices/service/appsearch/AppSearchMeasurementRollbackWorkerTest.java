@@ -40,12 +40,12 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Before;
@@ -56,7 +56,6 @@ import org.mockito.Mock;
 import org.mockito.quality.Strictness;
 
 import java.util.List;
-import java.util.concurrent.Executor;
 
 @SmallTest
 public class AppSearchMeasurementRollbackWorkerTest {
@@ -67,11 +66,10 @@ public class AppSearchMeasurementRollbackWorkerTest {
     private static final int APPSEARCH_WRITE_TIMEOUT_MS = 1000;
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final String mAdServicesPackageName =
-            AppSearchConsentWorker.getAdServicesPackageName(mContext);
-    private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private String mAdServicesPackageName;
     private AppSearchMeasurementRollbackWorker mWorker;
-    @Mock private ListenableFuture<AppSearchSession> mAppSearchSession;
+    private final ListenableFuture<AppSearchSession> mAppSearchSession =
+            Futures.immediateFuture(null);
     @Mock private Flags mMockFlags;
 
     @Rule(order = 0)
@@ -89,6 +87,7 @@ public class AppSearchMeasurementRollbackWorkerTest {
 
     @Before
     public void setup() {
+        mAdServicesPackageName = AppSearchConsentWorker.getAdServicesPackageName(mContext);
         doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(APPSEARCH_WRITE_TIMEOUT_MS).when(mMockFlags).getAppSearchWriteTimeout();
 

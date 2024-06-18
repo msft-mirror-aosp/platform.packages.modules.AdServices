@@ -26,6 +26,8 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -56,7 +58,7 @@ public final class DeleteExpiredJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_DELETE_EXPIRED_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDeleteExpiredKillSwitch()) {
@@ -70,6 +72,7 @@ public final class DeleteExpiredJobService extends JobService {
         LoggerFactory.getMeasurementLogger().d("DeleteExpiredJobService.onStartJob");
         sBackgroundExecutor.execute(
                 () -> {
+                    Flags flags = FlagsFactory.getFlags();
                     long earliestValidInsertion =
                             System.currentTimeMillis()
                                     - FlagsFactory.getFlags().getMeasurementDataExpiryWindowMs();
@@ -80,10 +83,12 @@ public final class DeleteExpiredJobService extends JobService {
                             .runInTransaction(
                                     dao ->
                                             dao.deleteExpiredRecords(
-                                                    earliestValidInsertion, retryLimit));
+                                                    earliestValidInsertion,
+                                                    retryLimit,
+                                                    getEarliestValidAppReportInsertion(flags)));
 
                     boolean shouldRetry = false;
-                    AdServicesJobServiceLogger.getInstance(DeleteExpiredJobService.this)
+                    AdServicesJobServiceLogger.getInstance()
                             .recordJobFinished(
                                     MEASUREMENT_DELETE_EXPIRED_JOB_ID,
                                     /* isSuccessful */ true,
@@ -94,12 +99,19 @@ public final class DeleteExpiredJobService extends JobService {
         return true;
     }
 
+    private @Nullable Long getEarliestValidAppReportInsertion(Flags flags) {
+        return flags.getMeasurementEnableReinstallReattribution()
+                ? System.currentTimeMillis()
+                        - flags.getMeasurementMaxReinstallReattributionWindowSeconds()
+                : null;
+    }
+
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getMeasurementLogger().d("DeleteExpiredJobService.onStopJob");
         boolean shouldRetry = false;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, MEASUREMENT_DELETE_EXPIRED_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -160,7 +172,7 @@ public final class DeleteExpiredJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_DELETE_EXPIRED_JOB_ID, skipReason);
         }
 

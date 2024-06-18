@@ -20,7 +20,6 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user"/>
-
     <option name="test-user-token" value="%TEST_USER%"/>
 
     <!-- IMPORTANT: This needs to come before SuiteApkInstaller
@@ -37,7 +36,7 @@
     <target_preparer
         class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="teardown-command"
-            value="pm --user %TEST_USER% uninstall com.android.ctssdkprovider"/>
+            value="pm uninstall --user %TEST_USER% com.android.ctssdkprovider"/>
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
@@ -51,10 +50,9 @@
     </test>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
+        <option name="run-command" value="cmd sdk_sandbox set-state --reset" />
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-        <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
     </target_preparer>
 
     <object type="module_controller"

@@ -1,5 +1,5 @@
 Contains artifacts that are shared between multiple AdServices-related projects
-suck as:
+such as:
 - AdServices system_server components
 - AdServices service
 - SDK Sandbox

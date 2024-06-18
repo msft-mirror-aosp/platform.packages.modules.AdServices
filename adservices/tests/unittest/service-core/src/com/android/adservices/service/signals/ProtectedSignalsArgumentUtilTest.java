@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.js.JSScriptArgument;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;

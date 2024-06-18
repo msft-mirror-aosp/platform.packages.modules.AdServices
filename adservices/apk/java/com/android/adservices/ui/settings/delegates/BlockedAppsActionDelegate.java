@@ -38,7 +38,6 @@ import java.io.IOException;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedAppsActionDelegate {
     private final BlockedAppsActivity mBlockedAppsActivity;
@@ -93,10 +92,6 @@ public class BlockedAppsActionDelegate {
      * AdServicesSettingsBlockedAppsFragment} to handle user actions.
      */
     public void initBlockedAppsFragment() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_ga_title);
-        } else {
-            mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_title);
-        }
+        mBlockedAppsActivity.setTitle(R.string.settingsUI_blocked_apps_ga_title);
     }
 }

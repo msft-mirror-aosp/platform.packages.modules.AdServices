@@ -38,7 +38,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
 /** Tests for {@link MainViewModel}. */
 @SpyStatic(FlagsFactory.class)

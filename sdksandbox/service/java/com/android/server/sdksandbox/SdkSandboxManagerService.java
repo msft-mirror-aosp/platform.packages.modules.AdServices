@@ -103,7 +103,6 @@ import com.android.server.sdksandbox.helpers.StringHelper;
 import com.android.server.sdksandbox.proto.Services.AllowedService;
 import com.android.server.sdksandbox.proto.Services.AllowedServices;
 import com.android.server.wm.ActivityInterceptorCallback;
-import com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import java.io.FileDescriptor;
@@ -198,10 +197,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final SdkSandboxPulledAtoms mSdkSandboxPulledAtoms;
 
-    private SdkSandboxSettingsListener mSdkSandboxSettingsListener;
+    private final SdkSandboxSettingsListener mSdkSandboxSettingsListener;
 
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
-    private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
 
     /**
      * Property to enforce restrictions for SDK sandbox processes. If the value of this property is
@@ -405,7 +403,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String callingPackageName, SandboxLatencyInfo sandboxLatencyInfo) {
         sandboxLatencyInfo.setTimeSystemServerReceivedCallFromApp(mInjector.elapsedRealtime());
 
-        final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
+        final int callingUid = Binder.getCallingUid();
+        CallingInfo callingInfo;
+        if (Process.isSdkSandboxUid(callingUid)) {
+            callingInfo =
+                    CallingInfo.fromExternal(
+                            mContext,
+                            Process.getAppUidForSdkSandboxUid(callingUid),
+                            callingPackageName);
+        } else {
+            callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
+        }
 
         final List<SandboxedSdk> sandboxedSdks = new ArrayList<>();
         synchronized (mLock) {
@@ -633,6 +641,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             if (isSdkSandboxDisabled()) {
                 Log.i(TAG, "Not loading an SDK as the SDK sandbox is disabled");
+                sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
+                sandboxLatencyInfo.setSandboxStatus(
+                        SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                 sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
                 callback.onLoadSdkFailure(
                         new LoadSdkException(LOAD_SDK_SDK_SANDBOX_DISABLED, SANDBOX_DISABLED_MSG),
@@ -654,6 +665,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         } catch (Throwable e) {
             try {
                 Log.e(TAG, "Failed to load SDK " + sdkName, e);
+                sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
+                sandboxLatencyInfo.setSandboxStatus(
+                        SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
                 sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
                 callback.onLoadSdkFailure(
                         new LoadSdkException(LOAD_SDK_INTERNAL_ERROR, e.getMessage(), e),
@@ -1046,7 +1060,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     void onUserUnlocking(int userId) {
         Log.i(TAG, "onUserUnlocking " + userId);
         // using postDelayed to wait for other volumes to mount
-        mHandler.postDelayed(() -> mSdkSandboxStorageManager.onUserUnlocking(userId), 20000);
+        BackgroundThread.getHandler()
+                .postDelayed(() -> mSdkSandboxStorageManager.onUserUnlocking(userId), 20000);
     }
 
     @Override
@@ -1064,9 +1079,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         synchronized (mLock) {
             writer.println(
                     "Killswitch enabled: " + mSdkSandboxSettingsListener.isKillSwitchEnabled());
-            writer.println(
-                    "Customized Sdk Context enabled: "
-                            + mSdkSandboxSettingsListener.isCustomizedSdkContextEnabled());
             writer.println("mLoadSdkSessions size: " + mLoadSdkSessions.size());
             for (CallingInfo callingInfo : mLoadSdkSessions.keySet()) {
                 writer.printf("Caller: %s has following SDKs", callingInfo);
@@ -1333,9 +1345,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
 
             try {
-                service.initialize(
-                        new SdkToServiceLink(),
-                        mSdkSandboxSettingsListener.isCustomizedSdkContextEnabled());
+                service.initialize(new SdkToServiceLink());
             } catch (Throwable e) {
                 handleFailedSandboxInitialization(mCallingInfo);
                 return false;
@@ -1475,6 +1485,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     boolean isSdkSandboxDisabled() {
+        if (!SdkLevel.isAtLeastU()) {
+            return true;
+        }
+
         synchronized (mLock) {
             if (!mInjector.isAdServiceApkPresent()) {
                 return true;
@@ -1516,13 +1530,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    void setSdkSandboxSettingsListener(SdkSandboxSettingsListener listener) {
-        synchronized (mLock) {
-            mSdkSandboxSettingsListener = listener;
-        }
-    }
-
     void stopAllSandboxes() {
         synchronized (mLock) {
             stopAllSandboxesLocked();
@@ -1547,16 +1554,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // For T, we kill the sandbox by uid. For U, we kill a specific sandbox process.
         if (SdkLevel.isAtLeastU()) {
-            try {
-                mServiceProvider.stopSandboxService(currentCallingInfo);
-            } catch (PackageManager.NameNotFoundException e) {
-                // Just log the exception for the CallingUid for which package is not found to
-                // ensure other sandbox services are stopped
-                Log.e(
-                        TAG,
-                        "Failed to stop sandbox service for: " + currentCallingInfo.toString(),
-                        e);
-            }
+            mServiceProvider.stopSandboxService(currentCallingInfo);
         } else {
             // For apps with shared uid, unbind the sandboxes for all the remaining apps since we
             // kill the sandbox by uid.
@@ -1780,37 +1778,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
          *
          * @param clientPackageName package name of the app for which the sdk was loaded in the
          *     sandbox
+         * @param sandboxLatencyInfo object containing the information of latency metrics for the
+         *     api
          * @return List of {@link SandboxedSdk} containing all currently loaded sdks
          */
         @Override
-        public List<SandboxedSdk> getSandboxedSdks(String clientPackageName)
+        public List<SandboxedSdk> getSandboxedSdks(
+                String clientPackageName, SandboxLatencyInfo sandboxLatencyInfo)
                 throws RemoteException {
             // TODO(b/258195148): Write multiuser tests
             // TODO(b/242039497): Add authorisation checks to make sure only the sandbox calls this
             //  API.
-            int uid = Binder.getCallingUid();
-            if (Process.isSdkSandboxUid(uid)) {
-                uid = Process.getAppUidForSdkSandboxUid(uid);
-            }
-            CallingInfo callingInfo = new CallingInfo(uid, clientPackageName);
-            final List<SandboxedSdk> sandboxedSdks = new ArrayList<>();
-            synchronized (mLock) {
-                List<LoadSdkSession> loadedSdks = getLoadedSdksForApp(callingInfo);
-                for (int i = 0; i < loadedSdks.size(); i++) {
-                    LoadSdkSession sdk = loadedSdks.get(i);
-                    SandboxedSdk sandboxedSdk = sdk.getSandboxedSdk();
-                    if (sandboxedSdk != null) {
-                        sandboxedSdks.add(sandboxedSdk);
-                    } else {
-                        Log.e(
-                                TAG,
-                                "SandboxedSdk is null for SDK "
-                                        + sdk.mSdkName
-                                        + " despite being loaded");
-                    }
-                }
-            }
-            return sandboxedSdks;
+            return SdkSandboxManagerService.this.getSandboxedSdks(
+                    clientPackageName, sandboxLatencyInfo);
         }
 
         @Override
@@ -1847,7 +1827,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     SdkSandboxManagerLocal getLocalManager() {
         return mInjector.getLocalManager();
     }
@@ -2064,13 +2044,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     }
                     break;
                 default: // NO_INTERCEPT
-                    SdkSandboxManagerService.this.logSandboxActivityApiLatency(
-                            SdkSandboxStatsLog
-                                    .SANDBOX_ACTIVITY_EVENT_OCCURRED__METHOD__INTERCEPT_SANDBOX_ACTIVITY,
-                            SdkSandboxStatsLog
-                                    .SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE,
-                            (int) (mInjector.elapsedRealtime() - timeEventStarted),
-                            callingUid);
                     return null;
             }
 
@@ -2302,7 +2275,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 Process.getAppUidForSdkSandboxUid(sdkSandboxUid));
     }
 
-    private class LocalImpl implements SdkSandboxManagerLocal {
+    class LocalImpl implements SdkSandboxManagerLocal {
+        // The following test allowlists are used to temporarily allow test components
+        // (ContentProviders, BroadcastReceivers etc.) to be accessed during testing. This is not
+        // combined with the existing allowlist and is checked independently.
+        private ArraySet<String> mTestCpAllowlist = new ArraySet<>();
+        private ArraySet<String> mTestSendBroadcastAllowlist = new ArraySet<>();
+
         @Override
         public void registerAdServicesManagerService(IBinder iBinder, boolean published) {
             SdkSandboxManagerService.this.registerAdServicesManagerService(iBinder, published);
@@ -2367,7 +2346,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public boolean canSendBroadcast(@NonNull Intent intent) {
-            return false;
+            return StringHelper.doesInputMatchAnyWildcardPattern(
+                    mTestSendBroadcastAllowlist, intent.getAction());
         }
 
         @Override
@@ -2427,7 +2407,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             try {
                 return !mSdkSandboxSettingsListener.areRestrictionsEnforced()
                         || StringHelper.doesInputMatchAnyWildcardPattern(
-                                getContentProviderAllowlist(), providerInfo.authority);
+                                getContentProviderAllowlist(), providerInfo.authority)
+                        || StringHelper.doesInputMatchAnyWildcardPattern(
+                                mTestCpAllowlist, providerInfo.authority);
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
@@ -2558,6 +2540,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         public int getEffectiveTargetSdkVersion(int sdkSandboxUid)
                 throws PackageManager.NameNotFoundException {
             return SdkSandboxManagerService.this.getEffectiveTargetSdkVersion(sdkSandboxUid);
+        }
+
+        void appendTestContentProviderAllowlist(@NonNull String[] testCpAllowlist) {
+            mTestCpAllowlist.addAll(Arrays.asList(testCpAllowlist));
+        }
+
+        void appendTestSendBroadcastAllowlist(@NonNull String[] testSendBroadcastAllowlist) {
+            mTestSendBroadcastAllowlist.addAll(Arrays.asList(testSendBroadcastAllowlist));
+        }
+
+        void clearTestAllowlists() {
+            mTestCpAllowlist = new ArraySet<>();
+            mTestSendBroadcastAllowlist = new ArraySet<>();
+        }
+
+        ArraySet<String> getTestContentProviderAllowlist() {
+            return mTestCpAllowlist;
+        }
+
+        ArraySet<String> getTestSendBroadcastAllowlist() {
+            return mTestSendBroadcastAllowlist;
         }
     }
 }

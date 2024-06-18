@@ -154,6 +154,10 @@ public class SqliteObjectMapper {
                 builder::setInstallCooldownWindow);
         setBooleanColumn(cursor, MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
                 builder::setInstallAttributed);
+        setLongColumn(
+                cursor,
+                MeasurementTables.SourceContract.REINSTALL_REATTRIBUTION_WINDOW,
+                builder::setReinstallReattributionWindow);
         setTextColumn(cursor, MeasurementTables.SourceContract.FILTER_DATA,
                 builder::setFilterDataString);
         setTextColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_SOURCE,
@@ -228,6 +232,14 @@ public class SqliteObjectMapper {
         setTextColumn(cursor, MeasurementTables.SourceContract.TRIGGER_DATA_MATCHING,
                 (enumValue) -> builder.setTriggerDataMatching(
                         Source.TriggerDataMatching.valueOf(enumValue)));
+        setLongColumn(
+                cursor,
+                MeasurementTables.SourceContract.ATTRIBUTION_SCOPE_LIMIT,
+                builder::setAttributionScopeLimit);
+        setLongColumn(
+                cursor,
+                MeasurementTables.SourceContract.MAX_EVENT_STATES,
+                builder::setMaxEventStates);
         return builder.build();
     }
 
@@ -305,6 +317,14 @@ public class SqliteObjectMapper {
                 (enumValue) ->
                         builder.setAggregatableSourceRegistrationTimeConfig(
                                 Trigger.SourceRegistrationTimeConfig.valueOf(enumValue)));
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.TRIGGER_CONTEXT_ID,
+                builder::setTriggerContextId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
+                builder::setAttributionScopesString);
         return builder.build();
     }
 
@@ -360,6 +380,10 @@ public class SqliteObjectMapper {
                 builder::setAggregationCoordinatorOrigin);
         setBooleanColumn(
                 cursor, MeasurementTables.AggregateReport.IS_FAKE_REPORT, builder::setIsFakeReport);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
+                builder::setTriggerContextId);
         return builder.build();
     }
 

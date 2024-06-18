@@ -20,41 +20,40 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
-import android.os.Build;
 import android.test.mock.MockContext;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
-import org.junit.Assume;
 import org.junit.Test;
 
 /** Unit tests for {@link SandboxedSdkContextUtils} */
-@SmallTest
-public final class SandboxedSdkContextUtilsTest {
+public final class SandboxedSdkContextUtilsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetAsSandboxedSdkContext_inputIsNotSandboxedSdkContext() {
-        assertThat(SandboxedSdkContextUtils.getAsSandboxedSdkContext(null)).isNull();
-        assertThat(SandboxedSdkContextUtils.getAsSandboxedSdkContext(new MockContext())).isNull();
-
-        final Context realContext = ApplicationProvider.getApplicationContext();
-        assertThat(SandboxedSdkContextUtils.getAsSandboxedSdkContext(realContext)).isNull();
+        expect.withMessage("null context")
+                .that(SandboxedSdkContextUtils.getAsSandboxedSdkContext(null))
+                .isNull();
+        expect.withMessage("mock context")
+                .that(SandboxedSdkContextUtils.getAsSandboxedSdkContext(new MockContext()))
+                .isNull();
+        expect.withMessage("real context")
+                .that(SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext))
+                .isNull();
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     public void testGetAsSandboxedSdkContext_inputIsSandboxedSdkContext() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
-        Context context = ApplicationProvider.getApplicationContext();
         Context sandboxedSdkContext =
                 new SandboxedSdkContext(
-                        /* baseContext = */ context,
-                        /* classLoader = */ context.getClassLoader(),
-                        /* clientPackageName = */ context.getPackageName(),
-                        /* info = */ context.getApplicationInfo(),
-                        /* sdkName = */ "sdkName",
-                        /* sdkCeDataDir = */ null,
-                        /* sdkDeDataDir = */ null,
-                        /* isCustomizedSdkContextEnabled = */ false);
+                        /* baseContext= */ mContext,
+                        /* classLoader= */ mContext.getClassLoader(),
+                        /* clientPackageName= */ mContext.getPackageName(),
+                        /* info= */ mContext.getApplicationInfo(),
+                        /* sdkName= */ "sdkName",
+                        /* sdkCeDataDir= */ null,
+                        /* sdkDeDataDir= */ null);
         assertThat(SandboxedSdkContextUtils.getAsSandboxedSdkContext(sandboxedSdkContext))
                 .isSameInstanceAs(sandboxedSdkContext);
     }

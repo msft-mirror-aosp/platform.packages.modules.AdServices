@@ -20,11 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdTechIdentifier;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -32,16 +30,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 // TODO(b/273329939): Delete once CTS tests are unignored
-@SmallTest
-public class SetAppInstallAdvertisersRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class SetAppInstallAdvertisersRequestTest extends AdServicesUnitTestCase {
     private static final Set<AdTechIdentifier> ADVERTISERS =
             new HashSet<>(
                     Arrays.asList(
                             AdTechIdentifier.fromString("example1.com"),
                             AdTechIdentifier.fromString("example2.com")));
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildsSetAppInstallAdvertisersRequest() {

@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.measurement.access;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -50,19 +51,12 @@ public class ConsentNotifiedAccessResolverTest {
                 new ConsentNotifiedAccessResolver(
                         mConsentManager, new CachedFlags(mFlags), mUserConsentAccessResolver);
         doReturn(false).when(mFlags).getConsentNotifiedDebugMode();
-        doReturn(new AccessInfo(false, FAILURE_REASON_UNSET))
+        doReturn(new AccessInfo(false, STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET))
                 .when(mUserConsentAccessResolver)
                 .getAccessInfo(mContext);
         doReturn(false).when(mConsentManager).wasNotificationDisplayed();
         doReturn(false).when(mConsentManager).wasU18NotificationDisplayed();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
-    }
-
-    @Test
-    public void getErrorStatusCode_returnsExpectedErrorCode() {
-        assertEquals(
-                AdServicesStatusUtils.STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET,
-                mConsentNotifiedAccessResolver.getErrorStatusCode());
     }
 
     @Test
@@ -76,15 +70,6 @@ public class ConsentNotifiedAccessResolverTest {
     public void isAllowed_returnsTrueWhenGaUXNotificationDisplayed() {
         // Setup
         doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
-
-        // Assertion
-        assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mContext).isAllowedAccess());
-    }
-
-    @Test
-    public void isAllowed_returnsTrueWhenBetaNotificationDisplayed() {
-        // Setup
-        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
 
         // Assertion
         assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mContext).isAllowedAccess());
@@ -111,13 +96,17 @@ public class ConsentNotifiedAccessResolverTest {
     @Test
     public void isAllowed_returnsFalseWhenNotificationWasNotDisplayed() {
         // Assertion
-        assertFalse(mConsentNotifiedAccessResolver.getAccessInfo(mContext).isAllowedAccess());
+        AccessInfo accessInfo = mConsentNotifiedAccessResolver.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(
+                AdServicesStatusUtils.STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET,
+                accessInfo.getResponseCode());
     }
 
     @Test
     public void isAllowed_returnsTrueWhenTheUserHasAlreadyConsented() {
         // Setup
-        doReturn(new AccessInfo(true, FAILURE_REASON_UNSET))
+        doReturn(new AccessInfo(true, STATUS_SUCCESS))
                 .when(mUserConsentAccessResolver)
                 .getAccessInfo(mContext);
 

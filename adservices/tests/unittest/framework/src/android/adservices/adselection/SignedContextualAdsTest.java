@@ -23,22 +23,20 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Collections;
 
 /** Unit tests for {@link SignedContextualAds} */
-public class SignedContextualAdsTest {
+@RequiresSdkLevelAtLeastS
+public final class SignedContextualAdsTest extends AdServicesUnitTestCase {
     public static final byte[] TEST_SIGNATURE = new byte[] {0, 1, 2};
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildContextualAdsSuccess() {
@@ -50,23 +48,23 @@ public class SignedContextualAdsTest {
                         .setSignature(TEST_SIGNATURE)
                         .build();
 
-        assertThat(contextualAds.getBuyer()).isEqualTo(SignedContextualAdsFixture.BUYER);
-        assertThat(contextualAds.getDecisionLogicUri())
+        expect.that(contextualAds.getBuyer()).isEqualTo(SignedContextualAdsFixture.BUYER);
+        expect.that(contextualAds.getDecisionLogicUri())
                 .isEqualTo(SignedContextualAdsFixture.DECISION_LOGIC_URI);
-        assertThat(contextualAds.getAdsWithBid())
+        expect.that(contextualAds.getAdsWithBid())
                 .isEqualTo(SignedContextualAdsFixture.ADS_WITH_BID);
-        assertThat(contextualAds.getSignature()).isEqualTo(TEST_SIGNATURE);
+        expect.that(contextualAds.getSignature()).isEqualTo(TEST_SIGNATURE);
     }
 
     @Test
     public void testBuildContextualAdsBuilderSuccess() {
         AdTechIdentifier newAdTech = AdTechIdentifier.fromString("new-buyer");
         SignedContextualAds contextualAds = SignedContextualAdsFixture.aSignedContextualAds();
-        assertThat(contextualAds.getBuyer()).isNotEqualTo(newAdTech);
+        expect.that(contextualAds.getBuyer()).isNotEqualTo(newAdTech);
 
         SignedContextualAds anotherContextualAds =
                 new SignedContextualAds.Builder(contextualAds).setBuyer(newAdTech).build();
-        assertThat(anotherContextualAds.getBuyer()).isEqualTo(newAdTech);
+        expect.that(anotherContextualAds.getBuyer()).isEqualTo(newAdTech);
     }
 
     @Test
@@ -78,10 +76,11 @@ public class SignedContextualAdsTest {
         p.setDataPosition(0);
         SignedContextualAds fromParcel = SignedContextualAds.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getBuyer()).isEqualTo(contextualAds.getBuyer());
-        assertThat(fromParcel.getDecisionLogicUri()).isEqualTo(contextualAds.getDecisionLogicUri());
-        assertThat(fromParcel.getAdsWithBid()).isEqualTo(contextualAds.getAdsWithBid());
-        assertThat(fromParcel.getSignature()).isEqualTo(contextualAds.getSignature());
+        expect.that(fromParcel.getBuyer()).isEqualTo(contextualAds.getBuyer());
+        expect.that(fromParcel.getDecisionLogicUri())
+                .isEqualTo(contextualAds.getDecisionLogicUri());
+        expect.that(fromParcel.getAdsWithBid()).isEqualTo(contextualAds.getAdsWithBid());
+        expect.that(fromParcel.getSignature()).isEqualTo(contextualAds.getSignature());
     }
 
     @Test
@@ -114,8 +113,7 @@ public class SignedContextualAdsTest {
     @Test
     public void testParcelNullDestFailure() {
         SignedContextualAds contextualAds = SignedContextualAdsFixture.aSignedContextualAds();
-        Parcel nullDest = null;
-        assertThrows(NullPointerException.class, () -> contextualAds.writeToParcel(nullDest, 0));
+        assertThrows(NullPointerException.class, () -> contextualAds.writeToParcel(null, 0));
     }
 
     @Test
@@ -169,22 +167,22 @@ public class SignedContextualAdsTest {
     @Test
     public void testContextualAdsDescribeContents() {
         SignedContextualAds obj = SignedContextualAdsFixture.aSignedContextualAds();
-
         assertThat(obj.describeContents()).isEqualTo(0);
     }
 
     @Test
-    public void testContextualAdsHaveSameHashCode() {
+    public void testContextualAdsEqual() {
         SignedContextualAds obj1 =
                 SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder().build();
         SignedContextualAds obj2 =
                 SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder().build();
 
-        CommonFixture.assertHaveSameHashCode(obj1, obj2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(obj1, obj2);
     }
 
     @Test
-    public void testContextualAdsHaveDifferentHashCode() {
+    public void testContextualAdsDifferent() {
         SignedContextualAds obj1 = SignedContextualAdsFixture.aSignedContextualAds();
         SignedContextualAds obj2 =
                 SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder()
@@ -195,6 +193,16 @@ public class SignedContextualAdsTest {
                         .setAdsWithBid(Collections.singletonList(AD_WITH_BID_1))
                         .build();
 
-        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreNotEqual(obj1, obj2);
+        et.expectObjectsAreNotEqual(obj1, obj3);
+        et.expectObjectsAreNotEqual(obj2, obj3);
+    }
+
+    @Test
+    public void testSignedContextualAdsDescribeContents() {
+        SignedContextualAds obj1 =
+                SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder().build();
+        assertThat(obj1.describeContents()).isEqualTo(0);
     }
 }

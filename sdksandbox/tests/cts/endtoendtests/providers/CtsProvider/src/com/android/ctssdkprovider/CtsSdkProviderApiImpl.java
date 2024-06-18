@@ -35,6 +35,9 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
@@ -43,7 +46,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
 import android.text.TextUtils;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
@@ -392,6 +395,28 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         return launcherActivities.size();
     }
 
+    @Override
+    public int requestAudioFocus() {
+        try {
+            AudioManager manager = mContext.getSystemService(AudioManager.class);
+
+            AudioAttributes attr =
+                    new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build();
+
+            AudioFocusRequest mediaFocusReq =
+                    new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                            .setAudioAttributes(attr)
+                            .build();
+
+            return manager.requestAudioFocus(mediaFocusReq);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     private void registerLifecycleEvents(
             IActivityStarter iActivityStarter,
             Activity sandboxActivity,
@@ -438,13 +463,21 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     private void buildActivityLayout(Activity activity, String textToCheck) {
-        final LinearLayout layout = new LinearLayout(activity);
+        final RelativeLayout layout = new RelativeLayout(activity);
         layout.setLayoutParams(
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT));
-        layout.setOrientation(LinearLayout.HORIZONTAL);
+                new RelativeLayout.LayoutParams(
+                        RelativeLayout.LayoutParams.MATCH_PARENT,
+                        RelativeLayout.LayoutParams.MATCH_PARENT));
+
+        // Place text view in the center to ensure UIAutomator finds the text.
+        RelativeLayout.LayoutParams textViewLayoutParams =
+                new RelativeLayout.LayoutParams(
+                        RelativeLayout.LayoutParams.WRAP_CONTENT,
+                        RelativeLayout.LayoutParams.WRAP_CONTENT);
+        textViewLayoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        textViewLayoutParams.addRule(RelativeLayout.CENTER_VERTICAL);
         final TextView tv1 = new TextView(activity);
+        tv1.setLayoutParams(textViewLayoutParams);
         int orientation = activity.getResources().getConfiguration().orientation;
         tv1.setText(textToCheck + "_orientation: " + orientation);
         layout.addView(tv1);

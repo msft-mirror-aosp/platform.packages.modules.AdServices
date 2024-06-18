@@ -18,11 +18,14 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+
 import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
@@ -41,6 +44,13 @@ public class AuctionServerPayloadMetricsStrategyEnabled
     @Override
     public void setNumBuyers(GetAdSelectionDataApiCalledStats.Builder builder, int numBuyers) {
         builder.setNumBuyers(numBuyers);
+    }
+
+    @Override
+    public void setServerAuctionCoordinatorSource(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            @AdsRelevanceStatusUtils.ServerAuctionCoordinatorSource int coordinatorSource) {
+        // do nothing
     }
 
     @Override
@@ -86,6 +96,61 @@ public class AuctionServerPayloadMetricsStrategyEnabled
         }
         updateInputFromCustomAudience(
                 perBuyerStats.get(buyerName), customAudience, dbCustomAudience);
+    }
+
+    @Override
+    public void logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+            Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> statsMap,
+            int encodedSignalsCount,
+            int encodedSignalsTotalSizeInBytes,
+            int encodedSignalsMaxSizeInBytes,
+            int encodedSignalsMinSizeInBytes) {
+        int encodedSignalsMeanSizeInBytes =
+                encodedSignalsCount == 0 ? 0 : encodedSignalsTotalSizeInBytes / encodedSignalsCount;
+
+        if (statsMap.isEmpty()) {
+            GetAdSelectionDataBuyerInputGeneratedStats stats =
+                    GetAdSelectionDataBuyerInputGeneratedStats.builder()
+                            .setNumCustomAudiences(FIELD_UNSET)
+                            .setNumCustomAudiencesOmitAds(FIELD_UNSET)
+                            .setCustomAudienceSizeMeanB(FIELD_UNSET)
+                            .setCustomAudienceSizeVarianceB(FIELD_UNSET)
+                            .setTrustedBiddingSignalsKeysSizeMeanB(FIELD_UNSET)
+                            .setTrustedBiddingSignalsKeysSizeVarianceB(FIELD_UNSET)
+                            .setUserBiddingSignalsSizeMeanB(FIELD_UNSET)
+                            .setUserBiddingSignalsSizeVarianceB(FIELD_UNSET)
+                            .setNumEncodedSignals(encodedSignalsCount)
+                            .setEncodedSignalsSizeMean(encodedSignalsMeanSizeInBytes)
+                            .setEncodedSignalsSizeMax(encodedSignalsMaxSizeInBytes)
+                            .setEncodedSignalsSizeMin(encodedSignalsMinSizeInBytes)
+                            .build();
+            mAdServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
+        } else {
+            for (BuyerInputGeneratorIntermediateStats buyerStats : statsMap.values()) {
+                GetAdSelectionDataBuyerInputGeneratedStats stats =
+                        GetAdSelectionDataBuyerInputGeneratedStats.builder()
+                                .setNumCustomAudiences(buyerStats.getNumCustomAudiences())
+                                .setNumCustomAudiencesOmitAds(
+                                        buyerStats.getNumCustomAudiencesOmitAds())
+                                .setCustomAudienceSizeMeanB(buyerStats.getCustomAudienceSizeMeanB())
+                                .setCustomAudienceSizeVarianceB(
+                                        buyerStats.getCustomAudienceSizeVarianceB())
+                                .setTrustedBiddingSignalsKeysSizeMeanB(
+                                        buyerStats.getTrustedBiddingSignalsKeysSizeMeanB())
+                                .setTrustedBiddingSignalsKeysSizeVarianceB(
+                                        buyerStats.getTrustedBiddingSignalskeysSizeVarianceB())
+                                .setUserBiddingSignalsSizeMeanB(
+                                        buyerStats.getUserBiddingSignalsSizeMeanB())
+                                .setUserBiddingSignalsSizeVarianceB(
+                                        buyerStats.getUserBiddingSignalsSizeVarianceB())
+                                .setNumEncodedSignals(encodedSignalsCount)
+                                .setEncodedSignalsSizeMean(encodedSignalsMeanSizeInBytes)
+                                .setEncodedSignalsSizeMax(encodedSignalsMaxSizeInBytes)
+                                .setEncodedSignalsSizeMin(encodedSignalsMinSizeInBytes)
+                                .build();
+                mAdServicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
+            }
+        }
     }
 
     private void updateInputFromCustomAudience(

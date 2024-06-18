@@ -15,16 +15,16 @@
  */
 package com.android.adservices.tests.appsetid;
 
+import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_REQUEST_PERMITS_PER_SECOND;
+
 import com.android.adservices.common.AdServicesCtsTestCase;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.SetFloatFlag;
 
-abstract class CtsAppSetIdEndToEndTestCase extends AdServicesCtsTestCase {
-
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                .setCompatModeFlags()
-                .setPpapiAppAllowList(mPackageName)
-                .setAppsetIdKillSwitch(false);
-    }
-}
+@DisableGlobalKillSwitch
+@SetAllLogcatTags
+@SetCompatModeFlags
+@SetFloatFlag(name = KEY_APPSETID_REQUEST_PERMITS_PER_SECOND, value = 5f)
+abstract class CtsAppSetIdEndToEndTestCase extends AdServicesCtsTestCase {}

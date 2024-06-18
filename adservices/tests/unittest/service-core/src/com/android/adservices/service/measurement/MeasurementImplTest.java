@@ -65,6 +65,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -103,6 +104,7 @@ public final class MeasurementImplTest {
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(AdServicesManager.class)
                     .spyStatic(MeasurementRollbackCompatManager.class)
+                    .spyStatic(FakeFlagsFactory.class)
                     .spyStatic(FlagsFactory.class)
                     .spyStatic(AdServicesLoggerImpl.class)
                     .mockStatic(SdkLevel.class)
@@ -224,6 +226,7 @@ public final class MeasurementImplTest {
                 spy(
                         new MeasurementImpl(
                                 DEFAULT_CONTEXT,
+                                FakeFlagsFactory.getFlagsForTest(),
                                 mDatastoreManager,
                                 mClickVerifier,
                                 mMeasurementDataDeleter,
@@ -240,6 +243,7 @@ public final class MeasurementImplTest {
         MeasurementImpl measurement =
                 new MeasurementImpl(
                         DEFAULT_CONTEXT,
+                        FakeFlagsFactory.getFlagsForTest(),
                         new SQLDatastoreManager(
                                 DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger),
                         mClickVerifier,
@@ -419,10 +423,11 @@ public final class MeasurementImplTest {
                 .when(mockClickVerifier)
                 .isInputEventVerifiable(any(), anyLong(), anyString());
         doReturn(false).when(mockFlags).getMeasurementIsClickVerificationEnabled();
-        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlagsForTest);
+        ExtendedMockito.doReturn(mockFlags).when(FakeFlagsFactory::getFlagsForTest);
         MeasurementImpl measurementImpl =
                 new MeasurementImpl(
                         DEFAULT_CONTEXT,
+                        FakeFlagsFactory.getFlagsForTest(),
                         mDatastoreManager,
                         mockClickVerifier,
                         mMeasurementDataDeleter,
@@ -966,6 +971,7 @@ public final class MeasurementImplTest {
     private MeasurementImpl createMeasurementImpl() {
         return new MeasurementImpl(
                 DEFAULT_CONTEXT,
+                FakeFlagsFactory.getFlagsForTest(),
                 mDatastoreManager,
                 mClickVerifier,
                 mMeasurementDataDeleter,

@@ -16,34 +16,33 @@
 
 package com.android.adservices.service.adselection.signature;
 
+import android.annotation.NonNull;
+
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.stats.SignatureVerificationLogger;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Objects;
 
 /** Verifies signatures using ECDSA algorithm (aka. ECDSAwithSHA256). */
 public class ECDSASignatureVerifier implements SignatureVerifier {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting
-    protected static final String NO_SUCH_ALGORITHM_ERROR =
-            "Key or signing algorithm is not found.";
-
-    @VisibleForTesting
-    protected static final String KEY_SPEC_ERROR =
-            "Failed to generate the PublicKey object from the given key.";
+    protected static final String UNKNOWN_ERROR =
+            "An unknown error occurred during signature verification";
 
     @VisibleForTesting
     protected static final String INVALID_KEY_ERROR =
-            "Given key is not suitable with the specified algorithm: ECDSA";
+            "Given key is either null or not suitable with the specified algorithm: ECDSA";
 
     @VisibleForTesting
     protected static final String SIGNATURE_VALIDATION_ERROR =
@@ -53,6 +52,15 @@ public class ECDSASignatureVerifier implements SignatureVerifier {
 
     @VisibleForTesting
     protected static final String ECDSA_WITH_SHA256_SIGNING_ALGORITHM = "SHA256withECDSA";
+
+    @NonNull private final SignatureVerificationLogger mSignatureVerificationLogger;
+
+    public ECDSASignatureVerifier(
+            @NonNull SignatureVerificationLogger signatureVerificationLogger) {
+        Objects.requireNonNull(signatureVerificationLogger);
+
+        mSignatureVerificationLogger = signatureVerificationLogger;
+    }
 
     /**
      * Verifies a given signature against the given public key and the serialized data.
@@ -74,18 +82,30 @@ public class ECDSASignatureVerifier implements SignatureVerifier {
             ecdsa.initVerify(aPublicKey);
             ecdsa.update(data);
             return ecdsa.verify(signature);
-        } catch (NoSuchAlgorithmException error) {
-            sLogger.e(error, NO_SUCH_ALGORITHM_ERROR);
-            throw new IllegalStateException(NO_SUCH_ALGORITHM_ERROR, error);
-        } catch (InvalidKeySpecException error) {
-            sLogger.e(error, KEY_SPEC_ERROR);
-            throw new IllegalStateException(KEY_SPEC_ERROR, error);
-        } catch (InvalidKeyException error) {
+        } catch (InvalidKeySpecException | InvalidKeyException | NullPointerException error) {
             sLogger.e(error, INVALID_KEY_ERROR);
-            throw new IllegalStateException(INVALID_KEY_ERROR, error);
+            logWrongKeyFormatError();
+            return false;
         } catch (SignatureException error) {
             sLogger.e(error, SIGNATURE_VALIDATION_ERROR);
-            throw new IllegalStateException(SIGNATURE_VALIDATION_ERROR, error);
+            logSignatureFormatError();
+            return false;
+        } catch (Exception error) {
+            sLogger.e(error, UNKNOWN_ERROR);
+            logUnknownError();
+            return false;
         }
+    }
+
+    private void logWrongKeyFormatError() {
+        mSignatureVerificationLogger.addFailureDetailCountOfKeysWithWrongFormat();
+    }
+
+    private void logSignatureFormatError() {
+        mSignatureVerificationLogger.setFailureDetailWrongSignatureFormat();
+    }
+
+    private void logUnknownError() {
+        mSignatureVerificationLogger.setFailureDetailUnknownError();
     }
 }

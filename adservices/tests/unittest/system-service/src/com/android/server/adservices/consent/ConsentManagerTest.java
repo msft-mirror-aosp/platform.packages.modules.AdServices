@@ -524,4 +524,26 @@ public class ConsentManagerTest {
         // ConsentManager only dumps the datastore, which is not accessible, so there's nothing else
         // to check
     }
+
+    @Test
+    public void isMeasurementDataResetTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isMeasurementDataReset()).isFalse();
+        consentManager.setMeasurementDataReset(true);
+
+        assertThat(consentManager.isMeasurementDataReset()).isTrue();
+    }
+
+    @Test
+    public void isPaDataResetTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isPaDataReset()).isFalse();
+        consentManager.setPaDataReset(true);
+
+        assertThat(consentManager.isPaDataReset()).isTrue();
+    }
 }

@@ -62,7 +62,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"您已选择不加入"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"感谢您的回复。我们已为您的设备关闭 Privacy Sandbox。\n\n如果您改变了主意或想了解详情，请前往隐私设置。"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"隐私权设置"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"知道了"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"您已加入 Beta 版测试计划"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"您的设备已开启 Privacy Sandbox，因此应用已能测试这些更注重保护隐私的新方式来向您展示广告。您随时可在隐私设置中关闭 Beta 版。"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"知道了"</string>
@@ -169,7 +168,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="2111625410373329760">"允许广告衡量"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="2780083472100004780">"应用和广告主可请求 Android 提供某些信息，以帮助他们衡量其广告效果。\n\n系统会定期从您的设备中删除广告衡量数据。"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="518549441454274773">"重置衡量数据"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="823743750634137761">"Android 会限制各种应用相互之间可以分享的信息，从而保护您的隐私。系统会延迟发送报告，以便保护您的身份信息。\n\n您的浏览器可能有相似的设置。如果 Android 和您的浏览器都开启了广告衡量功能，相关公司或许就能够衡量广告在您使用的应用和访问的网站中的效果。您的浏览记录会保留在设备上，确保其私密性。\n\n在我们的"<a href="https://policies.google.com/privacy">"隐私权政策"</a>"中详细了解 Android 如何保护您的数据。"</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="823743750634137761">"Android 会限制各种应用相互之间可以分享的信息，从而保护您的隐私。系统会延迟发送报告，以便保护您的身份信息。\n\n您的浏览器可能有相似的设置。如果 Android 和您的浏览器都开启了广告衡量功能，相关公司或许就能够衡量广告在您使用的应用和访问的网站中的效果。您的浏览记录会保留在设备上，确保其私密性。\n\n如需详细了解 Android 如何保护您的数据，请参阅我们的"<a href="https://policies.google.com/privacy">"隐私权政策"</a>"。"</string>
     <string name="settingsUI_measurement_are_reset" msgid="3109724238284555411">"广告衡量数据已重置"</string>
     <string name="settingsUI_dialog_negative_text" msgid="2991743327829379614">"取消"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="7364417538227823889">"要关闭 Privacy Sandbox 吗？"</string>
@@ -216,7 +215,7 @@
     <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{已开启/# 个应用}other{已开启/# 个应用}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"已开启"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"已关闭"</string>
-    <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"系统会根据您最近使用过的应用向您显示感兴趣的主题，并且应用会使用这些主题向您展示个性化广告。\n\n您可以屏蔽您不想与应用分享的主题。Android 还会定期自动删除主题。\n\n虽然您可以开启此功能，但可能看不到主题列表。只有在此功能完全推出，且应用开始使用之后，系统才会显示主题列表。"</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"系统会根据您最近使用过的应用来判断您感兴趣的主题。然后，应用会使用这些主题向您展示个性化广告。\n\n您可以屏蔽您不想与应用分享的主题。Android 还会定期自动删除主题。\n\n虽然您可以开启此功能，但可能看不到主题列表。只有在此功能完全推出，且应用开始使用之后，系统才会显示主题列表。"</string>
     <string name="settingsUI_topics_switch_title" msgid="6138535622464144001">"允许广告主题"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="1855691597262481021">"您已屏蔽的广告主题"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="1580902912944562790">"重置所有广告主题"</string>
@@ -254,10 +253,10 @@
     <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"我可以如何管理这些数据？"</string>
     <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"您可以禁止特定应用与广告合作伙伴分享您的活动记录，还可以随时在隐私设置中重置或关闭应用建议的广告。Android 也会定期自动删除这些数据。"</string>
     <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"详细了解 Android 如何帮助保护您的隐私"</a></string>
-    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"应用及其广告合作伙伴可根据您在此设备上其他应用中的活动记录来展示个性化广告，同时仍然确保与您相关的信息的私密性和安全性。\n\n例如，如果您经常使用烹饪应用，可能就会在其他应用中看到日杂配送服务或相关内容的广告。\n\nAndroid 会定期自动删除您的活动记录，但您也可以禁止应用与其广告合作伙伴分享这些信息。"</string>
-    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"应用及其广告合作伙伴通常会记住您感兴趣的内容，以便为您提供个性化体验。应用会安全地存储这些信息，只有其广告合作伙伴才能使用这些信息在其他应用中展示广告。\n\n您可以禁止应用与广告合作伙伴分享您的活动记录数据。Android 也会定期自动删除分享的活动记录数据，因此您再次使用的应用可能会重新出现在此列表中。\n\n您看到的广告是否经过个性化定制可能取决于很多因素，例如此设置、广告主题设置、您的广告 ID 设置，以及您使用的应用是否展示个性化广告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"详细了解应用建议的广告"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="2824173687944664612">"应用及其广告合作伙伴可根据您在此设备上其他应用中的活动记录来展示个性化广告，同时仍然确保与您相关的信息的私密性和安全性。\n\n例如，如果您经常使用烹饪应用，可能就会在其他应用中看到日杂配送服务或相关内容的广告。\n\nAndroid 会定期自动删除您的活动记录，但您也可以禁止应用与其广告合作伙伴分享这些信息。\n\n虽然您可以开启此功能，但可能看不到应用列表。只有在此功能完全推出，且应用开始使用之后，系统才会显示应用列表。"</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="7911915685966727993">"应用及其广告合作伙伴通常会记住您感兴趣的内容，以便为您提供个性化体验。应用会安全地存储这些信息，只有其广告合作伙伴才能使用这些信息在其他应用中展示广告。\n\n您可以禁止应用与广告合作伙伴分享您的活动记录数据。Android 也会定期自动删除分享的活动记录数据，因此您再次使用的应用可能会重新出现在此列表中。\n\n您看到的广告是否经过个性化定制可能取决于很多因素，例如此设置、广告主题设置、您的广告 ID 设置，以及您使用的应用是否展示个性化广告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"详细了解应用建议的广告"</a></string>
     <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android 使用多种隐私保护措施（例如汇总数据和噪声数据）来限制各种应用相互之间可以分享的信息，并帮助保护您的身份信息。\n\n您的浏览器可能有相似的设置。如果 Android 和您的浏览器都开启了广告效果衡量功能，相关公司或许就能够衡量广告在您使用的应用和访问的网站中的效果。您的浏览记录会保留在设备上，确保其私密性。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"详细了解广告效果衡量"</a></string>
-    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android 会根据您在最近几个星期使用过的应用，记住您感兴趣的主题。\n\n之后，您使用的应用可请求 Android 提供这些主题信息，以便向您展示个性化广告。Android 最多会分享 3 个主题，并且会保护您的身份以及应用使用情况相关信息。\n\nAndroid 会定期自动删除主题。如果您继续使用应用，相应主题可能会重新出现在列表中。或者，您可以屏蔽您不想让 Android 与应用分享的主题。\n\n您看到的广告是否经过个性化定制可能取决于很多因素，例如此设置、应用建议的广告设置、您的广告 ID 设置，以及您使用的应用是否展示个性化广告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"详细了解广告主题"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4957955199367073977">"Android 会根据您在最近几个星期使用过的应用，记住您感兴趣的主题。\n\n之后，您使用的应用可请求 Android 提供这些主题信息，以便向您展示个性化广告。Android 最多会分享 3 个主题，并且会保护您的身份以及应用使用情况相关信息。\n\nAndroid 会定期自动删除主题。如果您继续使用应用，相应主题可能会重新出现在列表中。或者，您可以屏蔽您不想让 Android 与应用分享的主题。\n\n您看到的广告是否经过个性化定制可能取决于很多因素，例如此设置、应用建议的广告设置、您的广告 ID 设置，以及您使用的应用是否展示个性化广告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"详细了解广告主题"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"代表感兴趣主题（如音乐、新闻和体育）的符号的彩色图示"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"圆圈内锁形图标的彩色图示"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"九个点构成方形的黑白小图示"</string>

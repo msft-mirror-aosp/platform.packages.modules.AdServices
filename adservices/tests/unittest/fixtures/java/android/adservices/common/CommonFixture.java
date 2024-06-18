@@ -23,8 +23,8 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -47,7 +47,7 @@ public class CommonFixture {
     public static final Set<String> PACKAGE_SET =
             new HashSet<>(Arrays.asList(TEST_PACKAGE_NAME_1, TEST_PACKAGE_NAME_2));
 
-    public static final Flags FLAGS_FOR_TEST = FlagsFactory.getFlagsForTest();
+    public static final Flags FLAGS_FOR_TEST = FakeFlagsFactory.getFlagsForTest();
 
     public static final Instant FIXED_NOW = Instant.now();
     public static final Instant FIXED_NOW_TRUNCATED_TO_MILLI =
@@ -101,7 +101,8 @@ public class CommonFixture {
             try {
                 Thread.sleep(wakeupTime - currentTime);
             } catch (InterruptedException ignored) {
-
+                Log.w(LOG_TAG, "Interrupted while sleeping");
+                Thread.currentThread().interrupt();
             }
             currentTime = System.currentTimeMillis();
         }

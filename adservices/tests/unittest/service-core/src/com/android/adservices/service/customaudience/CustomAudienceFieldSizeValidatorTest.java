@@ -26,17 +26,18 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.ValidatorTestUtil;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -62,7 +63,7 @@ public class CustomAudienceFieldSizeValidatorTest {
                         Locale.getDefault(),
                         CustomAudienceFieldSizeValidator.VIOLATION_NAME_TOO_LONG,
                         FLAGS.getFledgeCustomAudienceMaxNameSizeB(),
-                        tooLongName.getBytes().length));
+                        tooLongName.getBytes(StandardCharsets.UTF_8).length));
     }
 
     @Test
@@ -80,7 +81,7 @@ public class CustomAudienceFieldSizeValidatorTest {
                         Locale.getDefault(),
                         CustomAudienceFieldSizeValidator.VIOLATION_BIDDING_LOGIC_URI_TOO_LONG,
                         FLAGS.getFledgeCustomAudienceMaxBiddingLogicUriSizeB(),
-                        tooLongBiddingLogicUri.toString().getBytes().length));
+                        tooLongBiddingLogicUri.toString().getBytes(StandardCharsets.UTF_8).length));
     }
 
     @Test
@@ -98,7 +99,7 @@ public class CustomAudienceFieldSizeValidatorTest {
                         Locale.getDefault(),
                         CustomAudienceFieldSizeValidator.VIOLATION_DAILY_UPDATE_URI_TOO_LONG,
                         FLAGS.getFledgeCustomAudienceMaxDailyUpdateUriSizeB(),
-                        tooLongDailyUpdateUri.toString().getBytes().length));
+                        tooLongDailyUpdateUri.toString().getBytes(StandardCharsets.UTF_8).length));
     }
 
     @Test
@@ -115,7 +116,10 @@ public class CustomAudienceFieldSizeValidatorTest {
                         Locale.getDefault(),
                         CustomAudienceFieldSizeValidator.VIOLATION_USER_BIDDING_SIGNAL_TOO_BIG,
                         FLAGS.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
-                        tooBigUserBiddingSignals.toString().getBytes().length));
+                        tooBigUserBiddingSignals
+                                .toString()
+                                .getBytes(StandardCharsets.UTF_8)
+                                .length));
     }
 
     @Test
@@ -143,7 +147,7 @@ public class CustomAudienceFieldSizeValidatorTest {
     @Test
     public void testAdsTooBig() {
         AdDataConversionStrategy adDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
         List<AdData> tooBigAds =
                 List.of(
                         new AdData.Builder()

@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import android.util.Pair;
 
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -239,11 +239,19 @@ public class TriggerSpecsTest {
         TriggerSpecs testObject = new TriggerSpecs(
                 SourceFixture.getTriggerSpecArrayCountValidBaseline(), 3, source);
         // Oblige building privacy parameters for the trigger specs
-        testObject.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        testObject.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         // Assertion
         assertEquals(3, testObject.getPrivacyParamsForComputation()[0][0]);
         assertArrayEquals(new int[] {3, 3, 3}, testObject.getPrivacyParamsForComputation()[1]);
         assertArrayEquals(new int[] {4, 4, 4}, testObject.getPrivacyParamsForComputation()[2]);
+    }
+
+    @Test
+    public void testGetNumStates() {
+        Source source = SourceFixture.getMinimalValidSourceBuilder().build();
+        TriggerSpecs testObject =
+                new TriggerSpecs(SourceFixture.getTriggerSpecArrayCountValidBaseline(), 3, source);
+        assertEquals(220L, testObject.getNumStates(source, FakeFlagsFactory.getFlagsForTest()));
     }
 
     @Test

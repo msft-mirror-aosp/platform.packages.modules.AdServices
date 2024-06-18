@@ -22,6 +22,8 @@ import androidx.annotation.Nullable;
 import com.android.adservices.service.proto.PrivacySandboxApi;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableBiMap;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +35,7 @@ public class EnrollmentData {
     @VisibleForTesting public static String SEPARATOR = " ";
 
     private String mEnrollmentId;
+    private String mEnrolledSite;
     private String mEnrolledAPIsString;
     // mEnrolled APIs are derived from mEnrolledAPIsString, they represent the same enrolledAPIs
     private List<PrivacySandboxApi> mEnrolledAPIs;
@@ -45,6 +48,7 @@ public class EnrollmentData {
 
     private EnrollmentData() {
         mEnrollmentId = null;
+        mEnrolledSite = null;
         mEnrolledAPIsString = null;
         mEnrolledAPIs = new ArrayList<PrivacySandboxApi>();
         mSdkNames = new ArrayList<>();
@@ -62,6 +66,7 @@ public class EnrollmentData {
         }
         EnrollmentData enrollmentData = (EnrollmentData) obj;
         return Objects.equals(mEnrollmentId, enrollmentData.mEnrollmentId)
+                && Objects.equals(mEnrolledSite, enrollmentData.mEnrolledSite)
                 && Objects.equals(mEnrolledAPIsString, enrollmentData.mEnrolledAPIsString)
                 && Objects.equals(mEnrolledAPIs, enrollmentData.mEnrolledAPIs)
                 && Objects.equals(mSdkNames, enrollmentData.mSdkNames)
@@ -82,6 +87,7 @@ public class EnrollmentData {
     public int hashCode() {
         return Objects.hash(
                 mEnrollmentId,
+                mEnrolledSite,
                 mEnrolledAPIsString,
                 mEnrolledAPIs,
                 mSdkNames,
@@ -95,6 +101,11 @@ public class EnrollmentData {
     /** Returns ID provided to the Adtech at the end of the enrollment process. */
     public String getEnrollmentId() {
         return mEnrollmentId;
+    }
+
+    /** Returns enrolled site provided by Adtech during enrollment process. */
+    public String getEnrolledSite() {
+        return mEnrolledSite;
     }
 
     /** Return Enrolled APIs of given enrollment in string format */
@@ -164,31 +175,39 @@ public class EnrollmentData {
 
         String[] enrolledAPIsList = enrolledAPIs.trim().split("\\s+");
         for (String enrolledApi : enrolledAPIsList) {
-            enrolledApiEnums.add(enrolledApiToEnum(enrolledApi));
+            PrivacySandboxApi enrolledApiEnum =
+                    ENROLLMENT_API_ENUM_STRING_MAP
+                            .inverse()
+                            .getOrDefault(
+                                    enrolledApi,
+                                    /* defaultValue= */ PrivacySandboxApi
+                                            .PRIVACY_SANDBOX_API_UNKNOWN);
+            enrolledApiEnums.add(enrolledApiEnum);
         }
         return enrolledApiEnums;
     }
 
-    /**
-     * Returns the given {@code enrolledAPI} to corresponding {@link PrivacySandboxApi} enum value
-     */
-    // LINT.IfChange(enrolledApiToEnum)
-    private static PrivacySandboxApi enrolledApiToEnum(String enrolledAPI) {
-        return switch (enrolledAPI) {
-            case ("PRIVACY_SANDBOX_API_TOPICS") -> PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS;
-            case ("PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE") -> PrivacySandboxApi
-                    .PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE;
-            case ("PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION") -> PrivacySandboxApi
-                    .PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION;
-            case ("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING") -> PrivacySandboxApi
-                    .PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING;
-            case ("PRIVACY_SANDBOX_API_SHARED_STORAGE") -> PrivacySandboxApi
-                    .PRIVACY_SANDBOX_API_SHARED_STORAGE;
-            case ("PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS") -> PrivacySandboxApi
-                    .PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS;
-            default -> PrivacySandboxApi.PRIVACY_SANDBOX_API_UNKNOWN;
-        };
-    }
+    // LINT.IfChange(EnrollmentApiEnumStringMap)
+    public static final ImmutableBiMap<PrivacySandboxApi, String> ENROLLMENT_API_ENUM_STRING_MAP =
+            ImmutableBiMap.<PrivacySandboxApi, String>builder()
+                    .put(PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS, "PRIVACY_SANDBOX_API_TOPICS")
+                    .put(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,
+                            "PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE")
+                    .put(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION,
+                            "PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION")
+                    .put(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING,
+                            "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
+                    .put(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_SHARED_STORAGE,
+                            "PRIVACY_SANDBOX_API_SHARED_STORAGE")
+                    .put(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS,
+                            "PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS")
+                    .build();
+
     // LINT.ThenChange(/adservices/service-core/proto/rb_enrollment.proto:PrivacySandboxApi)
 
     /** Returns the builder for the instance */
@@ -196,6 +215,7 @@ public class EnrollmentData {
     public EnrollmentData.Builder cloneToBuilder() {
         return new EnrollmentData.Builder()
                 .setEnrollmentId(this.mEnrollmentId)
+                .setEnrolledSite(this.mEnrolledSite)
                 .setEnrolledAPIs(this.mEnrolledAPIsString)
                 .setSdkNames(this.mSdkNames)
                 .setAttributionSourceRegistrationUrl(this.mAttributionSourceRegistrationUrl)
@@ -217,6 +237,12 @@ public class EnrollmentData {
         /** See {@link EnrollmentData#getEnrollmentId()}. */
         public Builder setEnrollmentId(String enrollmentId) {
             mBuilding.mEnrollmentId = enrollmentId;
+            return this;
+        }
+
+        /** See {@link EnrollmentData#getEnrolledSite()}. */
+        public Builder setEnrolledSite(String enrolledSite) {
+            mBuilding.mEnrolledSite = enrolledSite;
             return this;
         }
 

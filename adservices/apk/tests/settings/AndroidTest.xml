@@ -49,12 +49,6 @@
                 value="com.example.adservices.samples.ui.consenttestapp.apk->/data/local/tmp/cts/install/com.example.adservices.samples.ui.consenttestapp.apk" />
     </target_preparer>
 
-    <!-- Enabled API access without ad_services_config -->
-    <option name="run-command"
-            value="device_config put adservices app_config_returns_enabled_by_detault true" />
-    <option name="teardown-command"
-            value="device_config put adservices app_config_returns_enabled_by_detault false" />
-
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false" /> <!-- Allow hidden API uses -->
         <option name="package" value="com.android.adservices.tests.ui"/>

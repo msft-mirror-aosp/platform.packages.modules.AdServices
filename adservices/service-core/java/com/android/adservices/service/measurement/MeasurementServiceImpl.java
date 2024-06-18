@@ -15,7 +15,6 @@
  */
 package com.android.adservices.service.measurement;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -169,8 +168,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     request.getAppPackageName(),
                     request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
-                    STATUS_RATE_LIMIT_REACHED,
-                    FAILURE_REASON_UNSET);
+                    STATUS_RATE_LIMIT_REACHED);
             return;
         }
         final int callerUid = Binder.getCallingUidOrThrow();
@@ -230,8 +228,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     request.getAppPackageName(),
                     request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
-                    STATUS_RATE_LIMIT_REACHED,
-                    FAILURE_REASON_UNSET);
+                    STATUS_RATE_LIMIT_REACHED);
             return;
         }
 
@@ -297,8 +294,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     request.getAppPackageName(),
                     request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
-                    STATUS_RATE_LIMIT_REACHED,
-                    FAILURE_REASON_UNSET);
+                    STATUS_RATE_LIMIT_REACHED);
             return;
         }
         final int callerUid = Binder.getCallingUidOrThrow();
@@ -358,8 +354,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     request.getAppPackageName(),
                     request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
-                    STATUS_RATE_LIMIT_REACHED,
-                    FAILURE_REASON_UNSET);
+                    STATUS_RATE_LIMIT_REACHED);
             return;
         }
 
@@ -421,8 +416,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     request.getAppPackageName(),
                     request.getSdkPackageName(),
                     getLatency(callerMetadata, serviceStartTime),
-                    STATUS_RATE_LIMIT_REACHED,
-                    FAILURE_REASON_UNSET);
+                    STATUS_RATE_LIMIT_REACHED);
             return;
         }
 
@@ -476,7 +470,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         sLightExecutor.execute(
                 () -> {
                     @StatusCode int statusCode = STATUS_UNSET;
-                    int failureReason = FAILURE_REASON_UNSET;
                     try {
                         final Supplier<Boolean> enforceForeground =
                                 mFlags::getEnforceForegroundStatusForMeasurementStatus;
@@ -526,9 +519,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             IAccessResolver resolver = optionalResolver.get();
                             LoggerFactory.getMeasurementLogger().e(resolver.getErrorMessage());
                             callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
-                            statusCode = resolver.getErrorStatusCode();
-                            failureReason =
-                                    accessResolverInfo.getAccessInfo().getDeniedAccessReason();
+                            statusCode = accessResolverInfo.getAccessInfo().getResponseCode();
                             return;
                         }
 
@@ -543,8 +534,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                 statusParam.getAppPackageName(),
                                 statusParam.getSdkPackageName(),
                                 getLatency(callerMetadata, serviceStartTime),
-                                statusCode,
-                                failureReason);
+                                statusCode);
                     }
                 });
     }
@@ -589,8 +579,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             String appPackageName,
             String sdkPackageName,
             int latency,
-            int resultCode,
-            int failureReason) {
+            int resultCode) {
         mAdServicesLogger.logApiCallStats(
                 new ApiCallStats.Builder()
                         .setCode(AD_SERVICES_API_CALLED)
@@ -599,7 +588,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                         .setAppPackageName(appPackageName)
                         .setSdkPackageName(sdkPackageName)
                         .setLatencyMillisecond(latency)
-                        .setResult(resultCode, failureReason)
+                        .setResultCode(resultCode)
                         .build());
     }
 
@@ -614,7 +603,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             long serviceStartTime) {
 
         int statusCode = STATUS_UNSET;
-        int failureReason = FAILURE_REASON_UNSET;
         try {
 
             AccessResolverInfo accessResolverInfo = getAccessDenied(accessResolvers);
@@ -622,11 +610,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             if (optionalResolver.isPresent()) {
                 IAccessResolver resolver = optionalResolver.get();
                 LoggerFactory.getMeasurementLogger().e(resolver.getErrorMessage());
-                statusCode = resolver.getErrorStatusCode();
-                failureReason = accessResolverInfo.getAccessInfo().getDeniedAccessReason();
+                statusCode = accessResolverInfo.getAccessInfo().getResponseCode();
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
-                                .setStatusCode(resolver.getErrorStatusCode())
+                                .setStatusCode(statusCode)
                                 .setErrorMessage(resolver.getErrorMessage())
                                 .build());
                 return;
@@ -645,8 +632,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     appPackageName,
                     sdkPackageName,
                     getLatency(callerMetadata, serviceStartTime),
-                    statusCode,
-                    failureReason);
+                    statusCode);
         }
     }
 
@@ -661,7 +647,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             long serviceStartTime) {
 
         int statusCode = STATUS_UNSET;
-        int failureReason = FAILURE_REASON_UNSET;
         try {
 
             AccessResolverInfo accessResolverInfo = getAccessDenied(accessResolvers);
@@ -669,11 +654,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             if (optionalResolver.isPresent()) {
                 IAccessResolver resolver = optionalResolver.get();
                 LoggerFactory.getMeasurementLogger().e(resolver.getErrorMessage());
-                statusCode = resolver.getErrorStatusCode();
-                failureReason = accessResolverInfo.getAccessInfo().getDeniedAccessReason();
+                statusCode = accessResolverInfo.getAccessInfo().getResponseCode();
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
-                                .setStatusCode(resolver.getErrorStatusCode())
+                                .setStatusCode(statusCode)
                                 .setErrorMessage(resolver.getErrorMessage())
                                 .build());
                 return;
@@ -699,8 +683,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     appPackageName,
                     sdkPackageName,
                     getLatency(callerMetadata, serviceStartTime),
-                    statusCode,
-                    failureReason);
+                    statusCode);
         }
     }
 

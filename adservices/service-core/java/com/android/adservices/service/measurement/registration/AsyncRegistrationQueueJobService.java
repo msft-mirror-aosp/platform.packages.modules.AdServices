@@ -59,7 +59,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
 
         if (FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch()) {
@@ -92,8 +92,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
                                                     result);
                                     final boolean isSuccessful =
                                             !ProcessingResult.THREAD_INTERRUPTED.equals(result);
-                                    AdServicesJobServiceLogger.getInstance(
-                                                    AsyncRegistrationQueueJobService.this)
+                                    AdServicesJobServiceLogger.getInstance()
                                             .recordJobFinished(
                                                     MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
                                                     isSuccessful,
@@ -143,7 +142,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, MEASUREMENT_ASYNC_REGISTRATION_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -241,7 +240,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID, skipReason);
         }
 

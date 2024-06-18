@@ -22,7 +22,7 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.cobalt.data.EventRecordAndSystemProfile;
 import com.android.cobalt.data.EventVector;
-import com.android.cobalt.observations.testing.FakeSecureRandom;
+import com.android.cobalt.testing.observations.FakeSecureRandom;
 
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.IntegerObservation;
@@ -32,7 +32,7 @@ import com.google.cobalt.MetricDefinition.TimeZonePolicy;
 import com.google.cobalt.Observation;
 import com.google.cobalt.ObservationMetadata;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.ReportDefinition.PrivacyLevel;
+import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.SystemProfile;
 import com.google.cobalt.UnencryptedObservationBatch;
@@ -146,7 +146,7 @@ public final class NonPrivateObservationGeneratorTest {
             ReportDefinition.newBuilder()
                     .setId(REPORT_ID)
                     .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
-                    .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY)
+                    .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION)
                     .build();
 
     private final SecureRandom mSecureRandom;
