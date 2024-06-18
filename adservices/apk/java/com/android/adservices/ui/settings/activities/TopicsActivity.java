@@ -56,20 +56,12 @@ public class TopicsActivity extends AdServicesBaseActivity {
     }
 
     @Override
-    public void initBeta() {
-        initActivity();
-    }
-
-    @Override
     public void initGA() {
         initActivity();
     }
 
     @Override
     public void initU18() {}
-
-    @Override
-    public void initRvc() {}
 
     private void initFragment() {
         setContentView(R.layout.adservices_settings_main_activity);

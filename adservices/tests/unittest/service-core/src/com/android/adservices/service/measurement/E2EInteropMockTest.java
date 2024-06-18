@@ -22,8 +22,9 @@ import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
 import android.os.RemoteException;
 
+import com.android.adservices.common.WebUtil;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.measurement.actions.Action;
-import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
@@ -31,9 +32,7 @@ import com.android.adservices.service.measurement.registration.AsyncFetchStatus;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.Enrollment;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -56,7 +55,7 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * 158fc9452690c9eff21ce07cccbc314a39759708.
+ * cc1188897a30bed7e53a80487ef8aacd64f50395.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -87,60 +86,68 @@ public class E2EInteropMockTest extends E2EMockTest {
     private static final Map<String, String> sApiConfigPhFlags = Map.ofEntries(
             entry(
                     "rate_limit_max_attributions",
-                    "measurement_max_attribution_per_rate_limit_window"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW),
             entry(
                     "rate_limit_max_attribution_reporting_origins",
-                    "measurement_max_distinct_enrollments_in_attribution"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION),
             entry(
                     "rate_limit_max_source_registration_reporting_origins",
-                    "measurement_max_distinct_reporting_origins_in_source"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE),
             entry(
                     "max_destinations_per_source_site_reporting_site",
-                    "measurement_max_distinct_destinations_in_active_source"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE),
             entry(
                     "max_event_info_gain",
-                    "measurement_flex_api_max_information_gain_event"),
+                    FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT),
             entry(
                     "rate_limit_max_reporting_origins_per_source_reporting_site",
-                    "measurement_max_reporting_origins_per_source_reporting_site_per_window"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW),
             entry(
                     "max_destinations_per_rate_limit_window",
-                    "measurement_max_destinations_per_publisher_per_rate_limit_window"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW),
             entry(
                     "max_destinations_per_rate_limit_window_reporting_site",
-                    "measurement_max_dest_per_publisher_x_enrollment_per_rate_limit_window"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW),
             entry(
                     "max_sources_per_origin",
-                    "measurement_max_sources_per_publisher"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER),
             entry(
                     "max_event_level_reports_per_destination",
-                    "measurement_max_event_reports_per_destination"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION),
             entry(
                     "max_aggregatable_reports_per_destination",
-                    "measurement_max_aggregate_reports_per_destination"),
+                    FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION),
             entry(
                     "max_trigger_state_cardinality",
-                    "measurement_max_report_states_per_source_registration"));
+                    FlagsConstants.KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
 
     private static String preprocessor(String json) {
-        // TODO(b/290098169): Cleanup anchorTime when this bug is addressed. Handling cases where
-        // Source event report window is already stored as mEventTime + mEventReportWindow.
-        return anchorTime(
-                json.replaceAll("\\.test(?=[\"\\/])", ".com")
-                        // Remove comments
-                        .replaceAll("^\\s*\\/\\/.+\\n", "")
-                        .replaceAll("\"destination\":", "\"web_destination\":"),
-                START_TIME);
+        return json.replaceAll("\\.test(?=[\"\\/])", ".com")
+                // Remove comments
+                .replaceAll("^\\s*\\/\\/.+\\n", "")
+                .replaceAll("\"destination\":", "\"web_destination\":");
     }
 
-    private static Map<String, String> sPhFlagsForInterop =
-            Map.of(
+    private static Map<String, String> sPhFlagsForInterop = Map.ofEntries(
+            entry(
                     // TODO (b/295382171): remove this after the flag is removed.
-                    "measurement_enable_max_aggregate_reports_per_source", "true",
-                    "measurement_source_registration_time_optional_for_agg_reports_enabled", "true",
-                    "measurement_flexible_event_reporting_api_enabled", "true",
-                    "measurement_enable_trigger_context_id", "true",
-                    "measurement_enable_source_deactivation_after_filtering", "true");
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                    WebUtil.validUrl("https://coordinator.test")));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -231,25 +238,6 @@ public class E2EInteropMockTest extends E2EMockTest {
         processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
         if (triggerRegistration.mDebugReporting) {
             processActualDebugReportApiJob(triggerRegistration.mTimestamp);
-        }
-    }
-
-    @Override
-    void processAction(AggregateReportingJob reportingJob) throws IOException, JSONException {
-        super.processAction(reportingJob);
-        // Test json files for interop tests come verbatim from chromium, so they don't have
-        // source_registration_time as a field. Remove them from the actual reports so that
-        // comparisons don't fail.
-        removeSourceRegistrationTime(mActualOutput.mAggregateReportObjects);
-        removeSourceRegistrationTime(mActualOutput.mDebugAggregateReportObjects);
-    }
-
-    private void removeSourceRegistrationTime(List<JSONObject> aggregateReportObjects)
-            throws JSONException {
-        for (JSONObject jsonObject : aggregateReportObjects) {
-            jsonObject
-                    .getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY)
-                    .remove(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME);
         }
     }
 
@@ -350,50 +338,5 @@ public class E2EInteropMockTest extends E2EMockTest {
 
     private static Uri getRegistrant(String packageName) {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
-    }
-
-    private static String anchorTime(String jsonStr, long time) {
-        try {
-            JSONObject json = new JSONObject(jsonStr);
-            long t0 = json.getJSONObject(TestFormatJsonMapping.TEST_INPUT_KEY)
-                    .getJSONArray(TestFormatJsonMapping.REGISTRATIONS_KEY)
-                    .getJSONObject(0)
-                    .getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
-            return ((JSONObject) anchorTime(json, t0, time)).toString();
-        } catch (JSONException ignored) {
-            return null;
-        }
-    }
-
-    private static Object anchorTime(Object obj, long t0, long anchor) throws JSONException {
-        if (obj instanceof JSONArray) {
-            JSONArray newJson = new JSONArray();
-            JSONArray jsonArray = (JSONArray) obj;
-            for (int i = 0; i < jsonArray.length(); i++) {
-                newJson.put(i, anchorTime(jsonArray.get(i), t0, anchor));
-            }
-            return newJson;
-        } else if (obj instanceof JSONObject) {
-            JSONObject newJson = new JSONObject();
-            JSONObject jsonObj = (JSONObject) obj;
-            Set<String> keys = jsonObj.keySet();
-
-            for (String key : keys) {
-                if (TIMESTAMP_KEYS_IN_MILLIS.contains(key)) {
-                    long time = jsonObj.getLong(key);
-                    newJson.put(key, String.valueOf(time - t0 + anchor));
-                } else if (TIMESTAMP_KEYS_IN_SECONDS.contains(key)) {
-                    long time = TimeUnit.SECONDS.toMillis(jsonObj.getLong(key));
-                    newJson.put(
-                            key,
-                            String.valueOf(TimeUnit.MILLISECONDS.toSeconds(time - t0 + anchor)));
-                } else {
-                    newJson.put(key, anchorTime(jsonObj.get(key), t0, anchor));
-                }
-            }
-            return newJson;
-        } else {
-            return obj;
-        }
     }
 }

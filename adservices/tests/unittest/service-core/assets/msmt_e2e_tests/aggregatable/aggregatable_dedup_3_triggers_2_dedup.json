@@ -5,7 +5,6 @@
       {
         "timestamp": "1643235573000",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-source",
           "source_type": "navigation",
           "registrant": "source.test"
         },
@@ -33,7 +32,6 @@
       {
         "timestamp": "1643235574000",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
           "registrant": "destination.test"
         },
         "responses": [{
@@ -73,7 +71,6 @@
       {
         "timestamp": "1643321974000",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
           "registrant": "destination.test"
         },
         "responses": [{
@@ -113,7 +110,6 @@
       {
         "timestamp": "1643321974000",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
           "registrant": "destination.test"
         },
         "responses": [{
@@ -156,14 +152,21 @@
     "aggregatable_results": [
       {
         "payload": {
-          "attribution_destination": "android-app://destination.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "1643239174",
+            "source_registration_time": "1643155200",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x559",
               "value": 123
             }
-          ],
-          "source_registration_time": "1643155200"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239174000"

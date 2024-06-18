@@ -34,13 +34,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
-import android.content.Context;
 
-
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.EnableAllApis;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
@@ -48,7 +42,6 @@ import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.annotations.SetStringArrayFlag;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
@@ -60,19 +53,12 @@ import java.util.concurrent.Executors;
 @EnableAllApis
 @SetCompatModeFlags
 @SetStringArrayFlag(name = FlagsConstants.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST, value = "empty")
-public final class NotInAllowListTest {
+public final class NotInAllowListTest
+        extends CtsAdServicesPermissionsNotInAllowListEndToEndTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String CALLER_NOT_ALLOWED =
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Caller is not allowed.";
-
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
 
     @Before
     public void setup() {
@@ -92,7 +78,7 @@ public final class NotInAllowListTest {
         ExecutionException exception =
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
     }
 
     @Test
@@ -116,7 +102,7 @@ public final class NotInAllowListTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> customAudienceClient.joinCustomAudience(customAudience).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
     }
 
     @Test
@@ -136,7 +122,7 @@ public final class NotInAllowListTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> customAudienceClient.fetchAndJoinCustomAudience(request).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
     }
 
     @Test
@@ -156,7 +142,7 @@ public final class NotInAllowListTest {
                                                 CommonFixture.VALID_BUYER_1,
                                                 "exampleCustomAudience")
                                         .get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
     }
 
     @Test
@@ -172,7 +158,7 @@ public final class NotInAllowListTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
     }
 
     @Test
@@ -188,7 +174,7 @@ public final class NotInAllowListTest {
         ExecutionException exception =
                 assertThrows(
                         ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
     }
 
     @Test
@@ -207,7 +193,7 @@ public final class NotInAllowListTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.reportImpression(request).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
     }
 
     @Test
@@ -233,7 +219,7 @@ public final class NotInAllowListTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.reportEvent(request).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
     }
 
     @Test
@@ -255,6 +241,6 @@ public final class NotInAllowListTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.updateAdCounterHistogram(request).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_ALLOWED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_ALLOWED);
     }
 }

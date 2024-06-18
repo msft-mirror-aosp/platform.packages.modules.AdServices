@@ -29,6 +29,7 @@ import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel.MeasurementViewModelUiEvent;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.settingslib.widget.MainSwitchBar;
 
 /**
@@ -48,12 +49,6 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initBeta() {
-        mActivity.setTitle(R.string.settingsUI_measurement_view_title);
-        configureSharedElements();
-    }
-
-    @Override
     public void initGA() {
         mActivity.setTitle(R.string.settingsUI_measurement_ga_title);
         configureSharedElements();
@@ -66,22 +61,6 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initRvc() {
-        mActivity.setTitle(R.string.settingsUI_measurement_ga_title);
-        configureElement(
-                R.id.measurement_switch_bar,
-                switchBar -> mMeasurementViewModel.consentSwitchClickHandlerOnR((Switch) switchBar),
-                mMeasurementViewModel.getMeasurementConsent(),
-                switchBar -> ((Switch) switchBar)::setChecked);
-        // reset msmt button
-        configureElement(
-                R.id.reset_measurement_button,
-                view -> mMeasurementViewModel.resetMeasurementButtonClickHandler());
-        // privacy policy link
-        configureLink(R.id.measurement_footer);
-    }
-
-    @Override
     public void initGaUxWithPas() {
         initGA();
         configureElement(R.id.measurement_footer, R.string.settingsUI_pas_msmt_view_footer);
@@ -90,12 +69,11 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
 
     private void configureSharedElements() {
         // consent switch
-        configureElement(
-                R.id.measurement_switch_bar,
-                switchBar ->
-                        mMeasurementViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar),
-                mMeasurementViewModel.getMeasurementConsent(),
-                switchBar -> ((MainSwitchBar) switchBar)::setChecked);
+        if (SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS()) {
+            configureMeasurementConsentSwitchOnR();
+        } else {
+            configureMeasurementConsentSwitch();
+        }
 
         // reset msmt button
         configureElement(
@@ -103,6 +81,23 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
                 view -> mMeasurementViewModel.resetMeasurementButtonClickHandler());
         // privacy policy link
         configureLink(R.id.measurement_footer);
+    }
+
+    private void configureMeasurementConsentSwitch() {
+        configureElement(
+                R.id.measurement_switch_bar,
+                switchBar ->
+                        mMeasurementViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar),
+                mMeasurementViewModel.getMeasurementConsent(),
+                switchBar -> ((MainSwitchBar) switchBar)::setChecked);
+    }
+
+    private void configureMeasurementConsentSwitchOnR() {
+        configureElement(
+                R.id.measurement_switch_bar,
+                switchBar -> mMeasurementViewModel.consentSwitchClickHandlerOnR((Switch) switchBar),
+                mMeasurementViewModel.getMeasurementConsent(),
+                switchBar -> ((Switch) switchBar)::setChecked);
     }
 
     private void listenToMeasurementViewModelUiEvents() {

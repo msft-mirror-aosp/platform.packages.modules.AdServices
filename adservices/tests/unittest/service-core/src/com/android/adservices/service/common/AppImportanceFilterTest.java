@@ -156,11 +156,11 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
                 .that(mApiCallStatsArgumentCaptor.getValue())
                 .hasCode(AD_SERVICES_API_CALLED)
                 .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
                 .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
                 .hasSdkPackageName(SDK_NAME)
                 .hasAppPackageName(APP_PACKAGE_NAME);
         verifyZeroInteractions(mPackageManager);
+        expect.that(mApiCallStatsArgumentCaptor.getValue().getApiClass()).isEqualTo(0);
     }
 
     @Test
@@ -237,10 +237,10 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
                 .that(mApiCallStatsArgumentCaptor.getValue())
                 .hasCode(AD_SERVICES_API_CALLED)
                 .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
                 .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
                 .hasSdkPackageName(SDK_NAME)
                 .hasAppPackageName(APP_PACKAGE_NAME);
+        expect.that(mApiCallStatsArgumentCaptor.getValue().getApiClass()).isEqualTo(0);
     }
 
     @Test
@@ -259,10 +259,10 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
                 .that(mApiCallStatsArgumentCaptor.getValue())
                 .hasCode(AD_SERVICES_API_CALLED)
                 .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
                 .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
                 .hasSdkPackageName("")
                 .hasAppPackageName(APP_PACKAGE_NAME);
+        expect.that(mApiCallStatsArgumentCaptor.getValue().getApiClass()).isEqualTo(0);
     }
 
     @Test
@@ -302,11 +302,11 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
                 .that(mApiCallStatsArgumentCaptor.getValue())
                 .hasCode(AD_SERVICES_API_CALLED)
                 .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
                 .hasResultCode(
                         AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES)
                 .hasSdkPackageName(SDK_NAME)
                 .hasAppPackageName(AppImportanceFilter.UNKNOWN_APP_PACKAGE_NAME);
+        expect.that(mApiCallStatsArgumentCaptor.getValue().getApiClass()).isEqualTo(0);
     }
 
     private void mockIsAtLeastT(boolean isIt) {

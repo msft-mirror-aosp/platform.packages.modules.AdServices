@@ -34,8 +34,10 @@ public final class AdServicesLogVerifierFactoryTest extends AdServicesUnitTestCa
     public void testCreate_withErrorLogUtilEnum_returnsErrorLogUtilVerifier() {
         List<LogVerifier> verifiers = AdServicesLogVerifierFactory.create(ERROR_LOG_UTIL);
 
-        assertThat(verifiers).hasSize(1);
+        assertThat(verifiers).hasSize(2);
         expect.that(verifiers.get(0).getClass()).isEqualTo(AdServicesErrorLogUtilVerifier.class);
+        expect.that(verifiers.get(1).getClass())
+                .isEqualTo(AdServicesErrorLogUtilWithExceptionVerifier.class);
     }
 
     @Test

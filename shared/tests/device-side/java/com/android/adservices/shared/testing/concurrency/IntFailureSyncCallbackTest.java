@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
-
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.testing.IntFailureSyncCallback;
@@ -34,7 +32,7 @@ public final class IntFailureSyncCallbackTest
 
     @Override
     protected IntFailureSyncCallback<String> newCallback(SyncCallbackSettings settings) {
-        return new IntFailureSyncCallback<>(settings) {};
+        return new ConcreteIntFailureSyncCallback(settings);
     }
 
     @Override
@@ -44,7 +42,7 @@ public final class IntFailureSyncCallbackTest
 
     @Test
     public void testAssertSuccess() throws Exception {
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.onResult("YES!"));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.onResult("YES!"));
 
         String success = mCallback.assertSuccess();
 
@@ -59,7 +57,7 @@ public final class IntFailureSyncCallbackTest
 
     @Test
     public void testAssertFailed() throws Exception {
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.onFailure(42));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.onFailure(42));
 
         mCallback.assertFailed(42);
 
@@ -83,5 +81,18 @@ public final class IntFailureSyncCallbackTest
                 .that(thrown)
                 .hasMessageThat()
                 .isEqualTo("Expected code 108, but it failed with code 42");
+    }
+
+    private static final class ConcreteIntFailureSyncCallback
+            extends IntFailureSyncCallback<String> {
+
+        @SuppressWarnings("unused") // Called by superclass using reflection
+        ConcreteIntFailureSyncCallback() {
+            super();
+        }
+
+        ConcreteIntFailureSyncCallback(SyncCallbackSettings settings) {
+            super(settings);
+        }
     }
 }

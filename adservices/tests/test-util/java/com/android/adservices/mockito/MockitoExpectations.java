@@ -152,6 +152,14 @@ public final class MockitoExpectations {
     }
 
     /**
+     * Mocks a call to {@link Flags#getMsmtRegistrationCobaltLoggingEnabled()} ()}, returning
+     * overrideValue.
+     */
+    public static void mockMsmtRegistrationCobaltLoggingEnabled(Flags flags, boolean enabled) {
+        when(flags.getMsmtRegistrationCobaltLoggingEnabled()).thenReturn(enabled);
+    }
+
+    /**
      * Mocks a call to {@link Flags#getAdservicesReleaseStageForCobalt()}, returning {@code DEBUG}
      * as the testing release stage.
      */

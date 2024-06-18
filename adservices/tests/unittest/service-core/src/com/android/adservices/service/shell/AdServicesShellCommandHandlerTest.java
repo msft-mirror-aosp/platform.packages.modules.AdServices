@@ -40,11 +40,13 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
 import com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand;
+import com.android.adservices.service.shell.adselection.MockAuctionResultCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceRefreshCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
@@ -88,6 +90,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     @Mock private AdServicesLogger mAdServicesLogger;
     @Mock private Clock mClock;
     @Mock private BuyerInputGenerator mBuyerInputGenerator;
+    @Mock private AuctionServerDataCompressor mAuctionServerDataCompressor;
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
     @Before
@@ -102,7 +105,8 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                         mCustomAudienceDao,
                         mConsentedDebugConfigurationDao,
                         mProtectedSignalsDao,
-                        mBuyerInputGenerator);
+                        mBuyerInputGenerator,
+                        mAuctionServerDataCompressor);
         mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
     }
 
@@ -249,7 +253,8 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                                 CustomAudienceRefreshCommand.HELP,
                                 ConsentedDebugShellCommand.HELP,
                                 GenerateInputForEncodingCommand.HELP,
-                                GetAdSelectionDataCommand.HELP));
+                                GetAdSelectionDataCommand.HELP,
+                                MockAuctionResultCommand.HELP));
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {

@@ -88,7 +88,7 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
 
     @Test
     public void testScheduleCustomAudienceUpdate_DelayExceedsLimit_failure() {
-        Uri updateUri = Uri.parse(mMockWebServerRule.getServerBaseAddress());
+        Uri updateUri = Uri.parse("http://localhost/update/ca");
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
                                 updateUri, Duration.of(20, ChronoUnit.DAYS), Collections.EMPTY_LIST)
@@ -102,18 +102,21 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
 
     @Test
     public void testScheduleCustomAudienceUpdate_DelayLowerLimit_failure() {
-        Uri updateUri = Uri.parse(mMockWebServerRule.getServerBaseAddress());
+        Uri updateUri = Uri.parse("http://localhost/update/ca");
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
                                 updateUri,
-                                Duration.of(-20, ChronoUnit.DAYS),
+                                Duration.of(1, ChronoUnit.MILLIS),
                                 Collections.EMPTY_LIST)
                         .build();
 
-        ExecutionException e =
+        Exception e =
                 assertThrows(
                         ExecutionException.class, () -> doScheduleCustomAudienceUpdate(request));
-        assertEquals("IllegalArgumentException", e.getCause().getClass().getSimpleName());
+        expect.withMessage("Thrown exception for duration below limit")
+                .that(e)
+                .hasCauseThat()
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
