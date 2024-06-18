@@ -16,6 +16,7 @@
 
 package com.android.adservices.ui;
 
+
 import android.annotation.RequiresApi;
 import android.content.Context;
 import android.os.Build;
@@ -42,6 +43,11 @@ public interface UxSelector {
                 initU18();
                 break;
             case GA_UX:
+                if (UxUtil.pasUxIsActive(/* beforeNotificationShown */ false)) {
+                    // UI views should be updated only once notification is sent (ROW).
+                    initGaUxWithPas();
+                    break;
+                }
                 initGA();
                 break;
             case BETA_UX:
@@ -64,7 +70,7 @@ public interface UxSelector {
 
     /**
      * This method will be called in {@link #initWithUx} if app is in {@link
-     * PrivacySandboxUxCollection#GA_UX} mode.
+     * PrivacySandboxUxCollection#GA_UX} mode and PAS Ux feature is disabled.
      */
     void initGA();
 
@@ -79,4 +85,10 @@ public interface UxSelector {
      * PrivacySandboxUxCollection#RVC_UX} mode.
      */
     void initRvc();
+
+    /**
+     * This method will be called in {@link #initWithUx} if app is in {@link
+     * PrivacySandboxUxCollection#GA_UX} mode and PAS Ux feature is enabled.
+     */
+    void initGaUxWithPas();
 }

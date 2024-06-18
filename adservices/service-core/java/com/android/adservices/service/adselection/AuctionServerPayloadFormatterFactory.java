@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -54,9 +55,10 @@ public class AuctionServerPayloadFormatterFactory {
 
     /** Returns an implementation for the {@link AuctionServerPayloadExtractor} */
     @NonNull
-    public static AuctionServerPayloadExtractor createPayloadExtractor(int version) {
+    public static AuctionServerPayloadExtractor createPayloadExtractor(
+            int version, AdServicesLogger adServicesLogger) {
         if (version == AuctionServerPayloadFormatterV0.VERSION) {
-            // Extract data does not need bucket size list.
+            // Extract data does not need bucket size list nor payload metrics feature
             return new AuctionServerPayloadFormatterV0(ImmutableList.of());
         } else if (version == AuctionServerPayloadFormatterExcessiveMaxSize.VERSION) {
             return new AuctionServerPayloadFormatterExcessiveMaxSize();

@@ -16,11 +16,14 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
+import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -31,6 +34,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -43,14 +47,17 @@ import android.os.LimitExceededException;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.NoFailureSyncCallback;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.CallingAppUidSupplier;
-import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -59,6 +66,7 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -70,8 +78,7 @@ import java.util.concurrent.ExecutorService;
 
 public class ProtectedSignalsServiceImplTest {
 
-    // TODO(b/296586554) Add API id
-    private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+    private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
     private static final int UID = 42;
     private static final AdTechIdentifier ADTECH = AdTechIdentifier.fromString("example.com");
     private static final Uri URI = Uri.parse("https://example.com");
@@ -86,9 +93,8 @@ public class ProtectedSignalsServiceImplTest {
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
-    @Mock private Flags mFlagsMock;
     @Mock private CallingAppUidSupplier mCallingAppUidSupplierMock;
-    @Mock private CustomAudienceServiceFilter mCustomAudienceServiceFilterMock;
+    @Mock private ProtectedSignalsServiceFilter mProtectedSignalsServiceFilterMock;
     @Mock private UpdateSignalsCallback mUpdateSignalsCallbackMock;
 
     @Captor ArgumentCaptor<FledgeErrorResponse> mErrorCaptor;
@@ -96,6 +102,11 @@ public class ProtectedSignalsServiceImplTest {
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     private DevContext mDevContext;
     private UpdateSignalsInput mInput;
+    private Flags mFlags;
+    private NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -107,6 +118,9 @@ public class ProtectedSignalsServiceImplTest {
                         .initMocks(this)
                         .startMocking();
 
+        mFlags = new ProtectedSignalsServiceImplTestFlags();
+        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerMock);
+
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
                         CONTEXT,
@@ -116,9 +130,9 @@ public class ProtectedSignalsServiceImplTest {
                         mDevContextFilterMock,
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
-                        mFlagsMock,
+                        mFlags,
                         mCallingAppUidSupplierMock,
-                        mCustomAudienceServiceFilterMock);
+                        mProtectedSignalsServiceFilterMock);
 
         mDevContext =
                 DevContext.builder()
@@ -129,10 +143,8 @@ public class ProtectedSignalsServiceImplTest {
 
         // Set up the mocks for a success flow -- indivual tests that want a failure can overwrite
         when(mCallingAppUidSupplierMock.getCallingAppUid()).thenReturn(UID);
-        when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(false);
-        when(mFlagsMock.getEnforceForegroundStatusForSignals()).thenReturn(true);
         when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContext);
-        when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
+        when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
                         eq(false),
@@ -145,6 +157,7 @@ public class ProtectedSignalsServiceImplTest {
                 .thenReturn(ADTECH);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(false);
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
         SettableFuture<Object> emptyReturn = SettableFuture.create();
         emptyReturn.set(new Object());
         when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
@@ -170,12 +183,14 @@ public class ProtectedSignalsServiceImplTest {
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
 
         verify(mFledgeAuthorizationFilterMock)
-                .assertAppDeclaredProtectedSignalsPermission(
-                        eq(CONTEXT), eq(PACKAGE), eq(API_NAME));
+                .assertAppDeclaredPermission(
+                        eq(CONTEXT),
+                        eq(PACKAGE),
+                        eq(API_NAME),
+                        eq(AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS));
         verify(mCallingAppUidSupplierMock).getCallingAppUid();
         verify(mDevContextFilterMock).createDevContext();
-        verify(mFlagsMock).getDisableFledgeEnrollmentCheck();
-        verify(mCustomAudienceServiceFilterMock)
+        verify(mProtectedSignalsServiceFilterMock)
                 .filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
@@ -190,9 +205,7 @@ public class ProtectedSignalsServiceImplTest {
         verify(mUpdateSignalsOrchestratorMock)
                 .orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext));
         verify(mUpdateSignalsCallbackMock).onSuccess();
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(API_NAME), eq(AdServicesStatusUtils.STATUS_SUCCESS), eq(0));
+        verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_SUCCESS, PACKAGE);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(1));
@@ -203,8 +216,8 @@ public class ProtectedSignalsServiceImplTest {
         assertThrows(
                 NullPointerException.class,
                 () -> mProtectedSignalsService.updateSignals(null, mUpdateSignalsCallbackMock));
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(API_NAME, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+        verifyUpdateSignalsApiUsageLog(
+                AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, /* packageName */"");
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(0));
@@ -215,8 +228,7 @@ public class ProtectedSignalsServiceImplTest {
         assertThrows(
                 NullPointerException.class,
                 () -> mProtectedSignalsService.updateSignals(mInput, null));
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(API_NAME, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+        verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, PACKAGE);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(0));
@@ -228,9 +240,7 @@ public class ProtectedSignalsServiceImplTest {
         assertThrows(
                 IllegalStateException.class,
                 () -> mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock));
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(API_NAME), eq(AdServicesStatusUtils.STATUS_INTERNAL_ERROR), eq(0));
+        verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_INTERNAL_ERROR, PACKAGE);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(0));
@@ -238,7 +248,7 @@ public class ProtectedSignalsServiceImplTest {
 
     @Test
     public void testUpdateSignalsFilterException() throws Exception {
-        when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
+        when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
                         eq(false),
@@ -275,22 +285,46 @@ public class ProtectedSignalsServiceImplTest {
         FledgeErrorResponse actual = mErrorCaptor.getValue();
         assertEquals(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, actual.getStatusCode());
         assertEquals(EXCEPTION_MESSAGE, actual.getErrorMessage());
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(API_NAME), eq(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT), eq(0));
+        verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, PACKAGE);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(0));
     }
 
     @Test
-    public void testUpdateSignalsNoConsent() throws Exception {
+    public void testUpdateSignalsNoConsentIfCallerNotHaveConsent() throws Exception {
+        // Does NOT have FLEDGE consent
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(true);
+        // Seen the PAS notification
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(API_NAME), eq(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED), eq(0));
+        verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED, PACKAGE);
+    }
+
+    @Test
+    public void testUpdateSignalsNoConsentIfUserNotSeenPASNotification() throws Exception {
+        // Has FLEDGE consent
+        when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
+                .thenReturn(false);
+        // Not seen the PAS notification
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(false);
+
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
+        verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED, PACKAGE);
+    }
+
+    @Test
+    public void testUpdateSignalsNoConsent() throws Exception {
+        // Revokes PA consent
+        when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
+                .thenReturn(true);
+        // Revokes PAS consent
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(false);
+
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
+        verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED, PACKAGE);
         verify(mUpdateSignalsCallbackMock).onSuccess();
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
@@ -301,11 +335,36 @@ public class ProtectedSignalsServiceImplTest {
     public void testUpdateSignalsCallbackException() throws Exception {
         doThrow(new RuntimeException()).when(mUpdateSignalsCallbackMock).onSuccess();
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(API_NAME), eq(AdServicesStatusUtils.STATUS_INTERNAL_ERROR), eq(0));
+        verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_INTERNAL_ERROR, PACKAGE);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(1));
+    }
+
+    private void verifyUpdateSignalsApiUsageLog(int resultCode, String packageName)
+            throws InterruptedException {
+        ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
+        assertThat(apiCallStats.getApiName()).isEqualTo(
+                AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS);
+        assertThat(apiCallStats.getAppPackageName()).isEqualTo(packageName);
+        assertThat(apiCallStats.getResultCode()).isEqualTo(resultCode);
+        assertThat(apiCallStats.getLatencyMillisecond()).isAtLeast(0);
+    }
+
+    private static class ProtectedSignalsServiceImplTestFlags implements Flags {
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return false;
+        }
+
+        @Override
+        public boolean getEnforceForegroundStatusForSignals() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAppPackageNameLoggingEnabled() {
+            return true;
+        }
     }
 }

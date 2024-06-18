@@ -20,10 +20,12 @@ import static android.adservices.appsetid.GetAppSetIdResult.SCOPE_APP;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** Unit tests for {@link android.adservices.appsetid.AppSetId} */
+@RequiresSdkLevelAtLeastS()
 @SmallTest
 public final class AppSetIdTest extends AdServicesUnitTestCase {
     private static final String TEST_APP_SET_ID = "TEST_APP_SET_ID";

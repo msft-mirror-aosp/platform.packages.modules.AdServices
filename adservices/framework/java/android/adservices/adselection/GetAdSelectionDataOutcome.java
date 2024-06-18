@@ -19,6 +19,7 @@ package android.adservices.adselection;
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
 
+import android.annotation.FlaggedApi;
 import android.annotation.Nullable;
 
 import androidx.annotation.NonNull;
@@ -38,8 +39,19 @@ public final class GetAdSelectionDataOutcome {
         this.mAdSelectionData = adSelectionData;
     }
 
-    /** Returns the adSelectionId that identifies the AdSelection. */
+    /**
+     * Returns the adSelectionId that identifies the AdSelection.
+     *
+     * @deprecated Use the {@link #getAdSelectionDataId()} instead.
+     */
     public long getAdSelectionId() {
+        return mAdSelectionId;
+    }
+
+    /** Returns the id that uniquely identifies this GetAdSelectionData payload. */
+    @FlaggedApi(
+            "com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled")
+    public long getAdSelectionDataId() {
         return mAdSelectionId;
     }
 

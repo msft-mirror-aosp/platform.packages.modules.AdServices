@@ -22,12 +22,18 @@ import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class UpdateSignalsRequestTest {
 
     private static final Uri URI = Uri.parse("https://example.com/somecoolsignals");
     private static final Uri OTHER_URI = Uri.parse("https://example.com/lesscoolsignals");
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testBuild() {

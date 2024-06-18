@@ -22,6 +22,9 @@ import static org.junit.Assert.assertEquals;
 
 import android.adservices.common.AdServicesStatusUtils;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link RunAdBiddingPerCAProcessReportedStats}. */
@@ -41,6 +44,9 @@ public class RunAdBiddingPerCAProcessReportedStatsTest {
     static final int RUN_BIDDING_LATENCY_IN_MILLIS = 5;
     static final int RUN_BIDDING_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
     static final int GET_TRUSTED_BIDDING_SIGNALS_RESULT_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuilderCreateSuccess() {

@@ -27,14 +27,12 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.topics.TopicParcel;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 
@@ -81,7 +79,6 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     private static final Topic TOPIC3 = Topic.create(123, 123, 123);
 
     private AppSearchConsentManager mAppSearchConsentManager;
-    private Context mContext;
     @Mock private AppSearchConsentWorker mAppSearchConsentWorker;
     @Mock private Flags mFlags;
     @Mock private AdServicesManager mAdServicesManager;
@@ -92,9 +89,9 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
     @Before
     public void setup() {
-        mContext = spy(appContext.get());
         extendedMockito.mockGetFlags(mFlags);
-        mAppSearchConsentManager = new AppSearchConsentManager(mContext, mAppSearchConsentWorker);
+        mAppSearchConsentManager =
+                new AppSearchConsentManager(mSpyContext, mAppSearchConsentWorker);
         ApplicationInfo app1 = new ApplicationInfo();
         app1.packageName = PACKAGE_NAME1;
         ApplicationInfo app2 = new ApplicationInfo();
@@ -351,7 +348,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
         AdServicesManager mAdServicesManager = mock(AdServicesManager.class);
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager, false);
         assertThat(result).isFalse();
     }
 
@@ -362,7 +359,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager, false);
         assertThat(result).isFalse();
     }
 
@@ -374,7 +371,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager, false);
         assertThat(result).isFalse();
     }
 
@@ -387,7 +384,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager, false);
         assertThat(result).isFalse();
     }
 
@@ -402,7 +399,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager, false);
         assertThat(result).isFalse();
     }
 
@@ -419,7 +416,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager, false);
         assertThat(result).isFalse();
     }
 
@@ -428,13 +425,15 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
         initConsentDataForMigration();
         boolean result =
                 mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                        mSharedPrefs, mDatastore, mAdServicesManager);
+                        mSharedPrefs, mDatastore, mAdServicesManager, false);
         assertThat(result).isTrue();
     }
 
     @Test
-    public void testMigrateConsentData_notificationNotDisplayed() throws IOException {
+    public void testMigrateConsentData_notificationNotDisplayed_u18MigrationDisabled()
+            throws IOException {
         initConsentDataForMigration();
+        when(mFlags.getEnableU18AppsearchMigration()).thenReturn(false);
         when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(false);
         boolean result =
@@ -444,8 +443,46 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     }
 
     @Test
+    public void testMigrateConsentData_notificationNotDisplayed_u18MigrationEnabled()
+            throws IOException {
+        initConsentDataForMigration();
+        when(mFlags.getEnableU18AppsearchMigration()).thenReturn(true);
+        when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
+        when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(false);
+        when(mAppSearchConsentWorker.wasU18NotificationDisplayed()).thenReturn(false);
+        boolean result =
+                mAppSearchConsentManager.migrateConsentDataIfNeeded(
+                        mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    public void testMigrateConsentData_u18UxNotificationDisplayed_u18MigrationEnabled()
+            throws IOException {
+        initConsentDataForMigration();
+        when(mFlags.getEnableU18AppsearchMigration()).thenReturn(true);
+        when(mAppSearchConsentWorker.wasU18NotificationDisplayed()).thenReturn(true);
+        when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
+        when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(false);
+        when(mAppSearchConsentWorker.getAppsWithConsent(any())).thenReturn(List.of());
+        when(mAppSearchConsentWorker.getPrivacySandboxFeature())
+                .thenReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
+        boolean result =
+                mAppSearchConsentManager.migrateConsentDataIfNeeded(
+                        mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
+        expect.that(result).isTrue();
+        verify(mDatastore).put(eq(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED), eq(true));
+        verify(mAdServicesManager).setU18NotificationDisplayed(true);
+        verify(mDatastore, atLeast(5)).put(any(), anyBoolean());
+        verify(mEditor)
+                .putBoolean(eq(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED), eq(true));
+        verify(mEditor).commit();
+    }
+
+    @Test
     public void testMigrateConsentData_betaUxNotificationDisplayed() throws IOException {
         initConsentDataForMigration();
+        when(mFlags.getEnableU18AppsearchMigration()).thenReturn(false);
         when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(true);
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(false);
         when(mAppSearchConsentWorker.getAppsWithConsent(any())).thenReturn(List.of());
@@ -480,6 +517,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
                 .thenReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
         when(mAppSearchConsentWorker.getBlockedTopics()).thenReturn(blockedTopics);
         initConsentDataForMigration();
+        when(mFlags.getEnableU18AppsearchMigration()).thenReturn(false);
 
         boolean result =
                 mAppSearchConsentManager.migrateConsentDataIfNeeded(
@@ -525,8 +563,9 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     @Test
     public void testMigrateConsentData_FromExtServices() throws Exception {
         initConsentDataForMigration();
+        when(mFlags.getEnableU18AppsearchMigration()).thenReturn(false);
         doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
-                .when(mContext)
+                .when(mSpyContext)
                 .getPackageName();
         boolean result =
                 mAppSearchConsentManager.migrateConsentDataIfNeeded(

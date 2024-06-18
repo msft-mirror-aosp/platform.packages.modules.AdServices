@@ -157,11 +157,17 @@ message IndexHistogramObservation {
 // STRING_COUNTS
 // UNIQUE_DEVICE_STRING_COUNTS
 message StringHistogramObservation {
-  // List of hashes of strings (hashed using Farmhash Fingerprint128).
+  // TODO(b/322409910): Delete string_hashes after clients stop sending
+  // the field.
+  repeated bytes string_hashes = 1 [deprecated = true];
+
+  // List of hashes of strings (hashed using Farmhash Fingerprint64).
   // The string that hashes to the bytes value in the ith position in
   // |string_hashes| corresponds to the bucket with index i in each of the
   // |bucket_indices| values in |string_histograms|.
-  repeated bytes string_hashes = 1;
+  //
+  // Only one of `string_hashes` or `string_hashes_ff64` should be used.
+  repeated bytes string_hashes_ff64 = 3;
 
   repeated IndexHistogram string_histograms = 2;
 }

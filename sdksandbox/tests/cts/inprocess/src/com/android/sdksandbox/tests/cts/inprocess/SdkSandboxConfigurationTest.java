@@ -36,6 +36,9 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.PackageInfoFlags;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+import android.media.AudioManager;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.SELinux;
@@ -68,6 +71,9 @@ public class SdkSandboxConfigurationTest {
     private static final String TEST_PKG = "com.android.sdksandbox.tests.cts.inprocesstests";
     private static final String CURRENT_USER_ID =
             String.valueOf(Process.myUserHandle().getUserId(Process.myUid()));
+    private final Context mContext =
+            InstrumentationRegistry.getInstrumentation().getTargetContext();
+    private final PackageManager mPackageManager = mContext.getPackageManager();
 
     @Before
     public void setUp() {
@@ -76,11 +82,9 @@ public class SdkSandboxConfigurationTest {
                         InstrumentationRegistry.getInstrumentation().getContext()));
     }
 
-    /**
-     * Tests that uid belongs to the sdk sandbox processes uid range.
-     */
+    /** Tests that uid belongs to the sdk sandbox processes uid range. */
     @Test
-    public void testUidBelongsToSdkSandboxRange() throws Exception {
+    public void testUidBelongsToSdkSandboxRange() {
         int myUid = Process.myUid();
         assertWithMessage(myUid + " is not a SdkSandbox uid").that(Process.isSdkSandbox()).isTrue();
     }
@@ -89,17 +93,17 @@ public class SdkSandboxConfigurationTest {
      * Tests that sdk sandbox processes are running under the {@code sdk_sandbox} selinux domain.
      */
     @Test
-    public void testCorrectSelinuxDomain() throws Exception {
-        final String ctx = SELinux.getContext();
-        assertThat(ctx).contains("u:r:sdk_sandbox");
+    public void testCorrectSelinuxDomain() {
+        final String selinuxContext = SELinux.getContext();
+        assertThat(selinuxContext).contains("u:r:sdk_sandbox");
     }
 
     /** Tests that sdk sandbox SDK minimum and target versions are correct. */
     @Test
     public void testCorrectSdkVersion() throws Exception {
-        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final PackageManager pm = ctx.getPackageManager();
-        final PackageInfo info = pm.getPackageInfo(ctx.getPackageName(), PackageInfoFlags.of(0));
+        final PackageManager pm = mContext.getPackageManager();
+        final PackageInfo info =
+                pm.getPackageInfo(mContext.getPackageName(), PackageInfoFlags.of(0));
 
         int minSdkVersion = info.applicationInfo.minSdkVersion;
         assertThat(minSdkVersion).isEqualTo(33);
@@ -113,21 +117,18 @@ public class SdkSandboxConfigurationTest {
      */
     @Test
     public void testClientAppIsVisibleToSdkSandbox() throws Exception {
-        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final PackageManager pm = ctx.getPackageManager();
-        final PackageInfo info = pm.getPackageInfo(TEST_PKG, PackageInfoFlags.of(0));
+        final PackageInfo info = mPackageManager.getPackageInfo(TEST_PKG, PackageInfoFlags.of(0));
         assertThat(info.applicationInfo.uid).isEqualTo(
                 Process.getAppUidForSdkSandboxUid(Process.myUid()));
     }
 
     /**
-     * Tests that {@link Context#getDataDir()} returns correct value for the CE storage of the
-     * sak sandbox.
+     * Tests that {@link Context#getDataDir()} returns correct value for the CE storage of the sak
+     * sandbox.
      */
     @Test
-    public void testGetDataDir_CE() throws Exception {
-        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final File dir = ctx.getDataDir();
+    public void testGetDataDir_CE() {
+        final File dir = mContext.getDataDir();
         assertThat(dir.getAbsolutePath())
                 .isEqualTo(
                         "/data/misc_ce/" + CURRENT_USER_ID + "/sdksandbox/" + TEST_PKG + "/shared");
@@ -139,10 +140,7 @@ public class SdkSandboxConfigurationTest {
      */
     @Test
     public void testGetDataDir_DE() throws Exception {
-        final Context ctx =
-                InstrumentationRegistry.getInstrumentation()
-                        .getTargetContext()
-                        .createDeviceProtectedStorageContext();
+        final Context ctx = mContext.createDeviceProtectedStorageContext();
         final File dir = ctx.getDataDir();
         assertThat(dir.getAbsolutePath())
                 .isEqualTo(
@@ -152,13 +150,13 @@ public class SdkSandboxConfigurationTest {
     /** Tests that sdk sandbox process can write to it's CE storage. */
     @Test
     public void testCanWriteToDataDir_CE() throws Exception {
-        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        try (OutputStreamWriter writer = new OutputStreamWriter(
-                ctx.openFileOutput("random_ce_file", MODE_PRIVATE))) {
+        try (OutputStreamWriter writer =
+                new OutputStreamWriter(mContext.openFileOutput("random_ce_file", MODE_PRIVATE))) {
             writer.write("I am an sdk sandbox");
         }
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(ctx.openFileInput("random_ce_file")))) {
+        try (BufferedReader reader =
+                new BufferedReader(
+                        new InputStreamReader(mContext.openFileInput("random_ce_file")))) {
             String line = reader.readLine();
             assertThat(line).isEqualTo("I am an sdk sandbox");
         }
@@ -167,10 +165,7 @@ public class SdkSandboxConfigurationTest {
     /** Tests that sdk sandbox process can write to it's DE storage. */
     @Test
     public void testCanWriteToDataDir_DE() throws Exception {
-        final Context ctx =
-                InstrumentationRegistry.getInstrumentation()
-                        .getTargetContext()
-                        .createDeviceProtectedStorageContext();
+        final Context ctx = mContext.createDeviceProtectedStorageContext();
         try (OutputStreamWriter writer = new OutputStreamWriter(
                 ctx.openFileOutput("random_de_file", MODE_PRIVATE))) {
             writer.write("I am also an sdk sandbox");
@@ -190,13 +185,11 @@ public class SdkSandboxConfigurationTest {
         assumeThat(
                 SdkSandboxManager.getSdkSandboxState(),
                 equalTo(SdkSandboxManager.SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION));
-        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         // First check that we can resolve the adservices apk
-        final PackageManager pm = ctx.getPackageManager();
         final Intent resolveIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
         final List<ResolveInfo> services =
-                pm.queryIntentServices(
+                mPackageManager.queryIntentServices(
                         resolveIntent,
                         PackageManager.ResolveInfoFlags.of(
                                 PackageManager.GET_SERVICES
@@ -221,13 +214,13 @@ public class SdkSandboxConfigurationTest {
                     @Override
                     public void onServiceDisconnected(ComponentName name) {}
                 };
-        final boolean ret = ctx.bindService(serviceIntent, conn, Context.BIND_AUTO_CREATE);
+        final boolean ret = mContext.bindService(serviceIntent, conn, Context.BIND_AUTO_CREATE);
 
         try {
             assertThat(ret).isTrue();
             assertThat(latch.await(3, TimeUnit.SECONDS)).isTrue();
         } finally {
-            ctx.unbindService(conn);
+            mContext.unbindService(conn);
         }
     }
 
@@ -244,9 +237,30 @@ public class SdkSandboxConfigurationTest {
 
         // Now time to query the current WebView provider through PackageManager, this is used to
         // check if this sdk sandbox process can see the WebView.
-        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final PackageInfo webViewProviderInfo =
-                ctx.getPackageManager().getPackageInfo(info.packageName, PackageInfoFlags.of(0));
+                mPackageManager.getPackageInfo(info.packageName, PackageInfoFlags.of(0));
         assertThat(webViewProviderInfo).isNotNull();
+    }
+
+    @Test
+    public void testCanAccessGyroscope() {
+        assumeTrue(mPackageManager.hasSystemFeature(PackageManager.FEATURE_SENSOR_GYROSCOPE));
+
+        SensorManager sensorManager = mContext.getSystemService(SensorManager.class);
+        assertThat(sensorManager).isNotNull();
+        Sensor gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        assertThat(gyroscope).isNotNull();
+    }
+
+    @Test
+    public void testCanAccessVolume() {
+        assumeTrue(mPackageManager.hasSystemFeature(PackageManager.FEATURE_AUDIO_OUTPUT));
+
+        AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_SYSTEM);
+        int minVolume = audioManager.getStreamMinVolume(AudioManager.STREAM_SYSTEM);
+        int currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_SYSTEM);
+        assertThat(currentVolume).isAtMost(maxVolume);
+        assertThat(currentVolume).isAtLeast(minVolume);
     }
 }

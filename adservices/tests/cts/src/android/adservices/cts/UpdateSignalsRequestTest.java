@@ -24,7 +24,10 @@ import android.adservices.signals.UpdateSignalsInput;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -38,6 +41,9 @@ public class UpdateSignalsRequestTest {
 
     private static final Uri URI = Uri.parse("https://example.com/somecoolsignals");
     private static final Uri OTHER_URI = Uri.parse("https://example.com/lesscoolsignals");
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuild() {

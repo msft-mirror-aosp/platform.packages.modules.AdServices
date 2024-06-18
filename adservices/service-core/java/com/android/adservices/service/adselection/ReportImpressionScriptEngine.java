@@ -32,6 +32,7 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
@@ -158,16 +159,19 @@ public class ReportImpressionScriptEngine {
     private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
     private final Supplier<Long> mMaxHeapSizeBytesSupplier;
     private final RegisterAdBeaconScriptEngineHelper mRegisterAdBeaconScriptEngineHelper;
+    private final RetryStrategy mRetryStrategy;
 
     public ReportImpressionScriptEngine(
             Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
-            RegisterAdBeaconScriptEngineHelper registerAdBeaconScriptEngineHelper) {
+            RegisterAdBeaconScriptEngineHelper registerAdBeaconScriptEngineHelper,
+            RetryStrategy retryStrategy) {
         mJsEngine = JSScriptEngine.getInstance(context, sLogger);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRegisterAdBeaconScriptEngineHelper = registerAdBeaconScriptEngineHelper;
+        mRetryStrategy = retryStrategy;
     }
 
     /**
@@ -302,7 +306,7 @@ public class ReportImpressionScriptEngine {
                         ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                                 mMaxHeapSizeBytesSupplier.get())
                         : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-        return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings);
+        return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings, mRetryStrategy);
     }
 
     @NonNull

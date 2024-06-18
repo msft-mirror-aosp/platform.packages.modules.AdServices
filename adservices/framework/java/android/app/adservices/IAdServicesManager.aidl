@@ -72,6 +72,19 @@ interface IAdServicesManager {
     boolean wasGaUxNotificationDisplayed();
 
     /**
+     * Saves information to the storage that GA UX notification was displayed for the
+     * first time to the user.
+     */
+    void recordPasNotificationDisplayed(boolean wasNotificationDisplayed);
+
+    /**
+     * Returns information whether PAS Consent Notification was displayed or not.
+     *
+     * @return true if PAS Consent Notification was displayed, otherwise false.
+     */
+    boolean wasPasNotificationDisplayed();
+
+    /**
      * Saves information to the storage that user explicitly interacted with consent.
      *
      * Current state:

@@ -110,6 +110,58 @@ public class ScenarioDispatcherTest {
         server.shutdown();
     }
 
+    @Test
+    public void testScenarioDispatcher_withMultiplePathSegments_httpGetSuccess() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-005.json", "");
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+
+        makeSimpleGetRequest(new URL(mMockWebServerRule.getServerBaseAddress() + "/hello/world"));
+
+        assertThat(dispatcher.getCalledPaths()).containsExactlyElementsIn(List.of("/hello/world"));
+        server.shutdown();
+    }
+
+    @Test
+    @FlakyTest(bugId = 315327589)
+    public void testScenarioDispatcher_withDuplicatePathCalls_doesNotReturnEarly()
+            throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-006.json", "");
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+
+        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
+        makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
+        makeSimpleGetRequest(new URL(baseAddress + "/scoring"));
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsExactlyElementsIn(List.of("/bidding", "/scoring"));
+        server.shutdown();
+    }
+
+    // Regression test for bug b/325677040.
+    @Test
+    public void testScenarioDispatcher_withComplexUrlStructure_success() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario("scenarios/scenario-test-007.json", "");
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+
+        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
+        makeSimpleGetRequest(new URL(baseAddress + "/scoring"));
+        makeSimpleGetRequest(new URL(baseAddress + "/seller/reportImpression"));
+        makeSimpleGetRequest(
+                new URL(
+                        String.format(
+                                "%s/seller/reportImpression?render_uri=%s/render/shirts/0?bid=5",
+                                baseAddress, baseAddress)));
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(List.of("/seller/reportImpression"));
+        server.shutdown();
+    }
+
     @SuppressWarnings("UnusedReturnValue")
     public static String makeSimpleGetRequest(URL url) throws Exception {
         StringBuilder result = new StringBuilder();

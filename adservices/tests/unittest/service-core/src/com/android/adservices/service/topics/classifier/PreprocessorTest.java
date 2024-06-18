@@ -26,7 +26,10 @@ import static org.junit.Assert.assertThrows;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link Preprocessor}. */
@@ -34,6 +37,9 @@ import org.junit.Test;
 public final class PreprocessorTest {
 
     private Preprocessor mPreprocessor;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

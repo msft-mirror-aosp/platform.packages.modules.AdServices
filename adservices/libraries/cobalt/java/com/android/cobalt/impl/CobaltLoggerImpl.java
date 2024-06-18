@@ -90,7 +90,11 @@ public final class CobaltLoggerImpl implements CobaltLogger {
         return FluentFuture.from(
                         mDataService.loggerEnabled(Instant.ofEpochMilli(currentTimeMillis)))
                 .transform(
-                        unused -> validateOccurrenceAndGetMetric(metricId, count, eventCodes),
+                        unused -> {
+                            checkArgument(count >= 0, "occurrence count can't be negative");
+                            return validateEventAndGetMetric(
+                                    MetricType.OCCURRENCE, metricId, eventCodes);
+                        },
                         mExecutor)
                 .transformAsync(
                         metric ->
@@ -100,9 +104,27 @@ public final class CobaltLoggerImpl implements CobaltLogger {
     }
 
     @Override
-    public ListenableFuture<Void> noOpLogString(
-            long metricId, String stringValue, List<Integer> eventVector) {
-        return Futures.immediateFuture(null);
+    public ListenableFuture<Void> logString(
+            long metricId, String stringValue, List<Integer> eventCodes) {
+        long currentTimeMillis = mSystemClock.currentTimeMillis();
+        if (!mEnabled) {
+            return mDataService.loggerDisabled(Instant.ofEpochMilli(currentTimeMillis));
+        }
+        if (Log.isLoggable(LOG_TAG, Log.INFO)) {
+            Log.i(LOG_TAG, "start logging STRING metric");
+        }
+
+        return FluentFuture.from(
+                        mDataService.loggerEnabled(Instant.ofEpochMilli(currentTimeMillis)))
+                .transform(
+                        unused ->
+                                validateEventAndGetMetric(MetricType.STRING, metricId, eventCodes),
+                        mExecutor)
+                .transformAsync(
+                        metric ->
+                                loggerEnabledLogString(
+                                        metric, stringValue, eventCodes, currentTimeMillis),
+                        mExecutor);
     }
 
     private ListenableFuture<Void> loggerEnabledLogOccurrence(
@@ -115,6 +137,27 @@ public final class CobaltLoggerImpl implements CobaltLogger {
         return FluentFuture.from(
                         Futures.allAsList(
                                 logNumberToReports(metric, count, eventVector, currentTimeMillis)))
+                .transform(this::recordSuccess, mExecutor)
+                .catching(
+                        RuntimeException.class,
+                        x -> recordFailureAndRethrow(metric.getId(), x),
+                        mExecutor);
+    }
+
+    private ListenableFuture<Void> loggerEnabledLogString(
+            MetricDefinition metric,
+            String stringValue,
+            List<Integer> eventCodes,
+            long currentTimeMillis) {
+        EventVector eventVector = EventVector.create(eventCodes);
+        if (mReleaseStage.getNumber() > metric.getMetaData().getMaxReleaseStageValue()) {
+            // Don't log a metric that is not enabled for the current release stage.
+            return Futures.immediateFuture(null);
+        }
+        return FluentFuture.from(
+                        Futures.allAsList(
+                                logStringToReports(
+                                        metric, stringValue, eventVector, currentTimeMillis)))
                 .transform(this::recordSuccess, mExecutor)
                 .catching(
                         RuntimeException.class,
@@ -179,9 +222,46 @@ public final class CobaltLoggerImpl implements CobaltLogger {
         return dbWrites.build();
     }
 
-    private MetricDefinition validateOccurrenceAndGetMetric(
-            long metricId, long count, List<Integer> eventCodes) {
-        checkArgument(count >= 0, "occurrence count can't be negative");
+    private ImmutableList<ListenableFuture<Void>> logStringToReports(
+            MetricDefinition metric,
+            String stringValue,
+            EventVector eventVector,
+            long currentTimeMillis) {
+        CobaltClock clock = new CobaltClock(currentTimeMillis);
+        int dayIndex = clock.dayIndex(metric);
+
+        ImmutableList.Builder<ListenableFuture<Void>> dbWrites = ImmutableList.builder();
+        for (ReportDefinition report : metric.getReportsList()) {
+            if (report.getMaxReleaseStage() != ReleaseStage.RELEASE_STAGE_NOT_SET
+                    && mReleaseStage.getNumber() > report.getMaxReleaseStageValue()) {
+                // Don't log a report that is not enabled for the current release stage.
+                continue;
+            }
+            ReportKey reportKey =
+                    ReportKey.create(
+                            mProject.getCustomerId(),
+                            mProject.getProjectId(),
+                            metric.getId(),
+                            report.getId());
+
+            if (report.getReportType() == ReportType.STRING_COUNTS) {
+                dbWrites.add(
+                        mDataService.aggregateString(
+                                reportKey,
+                                dayIndex,
+                                mSystemData.filteredSystemProfile(report),
+                                eventVector,
+                                report.getEventVectorBufferMax(),
+                                report.getStringBufferMax(),
+                                stringValue));
+            }
+        }
+
+        return dbWrites.build();
+    }
+
+    private MetricDefinition validateEventAndGetMetric(
+            MetricType metricType, long metricId, List<Integer> eventCodes) {
         checkArgument(
                 eventCodes.stream().allMatch(c -> c >= 0),
                 "event vectors can't contain negative event codes");
@@ -191,8 +271,9 @@ public final class CobaltLoggerImpl implements CobaltLogger {
         checkArgument(foundMetric.isPresent(), "failed to find metric with ID: %s", metricId);
         MetricType foundMetricType = foundMetric.get().getMetricType();
         checkArgument(
-                foundMetricType == MetricType.OCCURRENCE,
-                "wrong metric type, expected OCCURRENCE, found %s",
+                foundMetricType == metricType,
+                "wrong metric type, expected %s, found %s",
+                metricType,
                 foundMetricType);
 
         return foundMetric.get();

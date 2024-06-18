@@ -175,7 +175,9 @@ android_library {
         "adservices-grpclib-lite",
         "adservices-shared-common",
         "adservices-shared-error-logging",
+        "adservices-shared-spe",
         "adservices-shared-storage",
+        "adservices-shared-util",
         "modules-utils-build",
     ],
     jarjar_rules: "jarjar-rules.txt",
@@ -186,6 +188,7 @@ android_library {
     lint: {
         extra_check_modules: ["BackCompatLintChecker"],
         baseline_filename: "lint-baseline.xml",
+
     },
 }
 
@@ -214,13 +217,16 @@ cc_library_shared {
         "libcrypto_static",
     ],
     version_script: "jni/version-script.lds",
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    apex_available: [
+        "//apex_available:platform",
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
     ],
 }
-
 
 // Schemas needs to be bundled via this android_library since service-core unit tests for schema
 // migration will need this.
@@ -236,6 +242,6 @@ android_library {
     // See b/228270294 for the error about duplicated permissions.
     manifest: "EmptyManifest.xml",
     lint: {
-        baseline_filename: "lint-baseline.xml",
+        baseline_filename: "lint-baseline2.xml",
     },
 }

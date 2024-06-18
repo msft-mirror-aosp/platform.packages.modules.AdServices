@@ -16,58 +16,130 @@
 
 package com.android.adservices.service.adselection.signature;
 
+import static android.adservices.adselection.SignedContextualAdsFixture.aSignedContextualAds;
+
+import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PUBLIC_TEST_KEY_STRING;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.doReturn;
 
+import android.adservices.adselection.SignedContextualAds;
 import android.adservices.common.AdTechIdentifier;
-import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 
 public class ProtectedAudienceSignatureManagerTest {
-    private Context mContext = ApplicationProvider.getApplicationContext();
-    @Mock private EnrollmentDao mEnrollmentDao;
-    @Mock private EncryptionKeyDao mEncryptionKeyDao;
+    @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private EncryptionKeyDao mEncryptionKeyDaoMock;
+    private ProtectedAudienceSignatureManager mNoOpSignatureManager;
+    private ProtectedAudienceSignatureManager mSignatureManager;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
+        SignatureVerifier noOpSignatureVerifier =
+                new SignatureVerifier() {
+                    @Override
+                    public boolean verify(byte[] publicKey, byte[] data, byte[] signature) {
+                        return true;
+                    }
+                };
+        boolean enrollmentEnabled = false;
+        mSignatureManager =
+                new ProtectedAudienceSignatureManager(
+                        mEnrollmentDaoMock, mEncryptionKeyDaoMock, enrollmentEnabled);
+        mNoOpSignatureManager =
+                new ProtectedAudienceSignatureManager(
+                        mEnrollmentDaoMock, mEncryptionKeyDaoMock, noOpSignatureVerifier);
+    }
+
+    @Test
+    public void testVerifySignature_validSignature_returnTrue() {
+        SignedContextualAds signedContextualAds = aSignedContextualAds();
+        String enrollmentId = "enrollment1";
+        AdTechIdentifier buyer = signedContextualAds.getBuyer();
+
+        doReturn(new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build())
+                .when(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByAdTechIdentifier(buyer);
+        doReturn(
+                        Collections.singletonList(
+                                new EncryptionKey.Builder()
+                                        .setBody(PUBLIC_TEST_KEY_STRING)
+                                        .build()))
+                .when(mEncryptionKeyDaoMock)
+                .getEncryptionKeyFromEnrollmentIdAndKeyType(
+                        enrollmentId, EncryptionKey.KeyType.SIGNING);
+
+        boolean isVerified = mSignatureManager.isVerified(buyer, signedContextualAds);
+
+        assertThat(isVerified).isTrue();
+    }
+
+    @Test
+    public void testVerifySignature_invalidSignature_returnFalse() {
+        byte[] invalidSignature = new byte[] {1, 2, 3};
+        SignedContextualAds signedContextualAds =
+                new SignedContextualAds.Builder(aSignedContextualAds())
+                        .setSignature(invalidSignature)
+                        .build();
+        String enrollmentId = "enrollment1";
+        AdTechIdentifier buyer = signedContextualAds.getBuyer();
+
+        doReturn(new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build())
+                .when(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByAdTechIdentifier(buyer);
+        doReturn(
+                        Collections.singletonList(
+                                new EncryptionKey.Builder()
+                                        .setBody(PUBLIC_TEST_KEY_STRING)
+                                        .build()))
+                .when(mEncryptionKeyDaoMock)
+                .getEncryptionKeyFromEnrollmentIdAndKeyType(
+                        enrollmentId, EncryptionKey.KeyType.SIGNING);
+
+        boolean isVerified = mSignatureManager.isVerified(buyer, signedContextualAds);
+
+        assertThat(isVerified).isFalse();
     }
 
     @Test
     public void testFetchKeys_validAdTech_success() {
         AdTechIdentifier adTech = AdTechIdentifier.fromString("example.com");
-        String publicKey = "test-key";
+        byte[] publicKeyBytes = new byte[] {1, 2, 3, 4, 5};
+        String publicKey = Base64.getEncoder().encodeToString(publicKeyBytes);
         String enrollmentId = "enrollment1";
 
         doReturn(new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build())
-                .when(mEnrollmentDao)
+                .when(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
         doReturn(Collections.singletonList(new EncryptionKey.Builder().setBody(publicKey).build()))
-                .when(mEncryptionKeyDao)
+                .when(mEncryptionKeyDaoMock)
                 .getEncryptionKeyFromEnrollmentIdAndKeyType(
                         enrollmentId, EncryptionKey.KeyType.SIGNING);
 
-        ProtectedAudienceSignatureManager signatureManager =
-                new ProtectedAudienceSignatureManager(mContext, mEnrollmentDao, mEncryptionKeyDao);
+        List<byte[]> signingKeys = mNoOpSignatureManager.fetchPublicKeyForAdTech(adTech);
 
-        List<String> signingKeys = signatureManager.fetchPublicKeyForAdTech(adTech);
-
-        assertThat(signingKeys).isEqualTo(Collections.singletonList(publicKey));
+        assertThat(signingKeys.size()).isEqualTo(1);
+        assertThat(signingKeys.get(0)).isEqualTo(publicKeyBytes);
     }
 
     @Test
@@ -77,8 +149,10 @@ public class ProtectedAudienceSignatureManagerTest {
         EnrollmentData enrollment =
                 new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build();
 
-        String publicKey1 = "test-key1";
-        String publicKey2 = "test-key2";
+        byte[] publicKeyBytes1 = new byte[] {1, 2, 3, 4, 5};
+        String publicKey1 = Base64.getEncoder().encodeToString(publicKeyBytes1);
+        byte[] publicKeyBytes2 = new byte[] {6, 7, 8, 9, 10};
+        String publicKey2 = Base64.getEncoder().encodeToString(publicKeyBytes2);
         long expiration1 = 0L;
         long expiration2 = 1L;
         EncryptionKey encKey1 =
@@ -88,32 +162,28 @@ public class ProtectedAudienceSignatureManagerTest {
         List<EncryptionKey> encKeysToPersistInReverseOrder = List.of(encKey2, encKey1);
 
         doReturn(enrollment)
-                .when(mEnrollmentDao)
+                .when(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
         doReturn(encKeysToPersistInReverseOrder)
-                .when(mEncryptionKeyDao)
+                .when(mEncryptionKeyDaoMock)
                 .getEncryptionKeyFromEnrollmentIdAndKeyType(
                         enrollmentId, EncryptionKey.KeyType.SIGNING);
 
-        ProtectedAudienceSignatureManager signatureManager =
-                new ProtectedAudienceSignatureManager(mContext, mEnrollmentDao, mEncryptionKeyDao);
-
-        List<String> signingKeys = signatureManager.fetchPublicKeyForAdTech(adTech);
+        List<byte[]> signingKeys = mNoOpSignatureManager.fetchPublicKeyForAdTech(adTech);
 
         assertThat(signingKeys.size()).isEqualTo(2);
-        assertThat(signingKeys.get(0)).isEqualTo(publicKey1);
-        assertThat(signingKeys.get(1)).isEqualTo(publicKey2);
+        assertThat(signingKeys.get(0)).isEqualTo(publicKeyBytes1);
+        assertThat(signingKeys.get(1)).isEqualTo(publicKeyBytes2);
     }
 
     @Test
     public void testFetchKeys_notEnrolledAdTech_returnsEmptyList() {
         AdTechIdentifier adTech = AdTechIdentifier.fromString("example.com");
-        doReturn(null).when(mEnrollmentDao).getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
+        doReturn(null)
+                .when(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
 
-        ProtectedAudienceSignatureManager signatureManager =
-                new ProtectedAudienceSignatureManager(mContext, mEnrollmentDao, mEncryptionKeyDao);
-
-        List<String> signingKeys = signatureManager.fetchPublicKeyForAdTech(adTech);
+        List<byte[]> signingKeys = mNoOpSignatureManager.fetchPublicKeyForAdTech(adTech);
 
         assertThat(signingKeys).isEqualTo(Collections.emptyList());
     }
@@ -122,13 +192,10 @@ public class ProtectedAudienceSignatureManagerTest {
     public void testFetchKeys_enrolledAdTechWithNullId_returnsEmptyList() {
         AdTechIdentifier adTech = AdTechIdentifier.fromString("example.com");
         doReturn(new EnrollmentData.Builder().build())
-                .when(mEnrollmentDao)
+                .when(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(adTech);
 
-        ProtectedAudienceSignatureManager signatureManager =
-                new ProtectedAudienceSignatureManager(mContext, mEnrollmentDao, mEncryptionKeyDao);
-
-        List<String> signingKeys = signatureManager.fetchPublicKeyForAdTech(adTech);
+        List<byte[]> signingKeys = mNoOpSignatureManager.fetchPublicKeyForAdTech(adTech);
 
         assertThat(signingKeys).isEqualTo(Collections.emptyList());
     }

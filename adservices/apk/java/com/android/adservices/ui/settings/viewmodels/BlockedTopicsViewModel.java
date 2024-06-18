@@ -56,7 +56,7 @@ public class BlockedTopicsViewModel extends AndroidViewModel {
     public BlockedTopicsViewModel(@NonNull Application application) {
         super(application);
 
-        mConsentManager = ConsentManager.getInstance(application);
+        mConsentManager = ConsentManager.getInstance();
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
     }
 

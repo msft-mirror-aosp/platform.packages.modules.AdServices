@@ -19,7 +19,9 @@ package com.android.server.sdksandbox;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.Manifest;
+import android.app.sdksandbox.testutils.ProtoUtil;
 import android.content.Context;
+import android.os.Build;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 
@@ -32,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.List;
 import java.util.Map;
 
 public class SdkSandboxSettingsListenerUnitTest {
@@ -102,18 +105,44 @@ public class SdkSandboxSettingsListenerUnitTest {
     @Test
     public void testServiceAllowlist_DeviceConfigAllowlistApplied() {
         /*
-         * Base64 encoded Service allowlist allowlist_per_target_sdk { key: 33 value: {
-         * allowed_services: { intentAction : "android.test.33" componentPackageName :
-         * "packageName.test.33" componentClassName : "className.test.33" } } }
-         *
-         * <p>allowlist_per_target_sdk { key: 34 value: { allowed_services: { intentAction :
-         * "android.test.34" componentPackageName : "packageName.test.34" componentClassName :
-         * "className.test.34" } } }
+         * Base64 encoded Service allowlist allowlist_per_target_sdk
+         * allowlist_per_target_sdk {
+         *   key: 33
+         *   value: {
+         *     allowed_services: {
+         *       action : "action.test.33"
+         *       packageName : "packageName.test.33"
+         *       componentClassName : "componentClassName.test.33"
+         *       componentPackageName : "componentPackageName.test.33"
+         *     }
+         *   }
+         * }
+         * allowlist_per_target_sdk {
+         *   key: 34
+         *   value: {
+         *     allowed_services: {
+         *       action : "action.test.34"
+         *       packageName : "packageName.test.34"
+         *       componentClassName : "componentClassName.test.34"
+         *       componentPackageName : "componentPackageName.test.34"
+         *     }
+         *   }
+         * }
          */
-        final String encodedServiceAllowlist =
-                "Cj8IIRI7CjkKD2FuZHJvaWQudGVzdC4zMxITcGFja2FnZU5hbWUudGVzdC4zMxoRY2xhc3NOYW1lLnRl"
-                        + "c3QuMzMKPwgiEjsKOQoPYW5kcm9pZC50ZXN0LjM0EhNwYWNrYWdlTmFtZS50ZXN0LjM0GhFj"
-                        + "bGFzc05hbWUudGVzdC4zNA==";
+        ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServicesMap = new ArrayMap<>();
+
+        allowedServicesMap.put(
+                Build.VERSION_CODES.TIRAMISU,
+                getAllowedServicesMap(
+                        "action.test.33", "packageName.test.33",
+                        "componentClassName.test.33", "componentPackageName.test.33"));
+        allowedServicesMap.put(
+                Build.VERSION_CODES.UPSIDE_DOWN_CAKE,
+                getAllowedServicesMap(
+                        "action.test.34", "packageName.test.34",
+                        "componentClassName.test.34", "componentPackageName.test.34"));
+
+        String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServicesMap);
 
         setDeviceConfigProperty(PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
@@ -124,9 +153,10 @@ public class SdkSandboxSettingsListenerUnitTest {
 
         verifyAllowlistEntryContents(
                 allowedServices.getAllowedServices(0),
-                /*action=*/ "android.test.33",
+                /*action=*/ "action.test.33",
                 /*packageName=*/ "packageName.test.33",
-                /*componentClassName=*/ "className.test.33");
+                /*componentClassName=*/ "componentClassName.test.33",
+                /*componentPackageName=*/ "componentPackageName.test.33");
 
         allowedServices =
                 mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
@@ -135,19 +165,22 @@ public class SdkSandboxSettingsListenerUnitTest {
 
         verifyAllowlistEntryContents(
                 allowedServices.getAllowedServices(0),
-                /*action=*/ "android.test.34",
+                /*action=*/ "action.test.34",
                 /*packageName=*/ "packageName.test.34",
-                /*componentClassName=*/ "className.test.34");
+                /*componentClassName=*/ "componentClassName.test.34",
+                /*componentPackageName=*/ "componentPackageName.test.34");
     }
 
     private void verifyAllowlistEntryContents(
             Services.AllowedService allowedService,
             String action,
             String packageName,
-            String componentClassName) {
+            String componentClassName,
+            String componentPackageName) {
         assertThat(allowedService.getAction()).isEqualTo(action);
         assertThat(allowedService.getPackageName()).isEqualTo(packageName);
         assertThat(allowedService.getComponentClassName()).isEqualTo(componentClassName);
+        assertThat(allowedService.getComponentPackageName()).isEqualTo(componentPackageName);
     }
 
     private void setDeviceConfigProperty(String property, String value) {
@@ -163,5 +196,19 @@ public class SdkSandboxSettingsListenerUnitTest {
                     new DeviceConfig.Properties(
                             DeviceConfig.NAMESPACE_ADSERVICES, Map.of(property, value)));
         }
+    }
+
+    private List<ArrayMap<String, String>> getAllowedServicesMap(
+            String action,
+            String packageName,
+            String componentClassName,
+            String componentPackageName) {
+        ArrayMap<String, String> data = new ArrayMap<>(/* capacity= */ 4);
+        data.put("action", action);
+        data.put("packageName", packageName);
+        data.put("componentClassName", componentClassName);
+        data.put("componentPackageName", componentPackageName);
+
+        return List.of(data);
     }
 }

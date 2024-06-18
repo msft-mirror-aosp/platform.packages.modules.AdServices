@@ -52,6 +52,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -66,9 +67,9 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
@@ -143,11 +144,14 @@ public class SignalsIntakeE2ETest {
     private SignalEvictionController mSignalEvictionController;
     private AdTechUriValidator mAdtechUriValidator;
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
-    private CustomAudienceServiceFilter mCustomAudienceServiceFilter;
+    private ProtectedSignalsServiceFilter mProtectedSignalsServiceFilter;
     private EncoderLogicHandler mEncoderLogicHandler;
     private EncoderPersistenceDao mEncoderPersistenceDao;
     private ExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -172,6 +176,7 @@ public class SignalsIntakeE2ETest {
                         mEncoderPersistenceDao,
                         mEncoderEndpointsDao,
                         mEncoderLogicMetadataDao,
+                        mSignalsDao,
                         mAdServicesHttpsClientMock,
                         mBackgroundExecutorService);
         mUpdateEncoderEventHandler =
@@ -201,8 +206,8 @@ public class SignalsIntakeE2ETest {
                                         DbTestUtil.getSharedDbHelperForTest(),
                                         FlagsFactory.getFlagsForTest()),
                                 mAdServicesLoggerMock));
-        mCustomAudienceServiceFilter =
-                new CustomAudienceServiceFilter(
+        mProtectedSignalsServiceFilter =
+                new ProtectedSignalsServiceFilter(
                         mContextSpy,
                         mConsentManagerMock,
                         FlagsFactory.getFlagsForTest(),
@@ -212,6 +217,7 @@ public class SignalsIntakeE2ETest {
                         mMockThrottler);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
         when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true);
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
@@ -235,7 +241,8 @@ public class SignalsIntakeE2ETest {
                         mBackgroundExecutorService,
                         mUpdatesDownloader,
                         mUpdateProcessingOrchestrator,
-                        mAdtechUriValidator);
+                        mAdtechUriValidator,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
         mService =
                 new ProtectedSignalsServiceImpl(
                         mContextSpy,
@@ -247,7 +254,7 @@ public class SignalsIntakeE2ETest {
                         AdServicesLoggerImpl.getInstance(),
                         FlagsFactory.getFlagsForTest(),
                         CallingAppUidSupplierProcessImpl.create(),
-                        mCustomAudienceServiceFilter);
+                        mProtectedSignalsServiceFilter);
     }
 
     @Test
@@ -668,9 +675,22 @@ public class SignalsIntakeE2ETest {
     }
 
     @Test
-    public void testNoConsent() throws Exception {
+    public void testNoConsentCallerPackageHasNoConsent() throws Exception {
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(true);
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+        baseTestNoConsent();
+    }
+
+    @Test
+    public void testNoConsentUserNotSeenNotification() throws Exception {
+        when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
+                .thenReturn(false);
+        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(false);
+        baseTestNoConsent();
+    }
+
+    private void baseTestNoConsent() throws Exception {
         setupService(false);
         String json =
                 "{" + "\"put\":{\"" + BASE64_KEY_1 + "\":\"" + BASE64_VALUE_1 + "\"" + "}" + "}";

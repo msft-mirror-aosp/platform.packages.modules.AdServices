@@ -16,6 +16,9 @@
 
 package com.android.adservices.tests.cts.topics;
 
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -26,26 +29,18 @@ import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.adservices.topics.TopicsManager;
-import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.OutcomeReceiverForTests;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.FlagsConstants;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
@@ -54,12 +49,10 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 // TODO(b/243062789): Test should not use CountDownLatch or Sleep.
-@RunWith(JUnit4.class)
-public class TopicsManagerTest {
-    private static final String TAG = "TopicsManagerTest";
+public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
 
     // Test constants for testing encryption
-    static final String PUBLIC_KEY_BASE64 = "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=";
+    static final String TEST_PUBLIC_KEY_BASE64 = "rSJBSUYG0ebvfW1AXCWO0CMGMJhDzpfQm3eLyw1uxX8=";
 
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
@@ -70,9 +63,6 @@ public class TopicsManagerTest {
     private static final long EXPECTED_MODEL_VERSION = 5L;
     // Expected taxonomy version.
     private static final long EXPECTED_TAXONOMY_VERSION = 2L;
-
-    // Default Epoch Period.
-    private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
     // Classifier test constants.
     private static final int TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS = 5;
@@ -85,22 +75,16 @@ public class TopicsManagerTest {
     private static final int ON_DEVICE_CLASSIFIER_TYPE = 1;
     private static final int PRECOMPUTED_CLASSIFIER_TYPE = 2;
 
-    // Classifier default constants.
-    private static final int DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
-    // Threshold value for classifier confidence set back to the default.
-    private static final float DEFAULT_CLASSIFIER_THRESHOLD = 0.1f;
     // PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER
     private static final int DEFAULT_CLASSIFIER_TYPE = 3;
 
     // Use 0 percent for random topic in the test so that we can verify the returned topic.
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
-    private static final int TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
+            AdservicesTestHelper.getAdServicesPackageName(sContext);
 
     // Assert message statements.
     private static final String INCORRECT_MODEL_VERSION_MESSAGE =
@@ -108,18 +92,6 @@ public class TopicsManagerTest {
     private static final String INCORRECT_TAXONOMY_VERSION_MESSAGE =
             "Incorrect taxonomy version detected. Please repo sync, build and install the new"
                     + " apex.";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
-
-    // Skip the test if it runs on unsupported platforms.
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    // Sets flags used in the test (and automatically reset them at the end)
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.forTopicsE2ETests();
 
     @Before
     public void setup() throws Exception {
@@ -130,10 +102,11 @@ public class TopicsManagerTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        flags.setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS);
+        flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
-        flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        flags.setFlag(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
         // TODO(b/263297331): Handle rollback support for R and S.
     }
@@ -490,6 +463,8 @@ public class TopicsManagerTest {
         // Set flags for encryption test
         flags.setFlag(FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED, true);
         flags.setFlag(FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9, true);
+        // Override encryption key for testing
+        flags.setFlag(FlagsConstants.KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY, TEST_PUBLIC_KEY_BASE64);
 
         // The Test App has 1 SDK: sdk6
         // sdk6 calls the Topics API.
@@ -539,7 +514,7 @@ public class TopicsManagerTest {
         assertThat(sdk6Result.getEncryptedTopics()).hasSize(1);
         assertThat(sdk6Result.getEncryptedTopics().get(0).getEncryptedTopic()).isNotNull();
         assertThat(sdk6Result.getEncryptedTopics().get(0).getKeyIdentifier())
-                .isEqualTo(PUBLIC_KEY_BASE64);
+                .isEqualTo(TEST_PUBLIC_KEY_BASE64);
         assertThat(sdk6Result.getEncryptedTopics().get(0).getEncapsulatedKey()).isNotNull();
     }
 

@@ -85,6 +85,6 @@ public class CustomAudienceService extends Service {
 
     /** @return {@code true} if the Privacy Sandbox has user consent */
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven();
+        return ConsentManager.getInstance().getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 }

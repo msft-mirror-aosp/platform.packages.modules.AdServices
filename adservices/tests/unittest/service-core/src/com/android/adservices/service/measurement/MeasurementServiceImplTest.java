@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.measurement;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
@@ -92,7 +96,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -252,11 +256,30 @@ public final class MeasurementServiceImplTest {
 
     private void registerSourceAndAssertFailure(@AdServicesStatusUtils.StatusCode int status)
             throws InterruptedException {
-        registerSourceAndAssertFailure(status, createRegistrationSourceRequest());
+        registerSourceAndAssertFailure(
+                status,
+                createRegistrationSourceRequest(),
+                /* assertFailureReason = */ false,
+                FAILURE_REASON_UNSET);
     }
 
-    private void registerSourceAndAssertFailure(@AdServicesStatusUtils.StatusCode int status,
-            RegistrationRequest registrationSourceRequest) throws InterruptedException {
+    private void registerSourceAndAssertFailure(
+            @AdServicesStatusUtils.StatusCode int status,
+            RegistrationRequest registrationSourceRequest)
+            throws InterruptedException {
+        registerSourceAndAssertFailure(
+                status,
+                registrationSourceRequest,
+                /* assertFailureReason = */ false,
+                FAILURE_REASON_UNSET);
+    }
+
+    private void registerSourceAndAssertFailure(
+            @AdServicesStatusUtils.StatusCode int status,
+            RegistrationRequest registrationSourceRequest,
+            boolean assertFailureReason,
+            int failureReason)
+            throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         final List<MeasurementErrorResponse> errorContainer = new ArrayList<>();
         mMeasurementServiceImpl.register(
@@ -277,6 +300,9 @@ public final class MeasurementServiceImplTest {
         verify(mMockMeasurementImpl, never()).register(any(), anyBoolean(), anyLong());
         Assert.assertEquals(1, errorContainer.size());
         Assert.assertEquals(status, errorContainer.get(0).getStatusCode());
+        if (assertFailureReason) {
+            assertFailureReasonLogged(failureReason);
+        }
     }
 
     @Test
@@ -290,11 +316,39 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testRegisterSource_failureByDevContextAccessResolver_logFailureReason()
+            throws Exception {
+        runWithMocks(
+                Api.REGISTER_SOURCE,
+                new AccessDenier().deniedByDevContext(),
+                () ->
+                        registerSourceAndAssertFailure(
+                                STATUS_UNAUTHORIZED,
+                                createRegistrationSourceRequest(true),
+                                /* assertFailureReason= */ true,
+                                FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST));
+    }
+
+    @Test
     public void testRegisterSource_failureByAppPackageMsmtApiAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCE,
                 new AccessDenier().deniedByAppPackageMsmtApiApp(),
                 () -> registerSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
+    }
+
+    @Test
+    public void testRegisterSource_failureByAppPackageMsmtApiAccessResolver_logFailureReason()
+            throws Exception {
+        runWithMocks(
+                Api.REGISTER_SOURCE,
+                new AccessDenier().deniedByAppPackageMsmtApiApp(),
+                () ->
+                        registerSourceAndAssertFailure(
+                                STATUS_CALLER_NOT_ALLOWED,
+                                createRegistrationSourceRequest(),
+                                /* assertFailureReason= */ true,
+                                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST));
     }
 
     @Test
@@ -329,6 +383,20 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_SOURCE,
                 new AccessDenier().deniedByForegroundEnforcement(),
                 () -> registerSourceAndAssertFailure(STATUS_BACKGROUND_CALLER));
+    }
+
+    @Test
+    public void testRegisterSource_failureByForegroundEnforcementAccessResolver_logFailureReason()
+            throws Exception {
+        runWithMocks(
+                Api.REGISTER_SOURCE,
+                new AccessDenier().deniedByForegroundEnforcement(),
+                () ->
+                        registerSourceAndAssertFailure(
+                                STATUS_BACKGROUND_CALLER,
+                                createRegistrationSourceRequest(),
+                                /* assertFailureReason= */ true,
+                                FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND));
     }
 
     @Test
@@ -1934,11 +2002,17 @@ public final class MeasurementServiceImplTest {
         assertEquals(SDK_PACKAGE_NAME, captorStatus.getValue().getSdkPackageName());
     }
 
+    private void assertFailureReasonLogged(int failureReason) {
+        ArgumentCaptor<ApiCallStats> captorStatus = ArgumentCaptor.forClass(ApiCallStats.class);
+        verify(mMockAdServicesLogger, timeout(TIMEOUT)).logApiCallStats(captorStatus.capture());
+        assertEquals(failureReason, captorStatus.getValue().getFailureReason());
+    }
+
     private MeasurementServiceImpl createServiceWithMocks() {
         return new MeasurementServiceImpl(
                 mMockMeasurementImpl,
                 mMockContext,
-                Clock.SYSTEM_CLOCK,
+                Clock.getInstance(),
                 mMockConsentManager,
                 mMockThrottler,
                 new CachedFlags(mMockFlags),

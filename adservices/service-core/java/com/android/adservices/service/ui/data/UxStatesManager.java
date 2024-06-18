@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.ui.data;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
 
 import android.adservices.common.AdServicesStates;
@@ -34,6 +36,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 import java.util.Map;
 
@@ -61,6 +64,8 @@ public class UxStatesManager {
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull ConsentManager consentManager) {
+        LogUtil.d("Instantiating lazy UxStatesManager instance.");
+
         mUxFlags = flags.getUxFlags();
         mConsentManager = consentManager;
         mIsEeaDevice = DeviceRegionProvider.isEuDevice(context);
@@ -68,23 +73,18 @@ public class UxStatesManager {
                 context.getSharedPreferences("UX_SHARED_PREFERENCES", Context.MODE_PRIVATE);
     }
 
+    private static class UxStatesManagerLazyInstanceHolder {
+        static final UxStatesManager LAZY_INSTANCE =
+                new UxStatesManager(
+                        ApplicationContextSingleton.get(),
+                        FlagsFactory.getFlags(),
+                        ConsentManager.getInstance());
+    }
+
     /** Returns an instance of the UxStatesManager. */
     @NonNull
-    public static UxStatesManager getInstance(Context context) {
-        LogUtil.d("UxStates getInstance() called.");
-        if (sUxStatesManager == null) {
-            synchronized (LOCK) {
-                if (sUxStatesManager == null) {
-                    LogUtil.d("Creaeting new UxStatesManager.");
-                    sUxStatesManager =
-                            new UxStatesManager(
-                                    context,
-                                    FlagsFactory.getFlags(),
-                                    ConsentManager.getInstance(context));
-                }
-            }
-        }
-        return sUxStatesManager;
+    public static UxStatesManager getInstance() {
+        return UxStatesManagerLazyInstanceHolder.LAZY_INSTANCE;
     }
 
     /** Saves the AdServices states into data stores. */
@@ -102,7 +102,7 @@ public class UxStatesManager {
     /** Returns process statble UX flags. */
     public boolean getFlag(String uxFlagKey) {
         if (!mUxFlags.containsKey(uxFlagKey)) {
-            LogUtil.e("Key not found in cached UX flags: ", uxFlagKey);
+            LogUtil.e("Key not found in cached UX flags: %s", uxFlagKey);
         }
         Boolean value = mUxFlags.get(uxFlagKey);
         return value != null ? value : false;
@@ -170,5 +170,28 @@ public class UxStatesManager {
             return false;
         }
         return true;
+    }
+
+    /**
+     * PAS could be enabled but user may not have received notification, so user would see GA UX
+     * instead of PAS UX. Before the notification card is shown the notification has not been
+     * displayed yet, so if the calling context is related to this then we should only look at the
+     * PAS UX flag.
+     *
+     * @param beforeNotificationShown True if the calling context is logic before PAS notification
+     *     shown has been recorded.
+     * @return True if user will see PAS UX for settings/notification, otherwise false.
+     */
+    public boolean pasUxIsActive(boolean beforeNotificationShown) {
+        return getFlag(KEY_PAS_UX_ENABLED)
+                && (wasPasNotificationDisplayed() || beforeNotificationShown);
+    }
+
+    /** Returns if PAS notification was displayed. */
+    private boolean wasPasNotificationDisplayed() {
+        if (getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)) {
+            return getFlag(KEY_PAS_UX_ENABLED);
+        }
+        return ConsentManager.getInstance().wasPasNotificationDisplayed();
     }
 }

@@ -30,8 +30,11 @@ import android.adservices.adselection.AdWithBid;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -62,6 +65,9 @@ public class AdWithBidArgumentUtilTest {
                         AdDataArgumentUtilTest.aValidAdDataWithAdCounterKeysJson())
                 .put(AdWithBidArgumentUtil.BID_FIELD_NAME, BID_VALUE);
     }
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testShouldReadValidJSON() throws Exception {

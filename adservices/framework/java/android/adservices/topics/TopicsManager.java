@@ -16,7 +16,6 @@
 package android.adservices.topics;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_TOPICS;
-import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
@@ -38,6 +37,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.shared.common.ServiceUnavailableException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +82,7 @@ public final class TopicsManager {
     public static TopicsManager get(@NonNull Context context) {
         // TODO(b/269798827): Enable for R.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+            throw new ServiceUnavailableException();
         }
         // On TM+, context.getSystemService() does more than just call constructor.
         return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
@@ -98,7 +98,7 @@ public final class TopicsManager {
     public TopicsManager(Context context) {
         // TODO(b/269798827): Enable for R.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+            throw new ServiceUnavailableException();
         }
         // In case the TopicsManager is initiated from inside a sdk_sandbox process the fields
         // will be immediately rewritten by the initialize method below.
@@ -129,7 +129,7 @@ public final class TopicsManager {
     private ITopicsService getService() {
         ITopicsService service = mServiceBinder.getService();
         if (service == null) {
-            throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+            throw new ServiceUnavailableException();
         }
         return service;
     }

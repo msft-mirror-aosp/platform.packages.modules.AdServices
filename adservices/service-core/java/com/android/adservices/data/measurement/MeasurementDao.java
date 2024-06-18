@@ -70,6 +70,8 @@ import java.util.stream.Stream;
 /** Data Access Object for the Measurement PPAPI module. */
 class MeasurementDao implements IMeasurementDao {
 
+    private static final int MAX_COMPOUND_SELECT = 250;
+
     private Supplier<Boolean> mDbFileMaxSizeLimitReachedSupplier;
     private Supplier<Integer> mReportingRetryLimitSupplier;
     private Supplier<Boolean> mReportingRetryLimitEnabledSupplier;
@@ -147,6 +149,10 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.TriggerContract.AGGREGATION_COORDINATOR_ORIGIN,
                 getNullableUriString(trigger.getAggregationCoordinatorOrigin()));
+        values.put(
+                MeasurementTables.TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG,
+                trigger.getAggregatableSourceRegistrationTimeConfig().name());
+
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -469,7 +475,7 @@ class MeasurementDao implements IMeasurementDao {
                     source.getTriggerSpecs().encodeToJson());
             values.put(
                     MeasurementTables.SourceContract.PRIVACY_PARAMETERS,
-                    source.getTriggerSpecs().encodePrivacyParametersToJSONString());
+                    source.getTriggerSpecs().encodePrivacyParametersToJsonString());
         }
         values.put(
                 MeasurementTables.SourceContract.MAX_EVENT_LEVEL_REPORTS,
@@ -1563,35 +1569,47 @@ class MeasurementDao implements IMeasurementDao {
             return new HashSet<>();
         }
 
-        List<String> queries = triggerIds.stream().map(
-                triggerId ->
-                        "SELECT * FROM " + MeasurementTables.SourceContract.TABLE
-                                + " WHERE "
-                                    + MeasurementTables.SourceContract.TRIGGER_SPECS
-                                    + " IS NOT NULL"
-                                + " AND "
-                                    + MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS
-                                    + " LIKE '%\"" + triggerId  + "\"%'")
-                .collect(Collectors.toList());
+        // Reduce the number of trigger IDs to query to a set and convert to a list for batching.
+        List<String> triggerIdsList = new ArrayList<>(new HashSet<>(triggerIds));
 
-        String unionQuery = String.join(" UNION ", queries);
+        // SQlite limits the number of compound SELECT statements so we need to process them in
+        // batches.
+        int i = 0;
+        while (i < triggerIdsList.size()) {
+            int sublistEnd = Math.min(i + MAX_COMPOUND_SELECT, triggerIdsList.size());
 
-        try (Cursor cursor =
-                mSQLTransaction
-                        .getDatabase()
-                        .rawQuery(
-                                String.format(
-                                        Locale.ENGLISH,
-                                        "SELECT DISTINCT %s FROM (%s)",
-                                        MeasurementTables.SourceContract.ID,
-                                        unionQuery),
-                                null)) {
-            while (cursor.moveToNext()) {
-                String sourceId =
-                        cursor.getString(
-                                cursor.getColumnIndexOrThrow(MeasurementTables.SourceContract.ID));
-                sourceIds.add(sourceId);
+            List<String> queries = triggerIdsList.subList(i, sublistEnd).stream().map(
+                    triggerId ->
+                            "SELECT * FROM " + MeasurementTables.SourceContract.TABLE
+                                    + " WHERE "
+                                        + MeasurementTables.SourceContract.TRIGGER_SPECS
+                                        + " IS NOT NULL"
+                                    + " AND "
+                                        + MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS
+                                        + " LIKE '%\"" + triggerId  + "\"%'")
+                    .collect(Collectors.toList());
+
+            String unionQuery = String.join(" UNION ", queries);
+
+            try (Cursor cursor =
+                    mSQLTransaction
+                            .getDatabase()
+                            .rawQuery(
+                                    String.format(
+                                            Locale.ENGLISH,
+                                            "SELECT DISTINCT %s FROM (%s)",
+                                            MeasurementTables.SourceContract.ID,
+                                            unionQuery),
+                                    null)) {
+                while (cursor.moveToNext()) {
+                    String sourceId =
+                            cursor.getString(
+                                    cursor.getColumnIndexOrThrow(
+                                            MeasurementTables.SourceContract.ID));
+                    sourceIds.add(sourceId);
+                }
             }
+            i += MAX_COMPOUND_SELECT;
         }
         return sourceIds;
     }
@@ -2761,6 +2779,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.REQUEST_POST_BODY,
                 asyncRegistration.getPostBody());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.REDIRECT_BEHAVIOR,
+                asyncRegistration.getRedirectBehavior().name());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

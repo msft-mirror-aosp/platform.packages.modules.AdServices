@@ -29,6 +29,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -76,12 +77,17 @@ public class EncoderLogicHandlerTest {
 
     @Mock private AdServicesHttpsClient mAdServicesHttpsClient;
 
+    @Mock private ProtectedSignalsDao mProtectedSignalsDao;
+
     @Captor ArgumentCaptor<DBEncoderLogicMetadata> mDBEncoderLogicArgumentCaptor;
 
     private ListeningExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
 
     private ExecutorService mService = Executors.newFixedThreadPool(5);
     private EncoderLogicHandler mEncoderLogicHandler;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -90,6 +96,7 @@ public class EncoderLogicHandlerTest {
                         mEncoderPersistenceDao,
                         mEncoderEndpointsDao,
                         mEncoderLogicMetadataDao,
+                        mProtectedSignalsDao,
                         mAdServicesHttpsClient,
                         mExecutorService);
     }
@@ -273,6 +280,7 @@ public class EncoderLogicHandlerTest {
         verify(mEncoderLogicMetadataDao).deleteEncoder(buyer);
         verify(mEncoderPersistenceDao).deleteEncoder(buyer);
         verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer);
+        verify(mProtectedSignalsDao).deleteSignalsUpdateMetadata(buyer);
     }
 
     @Test
@@ -290,6 +298,9 @@ public class EncoderLogicHandlerTest {
 
         verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer1);
         verify(mEncoderEndpointsDao).deleteEncoderEndpoint(buyer2);
+
+        verify(mProtectedSignalsDao).deleteSignalsUpdateMetadata(buyer1);
+        verify(mProtectedSignalsDao).deleteSignalsUpdateMetadata(buyer2);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")

@@ -17,6 +17,8 @@
 package com.android.adservices.tests.cts.topics;
 
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -26,7 +28,6 @@ import android.adservices.topics.Topic;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -34,6 +35,7 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -92,10 +94,11 @@ public class TopicsManagerMddTest {
     @Rule(order = 1)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS)
                     // We need to turn off random topic so that we can verify the returned topic.
-                    .setTopicsPercentageForRandomTopicForTests(
+                    .setFlag(
+                            KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
                             TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC)
+                    .setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS)
                     .setFlag(
                             KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL, TEST_MDD_MANIFEST_FILE_URL)
                     .setCompatModeFlags();
@@ -111,7 +114,7 @@ public class TopicsManagerMddTest {
     }
 
     @Test
-    @FlakyTest(bugId = 299573314)
+    @Ignore("b/299573314")
     public void testTopicsManager_downloadModelViaMdd_runPrecomputedClassifier() throws Exception {
         // The Test App has 1 SDK: sdk1
         // sdk1 calls the Topics API.

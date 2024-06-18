@@ -49,7 +49,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
 
 /** Service tests for protected signals */
@@ -62,8 +61,6 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
 
     private final Flags mFlagsWithKillSwitchOnGaUxDisabled =
             new FlagsWithKillSwitchOnGaUxDisabled();
-    private final Flags mFlagsWithKillSwitchOffGaUxDisabled =
-            new FlagsWithKillSwitchOffGaUxDisabled();
     private final Flags mFlagsWithKillSwitchOnGaUxEnabled = new FlagsWithKillSwitchOnGaUxEnabled();
     private final Flags mFlagsWithKillSwitchOffGaUxEnabled =
             new FlagsWithKillSwitchOffGaUxEnabled();
@@ -110,7 +107,7 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
     public void testBindableProtectedSignalsServiceKillSwitchOffGaUxEnabled() {
         doReturn(mMockProtectedSignalsServiceImpl)
                 .when(() -> ProtectedSignalsServiceImpl.create(any(Context.class)));
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(eq(AdServicesApiType.FLEDGE));
@@ -141,19 +138,7 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
 
     private static class FlagsWithKillSwitchOnGaUxDisabled implements Flags {
         @Override
-        public boolean getProtectedSignalsServiceKillSwitch() {
-            return true;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return false;
-        }
-    }
-
-    private static class FlagsWithKillSwitchOffGaUxDisabled implements Flags {
-        @Override
-        public boolean getProtectedSignalsServiceKillSwitch() {
+        public boolean getProtectedSignalsEnabled() {
             return false;
         }
 
@@ -165,8 +150,8 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
 
     private static class FlagsWithKillSwitchOnGaUxEnabled implements Flags {
         @Override
-        public boolean getProtectedSignalsServiceKillSwitch() {
-            return true;
+        public boolean getProtectedSignalsEnabled() {
+            return false;
         }
 
         @Override
@@ -177,8 +162,8 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
 
     private static class FlagsWithKillSwitchOffGaUxEnabled implements Flags {
         @Override
-        public boolean getProtectedSignalsServiceKillSwitch() {
-            return false;
+        public boolean getProtectedSignalsEnabled() {
+            return true;
         }
 
         @Override

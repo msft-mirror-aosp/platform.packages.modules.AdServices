@@ -29,6 +29,7 @@ import androidx.room.Transaction;
 import com.android.adservices.data.common.CleanupUtils;
 import com.android.adservices.service.Flags;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -124,7 +125,10 @@ public abstract class AppInstallDao {
         Objects.requireNonNull(flags);
 
         List<String> packagesToRemove = getAllPackageNames();
-        CleanupUtils.removeAllowedPackages(packagesToRemove, packageManager, flags);
+        CleanupUtils.removeAllowedPackages(
+                packagesToRemove,
+                packageManager,
+                Arrays.asList(flags.getPpapiAppAllowList(), flags.getPasAppAllowList()));
         if (packagesToRemove.isEmpty()) {
             return 0;
         }

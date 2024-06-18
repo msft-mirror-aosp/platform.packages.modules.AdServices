@@ -21,6 +21,7 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -35,16 +36,23 @@ public class UserProfileIdDaoSharedPreferencesImpl implements UserProfileIdDao {
     private static final String STORAGE_NAME = "user_profile_id";
     @VisibleForTesting static final String USER_PROFILE_ID_KEY = "user_profile_id_key";
 
+    @VisibleForTesting
+    static final String USER_PROFILE_ID_CREATION_TIMESTAMP_KEY =
+            "user_profile_id_creation_timestamp_key";
+
     private final SharedPreferences mSharedPreferences;
+    private final Clock mClock;
 
     @GuardedBy("SINGLETON_LOCK")
     private static volatile UserProfileIdDao sUserProfileIdDao;
 
     @VisibleForTesting
-    UserProfileIdDaoSharedPreferencesImpl(@NonNull final SharedPreferences sharedPreferences) {
+    UserProfileIdDaoSharedPreferencesImpl(
+            @NonNull final SharedPreferences sharedPreferences, @NonNull final Clock clock) {
         Objects.requireNonNull(sharedPreferences);
 
         mSharedPreferences = sharedPreferences;
+        mClock = clock;
     }
 
     /** Returns the singleton instance of the {@link UserProfileIdDaoSharedPreferencesImpl} */
@@ -56,7 +64,8 @@ public class UserProfileIdDaoSharedPreferencesImpl implements UserProfileIdDao {
             if (sUserProfileIdDao == null) {
                 sUserProfileIdDao =
                         new UserProfileIdDaoSharedPreferencesImpl(
-                                context.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE));
+                                context.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE),
+                                Clock.getInstance());
             }
             return sUserProfileIdDao;
         }
@@ -71,10 +80,19 @@ public class UserProfileIdDaoSharedPreferencesImpl implements UserProfileIdDao {
     }
 
     @Override
+    public long getTimestamp() {
+        return mSharedPreferences.getLong(USER_PROFILE_ID_CREATION_TIMESTAMP_KEY, 0);
+    }
+
+    @Override
     public void setUserProfileId(@NonNull final UUID userProfileId) {
         Objects.requireNonNull(userProfileId);
 
         mSharedPreferences.edit().putString(USER_PROFILE_ID_KEY, userProfileId.toString()).commit();
+        mSharedPreferences
+                .edit()
+                .putLong(USER_PROFILE_ID_CREATION_TIMESTAMP_KEY, mClock.currentTimeMillis())
+                .commit();
     }
 
     @Override

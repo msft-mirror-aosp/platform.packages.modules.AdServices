@@ -37,9 +37,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.signals.DBProtectedSignal;
 
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -61,6 +63,9 @@ public class PutTest {
     private static final String PUT = "put";
 
     private Put mPut = new Put();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testGetName() {

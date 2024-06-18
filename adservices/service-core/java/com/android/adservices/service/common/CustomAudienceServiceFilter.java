@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
+
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -104,11 +106,12 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
         }
         if (!Objects.isNull(adTech)) {
             sLogger.v("Checking ad tech is allowed to use FLEDGE.");
-            assertFledgeEnrollment(adTech, callerPackageName, apiName, devContext);
+            assertFledgeEnrollment(
+                    adTech, callerPackageName, apiName, devContext, API_CUSTOM_AUDIENCES);
         }
 
         sLogger.v("Validating caller package is in allow list.");
-        assertAppInAllowList(callerPackageName, apiName);
+        assertAppInAllowList(callerPackageName, apiName, API_CUSTOM_AUDIENCES);
 
         if (enforceConsent) {
             sLogger.v("Validating per-app user consent.");
@@ -167,11 +170,13 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             adTech = AdTechIdentifier.fromString(uriForAdTech.getHost());
         } else {
             sLogger.v("Extracting ad tech's eTLD+1 identifier.");
-            adTech = getAndAssertAdTechFromUriAllowed(callerPackageName, uriForAdTech, apiName);
+            adTech =
+                    getAndAssertAdTechFromUriAllowed(
+                            callerPackageName, uriForAdTech, apiName, API_CUSTOM_AUDIENCES);
         }
 
         sLogger.v("Validating caller package is in allow list.");
-        assertAppInAllowList(callerPackageName, apiName);
+        assertAppInAllowList(callerPackageName, apiName, API_CUSTOM_AUDIENCES);
 
         if (enforceConsent) {
             sLogger.v("Validating per-app user consent.");

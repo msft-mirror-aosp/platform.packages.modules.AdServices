@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.SourceRegistrationRequest;
 import android.adservices.measurement.WebSourceParams;
@@ -75,7 +76,7 @@ public class DevContextAccessResolverTest {
                 getDevContextEnabled(), mRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -86,7 +87,7 @@ public class DevContextAccessResolverTest {
                 getDevContextDisabled(), mRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -97,7 +98,7 @@ public class DevContextAccessResolverTest {
                 getDevContextEnabled(), mRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -108,7 +109,11 @@ public class DevContextAccessResolverTest {
                 getDevContextDisabled(), mRegistrationRequest);
 
         // Execution
-        assertFalse(mClassUnderTest.isAllowed(mContext));
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(
+                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
+                accessInfo.getDeniedAccessReason());
     }
 
     @Test
@@ -120,7 +125,7 @@ public class DevContextAccessResolverTest {
                 getDevContextEnabled(), mWebSourceRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -132,7 +137,7 @@ public class DevContextAccessResolverTest {
                 getDevContextDisabled(), mWebSourceRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -144,7 +149,7 @@ public class DevContextAccessResolverTest {
                 getDevContextEnabled(), mWebSourceRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -158,7 +163,7 @@ public class DevContextAccessResolverTest {
                 getDevContextEnabled(), mWebSourceRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -170,7 +175,11 @@ public class DevContextAccessResolverTest {
                 getDevContextDisabled(), mWebSourceRegistrationRequest);
 
         // Execution
-        assertFalse(mClassUnderTest.isAllowed(mContext));
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(
+                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
+                accessInfo.getDeniedAccessReason());
     }
 
     @Test
@@ -184,7 +193,11 @@ public class DevContextAccessResolverTest {
                 getDevContextDisabled(), mWebSourceRegistrationRequest);
 
         // Execution
-        assertFalse(mClassUnderTest.isAllowed(mContext));
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(
+                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
+                accessInfo.getDeniedAccessReason());
     }
 
     @Test
@@ -197,7 +210,7 @@ public class DevContextAccessResolverTest {
                 getDevContextEnabled(), mWebTriggerRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -210,7 +223,7 @@ public class DevContextAccessResolverTest {
                 getDevContextDisabled(), mWebTriggerRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -223,7 +236,7 @@ public class DevContextAccessResolverTest {
                 getDevContextEnabled(), mWebTriggerRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -237,7 +250,7 @@ public class DevContextAccessResolverTest {
                 getDevContextEnabled(), mWebTriggerRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -250,7 +263,11 @@ public class DevContextAccessResolverTest {
                 getDevContextDisabled(), mWebTriggerRegistrationRequest);
 
         // Execution
-        assertFalse(mClassUnderTest.isAllowed(mContext));
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(
+                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
+                accessInfo.getDeniedAccessReason());
     }
 
     @Test
@@ -264,7 +281,11 @@ public class DevContextAccessResolverTest {
                 getDevContextDisabled(), mWebTriggerRegistrationRequest);
 
         // Execution
-        assertFalse(mClassUnderTest.isAllowed(mContext));
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(
+                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
+                accessInfo.getDeniedAccessReason());
     }
 
     @Test
@@ -276,7 +297,7 @@ public class DevContextAccessResolverTest {
                 new DevContextAccessResolver(getDevContextEnabled(), mSourceRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -288,7 +309,7 @@ public class DevContextAccessResolverTest {
                 new DevContextAccessResolver(getDevContextDisabled(), mSourceRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -299,7 +320,7 @@ public class DevContextAccessResolverTest {
                 new DevContextAccessResolver(getDevContextEnabled(), mSourceRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -311,7 +332,7 @@ public class DevContextAccessResolverTest {
                 new DevContextAccessResolver(getDevContextEnabled(), mSourceRegistrationRequest);
 
         // Execution
-        assertTrue(mClassUnderTest.isAllowed(mContext));
+        assertTrue(mClassUnderTest.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
@@ -322,7 +343,11 @@ public class DevContextAccessResolverTest {
                 new DevContextAccessResolver(getDevContextDisabled(), mSourceRegistrationRequest);
 
         // Execution
-        assertFalse(mClassUnderTest.isAllowed(mContext));
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(
+                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
+                accessInfo.getDeniedAccessReason());
     }
 
     @Test
@@ -334,7 +359,11 @@ public class DevContextAccessResolverTest {
                 new DevContextAccessResolver(getDevContextDisabled(), mSourceRegistrationRequest);
 
         // Execution
-        assertFalse(mClassUnderTest.isAllowed(mContext));
+        AccessInfo accessInfo = mClassUnderTest.getAccessInfo(mContext);
+        assertFalse(accessInfo.isAllowedAccess());
+        assertEquals(
+                AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
+                accessInfo.getDeniedAccessReason());
     }
 
     @Test

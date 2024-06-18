@@ -16,9 +16,10 @@
 package com.android.adservices.shared.common;
 
 import android.content.Context;
-import android.util.Log;
 
+import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,10 +34,6 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public final class ApplicationContextSingleton {
-
-    // TODO(b/280460130): use adservice helpers for tag name / logging methods
-    private static final String TAG = "AppContextSingleton";
-
     @VisibleForTesting
     public static final String ERROR_MESSAGE_SET_NOT_CALLED = "set() not called yet";
 
@@ -49,11 +46,7 @@ public final class ApplicationContextSingleton {
      */
     public static Context get() {
         Context context = sContext.get();
-        // TODO(b/303886367): use Preconditions.checkState()
-        if (context == null) {
-            // TODO(b/309169907): log to CEL
-            throw new IllegalStateException(ERROR_MESSAGE_SET_NOT_CALLED);
-        }
+        Preconditions.checkState(context != null, ERROR_MESSAGE_SET_NOT_CALLED);
         return context;
     }
 
@@ -68,15 +61,13 @@ public final class ApplicationContextSingleton {
     public static void set(Context context) {
         Context appContext =
                 Objects.requireNonNull(context, "context cannot be null").getApplicationContext();
-        // TODO(b/303886367): use Preconditions.checkIllegalArgument()
-        if (appContext == null) {
-            throw new IllegalArgumentException(
-                    "Context (" + context + ") does not have an application context");
-        }
+
+        Preconditions.checkArgument(
+                appContext != null, "Context (%s) does not have an application context", context);
 
         // Set if it's not set yet
         if (sContext.compareAndSet(null, appContext)) {
-            Log.i(TAG, "Set singleton context as " + appContext);
+            LogUtil.i("Set singleton context as %s", appContext);
             return;
         }
 
@@ -103,7 +94,7 @@ public final class ApplicationContextSingleton {
     @VisibleForTesting
     public static Context getForTests() {
         Context context = sContext.get();
-        Log.i(TAG, "getForTests(): returning " + context);
+        LogUtil.i("getForTests(): returning %s", context);
         return context;
     }
 
@@ -116,7 +107,7 @@ public final class ApplicationContextSingleton {
      */
     @VisibleForTesting
     public static void setForTests(Context context) {
-        Log.i(TAG, "setForTests(): from " + sContext.get() + " to " + context);
+        LogUtil.i("setForTests(): from %s to %s.", sContext.get(), context);
         sContext.set(context);
     }
 

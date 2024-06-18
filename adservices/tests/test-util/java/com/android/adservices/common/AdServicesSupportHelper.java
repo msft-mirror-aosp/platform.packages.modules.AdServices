@@ -15,6 +15,8 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.common.AbstractDeviceSupportHelper.GMS_CORE_PACKAGE;
+import static com.android.adservices.common.AbstractDeviceSupportHelper.PLAY_STORE_PACKAGE;
 import static com.android.compatibility.common.util.ShellIdentityUtils.invokeStaticMethodWithShellPermissions;
 
 import android.app.ActivityManager;
@@ -22,11 +24,18 @@ import android.content.Context;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.compatibility.common.util.PackageUtil;
+import com.android.compatibility.common.util.PropertyUtil;
 
 // TODO(b/297248322): move this class to sideless as the logic is duplicated on hostside
 /** Helper to check if AdServices is supported / enabled in a device. */
 public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
+
+    private static final String PLAY_STORE_USER_CERT =
+            "F0:FD:6C:5B:41:0F:25:CB:25:C3:B5:33:46:C8:97:2F:"
+                    + "AE:30:F8:EE:74:11:DF:91:04:80:AD:6B:2D:60:DB:83";
 
     private static final AdServicesSupportHelper sInstance = new AdServicesSupportHelper();
 
@@ -38,7 +47,7 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
 
     /** Gets the value of AdServices global kill switch. */
     public static boolean getGlobalKillSwitch() throws Exception {
-        PhFlags flags = PhFlags.getInstance();
+        Flags flags = FlagsFactory.getFlags();
         boolean value = invokeStaticMethodWithShellPermissions(() -> flags.getGlobalKillSwitch());
         sInstance.mLog.v("getGlobalKillSwitch(): %b", value);
         return value;
@@ -47,6 +56,18 @@ public final class AdServicesSupportHelper extends AbstractDeviceSupportHelper {
     @Override
     protected boolean hasPackageManagerFeature(String feature) {
         return mContext.getPackageManager().hasSystemFeature(feature);
+    }
+
+    @Override
+    protected boolean hasGmsCore() {
+        return PackageUtil.exists(GMS_CORE_PACKAGE);
+    }
+
+    @Override
+    protected boolean hasPlayStore() {
+        return (PropertyUtil.isUserBuild())
+                ? PackageUtil.exists(PLAY_STORE_PACKAGE, PLAY_STORE_USER_CERT)
+                : PackageUtil.exists(PLAY_STORE_PACKAGE);
     }
 
     @Override

@@ -47,6 +47,11 @@ java_defaults {
         "tflite_support_classifiers_java",
         "opencensus-java-api",
         "opencensus-java-contrib-grpc-metrics",
+        "adservices_flags_lib", // Used by FlagsConstantsTest
+        // Tests may run on the platforms that don't have ODP module installed.
+        // Without static_lib dependency, the framework code from ODP won't be
+        // packaged with the test APK and throw NoClassDefFoundError.
+        "framework-ondevicepersonalization.impl",
     ],
     libs: [
         "android.test.base",
@@ -90,10 +95,15 @@ android_test {
         // Exclude Mobile Data Download Test. This test need network connection and download files.
         // This will run in a separate test suite.
         "src/com/android/adservices/download/MobileDataDownloadTest.java",
+        // Measurement unit tests will be covered by AdServicesServiceCoreMeasurementUnitTests.
+        "src/com/android/adservices/service/measurement/**/*.java",
+        "src/com/android/adservices/data/measurement/**/*Test.java",
+        // Topics unit tests will be covered by AdServicesServiceCoreTopicsUnitTests.
+        "src/com/android/adservices/service/topics/**/*.java",
+        "src/com/android/adservices/data/topics/**/*Test.java",
     ],
     defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
 }
-
 
 android_test {
     name: "AdServicesJsEngineUnitTests",
@@ -194,6 +204,11 @@ java_defaults {
         "tflite_support_classifiers_java",
         "truth",
         "gson",
+        "adservices_flags_lib", // Used by FlagsConstantsTest
+        // Tests may run on the platforms that don't have ODP module installed.
+        // Without static_lib dependency, the framework code from ODP won't be
+        // packaged with the test APK and throw NoClassDefFoundError.
+        "framework-ondevicepersonalization.impl",
     ],
     libs: [
         "android.ext.adservices",
@@ -237,8 +252,62 @@ android_test {
         // Exclude Mobile Data Download Test. This test need network connection and download files.
         // This will run in a separate test suite.
         "src/com/android/adservices/download/MobileDataDownloadTest.java",
+        // Measurement unit tests will be covered by AdExtServicesServiceCoreMeasurementUnitTests.
+        "src/com/android/adservices/service/measurement/**/*.java",
+        "src/com/android/adservices/data/measurement/**/*Test.java",
+        // Topics unit tests will be covered by AdServicesServiceCoreTopicsUnitTests.
+        "src/com/android/adservices/service/topics/**/*.java",
+        "src/com/android/adservices/data/topics/**/*Test.java",
     ],
     test_config: "AndroidTest.ExtServices.xml",
+}
+
+android_test {
+    name: "AdServicesServiceCoreMeasurementUnitTests",
+    defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
+    srcs: [
+        "src/com/android/adservices/service/measurement/**/*.java",
+        "src/com/android/adservices/data/measurement/**/*.java",
+        "src/com/android/adservices/data/DbTestUtil.java",
+        "src/com/android/adservices/MockWebServerRuleFactory.java",
+    ],
+    test_config: "AndroidTest.Measurement.xml",
+}
+
+android_test {
+    name: "AdExtServicesServiceCoreMeasurementUnitTests",
+    srcs: [
+        "src/com/android/adservices/service/measurement/**/*.java",
+        "src/com/android/adservices/data/measurement/**/*.java",
+        "src/com/android/adservices/data/DbTestUtil.java",
+        "src/com/android/adservices/MockWebServerRuleFactory.java",
+    ],
+    defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
+    test_config: "AndroidTest.Measurement.ExtServices.xml",
+}
+
+android_test {
+    name: "AdServicesServiceCoreTopicsUnitTests",
+    defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
+    srcs: [
+        "src/com/android/adservices/service/topics/**/*.java",
+        "src/com/android/adservices/data/topics/**/*.java",
+        "src/com/android/adservices/data/DbTestUtil.java",
+        "src/com/android/adservices/MockRandom.java",
+    ],
+    test_config: "AndroidTest.Topics.xml",
+}
+
+android_test {
+    name: "AdExtServicesServiceCoreTopicsUnitTests",
+    srcs: [
+        "src/com/android/adservices/service/topics/**/*.java",
+        "src/com/android/adservices/data/topics/**/*.java",
+        "src/com/android/adservices/data/DbTestUtil.java",
+        "src/com/android/adservices/MockRandom.java",
+    ],
+    defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
+    test_config: "AndroidTest.Topics.ExtServices.xml",
 }
 
 android_test {

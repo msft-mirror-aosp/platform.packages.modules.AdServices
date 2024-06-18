@@ -115,6 +115,7 @@ bootclasspath_fragment {
             "android.adservices.exceptions",
             "android.adservices.extdata",
             "android.adservices.measurement",
+            "android.adservices.shell",
             "android.adservices.signals",
             "android.adservices.topics",
             "android.app.adservices",

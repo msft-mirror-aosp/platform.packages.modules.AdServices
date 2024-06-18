@@ -138,13 +138,13 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                             DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_SERVICE_ALLOWLIST));
 
     @GuardedBy("mLock")
-    private Map<Integer, AllowedContentProviders> mContentProviderAllowlistPerTargetSdkVersion =
+    private ArrayMap<Integer, ArraySet<String>> mContentProviderAllowlistPerTargetSdkVersion =
             getContentProviderDeviceConfigAllowlist(
                     DeviceConfig.getProperty(
                             DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_CONTENTPROVIDER_ALLOWLIST));
 
     @GuardedBy("mLock")
-    private AllowedContentProviders mNextContentProviderAllowlist =
+    private ArraySet<String> mNextContentProviderAllowlist =
             getNextContentProviderDeviceConfigAllowlist(
                     DeviceConfig.getProperty(
                             DeviceConfig.NAMESPACE_ADSERVICES,
@@ -152,7 +152,7 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
 
     @Nullable
     @GuardedBy("mLock")
-    private Map<Integer, AllowedBroadcastReceivers> mBroadcastReceiverAllowlistPerTargetSdkVersion =
+    private ArrayMap<Integer, ArraySet<String>> mBroadcastReceiverAllowlistPerTargetSdkVersion =
             getBroadcastReceiverDeviceConfigAllowlist(
                     DeviceConfig.getProperty(
                             DeviceConfig.NAMESPACE_ADSERVICES,
@@ -167,14 +167,14 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
 
     @Nullable
     @GuardedBy("mLock")
-    private Map<Integer, AllowedActivities> mActivityAllowlistPerTargetSdkVersion =
+    private ArrayMap<Integer, ArraySet<String>> mActivityAllowlistPerTargetSdkVersion =
             getActivityDeviceConfigAllowlist(
                     DeviceConfig.getProperty(
                             DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_ACTIVITY_ALLOWLIST));
 
     @Nullable
     @GuardedBy("mLock")
-    private AllowedActivities mNextActivityAllowlist =
+    private ArraySet<String> mNextActivityAllowlist =
             getNextActivityDeviceConfigAllowlist(
                     DeviceConfig.getProperty(
                             DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_ACTIVITY_ALLOWLIST));
@@ -335,21 +335,20 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
         }
     }
 
-    public Map<Integer, AllowedContentProviders> getContentProviderAllowlistPerTargetSdkVersion() {
+    public ArrayMap<Integer, ArraySet<String>> getContentProviderAllowlistPerTargetSdkVersion() {
         synchronized (mLock) {
             return mContentProviderAllowlistPerTargetSdkVersion;
         }
     }
 
-    public AllowedContentProviders getNextContentProviderAllowlist() {
+    public ArraySet<String> getNextContentProviderAllowlist() {
         synchronized (mLock) {
             return mNextContentProviderAllowlist;
         }
     }
 
     @Nullable
-    public Map<Integer, AllowedBroadcastReceivers>
-            getBroadcastReceiverAllowlistPerTargetSdkVersion() {
+    public ArrayMap<Integer, ArraySet<String>> getBroadcastReceiverAllowlistPerTargetSdkVersion() {
         synchronized (mLock) {
             return mBroadcastReceiverAllowlistPerTargetSdkVersion;
         }
@@ -363,14 +362,14 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     }
 
     @Nullable
-    public Map<Integer, AllowedActivities> getActivityAllowlistPerTargetSdkVersion() {
+    public ArrayMap<Integer, ArraySet<String>> getActivityAllowlistPerTargetSdkVersion() {
         synchronized (mLock) {
             return mActivityAllowlistPerTargetSdkVersion;
         }
     }
 
     @Nullable
-    public AllowedActivities getNextActivityAllowlist() {
+    public ArraySet<String> getNextActivityAllowlist() {
         synchronized (mLock) {
             return mNextActivityAllowlist;
         }
@@ -432,38 +431,68 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     }
 
     @NonNull
-    private static Map<Integer, AllowedContentProviders> getContentProviderDeviceConfigAllowlist(
+    private static ArrayMap<Integer, ArraySet<String>> getContentProviderDeviceConfigAllowlist(
             @Nullable String value) {
-        final ContentProviderAllowlists contentProviderAllowlistsProto =
+        ContentProviderAllowlists contentProviderAllowlistsProto =
                 getDeviceConfigProtoProperty(
                         ContentProviderAllowlists.parser(),
                         PROPERTY_CONTENTPROVIDER_ALLOWLIST,
                         value);
         // Content providers are restricted by default. If the property is not set, or it is an
         // empty string, there are no content providers to allowlist.
-        return contentProviderAllowlistsProto == null
-                ? new ArrayMap<>()
-                : contentProviderAllowlistsProto.getAllowlistPerTargetSdkMap();
+        if (contentProviderAllowlistsProto == null) {
+            return new ArrayMap<>();
+        }
+
+        ArrayMap<Integer, ArraySet<String>> allowedContentProviders = new ArrayMap<>();
+
+        contentProviderAllowlistsProto
+                .getAllowlistPerTargetSdkMap()
+                .forEach(
+                        (sdkVersion, allowList) -> {
+                            allowedContentProviders.put(
+                                    sdkVersion, new ArraySet<>(allowList.getAuthoritiesList()));
+                        });
+        return allowedContentProviders;
     }
 
     @Nullable
-    private static AllowedContentProviders getNextContentProviderDeviceConfigAllowlist(
+    private static ArraySet<String> getNextContentProviderDeviceConfigAllowlist(
             @Nullable String value) {
-        return getDeviceConfigProtoProperty(
-                AllowedContentProviders.parser(), PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST, value);
+        AllowedContentProviders allowedContentProviders =
+                getDeviceConfigProtoProperty(
+                        AllowedContentProviders.parser(),
+                        PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST,
+                        value);
+        if (allowedContentProviders == null) {
+            return null;
+        }
+        return new ArraySet<>(allowedContentProviders.getAuthoritiesList());
     }
 
     @Nullable
-    private static Map<Integer, AllowedBroadcastReceivers>
-            getBroadcastReceiverDeviceConfigAllowlist(@Nullable String value) {
-        final BroadcastReceiverAllowlists broadcastReceiverAllowlistsProto =
+    private static ArrayMap<Integer, ArraySet<String>> getBroadcastReceiverDeviceConfigAllowlist(
+            @Nullable String value) {
+        BroadcastReceiverAllowlists broadcastReceiverAllowlistsProto =
                 getDeviceConfigProtoProperty(
                         BroadcastReceiverAllowlists.parser(),
                         PROPERTY_BROADCASTRECEIVER_ALLOWLIST,
                         value);
-        return broadcastReceiverAllowlistsProto == null
-                ? null
-                : broadcastReceiverAllowlistsProto.getAllowlistPerTargetSdkMap();
+
+        if (broadcastReceiverAllowlistsProto == null) {
+            return null;
+        }
+
+        ArrayMap<Integer, ArraySet<String>> allowedBroadcastReceivers = new ArrayMap<>();
+
+        broadcastReceiverAllowlistsProto
+                .getAllowlistPerTargetSdkMap()
+                .forEach(
+                        (sdkVersion, allowList) -> {
+                            allowedBroadcastReceivers.put(
+                                    sdkVersion, new ArraySet<>(allowList.getIntentActionsList()));
+                        });
+        return allowedBroadcastReceivers;
     }
 
     @Nullable
@@ -474,27 +503,43 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                         AllowedBroadcastReceivers.parser(),
                         PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST,
                         value);
-        if (allowedBroadcastReceivers != null) {
-            return new ArraySet<>(allowedBroadcastReceivers.getIntentActionsList());
+        if (allowedBroadcastReceivers == null) {
+            return null;
         }
-        return null;
+        return new ArraySet<>(allowedBroadcastReceivers.getIntentActionsList());
     }
 
     @Nullable
-    private static Map<Integer, AllowedActivities> getActivityDeviceConfigAllowlist(
+    private static ArrayMap<Integer, ArraySet<String>> getActivityDeviceConfigAllowlist(
             @Nullable String value) {
         ActivityAllowlists activityAllowlistsProto =
                 getDeviceConfigProtoProperty(
                         ActivityAllowlists.parser(), PROPERTY_ACTIVITY_ALLOWLIST, value);
 
-        return activityAllowlistsProto == null
-                ? null
-                : activityAllowlistsProto.getAllowlistPerTargetSdkMap();
+        if (activityAllowlistsProto == null) {
+            return null;
+        }
+
+        ArrayMap<Integer, ArraySet<String>> allowedActivities = new ArrayMap<>();
+
+        activityAllowlistsProto
+                .getAllowlistPerTargetSdkMap()
+                .forEach(
+                        (sdkVersion, allowList) -> {
+                            allowedActivities.put(
+                                    sdkVersion, new ArraySet<>(allowList.getActionsList()));
+                        });
+        return allowedActivities;
     }
 
     @Nullable
-    private static AllowedActivities getNextActivityDeviceConfigAllowlist(@Nullable String value) {
-        return getDeviceConfigProtoProperty(
-                AllowedActivities.parser(), PROPERTY_NEXT_ACTIVITY_ALLOWLIST, value);
+    private static ArraySet<String> getNextActivityDeviceConfigAllowlist(@Nullable String value) {
+        AllowedActivities allowedActivities =
+                getDeviceConfigProtoProperty(
+                        AllowedActivities.parser(), PROPERTY_NEXT_ACTIVITY_ALLOWLIST, value);
+        if (allowedActivities == null) {
+            return null;
+        }
+        return new ArraySet<>(allowedActivities.getActionsList());
     }
 }

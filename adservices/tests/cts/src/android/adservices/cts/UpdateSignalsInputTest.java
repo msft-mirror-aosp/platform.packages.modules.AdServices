@@ -25,7 +25,10 @@ import android.adservices.signals.UpdateSignalsInput;
 import android.net.Uri;
 import android.os.Parcel;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -40,6 +43,9 @@ public class UpdateSignalsInputTest {
     private static final Uri URI = Uri.parse("https://example.com/somecoolsignals");
     private static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
     private static final String OTHER_PACKAGE = CommonFixture.TEST_PACKAGE_NAME_2;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuild() {

@@ -34,8 +34,11 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -47,6 +50,9 @@ public class CustomAudienceBiddingLogicUriValidatorTest {
     private final CustomAudienceBiddingLogicUriValidator mValidator =
             new CustomAudienceBiddingLogicUriValidator(
                     CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetValidationViolation_nullBiddingLogicUri_throws() {

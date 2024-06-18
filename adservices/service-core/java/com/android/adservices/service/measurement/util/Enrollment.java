@@ -30,7 +30,6 @@ import java.util.Optional;
 
 /** Enrollment utilities for measurement. */
 public final class Enrollment {
-    public static final String FAKE_ENROLLMENT = "fake_enrollment";
     public static final String LOCALHOST_ENROLLMENT_ID = "localhost_enrollment_id";
     public static final String LOCALHOST_IP_ENROLLMENT_ID = "localhost_ip_enrollment_id";
 

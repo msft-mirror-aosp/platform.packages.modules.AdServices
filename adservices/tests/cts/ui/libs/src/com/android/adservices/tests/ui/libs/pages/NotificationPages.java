@@ -33,6 +33,7 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
+import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.tests.ui.libs.UiConstants;
@@ -53,16 +54,17 @@ public class NotificationPages {
         int notificationHeader = -1;
         switch (ux) {
             case GA_UX:
+                // Should match the contentTitle string in ConsentNotificationTrigger.java.
                 notificationTitle =
                         isEuTest
-                                ? R.string.notificationUI_notification_ga_title_eu
-                                : isV2
-                                        ? R.string.notificationUI_notification_ga_title_v2
-                                        : R.string.notificationUI_notification_ga_title;
+                                ? R.string.notificationUI_notification_ga_title_eu_v2
+                                : R.string.notificationUI_notification_ga_title_v2;
+                // Should match the text in consent_notification_screen_1_ga_v2_eu.xml and
+                // consent_notification_screen_1_ga_v2_row.xml, respectively.
                 notificationHeader =
                         isEuTest
-                                ? R.string.notificationUI_header_ga_title_eu
-                                : R.string.notificationUI_header_ga_title;
+                                ? R.string.notificationUI_fledge_measurement_title_v2
+                                : R.string.notificationUI_header_ga_title_v2;
                 break;
             case BETA_UX:
                 notificationTitle =
@@ -179,17 +181,15 @@ public class NotificationPages {
         UiObject2 leftControlButton = getElement(context, device, leftButtonResId);
         UiObject2 rightControlButton = getElement(context, device, rightButtonResId);
         if (isGoSettings) {
-            leftControlButton.click();
+            leftControlButton.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         } else {
-            rightControlButton.click();
-
+            rightControlButton.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
             if (isFlip) {
                 UiObject2 title2 =
                         getElement(context, device, R.string.notificationUI_header_ga_title_eu_v2);
                 assertThat(title2).isNotNull();
             }
         }
-        Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
     }
 
     public static void euNotificationLandingPageTopicsPage(

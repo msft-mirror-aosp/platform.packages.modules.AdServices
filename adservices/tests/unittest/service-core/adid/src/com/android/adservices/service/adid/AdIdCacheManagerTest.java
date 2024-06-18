@@ -38,7 +38,6 @@ import android.adservices.adid.IAdIdProviderService;
 import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.adid.IGetAdIdProviderCallback;
 import android.adservices.common.UpdateAdIdRequest;
-import android.content.Context;
 import android.os.RemoteException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -62,7 +61,6 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
     private static final String AD_ID_UPDATE = "20000000-0000-0000-0000-000000000000";
     private static final int DUMMY_CALLER_UID = 0;
 
-    private Context mContext;
     private IAdIdProviderService mAdIdProviderService;
     private AdIdCacheManager mAdIdCacheManager;
 
@@ -72,7 +70,6 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
     public void setup() {
         extendedMockito.mockGetFlags(mMockFlags);
 
-        mContext = appContext.get();
         deleteIapcSharedPreference();
 
         mAdIdCacheManager = spy(new AdIdCacheManager(mContext));

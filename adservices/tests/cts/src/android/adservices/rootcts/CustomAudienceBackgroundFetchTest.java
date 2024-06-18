@@ -16,7 +16,7 @@
 
 package android.adservices.rootcts;
 
-import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -40,6 +40,7 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     private static final String CA_NAME = "shoes";
     private BackgroundJobHelper mBackgroundJobHelper;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -64,6 +65,32 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
             assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
                     .isTrue();
             assertThat(doSelectAds(adSelectionConfig).hasOutcome()).isTrue();
+        } finally {
+            leaveCustomAudience(CA_NAME);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /**
+     * Test to ensure that trusted signals are not updated during the daily update if the ads are
+     * not syntactically valid.
+     */
+    @Test
+    public void testAdSelection_withInvalidAds_backgroundJobUpdateFails() throws Exception {
+        ScenarioDispatcher dispatcher =
+                ScenarioDispatcher.fromScenario(
+                        "scenarios/remarketing-cuj-034.json", getCacheBusterPrefix());
+        setupDefaultMockWebServer(dispatcher);
+        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+
+        try {
+            joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
+            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
+            assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
+                    .isTrue();
+            assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
         } finally {
             leaveCustomAudience(CA_NAME);
         }

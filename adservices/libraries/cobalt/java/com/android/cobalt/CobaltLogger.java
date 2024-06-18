@@ -33,15 +33,12 @@ public interface CobaltLogger {
     ListenableFuture<Void> logOccurrence(long metricId, long count, List<Integer> eventVector);
 
     /**
-     * Logs an event for a STRING metric, but does nothing.
-     *
-     * <p>Will be replaced with `logString` when STRING support is implemented.
+     * Logs an event for a STRING metric.
      *
      * @param metricId registered ID of the STRING metric which the event occurred for
      * @param stringValue the string to log
      * @param eventVector registered events codes of the event which occurred
      * @return An optional ListenableFuture that is ready when logging completes
      */
-    ListenableFuture<Void> noOpLogString(
-            long metricId, String stringValue, List<Integer> eventVector);
+    ListenableFuture<Void> logString(long metricId, String stringValue, List<Integer> eventVector);
 }

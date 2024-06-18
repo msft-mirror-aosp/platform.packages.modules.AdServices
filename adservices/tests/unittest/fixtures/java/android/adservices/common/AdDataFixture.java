@@ -63,6 +63,10 @@ public class AdDataFixture {
         return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
     }
 
+    public static Uri getValidRenderUriByBuyer(AdTechIdentifier buyer, String sequence) {
+        return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
+    }
+
     public static List<AdData> getValidAdsByBuyer(AdTechIdentifier buyer) {
         return ImmutableList.of(
                 getValidAdDataByBuyer(buyer, 1),
@@ -150,6 +154,25 @@ public class AdDataFixture {
             AdTechIdentifier buyer, int sequenceNumber) {
         return getValidFilterAdDataBuilderByBuyer(buyer, sequenceNumber)
                 .setAdRenderId(String.valueOf(sequenceNumber))
+                .build();
+    }
+
+    public static AdData getValidFilterAdDataWithAdRenderIdByBuyer(
+            AdTechIdentifier buyer, String sequenceString) {
+
+        String metadata;
+        try {
+            metadata = JsonFixture.formatAsOrgJsonJSONObjectString(VALID_METADATA);
+        } catch (JSONException exception) {
+            throw new IllegalStateException("Error parsing valid metadata!", exception);
+        }
+
+        return new AdData.Builder()
+                .setRenderUri(getValidRenderUriByBuyer(buyer, sequenceString))
+                .setMetadata(metadata)
+                .setAdCounterKeys(getAdCounterKeys())
+                .setAdFilters(AdFiltersFixture.getValidAdFilters())
+                .setAdRenderId(sequenceString)
                 .build();
     }
 

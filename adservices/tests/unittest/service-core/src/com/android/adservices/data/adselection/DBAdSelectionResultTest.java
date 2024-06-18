@@ -24,6 +24,9 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class DBAdSelectionResultTest {
@@ -33,6 +36,9 @@ public class DBAdSelectionResultTest {
 
     private static final Uri VALID_AD_RENDER_URI_1 =
             AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_1, 1);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuild_unsetAdSelectionId_throwsISE() {

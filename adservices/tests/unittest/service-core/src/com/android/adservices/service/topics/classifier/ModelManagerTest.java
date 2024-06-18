@@ -41,6 +41,7 @@ import android.content.res.AssetManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
@@ -104,7 +105,10 @@ public class ModelManagerTest {
     @Mock SynchronousFileStorage mMockFileStorage;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesExtendedMockitoRule adServicesExtendedMock =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(FlagsFactory.class)

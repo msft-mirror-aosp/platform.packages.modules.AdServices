@@ -30,9 +30,6 @@ import java.util.Objects;
  * Rule used to properly set AdService flags - it will take care of permissions, restoring values at
  * the end, setting {@link android.provider.DeviceConfig} or {@link android.os.SystemProperties},
  * etc...
- *
- * <p>Most methods set {@link android.provider.DeviceConfig} flags, although some sets {@link
- * android.os.SystemProperties} instead - those are typically suffixed with {@code forTests}
  */
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let your   //
@@ -58,6 +55,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     protected static final String LOGCAT_TAG_UI = LOGCAT_TAG_ADSERVICES + ".ui";
     protected static final String LOGCAT_TAG_ADID = LOGCAT_TAG_ADSERVICES + ".adid";
     protected static final String LOGCAT_TAG_APPSETID = LOGCAT_TAG_ADSERVICES + ".appsetid";
+    protected static final String LOGCAT_TAG_SHARED = "adservices-shared";
 
     // TODO(b/294423183): instead of hardcoding the SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX, we
     // should dynamically calculate it based on setLogcatTag() calls
@@ -114,34 +112,6 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
     }
 
     /**
-     * Overrides the system property that sets max time period between each epoch computation job
-     * run.
-     */
-    public T setTopicsEpochJobPeriodMsForTests(long value) {
-        return setSystemProperty(FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value);
-    }
-
-    /** Overrides the system property that defines the percentage for random topic. */
-    public T setTopicsPercentageForRandomTopicForTests(long value) {
-        return setSystemProperty(FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value);
-    }
-
-    /** Overrides the system property used to disable topics enrollment check. */
-    public T setDisableTopicsEnrollmentCheckForTests(boolean value) {
-        return setSystemProperty(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, value);
-    }
-
-    /** Overrides the system property used to set ConsentManager notification debug mode keys. */
-    public T setConsentNotifiedDebugMode(boolean value) {
-        return setSystemProperty(FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE, value);
-    }
-
-    /** Overrides the system property used to set ConsentManager debug mode keys. */
-    public T setConsentManagerDebugMode(boolean value) {
-        return setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, value);
-    }
-
-    /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getEnableBackCompat()}.
      */
     public T setEnableBackCompat(boolean value) {
@@ -195,45 +165,12 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
 
     /**
      * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getAdIdKillSwitchForTests()}.
-     */
-    public T setAdIdKillSwitchForTests(boolean value) {
-        return setSystemProperty(FlagsConstants.KEY_ADID_KILL_SWITCH, value);
-    }
-
-    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
-    public T setAdserviceEnableStatus(boolean value) {
-        return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
-    }
-
-    /** Overrides flag used by {@link android.adservices.common.AdServicesCommonManager}. */
-    public T setUpdateAdIdCacheEnabled(boolean value) {
-        return setFlag(FlagsConstants.KEY_AD_ID_CACHE_ENABLED, value);
-    }
-
-    /**
-     * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMddBackgroundTaskKillSwitch()}.
      */
     public T setMddBackgroundTaskKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
 
-    /**
-     * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getEnforceForegroundStatusForTopics()}.
-     */
-    public T setTopicsEnforceForeground(boolean value) {
-        return setFlag(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS, value);
-    }
-
-    /**
-     * Overrides flag used by {@link
-     * com.android.adservices.service.PhFlags#getTopicsDisableDirectAppCalls()}.
-     */
-    public T setTopicsDisableDirectAppCall(boolean value) {
-        return setFlag(FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, value);
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
@@ -277,6 +214,18 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
                 });
     }
 
+    public T setDebugUxFlagsForRvcUx() {
+        return runOrCache(
+                "setDebugUxFlagsForRvcUx()",
+                () -> {
+                    if (!isAtLeastS() && isAtLeastR()) {
+                        setFlag(FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true);
+                        setFlag(FlagsConstants.KEY_DEBUG_UX, "RVC_UX");
+                        return;
+                    }
+                });
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: DO NOT add new setXyz() methods, unless they need non-trivial logic. Instead, let    //
     // your test call setFlags(flagName) (statically import FlagsConstant.flagName), which will   //
@@ -291,6 +240,7 @@ abstract class AbstractAdServicesFlagsSetterRule<T extends AbstractAdServicesFla
      */
     public T setDefaultLogcatTags() {
         setLogcatTag(LOGCAT_TAG_ADSERVICES, LOGCAT_LEVEL_VERBOSE);
+        setLogcatTag(LOGCAT_TAG_SHARED, LOGCAT_LEVEL_VERBOSE);
         setLogcatTag(LOGCAT_TAG_ADSERVICES_SERVICE, LOGCAT_LEVEL_VERBOSE);
         return getThis();
     }

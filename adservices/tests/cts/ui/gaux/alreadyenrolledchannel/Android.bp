@@ -19,7 +19,7 @@ package {
 android_test {
     name: "AdServicesGaUxAlreadyEnrolledChannelTest",
     srcs: [
-        "src/**/*.java",
+        "src/com/android/adservices/tests/ui/gaux/alreadyenrolledchannel/GaUxAlreadyEnrolledChannelTest.java",
     ],
     static_libs: [
         "adservices-assets",
@@ -37,7 +37,6 @@ android_test {
     test_suites: [
         "cts_root",
         "general-tests",
-        "mts-adservices",
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",

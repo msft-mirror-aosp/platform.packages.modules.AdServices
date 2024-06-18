@@ -16,37 +16,56 @@
 
 package android.app.sdksandbox.hosttestutils;
 
+import com.android.compatibility.common.util.FeatureUtil;
+import com.android.compatibility.common.util.PackageUtil;
 import com.android.tradefed.device.DeviceNotAvailableException;
+import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
+// TODO(b/322152671): deprecate for AdServicesHostSideSupportHelper
 public class DeviceSupportHostUtils {
     private final BaseHostJUnit4Test mTest;
-    private static final String FEATURE_AUTOMOTIVE = "android.hardware.type.automotive";
-    private static final String FEATURE_LEANBACK = "android.software.leanback";
-    private static final String FEATURE_RAM_LOW = "android.hardware.ram.low";
-    private static final String FEATURE_WATCH = "android.hardware.type.watch";
+
+    // Used only for Go device checks, which rely on checking GMS Core and Play Store.
+    public static final String GMS_CORE_PACKAGE = "com.google.android.gms";
+    public static final String PLAY_STORE_PACKAGE = "com.android.vending";
 
     public DeviceSupportHostUtils(BaseHostJUnit4Test test) {
         mTest = test;
     }
 
     public boolean isSdkSandboxSupported() throws DeviceNotAvailableException {
-        return !isWatch() && !isTv() && !isAuto() && !isLowRamDevice();
+        return !isWatch() && !isTv() && !isAutomotive() && !isGoDevice();
     }
 
     private boolean isWatch() throws DeviceNotAvailableException {
-        return mTest.getDevice().hasFeature(FEATURE_WATCH);
+        return FeatureUtil.isWatch(mTest.getDevice());
     }
 
     private boolean isTv() throws DeviceNotAvailableException {
-        return mTest.getDevice().hasFeature(FEATURE_LEANBACK);
+        return FeatureUtil.isTV(mTest.getDevice());
     }
 
-    private boolean isAuto() throws DeviceNotAvailableException {
-        return mTest.getDevice().hasFeature(FEATURE_AUTOMOTIVE);
+    private boolean isAutomotive() throws DeviceNotAvailableException {
+        return FeatureUtil.isAutomotive(mTest.getDevice());
     }
 
-    private boolean isLowRamDevice() throws DeviceNotAvailableException {
-        return mTest.getDevice().hasFeature(FEATURE_RAM_LOW);
+    private boolean hasGmsCore() throws DeviceNotAvailableException {
+        return PackageUtil.exists(mTest.getDevice(), GMS_CORE_PACKAGE);
+    }
+
+    private boolean hasPlayStore() throws DeviceNotAvailableException {
+        return PackageUtil.exists(mTest.getDevice(), PLAY_STORE_PACKAGE);
+    }
+
+    // Taken from vendor/xts/common/host-side/util/src/com/android/xts/common/util/GmsUtil.java
+    private boolean isGoDevice() throws DeviceNotAvailableException {
+        ITestDevice device = mTest.getDevice();
+        return FeatureUtil.isLowRam(device)
+                && hasGmsCore()
+                && hasPlayStore()
+                && !isWatch()
+                && !isAutomotive()
+                && !isTv();
     }
 }

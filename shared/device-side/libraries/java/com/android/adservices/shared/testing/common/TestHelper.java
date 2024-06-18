@@ -15,9 +15,9 @@
  */
 package com.android.adservices.shared.testing.common;
 
-import android.util.Log;
-
 import androidx.annotation.Nullable;
+
+import com.android.adservices.shared.util.LogUtil;
 
 import org.junit.runner.Description;
 
@@ -26,9 +26,6 @@ import java.util.Objects;
 
 /** Provides helpers for generic test-related tasks. */
 public final class TestHelper {
-
-    private static final String TAG = TestHelper.class.getSimpleName();
-
     private static final boolean VERBOSE = false; // Should NEVER be merged as true
 
     // TODO(b/315339283): use in other places
@@ -43,15 +40,9 @@ public final class TestHelper {
                                         annotationClass, "annotationClass cannot be null"));
         if (annotation != null) {
             if (VERBOSE) {
-                Log.v(
-                        TAG,
-                        "getAnnotation("
-                                + test
-                                + "): returning annotation ("
-                                + annotation
-                                + ") from test itself ("
-                                + getTestName(test)
-                                + ")");
+                LogUtil.v(
+                        "getAnnotation(%s): returning annotation (%s) from test itself (%s)",
+                        test, annotation, getTestName(test));
             }
             return annotation;
         }
@@ -60,33 +51,21 @@ public final class TestHelper {
             annotation = testClass.getAnnotation(annotationClass);
             if (annotation != null) {
                 if (VERBOSE) {
-                    Log.v(
-                            TAG,
-                            "getAnnotation("
-                                    + test
-                                    + "): returning annotation ("
-                                    + annotation
-                                    + ") from test class ("
-                                    + testClass.getSimpleName()
-                                    + ")");
+                    LogUtil.v(
+                            "getAnnotation(%s): returning annotation (%s) from test class (%s)",
+                            test, annotation, testClass.getSimpleName());
                 }
                 return annotation;
             }
             if (VERBOSE) {
-                Log.v(
-                        TAG,
-                        "getAnnotation("
-                                + test
-                                + "): not found on class "
-                                + testClass
-                                + ", will try superclass ("
-                                + testClass.getSuperclass()
-                                + ")");
+                LogUtil.v(
+                        "getAnnotation(%s): not found on class %s, will try superclass (%s)",
+                        test, testClass, testClass.getSuperclass());
             }
             testClass = testClass.getSuperclass();
         }
         if (VERBOSE) {
-            Log.v(TAG, "getAnnotation(" + test + "): returning null");
+            LogUtil.v("getAnnotation(" + test + "): returning null");
         }
         return null;
     }

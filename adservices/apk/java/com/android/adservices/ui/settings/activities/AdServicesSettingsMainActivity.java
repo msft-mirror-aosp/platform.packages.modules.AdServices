@@ -19,6 +19,7 @@ import static com.android.adservices.ui.UxUtil.isUxStatesReady;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
@@ -58,6 +59,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Trace.beginSection("AdServicesSettingsMainActivity#OnCreate");
         // Only for main view, we want to use the most up to date OTA strings on the device to
         // create the ResourcesLoader.
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
@@ -70,6 +72,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         if (!isUxStatesReady(this)) {
             initMainFragment();
         }
+        Trace.endSection();
     }
 
     private void initMainFragment() {
@@ -109,6 +112,11 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     public void initRvc() {
         initU18();
+    }
+
+    @Override
+    public void initGaUxWithPas() {
+        initGA();
     }
 
     private void initMainActivity(int layoutResID) {

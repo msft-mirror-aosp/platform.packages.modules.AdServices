@@ -36,6 +36,7 @@ import com.android.adservices.service.adselection.HistogramEvent;
 import com.google.common.base.Preconditions;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -462,7 +463,10 @@ public abstract class FrequencyCapDao {
             return 0;
         }
 
-        CleanupUtils.removeAllowedPackages(sourceAppsToRemove, packageManager, flags);
+        CleanupUtils.removeAllowedPackages(
+                sourceAppsToRemove,
+                packageManager,
+                Arrays.asList(flags.getPpapiAppAllowList(), flags.getPasAppAllowList()));
 
         int numDeletedEvents = 0;
         if (!sourceAppsToRemove.isEmpty()) {
