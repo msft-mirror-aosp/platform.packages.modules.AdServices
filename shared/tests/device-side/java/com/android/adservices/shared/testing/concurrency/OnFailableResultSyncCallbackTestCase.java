@@ -47,7 +47,7 @@ abstract class OnFailableResultSyncCallbackTestCase<
                 .contains("(no failure yet)");
         F injectedFailure = newFailure();
 
-        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.onFailure(injectedFailure));
+        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.onFailure(injectedFailure));
         F receivedFailure = mCallback.assertFailureReceived();
 
         expect.withMessage("%s.assertFailureReceived()", mCallback)

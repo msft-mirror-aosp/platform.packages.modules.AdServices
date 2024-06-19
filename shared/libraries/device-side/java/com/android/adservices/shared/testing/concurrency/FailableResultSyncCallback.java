@@ -160,7 +160,7 @@ public class FailableResultSyncCallback<R, F> extends AbstractSyncCallback
 
     @Override
     public final void assertCalled() throws InterruptedException {
-        mCallback.internalAssertCalled(mSettings.getMaxTimeoutMs());
+        mCallback.internalAssertCalled();
     }
 
     @Override

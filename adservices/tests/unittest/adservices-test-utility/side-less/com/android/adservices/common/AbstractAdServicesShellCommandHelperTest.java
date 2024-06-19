@@ -22,6 +22,7 @@ import static android.os.Build.VERSION_CODES.TIRAMISU;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.StandardStreamsLogger;
 import com.android.adservices.shared.testing.shell.CommandResult;
 
 import org.junit.Before;
@@ -62,6 +63,8 @@ public final class AbstractAdServicesShellCommandHelperTest extends AdServicesMo
                     + ".ShellCommandActivity";
 
     @Mock private AbstractDeviceSupportHelper mAbstractDeviceSupportHelper;
+
+    private final Logger.RealLogger mRealLogger = StandardStreamsLogger.getInstance();
 
     private final FakeAdServicesShellCommandHelper mAdServicesShellCommandHelper =
             new FakeAdServicesShellCommandHelper(

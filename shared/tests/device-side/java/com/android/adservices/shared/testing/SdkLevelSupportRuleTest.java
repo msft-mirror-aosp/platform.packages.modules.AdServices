@@ -16,7 +16,6 @@
 package com.android.adservices.shared.testing;
 
 import com.android.adservices.shared.testing.AndroidSdk.Level;
-import com.android.adservices.shared.testing.AndroidSdk.Range;
 
 public final class SdkLevelSupportRuleTest extends AbstractSdkLevelSupportedRuleTest {
 
@@ -33,14 +32,6 @@ public final class SdkLevelSupportRuleTest extends AbstractSdkLevelSupportedRule
     protected SdkLevelSupportRule newRule(Level ruleLevel, Level deviceLevel) {
         SdkLevelSupportRule rule = new SdkLevelSupportRule(ruleLevel);
         mLog.v("newRule(%s, %s): returning %s", ruleLevel, deviceLevel, rule);
-        rule.setDeviceLevelSupplier(() -> deviceLevel);
-        return rule;
-    }
-
-    @Override
-    protected AbstractSdkLevelSupportedRule newRule(Range ruleRange, Level deviceLevel) {
-        SdkLevelSupportRule rule = new SdkLevelSupportRule(ruleRange);
-        mLog.v("newRule(%s, %s): returning %s", ruleRange, deviceLevel, rule);
         rule.setDeviceLevelSupplier(() -> deviceLevel);
         return rule;
     }

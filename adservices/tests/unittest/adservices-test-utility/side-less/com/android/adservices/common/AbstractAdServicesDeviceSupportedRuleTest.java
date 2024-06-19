@@ -25,9 +25,9 @@ import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable
 import com.android.adservices.shared.meta_testing.SimpleStatement;
 import com.android.adservices.shared.meta_testing.TestAnnotations;
 import com.android.adservices.shared.testing.DeviceConditionsViolatedException;
-import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.ScreenSize;
+import com.android.adservices.shared.testing.StandardStreamsLogger;
 
 import com.google.common.truth.Expect;
 
@@ -52,7 +52,7 @@ import java.util.Locale;
  */
 public class AbstractAdServicesDeviceSupportedRuleTest {
     private static final String CLASS_SERVICE_NAME = "ClassService";
-    private final Logger.RealLogger mRealLogger = DynamicLogger.getInstance();
+    private final Logger.RealLogger mRealLogger = StandardStreamsLogger.getInstance();
     private final SimpleStatement mBaseStatement = new SimpleStatement();
 
     private FakeAdServicesDeviceSupportedRule mAdServicesDeviceSupportedRule;

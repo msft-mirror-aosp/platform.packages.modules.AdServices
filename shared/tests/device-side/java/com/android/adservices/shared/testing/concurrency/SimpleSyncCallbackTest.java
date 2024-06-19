@@ -27,10 +27,4 @@ public final class SimpleSyncCallbackTest extends SyncCallbackTestCase<SimpleSyn
         callback.setCalled();
         return "setCalled()";
     }
-
-    @Override
-    protected void assertCalled(SimpleSyncCallback callback, long timeoutMs)
-            throws InterruptedException {
-        callback.internalAssertCalled(timeoutMs);
-    }
 }

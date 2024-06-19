@@ -31,12 +31,6 @@ public final class AbstractSyncCallbackTest extends SyncCallbackTestCase<Abstrac
         return callback.internalSetCalled("internalSetCalled()");
     }
 
-    @Override
-    protected void assertCalled(AbstractSyncCallback callback, long timeoutMs)
-            throws InterruptedException {
-        callback.internalAssertCalled(timeoutMs);
-    }
-
     @Test
     public void testToString() {
         var cb = newCallback(mDefaultSettings);

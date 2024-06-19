@@ -492,17 +492,26 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
 
     @Test
     @SpyStatic(PlatformStorage.class)
-    public void testRecordGaUxNotificationDisplayed_failure() {
-        runRecordNotificationDisplayedTestFailure();
+    public void testRecordNotificationDisplayed_failure() {
+        runRecordNotificationDisplayedTestFailure(/* isBetaUx= */ true);
     }
 
-    private void runRecordNotificationDisplayedTestFailure() {
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    public void testRecordGaUxNotificationDisplayed_failure() {
+        runRecordNotificationDisplayedTestFailure(/* isBetaUx= */ false);
+    }
+
+    private void runRecordNotificationDisplayedTestFailure(boolean isBetaUx) {
         initFailureResponse();
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
 
         RuntimeException e =
                 assertThrows(
-                        RuntimeException.class, () -> worker.recordGaUxNotificationDisplayed(true));
+                        RuntimeException.class,
+                        isBetaUx
+                                ? () -> worker.recordNotificationDisplayed(true)
+                                : () -> worker.recordGaUxNotificationDisplayed(true));
 
         assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
@@ -510,17 +519,32 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @Test
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
-    public void testRecordGaUxNotificationDisplayed_failure_timeout() {
-        runRecordNotificationDisplayedTestFailureTimeout();
+    public void testRecordNotificationDisplayed_failure_timeout() {
+        runRecordNotificationDisplayedTestFailureTimeout(/* isBetaUx= */ true);
     }
 
-    private void runRecordNotificationDisplayedTestFailureTimeout() {
+    @Test
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordGaUxNotificationDisplayed_failure_timeout() {
+        runRecordNotificationDisplayedTestFailureTimeout(/* isBetaUx= */ false);
+    }
+
+    private void runRecordNotificationDisplayedTestFailureTimeout(boolean isBetaUx) {
         initTimeoutResponse();
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
 
-        RuntimeException e =
-                assertThrows(
-                        RuntimeException.class, () -> worker.recordGaUxNotificationDisplayed(true));
+        RuntimeException e;
+        if (isBetaUx) {
+            e =
+                    assertThrows(
+                            RuntimeException.class, () -> worker.recordNotificationDisplayed(true));
+        } else {
+            e =
+                    assertThrows(
+                            RuntimeException.class,
+                            () -> worker.recordGaUxNotificationDisplayed(true));
+        }
 
         assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
         assertThat(e.getCause()).isNotNull();
@@ -531,17 +555,31 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @MockStatic(AppSearchNotificationDao.class)
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
-    public void testRecordGaUxNotificationDisplayed() {
-        runRecordNotificationDisplayed();
+    public void testRecordNotificationDisplayed() {
+        runRecordNotificationDisplayed(/* isBetaUx= */ true);
     }
 
-    private void runRecordNotificationDisplayed() {
+    @Test
+    @MockStatic(AppSearchNotificationDao.class)
+    @SpyStatic(PlatformStorage.class)
+    @SpyStatic(UserHandle.class)
+    public void testRecordGaUxNotificationDisplayed() {
+        runRecordNotificationDisplayed(/* isBetaUx= */ false);
+    }
+
+    private void runRecordNotificationDisplayed(boolean isBetaUx) {
         initSuccessResponse();
         when(AppSearchNotificationDao.getRowId(eq("" + UID))).thenReturn("" + UID);
         // Verify that no exception is thrown.
-        when(AppSearchNotificationDao.wasNotificationDisplayed(any(), any(), any(), any()))
-                .thenReturn(false);
-        AppSearchConsentWorker.getInstance().recordGaUxNotificationDisplayed(true);
+        if (isBetaUx) {
+            when(AppSearchNotificationDao.wasGaUxNotificationDisplayed(any(), any(), any(), any()))
+                    .thenReturn(false);
+            AppSearchConsentWorker.getInstance().recordNotificationDisplayed(true);
+        } else {
+            when(AppSearchNotificationDao.wasNotificationDisplayed(any(), any(), any(), any()))
+                    .thenReturn(false);
+            AppSearchConsentWorker.getInstance().recordGaUxNotificationDisplayed(true);
+        }
     }
 
     @Test

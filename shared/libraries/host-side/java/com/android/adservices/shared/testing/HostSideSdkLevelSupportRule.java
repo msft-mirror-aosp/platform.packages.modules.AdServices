@@ -19,19 +19,11 @@ import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.AndroidSdk.Range;
 import com.android.tradefed.device.ITestDevice;
 
-import com.google.common.annotations.VisibleForTesting;
-
 /** See {@link AbstractSdkLevelSupportedRule}. */
 public final class HostSideSdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    @VisibleForTesting
-    HostSideSdkLevelSupportRule(Level atLeast) {
-        this(Range.forAtLeast(atLeast.getLevel()));
-    }
-
-    @VisibleForTesting
-    HostSideSdkLevelSupportRule(Range range) {
-        super(ConsoleLogger.getInstance(), range);
+    private HostSideSdkLevelSupportRule(Level atLeast) {
+        super(ConsoleLogger.getInstance(), Range.forAtLeast(atLeast.getLevel()));
     }
 
     /** Sets the test device singleton. */
@@ -71,7 +63,7 @@ public final class HostSideSdkLevelSupportRule extends AbstractSdkLevelSupported
     }
 
     @Override
-    public Level getRawDeviceApiLevel() {
+    public Level getDeviceApiLevel() {
         return Level.forLevel(TestDeviceHelper.getApiLevel());
     }
 }

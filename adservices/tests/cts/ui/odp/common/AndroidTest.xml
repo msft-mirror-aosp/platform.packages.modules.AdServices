@@ -17,6 +17,58 @@
 <configuration description="TF Config for AdServices Ui Cts test">
     <target_preparer class="com.android.tradefed.targetprep.RootTargetPreparer"/>
 
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
+        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
+
+        <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
+        <option
+            name="run-command"
+            value="setprop debug.adservices.consent_notification_debug_mode false"/>
+        <option
+            name="run-command"
+            value="device_config put adservices ui_ota_strings_feature_enabled false"/>
+        <option
+            name="run-command"
+            value="device_config put adservices is_eea_device_feature_enabled true"/>
+        <option name="run-command" value="device_config put adservices global_kill_switch false"/>
+        <option
+            name="run-command"
+            value="device_config put adservices adservice_enable_status true"/>
+        <option
+            name="run-command"
+            value="device_config put adservices adservice_enabled true"/>
+        <option
+            name="run-command"
+            value="device_config put ui_ota_strings_feature_enabled false"/>
+        <option
+            name="run-command"
+            value="device_config put adservices enable_ad_services_system_api true"/>
+        <option
+            name="run-command"
+            value="device_config put adservices eu_notif_flow_change_enabled false"/>
+        <option
+            name="run-command"
+            value="setprop debug.adservices.consent_notification_debug_mode false"/>
+        <option
+            name="run-command"
+            value="device_config put adservices is_eea_device_feature_enabled true"/>
+        <option
+            name="run-command"
+            value="setprop debug.adservices.consent_notification_debug_mode false"/>
+        <!-- override scheduling params so the test is unaffected by time of the day -->
+        <option
+            name="run-command"
+            value="device_config put adservices consent_notification_interval_begin_ms 0"/>
+        <!-- end of day (24 hours) -->
+        <option
+            name="run-command"
+            value="device_config put adservices consent_notification_interval_end_ms 86400000"/>
+        <option
+            name="run-command"
+            value="device_config put adservices consent_notification_minimal_delay_before_interval_ends 0"/>
+    </target_preparer>
+
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name" value="AdServicesCommonStatesServicesTest.apk"/>
@@ -38,6 +90,4 @@
         <option name="package" value="com.android.adservices.tests.ui.common"/>
         <option name="restart" value="false"/>
     </test>
-
-    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
 </configuration>

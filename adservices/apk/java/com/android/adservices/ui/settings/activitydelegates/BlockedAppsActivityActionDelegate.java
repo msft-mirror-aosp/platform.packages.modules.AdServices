@@ -63,6 +63,9 @@ public class BlockedAppsActivityActionDelegate extends BaseActionDelegate {
     public void initU18() {}
 
     @Override
+    public void initRvc() {}
+
+    @Override
     public void initGaUxWithPas() {
         initGA();
     }

@@ -110,7 +110,8 @@ public final class SyncCallbackSettings implements Identifiable {
         mLatch.countDown();
     }
 
-    void assertCalled(long timeoutMs, Supplier<String> caller) throws InterruptedException {
+    void assertCalled(Supplier<String> caller) throws InterruptedException {
+        long timeoutMs = getMaxTimeoutMs();
         TimeUnit unit = TimeUnit.MILLISECONDS;
         if (!mLatch.await(timeoutMs, unit)) {
             throw new SyncCallbackTimeoutException(caller.get(), timeoutMs, unit);

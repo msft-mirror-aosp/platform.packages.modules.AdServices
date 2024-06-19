@@ -18,20 +18,20 @@ package com.android.adservices.tests.cts.topics.mdd;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
-import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
-@DisableGlobalKillSwitch
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
 @SetAllLogcatTags
 @SetCompatModeFlags
+@SetFlagDisabled(KEY_GLOBAL_KILL_SWITCH)
 @SetFlagDisabled(KEY_TOPICS_KILL_SWITCH)
 @SetFlagEnabled(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK)
 public abstract class CtsAdServicesMddTestCase extends AdServicesCtsTestCase {}

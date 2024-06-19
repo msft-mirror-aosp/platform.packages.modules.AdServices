@@ -57,7 +57,7 @@ public final class AbstractRuleTest extends SharedSidelessTestCase {
     public void testRunSafely_noErrors() {
         List<Throwable> errors = new ArrayList<>();
 
-        mRule.runSafely(errors, () -> mLog.v("I'm fine"));
+        mRule.runSafely(errors, () -> System.out.println("I'm fine"));
 
         expect.withMessage("errors").that(errors).isEmpty();
     }

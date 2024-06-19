@@ -15,29 +15,10 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-// Source for all tests - ideally should be used by a host-side
-// project to run all of them (without "host-side" dependencies like
-// tradefed), although currently is running on device
-// TODO(b/347083260): create a AdServicesSharedLibrariesSidelessTests
-// project, then don't test them on device anymore.
 filegroup {
     name: "adservices-shared-sideless-tests-sources",
     srcs: [
         "java/**/*.java",
-    ],
-    visibility: [
-        "//packages/modules/AdServices/shared/tests:__subpackages__",
-    ],
-}
-
-// Source for tests that can run by themselves in a side-less project,
-// but could also be extended on device-side or host-side to provide
-// tests for the device-side / host-side counterpart (typically rules)
-filegroup {
-    name: "adservices-shared-sideless-plus-tests-sources",
-    srcs: [
-        "java/com/android/adservices/shared/testing/AbstractSdkLevelSupportedRuleTest.java",
-        "java/com/android/adservices/shared/testing/SharedSidelessTestCase.java",
     ],
     visibility: [
         "//packages/modules/AdServices/shared/tests:__subpackages__",

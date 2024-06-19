@@ -107,6 +107,9 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
     public void initU18() {}
 
     @Override
+    public void initRvc() {}
+
+    @Override
     public void initGaUxWithPas() {
         initGA();
         configureElement(R.id.apps_ga_introduction, R.string.settingsUI_pas_apps_view_body_text);

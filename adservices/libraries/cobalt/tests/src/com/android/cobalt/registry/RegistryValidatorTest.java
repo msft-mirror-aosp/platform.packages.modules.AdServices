@@ -24,8 +24,6 @@ import static com.google.cobalt.ReportDefinition.ReportType.FLEETWIDE_OCCURRENCE
 import static com.google.cobalt.ReportDefinition.ReportType.STRING_COUNTS;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
-
 import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.ReportDefinition;
@@ -37,22 +35,19 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public final class RegistryValidatorTest extends AdServicesUnitTestCase {
+// TODO(b/343722587): Switch assertThat in test cases with multiple checks to expect.
+public final class RegistryValidatorTest {
 
     @Test
     public void testValidateReportType_occurrenceMetric_onlySupportsFleetwideOccurrenceCounts() {
         for (ReportType reportType : ReportType.values()) {
             switch (reportType) {
                 case FLEETWIDE_OCCURRENCE_COUNTS:
-                    expect.withMessage(
-                                    "RegistryValidator.validateReportType(OCCURRENCE, reportType)")
-                            .that(RegistryValidator.validateReportType(OCCURRENCE, reportType))
+                    assertThat(RegistryValidator.validateReportType(OCCURRENCE, reportType))
                             .isTrue();
                     break;
                 default:
-                    expect.withMessage(
-                                    "RegistryValidator.validateReportType(OCCURRENCE, reportType)")
-                            .that(RegistryValidator.validateReportType(OCCURRENCE, reportType))
+                    assertThat(RegistryValidator.validateReportType(OCCURRENCE, reportType))
                             .isFalse();
                     break;
             }
@@ -64,14 +59,10 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         for (ReportType reportType : ReportType.values()) {
             switch (reportType) {
                 case STRING_COUNTS:
-                    expect.withMessage("RegistryValidator.validateReportType(STRING, reportType)")
-                            .that(RegistryValidator.validateReportType(STRING, reportType))
-                            .isTrue();
+                    assertThat(RegistryValidator.validateReportType(STRING, reportType)).isTrue();
                     break;
                 default:
-                    expect.withMessage("RegistryValidator.validateReportType(STRING, reportType)")
-                            .that(RegistryValidator.validateReportType(STRING, reportType))
-                            .isFalse();
+                    assertThat(RegistryValidator.validateReportType(STRING, reportType)).isFalse();
                     break;
             }
         }
@@ -83,19 +74,13 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
             switch (privacyMechanism) {
                 case DE_IDENTIFICATION:
                 case SHUFFLED_DIFFERENTIAL_PRIVACY:
-                    expect.withMessage(
-                                    "RegistryValidator.validatePrivacyMechanism("
-                                            + "FLEETWIDE_OCCURRENCE_COUNTS,privacyMechanism))")
-                            .that(
+                    assertThat(
                                     RegistryValidator.validatePrivacyMechanism(
                                             FLEETWIDE_OCCURRENCE_COUNTS, privacyMechanism))
                             .isTrue();
                     break;
                 default:
-                    expect.withMessage(
-                                    "RegistryValidator.validatePrivacyMechanism("
-                                            + "FLEETWIDE_OCCURRENCE_COUNTS,privacyMechanism))")
-                            .that(
+                    assertThat(
                                     RegistryValidator.validatePrivacyMechanism(
                                             FLEETWIDE_OCCURRENCE_COUNTS, privacyMechanism))
                             .isFalse();
@@ -109,19 +94,13 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         for (PrivacyMechanism privacyMechanism : PrivacyMechanism.values()) {
             switch (privacyMechanism) {
                 case DE_IDENTIFICATION:
-                    expect.withMessage(
-                                    "RegistryValidator.validatePrivacyMechanism(STRING_COUNTS,"
-                                            + " privacyMechanism))")
-                            .that(
+                    assertThat(
                                     RegistryValidator.validatePrivacyMechanism(
                                             STRING_COUNTS, privacyMechanism))
                             .isTrue();
                     break;
                 default:
-                    expect.withMessage(
-                                    "RegistryValidator.validatePrivacyMechanism(STRING_COUNTS,"
-                                            + " privacyMechanism))")
-                            .that(
+                    assertThat(
                                     RegistryValidator.validatePrivacyMechanism(
                                             STRING_COUNTS, privacyMechanism))
                             .isFalse();
@@ -186,14 +165,8 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setReportType(FLEETWIDE_OCCURRENCE_COUNTS)
                         .setPrivacyMechanism(DE_IDENTIFICATION)
                         .build();
-        expect.withMessage("RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)")
-                .that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
-        expect.withMessage(
-                        "RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric,report"
-                                + ".toBuilder().setIntBuckets(IntegerBuckets.newBuilder()"
-                                + ".setSparseOutput(true).build()).build())")
-                .that(
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(
                         RegistryValidator.isValidReportTypeAndPrivacyMechanism(
                                 metric,
                                 report.toBuilder()
@@ -213,14 +186,8 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setReportType(STRING_COUNTS)
                         .setPrivacyMechanism(DE_IDENTIFICATION)
                         .build();
-        expect.withMessage("RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)")
-                .that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
-        expect.withMessage(
-                        "RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric,"
-                                + "report.toBuilder().setIntBuckets(IntegerBuckets.newBuilder()"
-                                + ".setSparseOutput(true).build()).build())")
-                .that(
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(
                         RegistryValidator.isValidReportTypeAndPrivacyMechanism(
                                 metric,
                                 report.toBuilder()
