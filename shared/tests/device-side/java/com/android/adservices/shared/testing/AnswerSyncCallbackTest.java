@@ -69,6 +69,12 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
     }
 
     @Override
+    protected void assertCalled(AnswerSyncCallback<Void> callback, long timeoutMs)
+            throws InterruptedException {
+        callback.internalAssertCalled(timeoutMs);
+    }
+
+    @Override
     protected boolean providesExpectedConstructors() {
         return false;
     }

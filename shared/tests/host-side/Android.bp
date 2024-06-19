@@ -21,15 +21,20 @@ java_test_host {
     team: "trendy_team_android_rubidium",
     srcs: [
         "java/**/*.java",
+        ":adservices-shared-sideless-meta-testing-sources",
+        ":adservices-shared-sideless-plus-tests-sources",
     ],
     libs: [
         "tradefed",
     ],
     static_libs: [
         "adservices-shared-hostside-testing",
+        "auto_value_annotations",
+        "truth",
     ],
     test_suites: [
         "general-tests",
         "mts-adservices",
     ],
+    plugins: ["auto_annotation_plugin"],
 }

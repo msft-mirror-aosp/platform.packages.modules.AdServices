@@ -49,7 +49,6 @@ import org.junit.runner.Description;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 
-// TODO(b/315542995): provide host-side implementation
 /**
  * Test case for {@link AbstractSdkLevelSupportedRule} implementations.
  *
@@ -75,7 +74,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
     private final SimpleStatement mBaseStatement = new SimpleStatement();
 
     public AbstractSdkLevelSupportedRuleTest() {
-        this(StandardStreamsLogger.getInstance());
+        this(DynamicLogger.getInstance());
     }
 
     protected AbstractSdkLevelSupportedRuleTest(RealLogger realLogger) {
@@ -955,12 +954,12 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
         }
 
         private FakeSdkLevelSupportedRule(Range ruleRange, Level deviceLevel) {
-            super(StandardStreamsLogger.getInstance(), ruleRange);
+            super(DynamicLogger.getInstance(), ruleRange);
             mDeviceLevel = deviceLevel;
         }
 
         @Override
-        public Level getDeviceApiLevel() {
+        public Level getRawDeviceApiLevel() {
             if (mDeviceLevel == null) {
                 throw new UnsupportedOperationException(
                         "Rule created with constructor that doesn't provide the device level");

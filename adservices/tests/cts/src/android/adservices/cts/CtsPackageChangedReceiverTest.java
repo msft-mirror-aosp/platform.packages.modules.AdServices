@@ -16,30 +16,22 @@
 
 package android.adservices.cts;
 
+import static org.junit.Assert.assertThrows;
+
 import android.content.Context;
 import android.content.Intent;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
-public class CtsPackageChangedReceiverTest {
+public final class CtsPackageChangedReceiverTest extends CtsAdServicesDeviceTestCase {
     private static final String PACKAGE_CHANGED_BROADCAST =
             SdkLevel.isAtLeastT()
                     ? "com.android.adservices.PACKAGE_CHANGED"
                     : "com.android.ext.adservices.PACKAGE_CHANGED";
-
-    @Rule
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
 
     /**
      * Verify that the com.android.adservices.service.common.PACKAGE_CHANGED broadcast is protected
@@ -47,14 +39,12 @@ public class CtsPackageChangedReceiverTest {
      * test is a non-system app and should throw a SecurityException when it tries to send the
      * broadcast.
      */
-    @Test(expected = SecurityException.class)
+    @Test
     public void testSendProtectedBroadcast() {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         Intent intent = new Intent(PACKAGE_CHANGED_BROADCAST);
-        context.sendBroadcast(intent);
-        // Fail since the test app is a non-system app so it cannot send the broadcast, an exception
-        // should have been thrown.
-        Assert.fail(
-                "Expected security exception broadcasting action: " + PACKAGE_CHANGED_BROADCAST);
+        // Fail since the test app is a non-system app, so it cannot send the broadcast, an
+        // exception should have been thrown.
+        assertThrows(SecurityException.class, () -> context.sendBroadcast(intent));
     }
 }

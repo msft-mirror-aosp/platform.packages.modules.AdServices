@@ -26,17 +26,13 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFiltersFixture;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
-
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
 /** Unit tests for {@link AdFilters}. */
-@SmallTest
-public class AdFiltersTest {
-
+public final class AdFiltersTest extends CtsAdServicesDeviceTestCase {
     private static final String DIFFERENT_PACKAGE_NAME =
             CommonFixture.TEST_PACKAGE_NAME_1 + "arbitrary";
 
@@ -47,7 +43,7 @@ public class AdFiltersTest {
 
     @Test
     public void testBuildValidAdFilters_success() {
-        final AdFilters originalFilters =
+        AdFilters originalFilters =
                 new AdFilters.Builder()
                         .setFrequencyCapFilters(
                                 FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
@@ -59,7 +55,7 @@ public class AdFiltersTest {
 
     @Test
     public void testParcelAdFilters_success() {
-        final AdFilters originalFilters =
+        AdFilters originalFilters =
                 new AdFilters.Builder()
                         .setFrequencyCapFilters(
                                 FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
@@ -68,7 +64,7 @@ public class AdFiltersTest {
         Parcel targetParcel = Parcel.obtain();
         originalFilters.writeToParcel(targetParcel, 0);
         targetParcel.setDataPosition(0);
-        final AdFilters filtersFromParcel = AdFilters.CREATOR.createFromParcel(targetParcel);
+        AdFilters filtersFromParcel = AdFilters.CREATOR.createFromParcel(targetParcel);
 
         assertThat(filtersFromParcel.getFrequencyCapFilters())
                 .isEqualTo(originalFilters.getFrequencyCapFilters());
@@ -76,27 +72,26 @@ public class AdFiltersTest {
 
     @Test
     public void testBuildNullAdFilters_success() {
-        final AdFilters originalFilters =
-                new AdFilters.Builder().setFrequencyCapFilters(null).build();
+        AdFilters originalFilters = new AdFilters.Builder().setFrequencyCapFilters(null).build();
 
         assertThat(originalFilters.getFrequencyCapFilters()).isNull();
     }
 
     @Test
     public void testBuildNoSetters_success() {
-        final AdFilters originalFilters = new AdFilters.Builder().build();
+        AdFilters originalFilters = new AdFilters.Builder().build();
 
         assertThat(originalFilters.getFrequencyCapFilters()).isNull();
     }
 
     @Test
     public void testEqualsIdentical_success() {
-        final AdFilters originalFilters =
+        AdFilters originalFilters =
                 new AdFilters.Builder()
                         .setFrequencyCapFilters(
                                 FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
                         .build();
-        final AdFilters identicalFilters =
+        AdFilters identicalFilters =
                 new AdFilters.Builder()
                         .setFrequencyCapFilters(
                                 FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
@@ -107,36 +102,36 @@ public class AdFiltersTest {
 
     @Test
     public void testEqualsDifferent_success() {
-        final AdFilters originalFilters =
+        AdFilters originalFilters =
                 new AdFilters.Builder()
                         .setFrequencyCapFilters(
                                 FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
                         .build();
-        final AdFilters differentFilters = new AdFilters.Builder().build();
+        AdFilters differentFilters = new AdFilters.Builder().build();
 
         assertThat(originalFilters.equals(differentFilters)).isFalse();
     }
 
     @Test
     public void testEqualsNull_success() {
-        final AdFilters originalFilters =
+        AdFilters originalFilters =
                 new AdFilters.Builder()
                         .setFrequencyCapFilters(
                                 FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
                         .build();
-        final AdFilters nullFilters = null;
+        AdFilters nullFilters = null;
 
         assertThat(originalFilters.equals(nullFilters)).isFalse();
     }
 
     @Test
     public void testHashCodeIdentical_success() {
-        final AdFilters originalFilters =
+        AdFilters originalFilters =
                 new AdFilters.Builder()
                         .setFrequencyCapFilters(
                                 FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
                         .build();
-        final AdFilters identicalFilters =
+        AdFilters identicalFilters =
                 new AdFilters.Builder()
                         .setFrequencyCapFilters(
                                 FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
@@ -147,29 +142,26 @@ public class AdFiltersTest {
 
     @Test
     public void testHashCodeDifferent_success() {
-        final AdFilters originalFilters =
+        AdFilters originalFilters =
                 new AdFilters.Builder()
                         .setFrequencyCapFilters(
                                 FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
                         .build();
-        final AdFilters differentFilters = new AdFilters.Builder().build();
+        AdFilters differentFilters = new AdFilters.Builder().build();
 
         assertThat(originalFilters.hashCode()).isNotEqualTo(differentFilters.hashCode());
     }
 
     @Test
     public void testBuildNoSettersAppInstallOnly_success() {
-        final AdFilters originalFilters = new AdFilters.Builder().build();
+        AdFilters originalFilters = new AdFilters.Builder().build();
 
         assertThat(originalFilters.getAppInstallFilters()).isNull();
     }
 
     @Test
     public void testBuildNullAdFiltersAppInstallOnly_success() {
-        final AdFilters originalFilters =
-                new AdFilters.Builder()
-                        .setAppInstallFilters(null)
-                        .build();
+        AdFilters originalFilters = new AdFilters.Builder().setAppInstallFilters(null).build();
 
         assertThat(originalFilters.getAppInstallFilters()).isNull();
     }
@@ -185,7 +177,7 @@ public class AdFiltersTest {
         Parcel targetParcel = Parcel.obtain();
         APP_INSTALL_ONLY_FILTER.writeToParcel(targetParcel, 0);
         targetParcel.setDataPosition(0);
-        final AdFilters filtersFromParcel = AdFilters.CREATOR.createFromParcel(targetParcel);
+        AdFilters filtersFromParcel = AdFilters.CREATOR.createFromParcel(targetParcel);
 
         assertThat(filtersFromParcel.getAppInstallFilters())
                 .isEqualTo(APP_INSTALL_ONLY_FILTER.getAppInstallFilters());
@@ -193,7 +185,7 @@ public class AdFiltersTest {
 
     @Test
     public void testEqualsIdenticalAppInstallOnly_success() {
-        final AdFilters identicalFilters =
+        AdFilters identicalFilters =
                 new AdFilters.Builder()
                         .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
                         .build();
@@ -203,7 +195,7 @@ public class AdFiltersTest {
 
     @Test
     public void testEqualsDifferentAppInstallOnly_success() {
-        final AdFilters differentFilters =
+        AdFilters differentFilters =
                 new AdFilters.Builder()
                         .setAppInstallFilters(
                                 new AppInstallFilters.Builder()
@@ -218,7 +210,7 @@ public class AdFiltersTest {
 
     @Test
     public void testHashCodeIdenticalAppInstallOnly_success() {
-        final AdFilters identicalFilters =
+        AdFilters identicalFilters =
                 new AdFilters.Builder()
                         .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
                         .build();
@@ -228,7 +220,7 @@ public class AdFiltersTest {
 
     @Test
     public void testHashCodeDifferentAppInstallOnly_success() {
-        final AdFilters differentFilters =
+        AdFilters differentFilters =
                 new AdFilters.Builder()
                         .setAppInstallFilters(
                                 new AppInstallFilters.Builder()
@@ -243,21 +235,21 @@ public class AdFiltersTest {
 
     @Test
     public void testToString() {
-        final AdFilters originalFilters = AdFiltersFixture.getValidUnhiddenFilters();
+        AdFilters originalFilters = AdFiltersFixture.getValidUnhiddenFilters();
 
-        assertThat(originalFilters.toString()).contains("AdFilters{");
-        assertThat(originalFilters.toString())
+        expect.that(originalFilters.toString()).contains("AdFilters{");
+        expect.that(originalFilters.toString())
                 .contains(
                         "mFrequencyCapFilters="
                                 + FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS);
-        assertThat(originalFilters.toString())
+        expect.that(originalFilters.toString())
                 .contains(
                         "mAppInstallFilters=" + AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
     }
 
     @Test
     public void testAdFiltersDescribeContents() {
-        final AdFilters adFilters =
+        AdFilters adFilters =
                 new AdFilters.Builder()
                         .setFrequencyCapFilters(
                                 FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)

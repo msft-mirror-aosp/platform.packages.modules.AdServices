@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.adservices.tests.cts.topics.mdd;
+package com.android.tests.sandbox.measurement;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
-import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
-import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 @DisableGlobalKillSwitch
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
+@EnableDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE)
 @SetAllLogcatTags
-@SetCompatModeFlags
-@SetFlagDisabled(KEY_TOPICS_KILL_SWITCH)
-@SetFlagEnabled(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK)
-public abstract class CtsAdServicesMddTestCase extends AdServicesCtsTestCase {}
+@SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
+public abstract class CtsSandboxedMeasurementManagerTestCase extends AdServicesCtsTestCase {}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,20 @@ package com.android.adservices.shared.testing;
 import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.AndroidSdk.Range;
 
-public final class SdkLevelSupportRuleTest extends AbstractSdkLevelSupportedRuleTest {
+public final class HostSideSdkLevelSupportedRuleTest extends AbstractSdkLevelSupportedRuleTest {
 
-    public SdkLevelSupportRuleTest() {
-        super(AndroidLogger.getInstance());
+    public HostSideSdkLevelSupportedRuleTest() {
+        super(ConsoleLogger.getInstance());
     }
 
     @Override
-    protected SdkLevelSupportRule newRuleForDeviceLevelAndRuleAtLeastLevel(Level level) {
+    protected AbstractSdkLevelSupportedRule newRuleForDeviceLevelAndRuleAtLeastLevel(Level level) {
         return newRule(level, level);
     }
 
     @Override
-    protected SdkLevelSupportRule newRule(Level ruleLevel, Level deviceLevel) {
-        SdkLevelSupportRule rule = new SdkLevelSupportRule(ruleLevel);
+    protected AbstractSdkLevelSupportedRule newRule(Level ruleLevel, Level deviceLevel) {
+        HostSideSdkLevelSupportRule rule = new HostSideSdkLevelSupportRule(ruleLevel);
         mLog.v("newRule(%s, %s): returning %s", ruleLevel, deviceLevel, rule);
         rule.setDeviceLevelSupplier(() -> deviceLevel);
         return rule;
@@ -39,7 +39,7 @@ public final class SdkLevelSupportRuleTest extends AbstractSdkLevelSupportedRule
 
     @Override
     protected AbstractSdkLevelSupportedRule newRule(Range ruleRange, Level deviceLevel) {
-        SdkLevelSupportRule rule = new SdkLevelSupportRule(ruleRange);
+        HostSideSdkLevelSupportRule rule = new HostSideSdkLevelSupportRule(ruleRange);
         mLog.v("newRule(%s, %s): returning %s", ruleRange, deviceLevel, rule);
         rule.setDeviceLevelSupplier(() -> deviceLevel);
         return rule;

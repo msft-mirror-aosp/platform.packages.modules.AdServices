@@ -26,8 +26,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.google.common.truth.Truth;
-
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -69,7 +67,7 @@ public final class ConsentedDebugShellCommandCtsTest extends CtsAdServicesDevice
                 mAdServicesShellCommandHelper.runCommand(VIEW_SHELL_COMMAND_TEMPLATE);
         Log.d(TAG, "viewAfterDisableResponse: " + viewAfterDisableResponse);
 
-        Truth.assertThat(viewBeforeDisableResponse).contains(debugToken);
-        Truth.assertThat(viewAfterDisableResponse).doesNotContain(debugToken);
+        expect.that(viewBeforeDisableResponse).contains(debugToken);
+        expect.that(viewAfterDisableResponse).doesNotContain(debugToken);
     }
 }

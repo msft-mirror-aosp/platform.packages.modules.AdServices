@@ -19,8 +19,6 @@ package android.adservices.cts;
 import static android.adservices.common.CommonFixture.VALID_BUYER_1;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
-import static org.junit.Assert.assertEquals;
-
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
@@ -28,12 +26,12 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.LeaveCustomAudienceRequest;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class CustomAudienceRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class CustomAudienceRequestTest extends CtsAdServicesDeviceTestCase {
     private static final CustomAudience CUSTOM_AUDIENCE =
             CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
     private static final CustomAudience CUSTOM_AUDIENCE_OMIT_ADS =
@@ -43,15 +41,12 @@ public class CustomAudienceRequestTest {
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
     private static final String NAME = CustomAudienceFixture.VALID_NAME;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
     public void testBuildJoinCustomAudienceRequestSuccess() {
         JoinCustomAudienceRequest request =
                 new JoinCustomAudienceRequest.Builder().setCustomAudience(CUSTOM_AUDIENCE).build();
 
-        assertEquals(request.getCustomAudience(), CUSTOM_AUDIENCE);
+        expect.that(request.getCustomAudience()).isEqualTo(CUSTOM_AUDIENCE);
     }
 
     @Test
@@ -61,7 +56,7 @@ public class CustomAudienceRequestTest {
                         .setCustomAudience(CUSTOM_AUDIENCE_OMIT_ADS)
                         .build();
 
-        assertEquals(request.getCustomAudience(), CUSTOM_AUDIENCE_OMIT_ADS);
+        expect.that(request.getCustomAudience()).isEqualTo(CUSTOM_AUDIENCE_OMIT_ADS);
     }
 
     @Test
@@ -69,7 +64,7 @@ public class CustomAudienceRequestTest {
         LeaveCustomAudienceRequest request =
                 new LeaveCustomAudienceRequest.Builder().setBuyer(BUYER).setName(NAME).build();
 
-        assertEquals(request.getBuyer(), BUYER);
-        assertEquals(request.getName(), NAME);
+        expect.that(request.getBuyer()).isEqualTo(BUYER);
+        expect.that(request.getName()).isEqualTo(NAME);
     }
 }

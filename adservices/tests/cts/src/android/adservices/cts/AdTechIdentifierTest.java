@@ -17,26 +17,23 @@
 package android.adservices.cts;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 import android.adservices.common.AdTechIdentifier;
 import android.os.Parcel;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 
-public class AdTechIdentifierTest {
+@RequiresSdkLevelAtLeastS
+public final class AdTechIdentifierTest extends CtsAdServicesDeviceTestCase {
 
     private static final String AD_TECH_ID_STRING = "example.com";
     private static final String DIFFERENT_AD_TECH_ID_STRING = "example.org";
     private static final int ARRAY_SIZE = 10;
     private static final int DESCRIBE_CONTENTS_EXPECTATION = 0;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testAdTechIdentifierCreatorArray() {
@@ -51,7 +48,7 @@ public class AdTechIdentifierTest {
         preParcel.writeToParcel(parcel, 0);
         parcel.setDataPosition(0);
         AdTechIdentifier postParcel = AdTechIdentifier.CREATOR.createFromParcel(parcel);
-        assertEquals(preParcel, postParcel);
+        expect.that(postParcel).isEqualTo(preParcel);
     }
 
     @Test
@@ -64,7 +61,7 @@ public class AdTechIdentifierTest {
     @Test
     public void testBuildValidAdTechIdentifierSuccess() {
         AdTechIdentifier validAdTechId = AdTechIdentifier.fromString(AD_TECH_ID_STRING);
-        assertEquals(AD_TECH_ID_STRING, validAdTechId.toString());
+        expect.that(validAdTechId.toString()).isEqualTo(AD_TECH_ID_STRING);
     }
 
     @Test(expected = NullPointerException.class)
@@ -75,7 +72,7 @@ public class AdTechIdentifierTest {
     @Test
     public void testBuildValidAdTechIdentifierSuccessNoValidation() {
         AdTechIdentifier validAdTechId = AdTechIdentifier.fromString(AD_TECH_ID_STRING, false);
-        assertEquals(AD_TECH_ID_STRING, validAdTechId.toString());
+        expect.that(validAdTechId.toString()).isEqualTo(AD_TECH_ID_STRING);
     }
 
     @Test
@@ -83,24 +80,16 @@ public class AdTechIdentifierTest {
         AdTechIdentifier identicalId1 = AdTechIdentifier.fromString(AD_TECH_ID_STRING);
         AdTechIdentifier identicalId2 = AdTechIdentifier.fromString(AD_TECH_ID_STRING);
         AdTechIdentifier differentId = AdTechIdentifier.fromString(DIFFERENT_AD_TECH_ID_STRING);
-        assertEquals(identicalId1, identicalId2);
-        assertNotEquals(identicalId1, differentId);
-        assertNotEquals(identicalId2, differentId);
-    }
 
-    @Test
-    public void testAdTechIdentifierHashCode() {
-        AdTechIdentifier identicalId1 = AdTechIdentifier.fromString(AD_TECH_ID_STRING);
-        AdTechIdentifier identicalId2 = AdTechIdentifier.fromString(AD_TECH_ID_STRING);
-        AdTechIdentifier differentId = AdTechIdentifier.fromString(DIFFERENT_AD_TECH_ID_STRING);
-        assertEquals(identicalId1.hashCode(), identicalId2.hashCode());
-        assertNotEquals(identicalId1.hashCode(), differentId.hashCode());
-        assertNotEquals(identicalId2.hashCode(), differentId.hashCode());
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(identicalId1, identicalId2);
+        et.expectObjectsAreNotEqual(identicalId1, differentId);
+        et.expectObjectsAreNotEqual(identicalId2, differentId);
     }
 
     @Test
     public void testAdTechIdentifierToString() {
         AdTechIdentifier validAdTechId = AdTechIdentifier.fromString(AD_TECH_ID_STRING);
-        assertEquals(AD_TECH_ID_STRING, validAdTechId.toString());
+        expect.that(validAdTechId.toString()).isEqualTo(AD_TECH_ID_STRING);
     }
 }

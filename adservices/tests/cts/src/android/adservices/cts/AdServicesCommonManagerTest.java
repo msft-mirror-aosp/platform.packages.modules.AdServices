@@ -20,8 +20,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABL
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
@@ -43,7 +41,6 @@ import java.util.concurrent.Executors;
 
 @SetPpapiAppAllowList
 public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCase {
-
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private AdServicesCommonManager mCommonManager;
@@ -167,9 +164,9 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
         mCommonManager.updateAdId(
                 request, CALLBACK_EXECUTOR, new AdServicesOutcomeReceiverForTests<>());
 
-        assertThat(request.getAdId()).isEqualTo(AdId.ZERO_OUT);
-        assertThat(request.isLimitAdTrackingEnabled()).isTrue();
-        assertThat(request.describeContents()).isEqualTo(0);
+        expect.that(request.getAdId()).isEqualTo(AdId.ZERO_OUT);
+        expect.that(request.isLimitAdTrackingEnabled()).isTrue();
+        expect.that(request.describeContents()).isEqualTo(0);
     }
 
     @Test

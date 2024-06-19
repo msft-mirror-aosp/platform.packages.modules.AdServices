@@ -27,15 +27,13 @@ import android.adservices.adselection.PerBuyerConfiguration;
 import android.adservices.adselection.SellerConfiguration;
 import android.os.Parcel;
 
-import com.android.adservices.common.AdServicesCtsTestCase;
-
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
 import java.util.Set;
 
-public class SellerConfigurationTest extends AdServicesCtsTestCase {
+public final class SellerConfigurationTest extends CtsAdServicesDeviceTestCase {
 
     public static final Set<PerBuyerConfiguration> PER_BUYER_CONFIGURATIONS =
             ImmutableSet.of(PER_BUYER_CONFIGURATION_1, PER_BUYER_CONFIGURATION_2);

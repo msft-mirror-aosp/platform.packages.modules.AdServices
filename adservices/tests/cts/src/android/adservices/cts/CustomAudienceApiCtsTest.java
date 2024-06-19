@@ -40,10 +40,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AU
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import android.Manifest;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -93,15 +90,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@RequiresSdkLevelAtLeastS // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
 @DisableGlobalKillSwitch
+@EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
+@RequiresSdkLevelAtLeastS
+@SetAllLogcatTags
 @SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
-@EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
 @SetPpapiAppAllowList
-@SetAllLogcatTags
 public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
-
     private AdvertisingCustomAudienceClient mClient;
     private TestAdvertisingCustomAudienceClient mTestClient;
 
@@ -182,8 +178,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                                         CustomAudienceFixture.getValidBuilderForBuyer(
                                                         CommonFixture.NOT_ENROLLED_BUYER)
                                                 .build()));
-        assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
-        assertThat(exception)
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
+        expect.that(exception)
                 .hasCauseThat()
                 .hasMessageThat()
                 .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
@@ -259,8 +255,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithInvalidAdDataMetadata));
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -284,8 +280,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithInvalidAdDataRenderUris));
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -323,8 +319,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithInvalidAdDataRenderUris));
 
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -343,8 +339,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithInvalidNumberOfAds));
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isNull();
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -360,8 +356,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithMismatchedDailyFetchUriDomain));
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -372,8 +368,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         .build();
         Exception exception =
                 assertThrows(ExecutionException.class, () -> joinCustomAudience(customAudience));
-        assertTrue(exception.getCause() instanceof IllegalArgumentException);
-        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -396,8 +392,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                             joinCustomAudience(customAudience2);
                             joinCustomAudience(customAudience3);
                         });
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isNull();
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -420,8 +416,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                             joinCustomAudience(customAudience2);
                             joinCustomAudience(customAudience3);
                         });
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isNull();
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -442,7 +438,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -470,8 +466,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
         // A valid buyer will not be extracted from an invalid uri, thus failing due to lack of
         // authorization.
-        assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
-        assertThat(exception)
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
+        expect.that(exception)
                 .hasCauseThat()
                 .hasMessageThat()
                 .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
@@ -503,7 +499,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -535,7 +531,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         ExecutionException.class,
                         () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
         // The name exceeds size limit.
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -565,7 +561,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -595,7 +591,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         ExecutionException.class,
                         () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
         // The activation time exceeds delay limit.
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -624,7 +620,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -654,7 +650,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         ExecutionException.class,
                         () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
         // The expiration time exceeds max limit.
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -683,7 +679,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -713,7 +709,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         ExecutionException.class,
                         () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
         // The user bidding signals exceeds size limit.
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -746,8 +742,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                                                 CommonFixture.NOT_ENROLLED_BUYER,
                                                 CustomAudienceFixture.VALID_NAME)
                                         .get());
-        assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
-        assertThat(exception)
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
+        expect.that(exception)
                 .hasCauseThat()
                 .hasMessageThat()
                 .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
@@ -769,7 +765,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
         Exception exception =
                 assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
-        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -786,7 +782,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
         Exception exception =
                 assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
-        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -797,7 +793,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
         Exception exception =
                 assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
-        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
     }
 
     private void joinCustomAudience(CustomAudience customAudience)

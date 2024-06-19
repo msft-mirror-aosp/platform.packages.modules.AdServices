@@ -16,17 +16,17 @@
 
 package android.adservices.cts;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.signals.UpdateSignalsInput;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -35,63 +35,45 @@ import org.junit.Test;
  * <p>If this class is un-ignored {@link android.adservices.signals.UpdateSignalsInputTest} should
  * be deleted.
  */
-public class UpdateSignalsRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class UpdateSignalsRequestTest extends CtsAdServicesDeviceTestCase {
 
     private static final Uri URI = Uri.parse("https://example.com/somecoolsignals");
     private static final Uri OTHER_URI = Uri.parse("https://example.com/lesscoolsignals");
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
     public void testBuild() {
         UpdateSignalsRequest request = new UpdateSignalsRequest.Builder(URI).build();
-        assertEquals(URI, request.getUpdateUri());
+        expect.that(request.getUpdateUri()).isEqualTo(URI);
     }
 
     @Test
     public void testSetUpdateUri() {
         UpdateSignalsRequest request =
                 new UpdateSignalsRequest.Builder(URI).setUpdateUri(URI).build();
-        assertEquals(URI, request.getUpdateUri());
+        expect.that(request.getUpdateUri()).isEqualTo(URI);
     }
 
     @Test
     public void testBuildNullUri_throws() {
-        assertThrows(
-                NullPointerException.class, () -> new UpdateSignalsRequest.Builder(null).build());
+        assertThrows(NullPointerException.class, () -> new UpdateSignalsRequest.Builder(null));
     }
 
     @Test
     public void testEqualsEqual() {
         UpdateSignalsRequest identical1 = new UpdateSignalsRequest.Builder(URI).build();
         UpdateSignalsRequest identical2 = new UpdateSignalsRequest.Builder(URI).build();
-        assertEquals(identical1, identical2);
-    }
-
-    @Test
-    public void testEqualsNotEqualSameClass() {
-        UpdateSignalsRequest different1 = new UpdateSignalsRequest.Builder(URI).build();
         UpdateSignalsRequest different2 = new UpdateSignalsRequest.Builder(OTHER_URI).build();
-        assertNotEquals(different1, different2);
-    }
 
-    @Test
-    public void testEqualsNotEqualDifferentClass() {
-        UpdateSignalsRequest input1 = new UpdateSignalsRequest.Builder(URI).build();
-        assertNotEquals(input1, new Object());
-    }
-
-    @Test
-    public void testHash() {
-        UpdateSignalsRequest identical1 = new UpdateSignalsRequest.Builder(URI).build();
-        UpdateSignalsRequest identical2 = new UpdateSignalsRequest.Builder(URI).build();
-        assertEquals(identical1.hashCode(), identical2.hashCode());
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(identical1, identical2);
+        et.expectObjectsAreNotEqual(identical1, different2);
+        et.expectObjectsAreNotEqual(identical1, new Object());
     }
 
     @Test
     public void testToString() {
         UpdateSignalsRequest input = new UpdateSignalsRequest.Builder(URI).build();
-        assertEquals("UpdateSignalsRequest{" + "updateUri=" + URI + '}', input.toString());
+        assertThat(input.toString()).isEqualTo("UpdateSignalsRequest{updateUri=" + URI + '}');
     }
 }

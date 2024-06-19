@@ -18,25 +18,19 @@ package android.adservices.cts;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assume.assumeTrue;
-
 import android.adservices.AdServicesState;
 import android.adservices.AdServicesVersion;
 
-import androidx.test.runner.AndroidJUnit4;
-
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastU;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * CTS test for APIs provided by {@link android.adservices.AdServicesVersion} and other generic
  * features.
  */
-@RunWith(AndroidJUnit4.class)
-public class AdServicesJUnit4DeviceTest extends CtsAdServicesDeviceTestCase {
+public final class AdServicesJUnit4DeviceTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testApiVersion() {
         // Note that this version constant has been @removed from the public API,
@@ -52,8 +46,8 @@ public class AdServicesJUnit4DeviceTest extends CtsAdServicesDeviceTestCase {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastU
     public void testBinderServiceIsPublished() {
-        assumeTrue("SDK level must be at least U", SdkLevel.isAtLeastU());
         String cmd = "service check adservices_manager";
 
         assertWithMessage("output of '%s'", cmd)

@@ -16,27 +16,24 @@
 
 package android.adservices.cts;
 
-import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.common.AdSelectionSignals;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Adds tests for {@link AddAdSelectionFromOutcomesOverrideRequest}. */
-public final class AddAdSelectionFromOutcomesOverrideRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class AddAdSelectionFromOutcomesOverrideRequestTest
+        extends CtsAdServicesDeviceTestCase {
     private static final AdSelectionFromOutcomesConfig AD_SELECTION_FROM_OUTCOMES_CONFIG =
             AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
     private static final String SELECTION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals SELECTION_SIGNALS = AdSelectionSignals.EMPTY;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildsAddAdSelectionOverrideRequest() {
@@ -44,9 +41,9 @@ public final class AddAdSelectionFromOutcomesOverrideRequestTest {
                 new AddAdSelectionFromOutcomesOverrideRequest(
                         AD_SELECTION_FROM_OUTCOMES_CONFIG, SELECTION_LOGIC_JS, SELECTION_SIGNALS);
 
-        assertThat(request.getOutcomeSelectionLogicJs()).isEqualTo(SELECTION_LOGIC_JS);
-        assertThat(request.getAdSelectionFromOutcomesConfig())
+        expect.that(request.getOutcomeSelectionLogicJs()).isEqualTo(SELECTION_LOGIC_JS);
+        expect.that(request.getAdSelectionFromOutcomesConfig())
                 .isEqualTo(AD_SELECTION_FROM_OUTCOMES_CONFIG);
-        assertThat(request.getOutcomeSelectionTrustedSignals()).isEqualTo(SELECTION_SIGNALS);
+        expect.that(request.getOutcomeSelectionTrustedSignals()).isEqualTo(SELECTION_SIGNALS);
     }
 }

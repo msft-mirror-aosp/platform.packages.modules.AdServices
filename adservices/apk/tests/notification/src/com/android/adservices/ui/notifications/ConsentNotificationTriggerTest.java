@@ -820,6 +820,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
     }
 
     @Test
+    @FlakyTest(bugId = 345514911)
     public void testPasSettingsUpdatedAfterNotificationDisplayed() {
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();

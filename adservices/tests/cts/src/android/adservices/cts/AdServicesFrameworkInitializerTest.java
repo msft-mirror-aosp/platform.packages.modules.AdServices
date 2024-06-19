@@ -20,13 +20,10 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.AdServicesFrameworkInitializer;
 
-import androidx.test.filters.SmallTest;
-
 import org.junit.Test;
 
 /** Cts Test of {@link AdServicesFrameworkInitializer}. */
-@SmallTest
-public class AdServicesFrameworkInitializerTest {
+public final class AdServicesFrameworkInitializerTest extends CtsAdServicesDeviceTestCase {
     /**
      * AdServicesFrameworkInitializer.registerServiceWrappers() should only be called by
      * SystemServiceRegistry during boot up. Calling this API at any other time should throw an

@@ -22,18 +22,16 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.RemoveAdSelectionFromOutcomesOverrideRequest;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Adds tests for {@link RemoveAdSelectionFromOutcomesOverrideRequest} */
-public final class RemoveAdSelectionFromOutcomesOverrideRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class RemoveAdSelectionFromOutcomesOverrideRequestTest
+        extends CtsAdServicesDeviceTestCase {
     private static final AdSelectionFromOutcomesConfig AD_SELECTION_FROM_OUTCOMES_CONFIG =
             AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildsAddAdSelectionOverrideRequest() {

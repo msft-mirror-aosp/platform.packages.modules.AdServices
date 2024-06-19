@@ -654,7 +654,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
 
         @Override
         public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
+            return true;
         }
 
         @Override
