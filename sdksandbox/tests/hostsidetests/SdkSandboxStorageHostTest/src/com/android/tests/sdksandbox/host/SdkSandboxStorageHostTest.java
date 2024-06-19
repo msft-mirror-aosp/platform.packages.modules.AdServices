@@ -96,6 +96,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             uninstallPackage(TEST_APP_STORAGE_PACKAGE);
         } finally {
             mUserUtils.removeSecondaryUserIfNecessary();
+            // Several storage tests check storage for user 0, switch before running tests.
+            if (getDevice().getCurrentUser() != 0) {
+                getDevice().switchUser(0);
+            }
         }
     }
 
