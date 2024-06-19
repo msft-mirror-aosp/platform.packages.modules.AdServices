@@ -18,11 +18,8 @@ package com.android.tests.sdksandbox.host;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assume.assumeTrue;
+import android.app.sdksandbox.hosttestutils.SdkSandboxDeviceSupportedHostRule;
 
-import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
-
-import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.targetprep.TargetSetupError;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -30,11 +27,16 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
 public class SdkSandboxMetricsHostTest extends BaseHostJUnit4Test {
+
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedHostRule deviceSupportRule =
+            new SdkSandboxDeviceSupportedHostRule(this);
 
     private static final String TEST_APP_PACKAGE = "com.android.tests.sdksandbox";
     private static final String TEST_APP_APK = "SdkSandboxMetricsTestApp.apk";
@@ -44,14 +46,8 @@ public class SdkSandboxMetricsHostTest extends BaseHostJUnit4Test {
     private static final String SECONDARY_TEST_APP_APK = "SdkSandboxMetricsSecondaryTestApp.apk";
     private static final String SECONDARY_TEST_APP_CLASS_NAME = "SdkSandboxMetricsSecondaryTestApp";
 
-    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
-
-    private DeviceSdkLevel mDeviceSdkLevel;
-
     @Before
     public void setUp() throws DeviceNotAvailableException, TargetSetupError {
-        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
-        mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
         installPackage(TEST_APP_APK);
         installPackage(SECONDARY_TEST_APP_APK);
     }
@@ -64,13 +60,11 @@ public class SdkSandboxMetricsHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSdkCanAccessSdkSandboxExitReasons() throws Exception {
-        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
         runPhase(TEST_APP_PACKAGE, TEST_APP_CLASS_NAME, "testSdkCanAccessSdkSandboxExitReasons");
     }
 
     @Test
     public void testSdkCannotAccessOtherSdkSandboxExitReasons() throws Exception {
-        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
         runPhase(
                 SECONDARY_TEST_APP_PACKAGE,
                 SECONDARY_TEST_APP_CLASS_NAME,
@@ -83,7 +77,6 @@ public class SdkSandboxMetricsHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testAppWithDumpPermissionCanAccessSdkSandboxExitReasons() throws Exception {
-        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
         runPhase(
                 TEST_APP_PACKAGE,
                 TEST_APP_CLASS_NAME,
@@ -92,7 +85,6 @@ public class SdkSandboxMetricsHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSdkSandboxCrashGeneratesDropboxReport() throws Exception {
-        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
         runPhase(TEST_APP_PACKAGE, TEST_APP_CLASS_NAME, "testCrashSandboxGeneratesDropboxReport");
     }
 

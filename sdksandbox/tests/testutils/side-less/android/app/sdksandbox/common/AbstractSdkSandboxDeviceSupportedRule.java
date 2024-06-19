@@ -44,7 +44,7 @@ public abstract class AbstractSdkSandboxDeviceSupportedRule implements TestRule 
     }
 
     /** Checks whether {@code SdkSandbox} is supported by the device. */
-    public abstract boolean isSdkSandboxSupportedOnDevice();
+    public abstract boolean isSdkSandboxSupportedOnDevice() throws Throwable;
 
     @Override
     public Statement apply(Statement base, Description description) {

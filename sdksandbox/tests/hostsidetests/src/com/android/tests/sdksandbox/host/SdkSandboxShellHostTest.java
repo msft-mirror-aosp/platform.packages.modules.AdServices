@@ -19,10 +19,8 @@ package com.android.tests.sdksandbox.host;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assume.assumeTrue;
-
 import android.app.sdksandbox.hosttestutils.AwaitUtils;
-import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+import android.app.sdksandbox.hosttestutils.SdkSandboxDeviceSupportedHostRule;
 
 import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -34,6 +32,7 @@ import com.android.tradefed.util.CommandStatus;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -41,6 +40,10 @@ import java.util.HashSet;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
 public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
+
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedHostRule deviceSupportRule =
+            new SdkSandboxDeviceSupportedHostRule(this);
 
     private static final String DEBUGGABLE_APP_PACKAGE = "com.android.sdksandbox.debuggable";
     private static final String DEBUGGABLE_APP_ACTIVITY = "SdkSandboxTestDebuggableActivity";
@@ -51,7 +54,6 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
     private static final String DEBUGGABLE_APP_SANDBOX_NAME = DEBUGGABLE_APP_PACKAGE
       + "_sdk_sandbox";
     private static final String APP_SANDBOX_NAME = APP_PACKAGE + "_sdk_sandbox";
-    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
     private final HashSet<Integer> mOriginalUsers = new HashSet<>();
 
     /** Root device for all tests. */
@@ -68,8 +70,6 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
-        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
-
         assertThat(getBuild()).isNotNull();
         assertThat(getDevice()).isNotNull();
 
