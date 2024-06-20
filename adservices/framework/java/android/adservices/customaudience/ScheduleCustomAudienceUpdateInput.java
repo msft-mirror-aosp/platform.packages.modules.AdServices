@@ -169,7 +169,7 @@ public final class ScheduleCustomAudienceUpdateInput implements Parcelable {
          * @param callerPackageName the caller app's package name
          * @param minDelay minimum delay time duration for which the update is to be deferred
          * @param partialCustomAudienceList list of partial Custom Audiences that are overridden by
-         *     MMP on update
+         *     on-device ad tech's SDK on update
          */
         public Builder(
                 @NonNull Uri updateUri,
@@ -224,8 +224,8 @@ public final class ScheduleCustomAudienceUpdateInput implements Parcelable {
         }
 
         /**
-         * Sets list of Partial Custom Audiences that are sent to the DSP server when making a
-         * request to download updates for Custom Audience
+         * Sets list of Partial Custom Audiences that are sent to the buyer ad tech server when
+         * making a request to download updates for Custom Audience
          *
          * <p>See {@link #getPartialCustomAudienceList()} for more details
          */
