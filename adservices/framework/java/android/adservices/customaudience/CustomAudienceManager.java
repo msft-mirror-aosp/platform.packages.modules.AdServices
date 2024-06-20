@@ -493,13 +493,13 @@ public class CustomAudienceManager {
 
         try {
             final ICustomAudienceService service = getService();
-
             service.scheduleCustomAudienceUpdate(
                     new ScheduleCustomAudienceUpdateInput.Builder(
                                     request.getUpdateUri(),
                                     getCallerPackageName(),
                                     request.getMinDelay(),
                                     request.getPartialCustomAudienceList())
+                            .setShouldReplacePendingUpdates(request.shouldReplacePendingUpdates())
                             .build(),
                     new ScheduleCustomAudienceUpdateCallback.Stub() {
                         @Override
@@ -522,6 +522,7 @@ public class CustomAudienceManager {
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
+
 
     private String getCallerPackageName() {
         SandboxedSdkContext sandboxedSdkContext =
