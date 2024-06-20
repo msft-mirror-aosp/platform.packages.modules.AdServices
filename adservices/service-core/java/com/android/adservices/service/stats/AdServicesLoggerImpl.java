@@ -71,6 +71,7 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
         mStatsdAdServicesLogger.logMeasurementReports(measurementReportsStats);
+        cobaltLogMsmtReportingStats(measurementReportsStats);
     }
 
     @Override
@@ -172,6 +173,7 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     public void logMeasurementAttributionStats(
             MeasurementAttributionStats measurementAttributionStats) {
         mStatsdAdServicesLogger.logMeasurementAttributionStats(measurementAttributionStats);
+        cobaltLogMsmtAttribution(measurementAttributionStats);
     }
 
     @Override
@@ -437,6 +439,36 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                             /* statusCode= */ stats.getRegistrationStatus(),
                             /* errorCode= */ stats.getFailureType(),
                             /* isEeaDevice= */ FlagsFactory.getFlags().isEeaDevice());
+                });
+    }
+
+    /** Logs measurement attribution status using {@code CobaltLogger}. */
+    private void cobaltLogMsmtAttribution(MeasurementAttributionStats stats) {
+        sBackgroundExecutor.execute(
+                () -> {
+                    MeasurementCobaltLogger measurementCobaltLogger =
+                            MeasurementCobaltLogger.getInstance();
+                    measurementCobaltLogger.logAttributionStatusWithAppName(
+                            /* appPackageName= */ stats.getSourceRegistrant(),
+                            /* attrSurfaceType= */ stats.getSurfaceType(),
+                            /* sourceType= */ stats.getSourceType(),
+                            /* statusCode= */ stats.getResult(),
+                            /* errorCode= */ stats.getFailureType());
+                });
+    }
+
+    /** Logs measurement reporting status using {@code CobaltLogger}. */
+    private void cobaltLogMsmtReportingStats(MeasurementReportsStats stats) {
+        sBackgroundExecutor.execute(
+                () -> {
+                    MeasurementCobaltLogger measurementCobaltLogger =
+                            MeasurementCobaltLogger.getInstance();
+                    measurementCobaltLogger.logReportingStatusWithAppName(
+                            /* appPackageName= */ stats.getSourceRegistrant(),
+                            /* reportType= */ stats.getType(),
+                            /* reportUploadMethod= */ stats.getUploadMethod(),
+                            /* statusCode= */ stats.getResultCode(),
+                            /* errorCode= */ stats.getFailureType());
                 });
     }
 }
