@@ -103,6 +103,8 @@ public final class SourceFixture {
                 .setAttributionScopes(ValidSourceParams.ATTRIBUTION_SCOPES)
                 .setAttributionScopeLimit(ValidSourceParams.ATTRIBUTION_SCOPE_LIMIT)
                 .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES)
+                .setDestinationLimitPriority(10L)
+                .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
                 .setAttributedTriggers(new ArrayList<>());
     }
 
