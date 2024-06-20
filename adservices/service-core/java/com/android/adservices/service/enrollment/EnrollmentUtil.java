@@ -16,13 +16,15 @@
 
 package com.android.adservices.service.enrollment;
 
+
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import androidx.annotation.NonNull;
-
+import com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
+
 
 /** Util class for all enrollment-related classes */
 public class EnrollmentUtil {
@@ -38,11 +40,10 @@ public class EnrollmentUtil {
     }
 
     /** Returns an instance of the EnrollmentDao given a context. */
-    @NonNull
-    public static EnrollmentUtil getInstance(@NonNull Context context) {
+    public static EnrollmentUtil getInstance() {
         synchronized (EnrollmentUtil.class) {
             if (sSingleton == null) {
-                sSingleton = new EnrollmentUtil(context);
+                sSingleton = new EnrollmentUtil(ApplicationContextSingleton.get());
             }
             return sSingleton;
         }
@@ -114,5 +115,47 @@ public class EnrollmentUtil {
                 enrollmentRecordCount,
                 getQueryParameterValue(queryParameter),
                 errorCause);
+    }
+
+    /** Helper method to initialize transaction stats */
+    public AdServicesEnrollmentTransactionStats.Builder initTransactionStatsBuilder(
+            AdServicesEnrollmentTransactionStats.TransactionType type,
+            int transactionParameterCount,
+            int dataSourceRecordCount) {
+
+        return AdServicesEnrollmentTransactionStats.builder()
+                .setTransactionType(type)
+                .setTransactionParameterCount(transactionParameterCount)
+                .setDataSourceRecordCountPre(dataSourceRecordCount);
+    }
+
+    /** Log EnrollmentTransactionStats atom metrics for enrollment-related tracking */
+    public void logTransactionStats(
+            AdServicesLogger logger,
+            AdServicesEnrollmentTransactionStats.Builder statsBuilder,
+            AdServicesEnrollmentTransactionStats.TransactionStatus status,
+            int queryResultCount,
+            int transactionResultCount,
+            int dataSourceRecordCount) {
+        statsBuilder.setDataSourceRecordCountPost(dataSourceRecordCount);
+        logger.logEnrollmentTransactionStats(
+                statsBuilder
+                        .setTransactionStatus(status)
+                        .setEnrollmentFileBuildId(getBuildId())
+                        .setQueryResultCount(queryResultCount)
+                        .setTransactionResultCount(transactionResultCount)
+                        .build());
+    }
+
+    /**
+     * Log EnrollmentTransactionStats atom metrics for enrollment-related tracking where no result
+     * is expected
+     */
+    public void logTransactionStatsNoResult(
+            AdServicesLogger logger,
+            AdServicesEnrollmentTransactionStats.Builder statsBuilder,
+            AdServicesEnrollmentTransactionStats.TransactionStatus status,
+            int dataSourceRecordCount) {
+        logTransactionStats(logger, statsBuilder, status, 0, 0, dataSourceRecordCount);
     }
 }

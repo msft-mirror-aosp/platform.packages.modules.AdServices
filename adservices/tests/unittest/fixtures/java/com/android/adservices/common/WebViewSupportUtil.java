@@ -20,6 +20,7 @@ import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -61,6 +62,17 @@ public final class WebViewSupportUtil {
     }
 
     /**
+     * @return a boolean to indicate if Console callback for Javascript isolate is available.
+     */
+    public static boolean isJSIsolateConsoleCallbackAvailable(Context context)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        return isJSSandboxAvailable(context)
+                && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                        .isConsoleCallbackSupported()
+                        .get(2, TimeUnit.SECONDS);
+    }
+
+    /**
      * @return a boolean to indicate if Javascript sandbox supports WASM.
      */
     public static boolean isWasmSupportAvailable(Context context)
@@ -68,6 +80,18 @@ public final class WebViewSupportUtil {
         return JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
                 && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
                         .isWasmSupported()
+                        .get(2, TimeUnit.SECONDS);
+    }
+
+    /**
+     * @return a boolean to indicate if Javascript sandbox supports evaluation without transaction
+     *     limits.
+     */
+    public static boolean isEvaluationWithoutTransactionLimitSupportAvailable(Context context)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        return isJSSandboxAvailable(context)
+                && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                        .isLargeTransactionsSupported()
                         .get(2, TimeUnit.SECONDS);
     }
 }

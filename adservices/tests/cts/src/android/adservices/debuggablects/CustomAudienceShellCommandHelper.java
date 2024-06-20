@@ -16,7 +16,6 @@
 
 package android.adservices.debuggablects;
 
-import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdData;
 import android.adservices.common.AdFilters;
@@ -40,12 +39,12 @@ import java.time.Instant;
 final class CustomAudienceShellCommandHelper {
     private static final String NAME = "name";
     private static final String BUYER = "buyer";
-    private static final String ACTIVATION_TIME = "activation_time";
+    static final String ACTIVATION_TIME = "activation_time";
     private static final String EXPIRATION_TIME = "expiration_time";
     private static final String BIDDING_LOGIC_URI = "bidding_logic_uri";
     private static final String USER_BIDDING_SIGNALS = "user_bidding_signals";
     private static final String TRUSTED_BIDDING_DATA = "trusted_bidding_data";
-    private static final String DAILY_UPDATE = "daily_update";
+    static final String DAILY_UPDATE = "daily_update";
     private static final String DAILY_UPDATE_URI = "uri";
     private static final String ADS = "ads";
     private static final String ADS_URI = "uri";
@@ -55,9 +54,9 @@ final class CustomAudienceShellCommandHelper {
     private static final String AD_AD_RENDER_URI = "render_uri";
     private static final String AD_METADATA = "metadata";
     private static final String AD_AD_RENDER_ID = "ad_render_id";
-    private static final String ELIGIBLE_UPDATE_TIME = "eligible_update_time";
-    private static final String NUM_VALIDATION_FAILURES = "num_validation_failures";
-    private static final String NUM_TIMEOUT_FAILURES = "num_timeout_failures";
+    static final String ELIGIBLE_UPDATE_TIME = "eligible_update_time";
+    static final String NUM_VALIDATION_FAILURES = "num_validation_failures";
+    static final String NUM_TIMEOUT_FAILURES = "num_timeout_failures";
 
     static CustomAudience fromJson(@NonNull JSONObject jsonObject) throws JSONException {
         return new CustomAudience.Builder()
@@ -81,26 +80,6 @@ final class CustomAudienceShellCommandHelper {
                 .build();
     }
 
-    // Activation time is inconsistent so only parse for format correctness.
-    // TODO(b/327205505): Replace this code with a Truth matcher.
-    static void verifyActivationTime(JSONObject customAudience) throws JSONException {
-        Instant.parse(customAudience.getString(ACTIVATION_TIME));
-    }
-
-    // Background fetch data is not part of the public API except as exposed via CLI commands,
-    // therefore specific assertions cannot be made as to the expected state beyond expecting a
-    // certain format (valid date and integers).
-    // TODO(b/327205505): Replace this code with a Truth matcher.
-    static void verifyBackgroundFetchData(
-            JSONObject jsonObject, int expectedTimeoutFailures, int expectedValidationFailures)
-            throws JSONException {
-        JSONObject customAudienceBackgroundFetchData = jsonObject.getJSONObject(DAILY_UPDATE);
-        Instant.parse(customAudienceBackgroundFetchData.getString(ELIGIBLE_UPDATE_TIME));
-        assertThat(customAudienceBackgroundFetchData.getInt(NUM_TIMEOUT_FAILURES))
-                .isEqualTo(expectedTimeoutFailures);
-        assertThat(customAudienceBackgroundFetchData.getInt(NUM_VALIDATION_FAILURES))
-                .isEqualTo(expectedValidationFailures);
-    }
 
     private static TrustedBiddingData getTrustedBiddingDataFromJson(JSONObject jsonObject)
             throws JSONException {

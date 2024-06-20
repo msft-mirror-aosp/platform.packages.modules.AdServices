@@ -544,6 +544,33 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                                 .wasPasNotificationDisplayed());
     }
 
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordPasNotificationOpened(boolean wasNotificationOpened) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordPasNotificationOpened() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordPasNotificationOpened(wasNotificationOpened);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to Record PAS Notification Opened.");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasPasNotificationOpened() {
+        return executeGetter(
+                /* defaultReturn= */ true,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .wasPasNotificationOpened());
+    }
+
     /** retrieves the default consent of a user. */
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean getDefaultConsent() {
@@ -592,7 +619,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     @Override
-    @RequiresPermission
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public List<String> getKnownAppsWithConsent(@NonNull List<String> installedPackages) {
         return executeGetter(/* defaultReturn= */ List.of(),
                 (userId) -> mUserInstanceManager
@@ -775,7 +802,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     private static boolean isShellCmdEnabled() {
-        return FlagsFactory.getFlags().getAdServicesShellCommandEnabled();
+        return DebugFlags.getInstance().getAdServicesShellCommandEnabled();
     }
 
     @Override
@@ -1331,6 +1358,62 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                     .setEnrollmentChannel(enrollmentChannel);
         } catch (IOException e) {
             LogUtil.e(e, "Fail to set current enrollment channel: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isMeasurementDataReset() {
+        return executeGetter(
+                /* defaultReturn= */ false,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .isMeasurementDataReset());
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isMeasurementDataReset() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setMeasurementDataReset(isMeasurementDataReset);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isMeasurementDataReset().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isPaDataReset() {
+        return executeGetter(
+                /* defaultReturn= */ false,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .isPaDataReset());
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setPaDataReset(boolean isPaDataReset) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isPaDataReset() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setPaDataReset(isPaDataReset);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isPaDataReset().");
         }
     }
 

@@ -43,7 +43,6 @@ import java.io.IOException;
  * model is responsible for serving apps to the apps view and blocked apps view, and interacting
  * with the {@link ConsentManager} that persists and changes the apps data in a storage.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppsViewModel extends AndroidViewModel {
 
@@ -127,6 +126,7 @@ public class AppsViewModel extends AndroidViewModel {
     public void resetApps() throws IOException {
         mConsentManager.resetApps();
         mApps.postValue(getAppsFromConsentManager());
+        mConsentManager.setPaDataReset(true);
     }
 
     /** Returns an observable but immutable event enum representing an view action on UI. */

@@ -39,7 +39,6 @@
       {
         "timestamp": "1643235575000",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "com.example.2d1"
         },
         "responses": [{
@@ -64,7 +63,6 @@
       {
         "timestamp": "1643235576000",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "com.example.2d1"
         },
         "responses": [{
@@ -89,7 +87,6 @@
       {
         "timestamp": "1643235577000",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "com.example.2d1"
         },
         "responses": [{
@@ -114,7 +111,6 @@
       {
         "timestamp": "1643235578000",
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "com.example.2d1"
         },
         "responses": [{
@@ -143,7 +139,7 @@
         "payload": {
           "attribution_destination": "android-app://com.example.2d1",
           "randomized_trigger_rate": 0.0170218,
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "1643408373",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "1",
@@ -151,13 +147,13 @@
           "trigger_debug_key" : "8971346781"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411973000"
+        "report_time": "1643408373000"
       },
       {
         "payload": {
           "attribution_destination": "android-app://com.example.2d1",
           "randomized_trigger_rate": 0.0170218,
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "1643408373",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "2",
@@ -165,13 +161,13 @@
           "trigger_debug_key" : "8971346782"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411973000"
+        "report_time": "1643408373000"
       },
       {
         "payload": {
           "attribution_destination": "android-app://com.example.2d1",
           "randomized_trigger_rate": 0.0170218,
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "1643408373",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "3",
@@ -179,7 +175,7 @@
           "trigger_debug_key" : "8971346783"
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411973000"
+        "report_time": "1643408373000"
       }
     ],
     "debug_event_level_results": [
@@ -187,7 +183,7 @@
         "payload": {
           "attribution_destination": "android-app://com.example.2d1",
           "randomized_trigger_rate": 0.0170218,
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "1643408373",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "1",
@@ -201,7 +197,7 @@
         "payload": {
           "attribution_destination": "android-app://com.example.2d1",
           "randomized_trigger_rate": 0.0170218,
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "1643408373",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "2",
@@ -215,7 +211,7 @@
         "payload": {
           "attribution_destination": "android-app://com.example.2d1",
           "randomized_trigger_rate": 0.0170218,
-          "scheduled_report_time": "1643411973",
+          "scheduled_report_time": "1643408373",
           "source_event_id": "1",
           "source_type": "navigation",
           "trigger_data": "3",
@@ -235,7 +231,7 @@
             "type":"trigger-event-low-priority",
             "body": {
               "attribution_destination": "android-app://com.example.2d1",
-              "scheduled_report_time": "1643411973",
+              "scheduled_report_time": "1643408373",
               "source_event_id": "1",
               "source_type": "navigation",
               "randomized_trigger_rate": 0.0170218,

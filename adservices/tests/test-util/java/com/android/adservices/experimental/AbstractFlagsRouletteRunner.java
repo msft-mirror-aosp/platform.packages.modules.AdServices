@@ -19,8 +19,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.android.adservices.common.Logger;
-import com.android.adservices.common.Nullable;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.Nullable;
 
 import com.google.common.collect.ImmutableList;
 

@@ -16,10 +16,14 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.verify;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -34,19 +38,22 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.BuyerReportingResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.ReportingScriptResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.SellerReportingResult;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
+import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -54,6 +61,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.time.Instant;
 import java.util.List;
@@ -64,12 +72,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SmallTest
-public class ReportImpressionScriptEngineTest {
+public class ReportImpressionScriptEngineTest extends AdServicesMockitoTestCase {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String TAG = "ReportImpressionScriptEngineTest";
+    private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED =
+            true; // Enabling console messages for tests.
+    private final IsolateSettings mIsolateSettings =
+            IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+                    ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
-    IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
     private static final Flags FLAGS_WITH_SMALLER_MAX_ARRAY_SIZE =
             new Flags() {
                 @Override
@@ -139,6 +151,8 @@ public class ReportImpressionScriptEngineTest {
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             WebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 
+    @Mock private ReportImpressionExecutionLogger mReportImpressionExecutionLoggerMock;
+
     @Before
     public void setUp() {
         mReportImpressionScriptEngine =
@@ -146,7 +160,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testCanCallScript() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
         args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
@@ -161,7 +174,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testThrowsJSExecutionExceptionIfFunctionNotFound() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
         args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
@@ -176,11 +188,10 @@ public class ReportImpressionScriptEngineTest {
                                     "helloAdvertWrongName",
                                     args.build());
                         });
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testThrowsIllegalStateExceptionIfScriptIsNotReturningJson() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
         args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
@@ -248,7 +259,6 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportResultSuccessfulCaseWithMoreResultsFieldsThanExpected() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -338,11 +348,10 @@ public class ReportImpressionScriptEngineTest {
                                     mContextualSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsInvalidInteractionKeyType() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -367,11 +376,10 @@ public class ReportImpressionScriptEngineTest {
                                     mContextualSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsInvalidInteractionReportingUriType() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -396,7 +404,7 @@ public class ReportImpressionScriptEngineTest {
                                     mContextualSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -426,11 +434,10 @@ public class ReportImpressionScriptEngineTest {
                                     mContextualSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Null() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -454,11 +461,10 @@ public class ReportImpressionScriptEngineTest {
                                     mContextualSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Int() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -482,7 +488,7 @@ public class ReportImpressionScriptEngineTest {
                                     mContextualSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -510,7 +516,7 @@ public class ReportImpressionScriptEngineTest {
                                     mContextualSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -538,7 +544,7 @@ public class ReportImpressionScriptEngineTest {
                                     mContextualSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -707,6 +713,66 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    public void testReportResult_JsReferenceError() {
+        String jsScript =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': unknown, 'results': {'signals_for_buyer':"
+                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
+                        + "'reporting_uri': 'https://domain.com/reporting' } };\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        double bid = 5;
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportResult(
+                                    jsScript,
+                                    adSelectionConfig,
+                                    TEST_DOMAIN_URI,
+                                    bid,
+                                    mContextualSignals);
+                        });
+
+        verify(mReportImpressionExecutionLoggerMock)
+                .setReportResultJsScriptResultCode(JS_RUN_STATUS_JS_REFERENCE_ERROR);
+
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
+    }
+
+    @Test
+    public void testReportResult_verifyTelemetryLogging() throws Exception {
+        String jsScript =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
+                        + "'reporting_uri': 'https://domain.com/reporting' } };\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        double bid = 5;
+        AdSelectionSignals contextualSignals =
+                SellerContextualSignals.builder().setDataVersion(3).build().toAdSelectionSignals();
+
+        final SellerReportingResult result =
+                reportResult(jsScript, adSelectionConfig, TEST_DOMAIN_URI, bid, contextualSignals);
+
+        assertThat(
+                        AdSelectionSignals.fromString(
+                                SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
+                .isEqualTo(result.getSignalsForBuyer());
+
+        assertEquals(REPORTING_URI, result.getReportingUri());
+
+        verify(mReportImpressionExecutionLoggerMock)
+                .setReportResultSellerAdditionalSignalsContainedDataVersion(true);
+        verify(mReportImpressionExecutionLoggerMock)
+                .setReportResultJsScriptResultCode(JS_RUN_STATUS_SUCCESS);
+    }
+
+    @Test
     public void testReportWinSuccessfulCaseRegisterAdBeaconEnabled() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
@@ -834,11 +900,10 @@ public class ReportImpressionScriptEngineTest {
                                     mCustomAudienceSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportWinFailsInvalidInteractionKeyType() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
@@ -863,11 +928,10 @@ public class ReportImpressionScriptEngineTest {
                                     mCustomAudienceSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportWinFailsInvalidInteractionReportingUriType() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
@@ -892,11 +956,10 @@ public class ReportImpressionScriptEngineTest {
                                     mCustomAudienceSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testReportWinFailsWhenRegisterAdBeaconCalledMoreThanOnce() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer"
@@ -922,7 +985,7 @@ public class ReportImpressionScriptEngineTest {
                                     mCustomAudienceSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -949,7 +1012,7 @@ public class ReportImpressionScriptEngineTest {
                                     mCustomAudienceSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -976,7 +1039,7 @@ public class ReportImpressionScriptEngineTest {
                                     mCustomAudienceSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -1003,7 +1066,7 @@ public class ReportImpressionScriptEngineTest {
                                     mCustomAudienceSignals);
                         });
 
-        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
     }
 
     @Test
@@ -1130,6 +1193,70 @@ public class ReportImpressionScriptEngineTest {
                 });
     }
 
+    @Test
+    public void testReportWin_JsReferenceError() {
+        String jsScript =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': unknown, 'results': {'reporting_uri':"
+                        + " 'https://domain.com/reporting' } };\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            reportWin(
+                                    jsScript,
+                                    adSelectionConfig.getAdSelectionSignals(),
+                                    adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                                    mSignalsForBuyer,
+                                    adSelectionConfig.getSellerSignals(),
+                                    mCustomAudienceSignals);
+                        });
+
+        verify(mReportImpressionExecutionLoggerMock)
+                .setReportWinJsScriptResultCode(JS_RUN_STATUS_JS_REFERENCE_ERROR);
+
+        expect.that(exception).hasCauseThat().isInstanceOf(JSExecutionException.class);
+    }
+
+    @Test
+    public void testReportWin_verifyTelemetryLogging() throws Exception {
+        String jsScript =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri':"
+                        + " 'https://domain.com/reporting' } };\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        AdSelectionSignals contextualSignals =
+                BuyerContextualSignals.builder()
+                        .setAdCost(new AdCost(1, 8))
+                        .setDataVersion(3)
+                        .build()
+                        .toAdSelectionSignals();
+
+        final BuyerReportingResult result =
+                reportWin(
+                        jsScript,
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                        mSignalsForBuyer,
+                        contextualSignals,
+                        mCustomAudienceSignals);
+
+        assertEquals(REPORTING_URI, result.getReportingUri());
+
+        verify(mReportImpressionExecutionLoggerMock)
+                .setReportWinBuyerAdditionalSignalsContainedAdCost(true);
+        verify(mReportImpressionExecutionLoggerMock)
+                .setReportWinBuyerAdditionalSignalsContainedDataVersion(true);
+        verify(mReportImpressionExecutionLoggerMock)
+                .setReportWinJsScriptResultCode(JS_RUN_STATUS_SUCCESS);
+    }
+
     private ReportingScriptResult callReportingEngine(
             String jsScript, String functionCall, List<JSScriptArgument> args) throws Exception {
         return waitForFuture(
@@ -1152,7 +1279,12 @@ public class ReportImpressionScriptEngineTest {
                 () -> {
                     Log.i(TAG, "Calling reportResult");
                     return mReportImpressionScriptEngine.reportResult(
-                            jsScript, adSelectionConfig, renderUri, bid, contextualSignals);
+                            jsScript,
+                            adSelectionConfig,
+                            renderUri,
+                            bid,
+                            contextualSignals,
+                            mReportImpressionExecutionLoggerMock);
                 });
     }
 
@@ -1173,7 +1305,8 @@ public class ReportImpressionScriptEngineTest {
                             perBuyerSignals,
                             signalsForBuyer,
                             contextualSignals,
-                            customAudienceSignals);
+                            customAudienceSignals,
+                            mReportImpressionExecutionLoggerMock);
                 });
     }
 
@@ -1204,10 +1337,10 @@ public class ReportImpressionScriptEngineTest {
                     new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperDisabled();
         }
         return new ReportImpressionScriptEngine(
-                sContext,
-                () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                () -> mIsolateSettings.getMaxHeapSizeBytes(),
+                mIsolateSettings::getEnforceMaxHeapSizeFeature,
+                mIsolateSettings::getMaxHeapSizeBytes,
                 registerAdBeaconScriptEngineHelper,
-                new NoOpRetryStrategyImpl());
+                new NoOpRetryStrategyImpl(),
+                DevContext.builder().setDevOptionsEnabled(true).build());
     }
 }

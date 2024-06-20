@@ -16,7 +16,7 @@
 package com.android.adservices.experimental;
 
 import com.android.adservices.common.AdServicesSupportHelper;
-import com.android.adservices.common.AndroidLogger;
+import com.android.adservices.shared.testing.AndroidLogger;
 
 import org.junit.AssumptionViolatedException;
 

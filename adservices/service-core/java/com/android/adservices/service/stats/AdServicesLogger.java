@@ -24,6 +24,11 @@ import com.android.adservices.service.stats.kanon.KAnonImmediateSignJoinStatusSt
 import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.service.stats.pas.EncodingFetchStats;
+import com.android.adservices.service.stats.pas.EncodingJobRunStats;
+import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 
 /** Interface for Adservices logger. */
 public interface AdServicesLogger {
@@ -121,6 +126,12 @@ public interface AdServicesLogger {
     void logMeasurementClickVerificationStats(
             MeasurementClickVerificationStats measurementClickVerificationStats);
 
+    /** Logs measurement ODP registrations. */
+    void logMeasurementOdpRegistrations(MeasurementOdpRegistrationStats stats);
+
+    /** Logs measurement ODP API calls. */
+    void logMeasurementOdpApiCall(MeasurementOdpApiCallStats stats);
+
     /** Logs enrollment data stats. */
     void logEnrollmentDataStats(int mType, boolean mIsSuccessful, int mBuildId);
 
@@ -137,6 +148,9 @@ public interface AdServicesLogger {
             int mEnrollmentRecordCountInTable,
             String mQueryParameter,
             int mErrorCause);
+
+    /** Logs enrollment transaction stats. */
+    void logEnrollmentTransactionStats(AdServicesEnrollmentTransactionStats stats);
 
     /** Logs encryption key fetch stats. */
     void logEncryptionKeyFetchedStats(AdServicesEncryptionKeyFetchedStats stats);
@@ -195,4 +209,59 @@ public interface AdServicesLogger {
     /** Logs stats for GetAdSelectionDataBuyerInputGenerated */
     void logGetAdSelectionDataBuyerInputGeneratedStats(
             GetAdSelectionDataBuyerInputGeneratedStats stats);
+
+    /** Logs AdFilteringProcessJoinCAReported stats. */
+    void logAdFilteringProcessJoinCAReportedStats(AdFilteringProcessJoinCAReportedStats stats);
+
+    /** Logs AdFilteringProcessAdSelectionReported stats. */
+    void logAdFilteringProcessAdSelectionReportedStats(
+            AdFilteringProcessAdSelectionReportedStats stats);
+
+    /** Logs AdCounterHistogramUpdaterReported stats. */
+    void logAdCounterHistogramUpdaterReportedStats(AdCounterHistogramUpdaterReportedStats stats);
+
+    /** Logs TopicsEncryptionEpochComputationReported stats. */
+    void logTopicsEncryptionEpochComputationReportedStats(
+            TopicsEncryptionEpochComputationReportedStats stats);
+
+    /** Logs TopicsEncryptionGetTopicsReported stats */
+    void logTopicsEncryptionGetTopicsReportedStats(
+            TopicsEncryptionGetTopicsReportedStats stats);
+
+    /** Logs stats for shell command indicating success/failure, latency. */
+    void logShellCommandStats(ShellCommandStats stats);
+
+    /**
+     * Logs stats for signature verification for {@link
+     * android.adservices.adselection.SignedContextualAds} during on-device ad selection auction
+     */
+    void logSignatureVerificationStats(SignatureVerificationStats stats);
+
+    /** Logs stats for EncodingFetchStats */
+    void logEncodingJsFetchStats(EncodingFetchStats stats);
+
+    /** Logs stats for UpdateSignalsApiCalledStats */
+    void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats);
+
+    /** Logs stats for ServerAuctionBackgroundKeyFetchScheduled */
+    void logServerAuctionBackgroundKeyFetchScheduledStats(
+            ServerAuctionBackgroundKeyFetchScheduledStats stats);
+
+    /** Logs stats for UpdateSignalsApiCalledStats */
+    void logEncodingJsExecutionStats(EncodingJsExecutionStats stats);
+
+    /** Logs stats for ServerAuctionKeyFetchCalled */
+    void logServerAuctionKeyFetchCalledStats(ServerAuctionKeyFetchCalledStats stats);
+
+    /** Logs stats for EncodingJobRunStats */
+    void logEncodingJobRunStats(EncodingJobRunStats stats);
+
+    /** Logs stats for PersistAdSelectionResultCalledStats */
+    void logPersistAdSelectionResultCalledStats(PersistAdSelectionResultCalledStats stats);
+
+    /** Logs stats for SelectAdsFromOutcomesApiCalledStats */
+    void logSelectAdsFromOutcomesApiCalledStats(SelectAdsFromOutcomesApiCalledStats stats);
+
+    /** Logs stats for ReportImpressionApiCalledStats */
+    void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats);
 }

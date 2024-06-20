@@ -32,6 +32,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableCollection;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -74,14 +75,16 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
 
     @NonNull private final Flags mFlags;
     // Process stable flag value.
-    private final boolean mIsFilteringEnabled;
+    private final boolean mIsFrequencyCapFilteringEnabled;
+    private final boolean mIsAppInstallFilteringEnabled;
     private final boolean mIsAdRenderIdEnabled;
 
     public CustomAudienceFieldSizeValidator(@NonNull Flags flags) {
         Objects.requireNonNull(flags);
 
         mFlags = flags;
-        mIsFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
+        mIsFrequencyCapFilteringEnabled = mFlags.getFledgeFrequencyCapFilteringEnabled();
+        mIsAppInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
         mIsAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
     }
 
@@ -95,7 +98,7 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
             @NonNull CustomAudience customAudience,
             @NonNull ImmutableCollection.Builder<String> violations) {
 
-        int nameSize = customAudience.getName().getBytes().length;
+        int nameSize = customAudience.getName().getBytes(StandardCharsets.UTF_8).length;
         if (nameSize > mFlags.getFledgeCustomAudienceMaxNameSizeB()) {
             violations.add(
                     String.format(
@@ -105,7 +108,12 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
                             nameSize));
         }
 
-        int dailyUpdateUriSize = customAudience.getDailyUpdateUri().toString().getBytes().length;
+        int dailyUpdateUriSize =
+                customAudience
+                        .getDailyUpdateUri()
+                        .toString()
+                        .getBytes(StandardCharsets.UTF_8)
+                        .length;
         if (dailyUpdateUriSize > mFlags.getFledgeCustomAudienceMaxDailyUpdateUriSizeB()) {
             violations.add(
                     String.format(
@@ -115,7 +123,12 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
                             dailyUpdateUriSize));
         }
 
-        int biddingLogicUriSize = customAudience.getBiddingLogicUri().toString().getBytes().length;
+        int biddingLogicUriSize =
+                customAudience
+                        .getBiddingLogicUri()
+                        .toString()
+                        .getBytes(StandardCharsets.UTF_8)
+                        .length;
         if (biddingLogicUriSize > mFlags.getFledgeCustomAudienceMaxBiddingLogicUriSizeB()) {
             violations.add(
                     String.format(
@@ -173,7 +186,7 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
         if (userBiddingSignals == null) {
             return 0;
         }
-        return userBiddingSignals.toString().getBytes().length;
+        return userBiddingSignals.toString().getBytes(StandardCharsets.UTF_8).length;
     }
 
     private int getTrustedBiddingDataSize(TrustedBiddingData trustedBiddingData) {
@@ -187,7 +200,9 @@ public class CustomAudienceFieldSizeValidator implements Validator<CustomAudienc
     private int getAdsSize(List<AdData> ads) {
         AdDataConversionStrategy adDataConversionStrategy =
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                        mIsFilteringEnabled, mIsAdRenderIdEnabled);
+                        mIsFrequencyCapFilteringEnabled,
+                        mIsAppInstallFilteringEnabled,
+                        mIsAdRenderIdEnabled);
         return ads.stream()
                 .map(ad -> adDataConversionStrategy.fromServiceObject(ad).build())
                 .mapToInt(DBAdData::size)

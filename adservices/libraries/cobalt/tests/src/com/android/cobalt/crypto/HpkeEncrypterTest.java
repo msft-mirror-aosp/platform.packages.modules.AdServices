@@ -34,7 +34,7 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.cobalt.HpkeEncryptImpl;
 import com.android.cobalt.CobaltPipelineType;
-import com.android.cobalt.crypto.testing.HpkeEncryptFactory;
+import com.android.cobalt.testing.crypto.HpkeEncryptFactory;
 
 import com.google.cobalt.EncryptedMessage;
 import com.google.cobalt.EncryptedMessage.EncryptionScheme;

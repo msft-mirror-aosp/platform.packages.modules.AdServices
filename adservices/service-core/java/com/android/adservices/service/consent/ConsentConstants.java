@@ -101,4 +101,10 @@ public class ConsentConstants {
     public static final String WAS_U18_NOTIFICATION_DISPLAYED = "WAS_U18_NOTIFICATION_DISPLAYED";
 
     public static final String PAS_NOTIFICATION_DISPLAYED_ONCE = "PAS_NOTIFICATION_DISPLAYED_ONCE";
+
+    public static final String PAS_NOTIFICATION_OPENED = "PAS_NOTIFICATION_OPENED";
+
+    public static final String IS_MEASUREMENT_DATA_RESET = "IS_MEASUREMENT_DATA_RESET";
+
+    public static final String IS_PA_DATA_RESET = "IS_PA_DATA_RESET";
 }

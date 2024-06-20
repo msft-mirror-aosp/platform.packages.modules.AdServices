@@ -257,7 +257,7 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
         private void onMoreOrAcceptClicked(View view) {
             if (mHasScrolledToBottom) {
                 // acknowledge and dismiss
-                requireActivity().finish();
+                requireActivity().finishAndRemoveTask();
             } else {
                 mScrollContainer.smoothScrollTo(
                         0,

@@ -32,7 +32,6 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.cobalt.CobaltPeriodicJob;
 import com.android.cobalt.crypto.Encrypter;
-import com.android.cobalt.crypto.testing.NoOpEncrypter;
 import com.android.cobalt.data.CobaltDatabase;
 import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.EventVector;
@@ -40,10 +39,11 @@ import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.domain.Project;
 import com.android.cobalt.observations.PrivacyGenerator;
-import com.android.cobalt.observations.testing.ConstantFakeSecureRandom;
 import com.android.cobalt.system.SystemData;
-import com.android.cobalt.system.testing.FakeSystemClock;
-import com.android.cobalt.upload.testing.NoOpUploader;
+import com.android.cobalt.testing.crypto.NoOpEncrypter;
+import com.android.cobalt.testing.observations.ConstantFakeSecureRandom;
+import com.android.cobalt.testing.system.FakeSystemClock;
+import com.android.cobalt.testing.upload.NoOpUploader;
 
 import com.google.cobalt.Envelope;
 import com.google.cobalt.IndexHistogram;
@@ -60,8 +60,9 @@ import com.google.cobalt.ObservationToEncrypt;
 import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.ReportDefinition.PrivacyLevel;
+import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
+import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig;
 import com.google.cobalt.ReportParticipationObservation;
 import com.google.cobalt.StringHistogramObservation;
 import com.google.cobalt.SystemProfile;
@@ -217,7 +218,7 @@ public class CobaltPeriodicJobImplTest {
                                     .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
                                     .setSystemProfileSelection(
                                             SystemProfileSelectionPolicy.REPORT_ALL)
-                                    .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY))
+                                    .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION))
                     .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
                     .build();
     private static final MetricDefinition METRIC_2 =
@@ -230,19 +231,19 @@ public class CobaltPeriodicJobImplTest {
                                     .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
                                     .setSystemProfileSelection(
                                             SystemProfileSelectionPolicy.REPORT_ALL)
-                                    .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY))
+                                    .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION))
                     .addReports(
                             ReportDefinition.newBuilder()
                                     .setId((int) REPORT_3.reportId())
                                     .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
                                     .setSystemProfileSelection(
                                             SystemProfileSelectionPolicy.REPORT_ALL)
-                                    .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY))
+                                    .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION))
                     .addReports(
                             ReportDefinition.newBuilder()
                                     .setId((int) REPORT_4.reportId())
                                     .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
-                                    .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY))
+                                    .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION))
                     .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
                     .build();
     private static final MetricDefinition METRIC_3 =
@@ -665,7 +666,7 @@ public class CobaltPeriodicJobImplTest {
                                         .setId((int) REPORT_1.reportId())
                                         .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
                                         .setEventVectorBufferMax(1)
-                                        .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY))
+                                        .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION))
                         .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
                         .build();
         mProject =
@@ -741,11 +742,14 @@ public class CobaltPeriodicJobImplTest {
                                         .setId((int) REPORT_1.reportId())
                                         .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
                                         .addSystemProfileField(SystemProfileField.APP_VERSION)
-                                        .setPrivacyLevel(PrivacyLevel.LOW_PRIVACY)
+                                        .setPrivacyMechanism(
+                                                PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY)
                                         .setMinValue(0)
                                         .setMaxValue(0)
                                         .setNumIndexPoints(1)
-                                        .setPoissonMean(0.1))
+                                        .setShuffledDp(
+                                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                                        .setPoissonMean(0.1)))
                         .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
                         .build();
         mProject =
@@ -1010,13 +1014,13 @@ public class CobaltPeriodicJobImplTest {
                 ReportDefinition.newBuilder()
                         .setId(103)
                         .setReportType(ReportType.STRING_COUNTS)
-                        .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY)
+                        .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION)
                         .build();
         ReportDefinition systemProfileReport =
                 ReportDefinition.newBuilder()
                         .setId(104)
                         .setReportType(ReportType.STRING_COUNTS)
-                        .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY)
+                        .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION)
                         .addSystemProfileField(SystemProfileField.APP_VERSION)
                         .build();
         MetricDefinition metric =
@@ -1244,11 +1248,12 @@ public class CobaltPeriodicJobImplTest {
                 ReportDefinition.newBuilder()
                         .setId(1)
                         .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
-                        .setPrivacyLevel(PrivacyLevel.LOW_PRIVACY)
+                        .setPrivacyMechanism(PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY)
                         .setMinValue(0)
                         .setMaxValue(10)
                         .setNumIndexPoints(11)
-                        .setPoissonMean(0.03)
+                        .setShuffledDp(
+                                ShuffledDifferentialPrivacyConfig.newBuilder().setPoissonMean(0.03))
                         .build();
         MetricDefinition occurrenceMetric =
                 MetricDefinition.newBuilder()
@@ -1265,7 +1270,7 @@ public class CobaltPeriodicJobImplTest {
                 ReportDefinition.newBuilder()
                         .setId(1)
                         .setReportType(ReportType.STRING_COUNTS)
-                        .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY)
+                        .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION)
                         .build();
         MetricDefinition stringMetric =
                 MetricDefinition.newBuilder()

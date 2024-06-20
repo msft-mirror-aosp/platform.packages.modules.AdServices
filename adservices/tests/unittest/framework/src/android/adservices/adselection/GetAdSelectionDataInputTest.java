@@ -16,21 +16,19 @@
 
 package android.adservices.adselection;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertEquals;
-
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 import android.os.Parcel;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class GetAdSelectionDataInputTest {
+@RequiresSdkLevelAtLeastS
+public final class GetAdSelectionDataInputTest extends AdServicesUnitTestCase {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String ANOTHER_CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME_1;
 
@@ -39,9 +37,6 @@ public class GetAdSelectionDataInputTest {
 
     private static final Uri COORDINATOR_ORIGIN = Uri.parse("https://example.com");
     private static final Uri ANOTHER_COORDINATOR_ORIGIN = Uri.parse("https://google.com");
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildGetAdSelectionDataInput() {
@@ -52,9 +47,29 @@ public class GetAdSelectionDataInputTest {
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
                         .build();
 
-        assertThat(getAdSelectionDataInput.getSeller()).isEqualTo(SELLER);
-        assertThat(getAdSelectionDataInput.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
-        assertThat(getAdSelectionDataInput.getCoordinatorOriginUri()).isEqualTo(COORDINATOR_ORIGIN);
+        expect.that(getAdSelectionDataInput.getSeller()).isEqualTo(SELLER);
+        expect.that(getAdSelectionDataInput.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(getAdSelectionDataInput.getCoordinatorOriginUri())
+                .isEqualTo(COORDINATOR_ORIGIN);
+        expect.that(getAdSelectionDataInput.getSellerConfiguration()).isNull();
+    }
+
+    @Test
+    public void testBuildGetAdSelectionDataInputWithSellerConfiguration() {
+        GetAdSelectionDataInput getAdSelectionDataInput =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
+                        .build();
+
+        expect.that(getAdSelectionDataInput.getSeller()).isEqualTo(SELLER);
+        expect.that(getAdSelectionDataInput.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(getAdSelectionDataInput.getCoordinatorOriginUri())
+                .isEqualTo(COORDINATOR_ORIGIN);
+        expect.that(getAdSelectionDataInput.getSellerConfiguration())
+                .isEqualTo(SellerConfigurationFixture.SELLER_CONFIGURATION);
     }
 
     @Test
@@ -64,6 +79,7 @@ public class GetAdSelectionDataInputTest {
                         .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -71,9 +87,11 @@ public class GetAdSelectionDataInputTest {
         p.setDataPosition(0);
         GetAdSelectionDataInput fromParcel = GetAdSelectionDataInput.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getSeller()).isEqualTo(SELLER);
-        assertThat(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
-        assertThat(fromParcel.getCoordinatorOriginUri()).isEqualTo(COORDINATOR_ORIGIN);
+        expect.that(fromParcel.getSeller()).isEqualTo(SELLER);
+        expect.that(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(fromParcel.getCoordinatorOriginUri()).isEqualTo(COORDINATOR_ORIGIN);
+        expect.that(fromParcel.getSellerConfiguration())
+                .isEqualTo(SellerConfigurationFixture.SELLER_CONFIGURATION);
     }
 
     @Test
@@ -90,9 +108,9 @@ public class GetAdSelectionDataInputTest {
         p.setDataPosition(0);
         GetAdSelectionDataInput fromParcel = GetAdSelectionDataInput.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getSeller()).isNull();
-        assertThat(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
-        assertThat(fromParcel.getCoordinatorOriginUri()).isNull();
+        expect.that(fromParcel.getSeller()).isNull();
+        expect.that(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(fromParcel.getCoordinatorOriginUri()).isNull();
     }
 
     @Test
@@ -102,6 +120,7 @@ public class GetAdSelectionDataInputTest {
                         .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
                         .build();
 
         GetAdSelectionDataInput obj2 =
@@ -109,9 +128,11 @@ public class GetAdSelectionDataInputTest {
                         .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
                         .build();
 
-        assertThat(obj1).isEqualTo(obj2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(obj1, obj2);
     }
 
     @Test
@@ -121,6 +142,7 @@ public class GetAdSelectionDataInputTest {
                         .setSeller(SELLER)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
                         .build();
 
         GetAdSelectionDataInput obj2 =
@@ -128,13 +150,15 @@ public class GetAdSelectionDataInputTest {
                         .setSeller(SELLER)
                         .setCallerPackageName(ANOTHER_CALLER_PACKAGE_NAME)
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
                         .build();
 
-        assertThat(obj1).isNotEqualTo(obj2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreNotEqual(obj1, obj2);
     }
 
     @Test
-    public void testGetAdSelectionDataInputWithDifferentCoordinaotrValuesAreNotEqual() {
+    public void testGetAdSelectionDataInputWithDifferentCoordinatorValuesAreNotEqual() {
         GetAdSelectionDataInput obj1 =
                 new GetAdSelectionDataInput.Builder()
                         .setSeller(SELLER)
@@ -149,7 +173,8 @@ public class GetAdSelectionDataInputTest {
                         .setCoordinatorOriginUri(ANOTHER_COORDINATOR_ORIGIN)
                         .build();
 
-        assertThat(obj1).isNotEqualTo(obj2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreNotEqual(obj1, obj2);
     }
 
     @Test
@@ -161,25 +186,7 @@ public class GetAdSelectionDataInputTest {
                         .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
                         .build();
 
-        assertEquals(0, obj.describeContents());
-    }
-
-    @Test
-    public void testEqualGetAdSelectionDataInputsHaveSameHashCode() {
-        GetAdSelectionDataInput obj1 =
-                new GetAdSelectionDataInput.Builder()
-                        .setSeller(SELLER)
-                        .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
-                        .build();
-        GetAdSelectionDataInput obj2 =
-                new GetAdSelectionDataInput.Builder()
-                        .setSeller(SELLER)
-                        .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setCoordinatorOriginUri(COORDINATOR_ORIGIN)
-                        .build();
-
-        CommonFixture.assertHaveSameHashCode(obj1, obj2);
+        expect.that(obj.describeContents()).isEqualTo(0);
     }
 
     @Test

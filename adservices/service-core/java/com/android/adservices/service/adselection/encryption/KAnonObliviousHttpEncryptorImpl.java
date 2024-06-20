@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection.encryption;
 
+import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN;
+
 import android.net.Uri;
 
 import androidx.annotation.Nullable;
@@ -26,6 +28,7 @@ import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequest;
 import com.android.adservices.ohttp.ObliviousHttpRequestContext;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -60,12 +63,10 @@ public class KAnonObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             byte[] plainText,
             long contextId,
             long keyFetchTimeoutMs,
-            @Nullable Uri unusedCoordinatorUri) {
+            @Nullable Uri unusedCoordinatorUri,
+            DevContext devContext) {
         return mEncryptionKeyManager
-                .getLatestOhttpKeyConfigOfType(
-                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN,
-                        keyFetchTimeoutMs,
-                        null)
+                .getLatestOhttpKeyConfigOfType(JOIN, keyFetchTimeoutMs, null, devContext)
                 .transform(key -> createAndSerializeRequest(key, plainText), mLightweightExecutor);
     }
 
@@ -91,7 +92,10 @@ public class KAnonObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             ObliviousHttpClient client = ObliviousHttpClient.create(config);
 
             Objects.requireNonNull(client);
-            ObliviousHttpRequest request = client.createObliviousHttpRequest(plainText);
+            ObliviousHttpRequest request =
+                    client.createObliviousHttpRequest(
+                            plainText,
+                            ObliviousHttpKeyConfig.useFledgeAuctionServerMediaTypeChange(JOIN));
 
             Objects.requireNonNull(request);
             // we will need this context later when we try to call the decrypt method.

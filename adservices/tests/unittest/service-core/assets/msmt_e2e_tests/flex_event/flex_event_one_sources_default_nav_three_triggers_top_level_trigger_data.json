@@ -7,7 +7,6 @@
     "sources": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -38,7 +37,6 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -63,7 +61,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -88,7 +85,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -116,11 +112,11 @@
   "output": {
     "event_level_results": [
       {
-        "report_time": "800177000001",
+        "report_time": "800173400001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "800177000",
+          "scheduled_report_time": "800173400",
           "source_event_id": "2",
           "trigger_data": "2",
           "source_type": "navigation",
@@ -129,11 +125,11 @@
         }
       },
       {
-        "report_time": "800177000001",
+        "report_time": "800173400001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "800177000",
+          "scheduled_report_time": "800173400",
           "source_event_id": "2",
           "trigger_data": "1",
           "source_type": "navigation",
@@ -142,11 +138,11 @@
         }
       },
       {
-        "report_time": "800177000001",
+        "report_time": "800173400001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "800177000",
+          "scheduled_report_time": "800173400",
           "source_event_id": "2",
           "trigger_data": "0",
           "source_type": "navigation",

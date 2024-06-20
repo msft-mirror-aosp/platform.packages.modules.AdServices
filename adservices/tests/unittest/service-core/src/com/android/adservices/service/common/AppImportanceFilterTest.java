@@ -20,7 +20,6 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastT;
 import static com.android.adservices.service.common.AppImportanceFilterTest.ApiCallStatsSubject.apiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
@@ -40,17 +39,17 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -60,9 +59,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public final class AppImportanceFilterTest {
-
-    private static final String TAG = AppImportanceFilterTest.class.getSimpleName();
+@SpyStatic(SdkLevel.class)
+public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int API_CLASS = AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
     private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
@@ -72,13 +70,9 @@ public final class AppImportanceFilterTest {
     private static final String PROCESS_NAME = "process_name";
 
     @Mock private PackageManager mPackageManager;
-    @Captor ArgumentCaptor<ApiCallStats> mApiCallStatsArgumentCaptor;
     @Mock private ActivityManager mActivityManager;
-    @Mock AdServicesLogger mAdServiceLogger;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(SdkLevel.class).build();
+    @Mock private AdServicesLogger mAdServiceLogger;
+    @Captor private ArgumentCaptor<ApiCallStats> mApiCallStatsArgumentCaptor;
 
     private AppImportanceFilter mAppImportanceFilter;
 
@@ -162,11 +156,11 @@ public final class AppImportanceFilterTest {
                 .that(mApiCallStatsArgumentCaptor.getValue())
                 .hasCode(AD_SERVICES_API_CALLED)
                 .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
                 .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
                 .hasSdkPackageName(SDK_NAME)
                 .hasAppPackageName(APP_PACKAGE_NAME);
         verifyZeroInteractions(mPackageManager);
+        expect.that(mApiCallStatsArgumentCaptor.getValue().getApiClass()).isEqualTo(0);
     }
 
     @Test
@@ -243,10 +237,10 @@ public final class AppImportanceFilterTest {
                 .that(mApiCallStatsArgumentCaptor.getValue())
                 .hasCode(AD_SERVICES_API_CALLED)
                 .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
                 .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
                 .hasSdkPackageName(SDK_NAME)
                 .hasAppPackageName(APP_PACKAGE_NAME);
+        expect.that(mApiCallStatsArgumentCaptor.getValue().getApiClass()).isEqualTo(0);
     }
 
     @Test
@@ -265,10 +259,10 @@ public final class AppImportanceFilterTest {
                 .that(mApiCallStatsArgumentCaptor.getValue())
                 .hasCode(AD_SERVICES_API_CALLED)
                 .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
                 .hasResultCode(AdServicesStatusUtils.STATUS_BACKGROUND_CALLER)
                 .hasSdkPackageName("")
                 .hasAppPackageName(APP_PACKAGE_NAME);
+        expect.that(mApiCallStatsArgumentCaptor.getValue().getApiClass()).isEqualTo(0);
     }
 
     @Test
@@ -308,26 +302,30 @@ public final class AppImportanceFilterTest {
                 .that(mApiCallStatsArgumentCaptor.getValue())
                 .hasCode(AD_SERVICES_API_CALLED)
                 .hasApiName(API_NAME)
-                .hasApiClass(API_CLASS)
                 .hasResultCode(
                         AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES)
                 .hasSdkPackageName(SDK_NAME)
                 .hasAppPackageName(AppImportanceFilter.UNKNOWN_APP_PACKAGE_NAME);
+        expect.that(mApiCallStatsArgumentCaptor.getValue().getApiClass()).isEqualTo(0);
+    }
+
+    private void mockIsAtLeastT(boolean isIt) {
+        mocker.mockIsAtLeastT(isIt);
     }
 
     private void mockGetUidImportance(int uid, int result) {
-        Log.v(TAG, "mocking pm.getUidImportance(" + uid + ") returning " + result);
+        Log.v(mTag, "mocking pm.getUidImportance(" + uid + ") returning " + result);
         when(mActivityManager.getUidImportance(uid)).thenReturn(result);
     }
 
     private void mockGetUidImportance(int uid, RuntimeException result) {
-        Log.v(TAG, "mocking pm.getUidImportance(" + uid + ") throwing " + result);
+        Log.v(mTag, "mocking pm.getUidImportance(" + uid + ") throwing " + result);
         when(mActivityManager.getUidImportance(uid)).thenThrow(result);
     }
 
     private void mockGetPackagesForUid(int uid, String... packages) {
         Log.v(
-                TAG,
+                mTag,
                 "mocking pm.getPackagesForUid(" + uid + ") returning " + Arrays.toString(packages));
         when(mPackageManager.getPackagesForUid(uid)).thenReturn(packages);
     }

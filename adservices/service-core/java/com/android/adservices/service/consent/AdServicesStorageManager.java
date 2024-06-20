@@ -301,6 +301,16 @@ public final class AdServicesStorageManager implements IConsentStorage {
         mAdServicesManager.setConsentForApp(packageName, packageUid, isConsentRevoked);
     }
 
+    @Override
+    public void resetAppsAndBlockedApps() throws IOException {
+        mAdServicesManager.clearAllAppConsentData();
+    }
+
+    @Override
+    public void resetApps() throws IOException {
+        mAdServicesManager.clearKnownAppsWithConsent();
+    }
+
     /**
      * Set user consent if the app first time request access and/or return consent value for the
      * app.
@@ -374,6 +384,90 @@ public final class AdServicesStorageManager implements IConsentStorage {
     @Override
     public boolean wasU18NotificationDisplayed() {
         return mAdServicesManager.wasU18NotificationDisplayed();
+    }
+
+    @Override
+    public boolean wasPasNotificationDisplayed() throws IOException {
+        return mAdServicesManager.wasPasNotificationDisplayed();
+    }
+
+    @Override
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
+        mAdServicesManager.recordPasNotificationDisplayed(wasPasDisplayed);
+    }
+
+    /** Set the measurement data reset activity happens based on consent_source_of_truth. */
+    @Override
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        mAdServicesManager.setMeasurementDataReset(isMeasurementDataReset);
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    @Override
+    public boolean isMeasurementDataReset() throws IOException {
+        return mAdServicesManager.isMeasurementDataReset();
+    }
+
+    @Override
+    public Boolean getDefaultConsent() throws IOException {
+        return mAdServicesManager.getDefaultConsent();
+    }
+
+    @Override
+    public Boolean getTopicsDefaultConsent() {
+        return mAdServicesManager.getTopicsDefaultConsent();
+    }
+
+    @Override
+    public Boolean getFledgeDefaultConsent() {
+        return mAdServicesManager.getFledgeDefaultConsent();
+    }
+
+    @Override
+    public Boolean getMeasurementDefaultConsent() {
+        return mAdServicesManager.getMeasurementDefaultConsent();
+    }
+
+    @Override
+    public Boolean getDefaultAdIdState() {
+        return mAdServicesManager.getDefaultAdIdState();
+    }
+
+    @Override
+    public void recordDefaultConsent(boolean defaultConsent) {
+        mAdServicesManager.recordDefaultConsent(defaultConsent);
+    }
+
+    @Override
+    public void recordTopicsDefaultConsent(boolean defaultConsent) {
+        mAdServicesManager.recordTopicsDefaultConsent(defaultConsent);
+    }
+
+    @Override
+    public void recordFledgeDefaultConsent(boolean defaultConsent) {
+        mAdServicesManager.recordFledgeDefaultConsent(defaultConsent);
+    }
+
+    @Override
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) {
+        mAdServicesManager.recordMeasurementDefaultConsent(defaultConsent);
+    }
+
+    @Override
+    public void recordDefaultAdIdState(boolean defaultAdIdState) {
+        mAdServicesManager.recordDefaultAdIdState(defaultAdIdState);
+    }
+
+    @Override
+    public Boolean isPaDataReset() {
+        return mAdServicesManager.isPaDataReset();
+    }
+
+    @Override
+    public void setPaDataReset(boolean isPaDataReset) {
+        mAdServicesManager.setPaDataReset(isPaDataReset);
     }
 
     private PrivacySandboxUxCollection convertUxString(@NonNull String uxString) {

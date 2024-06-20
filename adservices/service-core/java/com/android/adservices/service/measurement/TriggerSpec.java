@@ -24,6 +24,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -109,7 +110,9 @@ public class TriggerSpec {
         windows.put("start_time", mEventReportWindowsStart);
         windows.put("end_times", new JSONArray(mEventReportWindowsEnd));
         json.put("event_report_windows", windows);
-        json.put("summary_window_operator", mSummaryWindowOperator.name().toLowerCase());
+        json.put(
+                "summary_window_operator",
+                mSummaryWindowOperator.name().toLowerCase(Locale.ENGLISH));
         json.put("summary_buckets", new JSONArray(mSummaryBuckets));
         return json;
     }
@@ -210,7 +213,7 @@ public class TriggerSpec {
                                         .getString(
                                                 TriggerSpecs.FlexEventReportJsonKeys
                                                         .SUMMARY_WINDOW_OPERATOR)
-                                        .toUpperCase()));
+                                        .toUpperCase(Locale.ROOT)));
             }
             if (!jsonObject.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
                 this.setSummaryBuckets(
@@ -259,7 +262,7 @@ public class TriggerSpec {
                                         .getString(
                                                 TriggerSpecs.FlexEventReportJsonKeys
                                                         .SUMMARY_WINDOW_OPERATOR)
-                                        .toUpperCase()));
+                                        .toUpperCase(Locale.ENGLISH)));
             }
             if (!jsonObject.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
                 List<Long> summaryBuckets =

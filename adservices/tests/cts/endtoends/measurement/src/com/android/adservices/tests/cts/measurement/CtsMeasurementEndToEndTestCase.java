@@ -15,10 +15,10 @@
  */
 package com.android.adservices.tests.cts.measurement;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
@@ -27,33 +27,39 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
-
-import android.util.Log;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
+import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFloatFlag;
 
-abstract class CtsMeasurementEndToEndTestCase extends AdServicesCtsTestCase {
-
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        Log.d(mTag, "getAdServicesFlagsSetterRule(): allow-listing for " + mPackageName);
-        return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                .setLogcatTag(LOGCAT_TAG_MEASUREMENT, LOGCAT_LEVEL_VERBOSE)
-                .setCompatModeFlags()
-                .setMsmtApiAppAllowList(mPackageName)
-                .setMsmtWebContextClientAllowList(mPackageName)
-                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
-                .setSystemProperty(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true)
-                .setFlag(KEY_GLOBAL_KILL_SWITCH, false)
-                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
-                .setFlag(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
-                .setFlag(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
-                .setFlag(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
-                .setFlag(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
-                .setFlag(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
-                .setFlag(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
-                .setFlag(KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES, false)
-                .setFlag(KEY_ADID_KILL_SWITCH, false);
-    }
-}
+@DisableGlobalKillSwitch
+@EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
+@EnableDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE)
+@SetAllLogcatTags
+@SetCompatModeFlags
+@SetFlagDisabled(KEY_ADID_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES)
+@SetFlagDisabled(KEY_MEASUREMENT_KILL_SWITCH)
+@SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
+@SetFloatFlag(name = KEY_MEASUREMENT_REGISTER_SOURCES_REQUEST_PERMITS_PER_SECOND, value = 25.0f)
+@SetFloatFlag(name = KEY_MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND, value = 25.0f)
+@SetFloatFlag(name = KEY_MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND, value = 25.0f)
+@SetMsmtApiAppAllowList
+@SetMsmtWebContextClientAppAllowList
+abstract class CtsMeasurementEndToEndTestCase extends AdServicesCtsTestCase {}

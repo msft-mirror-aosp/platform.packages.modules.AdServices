@@ -27,12 +27,16 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
 import static android.adservices.customaudience.CustomAudienceFixture.getValidFetchUriByBuyer;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 
@@ -44,6 +48,7 @@ import static org.junit.Assert.assertTrue;
 import android.Manifest;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
+import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -61,14 +66,17 @@ import android.util.Pair;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.annotations.SetFlagEnabled;
-import com.android.adservices.common.annotations.SetIntegerFlag;
-import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -86,7 +94,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @RequiresSdkLevelAtLeastS // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+@DisableGlobalKillSwitch
+@SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
+@EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
+@SetPpapiAppAllowList
+@SetAllLogcatTags
 public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     private AdvertisingCustomAudienceClient mClient;
@@ -102,15 +115,6 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
     private final ArrayList<Pair<AdTechIdentifier, String>> mCustomAudiencesToCleanUp =
             new ArrayList<>();
-
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.withAllLogcatTags()
-                .setGlobalKillSwitch(false)
-                .setFlag(FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
-                .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
-                .setPpapiAppAllowList(mPackageName);
-    }
 
     @Before
     public void setup() throws Exception {
@@ -280,6 +284,45 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithInvalidAdDataRenderUris));
+        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+    }
+
+    @Test
+    @SetFlagDisabled(KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED)
+    @SetIntegerFlag(name = KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH, value = 1)
+    public void testJoinCustomAudience_adRenderIdDisabled_invalidAdRenderIds_success()
+            throws Exception {
+        AdData adWithVeryLongAdRenderId =
+                AdDataFixture.getValidAdDataBuilderByBuyer(VALID_BUYER_1, 0)
+                        .setAdRenderId("this is a very very very very very long string")
+                        .build();
+        CustomAudience customAudienceWithInvalidAdDataRenderUris =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
+                        .setAds(ImmutableList.of(adWithVeryLongAdRenderId))
+                        .build();
+
+        joinCustomAudience(customAudienceWithInvalidAdDataRenderUris);
+    }
+
+    @Test
+    @SetFlagEnabled(KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED)
+    @SetIntegerFlag(name = KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH, value = 1)
+    public void testJoinCustomAudience_adRenderIdEnabled_invalidAdRenderIds_fail() {
+        AdData adWithVeryLongAdRenderId =
+                AdDataFixture.getValidAdDataBuilderByBuyer(VALID_BUYER_1, 0)
+                        .setAdRenderId("this is a very very very very very long string")
+                        .build();
+        CustomAudience customAudienceWithInvalidAdDataRenderUris =
+                CustomAudienceFixture.getValidBuilderForBuyer(VALID_BUYER_1)
+                        .setAds(ImmutableList.of(adWithVeryLongAdRenderId))
+                        .build();
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> joinCustomAudience(customAudienceWithInvalidAdDataRenderUris));
+
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
     }

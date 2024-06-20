@@ -4,7 +4,7 @@ adigupt@google.com
 akshaymiterani@google.com
 arpanah@google.com
 binhnguyen@google.com
-chndn@google.com
+feifeiji@google.com
 felipeal@google.com
 galarragas@google.com
 hanlixy@google.com
@@ -16,3 +16,9 @@ shwetachahar@google.com
 tccyp@google.com
 vikassahu@google.com
 yangwangyw@google.com
+
+# Flags related file should be reviewed by the Infra team.
+per-file *Flags*.java = set noparent
+per-file *Flags*.java = file:platform/packages/modules/AdServices:/adservices/OWNERS_COMMON_INFRA
+per-file CachedFlags.java = arpanah@google.com, lmohanan@google.com, feifeiji@google.com
+

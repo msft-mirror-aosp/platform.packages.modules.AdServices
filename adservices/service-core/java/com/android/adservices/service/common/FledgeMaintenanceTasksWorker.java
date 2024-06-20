@@ -95,7 +95,7 @@ public class FledgeMaintenanceTasksWorker {
         mFlags = FlagsFactory.getFlags();
         mAdSelectionEntryDao = AdSelectionDatabase.getInstance(context).adSelectionEntryDao();
         mFrequencyCapDao = SharedStorageDatabase.getInstance(context).frequencyCapDao();
-        mEnrollmentDao = EnrollmentDao.getInstance(context);
+        mEnrollmentDao = EnrollmentDao.getInstance();
         mEncryptionContextDao =
                 AdSelectionServerDatabase.getInstance(context).encryptionContextDao();
         mClock = Clock.systemUTC();
@@ -186,9 +186,9 @@ public class FledgeMaintenanceTasksWorker {
 
         // Read from flags directly, since this maintenance task worker is attached to a background
         //  job with unknown lifetime
-        if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
+        if (!mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             sLogger.v(
-                    "Ad selection filtering disabled; skipping Frequency Cap histogram"
+                    "Frequency cap filtering disabled; skipping Frequency Cap histogram"
                             + " maintenance");
             return;
         }

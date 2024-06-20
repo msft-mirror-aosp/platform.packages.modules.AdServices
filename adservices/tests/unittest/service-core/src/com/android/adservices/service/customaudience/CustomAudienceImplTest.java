@@ -29,19 +29,19 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.Validator;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -77,13 +77,25 @@ public class CustomAudienceImplTest {
                     .build();
 
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
 
     private static final DevContext DEV_OPTIONS_DISABLED = DevContext.createForDevOptionsDisabled();
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private CustomAudienceQuantityChecker mCustomAudienceQuantityCheckerMock;
     @Mock private Validator<CustomAudience> mCustomAudienceValidatorMock;
     @Mock private Clock mClockMock;
+    private static final Flags FLAGS =
+            new FakeFlagsFactory.TestFlags() {
+                @Override
+                public boolean getFledgeFrequencyCapFilteringEnabled() {
+                    return true;
+                }
+
+                @Override
+                public boolean getFledgeAppInstallFilteringEnabled() {
+                    return true;
+                }
+            };
 
     private CustomAudienceImpl mImpl;
 
@@ -98,7 +110,7 @@ public class CustomAudienceImplTest {
                         mCustomAudienceQuantityCheckerMock,
                         mCustomAudienceValidatorMock,
                         mClockMock,
-                        CommonFixture.FLAGS_FOR_TEST);
+                        FLAGS);
     }
 
     @Test
@@ -147,7 +159,7 @@ public class CustomAudienceImplTest {
     @Test
     public void testJoinCustomAudienceWithServerAuctionFlags_runNormallyFlagEnabled() {
         Flags flagsWithAuctionServerRequestFlagsEnabled =
-                new FlagsFactory.TestFlags() {
+                new FakeFlagsFactory.TestFlags() {
                     @Override
                     public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                         return true;
@@ -187,7 +199,7 @@ public class CustomAudienceImplTest {
     @Test
     public void testJoinCustomAudienceWithServerAuctionFlags_runNormallyFlagDisabled() {
         Flags flagsWithAuctionServerRequestFlagsDisabled =
-                new FlagsFactory.TestFlags() {
+                new FakeFlagsFactory.TestFlags() {
                     @Override
                     public boolean getFledgeAuctionServerRequestFlagsEnabled() {
                         return false;
@@ -248,15 +260,14 @@ public class CustomAudienceImplTest {
         CustomAudienceImpl implWithRealValidators =
                 new CustomAudienceImpl(
                         mCustomAudienceDaoMock,
-                        new CustomAudienceQuantityChecker(
-                                mCustomAudienceDaoMock, CommonFixture.FLAGS_FOR_TEST),
+                        new CustomAudienceQuantityChecker(mCustomAudienceDaoMock, FLAGS),
                         new CustomAudienceValidator(
                                 mClockMock,
-                                CommonFixture.FLAGS_FOR_TEST,
+                                FLAGS,
                                 new FrequencyCapAdDataValidatorImpl(),
                                 AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP),
                         mClockMock,
-                        CommonFixture.FLAGS_FOR_TEST);
+                        FLAGS);
 
         implWithRealValidators.joinCustomAudience(
                 customAudienceWithValidSubdomains,
@@ -268,9 +279,7 @@ public class CustomAudienceImplTest {
                         customAudienceWithValidSubdomains,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        Duration.ofMillis(
-                                CommonFixture.FLAGS_FOR_TEST
-                                        .getFledgeCustomAudienceDefaultExpireInMs()),
+                        Duration.ofMillis(FLAGS.getFledgeCustomAudienceDefaultExpireInMs()),
                         AD_DATA_CONVERSION_STRATEGY,
                         false,
                         /* auctionServerRequestFlags = */ false);

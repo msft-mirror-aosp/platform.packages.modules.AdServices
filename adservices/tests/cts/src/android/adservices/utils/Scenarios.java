@@ -17,19 +17,24 @@
 package android.adservices.utils;
 
 /** Default constants for CUJ scenarios. */
-public class Scenarios {
+public final class Scenarios {
 
-    public static final String BIDDING_LOGIC_PATH = "bidding";
-    public static final String BIDDING_SIGNALS_PATH = "bidding/trusted";
-    public static final String SCORING_LOGIC_PATH = "scoring";
-    public static final String SCORING_SIGNALS_PATH = "scoring/trusted";
-    public static final String FETCH_CA_PATH = "fetch/ca";
-    public static final String UPDATE_CA_PATH = "update/ca";
-    public static final String MEDIATION_LOGIC_PATH = "mediation";
-    public static final String AD_RENDER_1 = "render_ad/1";
-    public static final String AD_RENDER_2 = "render_ad/2";
+    public static final String BIDDING_LOGIC_PATH = "/bidding";
+    public static final String BIDDING_SIGNALS_PATH = "/bidding/trusted";
+    public static final String SCORING_LOGIC_PATH = "/scoring";
+    public static final String SCORING_SIGNALS_PATH = "/scoring/trusted";
+    public static final String FETCH_CA_PATH = "/fetch/ca";
+    public static final String UPDATE_CA_PATH = "/update/ca";
+    public static final String MEDIATION_LOGIC_PATH = "/mediation";
+    public static final String AD_RENDER_1 = "/render_ad/1";
+    public static final String AD_RENDER_2 = "/render_ad/2";
+    static final int TIMEOUT_SEC = 8;
+    static final String SCENARIOS_DATA_JARPATH = "scenarios/data/";
+    static final String DEFAULT_RESPONSE_BODY = "200 OK";
+    static final String FAKE_ADDRESS_1 = "https://localhost:38384";
+    static final String FAKE_ADDRESS_2 = "https://localhost:38385";
 
     public static String getDailyUpdatePath(String customAudienceName) {
-        return "bidding/daily/" + customAudienceName;
+        return "/bidding/daily/" + customAudienceName;
     }
 }

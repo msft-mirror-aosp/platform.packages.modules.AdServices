@@ -4,7 +4,6 @@
     "sources": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -28,7 +27,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -53,7 +51,6 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [{
@@ -81,11 +78,11 @@
   "output": {
     "event_level_results": [
       {
-        "report_time": "800694800001",
+        "report_time": "800691200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "scheduled_report_time": "800694800",
+          "scheduled_report_time": "800691200",
           "source_event_id": "2",
           "trigger_data": "1",
           "source_type": "navigation",

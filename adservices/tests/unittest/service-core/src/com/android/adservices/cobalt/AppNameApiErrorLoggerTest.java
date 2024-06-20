@@ -16,6 +16,9 @@
 
 package com.android.adservices.cobalt;
 
+import static com.android.adservices.mockito.MockitoExpectations.mockAppNameApiErrorCobaltLoggingEnabled;
+import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingEnabled;
+import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -26,10 +29,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.cobalt.CobaltLogger;
 import com.android.cobalt.domain.Project;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -44,6 +47,7 @@ import org.mockito.verification.VerificationMode;
 
 import java.util.Map;
 
+@SpyStatic(FlagsFactory.class)
 @SpyStatic(CobaltFactory.class)
 public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTestCase {
     private static final int METRIC_ID = 2;
@@ -55,102 +59,144 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
     private static final int UNKNOWN_EVENT_CODE = 0;
     private static final String APP_PACKAGE_NAME = "test.app.name";
 
-    private AppNameApiErrorLogger mAppNameApiErrorLogger;
-
     @Mock private CobaltLogger mMockCobaltLogger;
     @Mock private Flags mMockFlags;
 
     @Before
     public void setUp() {
-        mAppNameApiErrorLogger = new AppNameApiErrorLogger(mMockCobaltLogger);
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test
-    public void testGetInstance_cobaltDisabled() {
-        mockCobaltLoggingEnabled(false);
+    public void testGetInstance() {
+        mockCobaltLoggingFlags(mMockFlags, true);
 
-        assertThat(AppNameApiErrorLogger.getInstance(mContext, mMockFlags)).isNull();
-    }
-
-    @Test
-    public void testGetInstance_appNameApiErrorCobaltLoggingDisabled() {
-        mockAppNameApiErrorCobaltLoggingEnabled(false);
-
-        assertThat(AppNameApiErrorLogger.getInstance(mContext, mMockFlags)).isNull();
-    }
-
-    @Test
-    public void testGetInstance_notNull() {
-        mockCobaltLoggingEnabled(true);
-        mockAppNameApiErrorCobaltLoggingEnabled(true);
-        mockAdservicesReleaseStageForCobalt();
-
-        AppNameApiErrorLogger instance = AppNameApiErrorLogger.getInstance(mContext, mMockFlags);
+        AppNameApiErrorLogger instance = AppNameApiErrorLogger.getInstance();
         assertThat(instance).isNotNull();
-        assertThat(instance)
-                .isSameInstanceAs(AppNameApiErrorLogger.getInstance(mContext, mMockFlags));
+
+        AppNameApiErrorLogger otherInstance = AppNameApiErrorLogger.getInstance();
+        assertThat(otherInstance).isSameInstanceAs(instance);
     }
 
     @Test
-    public void testGetInstance_cobaltInitializationException() {
+    public void testIsEnabled_cobaltInitializationException() {
+        mockCobaltLoggingEnabled(mMockFlags, true);
         mockThrowExceptionOnGetCobaltLogger();
 
-        assertThat(AppNameApiErrorLogger.getInstance(mContext, mMockFlags)).isNull();
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger();
+
+        assertThat(logger.isEnabled()).isFalse();
+    }
+
+    @Test
+    public void testIsEnabled_cobaltLoggingDisabled() {
+        mockCobaltLoggingFlags(mMockFlags, false);
+
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger();
+
+        assertThat(logger.isEnabled()).isFalse();
+    }
+
+    @Test
+    public void testLogErrorOccurrence_cobaltLoggingDisabled() {
+        mockCobaltLoggingEnabled(mMockFlags, false);
+        // Passing a null cobaltLogger because COBALT_LOGGING_ENABLED is false.
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger(/* cobaltLogger */ null);
+
+        logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_ERROR_CODE, FIRST_ERROR_CODE);
+
+        verifyLoggedEvent(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, FIRST_ERROR_CODE, never());
+    }
+
+    @Test
+    public void testLogErrorOccurrence_appNameApiErrorLoggingDisabled() {
+        mockAppNameApiErrorCobaltLoggingEnabled(mMockFlags, false);
+        // Passing a null cobaltLogger because COBALT_LOGGING_ENABLED is false.
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger(/* cobaltLogger */ null);
+
+        logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_ERROR_CODE, FIRST_ERROR_CODE);
+
+        verifyLoggedEvent(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, FIRST_ERROR_CODE, never());
+    }
+
+    @Test
+    public void testLogErrorOccurrence_featureEnabled() {
+        mockCobaltLoggingFlags(mMockFlags, true);
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
+
+        logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_ERROR_CODE, FIRST_ERROR_CODE);
+
+        verifyLoggedEvent(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, FIRST_ERROR_CODE, times(1));
     }
 
     @Test
     public void testLogErrorOccurrence_nullAppPackageName() {
+        mockCobaltLoggingFlags(mMockFlags, true);
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
+
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        mAppNameApiErrorLogger.logErrorOccurrence(
+                        logger.logErrorOccurrence(
                                 /* appPackageName= */ null, FIRST_API_NAME_CODE, FIRST_ERROR_CODE));
     }
 
     @Test
     public void testLogErrorOccurrence_apiCodeBelowLimit() {
-        mAppNameApiErrorLogger.logErrorOccurrence(
-                APP_PACKAGE_NAME, FIRST_ERROR_CODE - 1, FIRST_ERROR_CODE);
+        mockCobaltLoggingFlags(mMockFlags, true);
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
+
+        logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_ERROR_CODE - 1, FIRST_ERROR_CODE);
 
         verifyLoggedEvent(APP_PACKAGE_NAME, UNKNOWN_EVENT_CODE, FIRST_ERROR_CODE, times(1));
     }
 
     @Test
     public void testLogErrorOccurrence_apiCodeOverLimit() {
-        mAppNameApiErrorLogger.logErrorOccurrence(
-                APP_PACKAGE_NAME, LAST_API_NAME_CODE + 1, LAST_ERROR_CODE);
+        mockCobaltLoggingFlags(mMockFlags, true);
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
+
+        logger.logErrorOccurrence(APP_PACKAGE_NAME, LAST_API_NAME_CODE + 1, LAST_ERROR_CODE);
 
         verifyLoggedEvent(APP_PACKAGE_NAME, UNKNOWN_EVENT_CODE, LAST_ERROR_CODE, times(1));
     }
 
     @Test
     public void testLogErrorOccurrence_errorCodeBelowLimit() {
-        mAppNameApiErrorLogger.logErrorOccurrence(
-                APP_PACKAGE_NAME, FIRST_API_NAME_CODE, SUCCESS_RESULT_CODE - 1);
+        mockCobaltLoggingFlags(mMockFlags, true);
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
+
+        logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, SUCCESS_RESULT_CODE - 1);
 
         verifyLoggedEvent(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, UNKNOWN_EVENT_CODE, times(1));
     }
 
     @Test
     public void testLogErrorOccurrence_errorCodeOverLimit() {
-        mAppNameApiErrorLogger.logErrorOccurrence(
-                APP_PACKAGE_NAME, LAST_API_NAME_CODE, LAST_ERROR_CODE + 1);
+        mockCobaltLoggingFlags(mMockFlags, true);
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
+
+        logger.logErrorOccurrence(APP_PACKAGE_NAME, LAST_API_NAME_CODE, LAST_ERROR_CODE + 1);
 
         verifyLoggedEvent(APP_PACKAGE_NAME, LAST_API_NAME_CODE, UNKNOWN_EVENT_CODE, times(1));
     }
 
     @Test
     public void testLogErrorOccurrence_successApiCode() {
-        mAppNameApiErrorLogger.logErrorOccurrence(
-                APP_PACKAGE_NAME, FIRST_API_NAME_CODE, SUCCESS_RESULT_CODE);
+        mockCobaltLoggingFlags(mMockFlags, true);
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
+
+        logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, SUCCESS_RESULT_CODE);
 
         verifyLoggedEvent(APP_PACKAGE_NAME, LAST_API_NAME_CODE, UNKNOWN_EVENT_CODE, never());
     }
 
     @Test
     public void testLogErrorOccurrence_correctValue() {
-        mAppNameApiErrorLogger.logErrorOccurrence(
-                APP_PACKAGE_NAME, FIRST_API_NAME_CODE, LAST_ERROR_CODE);
+        mockCobaltLoggingFlags(mMockFlags, true);
+        AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
+
+        logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, LAST_ERROR_CODE);
 
         verifyLoggedEvent(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, LAST_ERROR_CODE, times(1));
     }
@@ -228,18 +274,6 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
                         METRIC_ID,
                         appPackageName,
                         ImmutableList.of(loggedApiCode, loggedErrorCode));
-    }
-
-    private void mockCobaltLoggingEnabled(boolean enabled) {
-        when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    private void mockAppNameApiErrorCobaltLoggingEnabled(boolean enabled) {
-        when(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    private void mockAdservicesReleaseStageForCobalt() {
-        when(mMockFlags.getAdservicesReleaseStageForCobalt()).thenReturn("DEBUG");
     }
 
     private static void mockThrowExceptionOnGetCobaltLogger() {

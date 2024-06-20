@@ -32,8 +32,8 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.VerifiedMotionEvent;
 
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementClickVerificationStats;
@@ -76,7 +76,8 @@ public final class ClickVerifierTest {
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
         when(mInputManager.verifyInputEvent(eventOutsideRange)).thenReturn(mVerifiedMotionEvent);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs()
+                FakeFlagsFactory.getFlagsForTest()
+                                .getMeasurementRegistrationInputEventValidWindowMs()
                         + 1;
         assertThat(
                         mClickVerifier.isInputEventVerifiable(
@@ -90,7 +91,8 @@ public final class ClickVerifierTest {
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
         when(mInputManager.verifyInputEvent(eventInsideRange)).thenReturn(mVerifiedMotionEvent);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         assertThat(
@@ -103,7 +105,8 @@ public final class ClickVerifierTest {
     public void testInputEventNotValidatedBySystem() {
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
@@ -118,7 +121,8 @@ public final class ClickVerifierTest {
     public void testInputEvent_verifyByInputEventFlagDisabled_Verified() {
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -134,7 +138,8 @@ public final class ClickVerifierTest {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
@@ -155,7 +160,8 @@ public final class ClickVerifierTest {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
@@ -179,7 +185,8 @@ public final class ClickVerifierTest {
         InputEvent inputEvent2 = MotionEvent.obtain(10, 10, MotionEvent.ACTION_DOWN, 0, 0, 0);
         InputEvent inputEvent3 = MotionEvent.obtain(20, 20, MotionEvent.ACTION_DOWN, 0, 0, 0);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -207,7 +214,8 @@ public final class ClickVerifierTest {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -228,7 +236,8 @@ public final class ClickVerifierTest {
         // Setup
         InputEvent inputEvent = new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1, 0);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -249,7 +258,8 @@ public final class ClickVerifierTest {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -271,7 +281,8 @@ public final class ClickVerifierTest {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -310,7 +321,8 @@ public final class ClickVerifierTest {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
@@ -335,7 +347,8 @@ public final class ClickVerifierTest {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         long registerTimestamp =
-                FlagsFactory.getFlagsForTest().getMeasurementRegistrationInputEventValidWindowMs();
+                FakeFlagsFactory.getFlagsForTest()
+                        .getMeasurementRegistrationInputEventValidWindowMs();
         when(mFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);

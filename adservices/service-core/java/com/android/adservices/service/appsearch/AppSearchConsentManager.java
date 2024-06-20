@@ -58,8 +58,10 @@ import java.util.stream.Collectors;
  * This class manages the interface to AppSearch for reading/writing all AdServices consent data on
  * S- devices. This is needed because AdServices does not run any code in the system server on S-
  * devices, so consent data is rollback safe by storing it in AppSearch.
+ *
+ * <p>IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with
+ * AppSearchConsentStorageManager.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppSearchConsentManager {
     private final Context mContext;
@@ -478,7 +480,7 @@ public class AppSearchConsentManager {
         if (!wasGaUxNotificationDisplayed
                 && !wasNotificationDisplayed
                 && !wasU18NotificationDisplayed) {
-            // This shouldn't happen since we checked that either of these notifications is
+            // This shouldn't happen since we checked that one of these notifications is
             // displayed per AppSearch before entering.
             LogUtil.e("AppSearch has not recorded notification displayed. Aborting migration");
             return false;
@@ -619,5 +621,25 @@ public class AppSearchConsentManager {
             PrivacySandboxUxCollection ux,
             PrivacySandboxEnrollmentChannelCollection enrollmentChannel) {
         mAppSearchConsentWorker.setEnrollmentChannel(ux, enrollmentChannel);
+    }
+
+    /** Save the isMeasurementDataReset bit. */
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        mAppSearchConsentWorker.setMeasurementDataReset(isMeasurementDataReset);
+    }
+
+    /** Returns whether the isMeasurementDataReset bit is true. */
+    public Boolean isMeasurementDataReset() {
+        return mAppSearchConsentWorker.isMeasurementDataReset();
+    }
+
+    /** Save the isPaDataReset bit. */
+    public void setPaDataReset(boolean isPaDataReset) {
+        mAppSearchConsentWorker.setPaDataReset(isPaDataReset);
+    }
+
+    /** Returns whether the isPaDataReset bit is true. */
+    public Boolean isPaDataReset() {
+        return mAppSearchConsentWorker.isPaDataReset();
     }
 }

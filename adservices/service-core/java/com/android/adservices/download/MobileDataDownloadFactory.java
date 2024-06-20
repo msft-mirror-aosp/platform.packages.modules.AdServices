@@ -23,7 +23,6 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.SystemClock;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
@@ -35,6 +34,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.downloader.AndroidDownloaderLogger;
@@ -84,13 +84,15 @@ public class MobileDataDownloadFactory {
     private static final String MDD_METADATA_SHARED_PREFERENCES = "mdd_metadata_store";
     private static final String TOPICS_MANIFEST_ID = "TopicsManifestId";
     private static final String MEASUREMENT_MANIFEST_ID = "MeasurementManifestId";
+    private static final String ENCRYPTION_KEYS_MANIFEST_ID = "EncryptionKeysManifestId";
     private static final String UI_OTA_STRINGS_MANIFEST_ID = "UiOtaStringsManifestId";
+    private static final String UI_OTA_RESOURCES_MANIFEST_ID = "UiOtaResourcesManifestId";
+    private static final String ENROLLMENT_PROTO_MANIFEST_ID = "EnrollmentProtoManifestId";
 
     private static final int MAX_ADB_LOGCAT_SIZE = 4000;
 
     /** Returns a singleton of MobileDataDownload for the whole PPAPI app. */
-    @NonNull
-    public static MobileDataDownload getMdd(@NonNull Context context, @NonNull Flags flags) {
+    public static MobileDataDownload getMdd(Flags flags) {
         synchronized (MobileDataDownloadFactory.class) {
             if (sSingletonMdd == null) {
                 // TODO(b/236761740): This only adds the core MDD code. We still need other
@@ -98,9 +100,9 @@ public class MobileDataDownloadFactory {
                 // Add Logger
                 // Add Configurator.
 
-                context = context.getApplicationContext();
-                SynchronousFileStorage fileStorage = getFileStorage(context);
-                FileDownloader fileDownloader = getFileDownloader(context, flags, fileStorage);
+                Context context = ApplicationContextSingleton.get();
+                SynchronousFileStorage fileStorage = getFileStorage();
+                FileDownloader fileDownloader = getFileDownloader(flags, fileStorage);
                 NetworkUsageMonitor networkUsageMonitor =
                         new NetworkUsageMonitor(
                                 context,
@@ -116,7 +118,7 @@ public class MobileDataDownloadFactory {
                                 }
                             });
 
-                sSingletonMdd =
+                MobileDataDownloadBuilder mobileDataDownloadBuilder =
                         MobileDataDownloadBuilder.newBuilder()
                                 .setContext(context)
                                 .setControlExecutor(getControlExecutor())
@@ -125,16 +127,29 @@ public class MobileDataDownloadFactory {
                                 .setFileDownloaderSupplier(() -> fileDownloader)
                                 .addFileGroupPopulator(
                                         getTopicsManifestPopulator(
-                                                context, flags, fileStorage, fileDownloader))
+                                                flags, fileStorage, fileDownloader))
                                 .addFileGroupPopulator(
                                         getMeasurementManifestPopulator(
+                                                flags,
+                                                fileStorage,
+                                                fileDownloader,
+                                                /* getProto= */ false))
+                                .addFileGroupPopulator(
+                                        getEncryptionKeysManifestPopulator(
                                                 context, flags, fileStorage, fileDownloader))
                                 .addFileGroupPopulator(
-                                        getUiOtaStringsManifestPopulator(
-                                                context, flags, fileStorage, fileDownloader))
+                                        getUiOtaResourcesManifestPopulator(
+                                                flags, fileStorage, fileDownloader))
                                 .setLoggerOptional(getMddLogger(flags))
-                                .setFlagsOptional(Optional.of(MddFlags.getInstance()))
-                                .build();
+                                .setFlagsOptional(Optional.of(MddFlags.getInstance()));
+
+                if (flags.getEnrollmentProtoFileEnabled()) {
+                    mobileDataDownloadBuilder.addFileGroupPopulator(
+                            getMeasurementManifestPopulator(
+                                    flags, fileStorage, fileDownloader, /* getProto= */ true));
+                }
+
+                sSingletonMdd = mobileDataDownloadBuilder.build();
             }
 
             return sSingletonMdd;
@@ -150,10 +165,10 @@ public class MobileDataDownloadFactory {
     }
 
     /** Return a singleton of {@link SynchronousFileStorage}. */
-    @NonNull
-    public static SynchronousFileStorage getFileStorage(@NonNull Context context) {
+    public static SynchronousFileStorage getFileStorage() {
         synchronized (MobileDataDownloadFactory.class) {
             if (sSynchronousFileStorage == null) {
+                Context context = ApplicationContextSingleton.get();
                 sSynchronousFileStorage =
                         new SynchronousFileStorage(
                                 ImmutableList.of(
@@ -166,19 +181,16 @@ public class MobileDataDownloadFactory {
         }
     }
 
-    @NonNull
     @VisibleForTesting
     static ListeningExecutorService getControlExecutor() {
         return AdServicesExecutors.getBackgroundExecutor();
     }
 
-    @NonNull
     private static Executor getDownloadExecutor() {
         return AdServicesExecutors.getBackgroundExecutor();
     }
 
-    @NonNull
-    private static UrlEngine getUrlEngine(@NonNull Flags flags) {
+    private static UrlEngine getUrlEngine(Flags flags) {
         // TODO(b/219594618): Switch to use CronetUrlEngine.
         return new PlatformUrlEngine(
                 AdServicesExecutors.getBlockingExecutor(),
@@ -186,18 +198,13 @@ public class MobileDataDownloadFactory {
                 /* readTimeoutMs= */ flags.getDownloaderReadTimeoutMs());
     }
 
-    @NonNull
     private static ExceptionHandler getExceptionHandler() {
         return ExceptionHandler.withDefaultHandling();
     }
 
-    @NonNull
     @VisibleForTesting
-    static FileDownloader getFileDownloader(
-            @NonNull Context context,
-            @NonNull Flags flags,
-            @NonNull SynchronousFileStorage fileStorage) {
-        DownloadMetadataStore downloadMetadataStore = getDownloadMetadataStore(context);
+    static FileDownloader getFileDownloader(Flags flags, SynchronousFileStorage fileStorage) {
+        DownloadMetadataStore downloadMetadataStore = getDownloadMetadataStore();
 
         Downloader downloader =
                 new Downloader.Builder()
@@ -218,8 +225,8 @@ public class MobileDataDownloadFactory {
                 Optional.absent());
     }
 
-    @NonNull
-    private static DownloadMetadataStore getDownloadMetadataStore(@NonNull Context context) {
+    private static DownloadMetadataStore getDownloadMetadataStore() {
+        Context context = ApplicationContextSingleton.get();
         SharedPreferences sharedPrefs =
                 context.getSharedPreferences(MDD_METADATA_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         DownloadMetadataStore downloadMetadataStore =
@@ -229,13 +236,10 @@ public class MobileDataDownloadFactory {
     }
 
     // Create the Manifest File Group Populator for Topics Classifier.
-    @NonNull
     @VisibleForTesting
     static ManifestFileGroupPopulator getTopicsManifestPopulator(
-            @NonNull Context context,
-            @NonNull Flags flags,
-            @NonNull SynchronousFileStorage fileStorage,
-            @NonNull FileDownloader fileDownloader) {
+            Flags flags, SynchronousFileStorage fileStorage, FileDownloader fileDownloader) {
+        Context context = ApplicationContextSingleton.get();
 
         ManifestFileFlag manifestFileFlag =
                 ManifestFileFlag.newBuilder()
@@ -315,18 +319,21 @@ public class MobileDataDownloadFactory {
                 .build();
     }
 
-    @NonNull
     @VisibleForTesting
-    static ManifestFileGroupPopulator getUiOtaStringsManifestPopulator(
-            @NonNull Context context,
-            @NonNull Flags flags,
-            @NonNull SynchronousFileStorage fileStorage,
-            @NonNull FileDownloader fileDownloader) {
+    static ManifestFileGroupPopulator getUiOtaResourcesManifestPopulator(
+            Flags flags, SynchronousFileStorage fileStorage, FileDownloader fileDownloader) {
+        Context context = ApplicationContextSingleton.get();
 
         ManifestFileFlag manifestFileFlag =
                 ManifestFileFlag.newBuilder()
-                        .setManifestId(UI_OTA_STRINGS_MANIFEST_ID)
-                        .setManifestFileUrl(flags.getUiOtaStringsManifestFileUrl())
+                        .setManifestId(
+                                flags.getUiOtaResourcesFeatureEnabled()
+                                        ? UI_OTA_RESOURCES_MANIFEST_ID
+                                        : UI_OTA_STRINGS_MANIFEST_ID)
+                        .setManifestFileUrl(
+                                flags.getUiOtaResourcesFeatureEnabled()
+                                        ? flags.getUiOtaResourcesManifestFileUrl()
+                                        : flags.getUiOtaStringsManifestFileUrl())
                         .build();
 
         ManifestConfigFileParser manifestConfigFileParser =
@@ -339,7 +346,7 @@ public class MobileDataDownloadFactory {
                 .setEnabledSupplier(
                         () ->
                                 !ConsentManager.getInstance().wasGaUxNotificationDisplayed()
-                                        || isAnyConsentGiven(context, flags))
+                                        || isAnyConsentGiven(flags))
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)
@@ -363,7 +370,7 @@ public class MobileDataDownloadFactory {
                 .build();
     }
 
-    private static boolean isAnyConsentGiven(@NonNull Context context, Flags flags) {
+    private static boolean isAnyConsentGiven(Flags flags) {
         ConsentManager instance = ConsentManager.getInstance();
         if (flags.getGaUxFeatureEnabled()
                 && (instance.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()
@@ -375,18 +382,24 @@ public class MobileDataDownloadFactory {
         return instance.getConsent().isGiven();
     }
 
-    @NonNull
     @VisibleForTesting
     static ManifestFileGroupPopulator getMeasurementManifestPopulator(
-            @NonNull Context context,
-            @NonNull Flags flags,
-            @NonNull SynchronousFileStorage fileStorage,
-            @NonNull FileDownloader fileDownloader) {
+            Flags flags,
+            SynchronousFileStorage fileStorage,
+            FileDownloader fileDownloader,
+            boolean getProto) {
+        Context context = ApplicationContextSingleton.get();
+
+        String manifestId = getProto ? ENROLLMENT_PROTO_MANIFEST_ID : MEASUREMENT_MANIFEST_ID;
+        String fileUrl =
+                getProto
+                        ? flags.getMddEnrollmentManifestFileUrl()
+                        : flags.getMeasurementManifestFileUrl();
 
         ManifestFileFlag manifestFileFlag =
                 ManifestFileFlag.newBuilder()
-                        .setManifestId(MEASUREMENT_MANIFEST_ID)
-                        .setManifestFileUrl(flags.getMeasurementManifestFileUrl())
+                        .setManifestId(manifestId)
+                        .setManifestFileUrl(fileUrl)
                         .build();
 
         ManifestConfigFileParser manifestConfigFileParser =
@@ -399,7 +412,7 @@ public class MobileDataDownloadFactory {
                 .setEnabledSupplier(
                         () -> {
                             if (flags.getGaUxFeatureEnabled()) {
-                                return isAnyConsentGiven(context, flags);
+                                return isAnyConsentGiven(flags);
                             } else {
                                 return ConsentManager.getInstance().getConsent().isGiven();
                             }
@@ -427,18 +440,67 @@ public class MobileDataDownloadFactory {
                 .build();
     }
 
-    // Check the feature flag is on or off. True means use MddLogger.
-    @NonNull
     @VisibleForTesting
-    static Optional<Logger> getMddLogger(@NonNull Flags flags) {
+    static ManifestFileGroupPopulator getEncryptionKeysManifestPopulator(
+            Context context,
+            Flags flags,
+            SynchronousFileStorage fileStorage,
+            FileDownloader fileDownloader) {
+        ManifestFileFlag manifestFileFlag =
+                ManifestFileFlag.newBuilder()
+                        .setManifestId(ENCRYPTION_KEYS_MANIFEST_ID)
+                        .setManifestFileUrl(flags.getMddEncryptionKeysManifestFileUrl())
+                        .build();
+
+        ManifestConfigFileParser manifestConfigFileParser =
+                new ManifestConfigFileParser(
+                        fileStorage, AdServicesExecutors.getBackgroundExecutor());
+
+        return ManifestFileGroupPopulator.builder()
+                .setContext(context)
+                // encryption key resources should not be downloaded pre-consent
+                .setEnabledSupplier(
+                        () -> {
+                            if (flags.getGaUxFeatureEnabled()) {
+                                return isAnyConsentGiven(flags);
+                            } else {
+                                return ConsentManager.getInstance().getConsent().isGiven();
+                            }
+                        })
+                .setEnabledSupplier(flags::getEnableMddEncryptionKeys)
+                .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
+                .setFileDownloader(() -> fileDownloader)
+                .setFileStorage(fileStorage)
+                .setManifestFileFlagSupplier(() -> manifestFileFlag)
+                .setManifestConfigParser(manifestConfigFileParser)
+                .setMetadataStore(
+                        SharedPreferencesManifestFileMetadata.createFromContext(
+                                context, /*InstanceId*/
+                                Optional.absent(),
+                                AdServicesExecutors.getBackgroundExecutor()))
+                // TODO(b/239265537): Enable dedup using etag.
+                .setDedupDownloadWithEtag(false)
+                // TODO(b/243829623): use proper Logger.
+                .setLogger(
+                        new Logger() {
+                            @Override
+                            public void log(MessageLite event, int eventCode) {
+                                // A no-op logger.
+                            }
+                        })
+                .build();
+    }
+
+    // Check the feature flag is on or off. True means use MddLogger.
+    @VisibleForTesting
+    static Optional<Logger> getMddLogger(Flags flags) {
         return flags.getMddLoggerEnabled() ? Optional.of(new MddLogger()) : Optional.absent();
     }
 
     /** Dump MDD Debug Info. */
-    public static void dump(Context context, @NonNull PrintWriter writer) {
+    public static void dump(PrintWriter writer) {
         String debugString =
-                MobileDataDownloadFactory.getMdd(context, FlagsFactory.getFlags())
-                        .getDebugInfoAsString();
+                MobileDataDownloadFactory.getMdd(FlagsFactory.getFlags()).getDebugInfoAsString();
         writer.println("***====*** MDD Lib dump: ***====***");
 
         for (int i = 0; i <= debugString.length() / MAX_ADB_LOGCAT_SIZE; i++) {

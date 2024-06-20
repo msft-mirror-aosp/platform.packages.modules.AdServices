@@ -25,7 +25,7 @@ import android.annotation.NonNull;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -43,8 +43,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /** Unit tests for {@link AdServicesParcelableUtil}. */
-@SmallTest
-public class AdServicesParcelableUtilTest {
+public final class AdServicesParcelableUtilTest extends AdServicesUnitTestCase {
     @Test
     public void testWriteNullableToParcel_nullParcelThrows() {
         assertThrows(
@@ -79,12 +78,12 @@ public class AdServicesParcelableUtilTest {
 
     @Test
     public void testWriteNullableToParcelThenRead_nonNullSuccess() {
-        final int originalInt = 123;
+        int originalInt = 123;
         Parcel targetParcel = Parcel.obtain();
 
         AdServicesParcelableUtil.writeNullableToParcel(targetParcel, originalInt, Parcel::writeInt);
         targetParcel.setDataPosition(0);
-        final int intFromParcel =
+        int intFromParcel =
                 Objects.requireNonNull(
                         AdServicesParcelableUtil.readNullableFromParcel(
                                 targetParcel, Parcel::readInt));
@@ -98,7 +97,7 @@ public class AdServicesParcelableUtilTest {
 
         AdServicesParcelableUtil.writeNullableToParcel(targetParcel, null, Parcel::writeString);
         targetParcel.setDataPosition(0);
-        final String stringFromParcel =
+        String stringFromParcel =
                 AdServicesParcelableUtil.readNullableFromParcel(targetParcel, Parcel::readString);
 
         assertThat(stringFromParcel).isNull();
@@ -115,7 +114,7 @@ public class AdServicesParcelableUtilTest {
                         (targetParcel1, sourceObject) ->
                                 targetParcel1.writeParcelable(sourceObject, 0));
         targetParcel.setDataPosition(0);
-        final TestParcelable parcelableFromParcel =
+        TestParcelable parcelableFromParcel =
                 AdServicesParcelableUtil.readNullableFromParcel(
                         targetParcel, TestParcelable.CREATOR::createFromParcel);
 
@@ -167,13 +166,13 @@ public class AdServicesParcelableUtilTest {
 
     @Test
     public void testWriteMapToParcelThenRead_success() {
-        final ImmutableMap<Integer, TestParcelable> originalMap =
+        ImmutableMap<Integer, TestParcelable> originalMap =
                 ImmutableMap.of(1, new TestParcelable("one", 1), 2, new TestParcelable("two", 2));
         Parcel targetParcel = Parcel.obtain();
 
         AdServicesParcelableUtil.writeMapToParcel(targetParcel, originalMap);
         targetParcel.setDataPosition(0);
-        final ImmutableMap<Integer, TestParcelable> mapFromParcel =
+        ImmutableMap<Integer, TestParcelable> mapFromParcel =
                 ImmutableMap.copyOf(
                         AdServicesParcelableUtil.readMapFromParcel(
                                 targetParcel, Integer::parseInt, TestParcelable.class));
@@ -213,13 +212,13 @@ public class AdServicesParcelableUtilTest {
 
     @Test
     public void testWriteSetToParcelThenRead_success() {
-        final ImmutableSet<TestParcelable> originalSet =
+        ImmutableSet<TestParcelable> originalSet =
                 ImmutableSet.of(new TestParcelable("one", 1), new TestParcelable("two", 2));
         Parcel targetParcel = Parcel.obtain();
 
         AdServicesParcelableUtil.writeSetToParcel(targetParcel, originalSet);
         targetParcel.setDataPosition(0);
-        final ImmutableSet<TestParcelable> setFromParcel =
+        ImmutableSet<TestParcelable> setFromParcel =
                 ImmutableSet.copyOf(
                         AdServicesParcelableUtil.readSetFromParcel(
                                 targetParcel, TestParcelable.CREATOR));
@@ -251,12 +250,12 @@ public class AdServicesParcelableUtilTest {
 
     @Test
     public void testWriteStringSetToParcelThenRead_success() {
-        final ImmutableSet<String> originalSet = ImmutableSet.of("one", "two");
+        ImmutableSet<String> originalSet = ImmutableSet.of("one", "two");
         Parcel targetParcel = Parcel.obtain();
 
         AdServicesParcelableUtil.writeStringSetToParcel(targetParcel, originalSet);
         targetParcel.setDataPosition(0);
-        final ImmutableSet<String> setFromParcel =
+        ImmutableSet<String> setFromParcel =
                 ImmutableSet.copyOf(AdServicesParcelableUtil.readStringSetFromParcel(targetParcel));
 
         assertThat(setFromParcel).containsExactlyElementsIn(originalSet);
@@ -286,12 +285,12 @@ public class AdServicesParcelableUtilTest {
 
     @Test
     public void testWriteIntegerSetToParcelThenRead_success() {
-        final ImmutableSet<Integer> originalSet = ImmutableSet.of(1, 2);
+        ImmutableSet<Integer> originalSet = ImmutableSet.of(1, 2);
         Parcel targetParcel = Parcel.obtain();
 
         AdServicesParcelableUtil.writeIntegerSetToParcel(targetParcel, originalSet);
         targetParcel.setDataPosition(0);
-        final ImmutableSet<Integer> setFromParcel =
+        ImmutableSet<Integer> setFromParcel =
                 ImmutableSet.copyOf(
                         AdServicesParcelableUtil.readIntegerSetFromParcel(targetParcel));
 
@@ -300,12 +299,12 @@ public class AdServicesParcelableUtilTest {
 
     @Test
     public void testWriteIntegerSetToParcelThenRead_nullValueSkippedSuccess() {
-        final Set<Integer> originalSet = new HashSet<>(Arrays.asList(1, null, 2));
+        Set<Integer> originalSet = new HashSet<>(Arrays.asList(1, null, 2));
         Parcel targetParcel = Parcel.obtain();
 
         AdServicesParcelableUtil.writeIntegerSetToParcel(targetParcel, originalSet);
         targetParcel.setDataPosition(0);
-        final Set<Integer> setFromParcel =
+        Set<Integer> setFromParcel =
                 AdServicesParcelableUtil.readIntegerSetFromParcel(targetParcel);
 
         assertThat(setFromParcel).doesNotContain(null);
@@ -336,7 +335,7 @@ public class AdServicesParcelableUtilTest {
 
     @Test
     public void testWriteInstantListToParcelThenRead_success() {
-        final ImmutableList<Instant> originalList =
+        ImmutableList<Instant> originalList =
                 ImmutableList.of(
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plusMillis(500));
@@ -344,7 +343,7 @@ public class AdServicesParcelableUtilTest {
 
         AdServicesParcelableUtil.writeInstantListToParcel(targetParcel, originalList);
         targetParcel.setDataPosition(0);
-        final ImmutableList<Instant> listFromParcel =
+        ImmutableList<Instant> listFromParcel =
                 ImmutableList.copyOf(
                         AdServicesParcelableUtil.readInstantListFromParcel(targetParcel));
 
@@ -353,12 +352,12 @@ public class AdServicesParcelableUtilTest {
 
     @Test
     public void testWriteInstantListToParcel_skipsErrors() {
-        final ImmutableList<Instant> originalList =
+        ImmutableList<Instant> originalList =
                 ImmutableList.of(
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         Instant.MAX,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plusMillis(500));
-        final ImmutableLongArray expectedList =
+        ImmutableLongArray expectedList =
                 ImmutableLongArray.of(
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.toEpochMilli(),
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plusMillis(500).toEpochMilli());
@@ -367,10 +366,10 @@ public class AdServicesParcelableUtilTest {
         AdServicesParcelableUtil.writeInstantListToParcel(targetParcel, originalList);
         targetParcel.setDataPosition(0);
 
-        final int writtenArraySize = targetParcel.readInt();
+        int writtenArraySize = targetParcel.readInt();
         assertThat(writtenArraySize).isEqualTo(expectedList.length());
 
-        final long[] writtenArray = new long[writtenArraySize];
+        long[] writtenArray = new long[writtenArraySize];
         targetParcel.readLongArray(writtenArray);
         assertThat(writtenArray).asList().containsExactlyElementsIn(expectedList.asList());
     }
@@ -381,7 +380,7 @@ public class AdServicesParcelableUtilTest {
 
         @NonNull
         public static final Creator<TestParcelable> CREATOR =
-                new Creator<TestParcelable>() {
+                new Creator<>() {
                     @Override
                     public TestParcelable createFromParcel(@NonNull Parcel source) {
                         Objects.requireNonNull(source);
