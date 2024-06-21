@@ -722,8 +722,14 @@ class MeasurementDao implements IMeasurementDao {
                 getNullableUnsignedLong(source.getSharedDebugKey()));
         values.put(SourceContract.TRIGGER_DATA_MATCHING, source.getTriggerDataMatching().name());
 
-        boolean attributionScopeEnabled =
-                FlagsFactory.getFlags().getMeasurementEnableAttributionScope();
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementEnableSourceDestinationLimitPriority()) {
+            values.put(
+                    SourceContract.DESTINATION_LIMIT_PRIORITY,
+                    source.getDestinationLimitPriority());
+        }
+
+        boolean attributionScopeEnabled = flags.getMeasurementEnableAttributionScope();
         if (attributionScopeEnabled) {
             values.put(SourceContract.ATTRIBUTION_SCOPE_LIMIT, source.getAttributionScopeLimit());
             values.put(SourceContract.MAX_EVENT_STATES, source.getMaxEventStates());

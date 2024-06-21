@@ -277,6 +277,7 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getTriggerDataMatching(), source.getTriggerDataMatching());
         assertEquals(validSource.getEventReportWindows(), source.getEventReportWindows());
         assertEquals(SourceFixture.ValidSourceParams.SHARED_DEBUG_KEY, source.getSharedDebugKey());
+        assertEquals(0L, source.getDestinationLimitPriority());
 
         // Assert destinations were inserted into the source destination table.
 
@@ -10995,6 +10996,34 @@ public class MeasurementDaoTest {
                                                 .getMeasurementReportingJobServiceBatchWindowMillis()));
 
         assertTrue(results.isEmpty());
+    }
+
+    @Test
+    public void testInsertSource_withDestinationLimitPriorityEnabled_fetchesTheSetValue() {
+        // Setup
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableSourceDestinationLimitPriority();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+
+        // Execution
+        Source validSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setDestinationLimitPriority(
+                                SourceFixture.ValidSourceParams.DESTINATION_LIMIT_PRIORITY)
+                        .build();
+        mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
+
+        // Assertion
+        String sourceId = getFirstSourceIdFromDatastore();
+        Source source =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSource(sourceId))
+                        .orElseThrow(() -> new IllegalStateException("Source is null"));
+        assertEquals(
+                SourceFixture.ValidSourceParams.DESTINATION_LIMIT_PRIORITY,
+                source.getDestinationLimitPriority());
     }
 
     private static Consumer<AggregateReport> getAggregateReportConsumer(SQLiteDatabase db) {
