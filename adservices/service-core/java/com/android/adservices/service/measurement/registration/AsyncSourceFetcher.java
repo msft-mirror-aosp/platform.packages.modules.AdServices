@@ -237,7 +237,8 @@ public class AsyncSourceFetcher {
                                         SourceHeaderContract.REINSTALL_REATTRIBUTION_WINDOW_KEY),
                                 0L,
                                 mFlags.getMeasurementMaxReinstallReattributionWindowSeconds());
-                builder.setReinstallReattributionWindow(reinstallReattributionWindow);
+                builder.setReinstallReattributionWindow(
+                        TimeUnit.SECONDS.toMillis(reinstallReattributionWindow));
             } else {
                 builder.setReinstallReattributionWindow(0L);
             }
