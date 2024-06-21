@@ -4694,6 +4694,14 @@ public interface Flags extends ModuleSharedFlags {
         return ADSERVICES_RELEASE_STAGE_FOR_COBALT;
     }
 
+    /** Default value of whether Cobalt registry out of band update feature is enabled */
+    @FeatureFlag boolean COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED = false;
+
+    /** Returns whether Cobalt registry out of band update feature is enabled. */
+    default boolean getCobaltRegistryOutOfBandUpdateEnabled() {
+        return COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
+    }
+
     /**
      * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
      * logged_topic column to ReturnedTopic table.
