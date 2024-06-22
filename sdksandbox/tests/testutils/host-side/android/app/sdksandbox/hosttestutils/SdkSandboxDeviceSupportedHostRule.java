@@ -16,6 +16,9 @@
 
 package android.app.sdksandbox.hosttestutils;
 
+import android.app.sdksandbox.common.AbstractSdkSandboxDeviceSupportedRule;
+
+import com.android.adservices.shared.testing.ConsoleLogger;
 import com.android.compatibility.common.util.FeatureUtil;
 import com.android.compatibility.common.util.PackageUtil;
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
@@ -23,19 +26,21 @@ import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
-// TODO(b/322152671): deprecate for AdServicesHostSideSupportHelper
-public class DeviceSupportHostUtils {
+public final class SdkSandboxDeviceSupportedHostRule extends AbstractSdkSandboxDeviceSupportedRule {
+
     private final BaseHostJUnit4Test mTest;
 
     // Used only for Go device checks, which rely on checking GMS Core and Play Store.
     public static final String GMS_CORE_PACKAGE = "com.google.android.gms";
     public static final String PLAY_STORE_PACKAGE = "com.android.vending";
 
-    public DeviceSupportHostUtils(BaseHostJUnit4Test test) {
+    public SdkSandboxDeviceSupportedHostRule(BaseHostJUnit4Test test) {
+        super(ConsoleLogger.getInstance());
         mTest = test;
     }
 
-    public boolean isSdkSandboxSupported() throws DeviceNotAvailableException {
+    @Override
+    public boolean isSdkSandboxSupportedOnDevice() throws Throwable {
         DeviceSdkLevel deviceSdkLevel = new DeviceSdkLevel(mTest.getDevice());
         return !isWatch()
                 && !isTv()

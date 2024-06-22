@@ -16,27 +16,30 @@
 
 package com.android.tests.sandbox.fledge;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+import static com.android.adservices.service.FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
+
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
-import android.content.Context;
 import android.os.Bundle;
 import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdServicesCtsTestCase;
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -47,12 +50,13 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
-public class SandboxedFledgeManagerTest extends AdServicesCtsTestCase {
+@SetFlagDisabled(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE)
+@SetFlagEnabled(KEY_ADSERVICES_ENABLED)
+@SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetIntegerFlag(name = KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, value = 0)
+public final class SandboxedFledgeManagerTest extends CtsSandboxedFledgeManagerTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.sdkfledge";
-
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
 
     private boolean mHasAccessToDevOverrides;
 
@@ -60,10 +64,6 @@ public class SandboxedFledgeManagerTest extends AdServicesCtsTestCase {
 
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
-    @Rule(order = 10)
-    public AdServicesDeviceSupportedRule mAdServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
 
     @Before
     public void setup() throws TimeoutException {
@@ -103,23 +103,14 @@ public class SandboxedFledgeManagerTest extends AdServicesCtsTestCase {
     public void loadSdkAndRunFledgeFlow() {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
-        final SdkSandboxManager sdkSandboxManager =
-                sContext.getSystemService(SdkSandboxManager.class);
-        Assert.assertNotNull("SdkSandboxManager should not be null", sdkSandboxManager);
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        SdkSandboxManager sdkSandboxManager = sContext.getSystemService(SdkSandboxManager.class);
+        assertWithMessage("SdkSandboxManager should not be null")
+                .that(sdkSandboxManager)
+                .isNotNull();
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
         callback.assertLoadSdkIsSuccessful();
-    }
-
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                .setAdServicesEnabled(true)
-                .setAllLogcatTags()
-                .setFlag(FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE, false)
-                .setFlag(FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, 0)
-                .setFlag(FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, true);
     }
 }

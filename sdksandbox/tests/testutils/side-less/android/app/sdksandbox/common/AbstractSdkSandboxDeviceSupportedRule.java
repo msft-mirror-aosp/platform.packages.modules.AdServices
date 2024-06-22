@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.app.sdksandbox.testutils;
+package android.app.sdksandbox.common;
 
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
@@ -33,18 +33,18 @@ import java.util.Objects;
  * <p>See {@link com.android.adservices.common.AdServicesDeviceSupportedRule} for usage - this rule
  * is analogous to it.
  */
-abstract class AbstractSdkSandboxDeviceSupportedRule implements TestRule {
+public abstract class AbstractSdkSandboxDeviceSupportedRule implements TestRule {
 
     protected final Logger mLog;
 
     /** Default constructor. */
-    AbstractSdkSandboxDeviceSupportedRule(RealLogger logger) {
+    public AbstractSdkSandboxDeviceSupportedRule(RealLogger logger) {
         mLog = new Logger(Objects.requireNonNull(logger), "SdkSandboxDeviceSupportedRule");
         mLog.d("Constructor: logger=%s", logger);
     }
 
     /** Checks whether {@code SdkSandbox} is supported by the device. */
-    public abstract boolean isSdkSandboxSupportedOnDevice();
+    public abstract boolean isSdkSandboxSupportedOnDevice() throws Throwable;
 
     @Override
     public Statement apply(Statement base, Description description) {
