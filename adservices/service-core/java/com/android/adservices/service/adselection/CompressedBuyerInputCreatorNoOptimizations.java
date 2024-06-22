@@ -33,6 +33,8 @@ import java.util.Map;
 
 public class CompressedBuyerInputCreatorNoOptimizations implements CompressedBuyerInputCreator {
 
+    public static final int VERSION = 0;
+
     private final CompressedBuyerInputCreatorHelper mCompressedBuyerInputCreatorHelper;
     private final AuctionServerDataCompressor mDataCompressor;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -55,20 +57,6 @@ public class CompressedBuyerInputCreatorNoOptimizations implements CompressedBuy
                 new HashMap<>();
         final Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats =
                 new HashMap<>();
-        for (DBCustomAudience dBcustomAudience : dbCustomAudiences) {
-            final AdTechIdentifier buyerName = dBcustomAudience.getBuyer();
-            if (!buyerInputs.containsKey(buyerName)) {
-                buyerInputs.put(buyerName, BiddingAuctionServers.BuyerInput.newBuilder());
-            }
-            BiddingAuctionServers.BuyerInput.CustomAudience customAudience =
-                    mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
-                            dBcustomAudience);
-
-            buyerInputs.get(buyerName).addCustomAudiences(customAudience);
-
-            mCompressedBuyerInputCreatorHelper.addToBuyerIntermediateStats(
-                    perBuyerStats, dBcustomAudience, customAudience);
-        }
 
         // Creating a distinct loop over signals as buyers with CAs and Signals could be mutually
         // exclusive
@@ -88,6 +76,21 @@ public class CompressedBuyerInputCreatorNoOptimizations implements CompressedBuy
                     entry.getValue().getEncodedPayload());
 
             buyerInputs.put(buyerName, builderWithSignals);
+        }
+
+        for (DBCustomAudience dBcustomAudience : dbCustomAudiences) {
+            final AdTechIdentifier buyerName = dBcustomAudience.getBuyer();
+            if (!buyerInputs.containsKey(buyerName)) {
+                buyerInputs.put(buyerName, BiddingAuctionServers.BuyerInput.newBuilder());
+            }
+            BiddingAuctionServers.BuyerInput.CustomAudience customAudience =
+                    mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
+                            dBcustomAudience);
+
+            buyerInputs.get(buyerName).addCustomAudiences(customAudience);
+
+            mCompressedBuyerInputCreatorHelper.addToBuyerIntermediateStats(
+                    perBuyerStats, dBcustomAudience, customAudience);
         }
 
         mCompressedBuyerInputCreatorHelper.logBuyerInputGeneratedStats(perBuyerStats);
