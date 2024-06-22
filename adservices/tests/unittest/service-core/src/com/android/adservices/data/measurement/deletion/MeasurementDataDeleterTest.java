@@ -483,6 +483,34 @@ public class MeasurementDataDeleterTest {
     }
 
     @Test
+    public void deleteAppUninstalledData_reinstallWindowDisabled_undoInstallAttributionCalled()
+            throws DatastoreException {
+        // Setup
+        when(mFlags.getMeasurementEnableReinstallReattribution()).thenReturn(false);
+
+        // Execution
+        mMeasurementDataDeleter.deleteAppUninstalledData(
+                Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME));
+
+        // Assertions
+        verify(mMeasurementDao).undoInstallAttribution(any());
+    }
+
+    @Test
+    public void deleteAppUninstalledData_reinstallWindowEnabled_undoInstallAttributionNotCalled()
+            throws DatastoreException {
+        // Setup
+        when(mFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
+
+        // Execution
+        mMeasurementDataDeleter.deleteAppUninstalledData(
+                Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME));
+
+        // Assertions
+        verify(mMeasurementDao, never()).undoInstallAttribution(any());
+    }
+
+    @Test
     public void delete_deletionModeAll_success() throws DatastoreException {
         // Setup
         Set<String> triggerIds = Set.of("triggerId1", "triggerId2");

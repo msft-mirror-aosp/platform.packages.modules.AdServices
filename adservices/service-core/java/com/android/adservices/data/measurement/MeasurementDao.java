@@ -33,6 +33,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.MeasurementTables.SourceAttributionScopeContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceDestination;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Attribution;
@@ -2511,6 +2512,33 @@ class MeasurementDao implements IMeasurementDao {
                         SourceContract.TABLE,
                         whereString);
 
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementEnableReinstallReattribution()) {
+            String reinstallSubQuery =
+                    getReinstallRegistrationOriginsQuery(uri, eventTimestamp, whereString);
+
+            // Filter out sources where registration origin has reinstall signal
+            String reinstallWhereString =
+                    String.format(
+                            Locale.ENGLISH,
+                            mergeConditions(
+                                    " AND ",
+                                    whereString,
+                                    SourceContract.TABLE
+                                            + "."
+                                            + SourceContract.REGISTRATION_ORIGIN
+                                            + " NOT IN (%1$s)"),
+                            reinstallSubQuery);
+
+            filterQuery =
+                    String.format(
+                            Locale.ENGLISH,
+                            " ( WITH source_ids AS (%1$s) SELECT * from %2$s WHERE %3$s )",
+                            sourceIdSubQuery,
+                            SourceContract.TABLE,
+                            reinstallWhereString);
+        }
+
         // The inner query picks the top record based on priority and recency order after applying
         // the filter. But first_value generates one value per partition but applies to all the rows
         // that input has, so we have to nest it with distinct in order to get unique source_ids.
@@ -3055,6 +3083,74 @@ class MeasurementDao implements IMeasurementDao {
 
     private static Long getNullableUnsignedLong(@Nullable UnsignedLong ulong) {
         return Optional.ofNullable(ulong).map(UnsignedLong::getValue).orElse(null);
+    }
+
+    /**
+     * Return registration origins that recognizes the app install as a re-install i.e. exists rows
+     * in AppReportHistory table with the app destination for the report origin and the last report
+     * is within reinstall reattribution window and is install attributed.
+     */
+    private static String getReinstallRegistrationOriginsQuery(
+            Uri uri, long eventTimestamp, String whereString) {
+        String earliestReportTime =
+                String.format(
+                        Locale.ENGLISH,
+                        "%1$d - "
+                                + "("
+                                + SourceContract.TABLE
+                                + "."
+                                + SourceContract.REINSTALL_REATTRIBUTION_WINDOW
+                                + ")",
+                        eventTimestamp);
+
+        // Check if install is reinstall by filtering sources that are install attributed and
+        // are within the reinstall window.
+        final String reinstallWhereClause =
+                mergeConditions(
+                        " AND ",
+                        whereString,
+                        MeasurementTables.SourceContract.TABLE
+                                + "."
+                                + MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED
+                                + " = 1",
+                        // Only consider app report history within the signal lifetime
+                        MeasurementTables.AppReportHistoryContract.TABLE
+                                + "."
+                                + MeasurementTables.AppReportHistoryContract
+                                        .LAST_REPORT_DELIVERED_TIME
+                                + " > "
+                                + earliestReportTime);
+
+        final String sourceAppReportHistoryJoinClause =
+                mergeConditions(
+                        " AND ",
+                        MeasurementTables.SourceContract.TABLE
+                                + "."
+                                + MeasurementTables.SourceContract.REGISTRATION_ORIGIN
+                                + " = "
+                                + MeasurementTables.AppReportHistoryContract.TABLE
+                                + "."
+                                + MeasurementTables.AppReportHistoryContract.REGISTRATION_ORIGIN,
+                        MeasurementTables.AppReportHistoryContract.TABLE
+                                + "."
+                                + MeasurementTables.AppReportHistoryContract.APP_DESTINATION
+                                + " = "
+                                + DatabaseUtils.sqlEscapeString(uri.toString()));
+
+        String reinstallQuery =
+                "SELECT DISTINCT "
+                        + SourceContract.TABLE
+                        + "."
+                        + SourceContract.REGISTRATION_ORIGIN
+                        + " FROM "
+                        + MeasurementTables.SourceContract.TABLE
+                        + " INNER JOIN "
+                        + MeasurementTables.AppReportHistoryContract.TABLE
+                        + " ON "
+                        + sourceAppReportHistoryJoinClause
+                        + " WHERE "
+                        + reinstallWhereClause;
+        return reinstallQuery;
     }
 
     /**

@@ -136,6 +136,7 @@ public class MeasurementDaoTest {
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
     private static final Uri APP_ONE_SOURCE = Uri.parse("android-app://com.example2.one-source");
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment-id";
+    private static final String ENROLLMENT_ID1 = "enrollment-id1";
     private static final Uri APP_TWO_PUBLISHER =
             Uri.parse("android-app://com.publisher2.two-sources");
     private static final Uri APP_ONE_PUBLISHER =
@@ -188,6 +189,12 @@ public class MeasurementDaoTest {
     private DatastoreManager mDatastoreManager;
     public static final Uri REGISTRATION_ORIGIN_2 =
             WebUtil.validUri("https://subdomain_2.example.test");
+    public static final Uri REGISTRATION_ORIGIN_3 =
+            WebUtil.validUri("https://subdomain_3.example.test");
+    public static final Uri REGISTRATION_ORIGIN_4 =
+            WebUtil.validUri("https://subdomain_4.example.test");
+    public static final Uri REGISTRATION_ORIGIN_5 =
+            WebUtil.validUri("https://subdomain_5.example.test");
 
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
@@ -2629,6 +2636,294 @@ public class MeasurementDaoTest {
                 currentTimestamp - DAYS.toMillis(7),
                 getInstallAttributionInstallTime("IA1", db).longValue());
         removeSources(Arrays.asList("IA1"), db);
+    }
+
+    @Test
+    public void
+            testInstallAttribution_reinstallReattributionEnabled_skipsAttributionForReinstall() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableReinstallReattribution();
+        long currentTimestamp = System.currentTimeMillis();
+        long reinstallWindow = DAYS.toMillis(50);
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA1",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setReinstallReattributionWindow(reinstallWindow)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setInstallAttributed(true)
+                        .build(),
+                /* sourceId= */ "IA1");
+
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA2",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setReinstallReattributionWindow(reinstallWindow)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                /* sourceId= */ "IA2");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA3",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setReinstallReattributionWindow(reinstallWindow)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                /* sourceId= */ "IA3");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA4",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setReinstallReattributionWindow(reinstallWindow)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                /* sourceId= */ "IA4");
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.insertOrUpdateAppReportHistory(
+                                    INSTALLED_PACKAGE, REGISTRATION_ORIGIN, currentTimestamp);
+                        }));
+
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.doInstallAttribution(
+                                    INSTALLED_PACKAGE, currentTimestamp);
+                        }));
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA1", db));
+        assertFalse(getInstallAttributionStatus(/* sourceDbId= */ "IA2", db));
+        assertFalse(getInstallAttributionStatus(/* sourceDbId= */ "IA3", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA4", db));
+
+        removeSources(Arrays.asList("IA1", "IA2", "IA3", "IA4"), db);
+    }
+
+    @Test
+    public void testInstallAttribution_reinstallReattributionDisabled_doesNotSkipReinstall() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(false).when(mFlags).getMeasurementEnableReinstallReattribution();
+        long currentTimestamp = System.currentTimeMillis();
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA1",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setInstallAttributed(true)
+                        .build(),
+                "IA1");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA2",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                "IA2");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA3",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                "IA3");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA4",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                "IA4");
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.insertOrUpdateAppReportHistory(
+                                    INSTALLED_PACKAGE, REGISTRATION_ORIGIN, currentTimestamp);
+                        }));
+        // Should select id=IA2 as it is latest
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.doInstallAttribution(
+                                    INSTALLED_PACKAGE, currentTimestamp);
+                        }));
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA1", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA2", db));
+        assertFalse(getInstallAttributionStatus(/* sourceDbId= */ "IA3", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA4", db));
+
+        removeSources(Arrays.asList("IA1", "IA2", "IA3", "IA4"), db);
+    }
+
+    @Test
+    public void
+            testInstallAttribution_reinstallReattributionEnabledNoWindow_doesNotSkipReinstall() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableReinstallReattribution();
+        long currentTimestamp = System.currentTimeMillis();
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA1",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .setInstallAttributed(true)
+                        .build(),
+                "IA1");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA2",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .build(),
+                "IA2");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA3",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .build(),
+                "IA3");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA4",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .build(),
+                "IA4");
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.insertOrUpdateAppReportHistory(
+                                    INSTALLED_PACKAGE, REGISTRATION_ORIGIN, currentTimestamp);
+                        }));
+        // Should select id=IA2 as it is latest
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.doInstallAttribution(
+                                    INSTALLED_PACKAGE, currentTimestamp);
+                        }));
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA1", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA2", db));
+        assertFalse(getInstallAttributionStatus(/* sourceDbId= */ "IA3", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA4", db));
+
+        removeSources(Arrays.asList("IA1", "IA2", "IA3", "IA4"), db);
+    }
+
+    @Test
+    public void testInstallAttribution_reinstallReattributionEnabledNoReinstall_doesNotSkip() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableReinstallReattribution();
+        long currentTimestamp = System.currentTimeMillis();
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA1",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .build(),
+                "IA1");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA2",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .build(),
+                "IA2");
+
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.insertOrUpdateAppReportHistory(
+                                    INSTALLED_PACKAGE, REGISTRATION_ORIGIN, currentTimestamp);
+                        }));
+        // Should select id=IA2 as it is latest
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.doInstallAttribution(
+                                    INSTALLED_PACKAGE, currentTimestamp);
+                        }));
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        assertFalse(getInstallAttributionStatus(/* sourceDbId= */ "IA1", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA2", db));
+
+        removeSources(Arrays.asList("IA1", "IA2"), db);
     }
 
     @Test
@@ -5904,6 +6199,66 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void deleteExpiredRecords_reinstallAttributionEnabled_deletesExpiredAppInstallHistory() {
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementEnableReinstallReattribution();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getReadableDatabase();
+        long now = System.currentTimeMillis();
+        mDatastoreManager.runInTransaction(
+                (dao) ->
+                        dao.insertOrUpdateAppReportHistory(
+                                INSTALLED_PACKAGE,
+                                REGISTRATION_ORIGIN,
+                                /* lastReportDeliveredTimestamp= */ now
+                                        - TimeUnit.DAYS.toMillis(1)));
+        mDatastoreManager.runInTransaction(
+                (dao) ->
+                        dao.insertOrUpdateAppReportHistory(
+                                INSTALLED_PACKAGE,
+                                REGISTRATION_ORIGIN_2,
+                                /* lastReportDeliveredTimestamp= */ now
+                                        - TimeUnit.DAYS.toMillis(3)));
+
+        long earliestValidInsertion = now - TimeUnit.DAYS.toMillis(2);
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao ->
+                                measurementDao.deleteExpiredRecords(
+                                        earliestValidInsertion,
+                                        /* registrationRetryLimit= */ 0,
+                                        earliestValidInsertion)));
+        // Assert Record 1 remains because not expired and Retry Limiting Off.
+        assertEquals(
+                1,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.AppReportHistoryContract.REGISTRATION_ORIGIN
+                                + ") FROM "
+                                + MeasurementTables.AppReportHistoryContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.AppReportHistoryContract.REGISTRATION_ORIGIN
+                                + " = ?",
+                        new String[] {REGISTRATION_ORIGIN.toString()}));
+
+        // Assert Record 2 Removed because expired.
+        assertEquals(
+                0,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.AppReportHistoryContract.REGISTRATION_ORIGIN
+                                + ") FROM "
+                                + MeasurementTables.AppReportHistoryContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.AppReportHistoryContract.REGISTRATION_ORIGIN
+                                + " = ?",
+                        new String[] {REGISTRATION_ORIGIN_2.toString()}));
+    }
+
+    @Test
     public void getRegistrationRedirectCount_keyMissing() {
         Optional<KeyValueData> optKeyValueData =
                 mDatastoreManager.runInTransactionWithResult(
@@ -6646,6 +7001,10 @@ public class MeasurementDaoTest {
         values.put(SourceContract.REGISTRATION_ID, source.getRegistrationId());
         values.put(SourceContract.SHARED_AGGREGATION_KEYS, source.getSharedAggregationKeys());
         values.put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin().toString());
+        values.put(SourceContract.IS_INSTALL_ATTRIBUTED, source.isInstallAttributed());
+        values.put(
+                SourceContract.REINSTALL_REATTRIBUTION_WINDOW,
+                source.getReinstallReattributionWindow());
         long row = db.insert(SourceContract.TABLE, null, values);
         assertNotEquals("Source insertion failed", -1, row);
 
@@ -11115,6 +11474,24 @@ public class MeasurementDaoTest {
             int eventTimePastDays,
             boolean expiredIAWindow,
             String enrollmentId) {
+        return createSourceForIATest(
+                id,
+                currentTime,
+                priority,
+                eventTimePastDays,
+                expiredIAWindow,
+                enrollmentId,
+                REGISTRATION_ORIGIN);
+    }
+
+    private Source.Builder createSourceForIATest(
+            String id,
+            long currentTime,
+            long priority,
+            int eventTimePastDays,
+            boolean expiredIAWindow,
+            String enrollmentId,
+            Uri registrationOrigin) {
         return new Source.Builder()
                 .setId(id)
                 .setPublisher(Uri.parse("android-app://com.example.sample"))
@@ -11127,7 +11504,7 @@ public class MeasurementDaoTest {
                         currentTime
                                 - DAYS.toMillis(eventTimePastDays == -1 ? 10 : eventTimePastDays))
                 .setPriority(priority == -1 ? 100 : priority)
-                .setRegistrationOrigin(REGISTRATION_ORIGIN);
+                .setRegistrationOrigin(registrationOrigin);
     }
 
     private AggregateReport generateMockAggregateReport(String attributionDestination, int id) {

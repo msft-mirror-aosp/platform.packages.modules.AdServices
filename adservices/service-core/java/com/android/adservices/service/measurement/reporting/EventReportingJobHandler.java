@@ -321,8 +321,8 @@ public class EventReportingJobHandler {
             throws DatastoreException {
         Pair<List<Uri>, List<Uri>> destinations =
                 dao.getSourceDestinations(eventReport.getSourceId());
-        List<Uri> webDestinations = destinations.first;
-        List<Uri> appDestinations = destinations.second;
+        List<Uri> appDestinations = destinations.first;
+        List<Uri> webDestinations = destinations.second;
         if (appDestinations.isEmpty()
                 || !eventReport.getAttributionDestinations().contains(appDestinations.get(0))) {
             return;
@@ -334,7 +334,7 @@ public class EventReportingJobHandler {
         dao.insertOrUpdateAppReportHistory(
                 appDestinations.get(0),
                 eventReport.getRegistrationOrigin(),
-                System.currentTimeMillis());
+                eventReport.getReportTime());
     }
 
     /**

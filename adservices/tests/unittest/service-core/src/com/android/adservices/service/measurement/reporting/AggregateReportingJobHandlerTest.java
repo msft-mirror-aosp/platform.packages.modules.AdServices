@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
@@ -241,6 +241,7 @@ public class AggregateReportingJobHandlerTest {
     public void testSendReportSuccess_reinstallAttributionEnabled_persistsAppReportHistory()
             throws DatastoreException, IOException, JSONException {
         when(mMockFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
+        Long reportTime = 10L;
         AggregateReport aggregateReport =
                 new AggregateReport.Builder()
                         .setId("aggregateReportId")
@@ -250,6 +251,7 @@ public class AggregateReportingJobHandlerTest {
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .setRegistrationOrigin(REPORTING_URI)
                         .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                        .setScheduledReportTime(reportTime)
                         .setAttributionDestination(APP_DESTINATION)
                         .build();
         JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
@@ -259,8 +261,8 @@ public class AggregateReportingJobHandlerTest {
 
         Pair<List<Uri>, List<Uri>> destinations =
                 new Pair<>(
-                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
-                        List.of(APP_DESTINATION));
+                        List.of(APP_DESTINATION),
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)
@@ -293,7 +295,7 @@ public class AggregateReportingJobHandlerTest {
         verify(mTransaction, times(3)).begin();
         verify(mTransaction, times(3)).end();
         verify(mMeasurementDao, times(1))
-                .insertOrUpdateAppReportHistory(eq(APP_DESTINATION), eq(REPORTING_URI), anyLong());
+                .insertOrUpdateAppReportHistory(any(), any(), eq(reportTime));
     }
 
     @Test
@@ -319,8 +321,8 @@ public class AggregateReportingJobHandlerTest {
 
         Pair<List<Uri>, List<Uri>> destinations =
                 new Pair<>(
-                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
-                        List.of(APP_DESTINATION));
+                        List.of(APP_DESTINATION),
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)
@@ -352,8 +354,7 @@ public class AggregateReportingJobHandlerTest {
         verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(3)).begin();
         verify(mTransaction, times(3)).end();
-        verify(mMeasurementDao, times(0))
-                .insertOrUpdateAppReportHistory(eq(APP_DESTINATION), eq(REPORTING_URI), anyLong());
+        verify(mMeasurementDao, times(0)).insertOrUpdateAppReportHistory(any(), any(), anyLong());
     }
 
     @Test
@@ -378,8 +379,8 @@ public class AggregateReportingJobHandlerTest {
 
         Pair<List<Uri>, List<Uri>> destinations =
                 new Pair<>(
-                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
-                        List.of(APP_DESTINATION));
+                        List.of(APP_DESTINATION),
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)

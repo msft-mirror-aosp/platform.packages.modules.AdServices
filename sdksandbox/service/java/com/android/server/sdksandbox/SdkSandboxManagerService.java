@@ -28,6 +28,7 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_A
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
+import static com.android.sdksandbox.flags.Flags.serviceRestrictionPackageNameLogicUpdated;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
@@ -1681,15 +1682,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return;
             }
         }
-
-        if (requestAllowedPerAllowlist(
-                intent.getAction(),
-                intent.getPackage(),
-                /*componentClassName=*/ (component == null) ? null : component.getClassName(),
-                /*componentPackageName=*/ (component == null)
-                        ? null
-                        : component.getPackageName())) {
-            return;
+        // TODO(b/348144532): Make the error message more informative
+        if (serviceRestrictionPackageNameLogicUpdated()) {
+            if (isIntentAllowedPerAllowList(intent)) {
+                return;
+            }
+        } else {
+            if (requestAllowedPerAllowlist(
+                    intent.getAction(),
+                    intent.getPackage(),
+                    /* componentClassName= */ (component == null) ? null : component.getClassName(),
+                    /* componentPackageName= */ (component == null)
+                            ? null
+                            : component.getPackageName())) {
+                return;
+            }
         }
 
         // Default disallow.
@@ -2241,28 +2248,75 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
                         ? mSdkSandboxSettingsListener.getNextServiceAllowlist()
                         : mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
-                                /*targetSdkVersion=*/ 34);
+                                /* targetSdkVersion= */ 34);
 
         if (Objects.isNull(allowedServices)) {
             return false;
         }
-
         for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
             AllowedService allowedService = allowedServices.getAllowedServices(i);
             if (StringHelper.doesInputMatchWildcardPattern(
-                            allowedService.getAction(), action, /*matchOnNullInput=*/ true)
+                            allowedService.getAction(), action, /* matchOnNullInput= */ true)
                     && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getPackageName(),
                             packageName,
-                            /*matchOnNullInput=*/ true)
+                            /* matchOnNullInput= */ true)
                     && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getComponentClassName(),
                             componentClassName,
-                            /*matchOnNullInput=*/ true)
+                            /* matchOnNullInput= */ true)
                     && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getComponentPackageName(),
                             componentPackageName,
-                            /*matchOnNullInput=*/ true)) {
+                            /* matchOnNullInput= */ true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isIntentAllowedPerAllowList(Intent intent) {
+        // Implicit intents are disabled by default, and only explicit intents are permitted.
+        // Explicit intents must specify an action and either the package name or the component name
+        if (intent.getAction() == null
+                || (intent.getPackage() == null && intent.getComponent() == null)) {
+            return false;
+        }
+
+        // TODO(b/288873117): Use effective targetSdkVersion of the sandbox for the client app.
+        AllowedServices allowedServices =
+                mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
+                        ? mSdkSandboxSettingsListener.getNextServiceAllowlist()
+                        : mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
+                                /* targetSdkVersion= */ 34);
+
+        if (allowedServices == null) {
+            return false;
+        }
+
+        ComponentName component = intent.getComponent();
+
+        for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
+            AllowedService allowedService = allowedServices.getAllowedServices(i);
+            if (!StringHelper.doesInputMatchWildcardPattern(
+                    allowedService.getAction(), intent.getAction(), /* matchOnNullInput= */ true)) {
+                continue;
+            }
+
+            if (StringHelper.doesInputMatchWildcardPattern(
+                    allowedService.getPackageName(),
+                    intent.getPackage(),
+                    /* matchOnNullInput= */ true)) {
+                return true;
+            } else if (component != null
+                    && StringHelper.doesInputMatchWildcardPattern(
+                            allowedService.getComponentClassName(),
+                            component.getClassName(),
+                            /* matchOnNullInput= */ true)
+                    && StringHelper.doesInputMatchWildcardPattern(
+                            allowedService.getComponentPackageName(),
+                            component.getPackageName(),
+                            /* matchOnNullInput= */ true)) {
                 return true;
             }
         }

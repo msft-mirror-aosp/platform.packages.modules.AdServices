@@ -265,6 +265,7 @@ public class EventReportingJobHandlerTest {
     public void testSendReportSuccess_reinstallAttributionEnabled_persistsAppReportHistory()
             throws DatastoreException, IOException, JSONException {
         when(mFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
+        Long reportTime = 10L;
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
@@ -275,13 +276,14 @@ public class EventReportingJobHandlerTest {
                         .setSourceDebugKey(SOURCE_DEBUG_KEY)
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setReportTime(reportTime)
                         .setSourceId(SOURCE_ID)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setAttributionDestinations(
                                 List.of(
                                         DEFAULT_WEB_DESTINATION,
                                         ALT_WEB_DESTINATION,
                                         APP_DESTINATION))
-                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
         JSONObject eventReportPayload =
                 new EventReportPayload.Builder()
@@ -293,8 +295,8 @@ public class EventReportingJobHandlerTest {
 
         Pair<List<Uri>, List<Uri>> destinations =
                 new Pair<>(
-                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
-                        List.of(APP_DESTINATION));
+                        List.of(APP_DESTINATION),
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)
@@ -329,7 +331,7 @@ public class EventReportingJobHandlerTest {
         verify(mTransaction, times(2)).end();
         verify(mMeasurementDao, times(1))
                 .insertOrUpdateAppReportHistory(
-                        eq(APP_DESTINATION), eq(REPORTING_ORIGIN), anyLong());
+                        eq(APP_DESTINATION), eq(REPORTING_ORIGIN), eq(reportTime));
     }
 
     @Test
@@ -347,12 +349,12 @@ public class EventReportingJobHandlerTest {
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .setRegistrationOrigin(REPORTING_ORIGIN)
                         .setSourceId(SOURCE_ID)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setAttributionDestinations(
                                 List.of(
                                         DEFAULT_WEB_DESTINATION,
                                         ALT_WEB_DESTINATION,
                                         APP_DESTINATION))
-                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
         JSONObject eventReportPayload =
                 new EventReportPayload.Builder()
@@ -364,8 +366,8 @@ public class EventReportingJobHandlerTest {
 
         Pair<List<Uri>, List<Uri>> destinations =
                 new Pair<>(
-                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
-                        List.of(APP_DESTINATION));
+                        List.of(APP_DESTINATION),
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)
@@ -416,12 +418,12 @@ public class EventReportingJobHandlerTest {
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .setRegistrationOrigin(REPORTING_ORIGIN)
                         .setSourceId(SOURCE_ID)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setAttributionDestinations(
                                 List.of(
                                         DEFAULT_WEB_DESTINATION,
                                         ALT_WEB_DESTINATION,
                                         APP_DESTINATION))
-                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
         JSONObject eventReportPayload =
                 new EventReportPayload.Builder()
@@ -433,8 +435,8 @@ public class EventReportingJobHandlerTest {
 
         Pair<List<Uri>, List<Uri>> destinations =
                 new Pair<>(
-                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
-                        List.of(APP_DESTINATION));
+                        List.of(APP_DESTINATION),
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)
