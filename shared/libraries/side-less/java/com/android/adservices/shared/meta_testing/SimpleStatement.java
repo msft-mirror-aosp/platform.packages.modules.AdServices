@@ -15,16 +15,15 @@
  */
 package com.android.adservices.shared.meta_testing;
 
+import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.Logger;
-import com.android.adservices.shared.testing.StandardStreamsLogger;
 
 import org.junit.runners.model.Statement;
 
 /** A simple JUnit statement that provides methods to assert if was evaluated or not. */
 public final class SimpleStatement extends Statement {
 
-    private final Logger mLog =
-            new Logger(StandardStreamsLogger.getInstance(), SimpleStatement.class);
+    private final Logger mLog = new Logger(DynamicLogger.getInstance(), SimpleStatement.class);
 
     private boolean mEvaluated;
     private Throwable mThrowable;
