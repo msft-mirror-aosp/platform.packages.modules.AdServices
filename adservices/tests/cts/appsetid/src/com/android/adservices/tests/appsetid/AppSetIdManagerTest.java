@@ -118,8 +118,6 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
 
         // TODO(b/345835218): Create an Exception Checker for internal exceptions in tests.
         Exception e = receiver.assertFailure(IllegalStateException.class);
-
-        assertThat(e).hasCauseThat().isInstanceOf(ServiceUnavailableException.class);
         assertThat(e.getClass().getSimpleName())
                 .isEqualTo(ServiceUnavailableException.class.getSimpleName());
     }

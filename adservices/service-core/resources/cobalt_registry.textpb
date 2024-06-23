@@ -46,7 +46,6 @@ customers {
         report_name: "fleetwide_counts_true"
         id: 1
         report_type: FLEETWIDE_OCCURRENCE_COUNTS
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 18
         reporting_interval: DAYS_1
         system_profile_selection: REPORT_ALL
@@ -58,12 +57,10 @@ customers {
         id: 2
         report_type: FLEETWIDE_OCCURRENCE_COUNTS
         reporting_threshold: 1
-        privacy_level: LOW_PRIVACY
         num_index_points: 10
         min_value: 1
         max_value: 100
         event_vector_buffer_max: 18
-        poisson_mean: 0.1
         reporting_interval: DAYS_1
         system_profile_selection: REPORT_ALL
         max_release_stage: DEBUG
@@ -80,12 +77,10 @@ customers {
         id: 3
         report_type: FLEETWIDE_OCCURRENCE_COUNTS
         reporting_threshold: 1000000
-        privacy_level: HIGH_PRIVACY
         num_index_points: 49
         min_value: 1
         max_value: 100
         event_vector_buffer_max: 18
-        poisson_mean: 0.00124512
         reporting_interval: DAYS_1
         system_profile_selection: REPORT_ALL
         privacy_mechanism: SHUFFLED_DIFFERENTIAL_PRIVACY
@@ -101,12 +96,10 @@ customers {
         id: 4
         report_type: FLEETWIDE_OCCURRENCE_COUNTS
         reporting_threshold: 10000000
-        privacy_level: HIGH_PRIVACY
         num_index_points: 49
         min_value: 1
         max_value: 100
         event_vector_buffer_max: 18
-        poisson_mean: 0.000124512
         reporting_interval: DAYS_1
         system_profile_selection: REPORT_ALL
         privacy_mechanism: SHUFFLED_DIFFERENTIAL_PRIVACY
@@ -122,12 +115,10 @@ customers {
         id: 5
         report_type: FLEETWIDE_OCCURRENCE_COUNTS
         reporting_threshold: 2
-        privacy_level: LOW_PRIVACY
         num_index_points: 25
         min_value: 1
         max_value: 25
         event_vector_buffer_max: 18
-        poisson_mean: 0.002
         reporting_interval: DAYS_1
         system_profile_selection: REPORT_ALL
         max_release_stage: DOGFOOD
@@ -1949,7 +1940,6 @@ customers {
         id: 1
         report_type: STRING_COUNTS
         reporting_threshold: 1000000
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 100
         string_buffer_max: 50
         reporting_interval: DAYS_1
@@ -1962,7 +1952,6 @@ customers {
         id: 2
         report_type: STRING_COUNTS
         reporting_threshold: 1
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 100
         string_buffer_max: 50
         reporting_interval: DAYS_1
@@ -2238,7 +2227,6 @@ customers {
         id: 1
         report_type: STRING_COUNTS
         reporting_threshold: 1000000
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 100
         string_buffer_max: 50
         reporting_interval: DAYS_1
@@ -2252,7 +2240,6 @@ customers {
         id: 2
         report_type: STRING_COUNTS
         reporting_threshold: 1
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 100
         string_buffer_max: 50
         reporting_interval: DAYS_1
@@ -2391,7 +2378,6 @@ customers {
         id: 1
         report_type: STRING_COUNTS
         reporting_threshold: 1000000
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 100
         string_buffer_max: 50
         reporting_interval: DAYS_1
@@ -2405,7 +2391,6 @@ customers {
         id: 2
         report_type: STRING_COUNTS
         reporting_threshold: 1
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 100
         string_buffer_max: 50
         reporting_interval: DAYS_1
@@ -2541,7 +2526,6 @@ customers {
         id: 1
         report_type: STRING_COUNTS
         reporting_threshold: 1000000
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 200
         string_buffer_max: 50
         reporting_interval: DAYS_1
@@ -2555,7 +2539,6 @@ customers {
         id: 2
         report_type: STRING_COUNTS
         reporting_threshold: 1
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 200
         string_buffer_max: 50
         reporting_interval: DAYS_1

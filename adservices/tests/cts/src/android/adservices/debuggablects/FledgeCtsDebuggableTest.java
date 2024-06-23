@@ -22,6 +22,7 @@ import static android.adservices.utils.CustomAudienceTestFixture.AD_URI_PREFIX;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
@@ -168,6 +169,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SetLongFlag(
         name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
         value = EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS)
+@SetFlagEnabled(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED) // Enabled retry for java script engine
 public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final long LONGER_BIDDING_SCORING_TIMEOUT_MS = 8_000L;
     private static final long SHORT_OVERALL_AD_SELECTION_TIMEOUT_MS = 2_000L;

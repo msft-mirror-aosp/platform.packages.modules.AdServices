@@ -993,7 +993,8 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                         "msmt_attribution",
                         "msmt_event_report",
                         "msmt_aggregate_report",
-                        "msmt_async_registration_contract");
+                        "msmt_async_registration_contract",
+                        "msmt_app_report_history");
         for (String tableName : tableNames) {
             result.append("\n" + tableName + ":\n");
             result.append(getTableState(db, tableName));
@@ -1479,6 +1480,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         db.delete("msmt_attribution", null, null);
         db.delete("msmt_aggregate_report", null, null);
         db.delete("msmt_async_registration_contract", null, null);
+        db.delete("msmt_app_report_history", null, null);
     }
 
     abstract void processAction(RegisterSource sourceRegistration)

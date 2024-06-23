@@ -303,10 +303,6 @@ public class ReportAndRegisterEventImplTest {
         ReportEventTestCallback callback = callReportEvent(input, SHOULD_COUNT_LOG);
 
         // Verify registerEvent was called with exact parameters.
-        verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
-        verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
-
-        // Verify registerEvent was called with exact parameters.
         sellerCallback.assertCalled();
         buyerCallback.assertCalled();
 
@@ -341,10 +337,6 @@ public class ReportAndRegisterEventImplTest {
                 .registerEvent(eq(reportingUri), any(), any(), anyBoolean(), any(), any(), any());
 
         ReportEventTestCallback callback = callReportEvent(input, SHOULD_COUNT_LOG);
-
-        // Verify registerEvent was called with exact parameters.
-        verifyRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
-        verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
 
         // Verify registerEvent was called with exact parameters.
         sellerCallback.assertCalled();

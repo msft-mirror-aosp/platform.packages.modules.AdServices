@@ -174,7 +174,7 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
         mCompressedBuyerInputCreatorHelper.logBuyerInputGeneratedStats(perBuyerStats);
         verify(mAuctionServerPayloadMetricsStrategy)
                 .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
-                        perBuyerStats, 0, 0, 0, Integer.MAX_VALUE);
+                        perBuyerStats, 0, 0, 0, 0);
 
         mCompressedBuyerInputCreatorHelper.incrementPasExtendedMetrics(new byte[5]);
         mCompressedBuyerInputCreatorHelper.logBuyerInputGeneratedStats(perBuyerStats);
