@@ -46,9 +46,11 @@ import com.android.cobalt.system.testing.FakeSystemClock;
 import com.android.cobalt.upload.testing.NoOpUploader;
 
 import com.google.cobalt.Envelope;
+import com.google.cobalt.IndexHistogram;
 import com.google.cobalt.IntegerObservation;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.Metadata;
+import com.google.cobalt.MetricDefinition.MetricDimension;
 import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.MetricDefinition.TimeZonePolicy;
 import com.google.cobalt.Observation;
@@ -61,11 +63,13 @@ import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.PrivacyLevel;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportParticipationObservation;
+import com.google.cobalt.StringHistogramObservation;
 import com.google.cobalt.SystemProfile;
 import com.google.cobalt.SystemProfileField;
 import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.Hashing;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -889,7 +893,7 @@ public class CobaltPeriodicJobImplTest {
                 .isEqualTo(Optional.of(LOG_TIME_DAY));
         assertThat(mTestOnlyDao.getDayIndices()).containsExactly(LOG_TIME_DAY, LOG_TIME_DAY);
 
-        // Trigger the CobaltPeriodicJob for a day more than 30 days later when the cleanup occurs.
+        // Trigger the CobaltPeriodicJob for a day more than 1 days later when the cleanup occurs.
         mClock.set(CLEANUP_TIME);
         mPeriodicJob.generateAggregatedObservations().get();
 
@@ -996,5 +1000,427 @@ public class CobaltPeriodicJobImplTest {
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_3))
                 .isEqualTo(Optional.of(LOG_TIME_DAY));
         assertThat(mTestOnlyDao.getObservationBatches()).isEmpty();
+    }
+
+    @Test
+    public void generateAggregatedObservations_stringCounts_observationsSent() throws Exception {
+        // Create a registry with a STRING metric with 2 STRING_COUNTS reports: one with no system
+        // profile fields and the other with the app version.
+        ReportDefinition simpleReport =
+                ReportDefinition.newBuilder()
+                        .setId(103)
+                        .setReportType(ReportType.STRING_COUNTS)
+                        .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY)
+                        .build();
+        ReportDefinition systemProfileReport =
+                ReportDefinition.newBuilder()
+                        .setId(104)
+                        .setReportType(ReportType.STRING_COUNTS)
+                        .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY)
+                        .addSystemProfileField(SystemProfileField.APP_VERSION)
+                        .build();
+        MetricDefinition metric =
+                MetricDefinition.newBuilder()
+                        .setId(102)
+                        .setMetricType(MetricType.STRING)
+                        .setTimeZonePolicy(TimeZonePolicy.OTHER_TIME_ZONE)
+                        .setOtherTimeZone("America/Los_Angeles")
+                        .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
+                        .addReports(simpleReport)
+                        .addReports(systemProfileReport)
+                        .build();
+        mProject = Project.create(/* customerId= */ 100, /* projectId= */ 101, List.of(metric));
+
+        // Set up the main test objects.
+        manualSetUp();
+
+        ReportKey simpleReportKey =
+                ReportKey.create(
+                        mProject.getCustomerId(),
+                        mProject.getProjectId(),
+                        metric.getId(),
+                        simpleReport.getId());
+        ReportKey systemProfileReportKey =
+                ReportKey.create(
+                        mProject.getCustomerId(),
+                        mProject.getProjectId(),
+                        metric.getId(),
+                        systemProfileReport.getId());
+
+        // Initialize all reports as up to date for sending observations up to the previous day.
+        mTestOnlyDao.insertLastSentDayIndex(simpleReportKey, LOG_TIME_DAY - 1);
+        mTestOnlyDao.insertLastSentDayIndex(systemProfileReportKey, LOG_TIME_DAY - 1);
+
+        // Log "STRING_A" to both reports for EVENT_VECTOR_1.
+        {
+            mDataService
+                    .aggregateString(
+                            simpleReportKey,
+                            LOG_TIME_DAY,
+                            mSystemData.filteredSystemProfile(simpleReport),
+                            EVENT_VECTOR_1,
+                            /* eventVectorBufferMax= */ 0,
+                            /* stringBufferMax= */ 0,
+                            "STRING_A")
+                    .get();
+            mDataService
+                    .aggregateString(
+                            systemProfileReportKey,
+                            LOG_TIME_DAY,
+                            mSystemData.filteredSystemProfile(systemProfileReport),
+                            EVENT_VECTOR_1,
+                            /* eventVectorBufferMax= */ 0,
+                            /* stringBufferMax= */ 0,
+                            "STRING_A")
+                    .get();
+        }
+
+        // Log "STRING_A" to both reports for EVENT_VECTOR_2.
+        {
+            mDataService
+                    .aggregateString(
+                            simpleReportKey,
+                            LOG_TIME_DAY,
+                            mSystemData.filteredSystemProfile(simpleReport),
+                            EVENT_VECTOR_2,
+                            /* eventVectorBufferMax= */ 0,
+                            /* stringBufferMax= */ 0,
+                            "STRING_A")
+                    .get();
+            mDataService
+                    .aggregateString(
+                            systemProfileReportKey,
+                            LOG_TIME_DAY,
+                            mSystemData.filteredSystemProfile(systemProfileReport),
+                            EVENT_VECTOR_2,
+                            /* eventVectorBufferMax= */ 0,
+                            /* stringBufferMax= */ 0,
+                            "STRING_A")
+                    .get();
+        }
+
+        // Log "STRING_B" to both reports for EVENT_VECTOR_1 twice.
+        {
+            mDataService
+                    .aggregateString(
+                            simpleReportKey,
+                            LOG_TIME_DAY,
+                            mSystemData.filteredSystemProfile(simpleReport),
+                            EVENT_VECTOR_1,
+                            /* eventVectorBufferMax= */ 0,
+                            /* stringBufferMax= */ 0,
+                            "STRING_B")
+                    .get();
+            mDataService
+                    .aggregateString(
+                            simpleReportKey,
+                            LOG_TIME_DAY,
+                            mSystemData.filteredSystemProfile(simpleReport),
+                            EVENT_VECTOR_1,
+                            /* eventVectorBufferMax= */ 0,
+                            /* stringBufferMax= */ 0,
+                            "STRING_B")
+                    .get();
+
+            mDataService
+                    .aggregateString(
+                            systemProfileReportKey,
+                            LOG_TIME_DAY,
+                            mSystemData.filteredSystemProfile(systemProfileReport),
+                            EVENT_VECTOR_1,
+                            /* eventVectorBufferMax= */ 0,
+                            /* stringBufferMax= */ 0,
+                            "STRING_B")
+                    .get();
+            mDataService
+                    .aggregateString(
+                            systemProfileReportKey,
+                            LOG_TIME_DAY,
+                            mSystemData.filteredSystemProfile(systemProfileReport),
+                            EVENT_VECTOR_1,
+                            /* eventVectorBufferMax= */ 0,
+                            /* stringBufferMax= */ 0,
+                            "STRING_B")
+                    .get();
+        }
+
+        // Trigger the CobaltPeriodicJob for the current day.
+        mClock.set(UPLOAD_TIME);
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        // Verify the observations were all removed and the last sent day index updated.
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(simpleReportKey))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(systemProfileReportKey))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.getObservationBatches()).isEmpty();
+
+        // Verify a single observation was sent to Clearcut.
+        ImmutableList<Envelope> sentEnvelopes = mUploader.getSentEnvelopes();
+        assertThat(sentEnvelopes).hasSize(1);
+        assertThat(apiKeysOf(sentEnvelopes)).containsExactly(API_KEY);
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
+
+        // The reports share metadata excluding the report id and system profile fields.
+        ObservationMetadata baseMetadata =
+                ObservationMetadata.newBuilder()
+                        .setCustomerId(mProject.getCustomerId())
+                        .setProjectId(mProject.getProjectId())
+                        .setMetricId(metric.getId())
+                        .setDayIndex(LOG_TIME_DAY)
+                        .build();
+
+        ByteString stringAHash =
+                ByteString.copyFrom(
+                        Hashing.farmHashFingerprint64().hashBytes("STRING_A".getBytes()).asBytes());
+        ByteString stringBHash =
+                ByteString.copyFrom(
+                        Hashing.farmHashFingerprint64().hashBytes("STRING_B".getBytes()).asBytes());
+
+        // Both reports send the same histograms. The only difference is how system profiles are
+        // reported.
+        StringHistogramObservation stringHistogram =
+                StringHistogramObservation.newBuilder()
+                        .addStringHashesFf64(stringAHash)
+                        .addStringHashesFf64(stringBHash)
+                        .addStringHistograms(
+                                IndexHistogram.newBuilder()
+                                        .addAllEventCodes(EVENT_VECTOR_1.eventCodes())
+                                        // "STRING_A" was logged once.
+                                        .addBucketIndices(0)
+                                        .addBucketCounts(1)
+                                        // "STRING_B" was logged twice.
+                                        .addBucketIndices(1)
+                                        .addBucketCounts(2))
+                        .addStringHistograms(
+                                IndexHistogram.newBuilder()
+                                        .addAllEventCodes(EVENT_VECTOR_2.eventCodes())
+                                        // "STRING_A" was logged once.
+                                        .addBucketIndices(0)
+                                        .addBucketCounts(1))
+                        .build();
+
+        assertThat(getObservationsIn(sentEnvelopes.get(0)))
+                .containsExactly(
+                        baseMetadata.toBuilder()
+                                .setReportId(simpleReport.getId())
+                                .setSystemProfile(mSystemData.filteredSystemProfile(simpleReport))
+                                .build(),
+                        ImmutableList.of(
+                                ObservationToEncrypt.newBuilder()
+                                        .setObservation(
+                                                Observation.newBuilder()
+                                                        .setStringHistogram(stringHistogram)
+                                                        .setRandomId(RANDOM_BYTES))
+                                        .setContributionId(RANDOM_BYTES)
+                                        .build()),
+                        baseMetadata.toBuilder()
+                                .setReportId(systemProfileReport.getId())
+                                .setSystemProfile(
+                                        mSystemData.filteredSystemProfile(systemProfileReport))
+                                .build(),
+                        ImmutableList.of(
+                                ObservationToEncrypt.newBuilder()
+                                        .setObservation(
+                                                Observation.newBuilder()
+                                                        .setStringHistogram(stringHistogram)
+                                                        .setRandomId(RANDOM_BYTES))
+                                        .setContributionId(RANDOM_BYTES)
+                                        .build()));
+    }
+
+    @Test
+    public void generateAggregatedObservations_multipleMetricTypes_observationsSent()
+            throws Exception {
+        // Create a registry with an OCCURRENCE metric and a STRING metric. The OCCURRENCE metric
+        // has a privacy enabled FLEETWIDE_OCCCURRENCE_COUNTS report and the string metric has a
+        // non-private STRING_COUNTS report.
+        //
+        // The OCCURRENCE report is set up to trigged one fabricated observation and one report
+        // participation observation.
+        //
+        // Neither has system profile fields set.
+        ReportDefinition occurrenceReport =
+                ReportDefinition.newBuilder()
+                        .setId(1)
+                        .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
+                        .setPrivacyLevel(PrivacyLevel.LOW_PRIVACY)
+                        .setMinValue(0)
+                        .setMaxValue(10)
+                        .setNumIndexPoints(11)
+                        .setPoissonMean(0.03)
+                        .build();
+        MetricDefinition occurrenceMetric =
+                MetricDefinition.newBuilder()
+                        .setId(102)
+                        .setMetricType(MetricType.OCCURRENCE)
+                        .addMetricDimensions(MetricDimension.newBuilder().putEventCodes(1, "1"))
+                        .addMetricDimensions(MetricDimension.newBuilder().putEventCodes(5, "5"))
+                        .setTimeZonePolicy(TimeZonePolicy.OTHER_TIME_ZONE)
+                        .setOtherTimeZone("America/Los_Angeles")
+                        .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
+                        .addReports(occurrenceReport)
+                        .build();
+        ReportDefinition stringReport =
+                ReportDefinition.newBuilder()
+                        .setId(1)
+                        .setReportType(ReportType.STRING_COUNTS)
+                        .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY)
+                        .build();
+        MetricDefinition stringMetric =
+                MetricDefinition.newBuilder()
+                        .setId(103)
+                        .setMetricType(MetricType.STRING)
+                        .setTimeZonePolicy(TimeZonePolicy.OTHER_TIME_ZONE)
+                        .setOtherTimeZone("America/Los_Angeles")
+                        .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.DOGFOOD))
+                        .addReports(stringReport)
+                        .build();
+
+        mProject =
+                Project.create(
+                        /* customerId= */ 100,
+                        /* projectId= */ 101,
+                        List.of(occurrenceMetric, stringMetric));
+
+        // Set up the main test objects.
+        manualSetUp();
+
+        ReportKey occurrenceReportKey =
+                ReportKey.create(
+                        mProject.getCustomerId(),
+                        mProject.getProjectId(),
+                        occurrenceMetric.getId(),
+                        occurrenceReport.getId());
+        ReportKey stringReportKey =
+                ReportKey.create(
+                        mProject.getCustomerId(),
+                        mProject.getProjectId(),
+                        stringMetric.getId(),
+                        stringReport.getId());
+
+        // Initialize all reports as up to date for sending observations up to the previous day.
+        mTestOnlyDao.insertLastSentDayIndex(occurrenceReportKey, LOG_TIME_DAY - 1);
+        mTestOnlyDao.insertLastSentDayIndex(stringReportKey, LOG_TIME_DAY - 1);
+
+        // Log 10 to the occurrence report.
+        {
+            mDataService
+                    .aggregateCount(
+                            occurrenceReportKey,
+                            LOG_TIME_DAY,
+                            mSystemData.filteredSystemProfile(occurrenceReport),
+                            EVENT_VECTOR_1,
+                            /* eventVectorBufferMax= */ 0,
+                            /* count= */ 10)
+                    .get();
+        }
+
+        // Log "STRING_A" to the string report.
+        {
+            mDataService
+                    .aggregateString(
+                            stringReportKey,
+                            LOG_TIME_DAY,
+                            mSystemData.filteredSystemProfile(stringReport),
+                            EVENT_VECTOR_2,
+                            /* eventVectorBufferMax= */ 0,
+                            /* stringBufferMax= */ 0,
+                            "STRING_A")
+                    .get();
+        }
+
+        // Trigger the CobaltPeriodicJob for the current day.
+        mClock.set(UPLOAD_TIME);
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        // Verify the observations were all removed and the last sent day index updated.
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(occurrenceReportKey))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(stringReportKey))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.getObservationBatches()).isEmpty();
+
+        // Verify a single observation was sent to Clearcut.
+        ImmutableList<Envelope> sentEnvelopes = mUploader.getSentEnvelopes();
+        assertThat(sentEnvelopes).hasSize(1);
+        assertThat(apiKeysOf(sentEnvelopes)).containsExactly(API_KEY);
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
+
+        // The reports share metadata excluding the metric id, report id, and system profile fields.
+        ObservationMetadata baseMetadata =
+                ObservationMetadata.newBuilder()
+                        .setCustomerId(mProject.getCustomerId())
+                        .setProjectId(mProject.getProjectId())
+                        .setDayIndex(LOG_TIME_DAY)
+                        .build();
+
+        ByteString stringAHash =
+                ByteString.copyFrom(
+                        Hashing.farmHashFingerprint64().hashBytes("STRING_A".getBytes()).asBytes());
+
+        // Both reports send the same histograms. The only difference is how system profiles are
+        // reported.
+        StringHistogramObservation stringHistogram =
+                StringHistogramObservation.newBuilder()
+                        .addStringHashesFf64(stringAHash)
+                        .addStringHistograms(
+                                IndexHistogram.newBuilder()
+                                        .addAllEventCodes(EVENT_VECTOR_2.eventCodes())
+                                        // "STRING_A" was logged once.
+                                        .addBucketIndices(0)
+                                        .addBucketCounts(1))
+                        .build();
+
+        assertThat(getObservationsIn(sentEnvelopes.get(0)))
+                .containsExactly(
+                        baseMetadata.toBuilder()
+                                .setMetricId(occurrenceMetric.getId())
+                                .setReportId(occurrenceReport.getId())
+                                .setSystemProfile(
+                                        mSystemData.filteredSystemProfile(occurrenceReport))
+                                .build(),
+                        ImmutableList.of(
+                                // Real observation.
+                                ObservationToEncrypt.newBuilder()
+                                        .setObservation(
+                                                Observation.newBuilder()
+                                                        .setPrivateIndex(
+                                                                PrivateIndexObservation.newBuilder()
+                                                                        .setIndex(10))
+                                                        .setRandomId(RANDOM_BYTES))
+                                        .setContributionId(RANDOM_BYTES)
+                                        .build(),
+                                // Fabricated observation.
+                                ObservationToEncrypt.newBuilder()
+                                        .setObservation(
+                                                Observation.newBuilder()
+                                                        .setPrivateIndex(
+                                                                PrivateIndexObservation.newBuilder()
+                                                                        .setIndex(9))
+                                                        .setRandomId(RANDOM_BYTES))
+                                        .build(),
+                                // Report participation observation.
+                                ObservationToEncrypt.newBuilder()
+                                        .setObservation(
+                                                Observation.newBuilder()
+                                                        .setReportParticipation(
+                                                                ReportParticipationObservation
+                                                                        .getDefaultInstance())
+                                                        .setRandomId(RANDOM_BYTES))
+                                        .build()),
+                        baseMetadata.toBuilder()
+                                .setMetricId(stringMetric.getId())
+                                .setReportId(stringReport.getId())
+                                .setSystemProfile(mSystemData.filteredSystemProfile(stringReport))
+                                .build(),
+                        ImmutableList.of(
+                                ObservationToEncrypt.newBuilder()
+                                        .setObservation(
+                                                Observation.newBuilder()
+                                                        .setStringHistogram(stringHistogram)
+                                                        .setRandomId(RANDOM_BYTES))
+                                        .setContributionId(RANDOM_BYTES)
+                                        .build()));
     }
 }

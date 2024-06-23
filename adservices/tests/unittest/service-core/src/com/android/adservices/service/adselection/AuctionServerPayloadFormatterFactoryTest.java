@@ -23,15 +23,23 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
 
-
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
 
 public class AuctionServerPayloadFormatterFactoryTest {
     private static final int V0_VERSION = AuctionServerPayloadFormatterV0.VERSION;
     private static final int V1_VERSION = AuctionServerPayloadFormatterExcessiveMaxSize.VERSION;
     private static final int INVALID_VERSION = Integer.MAX_VALUE;
+
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testCreateFormatter_validVersion_returnImplementationSuccess() {
@@ -44,7 +52,8 @@ public class AuctionServerPayloadFormatterFactoryTest {
     @Test
     public void testCreateExtractor_validVersion_returnImplementationSuccess() {
         AuctionServerPayloadExtractor extractor =
-                AuctionServerPayloadFormatterFactory.createPayloadExtractor(V0_VERSION);
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(
+                        V0_VERSION, mAdServicesLoggerMock);
         assertTrue(extractor instanceof AuctionServerPayloadFormatterV0);
     }
 
@@ -59,7 +68,8 @@ public class AuctionServerPayloadFormatterFactoryTest {
     @Test
     public void testCreateExtractor_excessiveMaxSizeVersion_returnImplementationSuccess() {
         AuctionServerPayloadExtractor extractor =
-                AuctionServerPayloadFormatterFactory.createPayloadExtractor(V1_VERSION);
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(
+                        V1_VERSION, mAdServicesLoggerMock);
         assertTrue(extractor instanceof AuctionServerPayloadFormatterExcessiveMaxSize);
     }
 
@@ -84,6 +94,8 @@ public class AuctionServerPayloadFormatterFactoryTest {
                         AuctionServerPayloadExtractor.class.getName(),
                         INVALID_VERSION),
                 IllegalArgumentException.class,
-                () -> AuctionServerPayloadFormatterFactory.createPayloadExtractor(INVALID_VERSION));
+                () ->
+                        AuctionServerPayloadFormatterFactory.createPayloadExtractor(
+                                INVALID_VERSION, mAdServicesLoggerMock));
     }
 }

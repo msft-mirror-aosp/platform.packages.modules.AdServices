@@ -28,7 +28,5 @@ import org.junit.runner.RunWith;
 public class LoadAdMicrobenchmark extends LoadAd {
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(
-                            new KillAppsRule("com.google.android.libraries.internal.exampleclient"))
-                    .around(new DropCachesRule());
+            RuleChain.outerRule(new KillAppsRule(sPackageName)).around(new DropCachesRule());
 }

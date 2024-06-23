@@ -16,9 +16,12 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
-import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.annotation.RequiresApi;
 import android.content.Context;
@@ -39,6 +42,7 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.access.AppPackageAccessResolver;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -124,7 +128,7 @@ class ReportAndRegisterEventImpl extends EventReporter {
                             // Fail Silently by notifying success to caller
                             notifySuccessToCaller(callback);
                         } else {
-                            notifyFailureToCaller(callback, t);
+                            notifyFailureToCaller(input.getCallerPackageName(), callback, t);
                         }
                     }
                 },
@@ -136,6 +140,14 @@ class ReportAndRegisterEventImpl extends EventReporter {
         reportingUrisFuture
                 .transformAsync(
                         reportingUris -> {
+                            if (mFlags.getFledgeBeaconReportingMetricsEnabled()) {
+                                mAdServicesLogger.logReportInteractionApiCalledStats(
+                                        ReportInteractionApiCalledStats.builder()
+                                                .setBeaconReportingDestinationType(
+                                                        input.getReportingDestinations())
+                                                .setNumMatchingUris(reportingUris.size())
+                                                .build());
+                            }
                             if (canMeasurementRegisterAndReport(input)) {
                                 return reportAndRegisterUris(reportingUris, input);
                             } else {
@@ -149,7 +161,10 @@ class ReportAndRegisterEventImpl extends EventReporter {
                             public void onSuccess(List<Void> result) {
                                 sLogger.d("reportEvent() completed successfully.");
                                 mAdServicesLogger.logFledgeApiCallStats(
-                                        LOGGING_API_NAME, AdServicesStatusUtils.STATUS_SUCCESS, 0);
+                                        LOGGING_API_NAME,
+                                        input.getCallerPackageName(),
+                                        STATUS_SUCCESS,
+                                        /*latencyMs=*/ 0);
                             }
 
                             @Override
@@ -158,13 +173,15 @@ class ReportAndRegisterEventImpl extends EventReporter {
                                 if (t instanceof IOException) {
                                     mAdServicesLogger.logFledgeApiCallStats(
                                             LOGGING_API_NAME,
-                                            AdServicesStatusUtils.STATUS_IO_ERROR,
-                                            0);
+                                            input.getCallerPackageName(),
+                                            STATUS_IO_ERROR,
+                                            /*latencyMs=*/ 0);
                                 } else {
                                     mAdServicesLogger.logFledgeApiCallStats(
                                             LOGGING_API_NAME,
-                                            AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
-                                            0);
+                                            input.getCallerPackageName(),
+                                            STATUS_INTERNAL_ERROR,
+                                            /*latencyMs=*/ 0);
                                 }
                             }
                         },
@@ -186,7 +203,7 @@ class ReportAndRegisterEventImpl extends EventReporter {
                         mFlags.getMsmtApiAppAllowList(),
                         mFlags.getMsmtApiAppBlockList(),
                         input.getCallerPackageName());
-        if (!appPackageAccessResolver.isAllowed(mContext)) {
+        if (!appPackageAccessResolver.getAccessInfo(mContext).isAllowedAccess()) {
             sLogger.v("Skipping event registration: App is not allowlisted to use ARA.");
             return false;
         }

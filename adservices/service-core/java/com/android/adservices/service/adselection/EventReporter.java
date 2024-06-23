@@ -255,7 +255,10 @@ public abstract class EventReporter {
         }
     }
 
-    void notifyFailureToCaller(@NonNull ReportInteractionCallback callback, @NonNull Throwable t) {
+    void notifyFailureToCaller(
+            @NonNull String callerAppPackageName,
+            @NonNull ReportInteractionCallback callback,
+            @NonNull Throwable t) {
         int resultCode;
 
         boolean isFilterException = t instanceof FilterException;
@@ -272,7 +275,8 @@ public abstract class EventReporter {
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         // Note: Failure is logged before the callback to ensure deterministic testing.
         if (!isFilterException) {
-            mAdServicesLogger.logFledgeApiCallStats(LOGGING_API_NAME, resultCode, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    LOGGING_API_NAME, callerAppPackageName, resultCode, /*latencyMs=*/ 0);
         }
 
         try {

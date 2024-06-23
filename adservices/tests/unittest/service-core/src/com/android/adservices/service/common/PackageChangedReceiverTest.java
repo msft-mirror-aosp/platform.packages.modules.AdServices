@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.CommonFixture.doSleep;
+
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
@@ -44,6 +46,8 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
@@ -62,16 +66,15 @@ import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
@@ -82,37 +85,34 @@ import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link com.android.adservices.service.common.PackageChangedReceiver}. */
 @SmallTest
-public class PackageChangedReceiverTest {
+@SpyStatic(AdServicesLoggerImpl.class)
+@SpyStatic(TopicsWorker.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(MeasurementImpl.class)
+@SpyStatic(ConsentManager.class)
+public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoTestCase {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
     private static final int BACKGROUND_THREAD_TIMEOUT_MS = 500;
     private static final int DEFAULT_PACKAGE_UID = -1;
 
-    @Mock EpochManager mMockEpochManager;
-    @Mock CacheManager mMockCacheManager;
-    @Mock BlockedTopicsManager mBlockedTopicsManager;
-    @Mock AppUpdateManager mMockAppUpdateManager;
-    @Mock CustomAudienceDatabase mCustomAudienceDatabaseMock;
-    @Mock SharedStorageDatabase mSharedStorageDatabaseMock;
-    @Mock CustomAudienceDao mCustomAudienceDaoMock;
-    @Mock AppInstallDao mAppInstallDaoMock;
-    @Mock FrequencyCapDao mFrequencyCapDaoMock;
-    @Mock ConsentManager mConsentManager;
-    @Mock Flags mMockFlags;
+    @Mock private EpochManager mMockEpochManager;
+    @Mock private CacheManager mMockCacheManager;
+    @Mock private BlockedTopicsManager mBlockedTopicsManager;
+    @Mock private AppUpdateManager mMockAppUpdateManager;
+    @Mock private CustomAudienceDatabase mCustomAudienceDatabaseMock;
+    @Mock private SharedStorageDatabase mSharedStorageDatabaseMock;
+    @Mock private CustomAudienceDao mCustomAudienceDaoMock;
+    @Mock private AppInstallDao mAppInstallDaoMock;
+    @Mock private FrequencyCapDao mFrequencyCapDaoMock;
+    @Mock private ConsentManager mConsentManager;
+    @Mock private Flags mMockFlags;
 
     private TopicsWorker mSpyTopicsWorker;
-    private MockitoSession mStaticMockSession;
 
     @Before
     public void before() {
-        MockitoAnnotations.initMocks(this);
-
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AdServicesLoggerImpl.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
         ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
                 .when(AdServicesLoggerImpl::getInstance);
 
@@ -127,11 +127,6 @@ public class PackageChangedReceiverTest {
                                 FlagsFactory.getFlagsForTest()));
         doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
         PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
-    }
-
-    @After
-    public void cleanup() {
-        mStaticMockSession.finishMocking();
     }
 
     private PackageChangedReceiver createSpyPackageReceiverForMeasurement() {
@@ -312,11 +307,12 @@ public class PackageChangedReceiverTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testReceivePackageFullyRemoved_consent() throws Exception {
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-        runPackageFullyRemovedForConsent(intent);
+        runPackageFullyRemovedForConsent_onS(intent);
     }
 
     /**
@@ -326,6 +322,7 @@ public class PackageChangedReceiverTest {
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid()
             throws InterruptedException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
@@ -342,6 +339,7 @@ public class PackageChangedReceiverTest {
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
             throws InterruptedException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
@@ -354,6 +352,7 @@ public class PackageChangedReceiverTest {
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid_backCompat()
             throws InterruptedException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.removeExtra(Intent.EXTRA_UID);
 
@@ -364,6 +363,7 @@ public class PackageChangedReceiverTest {
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault_backCompat()
             throws InterruptedException, IOException {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
 
@@ -451,11 +451,10 @@ public class PackageChangedReceiverTest {
 
     @Test
     public void testPackageChangedReceiverDisabled() {
-        Context mockContext = mock(Context.class);
         PackageManager mockPackageManager = mock(PackageManager.class);
-        doReturn(mockPackageManager).when(mockContext).getPackageManager();
+        doReturn(mockPackageManager).when(mMockContext).getPackageManager();
 
-        PackageChangedReceiver.disableReceiver(mockContext, mMockFlags);
+        PackageChangedReceiver.disableReceiver(mMockContext, mMockFlags);
 
         ArgumentCaptor<ComponentName> cap = ArgumentCaptor.forClass(ComponentName.class);
         verify(mockPackageManager)
@@ -467,14 +466,6 @@ public class PackageChangedReceiverTest {
     }
 
     private void runPackageFullyRemovedForTopicsKillSwitchOff(Intent intent) throws Exception {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(TopicsWorker.class)
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
             long epochId = 1;
 
             // Kill switch is off.
@@ -500,20 +491,9 @@ public class PackageChangedReceiverTest {
             verify(mMockEpochManager, times(2)).getCurrentEpochId();
             verify(mMockAppUpdateManager)
                     .handleAppUninstallationInRealTime(Uri.parse(SAMPLE_PACKAGE), epochId);
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageFullyRemovedForTopicsKillSwitchOn(Intent intent) throws Exception {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(TopicsWorker.class)
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
             // Kill switch is on.
             doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
@@ -528,20 +508,9 @@ public class PackageChangedReceiverTest {
 
             // When the kill switch is on, there is no Topics related work.
             verify(mSpyTopicsWorker, never()).handleAppUninstallation(any());
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageFullyRemovedForMsmtKillSwitchOff(Intent intent) throws Exception {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MeasurementImpl.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
             // Kill switch is off.
             doReturn(false).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
@@ -566,20 +535,9 @@ public class PackageChangedReceiverTest {
 
             // Verify method inside measurement background thread executes
             verify(mockMeasurementImpl, times(1)).deletePackageRecords(any());
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageFullyRemovedForMsmtKillSwitchOn(Intent intent) throws Exception {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MeasurementImpl.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
             // Kill Switch is on.
             doReturn(true).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
@@ -604,22 +562,10 @@ public class PackageChangedReceiverTest {
 
             // Verify method inside measurement background thread does not execute
             verify(mockMeasurementImpl, never()).deletePackageRecords(any());
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageFullyRemovedForFledgeKillSwitchOff(
             Intent intent, boolean filteringEnabled) throws Exception {
-        // Start a mockitoSession to mock static method
-        // Lenient added to allow easy disabling of other APIs' methods
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        try {
             // Kill switch is off; service is enabled
             doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
             doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -674,21 +620,9 @@ public class PackageChangedReceiverTest {
             } else {
                 verifyZeroInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
             }
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageFullyRemovedForFledgeKillSwitchOn(Intent intent) {
-        // Start a mockitoSession to mock static method
-        // Lenient added to allow easy disabling of other APIs' methods
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        try {
             // Kill switch is on; service is disabled
             doReturn(true).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
             doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -705,23 +639,11 @@ public class PackageChangedReceiverTest {
             verify(spyReceiver, never()).getSharedStorageDatabase(any());
             verifyZeroInteractions(
                     mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
-        } finally {
-            session.finishMocking();
-        }
     }
 
-    private void runPackageFullyRemovedForConsent(Intent intent) throws Exception {
-        // Start a mockitoSession to mock static method
-        // Lenient added to allow easy disabling of other APIs' methods
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(ConsentManager.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        try {
+    private void runPackageFullyRemovedForConsent_onS(Intent intent) throws Exception {
             // Mock static method AppConsentDao.getInstance() executed on a separate thread
-            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
             CountDownLatch completionLatch = new CountDownLatch(1);
             doAnswer(
@@ -741,24 +663,12 @@ public class PackageChangedReceiverTest {
             // Verify method inside background thread executes
             assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             verify(mConsentManager).clearConsentForUninstalledApp(any(), anyInt());
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void validateConsentWhenPackageUidAbsent(Intent intent, boolean isPackageStillInstalled)
             throws IOException, InterruptedException {
-        // Start a mockitoSession to mock static method
-        // Lenient added to allow easy disabling of other APIs' methods
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(ConsentManager.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        try {
             // Mock static method AppConsentDao.getInstance() executed on a separate thread
-            doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+            doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
             // Track whether the clearConsentForUninstalledApp was ever invoked.
             // Use a CountDownLatch since this invocation happens on a background thread.
@@ -787,20 +697,9 @@ public class PackageChangedReceiverTest {
             // and that it does not execute if the package is still installed.
             assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS))
                     .isEqualTo(!isPackageStillInstalled);
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageAddedForTopics(Intent intent) throws Exception {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(TopicsWorker.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-
-        try {
             // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
             doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(eq(sContext)));
 
@@ -820,20 +719,9 @@ public class PackageChangedReceiverTest {
 
             // Verify the execution in background thread has occurred.
             assertThat(completionLatch.await(/* timeout */ 500, TimeUnit.MILLISECONDS)).isTrue();
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageAddedMsmtKillSwitchOff(Intent intent) throws Exception {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MeasurementImpl.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
             // Kill Switch is off.
             doReturn(false).when(mMockFlags).getMeasurementReceiverInstallAttributionKillSwitch();
 
@@ -858,20 +746,9 @@ public class PackageChangedReceiverTest {
 
             // Verify method inside measurement background thread executes
             verify(mockMeasurementImpl, times(1)).doInstallAttribution(any(), anyLong());
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageAddedForMsmtKillSwitchOn(Intent intent) throws Exception {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MeasurementImpl.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
             // Kill Switch is on.
             doReturn(true).when(mMockFlags).getMeasurementReceiverInstallAttributionKillSwitch();
 
@@ -896,20 +773,9 @@ public class PackageChangedReceiverTest {
 
             // Verify method inside measurement background thread does not execute
             verify(mockMeasurementImpl, never()).doInstallAttribution(any(), anyLong());
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageDataClearedForMsmtKillSwitchOff(Intent intent) throws Exception {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MeasurementImpl.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
             // Kill Switch is off.
             doReturn(false).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
@@ -934,20 +800,9 @@ public class PackageChangedReceiverTest {
 
             // Verify method inside measurement background thread executes
             verify(mockMeasurementImpl, times(1)).deletePackageRecords(any());
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageDataClearedForMsmtKillSwitchOn(Intent intent) throws Exception {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MeasurementImpl.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        try {
             // Kill Switch is on.
             doReturn(true).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
@@ -972,21 +827,9 @@ public class PackageChangedReceiverTest {
 
             // Verify method inside measurement background thread does not execute
             verify(mockMeasurementImpl, never()).deletePackageRecords(any());
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageDataClearedForFledgeKillSwitchOff(Intent intent) throws Exception {
-        // Start a mockitoSession to mock static method
-        // Lenient added to allow easy disabling of other APIs' methods
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        try {
             // Kill switch is off; service is enabled
             doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
             doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -1037,21 +880,9 @@ public class PackageChangedReceiverTest {
             verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
             verify(mAppInstallDaoMock).deleteByPackageName(any());
             verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
-        } finally {
-            session.finishMocking();
-        }
     }
 
     private void runPackageDataClearedForFledgeKillSwitchOn(Intent intent) {
-        // Start a mockitoSession to mock static method
-        // Lenient added to allow easy disabling of other APIs' methods
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        try {
             // Kill switch is on; service is disabled
             doReturn(true).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
             doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -1067,23 +898,11 @@ public class PackageChangedReceiverTest {
             verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
             verifyZeroInteractions(
                     mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
-        } finally {
-            session.finishMocking();
-        }
     }
 
     @Test
+    @SpyStatic(PackageManagerCompatUtils.class)
     public void testIsPackageStillInstalled() {
-        // Start a mockitoSession to mock static method
-        // Lenient added to allow easy disabling of other APIs' methods
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-
-        try {
             final String packageNamePrefix = "com.example.package";
             final int count = 4;
             final List<PackageInfo> packages = new ArrayList<>();
@@ -1102,21 +921,12 @@ public class PackageChangedReceiverTest {
             assertThat(receiver.isPackageStillInstalled(context, packageNamePrefix + 0)).isTrue();
             assertThat(receiver.isPackageStillInstalled(context, packageNamePrefix + count))
                     .isFalse();
-        } finally {
-            session.finishMocking();
-        }
     }
 
     @Test
+    @MockStatic(SdkLevel.class)
     public void testReceive_onT_onExtServices() {
-        MockitoSession mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(SdkLevel.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        try {
-            ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
+        extendedMockito.mockIsAtLeastT(true);
             Intent intent =
                     createIntentSentByAdServiceSystemService(Intent.ACTION_PACKAGE_FULLY_REMOVED);
             PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
@@ -1129,21 +939,12 @@ public class PackageChangedReceiverTest {
             verify(receiver, never()).measurementOnPackageFullyRemoved(any(), any());
             verify(receiver, never()).topicsOnPackageFullyRemoved(any(), any());
             verify(receiver, never()).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
-        } finally {
-            mMockitoSession.finishMocking();
-        }
     }
 
     @Test
+    @MockStatic(SdkLevel.class)
     public void testReceive_onS_onExtServices() {
-        MockitoSession mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(SdkLevel.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        try {
-            ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+        extendedMockito.mockIsAtLeastT(false);
             Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
             PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
             Context spyContext = Mockito.spy(ApplicationProvider.getApplicationContext());
@@ -1155,8 +956,26 @@ public class PackageChangedReceiverTest {
             verify(receiver).measurementOnPackageFullyRemoved(any(), any());
             verify(receiver).topicsOnPackageFullyRemoved(any(), any());
             verify(receiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
-        } finally {
-            mMockitoSession.finishMocking();
-        }
+    }
+
+    @Test
+    @MockStatic(SdkLevel.class)
+    public void testAppConsentDeletion_onR() throws Exception {
+        extendedMockito.mockIsAtLeastS(false);
+        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
+            Intent intent =
+                    createIntentSentByAdServiceSystemService(
+                            PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+            doReturn(false).when(spyReceiver).isPackageStillInstalled(any(), anyString());
+
+            // Invoke the onReceive method to test the behavior
+            spyReceiver.onReceive(sContext, intent);
+
+            verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
+            doSleep(BACKGROUND_THREAD_TIMEOUT_MS);
+
+            // On R App consent clear should not be called as it is not supported
+            verify(mConsentManager, never()).clearConsentForUninstalledApp(any(), anyInt());
     }
 }

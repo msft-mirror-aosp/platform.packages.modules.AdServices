@@ -23,13 +23,13 @@ import java.util.Arrays;
 /** ByteArrayStream implementation that reduces amount of copy operation */
 public class ThreadUnsafeByteArrayOutputStream {
     private static final int ONE_KILOBYTE = 1024;
-    private static final int INITIAL_CAPACITY = 100 * ONE_KILOBYTE;
+    private static final int DEFAULT_INITIAL_CAPACITY = 100 * ONE_KILOBYTE;
     private static final int SOFT_MAX_ARRAY_LENGTH = Integer.MAX_VALUE - 8;
     private byte[] mBuffer;
     private int mCount;
 
     public ThreadUnsafeByteArrayOutputStream() {
-        this.mBuffer = new byte[INITIAL_CAPACITY];
+        this.mBuffer = new byte[DEFAULT_INITIAL_CAPACITY];
         this.mCount = 0;
     }
 

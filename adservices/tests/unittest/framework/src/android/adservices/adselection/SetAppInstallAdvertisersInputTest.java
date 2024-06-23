@@ -26,6 +26,9 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -41,6 +44,9 @@ public final class SetAppInstallAdvertisersInputTest {
                             AdTechIdentifier.fromString("example1.com"),
                             AdTechIdentifier.fromString("example2.com")));
     private static final String CALLER_PACKAGE_NAME = "callerPackageName";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testWriteToParcel() {

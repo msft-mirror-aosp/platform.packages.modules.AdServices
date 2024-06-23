@@ -107,7 +107,8 @@
               "key": "0x559",
               "value": 123
             }
-          ]
+          ],
+          "source_registration_time": "1643155200"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239174000"
@@ -120,7 +121,8 @@
               "key": "0x559",
               "value": 456
             }
-          ]
+          ],
+          "source_registration_time": "1643155200"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643325574000"

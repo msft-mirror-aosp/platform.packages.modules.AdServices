@@ -32,6 +32,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.shared.common.ServiceUnavailableException;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -106,6 +107,11 @@ public class AppSetIdManager {
         IAppSetIdService service = null;
         try {
             service = mServiceBinder.getService();
+
+            // Throw ServiceUnavailableException and set it to the callback.
+            if (service == null) {
+                throw new ServiceUnavailableException();
+            }
         } catch (RuntimeException e) {
             LogUtil.e(e, "Failed binding to AppSetId service");
             executor.execute(() -> callback.onError(e));

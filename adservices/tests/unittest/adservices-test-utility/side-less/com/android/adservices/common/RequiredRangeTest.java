@@ -15,8 +15,8 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.common.AbstractSdkLevelSupportedRule.AndroidSdkRange;
 import com.android.adservices.common.AbstractSdkLevelSupportedRule.RequiredRange;
+import com.android.adservices.common.AndroidSdk.Range;
 
 import com.google.common.truth.Expect;
 
@@ -32,7 +32,7 @@ public final class RequiredRangeTest {
 
     @Test
     public void testToString() {
-        var range = AndroidSdkRange.forAnyLevel();
+        var range = Range.forAnyLevel();
         var requiredRange = new RequiredRange(range, REASON);
 
         String toString = requiredRange.toString();
@@ -43,8 +43,8 @@ public final class RequiredRangeTest {
 
     @Test
     public void testEqualsHashCode() {
-        var range1 = AndroidSdkRange.forAnyLevel();
-        var range2 = AndroidSdkRange.forExactly(42);
+        var range1 = Range.forAnyLevel();
+        var range2 = Range.forExactly(42);
 
         expectEquals(new RequiredRange(range1, REASON), new RequiredRange(range1, REASON));
         expectEquals(new RequiredRange(range1, REASON), new RequiredRange(range1, NULL_REASON));

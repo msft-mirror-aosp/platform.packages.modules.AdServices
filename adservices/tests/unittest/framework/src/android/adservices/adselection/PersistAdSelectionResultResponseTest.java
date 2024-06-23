@@ -27,6 +27,9 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 @SmallTest
@@ -37,6 +40,9 @@ public class PersistAdSelectionResultResponseTest {
             new Uri.Builder().path("another-valid.example.com/testing/hello").build();
     private static final long TEST_AD_SELECTION_ID = 12345;
     private static final long ANOTHER_TEST_AD_SELECTION_ID = 6789;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildPersistAdSelectionResultResponse() {

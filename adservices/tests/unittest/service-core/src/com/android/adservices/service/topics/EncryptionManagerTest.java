@@ -41,6 +41,7 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.HpkeJni;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.EncryptedTopic;
@@ -106,6 +107,9 @@ public final class EncryptionManagerTest {
                     .setLastFetchTime(100001L)
                     .build();
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Rule
     public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this).spyStatic(ErrorLogUtil.class).build();
@@ -127,6 +131,7 @@ public final class EncryptionManagerTest {
 
         when(mFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
         when(mFlags.getTopicsEncryptionEnabled()).thenReturn(true);
+        when(mFlags.getTopicsTestEncryptionPublicKey()).thenReturn("");
     }
 
     @Test
@@ -180,6 +185,23 @@ public final class EncryptionManagerTest {
         assertThat(optionalEncryptedTopic.get().getEncryptedTopic()).isNotEmpty();
         assertThat(optionalEncryptedTopic.get().getKeyIdentifier())
                 .isEqualTo(LATEST_HPKE_ENCRYPTION_KEY.getBody());
+        assertThat(optionalEncryptedTopic.get().getEncapsulatedKey()).isNotEmpty();
+    }
+
+    @Test
+    public void testEncryption_useTestingKeys() {
+        String overrideTestKey = "YVfr8K7rpuv45LtaCv9L1eIGxBv/UK22WugJBjg53fo";
+        when(mFlags.getTopicsTestEncryptionPublicKey()).thenReturn(overrideTestKey);
+        Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
+
+        Optional<EncryptedTopic> optionalEncryptedTopic =
+                mEncryptionManager.encryptTopic(topic, SDK_NAME);
+
+        // Verify EncryptedTopic is not empty.
+        assertThat(optionalEncryptedTopic.isPresent()).isTrue();
+        assertThat(optionalEncryptedTopic.get().getEncryptedTopic()).isNotEmpty();
+        // Verify test key used to override has been used.
+        assertThat(optionalEncryptedTopic.get().getKeyIdentifier()).isEqualTo(overrideTestKey);
         assertThat(optionalEncryptedTopic.get().getEncapsulatedKey()).isNotEmpty();
     }
 

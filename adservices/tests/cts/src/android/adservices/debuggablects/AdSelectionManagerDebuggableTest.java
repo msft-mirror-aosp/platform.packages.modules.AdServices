@@ -24,26 +24,23 @@ import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.os.Process;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTest {
+@RequiresSdkLevelAtLeastS
+public final class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
@@ -62,23 +59,9 @@ public class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTes
 
     private String mAccessStatus;
 
-    // Ignore tests when device is not at least S
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 2)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName());
-
     @Before
     public void setup() {
-        if (SdkLevel.isAtLeastT()) {
+        if (sdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         }
 

@@ -125,8 +125,9 @@ public class AdSelectionConfigFixture {
      *     for the unit tests, this version of Ad Selection builder includes contextual Ads as well
      * @hide
      */
-    public static AdSelectionConfig.Builder anAdSelectionConfigWithContextualAdsBuilder() {
+    public static AdSelectionConfig.Builder anAdSelectionConfigWithSignedContextualAdsBuilder() {
         return anAdSelectionConfigBuilder()
-                .setBuyerSignedContextualAds(SignedContextualAdsFixture.getBuyerContextualAdsMap());
+                .setPerBuyerSignedContextualAds(
+                        SignedContextualAdsFixture.getBuyerSignedContextualAdsMap());
     }
 }

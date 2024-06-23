@@ -16,10 +16,12 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.DeviceSideDeviceConfigHelper.callWithDeviceConfigPermissions;
-import static com.android.adservices.service.FlagsConstants.KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT;
-import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES;
-import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
@@ -30,12 +32,15 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
 import android.os.Build;
 
 import com.android.adservices.experimental.AbstractFlagsRouletteRunner;
 import com.android.adservices.experimental.AbstractFlagsRouletteRunner.FlagsRouletteState;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -49,11 +54,13 @@ public final class AdServicesFlagsSetterRule
                 DeviceSideSystemPropertiesHelper.getInstance());
     }
 
-    private static AdServicesFlagsSetterRule withDefaultLogcatTags() {
+    /** Factory method that only {@link #setDefaultLogcatTags() sets the default logcat tags}. */
+    public static AdServicesFlagsSetterRule withDefaultLogcatTags() {
         return new AdServicesFlagsSetterRule().setDefaultLogcatTags();
     }
 
-    private static AdServicesFlagsSetterRule withAllLogcatTags() {
+    /** Factory method that only {@link #setAllLogcatTags() sets all relevant logcat tags}. */
+    public static AdServicesFlagsSetterRule withAllLogcatTags() {
         return new AdServicesFlagsSetterRule().setAllLogcatTags();
     }
 
@@ -67,30 +74,17 @@ public final class AdServicesFlagsSetterRule
         return withAllLogcatTags()
                 .setGlobalKillSwitch(false)
                 .setTopicsKillSwitch(false)
-                .setAdIdKillSwitchForTests(false)
-                .setSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
-                .setSystemProperty(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false);
+                .setFlag(KEY_ADID_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, false)
+                .setFlag(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, true);
     }
 
     // TODO(b/297085722): pass clearFlags() on forGlobalKillSwitchDisabledTests() by default?
     /** Factory method that clears all flags then disables the global kill switch. */
     public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledOnClearSlateTests() {
         return withDefaultLogcatTags().clearFlags().setGlobalKillSwitch(false);
-    }
-
-    /** Factory method for Topics end-to-end CTS tests. */
-    public static AdServicesFlagsSetterRule forTopicsE2ETests() {
-        return forGlobalKillSwitchDisabledOnClearSlateTests()
-                .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
-                .setTopicsKillSwitch(false)
-                .setTopicsOnDeviceClassifierKillSwitch(false)
-                .setFlag(KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT, true)
-                .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)
-                .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true)
-                .setDisableTopicsEnrollmentCheckForTests(true)
-                .setConsentManagerDebugMode(true)
-                .setCompatModeFlags();
     }
 
     /** Factory method for Measurement E2E CTS tests */
@@ -100,18 +94,18 @@ public final class AdServicesFlagsSetterRule
                 .setCompatModeFlags()
                 .setMsmtApiAppAllowList(packageName)
                 .setMsmtWebContextClientAllowList(packageName)
-                .setConsentManagerDebugMode(true)
-                .setConsentNotifiedDebugMode(true)
-                .setSystemProperty(KEY_GLOBAL_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
-                .setSystemProperty(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
+                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                .setSystemProperty(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true)
+                .setFlag(KEY_GLOBAL_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH, false)
                 .setFlag(KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES, false)
-                .setAdIdKillSwitchForTests(false);
+                .setFlag(KEY_ADID_KILL_SWITCH, false);
     }
 
     /** Factory method for Topics CB tests */
@@ -120,16 +114,11 @@ public final class AdServicesFlagsSetterRule
         return forGlobalKillSwitchDisabledTests()
                 .setLogcatTag(LOGCAT_TAG_TOPICS, LOGCAT_LEVEL_VERBOSE)
                 .setTopicsKillSwitch(false)
-                .setConsentManagerDebugMode(true)
-                .setDisableTopicsEnrollmentCheckForTests(true)
-                .setTopicsEpochJobPeriodMsForTests(epochPeriodMs)
-                .setTopicsPercentageForRandomTopicForTests(pctRandomTopic)
+                .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
+                .setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, epochPeriodMs)
+                .setFlag(KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, pctRandomTopic)
                 .setCompatModeFlags();
-    }
-
-    /** Factory method for AdservicesCommonManager end-to-end CTS tests. */
-    public static AdServicesFlagsSetterRule forCommonManagerE2ETests(String packageName) {
-        return withDefaultLogcatTags().setCompatModeFlags().setPpapiAppAllowList(packageName);
     }
 
     // NOTE: add more factory methods as needed
@@ -168,7 +157,7 @@ public final class AdServicesFlagsSetterRule
     public float getAdIdRequestPerSecond() {
         try {
             return callWithDeviceConfigPermissions(
-                    () -> PhFlags.getInstance().getAdIdRequestPermitsPerSecond());
+                    () -> FlagsFactory.getFlags().getAdIdRequestPermitsPerSecond());
         } catch (Throwable t) {
             float defaultValue = Flags.ADID_REQUEST_PERMITS_PER_SECOND;
             mLog.e(

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.BUYER_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.OWNER_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
@@ -321,6 +322,29 @@ public class CustomAudienceBlobFixture {
             return addToJSONObject(json, ADS_KEY, adsJson, false);
         }
 
+        return json;
+    }
+
+    /**
+     * Converts a list of {@link String} into a JSONObject with a keyed field for auction server
+     * request flags.
+     *
+     * <p>Optionally adds harmless junk to the object by adding unexpected fields.
+     */
+    public static JSONObject addAuctionServerRequestFlags(
+            JSONObject json, List<String> auctionServerRequestFlags, boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        if (auctionServerRequestFlags != null) {
+            JSONArray auctionServerRequestFlagsArray = new JSONArray();
+            for (String s : auctionServerRequestFlags) {
+                auctionServerRequestFlagsArray.put(s);
+            }
+            if (shouldAddHarmlessJunk) {
+                JsonFixture.addHarmlessJunkValues(auctionServerRequestFlagsArray);
+            }
+            return addToJSONObject(
+                    json, AUCTION_SERVER_REQUEST_FLAGS_KEY, auctionServerRequestFlagsArray, false);
+        }
         return json;
     }
 

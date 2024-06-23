@@ -30,12 +30,14 @@ import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -60,6 +62,9 @@ public class DataVersionFetcherTest {
     public static final Map<String, List<String>> VALID_HEADERS_SELLER =
             ImmutableMap.of(
                     DATA_VERSION_HEADER_SCORING_KEY, List.of(Integer.toString(DATA_VERSION_1)));
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetBuyerDataVersionHeaderSuccess() {

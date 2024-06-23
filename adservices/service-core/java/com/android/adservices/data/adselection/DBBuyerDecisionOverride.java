@@ -93,7 +93,7 @@ public abstract class DBBuyerDecisionOverride {
 
         /** Sets the Buyer decision logic to use instead of fetching it from a trusted server. */
         public abstract DBBuyerDecisionOverride.Builder setDecisionLogic(
-                String buyersDecisionLogic);
+                String perBuyerDecisionLogic);
 
         /** @return an instance of {@link DBBuyerDecisionOverride} */
         public abstract DBBuyerDecisionOverride build();

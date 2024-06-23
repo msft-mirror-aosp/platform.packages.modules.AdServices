@@ -151,7 +151,7 @@
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263,
+        "randomized_trigger_rate": 0.0008051,
         "source_debug_key": "347982378"
       }
     }],
@@ -165,13 +165,15 @@
           {"key": "0x559", "value": 32768},
           {"key": "0xa85", "value": 1664}
         ],
-        "source_debug_key": "347982378"
+        "source_debug_key": "347982378",
+        "source_registration_time": "799977600"
       }
     }],
     "debug_event_level_results": [],
     "debug_aggregatable_results": [],
     "verbose_debug_reports": [
       {
+        "report_time": "800000000001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
         "payload": [
           {
@@ -186,6 +188,7 @@
         ]
       },
       {
+        "report_time": "800000000001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
         "payload": [
           {

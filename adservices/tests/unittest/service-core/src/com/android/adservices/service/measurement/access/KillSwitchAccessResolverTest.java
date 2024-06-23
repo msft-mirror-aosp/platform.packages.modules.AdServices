@@ -45,14 +45,14 @@ public class KillSwitchAccessResolverTest {
     public void testIsAllowed_killSwitchOff_isAllowed() {
         mResolver = new KillSwitchAccessResolver(() -> /* kill switch off */ false);
 
-        assertTrue(mResolver.isAllowed(mContext));
+        assertTrue(mResolver.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test
     public void testIsAllowed_killSwitchOn_isNotAllowed() {
         mResolver = new KillSwitchAccessResolver(() -> /* kill switch on */ true);
 
-        assertFalse(mResolver.isAllowed(mContext));
+        assertFalse(mResolver.getAccessInfo(mContext).isAllowedAccess());
     }
 
     @Test

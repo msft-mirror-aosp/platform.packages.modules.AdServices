@@ -19,7 +19,7 @@ package com.android.adservices.service.ui;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_NOTIFICATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
@@ -97,9 +97,7 @@ public class UxEngineTest {
                         .initMocks(this)
                         .startMocking();
 
-        ExtendedMockito.doReturn(mConsentManager).when(
-                () -> ConsentManager.getInstance(any())
-        );
+        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
         ExtendedMockito.doReturn(mFlags)
                 .when(FlagsFactory::getFlags);
@@ -748,7 +746,7 @@ public class UxEngineTest {
         verify(mUxStatesManager).getFlag(KEY_RVC_UX_ENABLED);
 
         // RVC UX logic where flag is checked once in RvcPostOTAChannel.
-        verify(mUxStatesManager).getFlag(KEY_RVC_NOTIFICATION_ENABLED);
+        verify(mUxStatesManager).getFlag(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED);
 
         // The UX can not be updated due to the fact that graduation channel is currently disabled.
         verify(mConsentManager, never()).setUx(any());

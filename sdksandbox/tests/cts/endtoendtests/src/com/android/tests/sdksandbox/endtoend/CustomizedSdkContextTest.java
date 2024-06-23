@@ -147,6 +147,17 @@ public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
         assertThat(appContextHashCode).isEqualTo(appContextHashCode2);
     }
 
+    /** Test that sdk context uses same userId as application context */
+    @Test
+    public void testSdkContextUserId() throws Exception {
+        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
+
+        loadSdk();
+        int contextUserId = mSdk.getContextUserId();
+
+        assertThat(contextUserId).isEqualTo(mContext.getUserId());
+    }
+
     @Test
     public void testClassloader() throws Exception {
         assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());

@@ -99,7 +99,6 @@ public abstract class IntFailureSyncCallback<T> extends SyncCallback<T, Integer>
      * Asserts that {@link #onError(Exception)} was called, waiting up to {@link #getTimeoutMs()}
      * milliseconds before failing (if not called).
      *
-     * @return the error
      */
     public void assertFailed(int expectedCode) throws InterruptedException {
         int actualCode = assertErrorReceived();
@@ -123,7 +122,7 @@ public abstract class IntFailureSyncCallback<T> extends SyncCallback<T, Integer>
     }
 
     /** Gets the error returned by {@link #onError(Exception)}. */
-    public @Nullable int getFailure() {
+    public int getFailure() {
         return getErrorReceived();
     }
 

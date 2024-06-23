@@ -27,9 +27,6 @@ import com.google.errorprone.annotations.FormatString;
 /** Device-side implementation of {@link SystemPropertiesHelper.Interface}. */
 final class DeviceSideSystemPropertiesHelper extends SystemPropertiesHelper.Interface {
 
-    private static final Logger sLogger =
-            new Logger(AndroidLogger.getInstance(), DeviceSideSystemPropertiesHelper.class);
-
     private static final DeviceSideSystemPropertiesHelper sInstance =
             new DeviceSideSystemPropertiesHelper();
 

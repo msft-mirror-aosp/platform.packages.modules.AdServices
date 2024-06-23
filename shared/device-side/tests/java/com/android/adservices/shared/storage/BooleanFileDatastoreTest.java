@@ -18,6 +18,8 @@ package com.android.adservices.shared.storage;
 
 import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.shared.util.LogUtil.DEBUG;
+import static com.android.adservices.shared.util.LogUtil.VERBOSE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -26,12 +28,12 @@ import static org.junit.Assert.assertThrows;
 
 import android.content.Context;
 import android.os.Build;
-import android.util.Log;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.shared.util.LogUtil;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
@@ -51,8 +53,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public final class BooleanFileDatastoreTest {
-    private static final String TAG = BooleanFileDatastoreTest.class.getSimpleName();
-
     private static final Context APPLICATION_CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final String VALID_DIR = APPLICATION_CONTEXT.getFilesDir().getAbsolutePath();
@@ -143,7 +143,9 @@ public final class BooleanFileDatastoreTest {
     public void testConstructor_parentPathDirectoryIsNotAFile() throws Exception {
         File file = new File(VALID_DIR, "file.IAm");
         String path = file.getAbsolutePath();
-        Log.d(TAG, "path: " + path);
+        if (DEBUG) {
+            LogUtil.d("path: %s", path);
+        }
         assertWithMessage("Could not create file %s", path).that(file.createNewFile()).isTrue();
 
         try {
@@ -154,7 +156,7 @@ public final class BooleanFileDatastoreTest {
                                     path, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY));
         } finally {
             if (!file.delete()) {
-                Log.e(TAG, "Could not delete file " + path + " at the end");
+                LogUtil.e("Could not delete file %s at the end", path);
             }
         }
     }
@@ -236,7 +238,6 @@ public final class BooleanFileDatastoreTest {
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
 
-        Set<String> keys = mDatastore.keySet();
         assertWithMessage("keys").that(mDatastore.keySet()).containsExactly(TEST_KEY);
 
         // Delete
@@ -451,7 +452,9 @@ public final class BooleanFileDatastoreTest {
 
         String prefix = "_";
         String dump = dump(pw -> mDatastore.dump(pw, prefix));
-        Log.d(TAG, "Contents of dump: \n" + dump);
+        if (DEBUG) {
+            LogUtil.d("Contents of dump: \n%s", dump);
+        }
 
         assertCommonDumpContents(dump, prefix);
 
@@ -519,7 +522,9 @@ public final class BooleanFileDatastoreTest {
     }
 
     private static void mockIsAtLeastS(boolean isIt) {
-        Log.v(TAG, "mockIsAtLeastS(" + isIt + ")");
+        if (VERBOSE) {
+            LogUtil.v("mockIsAtLeastS(%b)", isIt);
+        }
         doReturn(isIt).when(SdkLevel::isAtLeastS);
     }
 }

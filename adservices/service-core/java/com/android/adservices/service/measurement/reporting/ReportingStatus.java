@@ -52,7 +52,10 @@ public class ReportingStatus {
         VERBOSE_DEBUG_TRIGGER_UNKNOWN_ERROR(26),
         VERBOSE_DEBUG_TRIGGER_AGGREGATE_STORAGE_LIMIT(27),
         VERBOSE_DEBUG_TRIGGER_AGGREGATE_EXCESSIVE_REPORTS(28),
-        VERBOSE_DEBUG_UNKNOWN(29);
+        VERBOSE_DEBUG_TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED(29),
+        VERBOSE_DEBUG_TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA(30),
+        VERBOSE_DEBUG_UNKNOWN(9999);
+
         private final int mValue;
 
         ReportType(int value) {
@@ -202,6 +205,12 @@ public class ReportingStatus {
             mReportType = ReportType.VERBOSE_DEBUG_TRIGGER_AGGREGATE_STORAGE_LIMIT;
         } else if (reportType.equals(DebugReportApi.Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS)) {
             mReportType = ReportType.VERBOSE_DEBUG_TRIGGER_AGGREGATE_EXCESSIVE_REPORTS;
+        } else if (reportType.equals(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED)) {
+            mReportType = ReportType.VERBOSE_DEBUG_TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED;
+        } else if (reportType.equals(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA)) {
+            mReportType = ReportType.VERBOSE_DEBUG_TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA;
+        } else {
+            mReportType = ReportType.VERBOSE_DEBUG_UNKNOWN;
         }
     }
 

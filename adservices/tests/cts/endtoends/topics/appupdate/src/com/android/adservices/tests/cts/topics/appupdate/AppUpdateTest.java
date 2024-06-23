@@ -18,6 +18,13 @@ package com.android.adservices.tests.cts.topics.appupdate;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.adservices.tests.cts.topics.appupdate.CtsAdServicesTopicsAppUpdateTestCase.TEST_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.tests.cts.topics.appupdate.CtsAdServicesTopicsAppUpdateTestCase.TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
@@ -28,16 +35,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -85,9 +89,8 @@ import java.util.stream.Collectors;
  *
  * <p>Expected running time: ~48s.
  */
-public class AppUpdateTest {
-    @SuppressWarnings("unused")
-    private static final String TAG = "AppUpdateTest";
+@RequiresSdkLevelAtLeastT
+public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
 
     private static final String TEST_APK_NAME = "CtsSampleTopicsApp1.apk";
     private static final String TEST_APK_PATH = "/data/local/tmp/cts/install/" + TEST_APK_NAME;
@@ -107,11 +110,10 @@ public class AppUpdateTest {
             "com.android.adservices.tests.cts.topics.EMPTY_TOPIC_RESPONSE";
     private static final String SDK_NAME = "sdk";
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
+    private final String mAdServicesPackageName =
+            AdservicesTestHelper.getAdServicesPackageName(sContext, mTag);
 
     // Expected topic responses used for assertion. This is the expected order of broadcasts that
     // the test sample app will send back to the main test app. So the order is important.
@@ -124,44 +126,24 @@ public class AppUpdateTest {
     private static final int EPOCH_JOB_ID = 2;
     private static final int MAINTENANCE_JOB_ID = 1;
 
-    // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
-
-    // As adb commands and broadcast processing require time to execute, add this waiting time to
-    // allow them to have enough time to be executed. This helps to reduce the test flaky.
-    private static final long EXECUTION_WAITING_TIME = 2000;
-
-    // Use 0 percent for random topic in the test so that we can verify the returned topic.
-    private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
-    private static final int DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
-
-    private int mExpectedTopicResponseBroadCastIndex = 0;
+    private int mExpectedTopicResponseBroadCastIndex;
     private BroadcastReceiver mTopicsResponseReceiver;
 
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
-
     @Before
-    public void setup() throws InterruptedException {
+    public void setup() throws Exception {
         // Kill AdServices process so that background jobs don't get skipped due to starting
         // with same params.
-        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
+        AdservicesTestHelper.killAdservicesProcess(mAdServicesPackageName);
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        flags.setTopicsEpochJobPeriodMsForTests(TEST_EPOCH_JOB_PERIOD_MS);
+        flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
-        flags.setTopicsPercentageForRandomTopicForTests(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
-        flags.setTopicsDisableDirectAppCall(true);
-        flags.setTopicsEnforceForeground(false);
-
+        flags.setFlag(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        flags.setFlag(KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, true);
+        flags.setFlag(KEY_ENFORCE_FOREGROUND_STATUS_TOPICS, false);
         registerTopicResponseReceiver();
     }
 
@@ -298,7 +280,7 @@ public class AppUpdateTest {
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
+                "cmd jobscheduler run -f" + " " + mAdServicesPackageName + " " + EPOCH_JOB_ID);
     }
 
     // Forces JobScheduler to run the Maintenance job.
@@ -306,7 +288,7 @@ public class AppUpdateTest {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f"
                         + " "
-                        + ADSERVICES_PACKAGE_NAME
+                        + mAdServicesPackageName
                         + " "
                         + MAINTENANCE_JOB_ID);
     }

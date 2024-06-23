@@ -60,25 +60,25 @@ message SystemProfile {
   // cannot be determined, then this field will be 'unknown:<cpu signature>'.
   string board_name = 4;
 
-  // This is a string representing the type of Fuchsia product from which
-  // an observation is collected.
+  // This is a string representing the type of product running on the device.
   //
-  // During development, this is going to refer to layers of the Fuchsia cake
-  // such as "garnet", "zircon", "topaz", etc... In the future, we will use
-  // something related to what sort of device we are running on, such as
-  // "Acme Lightbulb X" or "Machine Corp. Laptop III".
+  // The use of this field is system-specific. For example on Fuchsia it is the
+  // experience running on the device, e.g., "smart display" or "workstation".
   string product_name = 5;
 
   // This is a string representing the version of the currently running system.
-  // The use of this field is system-specific. For example on Fuchsia it is the
-  // build version (aka OS version) with a value that looks like
-  // "0.20200114.1.1".
+  //
+  // The use of this field is system-specific. For example, on Fuchsia, it is
+  // the build version from fuchsia.buildinfo/Provider, e.g., "0.20200114.1.1".
+  // On Android, it is from android.os.Build.VERSION.RELEASE.
   string system_version = 8;
 
   // This is a string representing the version of the app sending information.
-  // The use and format is application-specific. The main anticipated use of
-  // this field is for experiments and debugging. I.e. to figure out if an
-  // issue is version-specific or not.
+  // There can be multiple apps running on the system and updated separately
+  // from the system so sometimes it's more relevant to slice by the app version
+  // than the system version above.
+  //
+  // The use and format of this field is application-specific.
   //
   // The value '<unset>' means the system did not notify Cobalt of the current
   // app_version.
@@ -87,9 +87,10 @@ message SystemProfile {
   // not know the app_version.
   string app_version = 14;
 
-  // This is a string representation of the current channel. It is an arbitrary
-  // string that depends on the system. For example on Fuchsia some possible
-  // values are "qa-daily" and "fishfood".
+  // This is a string representation of the current channel the device belongs
+  // to. It is common to segment a fleet of devices into disjoint populations.
+  //
+  // The use of this field is system-specific.
   //
   // The value '<unset>' means the system did not notify Cobalt of the current
   // channel.

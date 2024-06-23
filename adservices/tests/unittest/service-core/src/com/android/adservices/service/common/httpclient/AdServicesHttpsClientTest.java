@@ -18,6 +18,8 @@ package com.android.adservices.service.common.httpclient;
 
 import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
 
+import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.EMPTY_BODY;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -55,6 +57,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.mockwebserver.Dispatcher;
@@ -462,7 +465,13 @@ public class AdServicesHttpsClientTest {
 
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.create(
-                        uri, requestProperties, responseHeaderKeys, false, DEV_CONTEXT_DISABLED);
+                        uri,
+                        requestProperties,
+                        responseHeaderKeys,
+                        false,
+                        DEV_CONTEXT_DISABLED,
+                        AdServicesHttpUtil.HttpMethodType.GET,
+                        EMPTY_BODY);
 
         assertEquals(uri, request.getUri());
         assertEquals(requestProperties, request.getRequestProperties());
@@ -486,7 +495,13 @@ public class AdServicesHttpsClientTest {
 
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.create(
-                        uri, requestProperties, responseHeaderKeys, false, DEV_CONTEXT_ENABLED);
+                        uri,
+                        requestProperties,
+                        responseHeaderKeys,
+                        false,
+                        DEV_CONTEXT_ENABLED,
+                        AdServicesHttpUtil.HttpMethodType.GET,
+                        EMPTY_BODY);
 
         assertEquals(uri, request.getUri());
         assertEquals(requestProperties, request.getRequestProperties());
@@ -843,6 +858,152 @@ public class AdServicesHttpsClientTest {
         // Verify we are pinging a local domain.
         assertThat(WebAddresses.isLocalhost(Uri.parse(url.toString()))).isTrue();
         assertEquals(mJsScript, response.getResponseBody());
+    }
+
+    @Test
+    public void testperformRequestAndGetResponseInBytes_postsCorrectData() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+        URL url = server.getUrl(mReportingPath);
+        byte[] postedBody = {1, 2, 3};
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(
+                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBody)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.POST)
+                        .build();
+
+        mClient.performRequestGetResponseInBase64String(request).get();
+
+        RecordedRequest recordedRequest1 = server.takeRequest();
+        assertThat(recordedRequest1.getMethod())
+                .isEqualTo(AdServicesHttpUtil.HttpMethodType.POST.name());
+        assertThat(recordedRequest1.getBody()).isEqualTo(postedBody);
+    }
+
+    @Test
+    public void performRequestGetResponseBytes_getRequestNonEmptyBody_requestBodyShouldBeEmpty()
+            throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+        URL url = server.getUrl(mReportingPath);
+        byte[] postedBody = {1, 2, 3};
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(
+                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBody)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.GET)
+                        .build();
+
+        mClient.performRequestGetResponseInBase64String(request).get();
+
+        RecordedRequest recordedRequest = server.takeRequest();
+        assertThat(recordedRequest.getMethod())
+                .isEqualTo(AdServicesHttpUtil.HttpMethodType.GET.name());
+        assertThat(recordedRequest.getBody()).isEqualTo(EMPTY_BODY);
+    }
+
+    @Test
+    public void testperformRequestAndGetResponseInBytes_shouldReturnResponseInBytes()
+            throws Exception {
+        byte[] byteResponse = {1, 2, 3, 54};
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody(byteResponse)));
+        URL url = server.getUrl(mReportingPath);
+        byte[] postedBodyInBytes = {1, 2, 3};
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(
+                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBodyInBytes)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.GET)
+                        .build();
+
+        AdServicesHttpClientResponse response =
+                mClient.performRequestGetResponseInBase64String(request).get();
+
+        String expectedResponseString = BaseEncoding.base64().encode(byteResponse);
+        assertThat(response.getResponseBody()).isEqualTo(expectedResponseString);
+    }
+
+    @Test
+    public void performRequestGetResponseBytes_failedStatusCode_shouldThrowErrorWithCorrectCode()
+            throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setResponseCode(429)));
+        URL url = server.getUrl(mReportingPath);
+        byte[] postedBody = {1, 2, 3};
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(
+                                AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBody)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.GET)
+                        .build();
+
+        // Assert future chain throws an AdServicesNetworkException.
+        Exception wrapperException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mClient.performRequestGetResponseInBase64String(request).get());
+        assertThat(wrapperException.getCause()).isInstanceOf(AdServicesNetworkException.class);
+
+        // Assert the expected AdServicesNetworkException is thrown.
+        AdServicesNetworkException exception =
+                (AdServicesNetworkException) wrapperException.getCause();
+        assertThat(exception.getErrorCode())
+                .isEqualTo(AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS);
+    }
+
+    @Test
+    public void testPerformRequestAndGetResponseInString_shouldReturnResponseString()
+            throws Exception {
+        String stringResponse = "This is a plain String response which could also be a JSON String";
+        byte[] postedBodyInBytes = "{[1,2,3]}".getBytes("UTF-8");
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request)
+                            throws InterruptedException {
+                        assertEquals(new String(postedBodyInBytes), new String(request.getBody()));
+                        return new MockResponse().setBody(stringResponse);
+                    }
+                };
+        MockWebServer server = mMockWebServerRule.startMockWebServer(dispatcher);
+        URL url = server.getUrl(mReportingPath);
+
+        ImmutableMap<String, String> requestProperties =
+                ImmutableMap.of(
+                        "Content-Type", "application/json",
+                        "Accept", "application/json");
+
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setRequestProperties(requestProperties)
+                        .setUri(Uri.parse(url.toString()))
+                        .setDevContext(DEV_CONTEXT_DISABLED)
+                        .setBodyInBytes(postedBodyInBytes)
+                        .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.POST)
+                        .build();
+
+        AdServicesHttpClientResponse response =
+                mClient.performRequestGetResponseInPlainString(request).get();
+
+        assertEquals(1, server.getRequestCount());
+        assertThat(response.getResponseBody()).isEqualTo(stringResponse);
     }
 
     private AdServicesHttpClientResponse fetchPayload(Uri uri, DevContext devContext)

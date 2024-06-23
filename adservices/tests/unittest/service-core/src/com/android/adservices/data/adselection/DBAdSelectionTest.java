@@ -27,6 +27,9 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Clock;
@@ -51,6 +54,9 @@ public class DBAdSelectionTest {
             CustomAudienceSignalsFixture.aCustomAudienceSignals();
 
     private static final String CALLER_PACKAGE_NAME = "callerPackageName";
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildDBAdSelection() {

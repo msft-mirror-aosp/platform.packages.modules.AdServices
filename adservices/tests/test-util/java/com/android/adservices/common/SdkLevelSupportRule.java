@@ -18,6 +18,8 @@ package com.android.adservices.common;
 
 import android.os.Build;
 
+import com.android.adservices.common.AndroidSdk.Level;
+import com.android.adservices.common.AndroidSdk.Range;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -30,14 +32,14 @@ import java.util.function.Supplier;
  */
 public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    @Nullable private Supplier<AndroidSdkLevel> mDeviceLevelSupplier;
+    @Nullable private Supplier<Level> mDeviceLevelSupplier;
 
-    SdkLevelSupportRule(AndroidSdkLevel level) {
-        super(AndroidLogger.getInstance(), AndroidSdkRange.forAtLeast(level.getLevel()));
+    SdkLevelSupportRule(Level atLeast) {
+        super(AndroidLogger.getInstance(), Range.forAtLeast(atLeast.getLevel()));
     }
 
     @VisibleForTesting
-    void setDeviceLevelSupplier(Supplier<AndroidSdkLevel> levelSupplier) {
+    void setDeviceLevelSupplier(Supplier<Level> levelSupplier) {
         mDeviceLevelSupplier = Objects.requireNonNull(levelSupplier);
     }
 
@@ -48,49 +50,49 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
      *
      * <ul>
      *   <li>Only a few tests require a specific SDK release - such tests will be annotated with a
-     *       {@code &#064;RequiresSdkLevel...} annotation.
-     *   <li>Some test methods (typically <code>&#064;Before</code>) need to check the SDK release
-     *       inside them - these tests call call rule methods such as {@code isAtLeastS()}.
+     *       {@code @RequiresSdkLevel...} annotation.
+     *   <li>Some test methods (typically <code>@Before</code>) need to check the SDK release inside
+     *       them - these tests call call rule methods such as {@code isAtLeastS()}.
      * </ul>
      */
     public static SdkLevelSupportRule forAnyLevel() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.ANY);
+        return new SdkLevelSupportRule(Level.ANY);
     }
 
     /**
      * Gets a rule that ensures tests are only executed on Android S+ and skipped otherwise, by
      * default (if the test have other SDK restrictions, the test can be annotated with extra
-     * {@code &#064;RequiresSdkLevel...} annotations)
+     * {@code @RequiresSdkLevel...} annotations)
      */
     public static SdkLevelSupportRule forAtLeastS() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.S);
+        return new SdkLevelSupportRule(Level.S);
     }
 
     /**
      * Gets a rule that ensures tests are only executed on Android T+ and skipped otherwise, by
      * default (if the test have other SDK restrictions, the test can be annotated with extra
-     * {@code &#064;RequiresSdkLevel...} annotations)
+     * {@code @RequiresSdkLevel...} annotations)
      */
     public static SdkLevelSupportRule forAtLeastT() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.T);
+        return new SdkLevelSupportRule(Level.T);
     }
 
     /**
      * Gets a rule that ensures tests are only executed on Android U+ and skipped otherwise, by
      * default (if the test have other SDK restrictions, the test can be annotated with extra
-     * {@code &#064;RequiresSdkLevel...} annotations)
+     * {@code @RequiresSdkLevel...} annotations)
      */
     public static SdkLevelSupportRule forAtLeastU() {
-        return new SdkLevelSupportRule(AndroidSdkLevel.U);
+        return new SdkLevelSupportRule(Level.U);
     }
 
     @Override
-    public AndroidSdkLevel getDeviceApiLevel() {
+    public Level getDeviceApiLevel() {
         if (mDeviceLevelSupplier != null) {
-            AndroidSdkLevel level = mDeviceLevelSupplier.get();
+            Level level = mDeviceLevelSupplier.get();
             mLog.d("getDeviceApiLevel(): returning %s as set by supplier", level);
             return level;
         }
-        return AndroidSdkLevel.forLevel(Build.VERSION.SDK_INT);
+        return Level.forLevel(Build.VERSION.SDK_INT);
     }
 }

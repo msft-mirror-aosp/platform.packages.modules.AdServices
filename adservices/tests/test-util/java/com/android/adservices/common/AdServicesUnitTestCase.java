@@ -24,9 +24,8 @@ import org.junit.Rule;
  *
  * <p>Contains only the bare minimum functionality required by them, like custom JUnit rules.
  *
- * <p>In fact, this class "reserves" the first 10 rules (as defined by order), so subclasses should
- * start defining rules with {@code order = 11} (although for now they can use {@code order = 0} for
- * {@code SdkLevelSupportRule}, as that rule cannot be defined here yet.
+ * <p>In fact, this class "reserves" the first 11 rules (as defined by order 0-10), so subclasses
+ * should start defining rules with {@code order = 11}.
  */
 public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
 

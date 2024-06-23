@@ -23,6 +23,9 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -33,6 +36,9 @@ import java.util.concurrent.Executors;
 public final class CobaltDataServiceFactoryTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void nullContext_throwsNullPointerException() throws Exception {

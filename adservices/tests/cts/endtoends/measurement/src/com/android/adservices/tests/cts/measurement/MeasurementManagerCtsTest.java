@@ -31,22 +31,16 @@ import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
-import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.SystemProperties;
-import android.test.suitebuilder.annotation.SmallTest;
 import android.text.TextUtils;
 import android.view.InputEvent;
 import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.RequiresLowRamDevice;
 import com.android.adservices.common.WebUtil;
 import com.android.compatibility.common.util.ShellUtils;
@@ -55,9 +49,7 @@ import com.android.modules.utils.build.SdkLevel;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -72,10 +64,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@SmallTest
-@RunWith(AndroidJUnit4.class)
-public class MeasurementManagerCtsTest {
-    private MeasurementManager mMeasurementManager;
+public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestCase {
+
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final long CALLBACK_TIMEOUT = 5_000L;
 
@@ -104,22 +94,16 @@ public class MeasurementManagerCtsTest {
             "measurement_register_trigger_request_permits_per_second";
     private static final String FLAG_REGISTER_WEB_TRIGGER =
             "measurement_register_web_trigger_request_permits_per_second";
+
     private final ExecutorService mExecutorService = Executors.newCachedThreadPool();
-
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forMeasurementE2ETests(sContext.getPackageName());
+    private MeasurementManager mMeasurementManager;
 
     @Before
     public void setup() throws Exception {
         mMeasurementManager = MeasurementManager.get(sContext);
-        Objects.requireNonNull(mMeasurementManager);
+        assertWithMessage("MeasurementManager.get(%s)", sContext)
+                .that(mMeasurementManager)
+                .isNotNull();
 
         // Cool-off rate limiter in case it was initialized by another test
         TimeUnit.SECONDS.sleep(1);
@@ -1023,7 +1007,8 @@ public class MeasurementManagerCtsTest {
 
     private void enableGlobalKillSwitch(boolean enabled) {
         if (SdkLevel.isAtLeastT()) {
-            ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + enabled);
+            ShellUtils.runShellCommand(
+                    "device_config put adservices global_kill_switch " + enabled);
         } else {
             ShellUtils.runShellCommand(
                     "device_config put adservices enable_back_compat " + !enabled);
@@ -1031,7 +1016,8 @@ public class MeasurementManagerCtsTest {
     }
 
     private void enableMeasurementKillSwitch(boolean enabled) {
-        ShellUtils.runShellCommand("setprop debug.adservices.measurement_kill_switch " + enabled);
+        ShellUtils.runShellCommand(
+                "device_config put adservices measurement_kill_switch " + enabled);
     }
 
     private boolean registerSourceAndVerifyRateLimitReached(

@@ -37,7 +37,9 @@ public class SqliteObjectMapper {
                 EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID,
                 builder::setEnrollmentId);
         setTextColumn(
-                cursor, EnrollmentTables.EnrollmentDataContract.COMPANY_ID, builder::setCompanyId);
+                cursor,
+                EnrollmentTables.EnrollmentDataContract.COMPANY_ID,
+                builder::setEnrolledAPIs);
         setTextColumn(
                 cursor, EnrollmentTables.EnrollmentDataContract.SDK_NAMES, builder::setSdkNames);
         setTextColumn(
@@ -91,6 +93,37 @@ public class SqliteObjectMapper {
         }
 
         return enrolledFledgeAdTechIdentifiers;
+    }
+
+    /**
+     * Transforms the PAS urls found at the given {@code cursor} to a {@link AdTechIdentifier}
+     * objects.
+     */
+    static AdTechIdentifier getAdTechIdentifierFromPASCursor(Cursor cursor) {
+
+        List<String> pasUrls = new ArrayList<>();
+        AdTechIdentifier enrolledPASAdTechIdentifier = null;
+
+        setTextColumn(
+                cursor,
+                EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
+                input -> {
+                    pasUrls.add(input);
+                    return null;
+                });
+
+        for (String pasUrl : pasUrls) {
+            try {
+                if (pasUrl != null && !pasUrl.trim().isEmpty()) {
+                    enrolledPASAdTechIdentifier =
+                            AdTechIdentifier.fromString(Uri.parse(pasUrl).getHost());
+                }
+            } catch (Exception exception) {
+                LogUtil.d(exception, "Failure parsing PAS URL \"%s\"; skipping", pasUrl);
+            }
+        }
+
+        return enrolledPASAdTechIdentifier;
     }
 
     private static <BuilderType> void setTextColumn(

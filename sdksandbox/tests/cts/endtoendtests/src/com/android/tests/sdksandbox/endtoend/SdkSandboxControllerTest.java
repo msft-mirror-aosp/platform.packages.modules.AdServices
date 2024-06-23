@@ -29,6 +29,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.platform.test.annotations.RequiresFlagsEnabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
@@ -54,6 +56,9 @@ public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
     @Rule(order = 1)
+    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
+
+    @Rule(order = 2)
     public final ActivityScenarioRule<TestActivity> activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
 
@@ -90,6 +95,7 @@ public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
         assumeTrue(SdkLevel.isAtLeastU());
 
         loadSdk();
+        mSdk.createAndRegisterSdkSandboxClientImportanceListener();
 
         mSdk.waitForStateChangeDetection(
                 /*expectedForegroundValue=*/ 0, /*expectedBackgroundValue=*/ 0);
@@ -115,6 +121,7 @@ public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
         assumeTrue(SdkLevel.isAtLeastU());
 
         loadSdk();
+        mSdk.createAndRegisterSdkSandboxClientImportanceListener();
 
         mSdk.waitForStateChangeDetection(
                 /*expectedForegroundValue=*/ 0, /*expectedBackgroundValue=*/ 0);

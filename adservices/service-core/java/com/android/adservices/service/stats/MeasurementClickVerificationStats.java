@@ -66,6 +66,27 @@ public abstract class MeasurementClickVerificationStats {
     public abstract String getSourceRegistrant();
 
     /**
+     * @return true, if click deduplication is enabled (the result is not recorded).
+     */
+    public abstract boolean isClickDeduplicationEnabled();
+
+    /**
+     * @return true, if click deduplication is enforced (the result is recorded but the click is not
+     *     demoted if it fails).
+     */
+    public abstract boolean isClickDeduplicationEnforced();
+
+    /**
+     * @return the current limit for the number of sources per click.
+     */
+    public abstract long getMaxSourcesPerClick();
+
+    /**
+     * @return whether the current registration attempt is under the limit.
+     */
+    public abstract boolean isCurrentRegistrationUnderClickDeduplicationLimit();
+
+    /**
      * @return generic builder.
      */
     public static MeasurementClickVerificationStats.Builder builder() {
@@ -99,6 +120,18 @@ public abstract class MeasurementClickVerificationStats {
 
         /** Set source registrant. */
         public abstract Builder setSourceRegistrant(String value);
+
+        /** Set to true, if click deduplication is enabled. */
+        public abstract Builder setClickDeduplicationEnabled(boolean value);
+
+        /** Set to true, if click deduplication is enforced. */
+        public abstract Builder setClickDeduplicationEnforced(boolean value);
+
+        /** Set the current limit for number of sources per click. */
+        public abstract Builder setMaxSourcesPerClick(long value);
+
+        /** Set to true, if the current click is under the deduplication limit. */
+        public abstract Builder setCurrentRegistrationUnderClickDeduplicationLimit(boolean value);
 
         /** Auto build for {@link MeasurementClickVerificationStats} */
         abstract MeasurementClickVerificationStats autoBuild();

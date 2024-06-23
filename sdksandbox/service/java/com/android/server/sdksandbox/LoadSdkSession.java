@@ -19,7 +19,6 @@ package com.android.server.sdksandbox;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 
-import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED;
 
 import android.annotation.IntDef;
 import android.annotation.Nullable;
@@ -34,14 +33,11 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.ApplicationInfoFlags;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.os.UserHandle;
-import android.text.TextUtils;
 import android.util.ArraySet;
 import android.util.Log;
 import android.view.SurfaceControlViewHost;
@@ -53,10 +49,10 @@ import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.IUnloadSdkInSandboxCallback;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
+import com.android.server.sdksandbox.helpers.PackageManagerHelper;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.List;
 
 /**
  * Represents the lifecycle of a single request to load an SDK for a specific app.
@@ -176,7 +172,8 @@ class LoadSdkSession {
             String sdkName,
             CallingInfo callingInfo,
             Bundle loadParams,
-            ILoadSdkCallback loadCallback) {
+            ILoadSdkCallback loadCallback)
+            throws PackageManager.NameNotFoundException {
         mContext = context;
         mSdkSandboxManagerService = service;
         mInjector = injector;
@@ -223,9 +220,6 @@ class LoadSdkSession {
             handleLoadFailure(
                     new LoadSdkException(
                             SDK_SANDBOX_PROCESS_NOT_AVAILABLE, "Sandbox is not available"),
-                    /*startTimeOfErrorStage=*/ -1,
-                    SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                    /*successAtStage=*/ false,
                     sandboxLatencyInfo);
         }
 
@@ -245,9 +239,6 @@ class LoadSdkSession {
                     new LoadSdkException(
                             SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                             "Failed to load SDK as sandbox is dead"),
-                    /*startTimeOfErrorStage=*/ -1,
-                    SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                    /*successAtStage=*/ false,
                     sandboxLatencyInfo);
         } catch (RemoteException e) {
             String errorMsg = "Failed to load sdk";
@@ -255,9 +246,6 @@ class LoadSdkSession {
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
             handleLoadFailure(
                     new LoadSdkException(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR, errorMsg),
-                    /*startTimeOfErrorStage=*/ -1,
-                    /*stage*/ SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                    /*successAtStage=*/ false,
                     sandboxLatencyInfo);
         }
     }
@@ -289,24 +277,8 @@ class LoadSdkSession {
         }
     }
 
-    // TODO(b/296844050): remove startTimeOfErrorStage, stage and successAtStage parameters.
-    void handleLoadFailure(
-            LoadSdkException exception,
-            long startTimeOfErrorStage,
-            int stage,
-            boolean successAtStage,
-            SandboxLatencyInfo sandboxLatencyInfo) {
-        final long timeSystemServerCalledApp = mInjector.elapsedRealtime();
-        sandboxLatencyInfo.setTimeSystemServerCalledApp(timeSystemServerCalledApp);
-        if (stage != SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED) {
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                    (int) (timeSystemServerCalledApp - startTimeOfErrorStage),
-                    successAtStage,
-                    stage,
-                    mCallingInfo.getUid());
-        }
+    void handleLoadFailure(LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
+        sandboxLatencyInfo.setTimeSystemServerCalledApp(mInjector.elapsedRealtime());
 
         synchronized (mLock) {
             if (getStatus() == LOAD_PENDING) {
@@ -464,9 +436,6 @@ class LoadSdkSession {
                         new LoadSdkException(
                                 SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
                                 "Could not load SDK, sandbox has died"),
-                        /*startTimeOfErrorStage=*/ -1,
-                        SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__METHOD_UNSPECIFIED,
-                        /*successAtStage=*/ false,
                         new SandboxLatencyInfo());
             }
 
@@ -556,9 +525,6 @@ class LoadSdkSession {
             }
             handleLoadFailure(
                     updateLoadSdkErrorCode(exception),
-                    /*startTimeOfErrorStage=*/ -1,
-                    SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED,
-                    /*successAtStage=*/ true,
                     sandboxLatencyInfo);
         }
 
@@ -735,55 +701,33 @@ class LoadSdkSession {
                 appUid);
     }
 
-    // Returns an empty string if there is no issue getting information the SDK provider, else the
-    // error message.
-    String getSdkProviderErrorIfExists() {
-        if (mSdkProviderInfo == null) {
-            return mSdkName + " not found for loading";
-        }
-        if (TextUtils.isEmpty(mSdkProviderInfo.getSdkProviderClassName())) {
-            return mSdkName + " did not set " + PROPERTY_SDK_PROVIDER_CLASS_NAME;
-        }
-        return "";
-    }
+    private SdkProviderInfo createSdkProviderInfo() throws PackageManager.NameNotFoundException {
+        PackageManagerHelper packageManagerHelper =
+                new PackageManagerHelper(mContext, mCallingInfo.getUid());
+        SharedLibraryInfo sharedLibrary =
+                packageManagerHelper.getSdkSharedLibraryInfoForSdk(
+                        mCallingInfo.getPackageName(), mSdkName);
 
-    private SdkProviderInfo createSdkProviderInfo() {
+        String sdkProviderClassName;
         try {
-            UserHandle userHandle = UserHandle.getUserHandleForUid(mCallingInfo.getUid());
-            Context userContext = mContext.createContextAsUser(userHandle, /* flags= */ 0);
-            PackageManager pm = userContext.getPackageManager();
-            ApplicationInfo info =
-                    pm.getApplicationInfo(
-                            mCallingInfo.getPackageName(),
-                            ApplicationInfoFlags.of(PackageManager.GET_SHARED_LIBRARY_FILES));
-            List<SharedLibraryInfo> sharedLibraries = info.getSharedLibraryInfos();
-            for (int j = 0; j < sharedLibraries.size(); j++) {
-                SharedLibraryInfo sharedLibrary = sharedLibraries.get(j);
-                if (sharedLibrary.getType() != SharedLibraryInfo.TYPE_SDK_PACKAGE) {
-                    continue;
-                }
-
-                if (!mSdkName.equals(sharedLibrary.getName())) {
-                    continue;
-                }
-
-                String sdkProviderClassName =
-                        pm.getProperty(
-                                        PROPERTY_SDK_PROVIDER_CLASS_NAME,
-                                        sharedLibrary.getDeclaringPackage().getPackageName())
-                                .getString();
-                ApplicationInfo applicationInfo =
-                        pm.getPackageInfo(
-                                        sharedLibrary.getDeclaringPackage(),
-                                        PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
-                                                | PackageManager.MATCH_ANY_USER)
-                                .applicationInfo;
-                return new SdkProviderInfo(applicationInfo, sharedLibrary, sdkProviderClassName);
-            }
-            return null;
+            sdkProviderClassName =
+                    packageManagerHelper
+                            .getProperty(
+                                    PROPERTY_SDK_PROVIDER_CLASS_NAME,
+                                    sharedLibrary.getDeclaringPackage().getPackageName())
+                            .getString();
         } catch (PackageManager.NameNotFoundException e) {
-            return null;
+            throw new PackageManager.NameNotFoundException(
+                    PROPERTY_SDK_PROVIDER_CLASS_NAME + " property");
         }
+
+        ApplicationInfo applicationInfo =
+                packageManagerHelper.getApplicationInfoForSharedLibrary(
+                        sharedLibrary,
+                        PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
+                                | PackageManager.MATCH_ANY_USER);
+
+        return new SdkProviderInfo(applicationInfo, sharedLibrary, sdkProviderClassName);
     }
 
     ApplicationInfo getApplicationInfo() {

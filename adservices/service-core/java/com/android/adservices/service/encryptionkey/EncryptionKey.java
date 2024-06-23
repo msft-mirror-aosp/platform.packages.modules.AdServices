@@ -135,6 +135,21 @@ public class EncryptionKey {
         return mLastFetchTime;
     }
 
+    /** Returns the builder for the instance */
+    public EncryptionKey.Builder cloneToBuilder() {
+        return new EncryptionKey.Builder()
+                .setId(this.mId)
+                .setKeyType(this.mKeyType)
+                .setEnrollmentId(this.mEnrollmentId)
+                .setReportingOrigin(this.mReportingOrigin)
+                .setEncryptionKeyUrl(this.mEncryptionKeyUrl)
+                .setProtocolType(this.mProtocolType)
+                .setKeyCommitmentId(this.mKeyCommitmentId)
+                .setBody(this.mBody)
+                .setExpiration(this.mExpiration)
+                .setLastFetchTime(this.mLastFetchTime);
+    }
+
     /** Builder for {@link EncryptionKey}. */
     public static final class Builder {
         private final EncryptionKey mBuilding;

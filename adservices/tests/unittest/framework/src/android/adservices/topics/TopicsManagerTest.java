@@ -23,11 +23,17 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Assume;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link Topic} */
 public class TopicsManagerTest {
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testTopicsManagerCtor_TPlus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);

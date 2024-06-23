@@ -55,7 +55,7 @@ public class MeasurementViewModel extends AndroidViewModel {
 
     public MeasurementViewModel(@NonNull Application application) {
         super(application);
-        mConsentManager = ConsentManager.getInstance(application);
+        mConsentManager = ConsentManager.getInstance();
         mMeasurementConsent = new MutableLiveData<>(getMeasurementConsentFromConsentManager());
     }
 
@@ -90,7 +90,7 @@ public class MeasurementViewModel extends AndroidViewModel {
         }
         mMeasurementConsent.postValue(getMeasurementConsentFromConsentManager());
         if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-            ConsentManager.getInstance(getApplication())
+            ConsentManager.getInstance()
                     .recordUserManualInteractionWithConsent(
                             ConsentManager.MANUAL_INTERACTIONS_RECORDED);
         }

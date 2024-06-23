@@ -283,7 +283,7 @@ public class BackgroundFetchWorker {
         } catch (Exception e) {
             sLogger.d(
                     "Error when closing backgroundFetchExecutionLogger, "
-                            + "skipping metrics logging: {}",
+                            + "skipping metrics logging: %s",
                     e.getMessage());
         }
     }

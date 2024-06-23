@@ -23,23 +23,25 @@ import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
 
-import android.adservices.FlagsConstants;
 import android.adservices.adid.AdId;
 import android.annotation.CallbackExecutor;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.Build;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.flags.Flags;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -62,12 +64,6 @@ import java.util.concurrent.Executor;
 public class AdServicesCommonManager {
     /** @hide */
     public static final String AD_SERVICES_COMMON_SERVICE = "ad_services_common_service";
-
-    private static final String KEY_AD_ID_CACHE_ENABLED = FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
-    private static final String KEY_ENABLE_ADSERVICES_API_ENABLED =
-            FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED;
-    private static final String KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED =
-            FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 
     private final Context mContext;
     private final ServiceBinder<IAdServicesCommonService> mAdServicesCommonServiceBinder;
@@ -133,7 +129,7 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED)
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED)
     @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
     public void isAdServicesEnabled(
             @NonNull @CallbackExecutor Executor executor,
@@ -247,7 +243,7 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(KEY_ENABLE_ADSERVICES_API_ENABLED)
+    @FlaggedApi(Flags.FLAG_ENABLE_ADSERVICES_API_ENABLED)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
@@ -311,7 +307,7 @@ public class AdServicesCommonManager {
      */
     // TODO(b/295205476): Move exceptions into the callback.
     @SystemApi
-    @FlaggedApi(KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
     public void updateAdId(
             @NonNull UpdateAdIdRequest updateAdIdRequest,
@@ -360,7 +356,7 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(KEY_AD_ID_CACHE_ENABLED)
+    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
     @RequiresApi(Build.VERSION_CODES.S)
     public void updateAdId(
@@ -371,5 +367,68 @@ public class AdServicesCommonManager {
                 updateAdIdRequest,
                 executor,
                 OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
+    }
+
+    /**
+     * Get the AdService's common states.
+     *
+     * @param executor the executor for the callback.
+     * @param callback the callback in type {@link AdServicesOutcomeReceiver}, available on Android
+     *     R and above.
+     * @throws IllegalStateException if there is any {@code Binder} invocation error.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_GET_ADSERVICES_COMMON_STATES_API_ENABLED)
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    public void getAdservicesCommonStates(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull
+                    AdServicesOutcomeReceiver<AdServicesCommonStatesResponse, Exception> callback) {
+        final IAdServicesCommonService service = getService();
+        CallerMetadata callerMetadata =
+                new CallerMetadata.Builder()
+                        .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                        .build();
+        String appPackageName = "";
+        String sdkPackageName = "";
+        // First check if context is SandboxedSdkContext or not
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        if (sandboxedSdkContext != null) {
+            // This is the case with the Sandbox.
+            sdkPackageName = sandboxedSdkContext.getSdkPackageName();
+            appPackageName = sandboxedSdkContext.getClientPackageName();
+        } else {
+            // This is the case without the Sandbox.
+            appPackageName = mContext.getPackageName();
+        }
+        try {
+            service.getAdServicesCommonStates(
+                    new GetAdServicesCommonStatesParams.Builder(appPackageName, sdkPackageName)
+                            .build(),
+                    callerMetadata,
+                    new IAdServicesCommonStatesCallback.Stub() {
+                        @Override
+                        public void onResult(AdServicesCommonStatesResponse result) {
+                            executor.execute(
+                                    () -> {
+                                        callback.onResult(result);
+                                    });
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) {
+                            executor.execute(
+                                    () ->
+                                            callback.onError(
+                                                    AdServicesStatusUtils.asException(statusCode)));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
     }
 }

@@ -121,7 +121,7 @@
         "payload": {
           "attribution_destination": "android-app://destination.test",
           "scheduled_report_time": "1643325573",
-          "randomized_trigger_rate": 0.0024263,
+          "randomized_trigger_rate": 0.0001372,
           "source_event_id": "123",
           "source_type": "navigation",
           "trigger_data": "1"
@@ -133,7 +133,7 @@
         "payload": {
           "attribution_destination": "android-app://destination.test",
           "scheduled_report_time": "1643325573",
-          "randomized_trigger_rate": 0.0024263,
+          "randomized_trigger_rate": 0.0001372,
           "source_event_id": "123",
           "source_type": "navigation",
           "trigger_data": "2"
@@ -151,7 +151,8 @@
               "key": "0x559",
               "value": 123
             }
-          ]
+          ],
+          "source_registration_time": "1643155200"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "1643239174000"
@@ -162,7 +163,8 @@
            "histograms": [ {
               "key": "0x559",
               "value": 456
-           } ]
+           } ],
+           "source_registration_time": "1643155200"
         },
         "report_time": "1643325572000",
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution"
@@ -173,7 +175,8 @@
           "histograms": [ {
             "key": "0x559",
             "value": 789
-          } ]
+          } ],
+          "source_registration_time": "1643155200"
         },
         "report_time": "1643325574000",
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution"

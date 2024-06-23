@@ -26,6 +26,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -34,6 +35,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
@@ -49,6 +51,10 @@ public class AppSearchInteractionsDaoTest {
     private final String mAdServicesPackageName =
             AppSearchConsentWorker.getAdServicesPackageName(mContext);
     private MockitoSession mStaticMockSession;
+
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
 
     @Before
     public void setup() {

@@ -28,10 +28,17 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 @SmallTest
 public class RemoveAdCounterHistogramOverrideInputTest {
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testBuildValidInput_success() {
         final RemoveAdCounterHistogramOverrideInput originalInput =

@@ -23,11 +23,17 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 public class UpdateEncoderEventTest {
 
     private final Uri mUri = CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/encoder");
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Test
     public void testUpdateEncoderEventBuild() {

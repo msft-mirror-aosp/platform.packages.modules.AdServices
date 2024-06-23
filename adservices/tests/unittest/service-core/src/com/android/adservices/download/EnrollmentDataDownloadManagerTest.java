@@ -19,7 +19,7 @@ package com.android.adservices.download;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -38,6 +38,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDaoTest;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -89,7 +90,10 @@ public class EnrollmentDataDownloadManagerTest {
 
     @Mock private Flags mMockFlags;
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule.Builder(this)
                     .spyStatic(FlagsFactory.class)
@@ -102,6 +106,7 @@ public class EnrollmentDataDownloadManagerTest {
     @After
     public void cleanup() {
         sContext.getSharedPreferences("enrollment_data_read_status", 0).edit().clear().commit();
+        sContext.getSharedPreferences("adservices_enrollment", 0).edit().clear().commit();
     }
 
     @Test
@@ -294,7 +299,7 @@ public class EnrollmentDataDownloadManagerTest {
         verify(mMockEnrollmentDao, never()).insert(any());
 
         verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
     }
 
@@ -364,6 +369,80 @@ public class EnrollmentDataDownloadManagerTest {
         verifyEnrollmentDataDownloadStatus(EnrollmentDataDownloadManager.DownloadStatus.SKIP);
         verifyZeroInteractions(mMockEnrollmentDao);
         verifyZeroInteractions(mEnrollmentUtil);
+    }
+
+    @Test
+    public void testReadFileAndInsertIntoDatabaseSuccess_verifyFileGroupDataInSharedPreference()
+            throws IOException, ExecutionException, InterruptedException {
+        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage(any())));
+        doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any(), any())));
+        doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance(any())));
+        doReturn(mMockEncryptionKeyDao).when(() -> (EncryptionKeyDao.getInstance(any())));
+        when(mMockFileStorage.open(any(), any()))
+                .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
+
+        mEnrollmentDataDownloadManager =
+                new EnrollmentDataDownloadManager(
+                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+
+        when(mMockMdd.getFileGroup(any()))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                ClientFileGroup.newBuilder()
+                                        .addFile(
+                                                ClientFile.newBuilder()
+                                                        .setFileId("adtech_enrollment_data.csv")
+                                                        .setFileUri("adtech_enrollment_data.csv")
+                                                        .build())
+                                        .setBuildId(1)
+                                        .setStatus(ClientFileGroup.Status.PENDING)
+                                        .build()));
+        when(mMockFlags.getEnrollmentMddRecordDeletionEnabled()).thenReturn(false);
+        when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(false);
+        when(mMockFlags.getEncryptionKeyNetworkConnectTimeoutMs())
+                .thenReturn(Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS);
+        when(mMockFlags.getEncryptionKeyNetworkReadTimeoutMs())
+                .thenReturn(Flags.ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS);
+
+        ArgumentCaptor<EnrollmentData> enrollmentDataCaptor =
+                ArgumentCaptor.forClass(EnrollmentData.class);
+        doReturn(true).when(mMockEnrollmentDao).insert(enrollmentDataCaptor.capture());
+
+        ArgumentCaptor<String> enrollmentIdCaptor = ArgumentCaptor.forClass(String.class);
+        List<EncryptionKey> existingEncryptionKeys = new ArrayList<>();
+        doReturn(existingEncryptionKeys)
+                .when(mMockEncryptionKeyDao)
+                .getEncryptionKeyFromEnrollmentId(enrollmentIdCaptor.capture());
+
+        List<EncryptionKey> encryptionKeyList =
+                Arrays.asList(
+                        EncryptionKeyDaoTest.ENCRYPTION_KEY1, EncryptionKeyDaoTest.SIGNING_KEY1);
+        Optional<List<EncryptionKey>> fetchResult = Optional.of(encryptionKeyList);
+        ArgumentCaptor<Boolean> isFirstFetchCaptor = ArgumentCaptor.forClass(Boolean.class);
+        doReturn(fetchResult)
+                .when(mEncryptionKeyFetcher)
+                .fetchEncryptionKeys(
+                        any(), enrollmentDataCaptor.capture(), isFirstFetchCaptor.capture());
+
+        ArgumentCaptor<EncryptionKey> encryptionKeyCaptor =
+                ArgumentCaptor.forClass(EncryptionKey.class);
+        doReturn(true).when(mMockEncryptionKeyDao).insert(encryptionKeyCaptor.capture());
+
+        verifyEnrollmentDataDownloadStatus(EnrollmentDataDownloadManager.DownloadStatus.SUCCESS);
+
+        verify(mMockEnrollmentDao, times(5)).insert(any());
+        verify(mMockEncryptionKeyDao, times(10)).insert((EncryptionKey) any());
+        verify(mEnrollmentUtil, times(1))
+                .logEnrollmentFileDownloadStats(eq(mLogger), eq(true), eq("1"));
+
+        // Verify no duplicate inserts after enrollment data is saved before.
+        verifyEnrollmentDataDownloadStatus(EnrollmentDataDownloadManager.DownloadStatus.SKIP);
+        verifyZeroInteractions(mMockEnrollmentDao);
+        verifyZeroInteractions(mEnrollmentUtil);
+
+        EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance(sContext);
+        assertThat(enrollmentUtil.getBuildId()).isEqualTo(1);
+        assertThat(enrollmentUtil.getFileGroupStatus()).isEqualTo(2);
     }
 
     private void verifyEnrollmentDataDownloadStatus(

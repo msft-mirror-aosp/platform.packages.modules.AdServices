@@ -30,7 +30,11 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.util.Clock;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -47,6 +51,9 @@ public class UpdateCustomAudienceExecutionLoggerTest {
     @Captor
     ArgumentCaptor<UpdateCustomAudienceProcessReportedStats>
             mUpdateCustomAudienceProcessReportedStatsArgumentCaptor;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

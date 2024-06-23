@@ -63,7 +63,6 @@ public class MeasurementDbMigratorV30Test extends MeasurementDbMigratorTestBase 
                 MeasurementTables.SourceContract.TABLE,
                 Set.of(MeasurementTables.SourceContract.ID));
         MigrationTestHelper.verifyDataInDb(db, fakeData, new HashMap<>(), columnsToBeSkipped);
-        // Check that new columns are initialized with empty string
         List<Pair<String, String>> tableAndNewColumnPairs = new ArrayList<>();
         tableAndNewColumnPairs.add(
                 new Pair<>(

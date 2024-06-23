@@ -26,6 +26,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -40,6 +41,7 @@ import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -73,6 +75,9 @@ public class PrecomputedClassifierTest {
     @Mock private SynchronousFileStorage mMockFileStorage;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
     @Mock AdServicesLogger mLogger;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() throws IOException {

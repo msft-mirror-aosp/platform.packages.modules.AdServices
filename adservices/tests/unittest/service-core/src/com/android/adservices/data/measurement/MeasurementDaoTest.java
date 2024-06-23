@@ -317,7 +317,7 @@ public class MeasurementDaoTest {
                 source.getTriggerSpecsString());
         assertNull(source.getEventAttributionStatus());
         assertEquals(
-                validSource.getTriggerSpecs().encodePrivacyParametersToJSONString(),
+                validSource.getTriggerSpecs().encodePrivacyParametersToJsonString(),
                 source.getPrivacyParameters());
         assertEquals(validSource.getTriggerSpecs(), source.getTriggerSpecs());
 
@@ -399,6 +399,9 @@ public class MeasurementDaoTest {
             assertEquals(
                     validTrigger.getAggregationCoordinatorOrigin(),
                     trigger.getAggregationCoordinatorOrigin());
+            assertEquals(
+                    validTrigger.getAggregatableSourceRegistrationTimeConfig(),
+                    trigger.getAggregatableSourceRegistrationTimeConfig());
         }
     }
 
@@ -4439,7 +4442,34 @@ public class MeasurementDaoTest {
             AggregateReport aggregateReport = SqliteObjectMapper.constructAggregateReport(cursor);
             assertNotNull(aggregateReport);
             assertNotNull(aggregateReport.getId());
-            assertTrue(Objects.equals(validAggregateReport, aggregateReport));
+            assertEquals(validAggregateReport, aggregateReport);
+        }
+    }
+
+    @Test
+    public void testInsertAggregateReport_withNullSourceRegistrationTime() {
+        AggregateReport.Builder builder = AggregateReportFixture.getValidAggregateReportBuilder();
+        builder.setSourceRegistrationTime(null);
+        AggregateReport aggregateReportWithNullSourceRegistrationTime = builder.build();
+        mDatastoreManager.runInTransaction(
+                (dao) -> dao.insertAggregateReport(aggregateReportWithNullSourceRegistrationTime));
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertTrue(cursor.moveToNext());
+            AggregateReport aggregateReport = SqliteObjectMapper.constructAggregateReport(cursor);
+            assertNotNull(aggregateReport);
+            assertNotNull(aggregateReport.getId());
+            assertEquals(aggregateReportWithNullSourceRegistrationTime, aggregateReport);
         }
     }
 
@@ -4885,44 +4915,6 @@ public class MeasurementDaoTest {
                                 null,
                                 null)
                         .getCount());
-    }
-
-    private static AsyncRegistration buildAsyncRegistration(String id) {
-
-        return new AsyncRegistration.Builder()
-                .setId(id)
-                .setOsDestination(Uri.parse("android-app://installed-app-destination"))
-                .setRegistrant(INSTALLED_REGISTRANT)
-                .setTopOrigin(INSTALLED_REGISTRANT)
-                .setAdIdPermission(false)
-                .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                .setRegistrationId(UUID.randomUUID().toString())
-                .build();
-    }
-
-    private static AsyncRegistration buildAsyncRegistrationWithNotDestination(String id) {
-        return new AsyncRegistration.Builder()
-                .setId(id)
-                .setOsDestination(Uri.parse("android-app://not-installed-app-destination"))
-                .setRegistrant(INSTALLED_REGISTRANT)
-                .setTopOrigin(INSTALLED_REGISTRANT)
-                .setAdIdPermission(false)
-                .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                .setRequestTime(Long.MAX_VALUE)
-                .setRegistrationId(UUID.randomUUID().toString())
-                .build();
-    }
-
-    private static AsyncRegistration buildAsyncRegistrationWithNotRegistrant(String id) {
-        return new AsyncRegistration.Builder()
-                .setId(id)
-                .setOsDestination(Uri.parse("android-app://installed-app-destination"))
-                .setRegistrant(NOT_INSTALLED_REGISTRANT)
-                .setTopOrigin(NOT_INSTALLED_REGISTRANT)
-                .setAdIdPermission(false)
-                .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
-                .setRegistrationId(UUID.randomUUID().toString())
-                .build();
     }
 
     @Test
@@ -6163,6 +6155,9 @@ public class MeasurementDaoTest {
             assertEquals(
                     asyncRegistration.getPlatformAdId(), validAsyncRegistration.getPlatformAdId());
             assertEquals(asyncRegistration.getPostBody(), validAsyncRegistration.getPostBody());
+            assertEquals(
+                    asyncRegistration.getRedirectBehavior(),
+                    validAsyncRegistration.getRedirectBehavior());
         }
     }
 
@@ -6930,7 +6925,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source1.buildTriggerSpecs();
         Source source2 =
@@ -6943,7 +6938,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source2.buildTriggerSpecs();
 
@@ -6988,7 +6983,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source3.buildTriggerSpecs();
 
@@ -7038,7 +7033,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void fetchFlexSourceIdsFor_emptyInputSourceId_noSourceReturned()
+    public void fetchFlexSourceIdsFor_moreThanSqliteMaxCompoundSelect_expectedSourceReturned()
             throws JSONException {
         // Setup
         TriggerSpecs testTriggerSpecs = SourceFixture.getValidTriggerSpecsCountBased();
@@ -7052,10 +7047,9 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source1.buildTriggerSpecs();
-
         Source source2 =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(2L))
@@ -7066,7 +7060,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source2.buildTriggerSpecs();
 
@@ -7111,7 +7105,130 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
+                        .build();
+        source3.buildTriggerSpecs();
+
+        insertAttributedTrigger(
+                source3.getTriggerSpecs(),
+                EventReportFixture.getBaseEventReportBuild()
+                        .setTriggerId("123456")
+                        .setTriggerData(new UnsignedLong(2L))
+                        .setTriggerPriority(1L)
+                        .setTriggerValue(1L)
+                        .build());
+
+        List<Source> sources = List.of(source1, source2, source3);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        sources.forEach(source -> insertInDb(db, source));
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(getRandomIdsWith(1000, "123456"));
+                    Set<String> expected = Set.of("source1", "source2", "source3");
+                    assertEquals(expected, actualSources);
+                });
+
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(getRandomIdsWith(1000, "234567"));
+                    Set<String> expected = Set.of("source1", "source2");
+                    assertEquals(expected, actualSources);
+                });
+
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Set<String> actualSources =
+                            dao.fetchFlexSourceIdsFor(getRandomIdsWith(1000, "23456"));
+                    assertEquals(Collections.emptySet(), actualSources);
+                });
+
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Set<String> actualSources = dao.fetchFlexSourceIdsFor(new ArrayList<>());
+                    assertEquals(Collections.emptySet(), actualSources);
+                });
+    }
+
+    @Test
+    public void fetchFlexSourceIdsFor_emptyInputSourceId_noSourceReturned()
+            throws JSONException {
+        // Setup
+        TriggerSpecs testTriggerSpecs = SourceFixture.getValidTriggerSpecsCountBased();
+        Source source1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(5000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source1")
+                        .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
+                        .setPrivacyParameters(
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
+                        .build();
+        source1.buildTriggerSpecs();
+
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(10000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source2")
+                        .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
+                        .setPrivacyParameters(
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
+                        .build();
+        source2.buildTriggerSpecs();
+
+        List<TriggerSpecs> triggerSpecsList = List.of(
+                source1.getTriggerSpecs(),
+                source2.getTriggerSpecs());
+
+        for (TriggerSpecs triggerSpecs : triggerSpecsList) {
+            insertAttributedTrigger(
+                    triggerSpecs,
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("123456")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+            insertAttributedTrigger(
+                    triggerSpecs,
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("234567")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+            insertAttributedTrigger(
+                    triggerSpecs,
+                    EventReportFixture.getBaseEventReportBuild()
+                            .setTriggerId("345678")
+                            .setTriggerData(new UnsignedLong(2L))
+                            .setTriggerPriority(1L)
+                            .setTriggerValue(1L)
+                            .build());
+        }
+
+        Source source3 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(2L))
+                        .setPublisher(WebUtil.validUri("https://subdomain1.site1.test"))
+                        .setEventTime(10000)
+                        .setRegistrant(Uri.parse("android-app://com.registrant1"))
+                        .setId("source3")
+                        .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
+                        .setPrivacyParameters(
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source3.buildTriggerSpecs();
 
@@ -7192,7 +7309,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source1.buildTriggerSpecs();
 
@@ -7226,7 +7343,7 @@ public class MeasurementDaoTest {
                         .setTriggerSpecsString(testTriggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(testTriggerSpecs.getMaxReports())
                         .setPrivacyParameters(
-                                testTriggerSpecs.encodePrivacyParametersToJSONString())
+                                testTriggerSpecs.encodePrivacyParametersToJsonString())
                         .build();
         source3.buildTriggerSpecs();
 
@@ -8015,7 +8132,9 @@ public class MeasurementDaoTest {
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
                         .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
                         .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.INCLUDE);
         Trigger t1 =
                 triggerBuilder
                         .setId("t1")
@@ -8069,7 +8188,9 @@ public class MeasurementDaoTest {
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
                         .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
                         .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.INCLUDE);
         // Trigger with debug AdId present
         Trigger t1 =
                 triggerBuilder
@@ -8140,7 +8261,9 @@ public class MeasurementDaoTest {
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
                         .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
                         .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.INCLUDE);
         // Multiple triggers with same AdId
         Trigger t1 =
                 triggerBuilder
@@ -8219,7 +8342,9 @@ public class MeasurementDaoTest {
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
                         .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
                         .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.INCLUDE);
         // Multiple triggers with different AdIds but the same enrollmentId
         Trigger t1 =
                 triggerBuilder
@@ -8298,7 +8423,9 @@ public class MeasurementDaoTest {
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
                         .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
                         .setRegistrationOrigin(
-                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                        .setAggregatableSourceRegistrationTimeConfig(
+                                Trigger.SourceRegistrationTimeConfig.INCLUDE);
         // Multiple triggers with different AdIds and differing enrollmentIds
         Trigger t1 =
                 triggerBuilder
@@ -8987,7 +9114,7 @@ public class MeasurementDaoTest {
                 .setInstallCooldownWindow(SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
                 .setAttributionMode(SourceFixture.ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(SourceFixture.ValidSourceParams.buildAggregateSource())
-                .setFilterData(SourceFixture.ValidSourceParams.buildFilterData())
+                .setFilterDataString(SourceFixture.ValidSourceParams.buildFilterDataString())
                 .setSharedFilterDataKeys(SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS)
                 .setIsDebugReporting(true)
                 .setRegistrationId(UUID.randomUUID().toString())
@@ -9564,6 +9691,15 @@ public class MeasurementDaoTest {
                         eventReport.getTriggerId(),
                         eventReport.getTriggerData(),
                         eventReport.getTriggerDedupKey()));
+    }
+
+    private static List<String> getRandomIdsWith(int numIds, String idToInclude) {
+        List<String> result = new ArrayList<>();
+        result.add(idToInclude);
+        for (int i = 0; i < numIds; i++) {
+            result.add(UUID.randomUUID().toString());
+        }
+        return result;
     }
 
     private static String getFirstSourceIdFromDatastore() {

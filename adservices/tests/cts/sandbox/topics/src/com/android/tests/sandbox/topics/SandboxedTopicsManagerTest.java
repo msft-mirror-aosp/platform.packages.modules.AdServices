@@ -16,27 +16,27 @@
 
 package com.android.tests.sandbox.topics;
 
+import static com.android.tests.sandbox.topics.CtsSandboxedTopicsManagerTestsTestCase.TEST_EPOCH_JOB_PERIOD_MS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
-import android.content.Context;
 import android.os.Bundle;
 
 import androidx.test.filters.FlakyTest;
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.SetIntegerFlag;
+import com.android.adservices.common.annotations.SetLongFlag;
+import com.android.adservices.service.FlagsConstants;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.time.Duration;
 import java.util.concurrent.Executor;
@@ -46,36 +46,23 @@ import java.util.concurrent.TimeoutException;
 /*
  * Test Topics API running within the Sandbox.
  */
-@RunWith(JUnit4.class)
-public class SandboxedTopicsManagerTest {
-    private static final String TAG = "SandboxedTopicsManagerTest";
+@SetLongFlag(name = FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value = TEST_EPOCH_JOB_PERIOD_MS)
+// We need to turn off random topic so that we can verify the returned topic.
+@SetIntegerFlag(name = FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value = 0)
+public final class SandboxedTopicsManagerTest extends CtsSandboxedTopicsManagerTestsTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.sdk1";
 
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
 
-    // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
-
-    // Default Epoch Period.
-    private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
-
-    // Use 0 percent for random topic in the test so that we can verify the returned topic.
-    private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
-    private static final int TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
-
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
-    private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
+    private final String mAdServicesPackageName =
+            AdservicesTestHelper.getAdServicesPackageName(sContext, mTag);
 
     @Before
     public void setup() throws TimeoutException, InterruptedException {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         // Kill adservices process to avoid interfering from other tests.
-        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
+        AdservicesTestHelper.killAdservicesProcess(mAdServicesPackageName);
 
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
@@ -83,37 +70,19 @@ public class SandboxedTopicsManagerTest {
 
         // Start a foreground activity
         SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
-
-        // The setup for this test:
-        // SandboxedTopicsManagerTest is the test app. It will load the Sdk1 into the Sandbox.
-        // The Sdk1 (running within the Sandbox) will query Topics API and verify that the correct
-        // Topics are returned.
-        // After Sdk1 verifies the result, it will communicate back to the
-        // SandboxedTopicsManagerTest via the loadSdk's callback.
-        // In this test, we use the loadSdk's callback as a 2-way communications between the Test
-        // app (this class) and the Sdk running within the Sandbox process.
-
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
     @After
     public void shutDown() {
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
         SimpleActivity.stopSimpleActivity(sContext);
     }
 
     @Test
     @FlakyTest(bugId = 301370748)
     public void loadSdkAndRunTopicsApi() throws Exception {
-        final SdkSandboxManager sdkSandboxManager =
-                sContext.getSystemService(SdkSandboxManager.class);
+        SdkSandboxManager sdkSandboxManager = sContext.getSystemService(SdkSandboxManager.class);
 
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
         // Let EpochJobService finish onStart() when first getting scheduled.
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
@@ -145,22 +114,9 @@ public class SandboxedTopicsManagerTest {
         callback.assertLoadSdkIsSuccessful();
     }
 
-    // Override the Epoch Period to shorten the Epoch Length in the test.
-    private void overrideEpochPeriod(long overrideEpochPeriod) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
-    }
-
-    // Override the Percentage For Random Topic in the test.
-    private void overridePercentageForRandomTopic(long overridePercentage) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_percentage_for_random_topics "
-                        + overridePercentage);
-    }
-
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
+                "cmd jobscheduler run -f" + " " + mAdServicesPackageName + " " + EPOCH_JOB_ID);
     }
 }

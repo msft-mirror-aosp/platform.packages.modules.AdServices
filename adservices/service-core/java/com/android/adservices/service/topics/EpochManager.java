@@ -36,9 +36,9 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -116,7 +116,8 @@ public class EpochManager {
     private final Random mRandom;
     private final Classifier mClassifier;
     private final Flags mFlags;
-    // Use Clock.SYSTEM_CLOCK except in unit tests, which pass in a local instance of Clock to mock.
+    // Use Clock.getInstance() except in unit tests, which pass in a local instance of Clock to
+    // mock.
     private final Clock mClock;
     private final ClassifierManager mClassifierManager;
     private final EncryptionManager mEncryptionManager;
@@ -153,7 +154,7 @@ public class EpochManager {
                                 new Random(),
                                 ClassifierManager.getInstance(context),
                                 FlagsFactory.getFlags(),
-                                Clock.SYSTEM_CLOCK,
+                                Clock.getInstance(),
                                 ClassifierManager.getInstance(context),
                                 EncryptionManager.getInstance(context));
             }

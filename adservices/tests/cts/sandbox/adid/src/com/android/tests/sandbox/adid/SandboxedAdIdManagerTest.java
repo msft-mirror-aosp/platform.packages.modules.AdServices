@@ -115,6 +115,7 @@ public class SandboxedAdIdManagerTest {
     // use the default value.
     private void overridingAdservicesAdIdKillSwitch(boolean shouldOverride) {
         String overrideString = shouldOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "device_config put adservices adid_kill_switch " + overrideString);
     }
 }

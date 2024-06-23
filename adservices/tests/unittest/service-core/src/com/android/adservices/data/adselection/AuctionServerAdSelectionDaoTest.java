@@ -25,6 +25,7 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -32,6 +33,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.MockitoSession;
 
@@ -40,6 +42,9 @@ import java.util.Set;
 public class AuctionServerAdSelectionDaoTest {
     private AuctionServerAdSelectionDao mServerAdSelectionDao;
     private MockitoSession mStaticMockSession = null;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

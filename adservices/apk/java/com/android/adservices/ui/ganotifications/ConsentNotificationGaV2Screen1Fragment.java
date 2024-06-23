@@ -77,10 +77,8 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
         setupListeners(savedInstanceState);
 
         ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
-        ConsentManager.getInstance(requireContext())
-                .enable(requireContext(), AdServicesApiType.FLEDGE);
-        ConsentManager.getInstance(requireContext())
-                .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+        ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
+        ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
     }
 
     @Override

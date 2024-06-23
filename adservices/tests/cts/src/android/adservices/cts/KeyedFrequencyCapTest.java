@@ -27,8 +27,11 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -36,6 +39,9 @@ import java.time.Duration;
 /** Unit tests for {@link KeyedFrequencyCap}. */
 @SmallTest
 public class KeyedFrequencyCapTest {
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testBuildValidKeyedFrequencyCap_success() {
         final KeyedFrequencyCap originalCap =

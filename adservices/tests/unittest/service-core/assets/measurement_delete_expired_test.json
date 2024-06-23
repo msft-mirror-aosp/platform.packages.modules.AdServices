@@ -102,7 +102,8 @@
               }
             ],
             "triggerTime": 8640000002,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           },
           {
             "id": "young1",
@@ -121,7 +122,8 @@
               }
             ],
             "triggerTime": 33203622330000,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -149,7 +151,8 @@
               }
             ],
             "triggerTime": 33203622330000,
-            "registrant": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz",
+            "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
           }
         ],
         "event_reports": [],
@@ -296,7 +299,8 @@
             "retryCount": 1,
             "verifiedDestination": "https://foo.com",
             "webDestination": "https://foo.com",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           },
           {
             "registrationId": "AR2",
@@ -313,7 +317,8 @@
             "retryCount": 1,
             "verifiedDestination": "https://foo.com",
             "webDestination": "https://foo.com",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           },
           {
             "registrationId": "AR3",
@@ -330,7 +335,8 @@
             "retryCount": 5,
             "verifiedDestination": "https://foo.com",
             "webDestination": "https://foo.com",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           },
           {
             "registrationId": "AR4",
@@ -347,7 +353,8 @@
             "retryCount": 5,
             "verifiedDestination": "https://foo.com",
             "webDestination": "https://foo.com",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           }
         ]
       },
@@ -374,7 +381,8 @@
             "retryCount": 1,
             "verifiedDestination": "https://foo.com",
             "webDestination": "https://foo.com",
-            "sourceType": 1
+            "sourceType": 1,
+            "redirectBehavior": "AS_IS"
           }
         ]
       },

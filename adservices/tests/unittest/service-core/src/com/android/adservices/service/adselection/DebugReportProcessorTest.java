@@ -24,8 +24,10 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -53,6 +55,9 @@ public class DebugReportProcessorTest {
 
     public static final double AD_BID_1 = 1.0;
     public static final double AD_BID_2 = 2.0;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void singleBuyerSessionSuccessfulCase_returnsWinUri() {

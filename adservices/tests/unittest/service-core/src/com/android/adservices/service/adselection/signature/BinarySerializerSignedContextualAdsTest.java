@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.adselection.signature;
 
-import static android.adservices.adselection.SignedContextualAdsFixture.PLACEHOLDER_SIGNATURE;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.AdWithBid;
@@ -30,19 +28,28 @@ import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCap;
 import android.net.Uri;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class BinarySerializerSignedContextualAdsTest {
+    public static final byte[] TEST_SIGNATURE = new byte[] {0, 1, 2};
+
     private SignedContextualAdsHashUtil mSerializer;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
@@ -121,7 +128,7 @@ public class BinarySerializerSignedContextualAdsTest {
                         .setBuyer(AdTechIdentifier.fromString(buyer))
                         .setDecisionLogicUri(Uri.parse(decisionLogicUri))
                         .setAdsWithBid(
-                                List.of(
+                                ImmutableList.of(
                                         new AdWithBid(
                                                 new AdData.Builder()
                                                         .setMetadata(metadata)
@@ -131,7 +138,7 @@ public class BinarySerializerSignedContextualAdsTest {
                                                         .setRenderUri(Uri.parse(adRenderUri))
                                                         .build(),
                                                 Double.parseDouble(bid))))
-                        .setSignature(PLACEHOLDER_SIGNATURE)
+                        .setSignature(TEST_SIGNATURE)
                         .build();
 
         byte[] serialized = new SignedContextualAdsHashUtil().serialize(contextualAds);
@@ -189,7 +196,7 @@ public class BinarySerializerSignedContextualAdsTest {
                         .setBuyer(AdTechIdentifier.fromString(buyer))
                         .setDecisionLogicUri(Uri.parse(decisionLogicUri))
                         .setAdsWithBid(
-                                List.of(
+                                ImmutableList.of(
                                         new AdWithBid(
                                                 new AdData.Builder()
                                                         .setMetadata(metadata)
@@ -203,7 +210,7 @@ public class BinarySerializerSignedContextualAdsTest {
                                                         .setRenderUri(Uri.parse(adRenderUri))
                                                         .build(),
                                                 Double.parseDouble(bid))))
-                        .setSignature(PLACEHOLDER_SIGNATURE)
+                        .setSignature(TEST_SIGNATURE)
                         .build();
 
         byte[] serialized = new SignedContextualAdsHashUtil().serialize(contextualAds);

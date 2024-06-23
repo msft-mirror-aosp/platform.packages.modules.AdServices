@@ -68,7 +68,9 @@ public final class AppSearchDaoWriter {
                         // AdServices debug-signed apk certificate sha
                         "686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2",
                         // AdServices release-signed apk certificate sha
-                        "80f8fbb9a026807f58d98dbc28bf70724d8f66bbfcec997c6bdc0102c3230dee");
+                        "80f8fbb9a026807f58d98dbc28bf70724d8f66bbfcec997c6bdc0102c3230dee",
+                        // AOSP AdServices debug-signed apk certificate sha
+                        "ccc51124be4ab8f81bca7d32f6b3eb1ae04770e5ddfcc73a0108e1f94ec9f5f2");
         return certs.stream()
                 .map(
                         s ->
