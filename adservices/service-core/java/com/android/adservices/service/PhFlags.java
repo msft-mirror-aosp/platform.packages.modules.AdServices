@@ -439,6 +439,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getCobaltRegistryOutOfBandUpdateEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED,
+                COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED);
+    }
+
+    @Override
     public long getMaintenanceJobPeriodMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig) and then
         // hard-coded value.

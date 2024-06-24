@@ -137,6 +137,8 @@ public final class FlagsConstants {
     public static final String KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS =
             "cobalt_upload_service_unbind_delay_ms";
     public static final String KEY_COBALT_LOGGING_ENABLED = "cobalt_logging_enabled";
+    public static final String KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED =
+            "cobalt_registry_out_of_band_update_enabled";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
