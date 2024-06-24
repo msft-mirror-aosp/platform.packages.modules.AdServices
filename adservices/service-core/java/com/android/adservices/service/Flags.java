@@ -3865,14 +3865,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS;
     }
 
-    /** Disable aggregate report delay by default. */
-    boolean MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY = false;
-
-    /** Returns true if aggregate report delay configurability is enabled, false otherwise. */
-    default boolean getMeasurementEnableConfigurableAggregateReportDelay() {
-        return MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
-    }
-
     /**
      * Default aggregate report delay. Derived from {@link
      * com.android.adservices.service.measurement.PrivacyParams#AGGREGATE_REPORT_MIN_DELAY} and

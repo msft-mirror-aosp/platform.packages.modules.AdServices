@@ -3138,13 +3138,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableConfigurableAggregateReportDelay() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY,
-                MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY);
-    }
-
-    @Override
     public String getMeasurementAggregateReportDelayConfig() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
@@ -4083,11 +4076,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS
                         + " = "
                         + getMeasurementEventReportsCtcEarlyReportingWindows());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY
-                        + " = "
-                        + getMeasurementEnableConfigurableAggregateReportDelay());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG
