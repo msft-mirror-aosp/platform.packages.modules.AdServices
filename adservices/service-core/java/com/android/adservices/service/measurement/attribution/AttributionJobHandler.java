@@ -1846,10 +1846,6 @@ class AttributionJobHandler {
         long reportDelayFromDefaults =
                 (long) (Math.random() * AGGREGATE_REPORT_DELAY_SPAN + AGGREGATE_REPORT_MIN_DELAY);
 
-        if (!mFlags.getMeasurementEnableConfigurableAggregateReportDelay()) {
-            return reportDelayFromDefaults;
-        }
-
         String aggregateReportDelayString = mFlags.getMeasurementAggregateReportDelayConfig();
 
         if (aggregateReportDelayString == null) {

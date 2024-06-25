@@ -506,6 +506,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED", Flags::getEnrollmentProtoFileEnabled);
     }
 
+    @Test
+    public void testGetCobaltRegistryOutOfBandUpdateEnabled() {
+        testFeatureFlag(
+                "COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED",
+                Flags::getCobaltRegistryOutOfBandUpdateEnabled);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //

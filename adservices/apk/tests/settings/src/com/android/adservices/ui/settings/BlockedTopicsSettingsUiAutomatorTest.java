@@ -22,24 +22,42 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_O
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
+import static com.android.adservices.ui.settings.BlockedTopicsSettingsUiAutomatorTest.TEST_EPOCH_JOB_PERIOD_MS;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.test.uiautomator.UiObject2;
 
 import com.android.adservices.api.R;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.BlockedTopicsSettingsTestUtil;
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Class to test the CUJ that blocks/unblocks/resets topics with dialog enabled. */
+@DisableGlobalKillSwitch
+@SetAllLogcatTags
+@SetCompatModeFlags
+@SetFlagDisabled(KEY_TOPICS_KILL_SWITCH)
+@SetFlagEnabled(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES)
+@SetFlagEnabled(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK)
+@SetFlagEnabled(KEY_GA_UX_FEATURE_ENABLED)
+@SetFlagEnabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
+@SetIntegerFlag(name = KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, value = 2)
+@SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 2)
+@SetLongFlag(name = KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value = TEST_EPOCH_JOB_PERIOD_MS)
 public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTestCase {
     // Time out to start UI launcher.
     private static final int LAUNCHER_LAUNCH_TIMEOUT = 3000;
@@ -49,26 +67,12 @@ public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTest
     //
     // Set it to 10 seconds because AVD takes longer time to operate UI. Normally 3 seconds are
     // enough for a non-ui test.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 10000;
-
-    @Rule(order = 11)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setTopicsKillSwitch(false)
-                    .setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS)
-                    .setFlag(KEY_CONSENT_SOURCE_OF_TRUTH, 2)
-                    .setFlag(KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, 2)
-                    .setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true)
-                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
-                    .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)
-                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
-                    .setCompatModeFlags();
+    static final long TEST_EPOCH_JOB_PERIOD_MS = 10000;
 
     @Test
+    @SetFlagDisabled(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED)
     @Ignore("b/272511638")
     public void topicBlockUnblockResetTest() throws Exception {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ui_toggle_speed_bump_enabled false");
         // Launch main view of Privacy Sandbox Settings.
         ApkTestUtil.launchSettingView(mDevice, LAUNCHER_LAUNCH_TIMEOUT);
 

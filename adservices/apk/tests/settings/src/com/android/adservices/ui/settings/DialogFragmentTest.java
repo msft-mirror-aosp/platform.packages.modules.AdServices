@@ -29,7 +29,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.RemoteException;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
@@ -41,6 +40,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -59,17 +59,16 @@ import com.google.common.collect.ImmutableList;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@SpyStatic(FlagsFactory.class)
+@RequiresSdkLevelAtLeastT(reason = "Back Compat only support GA UX")
+@SetAllLogcatTags
 @SpyStatic(BackgroundJobsManager.class)
 @SpyStatic(ConsentManager.class)
-@RequiresSdkLevelAtLeastT(reason = "Back Compat only support GA UX")
-@RunWith(AndroidJUnit4.class)
+@SpyStatic(FlagsFactory.class)
 public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";

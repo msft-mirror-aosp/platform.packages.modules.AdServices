@@ -439,6 +439,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getCobaltRegistryOutOfBandUpdateEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED,
+                COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED);
+    }
+
+    @Override
     public long getMaintenanceJobPeriodMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig) and then
         // hard-coded value.
@@ -3138,13 +3145,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableConfigurableAggregateReportDelay() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY,
-                MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY);
-    }
-
-    @Override
     public String getMeasurementAggregateReportDelayConfig() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
@@ -4083,11 +4083,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS
                         + " = "
                         + getMeasurementEventReportsCtcEarlyReportingWindows());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY
-                        + " = "
-                        + getMeasurementEnableConfigurableAggregateReportDelay());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG

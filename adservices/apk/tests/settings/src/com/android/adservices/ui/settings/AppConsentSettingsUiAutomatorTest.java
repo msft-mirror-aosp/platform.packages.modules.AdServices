@@ -16,6 +16,14 @@
 
 package com.android.adservices.ui.settings;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.ComponentName;
@@ -24,7 +32,6 @@ import android.content.Intent;
 import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -34,23 +41,28 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
-public class AppConsentSettingsUiAutomatorTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@DisableGlobalKillSwitch
+@SetAllLogcatTags
+@SetCompatModeFlags
+public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestCase {
     private static final String TEST_APP_NAME = "com.example.adservices.samples.ui.consenttestapp";
     private static final String TEST_APP_APK_PATH =
             "/data/local/tmp/cts/install/" + TEST_APP_NAME + ".apk";
@@ -65,9 +77,8 @@ public class AppConsentSettingsUiAutomatorTest {
 
     private String mTestName;
 
-    @Rule(order = 0)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+    @Rule(order = 5)
+    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
 
     @Before
     public void setup() throws UiObjectNotFoundException {
@@ -85,7 +96,7 @@ public class AppConsentSettingsUiAutomatorTest {
     public void teardown() {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
-        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
         ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_APP_NAME);
@@ -94,7 +105,7 @@ public class AppConsentSettingsUiAutomatorTest {
     // TODO: Remove this blank test along with the other @Ignore. b/268351419
     @Test
     public void placeholderTest() {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         // As this class is the only test class in the test module and need to be @Ignore for the
         // moment, add a blank test to help presubmit to pass.
@@ -102,80 +113,74 @@ public class AppConsentSettingsUiAutomatorTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerOnlyTest() throws InterruptedException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         // System server is not available on S-, skip this test for S-
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        mTestName = getTestName();
         appConsentTest(0, false);
     }
 
     @Test
     @Ignore("Flaky test. (b/268351419)")
     public void consentPpApiOnlyTest() throws InterruptedException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         appConsentTest(1, false);
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerAndPpApiTest() throws InterruptedException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         // System server is not available on S-, skip this test for S-
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        mTestName = getTestName();
+
         appConsentTest(2, false);
     }
 
     @Test
+    @SetFlagEnabled(KEY_ENABLE_APPSEARCH_CONSENT_DATA)
+    @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 3)
     @Ignore("Flaky test. (b/268351419)")
-    public void consentAppSearchOnlyTest() throws UiObjectNotFoundException, InterruptedException {
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_appsearch_consent_data true");
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
+    public void consentAppSearchOnlyTest() throws InterruptedException {
+        mTestName = getTestName();
         appConsentTest(Flags.APPSEARCH_ONLY, false);
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
     }
 
     @Test
+    @SetFlagEnabled(KEY_ENABLE_APPSEARCH_CONSENT_DATA)
+    @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 3)
     @Ignore("Flaky test. (b/268351419)")
-    public void consentAppSearchOnlyDialogsOnTest()
-            throws UiObjectNotFoundException, InterruptedException {
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_appsearch_consent_data true");
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
+    public void consentAppSearchOnlyDialogsOnTest() throws InterruptedException {
+        mTestName = getTestName();
         appConsentTest(Flags.APPSEARCH_ONLY, true);
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     @Ignore("Flaky test. (b/268351419)")
-    public void consentSystemServerOnlyDialogsOnTest()
-            throws UiObjectNotFoundException, InterruptedException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
+    public void consentSystemServerOnlyDialogsOnTest() throws InterruptedException {
         // System server is not available on S-, skip this test for S-
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        mTestName = getTestName();
+
         appConsentTest(0, true);
     }
 
     @Test
     @Ignore("Flaky test. (b/268351419)")
     public void consentPpApiOnlyDialogsOnTest() throws InterruptedException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         appConsentTest(1, true);
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerAndPpApiDialogsOnTest() throws InterruptedException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         // System server is not available on S-, skip this test for S-
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        mTestName = getTestName();
         appConsentTest(2, true);
     }
 
@@ -209,17 +214,17 @@ public class AppConsentSettingsUiAutomatorTest {
 
     private void appConsentTest(int consentSourceOfTruth, boolean dialogsOn)
             throws InterruptedException {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_source_of_truth " + consentSourceOfTruth);
-        ShellUtils.runShellCommand(
-                "device_config put adservices ui_dialogs_feature_enabled " + dialogsOn);
-        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
+        flags.setFlag(KEY_CONSENT_SOURCE_OF_TRUTH, consentSourceOfTruth);
+        flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, dialogsOn);
+
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         // Wait for launcher
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
+
+        flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, false);
 
         setPpApiConsentToGiven();
 
@@ -247,7 +252,7 @@ public class AppConsentSettingsUiAutomatorTest {
                 .isNotNull();
     }
 
-    private void unblockAppConsent(boolean dialogsOn) throws InterruptedException {
+    private void unblockAppConsent(boolean dialogsOn) {
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_apps_title);
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_unblock_app_title);
 
@@ -273,7 +278,7 @@ public class AppConsentSettingsUiAutomatorTest {
         sDevice.pressBack();
     }
 
-    private void resetAppConsent(boolean dialogsOn) throws InterruptedException {
+    private void resetAppConsent(boolean dialogsOn) {
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_apps_title);
 
         if (dialogsOn) {
@@ -290,7 +295,7 @@ public class AppConsentSettingsUiAutomatorTest {
         }
     }
 
-    private void blockAppConsent(boolean dialogsOn) throws InterruptedException {
+    private void blockAppConsent(boolean dialogsOn) {
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_block_app_title);
 
         if (dialogsOn) {
@@ -309,32 +314,20 @@ public class AppConsentSettingsUiAutomatorTest {
         String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APP_APK_PATH);
         assertThat(installMessage).contains("Success");
 
-        ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests persistent");
-        ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices"
-                        + " fledge_custom_audience_service_kill_switch false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices"
-                        + " fledge_schedule_custom_audience_update_enabled true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices disable_fledge_enrollment_check true");
+        flags.setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false);
+        flags.setFlag(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, true);
+        flags.setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, true);
+        flags.setPpapiAppAllowList("*");
 
-        ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list *");
-
-        Context context = ApplicationProvider.getApplicationContext();
         Intent intent = new Intent().setComponent(COMPONENT);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        mContext.startActivity(intent);
 
         sDevice.wait(Until.hasObject(By.pkg(TEST_APP_NAME).depth(0)), LAUNCH_TIMEOUT);
 
         Thread.sleep(1000);
 
-        ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests none");
         ShellUtils.runShellCommand(
                 "am force-stop com.example.adservices.samples.ui.consenttestapp");
-        ShellUtils.runShellCommand(
-                "device_config put adservices disable_fledge_enrollment_check null");
     }
 }

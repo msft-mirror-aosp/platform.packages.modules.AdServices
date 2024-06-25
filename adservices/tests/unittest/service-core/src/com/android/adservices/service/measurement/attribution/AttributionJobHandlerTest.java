@@ -2364,7 +2364,6 @@ public class AttributionJobHandlerTest {
 
         long reportMinDelay = TimeUnit.MINUTES.toMillis(61);
         long reportDelaySpan = TimeUnit.MINUTES.toMillis(10);
-        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
         when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn(
                 String.valueOf(reportMinDelay) + "," + String.valueOf(reportDelaySpan));
 
@@ -2437,7 +2436,6 @@ public class AttributionJobHandlerTest {
         Trigger trigger = getAggregateTrigger();
         Source source = getAggregateSource();
 
-        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
         when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn(null);
 
         when(mMeasurementDao.getPendingTriggerIds())
@@ -2475,7 +2473,6 @@ public class AttributionJobHandlerTest {
         Trigger trigger = getAggregateTrigger();
         Source source = getAggregateSource();
 
-        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
         when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn("12");
 
         when(mMeasurementDao.getPendingTriggerIds())
@@ -2513,7 +2510,6 @@ public class AttributionJobHandlerTest {
         Trigger trigger = getAggregateTrigger();
         Source source = getAggregateSource();
 
-        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
         when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn("1200u0000r,3600000");
 
         when(mMeasurementDao.getPendingTriggerIds())

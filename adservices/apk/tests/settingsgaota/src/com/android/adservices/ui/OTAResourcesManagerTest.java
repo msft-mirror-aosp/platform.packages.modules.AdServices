@@ -29,18 +29,17 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 
-import android.content.Context;
 import android.content.res.loader.ResourcesProvider;
 import android.os.ParcelFileDescriptor;
 
-import androidx.test.platform.app.InstrumentationRegistry;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
@@ -49,66 +48,41 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 
-public class OTAResourcesManagerTest {
+@SpyStatic(ErrorLogUtil.class)
+@SpyStatic(MobileDataDownloadFactory.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(ParcelFileDescriptor.class)
+@SpyStatic(ResourcesProvider.class)
+public final class OTAResourcesManagerTest extends AdServicesExtendedMockitoTestCase {
     @Mock
     MobileDataDownload mMockMdd;
     @Mock
     Flags mMockFlags;
     @Mock
-    MobileDataDownloadFactory mMockMddFactory;
-    @Mock
-    ResourcesProvider mResourcesProvider;
-    @Mock
     ParcelFileDescriptor mMockParcelFileDescriptor;
-    private Context mContext;
-    private MockitoSession mStaticMockSession = null;
 
     @Before
     public void setUp() {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
 
-        mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(ErrorLogUtil.class)
-                        .spyStatic(MobileDataDownloadFactory.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(ParcelFileDescriptor.class)
-                        .spyStatic(ResourcesProvider.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-        ExtendedMockito.doReturn(mMockMdd)
-                .when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
-        ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
-        ExtendedMockito.doReturn(mMockParcelFileDescriptor)
+        doReturn(mMockMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(mMockParcelFileDescriptor)
                 .when(() -> ParcelFileDescriptor.open(any(File.class), anyInt()));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     /** Verify that MDD throws an ExecutionException, getDownloadedFiles return a null object. */
     @Test
-    public void testGetDownloadedFiles_futureExecutionException() throws Exception {
+    public void testGetDownloadedFiles_futureExecutionException() {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ListenableFuture<ClientFileGroup> testFuture =
                 Futures.immediateFailedFuture(
@@ -128,7 +102,7 @@ public class OTAResourcesManagerTest {
      * * Verify that MDD throws an InterruptedException, getDownloadedFiles return a null object.
      */
     @Test
-    public void testGetDownloadedFiles_futureInterruptedException() throws Exception {
+    public void testGetDownloadedFiles_futureInterruptedException() {
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ListenableFuture<ClientFileGroup> testFuture =
                 Futures.immediateFailedFuture(new InterruptedException("mockInterruptedException"));
@@ -147,7 +121,7 @@ public class OTAResourcesManagerTest {
      * * Verify that when the file group is not downloaded, getDownloadedFiles return an empty map.
      */
     @Test
-    public void testGetDownloadedFiles_nullFileGroup() throws Exception {
+    public void testGetDownloadedFiles_nullFileGroup() {
         ListenableFuture<ClientFileGroup> testFuture = Futures.immediateFuture(null);
         doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
 
@@ -159,7 +133,7 @@ public class OTAResourcesManagerTest {
      * map.
      */
     @Test
-    public void testGetDownloadedFiles_emptyClientFileGroup() throws Exception {
+    public void testGetDownloadedFiles_emptyClientFileGroup() {
         ClientFileGroup testCfg =
                 ClientFileGroup.newBuilder().setStatus(ClientFileGroup.Status.DOWNLOADED).build();
 
@@ -171,7 +145,7 @@ public class OTAResourcesManagerTest {
 
     /** Verify that when MDD download is pending, getDownloadedFiles returns null. */
     @Test
-    public void testGetDownloadedFiles_pendingClientFileGroup() throws Exception {
+    public void testGetDownloadedFiles_pendingClientFileGroup() {
         ClientFileGroup testCfg =
                 ClientFileGroup.newBuilder()
                         .setGroupName("testGroupName")
@@ -190,7 +164,7 @@ public class OTAResourcesManagerTest {
      * * Verify that MDD downloads a valid file group, getDownloadedFiles return a non-empty map.
      */
     @Test
-    public void testGetDownloadedFiles_validClientFileGroup() throws Exception {
+    public void testGetDownloadedFiles_validClientFileGroup() {
         ClientFile testCf = ClientFile.newBuilder().setFileId("testFileId1").build();
 
         ClientFileGroup testCfg =
@@ -302,8 +276,7 @@ public class OTAResourcesManagerTest {
 
         ListenableFuture<ClientFileGroup> testFuture = Futures.immediateFuture(testCfg);
         doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
-        ExtendedMockito.doReturn(null)
-                .when(() -> ResourcesProvider.loadFromTable(mMockParcelFileDescriptor, null));
+        doReturn(null).when(() -> ResourcesProvider.loadFromTable(mMockParcelFileDescriptor, null));
 
         OTAResourcesManager.refreshOTAResources(mContext);
 
@@ -340,8 +313,7 @@ public class OTAResourcesManagerTest {
 
         ListenableFuture<ClientFileGroup> testFuture = Futures.immediateFuture(testCfg);
         doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
-        ExtendedMockito.doReturn(null)
-                .when(() -> ResourcesProvider.loadFromApk(mMockParcelFileDescriptor, null));
+        doReturn(null).when(() -> ResourcesProvider.loadFromApk(mMockParcelFileDescriptor, null));
 
         OTAResourcesManager.refreshOTAResources(mContext);
 

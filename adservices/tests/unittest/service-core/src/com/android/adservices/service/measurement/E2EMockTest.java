@@ -147,9 +147,6 @@ public abstract class E2EMockTest extends E2ETest {
     private static Map<String, String> sPhFlags =
             Map.ofEntries(
                     entry(
-                            FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY,
-                            "true"),
-                    entry(
                             FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
                             AGGREGATE_REPORT_DELAY + ",0"),
                     entry(
