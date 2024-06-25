@@ -39,6 +39,7 @@ import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.Flags.COBALT_ADSERVICES_API_KEY_HEX;
 import static com.android.adservices.service.Flags.COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_LOGGING_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
 import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
@@ -353,7 +354,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_API_STATUS
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_REPORT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
@@ -549,6 +549,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_THRES
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_ADSERVICES_API_KEY_HEX;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
@@ -823,7 +824,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
@@ -1275,6 +1275,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE,
                 APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE,
                 Flags::getAppNameApiErrorCobaltLoggingSamplingRate);
+    }
+
+    @Test
+    public void testGetCobaltRegistryOutOfBandUpdateEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED,
+                COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED,
+                Flags::getCobaltRegistryOutOfBandUpdateEnabled);
     }
 
     @Test
@@ -2740,14 +2748,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS,
                 MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS,
                 Flags::getMeasurementEventReportsCtcEarlyReportingWindows);
-    }
-
-    @Test
-    public void testGetMeasurementEnableConfigurableAggregateReportDelay() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY,
-                MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY,
-                Flags::getMeasurementEnableConfigurableAggregateReportDelay);
     }
 
     @Test
