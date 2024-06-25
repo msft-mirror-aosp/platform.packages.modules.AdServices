@@ -137,6 +137,8 @@ public final class FlagsConstants {
     public static final String KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS =
             "cobalt_upload_service_unbind_delay_ms";
     public static final String KEY_COBALT_LOGGING_ENABLED = "cobalt_logging_enabled";
+    public static final String KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED =
+            "cobalt_registry_out_of_band_update_enabled";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -1251,9 +1253,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
             "measurement_event_reports_ctc_early_reporting_windows";
-
-    public static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY =
-            "measurement_enable_configurable_aggregate_report_delay";
 
     public static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             "measurement_aggregate_report_delay_config";

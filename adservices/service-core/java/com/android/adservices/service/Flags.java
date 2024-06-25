@@ -3865,14 +3865,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS;
     }
 
-    /** Disable aggregate report delay by default. */
-    boolean MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY = false;
-
-    /** Returns true if aggregate report delay configurability is enabled, false otherwise. */
-    default boolean getMeasurementEnableConfigurableAggregateReportDelay() {
-        return MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
-    }
-
     /**
      * Default aggregate report delay. Derived from {@link
      * com.android.adservices.service.measurement.PrivacyParams#AGGREGATE_REPORT_MIN_DELAY} and
@@ -4692,6 +4684,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the value of Adservices release stage for Cobalt. */
     default String getAdservicesReleaseStageForCobalt() {
         return ADSERVICES_RELEASE_STAGE_FOR_COBALT;
+    }
+
+    /** Default value of whether Cobalt registry out of band update feature is enabled */
+    @FeatureFlag boolean COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED = false;
+
+    /** Returns whether Cobalt registry out of band update feature is enabled. */
+    default boolean getCobaltRegistryOutOfBandUpdateEnabled() {
+        return COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
     }
 
     /**
