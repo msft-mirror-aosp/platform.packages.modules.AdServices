@@ -66,10 +66,3 @@ flag {
     description: "Enables the static dex verifier for the SDK sandbox to run on new SDKs"
     bug: "231441674"
 }
-
-flag {
-    name: "service_restriction_package_name_logic_updated"
-    namespace: "sdk_sandbox"
-    description: "Updates the package name validation process to determine service access within the SDK sandbox"
-    bug: "271547387"
-}
