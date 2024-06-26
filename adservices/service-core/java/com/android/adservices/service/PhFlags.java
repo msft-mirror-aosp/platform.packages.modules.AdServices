@@ -449,6 +449,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public String getMddCobaltRegistryManifestFileUrl() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MDD_COBALT_REGISTRY_MANIFEST_FILE_URL,
+                MDD_COBALT_REGISTRY_MANIFEST_FILE_URL);
+    }
+
+    @Override
     public long getMaintenanceJobPeriodMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig) and then
         // hard-coded value.
@@ -3230,8 +3237,8 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getMeasurementEnableAttributionScope() {
         return getDeviceConfigFlag(
-                        FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
-                        MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE);
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
+                MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE);
     }
 
     @Override
@@ -6888,6 +6895,7 @@ public final class PhFlags implements Flags {
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers
+
     /**
      * @deprecated - reading a flag from {@link SystemProperties} first is deprecated - this method
      *     should only be used to refactor existing methods in this class, not on new ones.

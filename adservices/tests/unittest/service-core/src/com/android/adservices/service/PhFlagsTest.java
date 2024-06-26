@@ -312,6 +312,7 @@ import static com.android.adservices.service.Flags.IS_U18_UX_DETENTION_CHANNEL_E
 import static com.android.adservices.service.Flags.MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+import static com.android.adservices.service.Flags.MDD_COBALT_REGISTRY_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
@@ -785,6 +786,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MAINLINE_TRAIN_V
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_COBALT_REGISTRY_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
@@ -1303,6 +1305,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED,
                 COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED,
                 Flags::getCobaltRegistryOutOfBandUpdateEnabled);
+    }
+
+    @Test
+    public void testgetMddCobaltRegistryManifestFileUrl() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MDD_COBALT_REGISTRY_MANIFEST_FILE_URL,
+                MDD_COBALT_REGISTRY_MANIFEST_FILE_URL,
+                Flags::getMddCobaltRegistryManifestFileUrl);
     }
 
     @Test

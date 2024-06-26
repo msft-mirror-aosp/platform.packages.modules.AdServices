@@ -867,6 +867,8 @@ public final class FlagsConstants {
             "downloader_max_download_threads";
     public static final String KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "mdd_topics_classifier_manifest_file_url";
+    public static final String KEY_MDD_COBALT_REGISTRY_MANIFEST_FILE_URL =
+            "mdd_cobalt_registry_manifest_file_url";
 
     // Killswitch keys
     public static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
