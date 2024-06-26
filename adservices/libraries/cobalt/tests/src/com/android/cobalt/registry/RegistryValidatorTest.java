@@ -24,6 +24,9 @@ import static com.google.cobalt.ReportDefinition.PrivacyMechanism.DE_IDENTIFICAT
 import static com.google.cobalt.ReportDefinition.PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY;
 import static com.google.cobalt.ReportDefinition.ReportType.FLEETWIDE_OCCURRENCE_COUNTS;
 import static com.google.cobalt.ReportDefinition.ReportType.STRING_COUNTS;
+import static com.google.cobalt.ReportDefinition.ReportingInterval.DAYS_1;
+import static com.google.cobalt.ReportDefinition.ReportingInterval.HOURS_1;
+import static com.google.cobalt.ReportDefinition.ReportingInterval.REPORTING_INTERVAL_UNSET;
 import static com.google.cobalt.WindowSize.WINDOW_1_DAY;
 import static com.google.cobalt.WindowSize.WINDOW_28_DAYS;
 import static com.google.cobalt.WindowSize.WINDOW_30_DAYS;
@@ -34,17 +37,20 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 
 import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
+import com.google.cobalt.MetricDefinition.MetricDimension;
 import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
+import com.google.cobalt.ReportDefinition.ReportingInterval;
 import com.google.cobalt.WindowSize;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.List;
 import java.util.function.BiPredicate;
 
 @RunWith(JUnit4.class)
@@ -284,6 +290,127 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testExpeditedSending_falseSupported() {
+        expect.withMessage("validateExpeditedSending(false)")
+                .that(RegistryValidator.validateExpeditedSending(false))
+                .isTrue();
+        expect.withMessage("validateExpeditedSending(true)")
+                .that(RegistryValidator.validateExpeditedSending(true))
+                .isFalse();
+    }
+
+    @Test
+    public void testExemptFromConsent_falseSupported() {
+        expect.withMessage("validateExemptFromConsent(false)")
+                .that(RegistryValidator.validateExemptFromConsent(false))
+                .isTrue();
+        expect.withMessage("validateExemptFromConsent(true)")
+                .that(RegistryValidator.validateExemptFromConsent(true))
+                .isFalse();
+    }
+
+    @Test
+    public void testReportingInterval_days1Supported() {
+        for (ReportingInterval reportingInterval : ReportingInterval.values()) {
+            switch (reportingInterval) {
+                case DAYS_1:
+                    expect.withMessage("validateReportingInterval(DAYS_1)")
+                            .that(RegistryValidator.validateReportingInterval(reportingInterval))
+                            .isTrue();
+                    break;
+                default:
+                    expect.withMessage("validateReportingInterval(%s)", reportingInterval)
+                            .that(RegistryValidator.validateReportingInterval(reportingInterval))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testMaxPrivateIndex_mustBeLessThanMaxInt32() {
+        // Dimension with 1000 possible events.
+        List<MetricDimension> metricDimensions = List.of(getMetricDimension(999));
+
+        for (ReportType reportType : ReportType.values()) {
+            switch (reportType) {
+                case REPORT_TYPE_UNSET:
+                    break;
+                case FLEETWIDE_OCCURRENCE_COUNTS:
+                    // Max index points isn't checked for de-identified reports.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            DE_IDENTIFICATION,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ 10))
+                            .isTrue();
+                    // Max index points isn't checked for de-identified reports.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            DE_IDENTIFICATION,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ Integer.MAX_VALUE / 10))
+                            .isTrue();
+                    // Passes because 1000 * 10 < Integer.MAX_VALUE
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ 10))
+                            .isTrue();
+                    // Fails because 1000 * Integer.MAX_VALUE / 10 > Integer.MAX_VALUE
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ Integer.MAX_VALUE / 10))
+                            .isFalse();
+                    break;
+                default:
+                    // Max index points isn't checked for de-identified reports.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            DE_IDENTIFICATION,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ 10))
+                            .isTrue();
+                    // Max index points isn't checked for de-identified reports.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            DE_IDENTIFICATION,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ Integer.MAX_VALUE / 10))
+                            .isTrue();
+                    // Max index points not valid for reports other than private
+                    // FLEETWIDE_OCCURRENCE_COUNTS.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ 10))
+                            .isFalse();
+                    // Max index points not valid for reports other than private
+                    // FLEETWIDE_OCCURRENCE_COUNTS.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ Integer.MAX_VALUE / 10))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
     public void testIsValidReportTypeAndPrivacyMechanism_privateFleetwideOccurrenceCounts() {
         MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
@@ -484,6 +611,74 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 .isFalse();
     }
 
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_expeditedSendingFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setExpeditedSending(true)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_1dayReportingIntervalSupported() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
+
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setReportingInterval(REPORTING_INTERVAL_UNSET)
+                                        .build()))
+                .isFalse();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric, report.toBuilder().setReportingInterval(HOURS_1).build()))
+                .isFalse();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric, report.toBuilder().setReportingInterval(DAYS_1).build()))
+                .isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_exemptFromConsentFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
+
+        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isTrue();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric, report.toBuilder().setExemptFromConsent(true).build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_maxPrivateIndexTooLargeFails() {
+        // Metric with a dimension with 1000 possible events.
+        MetricDefinition metric =
+                getMetricDefinition(OCCURRENCE).toBuilder()
+                        .addMetricDimensions(getMetricDimension(999))
+                        .build();
+
+        // Report with 1/10th of Integer.MAX_VALUE the number of index points.
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setNumIndexPoints(Integer.MAX_VALUE / 10)
+                        .build();
+
+        // Fails because 1000 * Integer.MAX_VALUE / 10 > Integer.MAX_VALUE
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
     private static MetricDefinition getMetricDefinition(MetricType metricType) {
         return MetricDefinition.newBuilder().setMetricType(metricType).build();
     }
@@ -493,6 +688,11 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         return ReportDefinition.newBuilder()
                 .setReportType(reportType)
                 .setPrivacyMechanism(privacyMechanism)
+                .setReportingInterval(DAYS_1)
                 .build();
+    }
+
+    private static MetricDimension getMetricDimension(int maxEventCode) {
+        return MetricDimension.newBuilder().setMaxEventCode(maxEventCode).build();
     }
 }
