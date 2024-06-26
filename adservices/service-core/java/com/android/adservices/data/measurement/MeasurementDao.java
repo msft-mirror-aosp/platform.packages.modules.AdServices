@@ -3419,7 +3419,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public List<String> fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+    public Pair<Long, List<String>> fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
             Uri publisher,
             int publisherType,
             String enrollmentId,
@@ -3449,6 +3449,17 @@ class MeasurementDao implements IMeasurementDao {
                         Source.Status.MARKED_TO_DELETE // 9
                         );
 
+        boolean isDestinationLimitPriorityEnabled =
+                FlagsFactory.getFlags().getMeasurementEnableSourceDestinationLimitPriority();
+        String selectHighestDestinationPriority =
+                isDestinationLimitPriorityEnabled
+                        ? String.format(
+                                " MAX (s.%1$s) AS destination_limit_priority, ",
+                                SourceContract.DESTINATION_LIMIT_PRIORITY)
+                        : "";
+        String orderByDestinationPriority =
+                isDestinationLimitPriorityEnabled ? " destination_limit_priority ASC, " : "";
+
         String oldestDestination =
                 String.join(
                         ", ",
@@ -3456,6 +3467,7 @@ class MeasurementDao implements IMeasurementDao {
                         String.format(
                                 "oldest_destination AS ( "
                                         + "SELECT d.%1$s, "
+                                        + selectHighestDestinationPriority
                                         + "MAX(s.%2$s) AS source_event_time FROM %3$s AS d "
                                         + "INNER JOIN %4$s AS s ON (d.%5$s = s.%6$s) "
                                         + "WHERE d.%5$s IN source_ids "
@@ -3463,7 +3475,9 @@ class MeasurementDao implements IMeasurementDao {
                                         + "AND %1$s NOT IN "
                                         + flattenAsSqlQueryList(excludedDestinations)
                                         + " GROUP BY d.%1$s "
-                                        + "ORDER BY source_event_time ASC LIMIT 1) ",
+                                        + "ORDER BY "
+                                        + orderByDestinationPriority
+                                        + "source_event_time ASC LIMIT 1) ",
                                 MeasurementTables.SourceDestination.DESTINATION, // 1
                                 MeasurementTables.SourceContract.EVENT_TIME, // 2
                                 MeasurementTables.SourceDestination.TABLE, // 3
@@ -3486,12 +3500,16 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.SourceDestination.DESTINATION);
 
         List<String> sourceIds = new ArrayList<>();
+        long lowestDestinationLimitPriority = Long.MIN_VALUE;
         try (Cursor cursor =
                 mSQLTransaction
                         .getDatabase()
                         .query(
                                 MeasurementTables.SourceContract.TABLE,
-                                new String[] {MeasurementTables.SourceContract.ID},
+                                new String[] {
+                                    MeasurementTables.SourceContract.ID,
+                                    SourceContract.DESTINATION_LIMIT_PRIORITY
+                                },
                                 MeasurementTables.SourceContract.ID
                                         + " IN "
                                         + "("
@@ -3502,10 +3520,21 @@ class MeasurementDao implements IMeasurementDao {
                                 null,
                                 null)) {
             while (cursor.moveToNext()) {
-                sourceIds.add(cursor.getString(0));
+                sourceIds.add(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.SourceContract.ID)));
+                long sourceDestinationLimitPriority =
+                        cursor.getLong(
+                                cursor.getColumnIndex(SourceContract.DESTINATION_LIMIT_PRIORITY));
+                // Find the maximum destination limit priority value, i.e. if two sources assign
+                // different destination limit priority value to the associated destinations, we
+                // consider higher of the two values.
+                if (sourceDestinationLimitPriority > lowestDestinationLimitPriority) {
+                    lowestDestinationLimitPriority = sourceDestinationLimitPriority;
+                }
             }
         }
-        return sourceIds;
+        return new Pair<>(lowestDestinationLimitPriority, sourceIds);
     }
 
     @Override
@@ -3527,6 +3556,7 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.AggregateReport.TABLE,
                         aggregateReportsWhereClause);
 
+        // Delete the attributions first
         if (mSQLTransaction
                         .getDatabase()
                         .delete(
@@ -3540,6 +3570,7 @@ class MeasurementDao implements IMeasurementDao {
             throw new DatastoreException("Attribution deletion failed.");
         }
 
+        // Delete the reports
         if (mSQLTransaction
                         .getDatabase()
                         .delete(
@@ -3548,6 +3579,34 @@ class MeasurementDao implements IMeasurementDao {
                                 null)
                 < 0) {
             throw new DatastoreException("Aggregate Reports deletion failed.");
+        }
+    }
+
+    @Override
+    public void deleteFutureFakeEventReportsForSources(
+            List<String> sourceIds, long currentTimeStamp) throws DatastoreException {
+        String fakeEventReportsWhereClause =
+                mergeConditions(
+                        " AND ",
+                        MeasurementTables.EventReportContract.SOURCE_ID
+                                + " IN "
+                                + flattenAsSqlQueryList(sourceIds),
+                        MeasurementTables.EventReportContract.STATUS
+                                + " = "
+                                + EventReport.Status.PENDING,
+                        MeasurementTables.EventReportContract.TRIGGER_TIME
+                                + " >= "
+                                + currentTimeStamp);
+
+        // Delete the reports
+        if (mSQLTransaction
+                        .getDatabase()
+                        .delete(
+                                MeasurementTables.EventReportContract.TABLE,
+                                fakeEventReportsWhereClause,
+                                null)
+                < 0) {
+            throw new DatastoreException("Fake event report deletion failed.");
         }
     }
 

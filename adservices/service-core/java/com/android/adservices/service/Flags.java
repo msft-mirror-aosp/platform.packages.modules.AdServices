@@ -3894,16 +3894,11 @@ public interface Flags extends ModuleSharedFlags {
 
     boolean MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO = false;
 
-    /** Enable FIFO destinations based deletion of sources to accommodate an incoming source. */
-    default boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
-        return MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO;
-    }
-
     boolean MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS = false;
 
     /**
      * Enable deletion of reports along with FIFO destinations. In practice it's a sub flag to
-     * {@link #getMeasurementEnableDestinationXPublisherXEnrollmentFifo}
+     * {@link #getMeasurementEnableSourceDestinationLimitPriority()}
      */
     default boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
         return MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
