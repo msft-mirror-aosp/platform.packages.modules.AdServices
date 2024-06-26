@@ -21,6 +21,8 @@ import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggi
 import static com.android.adservices.mockito.MockitoExpectations.mockMsmtAttributionCobaltLoggingEnabled;
 import static com.android.adservices.mockito.MockitoExpectations.mockMsmtRegistrationCobaltLoggingEnabled;
 import static com.android.adservices.mockito.MockitoExpectations.mockMsmtReportingCobaltLoggingEnabled;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_COBALT_LOGGER_INITIALIZATION_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__UNKNOWN_ATTRIBUTION_SURFACE_COMBINATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__WEB_APP_ATTRIBUTION_SURFACE_COMBINATION;
@@ -65,6 +67,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.cobalt.CobaltLogger;
@@ -178,6 +181,10 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_COBALT_LOGGER_INITIALIZATION_FAILURE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
     public void testIsEnabled_cobaltInitializationException() {
         mockCobaltLoggingEnabled(mMockFlags, true);
         mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);

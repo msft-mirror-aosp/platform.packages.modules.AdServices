@@ -177,6 +177,7 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
     private void warmupClientAndServer() throws Exception {
 
         makeWarmUpNetworkCall(TEST_COORDINATOR);
+        makeWarmUpNetworkCall(keyFetchUrlOption.get());
 
         // The first warm up call brings ups the sfe
         byte[] getAdSelectionData =

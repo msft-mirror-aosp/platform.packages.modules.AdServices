@@ -205,7 +205,11 @@ public class GetAdSelectionDataRunner {
                         mFlags.getFledgeAuctionServerOmitAdsEnabled());
         CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
                 new CompressedBuyerInputCreatorFactory(
-                        compressedBuyerInputCreatorHelper, mDataCompressor);
+                        compressedBuyerInputCreatorHelper,
+                        mDataCompressor,
+                        mFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao);
 
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
@@ -305,7 +309,11 @@ public class GetAdSelectionDataRunner {
                         mFlags.getFledgeAuctionServerOmitAdsEnabled());
         CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
                 new CompressedBuyerInputCreatorFactory(
-                        compressedBuyerInputCreatorHelper, mDataCompressor);
+                        compressedBuyerInputCreatorHelper,
+                        mDataCompressor,
+                        mFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao);
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
                         mCustomAudienceDao,

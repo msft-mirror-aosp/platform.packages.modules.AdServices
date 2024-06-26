@@ -280,6 +280,14 @@
           "exclude-annotation": "androidx.test.filters.FlakyTest"
         }
       ]
+    },
+    {
+      "name": "AdServicesApkUISettingsGaUXSelectorTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     }
   ],
   "extservices-mainline-presubmit": [
@@ -1461,14 +1469,6 @@
     },
     {
       "name": "AdServicesApkUISettingsGaOtaTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesApkUISettingsGaUXSelectorTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"

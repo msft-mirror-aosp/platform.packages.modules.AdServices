@@ -25,11 +25,15 @@ import androidx.room.RenameColumn;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 import androidx.room.migration.AutoMigrationSpec;
+import androidx.room.migration.Migration;
+import androidx.room.util.TableInfo;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
@@ -75,6 +79,22 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
             toColumnName = "daily_update_uri")
     static class AutoMigration1To2 implements AutoMigrationSpec {}
 
+    @VisibleForTesting
+    static final Migration MIGRATION_7_8 =
+            new Migration(7, 8) {
+                @Override
+                public void migrate(SupportSQLiteDatabase db) {
+                    final TableInfo info =
+                            TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+
+                    if (!info.columns.containsKey("is_debuggable")) {
+                        db.execSQL(
+                                "ALTER TABLE `scheduled_custom_audience_update` ADD COLUMN"
+                                        + " `is_debuggable` INTEGER NOT NULL DEFAULT false");
+                    }
+                }
+            };
+
     private static volatile CustomAudienceDatabase sSingleton;
 
     // TODO: How we want handle synchronized situation (b/228101878).
@@ -106,6 +126,7 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, CustomAudienceDatabase.class, DATABASE_NAME)
+                                .addMigrations(MIGRATION_7_8)
                                 .fallbackToDestructiveMigration(true)
                                 .addTypeConverter(converters)
                                 .build();

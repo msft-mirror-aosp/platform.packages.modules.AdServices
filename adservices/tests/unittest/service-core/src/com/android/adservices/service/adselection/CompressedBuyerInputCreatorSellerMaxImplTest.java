@@ -18,9 +18,12 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_1;
 import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_2;
+import static android.adservices.common.CommonFixture.getAlphaNumericString;
 
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.atLeast;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -49,11 +52,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class CompressedBuyerInputCreatorNoOptimizationsTest
+public class CompressedBuyerInputCreatorSellerMaxImplTest
         extends AdServicesExtendedMockitoTestCase {
     private CompressedBuyerInputCreator mCompressedBuyerInputCreator;
     private AuctionServerDataCompressor mAuctionServerDataCompressor;
+    private CompressedBuyerInputCreatorHelper mCompressedBuyerInputCreatorHelper;
     @Mock private AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategyMock;
+    private static final int NUM_RECALCULATIONS = 10;
+    private static final int MAX_SELLER_BYTES = 20 * 1024; // 20KB
     private static final boolean OMIT_ADS_DISABLED = false;
     private static final boolean PAS_METRICS_DISABLED = false;
 
@@ -63,15 +69,19 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION);
 
-        CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper =
+        mCompressedBuyerInputCreatorHelper =
                 new CompressedBuyerInputCreatorHelper(
                         mAuctionServerPayloadMetricsStrategyMock,
                         PAS_METRICS_DISABLED,
                         OMIT_ADS_DISABLED);
 
         mCompressedBuyerInputCreator =
-                new CompressedBuyerInputCreatorNoOptimizations(
-                        compressedBuyerInputCreatorHelper, mAuctionServerDataCompressor);
+                new CompressedBuyerInputCreatorSellerPayloadMaxImpl(
+                        mCompressedBuyerInputCreatorHelper,
+                        mAuctionServerDataCompressor,
+                        NUM_RECALCULATIONS,
+                        MAX_SELLER_BYTES,
+                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES);
     }
 
     @Test
@@ -91,11 +101,13 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
         Map<String, DBCustomAudience> namesToCustomAudience = resultPair.second;
 
         Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap =
-                generateEncodedPayload(buyersList);
+                generateExpectedEncodedPayloadForBuyers(buyersList);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 mCompressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
                         dbCustomAudienceList, encodedPayloadMap);
+
+        int totalNumCAsInBuyerInput = 0;
 
         for (AdTechIdentifier buyer : buyersList) {
             BiddingAuctionServers.BuyerInput buyerInput =
@@ -112,15 +124,18 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                 expect.that(deviceCA.getName()).isEqualTo(buyerInputsCAName);
                 expect.that(deviceCA.getBuyer()).isEqualTo(buyer);
                 assertCAsEqual(buyerInputsCA, deviceCA, true);
+                totalNumCAsInBuyerInput++;
             }
 
             BiddingAuctionServers.ProtectedAppSignals appSignals =
                     buyerInput.getProtectedAppSignals();
-            expect.that(encodedPayloadMap.get(buyer).getVersion())
-                    .isEqualTo(appSignals.getEncodingVersion());
-            expect.that(ByteString.copyFrom(encodedPayloadMap.get(buyer).getEncodedPayload()))
-                    .isEqualTo(appSignals.getAppInstallSignals());
+            expect.that(appSignals.getEncodingVersion())
+                    .isEqualTo(encodedPayloadMap.get(buyer).getVersion());
+            expect.that(appSignals.getAppInstallSignals())
+                    .isEqualTo(
+                            ByteString.copyFrom(encodedPayloadMap.get(buyer).getEncodedPayload()));
         }
+        expect.that(totalNumCAsInBuyerInput).isEqualTo(dbCustomAudienceList.size());
         verify(mAuctionServerPayloadMetricsStrategyMock, times(dbCustomAudienceList.size()))
                 .addToBuyerIntermediateStats(any(), any(), any());
         verify(mAuctionServerPayloadMetricsStrategyMock)
@@ -133,7 +148,7 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                     throws Exception {
         List<AdTechIdentifier> buyersList = ImmutableList.of(BUYER_1, BUYER_2);
         Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap =
-                generateEncodedPayload(buyersList);
+                generateExpectedEncodedPayloadForBuyers(buyersList);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 mCompressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
@@ -150,10 +165,11 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
 
             BiddingAuctionServers.ProtectedAppSignals appSignals =
                     buyerInput.getProtectedAppSignals();
-            expect.that(encodedPayloadMap.get(buyer).getVersion())
-                    .isEqualTo(appSignals.getEncodingVersion());
-            expect.that(ByteString.copyFrom(encodedPayloadMap.get(buyer).getEncodedPayload()))
-                    .isEqualTo(appSignals.getAppInstallSignals());
+            expect.that(appSignals.getEncodingVersion())
+                    .isEqualTo(encodedPayloadMap.get(buyer).getVersion());
+            expect.that(appSignals.getAppInstallSignals())
+                    .isEqualTo(
+                            ByteString.copyFrom(encodedPayloadMap.get(buyer).getEncodedPayload()));
         }
         verify(mAuctionServerPayloadMetricsStrategyMock, never())
                 .addToBuyerIntermediateStats(any(), any(), any());
@@ -182,6 +198,8 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                 mCompressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
                         dbCustomAudienceList, ImmutableMap.of());
 
+        int totalNumCAsInBuyerInput = 0;
+
         for (AdTechIdentifier buyer : buyersList) {
             BiddingAuctionServers.BuyerInput buyerInput =
                     BiddingAuctionServers.BuyerInput.parseFrom(
@@ -197,19 +215,148 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                 expect.that(deviceCA.getName()).isEqualTo(buyerInputsCAName);
                 expect.that(deviceCA.getBuyer()).isEqualTo(buyer);
                 assertCAsEqual(buyerInputsCA, deviceCA, true);
+                totalNumCAsInBuyerInput++;
             }
 
             BiddingAuctionServers.ProtectedAppSignals appSignals =
                     buyerInput.getProtectedAppSignals();
             expect.that(appSignals.getSerializedSize()).isEqualTo(0);
         }
+        expect.that(totalNumCAsInBuyerInput).isEqualTo(dbCustomAudienceList.size());
         verify(mAuctionServerPayloadMetricsStrategyMock, times(dbCustomAudienceList.size()))
                 .addToBuyerIntermediateStats(any(), any(), any());
         verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
     }
 
-    private Map<AdTechIdentifier, DBEncodedPayload> generateEncodedPayload(
+    @Test
+    public void
+            generateCompressedBuyerInputFromDBCAsAndEncodedSignalsReturnsCompressedInputs_NotEnoughSpaceForPAS()
+                    throws Exception {
+
+        // Create new creator with PAS length as the max size, where the min for 2 buyers is 2*PAS
+        // length
+        CompressedBuyerInputCreator compressedBuyerInputCreator =
+                new CompressedBuyerInputCreatorSellerPayloadMaxImpl(
+                        mCompressedBuyerInputCreatorHelper,
+                        mAuctionServerDataCompressor,
+                        NUM_RECALCULATIONS,
+                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES,
+                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES);
+
+        Map<String, AdTechIdentifier> nameAndBuyersMap =
+                Map.of(
+                        "Shoes CA of Buyer 1", BUYER_1,
+                        "Shirts CA of Buyer 1", BUYER_1,
+                        "Shoes CA Of Buyer 2", BUYER_2);
+
+        List<AdTechIdentifier> buyersList = ImmutableList.of(BUYER_1, BUYER_2);
+        Pair<List<DBCustomAudience>, Map<String, DBCustomAudience>> resultPair =
+                createDBCustomAudiences(nameAndBuyersMap);
+
+        Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap =
+                generateExpectedEncodedPayloadForBuyers(buyersList);
+
+        List<DBCustomAudience> dbCustomAudienceList = resultPair.first;
+        Map<String, DBCustomAudience> namesToCustomAudience = resultPair.second;
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
+                compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
+                        dbCustomAudienceList, encodedPayloadMap);
+
+        int totalNumCAsInBuyerInput = 0;
+
+        for (AdTechIdentifier buyer : buyersList) {
+            BiddingAuctionServers.BuyerInput buyerInput =
+                    BiddingAuctionServers.BuyerInput.parseFrom(
+                            mAuctionServerDataCompressor
+                                    .decompress(compressedDataMap.get(buyer))
+                                    .getData());
+
+            for (BiddingAuctionServers.BuyerInput.CustomAudience buyerInputsCA :
+                    buyerInput.getCustomAudiencesList()) {
+                String buyerInputsCAName = buyerInputsCA.getName();
+                expect.that(nameAndBuyersMap).containsKey(buyerInputsCAName);
+                DBCustomAudience deviceCA = namesToCustomAudience.get(buyerInputsCAName);
+                expect.that(deviceCA.getName()).isEqualTo(buyerInputsCAName);
+                expect.that(deviceCA.getBuyer()).isEqualTo(buyer);
+                assertCAsEqual(buyerInputsCA, deviceCA, true);
+                totalNumCAsInBuyerInput++;
+            }
+
+            BiddingAuctionServers.ProtectedAppSignals appSignals =
+                    buyerInput.getProtectedAppSignals();
+            expect.that(appSignals.getSerializedSize()).isEqualTo(0);
+        }
+        expect.that(totalNumCAsInBuyerInput).isEqualTo(dbCustomAudienceList.size());
+        verify(mAuctionServerPayloadMetricsStrategyMock, times(dbCustomAudienceList.size()))
+                .addToBuyerIntermediateStats(any(), any(), any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+    }
+
+    @Test
+    public void generateCompressedBuyerInputFromDBCAsAndEncodedSignalsRespectsMaxSize()
+            throws Exception {
+
+        int smallerMaxSize = 3 * 1024;
+
+        CompressedBuyerInputCreator compressedBuyerInputCreator =
+                new CompressedBuyerInputCreatorSellerPayloadMaxImpl(
+                        mCompressedBuyerInputCreatorHelper,
+                        mAuctionServerDataCompressor,
+                        NUM_RECALCULATIONS,
+                        smallerMaxSize,
+                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES);
+
+        List<AdTechIdentifier> buyersList = ImmutableList.of(BUYER_1, BUYER_2);
+
+        // Init with 100 CAs, which by compressing everything is larger than 3Kb
+        List<DBCustomAudience> dbCustomAudienceList = createBulkDBCustomAudiences(buyersList, 100);
+
+        Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap =
+                generateExpectedEncodedPayloadForBuyers(buyersList);
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
+                compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
+                        dbCustomAudienceList, encodedPayloadMap);
+
+        for (AdTechIdentifier buyer : buyersList) {
+            BiddingAuctionServers.BuyerInput buyerInput =
+                    BiddingAuctionServers.BuyerInput.parseFrom(
+                            mAuctionServerDataCompressor
+                                    .decompress(compressedDataMap.get(buyer))
+                                    .getData());
+
+            BiddingAuctionServers.ProtectedAppSignals appSignals =
+                    buyerInput.getProtectedAppSignals();
+            expect.that(appSignals.getEncodingVersion())
+                    .isEqualTo(encodedPayloadMap.get(buyer).getVersion());
+            expect.that(appSignals.getAppInstallSignals())
+                    .isEqualTo(
+                            ByteString.copyFrom(encodedPayloadMap.get(buyer).getEncodedPayload()));
+        }
+
+        expect.that(getTotalSize(compressedDataMap)).isLessThan(smallerMaxSize);
+
+        // We don't know how many CAs were fitted, so we don't know how many times this should be
+        // called, just making sure it is
+        verify(mAuctionServerPayloadMetricsStrategyMock, atLeast(1))
+                .addToBuyerIntermediateStats(any(), any(), any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+    }
+
+    private int getTotalSize(
+            Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedInputs) {
+        int totalSize = 0;
+        for (AuctionServerDataCompressor.CompressedData data : compressedInputs.values()) {
+            totalSize += data.getData().length;
+        }
+        return totalSize;
+    }
+
+    private Map<AdTechIdentifier, DBEncodedPayload> generateExpectedEncodedPayloadForBuyers(
             List<AdTechIdentifier> buyers) {
         Map<AdTechIdentifier, DBEncodedPayload> map = new HashMap<>();
         for (AdTechIdentifier buyer : buyers) {
@@ -233,6 +380,23 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
             customAudiences.add(thisCustomAudience);
         }
         return Pair.create(customAudiences, namesToCustomAudiences);
+    }
+
+    private List<DBCustomAudience> createBulkDBCustomAudiences(
+            List<AdTechIdentifier> buyers, int numCAsForBuyer) {
+        // Generates a 20 code point string, using only the letters a-z
+        List<DBCustomAudience> customAudiences = new ArrayList<>();
+        for (AdTechIdentifier buyer : buyers) {
+            for (int i = 0; i < numCAsForBuyer; i++) {
+
+                DBCustomAudience thisCustomAudience =
+                        DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                                        buyer, getAlphaNumericString(15))
+                                .build();
+                customAudiences.add(thisCustomAudience);
+            }
+        }
+        return customAudiences;
     }
 
     /**
