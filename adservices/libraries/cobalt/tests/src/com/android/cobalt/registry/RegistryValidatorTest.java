@@ -18,10 +18,16 @@ package com.android.cobalt.registry;
 
 import static com.google.cobalt.MetricDefinition.MetricType.OCCURRENCE;
 import static com.google.cobalt.MetricDefinition.MetricType.STRING;
+import static com.google.cobalt.ReportDefinition.LocalAggregationProcedure.LOCAL_AGGREGATION_PROCEDURE_UNSET;
+import static com.google.cobalt.ReportDefinition.LocalAggregationProcedure.SUM_PROCEDURE;
 import static com.google.cobalt.ReportDefinition.PrivacyMechanism.DE_IDENTIFICATION;
 import static com.google.cobalt.ReportDefinition.PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY;
 import static com.google.cobalt.ReportDefinition.ReportType.FLEETWIDE_OCCURRENCE_COUNTS;
 import static com.google.cobalt.ReportDefinition.ReportType.STRING_COUNTS;
+import static com.google.cobalt.WindowSize.WINDOW_1_DAY;
+import static com.google.cobalt.WindowSize.WINDOW_28_DAYS;
+import static com.google.cobalt.WindowSize.WINDOW_30_DAYS;
+import static com.google.cobalt.WindowSize.WINDOW_7_DAYS;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
@@ -30,8 +36,10 @@ import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.ReportDefinition;
+import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
+import com.google.cobalt.WindowSize;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -231,6 +239,51 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testLocalAggregationPeriod_windowUnsetSupported() {
+        for (WindowSize windowSize : WindowSize.values()) {
+            switch (windowSize) {
+                case UNSET:
+                    expect.that(RegistryValidator.validateLocalAggregationPeriod(windowSize))
+                            .isTrue();
+                    break;
+                default:
+                    expect.that(RegistryValidator.validateLocalAggregationPeriod(windowSize))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testLocalAggregationProcedure_noneSuppoorted() {
+        for (LocalAggregationProcedure localAggregationProcedure :
+                LocalAggregationProcedure.values()) {
+            switch (localAggregationProcedure) {
+                case LOCAL_AGGREGATION_PROCEDURE_UNSET:
+                    expect.that(
+                                    RegistryValidator.validateLocalAggregationProcedure(
+                                            localAggregationProcedure))
+                            .isTrue();
+                    break;
+                default:
+                    expect.that(
+                                    RegistryValidator.validateLocalAggregationProcedure(
+                                            localAggregationProcedure))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testLocalAggregationProcedurePercentileN_zeroSuppoorted() {
+        expect.that(RegistryValidator.validateLocalAggregationPercentileN(0)).isTrue();
+        for (int i = 9; i < 100; i += 10) {
+            expect.that(RegistryValidator.validateLocalAggregationPercentileN(i)).isFalse();
+        }
+    }
+
+    @Test
     public void testIsValidReportTypeAndPrivacyMechanism_privateFleetwideOccurrenceCounts() {
         MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
@@ -372,6 +425,62 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         expect.that(
                         RegistryValidator.isValidReportTypeAndPrivacyMechanism(
                                 metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_setlocalAggregationPeriodFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
+
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder().setLocalAggregationPeriod(WINDOW_1_DAY).build()))
+                .isFalse();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setLocalAggregationPeriod(WINDOW_7_DAYS)
+                                        .build()))
+                .isFalse();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setLocalAggregationPeriod(WINDOW_28_DAYS)
+                                        .build()))
+                .isFalse();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setLocalAggregationPeriod(WINDOW_30_DAYS)
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_anyLocalAggregationProcedureFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setLocalAggregationProcedure(SUM_PROCEDURE)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_nonZeroLocalAggregationPercentileFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setLocalAggregationProcedurePercentileN(1)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
                 .isFalse();
     }
 

@@ -18,6 +18,7 @@ package com.android.cobalt.registry;
 
 import static com.google.cobalt.MetricDefinition.MetricType.OCCURRENCE;
 import static com.google.cobalt.MetricDefinition.MetricType.STRING;
+import static com.google.cobalt.ReportDefinition.LocalAggregationProcedure.LOCAL_AGGREGATION_PROCEDURE_UNSET;
 import static com.google.cobalt.ReportDefinition.PrivacyMechanism.DE_IDENTIFICATION;
 import static com.google.cobalt.ReportDefinition.PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY;
 import static com.google.cobalt.ReportDefinition.ReportType.FLEETWIDE_OCCURRENCE_COUNTS;
@@ -31,8 +32,10 @@ import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.ReportDefinition;
+import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
+import com.google.cobalt.WindowSize;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -103,12 +106,31 @@ public final class RegistryValidator {
             return false;
         }
 
+        if (!validateLocalAggregationPeriod(report.getLocalAggregationPeriod())) {
+            logValidationFailure(
+                    "Local aggregation period (%s) failed validation",
+                    report.getLocalAggregationPeriod());
+            return false;
+        }
+
+        if (!validateLocalAggregationProcedure(report.getLocalAggregationProcedure())) {
+            logValidationFailure(
+                    "Local aggregation procedure (%s) failed validation",
+                    report.getLocalAggregationProcedure());
+            return false;
+        }
+
+        if (!validateLocalAggregationPercentileN(
+                report.getLocalAggregationProcedurePercentileN())) {
+            logValidationFailure(
+                    "Local aggregation procedure percentile N (%d) failed validation",
+                    report.getLocalAggregationProcedurePercentileN());
+            return false;
+        }
+
         // TODO(b/343722587): Add remaining validations from the Cobalt config validator. This
         // includes:
         //   * poisson fields for different privacy mechanisms
-        //   * local aggregation period (is WINDOW_DAYS_1)
-        //   * local aggregation procedure (is unset)
-        //   * local aggregation procedure percentile n (is unset)
         //   * expedited sending (is unset)
         //   * max release stage (set and report's is less than metric's)
         //   * reporting interval (must be DAYS_1)
@@ -165,6 +187,25 @@ public final class RegistryValidator {
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static boolean validateMaxCount(long maxCount) {
         return maxCount == 0;
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateLocalAggregationPeriod(WindowSize localAggregationPeriod) {
+        // Some parts of the code always assume a local aggregation period of 1 day independent of
+        // the values in reports, e.g. database clean. Supporting larger windows in reports must be
+        // done with a careful check of existing code.
+        return localAggregationPeriod.equals(WindowSize.UNSET);
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateLocalAggregationProcedure(
+            LocalAggregationProcedure localAggregationProcedure) {
+        return localAggregationProcedure.equals(LOCAL_AGGREGATION_PROCEDURE_UNSET);
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateLocalAggregationPercentileN(int localAggregationPercentileN) {
+        return localAggregationPercentileN == 0;
     }
 
     private static void logValidationFailure(String format, Object... params) {
