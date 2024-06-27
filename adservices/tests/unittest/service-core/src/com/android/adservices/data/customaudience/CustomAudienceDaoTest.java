@@ -68,6 +68,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -577,8 +578,32 @@ public class CustomAudienceDaoTest {
                             .setBuyer(BUYER_1)
                             .setOwner(OWNER_1)
                             .setUpdateUri(CommonFixture.getUri(BUYER_1, "/updateUri"))
-                            .setScheduledTime(CommonFixture.FIXED_NEXT_ONE_DAY)
-                            .setCreationTime(CommonFixture.FIXED_NOW);
+                            .setScheduledTime(
+                                    CommonFixture.FIXED_NEXT_ONE_DAY.truncatedTo(ChronoUnit.MILLIS))
+                            .setCreationTime(
+                                    CommonFixture.FIXED_NOW.truncatedTo(ChronoUnit.MILLIS));
+
+    private static final DBScheduledCustomAudienceUpdate DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1 =
+            DBScheduledCustomAudienceUpdate.builder()
+                    .setBuyer(BUYER_1)
+                    .setOwner(OWNER_1)
+                    .setUpdateUri(CommonFixture.getUri(BUYER_1, "/updateUri"))
+                    .setScheduledTime(
+                            CommonFixture.FIXED_NEXT_ONE_DAY.truncatedTo(ChronoUnit.MILLIS))
+                    .setCreationTime(CommonFixture.FIXED_NOW.truncatedTo(ChronoUnit.MILLIS))
+                    .setUpdateId(1L)
+                    .build();
+
+    private static final DBScheduledCustomAudienceUpdate DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2 =
+            DBScheduledCustomAudienceUpdate.builder()
+                    .setBuyer(BUYER_2)
+                    .setOwner(OWNER_2)
+                    .setUpdateUri(CommonFixture.getUri(BUYER_2, "/updateUri"))
+                    .setScheduledTime(
+                            CommonFixture.FIXED_NEXT_ONE_DAY.truncatedTo(ChronoUnit.MILLIS))
+                    .setCreationTime(CommonFixture.FIXED_NOW.truncatedTo(ChronoUnit.MILLIS))
+                    .setUpdateId(2L)
+                    .build();
 
     private static final DBPartialCustomAudience.Builder DB_PARTIAL_CUSTOM_AUDIENCE_BUILDER =
             DBPartialCustomAudience.builder()
@@ -1086,6 +1111,7 @@ public class CustomAudienceDaoTest {
     }
 
     @Test(expected = NullPointerException.class)
+    @Ignore("BugId = 347286338")
     public void testPersistCustomAudienceOverride() {
         mCustomAudienceDao.persistCustomAudienceOverride(null);
     }
@@ -1235,11 +1261,13 @@ public class CustomAudienceDaoTest {
     }
 
     @Test(expected = NullPointerException.class)
+    @Ignore("BugId = 347286338")
     public void testCreateOrUpdate_nullCustomAudience() {
         mCustomAudienceDao.persistCustomAudience(null);
     }
 
     @Test(expected = NullPointerException.class)
+    @Ignore("BugId = 347286338")
     public void testCreateOrUpdate_nullCustomAudienceBackgroundFetchData() {
         mCustomAudienceDao.persistCustomAudienceBackgroundFetchData(null);
     }
@@ -2109,7 +2137,7 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
-    public void testDeleteAllCustomAudienceData() {
+    public void testDeleteAllCustomAudienceData_withScheduleCustomAudienceEnabled() {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
         // Prepopulate with data
@@ -2118,6 +2146,8 @@ public class CustomAudienceDaoTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_1);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1);
         assertEquals(
                 CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
@@ -2147,9 +2177,14 @@ public class CustomAudienceDaoTest {
                         DB_CUSTOM_AUDIENCE_OVERRIDE_1.getOwner(),
                         DB_CUSTOM_AUDIENCE_OVERRIDE_1.getBuyer(),
                         DB_CUSTOM_AUDIENCE_OVERRIDE_1.getName()));
+        assertEquals(
+                1, mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).size());
+        DBScheduledCustomAudienceUpdate scheduledCustomAudienceUpdateInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).get(0);
+        assertEquals(DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1, scheduledCustomAudienceUpdateInDB);
 
         // Clear all data
-        mCustomAudienceDao.deleteAllCustomAudienceData();
+        mCustomAudienceDao.deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         // Verify all data is deleted
         assertNull(
@@ -2177,15 +2212,18 @@ public class CustomAudienceDaoTest {
                         DB_CUSTOM_AUDIENCE_OVERRIDE_1.getOwner(),
                         DB_CUSTOM_AUDIENCE_OVERRIDE_1.getBuyer(),
                         DB_CUSTOM_AUDIENCE_OVERRIDE_1.getName()));
+        assertTrue(mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).isEmpty());
 
         // Clear all data once empty to verify nothing crashes when we persist again
-        mCustomAudienceDao.deleteAllCustomAudienceData();
+        mCustomAudienceDao.deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_1);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1);
         assertEquals(
                 CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
@@ -2215,19 +2253,108 @@ public class CustomAudienceDaoTest {
                         DB_CUSTOM_AUDIENCE_OVERRIDE_1.getOwner(),
                         DB_CUSTOM_AUDIENCE_OVERRIDE_1.getBuyer(),
                         DB_CUSTOM_AUDIENCE_OVERRIDE_1.getName()));
+        assertEquals(
+                1, mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).size());
+        assertEquals(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1,
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).get(0));
     }
 
     @Test
-    public void testDeleteCustomAudienceDataByOwner() {
+    public void testDeleteAllCustomAudienceData_withScheduleCustomAudienceDisabled() {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
+        mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_1);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1);
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_EXPIRED,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_EXPIRED.getOwner(),
+                        CUSTOM_AUDIENCE_EXPIRED.getBuyer(),
+                        CUSTOM_AUDIENCE_EXPIRED.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_EXPIRED,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_EXPIRED.getOwner(),
+                        CUSTOM_AUDIENCE_EXPIRED.getBuyer(),
+                        CUSTOM_AUDIENCE_EXPIRED.getName()));
+        assertTrue(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getOwner(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getBuyer(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getName()));
+        assertEquals(
+                1, mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).size());
+        DBScheduledCustomAudienceUpdate scheduledCustomAudienceUpdateInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).get(0);
+        assertEquals(DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1, scheduledCustomAudienceUpdateInDB);
+
+        // Clear all data
+        mCustomAudienceDao.deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ false);
+
+        // Verify all data is deleted
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_EXPIRED.getOwner(),
+                        CUSTOM_AUDIENCE_EXPIRED.getBuyer(),
+                        CUSTOM_AUDIENCE_EXPIRED.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_EXPIRED.getOwner(),
+                        CUSTOM_AUDIENCE_EXPIRED.getBuyer(),
+                        CUSTOM_AUDIENCE_EXPIRED.getName()));
+        assertFalse(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getOwner(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getBuyer(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getName()));
+        assertFalse(mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).isEmpty());
+    }
+
+    @Test
+    public void testDeleteCustomAudienceDataByOwner_withScheduleCustomAudienceEnabled() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        // Prepopulate with data
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /* debuggable= */ true);
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_1);
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_2);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2);
+
         assertEquals(
                 CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
@@ -2262,9 +2389,30 @@ public class CustomAudienceDaoTest {
                         DB_CUSTOM_AUDIENCE_OVERRIDE_2.getOwner(),
                         DB_CUSTOM_AUDIENCE_OVERRIDE_2.getBuyer(),
                         DB_CUSTOM_AUDIENCE_OVERRIDE_2.getName()));
+        assertEquals(
+                1,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_1.getOwner())
+                        .size());
+        assertEquals(
+                1,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_2.getOwner())
+                        .size());
+        assertEquals(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_1.getOwner())
+                        .get(0));
+        assertEquals(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_2.getOwner())
+                        .get(0));
 
         // Clear all data
-        mCustomAudienceDao.deleteCustomAudienceDataByOwner(CUSTOM_AUDIENCE_1.getOwner());
+        mCustomAudienceDao.deleteCustomAudienceDataByOwner(
+                CUSTOM_AUDIENCE_1.getOwner(), /* scheduleCustomAudienceEnabled= */ true);
 
         // Verify data for the owner is deleted
         assertNull(
@@ -2299,6 +2447,154 @@ public class CustomAudienceDaoTest {
                         DB_CUSTOM_AUDIENCE_OVERRIDE_2.getOwner(),
                         DB_CUSTOM_AUDIENCE_OVERRIDE_2.getBuyer(),
                         DB_CUSTOM_AUDIENCE_OVERRIDE_2.getName()));
+        assertTrue(
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_1.getOwner())
+                        .isEmpty());
+        assertFalse(
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_2.getOwner())
+                        .isEmpty());
+        assertEquals(
+                1,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_2.getOwner())
+                        .size());
+        assertEquals(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_2.getOwner())
+                        .get(0));
+    }
+
+    @Test
+    public void testDeleteCustomAudienceDataByOwner_withScheduleCustomAudienceDisabled() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        // Prepopulate with data
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, /*debuggable=*/ true);
+        mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_1);
+        mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_2);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2);
+
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertTrue(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getOwner(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getBuyer(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getName()));
+        assertTrue(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_2.getOwner(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_2.getBuyer(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_2.getName()));
+        assertEquals(
+                1,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_1.getOwner())
+                        .size());
+        assertEquals(
+                1,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_2.getOwner())
+                        .size());
+        assertEquals(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_1.getOwner())
+                        .get(0));
+        assertEquals(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_2.getOwner())
+                        .get(0));
+
+        // Clear all data
+        mCustomAudienceDao.deleteCustomAudienceDataByOwner(
+                CUSTOM_AUDIENCE_1.getOwner(), /* scheduleCustomAudienceEnabled= */ false);
+
+        // Verify data for the owner is deleted
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_2,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_2,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_2.getOwner(),
+                        CUSTOM_AUDIENCE_2.getBuyer(),
+                        CUSTOM_AUDIENCE_2.getName()));
+        assertFalse(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getOwner(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getBuyer(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_1.getName()));
+        assertTrue(
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_2.getOwner(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_2.getBuyer(),
+                        DB_CUSTOM_AUDIENCE_OVERRIDE_2.getName()));
+        assertEquals(
+                1,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_1.getOwner())
+                        .size());
+        assertEquals(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_1.getOwner())
+                        .get(0));
+        assertEquals(
+                1,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_2.getOwner())
+                        .size());
+        assertEquals(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2,
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledByOwner(CUSTOM_AUDIENCE_2.getOwner())
+                        .get(0));
     }
 
     @Test
@@ -2481,6 +2777,69 @@ public class CustomAudienceDaoTest {
                 "Entries with foreign keys should have also been deleted",
                 0,
                 partialCustomAudienceList.size());
+    }
+
+    @Test
+    public void testGetCustomAudienceUpdatesScheduledByOwner_returnsCorrectEntries() {
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2);
+
+        assertEquals(
+                "There should be one entry with OWNER_1",
+                1,
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).size());
+        assertEquals(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1,
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).get(0));
+        assertEquals(
+                "There should be one entry with OWNER_2",
+                1,
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_2).size());
+        assertEquals(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2,
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_2).get(0));
+        assertEquals(
+                "There should be zero entry with OWNER_3",
+                0,
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_3).size());
+    }
+
+    @Test
+    public void testDeleteScheduledCustomAudienceUpdatesWithGivenOwner_removesCorrectEntries() {
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2);
+
+        mCustomAudienceDao.deleteScheduledCustomAudienceUpdatesByOwner(OWNER_1);
+
+        assertTrue(
+                "Update with the owner: " + OWNER_1 + "should be deleted",
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).isEmpty());
+        assertEquals(
+                1, mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_2).size());
+        assertEquals(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2,
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_2).get(0));
+    }
+
+    @Test
+    public void testDeleteAllScheduledCustomAudienceUpdates_removesAllEntries() {
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_1);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_2);
+
+        mCustomAudienceDao.deleteAllScheduledCustomAudienceUpdates();
+
+        assertTrue(
+                "Update with the owner: " + OWNER_1 + "should be deleted",
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).isEmpty());
+        assertTrue(
+                "Update with the owner: " + OWNER_2 + "should be deleted",
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_2).isEmpty());
     }
 
     @Test

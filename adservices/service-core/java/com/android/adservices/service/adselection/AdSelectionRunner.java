@@ -32,7 +32,6 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
@@ -136,7 +135,6 @@ public abstract class AdSelectionRunner {
     static final String ON_DEVICE_AUCTION_KILL_SWITCH_ENABLED =
             "On device auction kill switch enabled";
 
-    @NonNull protected final Context mContext;
     @NonNull protected final CustomAudienceDao mCustomAudienceDao;
     @NonNull protected final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull protected final EncryptionKeyDao mEncryptionKeyDao;
@@ -166,7 +164,6 @@ public abstract class AdSelectionRunner {
     @NonNull protected final AdFilteringLogger mContextualAdsFilteringLogger;
 
     /**
-     * @param context service context
      * @param customAudienceDao DAO to access custom audience storage
      * @param adSelectionEntryDao DAO to access ad selection storage
      * @param lightweightExecutorService executor for running short tasks
@@ -177,7 +174,6 @@ public abstract class AdSelectionRunner {
      * @param adSelectionServiceFilter for validating the request
      */
     public AdSelectionRunner(
-            @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final EncryptionKeyDao encryptionKeyDao,
@@ -197,7 +193,6 @@ public abstract class AdSelectionRunner {
             boolean shouldUseUnifiedTables,
             @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory,
             @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(encryptionKeyDao);
@@ -215,7 +210,6 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(kAnonSignJoinFactory);
         Objects.requireNonNull(appInstallAdFilterer);
 
-        mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mEncryptionKeyDao = encryptionKeyDao;
@@ -249,7 +243,6 @@ public abstract class AdSelectionRunner {
 
     @VisibleForTesting
     AdSelectionRunner(
-            @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final EncryptionKeyDao encryptionKeyDao,
@@ -271,7 +264,6 @@ public abstract class AdSelectionRunner {
             boolean shouldUseUnifiedTables,
             @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory,
             @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(encryptionKeyDao);
@@ -291,7 +283,6 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(kAnonSignJoinFactory);
         Objects.requireNonNull(appInstallAdFilterer);
 
-        mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mEncryptionKeyDao = encryptionKeyDao;

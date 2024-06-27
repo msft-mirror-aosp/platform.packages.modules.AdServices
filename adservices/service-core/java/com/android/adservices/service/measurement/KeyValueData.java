@@ -30,13 +30,17 @@ import java.util.Objects;
  * persist these objects.
  */
 public class KeyValueData {
+
+
     public enum DataType {
         REGISTRATION_REDIRECT_COUNT,
         EVENT_REPORT_RETRY_COUNT,
         DEBUG_EVENT_REPORT_RETRY_COUNT,
         AGGREGATE_REPORT_RETRY_COUNT,
         DEBUG_AGGREGATE_REPORT_RETRY_COUNT,
-        DEBUG_REPORT_RETRY_COUNT
+        DEBUG_REPORT_RETRY_COUNT,
+        JOB_LAST_EXECUTION_TIME,
+        JOB_NEXT_EXECUTION_TIME,
     }
 
     private DataType mDataType = null;
@@ -135,12 +139,44 @@ public class KeyValueData {
         mValue = String.valueOf(value);
     }
 
+    /** Get the last execution time of the Reporting Service Job */
+    public Long getReportingJobLastExecutionTime() {
+        validateOfTypeReport();
+        if (mValue == null) {
+            return null;
+        }
+        return Long.parseLong(mValue);
+    }
+
+    /** Set the last execution time of the Reporting Service Job */
+    public void setReportingJobLastExecutionTime(long value) {
+        validateOfTypeReport();
+        mValue = String.valueOf(value);
+    }
+
+    /** Get the next execution time of the Reporting Service Job */
+    public Long getReportingJobNextExecutionTime() {
+        validateOfTypeReport();
+        if (mValue == null) {
+            return null;
+        }
+        return Long.parseLong(mValue);
+    }
+
+    /** Set the next execution time of the Reporting Service Job */
+    public void setReportingJobNextExecutionTime(Long value) {
+        validateOfTypeReport();
+        mValue = String.valueOf(value);
+    }
+
     private void validateOfTypeReport() {
         if (mDataType != DataType.AGGREGATE_REPORT_RETRY_COUNT
                 && mDataType != DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT
                 && mDataType != DataType.EVENT_REPORT_RETRY_COUNT
                 && mDataType != DataType.DEBUG_EVENT_REPORT_RETRY_COUNT
-                && mDataType != DataType.DEBUG_REPORT_RETRY_COUNT) {
+                && mDataType != DataType.DEBUG_REPORT_RETRY_COUNT
+                && mDataType != DataType.JOB_LAST_EXECUTION_TIME
+                && mDataType != DataType.JOB_NEXT_EXECUTION_TIME) {
             throw new IllegalStateException("Illegal method call");
         }
     }

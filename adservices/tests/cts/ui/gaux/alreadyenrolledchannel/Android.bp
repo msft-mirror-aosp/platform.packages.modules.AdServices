@@ -19,7 +19,7 @@ package {
 android_test {
     name: "AdServicesGaUxAlreadyEnrolledChannelTest",
     srcs: [
-        "src/com/android/adservices/tests/ui/gaux/alreadyenrolledchannel/GaUxAlreadyEnrolledChannelTest.java",
+        "**/*.java",
     ],
     static_libs: [
         "adservices-assets",
@@ -41,8 +41,7 @@ android_test {
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
-        disabled_checks: ["MissingAndroidProcessInAdExtServicesManifest"],
+        extra_check_modules: ["AdServicesTestLintChecker"],
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }

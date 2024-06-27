@@ -22,9 +22,6 @@ import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.AndroidSdk.Range;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.Objects;
-import java.util.function.Supplier;
-
 /**
  * Device-side version of {@link AbstractSdkLevelSupportedRule}.
  *
@@ -32,15 +29,13 @@ import java.util.function.Supplier;
  */
 public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
 
-    @Nullable private Supplier<Level> mDeviceLevelSupplier;
-
     SdkLevelSupportRule(Level atLeast) {
-        super(AndroidLogger.getInstance(), Range.forAtLeast(atLeast.getLevel()));
+        this(Range.forAtLeast(atLeast.getLevel()));
     }
 
     @VisibleForTesting
-    void setDeviceLevelSupplier(Supplier<Level> levelSupplier) {
-        mDeviceLevelSupplier = Objects.requireNonNull(levelSupplier);
+    SdkLevelSupportRule(Range range) {
+        super(AndroidLogger.getInstance(), range);
     }
 
     /**
@@ -87,12 +82,7 @@ public final class SdkLevelSupportRule extends AbstractSdkLevelSupportedRule {
     }
 
     @Override
-    public Level getDeviceApiLevel() {
-        if (mDeviceLevelSupplier != null) {
-            Level level = mDeviceLevelSupplier.get();
-            mLog.d("getDeviceApiLevel(): returning %s as set by supplier", level);
-            return level;
-        }
+    public Level getRawDeviceApiLevel() {
         return Level.forLevel(Build.VERSION.SDK_INT);
     }
 }

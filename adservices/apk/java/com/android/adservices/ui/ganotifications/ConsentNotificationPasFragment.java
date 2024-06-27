@@ -99,12 +99,17 @@ public class ConsentNotificationPasFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupListeners(savedInstanceState);
         ConsentManager consentManager = ConsentManager.getInstance();
+        boolean isNotRenotifyNoManualInteraction =
+                !mIsRenotify
+                        && consentManager.getUserManualInteractionWithConsent()
+                                != MANUAL_INTERACTIONS_RECORDED;
+        boolean isAdultFromRvcMsmtEnabled =
+                consentManager.isOtaAdultUserFromRvc()
+                        && consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
         if (UxStatesManager.getInstance().getFlag(KEY_EEA_PAS_UX_ENABLED)) {
             consentManager.recordPasNotificationOpened(true);
             if (mIsStrictConsentBehavior
-                    && !mIsRenotify
-                    && consentManager.getUserManualInteractionWithConsent()
-                            != MANUAL_INTERACTIONS_RECORDED) {
+                    && (isNotRenotifyNoManualInteraction || isAdultFromRvcMsmtEnabled)) {
                 consentManager.enable(requireContext(), AdServicesApiType.FLEDGE);
                 consentManager.enable(requireContext(), AdServicesApiType.MEASUREMENTS);
             }
@@ -194,11 +199,10 @@ public class ConsentNotificationPasFragment extends Fragment {
         if (expanded) {
             text.setVisibility(View.VISIBLE);
             expander.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                    0, 0, R.drawable.ic_chevron_up, 0);
+                    0, 0, R.drawable.ic_minimize, 0);
         } else {
             text.setVisibility(View.GONE);
-            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                    0, 0, R.drawable.ic_chevron_down, 0);
+            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_expand, 0);
         }
         return expanded;
     }

@@ -1,8 +1,8 @@
 {
   "description": "Given 6 sources - s1 (matching enrollment ID with trigger, but ignored due to lower priority than winner), s2 (non matching source_filters when creating derived source), s3 (non-matching enrollment ID, ignored due to out of range priority), s4 (expired before trigger time), s5 (its derived source wins), s6 (no attribution config for enrollmentId). Also, only one of agregation_keys is shared by winning source.",
   "phflags_override": {
-    "measurement_enable_xna" : "true",
-    "web_context_client_allow_list" : "*"
+    "measurement_enable_xna": "true",
+    "web_context_client_allow_list": "*"
   },
   "input": {
     "sources": [
@@ -288,8 +288,8 @@
                         "100"
                       ]
                     },
-                    "x_network_data" : {
-                      "key_offset" : 12
+                    "x_network_data": {
+                      "key_offset": 12
                     }
                   },
                   {
@@ -337,13 +337,13 @@
                         "electronics.megastore"
                       ]
                     },
-                    "source_expiry_override" : 70,
+                    "source_expiry_override": 70,
                     "priority": "200",
                     "expiry": "172801"
                   }
                 ],
-                "x_network_key_mapping" : {
-                  "enrollment-id-ad-tech2.test" : "0x2"
+                "x_network_key_mapping": {
+                  "enrollment-id-ad-tech2.test": "0x2"
                 }
               },
               "Location": null,
@@ -362,7 +362,14 @@
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "source_site": "android-app://example.1s5.test",
           "histograms": [
@@ -370,8 +377,7 @@
               "key": "0x2559",
               "value": 32768
             }
-          ],
-          "source_registration_time": "799977600"
+          ]
         }
       }
     ]

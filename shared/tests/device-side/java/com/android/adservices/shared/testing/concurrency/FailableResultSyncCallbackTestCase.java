@@ -15,7 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
 import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.MSG_WRONG_ERROR_RECEIVED;
 
 import static org.junit.Assert.assertThrows;
@@ -67,7 +66,7 @@ public abstract class FailableResultSyncCallbackTestCase<
         assertInitialState(mCallback);
         R injectedResult = null;
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.injectResult(injectedResult));
         mCallback.assertCalled();
 
         String when = "after injectFailure()";
@@ -85,7 +84,7 @@ public abstract class FailableResultSyncCallbackTestCase<
         F failure = newFailure();
         assertInitialState(mCallback);
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectFailure(failure));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.injectFailure(failure));
 
         F receivedFailure = mCallback.assertFailureReceived();
 

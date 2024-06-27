@@ -17,45 +17,29 @@
 package android.adservices.cts;
 
 import android.adservices.signals.ProtectedSignalsManager;
-import android.content.Context;
 import android.os.Build;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
-
 import com.android.adservices.service.FlagsConstants;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
-import com.google.common.truth.Expect;
-
 import org.junit.Assume;
-import org.junit.Rule;
 import org.junit.Test;
 
-@SmallTest
+@RequiresSdkLevelAtLeastS
 @SetFlagEnabled(FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED)
-public class ProtectedSignalsManagerTest {
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final Expect expect = Expect.create();
-
+public final class ProtectedSignalsManagerTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testAdSelectionManagerCtor_TPlus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
-        final Context context = ApplicationProvider.getApplicationContext();
-        expect.that(ProtectedSignalsManager.get(context)).isNotNull();
-        expect.that(context.getSystemService(ProtectedSignalsManager.class)).isNotNull();
+        expect.that(ProtectedSignalsManager.get(mContext)).isNotNull();
+        expect.that(mContext.getSystemService(ProtectedSignalsManager.class)).isNotNull();
     }
 
     @Test
     public void testAdSelectionManagerCtor_SMinus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU);
-        final Context context = ApplicationProvider.getApplicationContext();
-        expect.that(ProtectedSignalsManager.get(context)).isNotNull();
-        expect.that(context.getSystemService(ProtectedSignalsManager.class)).isNull();
+        expect.that(ProtectedSignalsManager.get(mContext)).isNotNull();
+        expect.that(mContext.getSystemService(ProtectedSignalsManager.class)).isNull();
     }
 }
