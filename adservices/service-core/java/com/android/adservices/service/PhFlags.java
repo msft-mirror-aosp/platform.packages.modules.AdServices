@@ -3269,6 +3269,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableSourceDestinationLimitPriority() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY,
+                MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY);
+    }
+
+    @Override
+    public int getMeasurementDefaultSourceDestinationLimitAlgorithm() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM,
+                MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM);
+    }
+
+    @Override
+    public boolean getMeasurementEnableSourceDestinationLimitAlgorithmField() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD,
+                MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD);
+    }
+
+    @Override
     public String getAdServicesModuleJobPolicy() {
         return getDeviceConfigFlag(
                 KEY_AD_SERVICES_MODULE_JOB_POLICY, AD_SERVICES_MODULE_JOB_POLICY);
@@ -4247,6 +4268,21 @@ public final class PhFlags implements Flags {
                                 .KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS
                         + " = "
                         + getMeasurementEnableFifoDestinationsDeleteAggregateReports());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY
+                        + " = "
+                        + getMeasurementEnableSourceDestinationLimitPriority());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD
+                        + " = "
+                        + getMeasurementEnableSourceDestinationLimitAlgorithmField());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM
+                        + " = "
+                        + getMeasurementDefaultSourceDestinationLimitAlgorithm());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(

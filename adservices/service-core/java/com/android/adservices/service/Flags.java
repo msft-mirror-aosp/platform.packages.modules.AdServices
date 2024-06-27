@@ -4787,6 +4787,28 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
     }
 
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY = false;
+
+    default boolean getMeasurementEnableSourceDestinationLimitPriority() {
+        return MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY;
+    }
+
+    /**
+     * Default destination limit algorithm configuration. LIFO (0) by default, can be configured as
+     * FIFO (1).
+     */
+    @ConfigFlag int MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM = 0;
+
+    default int getMeasurementDefaultSourceDestinationLimitAlgorithm() {
+        return MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD = false;
+
+    default boolean getMeasurementEnableSourceDestinationLimitAlgorithmField() {
+        return MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
