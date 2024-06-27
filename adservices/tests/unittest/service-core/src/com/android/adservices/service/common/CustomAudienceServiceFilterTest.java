@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 import static android.adservices.customaudience.CustomAudienceFixture.getValidFetchUriByBuyer;
 
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
@@ -24,10 +25,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -37,7 +36,6 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.os.LimitExceededException;
 import android.os.Process;
-
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.DbTestUtil;
@@ -68,7 +66,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 }
             };
 
-    @Mock private ConsentManager mConsentManagerMock;
+    @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
 
     @Mock AppImportanceFilter mAppImportanceFilter;
 
@@ -87,7 +85,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                             mSpyContext, DbTestUtil.getSharedDbHelperForTest(), TEST_FLAGS),
                     mAdServicesLoggerMock);
 
-    @Mock private Throttler mMockThrottler;
+    @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
 
     private CustomAudienceServiceFilter mCustomAudienceServiceFilter;
 
@@ -105,14 +103,12 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         mCustomAudienceServiceFilter =
                 new CustomAudienceServiceFilter(
                         mSpyContext,
-                        mConsentManagerMock,
+                        mFledgeConsentFilterMock,
                         TEST_FLAGS,
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mMockThrottler);
-
-        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.UNKNOWN), anyString())).thenReturn(true);
+                        mFledgeApiThrottleFilterMock);
     }
 
     @Test
@@ -133,8 +129,9 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
 
     @Test
     public void testFilterRequest_throttled_throws() {
-        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.UNKNOWN), anyString()))
-                .thenReturn(false);
+        doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
+                .when(mFledgeApiThrottleFilterMock)
+                .assertCallerNotThrottled(anyString(), any(), anyInt());
 
         assertThrows(
                 LimitExceededException.class,
@@ -193,12 +190,12 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         mCustomAudienceServiceFilter =
                 new CustomAudienceServiceFilter(
                         mSpyContext,
-                        mConsentManagerMock,
+                        mFledgeConsentFilterMock,
                         FLAGS_WITH_ENROLLMENT_CHECK,
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mMockThrottler);
+                        mFledgeApiThrottleFilterMock);
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
@@ -228,12 +225,12 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         mCustomAudienceServiceFilter =
                 new CustomAudienceServiceFilter(
                         mSpyContext,
-                        mConsentManagerMock,
+                        mFledgeConsentFilterMock,
                         FLAGS_WITH_ENROLLMENT_CHECK,
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mMockThrottler);
+                        mFledgeApiThrottleFilterMock);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
@@ -251,9 +248,6 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
 
     @Test
     public void testFilterRequest_withDeveloperMode_succeeds() {
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
         mCustomAudienceServiceFilter.filterRequest(
                 SELLER_VALID,
                 CALLER_PACKAGE_NAME,
@@ -273,12 +267,12 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
         mCustomAudienceServiceFilter =
                 new CustomAudienceServiceFilter(
                         mSpyContext,
-                        mConsentManagerMock,
+                        mFledgeConsentFilterMock,
                         FLAGS_WITH_ENROLLMENT_CHECK,
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mMockThrottler);
+                        mFledgeApiThrottleFilterMock);
 
         mCustomAudienceServiceFilter.filterRequest(
                 SELLER_LOCALHOST,
@@ -335,9 +329,6 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
 
     @Test
     public void testFilterRequest_enforceConsentTrue_hasUserConsentForApp_succeeds() {
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
         mCustomAudienceServiceFilter.filterRequest(
                 SELLER_VALID,
                 CALLER_PACKAGE_NAME,
@@ -351,9 +342,9 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
 
     @Test
     public void testFilterRequest_enforceConsentTrue_lacksUserConsentForApp_throws() {
-        doReturn(true)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mFledgeConsentFilterMock)
+                .assertAndPersistCallerHasUserConsentForApp(anyString(), anyInt());
 
         assertThrows(
                 ConsentManager.RevokedConsentException.class,
@@ -370,10 +361,11 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
     }
 
     @Test
-    public void testFilterRequest_enforceConsentFalse_lacksUserConsentForApp_throws() {
-        doReturn(true)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
+    public void testFilterRequest_enforceConsentFalse_lacksUserConsentForApp_succeeds() {
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mFledgeConsentFilterMock)
+                .assertAndPersistCallerHasUserConsentForApp(anyString(), anyInt());
+
         mCustomAudienceServiceFilter.filterRequest(
                 SELLER_VALID,
                 CALLER_PACKAGE_NAME,
@@ -404,8 +396,9 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
 
     @Test
     public void testFilterRequestAndExtractIdentifier_throttled_throws() {
-        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.UNKNOWN), anyString()))
-                .thenReturn(false);
+        doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
+                .when(mFledgeApiThrottleFilterMock)
+                .assertCallerNotThrottled(anyString(), any(), anyInt());
 
         assertThrows(
                 LimitExceededException.class,
@@ -575,10 +568,6 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         API_NAME,
                         API_CUSTOM_AUDIENCES);
 
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
-
         mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
                 getValidFetchUriByBuyer(SELLER_VALID),
                 CALLER_PACKAGE_NAME,
@@ -602,9 +591,9 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         API_NAME,
                         API_CUSTOM_AUDIENCES);
 
-        doReturn(true)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mFledgeConsentFilterMock)
+                .assertAndPersistCallerHasUserConsentForApp(anyString(), anyInt());
 
         assertThrows(
                 ConsentManager.RevokedConsentException.class,
@@ -632,9 +621,9 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         API_NAME,
                         API_CUSTOM_AUDIENCES);
 
-        doReturn(true)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mFledgeConsentFilterMock)
+                .assertAndPersistCallerHasUserConsentForApp(anyString(), anyInt());
 
         mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
                 getValidFetchUriByBuyer(SELLER_VALID),

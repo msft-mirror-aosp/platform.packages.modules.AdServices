@@ -54,8 +54,7 @@ public class AppSearchTopicsConsentDaoTest {
     private static final List<Long> TOPIC_TAXONOMIES = List.of(1L, 2L, 3L);
     private static final List<Long> TOPIC_MODELS = List.of(11L, 22L, 33L);
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final String mAdServicesPackageName =
-            AppSearchConsentWorker.getAdServicesPackageName(mContext);
+    private String mAdServicesPackageName;
     private final ListenableFuture mSearchSessionFuture = Futures.immediateFuture(null);
     private MockitoSession mStaticMockSession;
 
@@ -67,6 +66,9 @@ public class AppSearchTopicsConsentDaoTest {
 
     @Before
     public void setup() {
+        // TODO(b/347043278): must be set inside @Before so it's not called when device is not
+        // supported
+        mAdServicesPackageName = AppSearchConsentWorker.getAdServicesPackageName(mContext);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(AppSearchDao.class)

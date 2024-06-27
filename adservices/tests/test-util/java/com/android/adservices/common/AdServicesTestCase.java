@@ -22,8 +22,6 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.shared.testing.DeviceSideTestCase;
-import com.android.adservices.shared.testing.ProcessLifeguardRule;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -55,16 +53,9 @@ abstract class AdServicesTestCase extends DeviceSideTestCase {
     private static final String PROP_EXCEPTION_THROWN_FREQUENCY =
             "debug.adservices.test.postTestThrownFrequency";
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
-
     @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 2)
-    public final ProcessLifeguardRule processLifeguard =
-            new ProcessLifeguardRule(ProcessLifeguardRule.Mode.IGNORE);
 
     @After
     public final void postTestOptionalActions() {

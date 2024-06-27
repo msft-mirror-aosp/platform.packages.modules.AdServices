@@ -25,9 +25,12 @@ import static com.android.adservices.data.measurement.MeasurementTables.SourceCo
 import static com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import static com.android.adservices.data.measurement.MeasurementTables.XnaIgnoredSourcesContract;
 import static com.android.adservices.service.Flags.MEASUREMENT_DB_SIZE_LIMIT;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME;
 
@@ -133,6 +136,7 @@ public class MeasurementDaoTest {
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
     private static final Uri APP_ONE_SOURCE = Uri.parse("android-app://com.example2.one-source");
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment-id";
+    private static final String ENROLLMENT_ID1 = "enrollment-id1";
     private static final Uri APP_TWO_PUBLISHER =
             Uri.parse("android-app://com.publisher2.two-sources");
     private static final Uri APP_ONE_PUBLISHER =
@@ -185,6 +189,12 @@ public class MeasurementDaoTest {
     private DatastoreManager mDatastoreManager;
     public static final Uri REGISTRATION_ORIGIN_2 =
             WebUtil.validUri("https://subdomain_2.example.test");
+    public static final Uri REGISTRATION_ORIGIN_3 =
+            WebUtil.validUri("https://subdomain_3.example.test");
+    public static final Uri REGISTRATION_ORIGIN_4 =
+            WebUtil.validUri("https://subdomain_4.example.test");
+    public static final Uri REGISTRATION_ORIGIN_5 =
+            WebUtil.validUri("https://subdomain_5.example.test");
 
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
@@ -2629,6 +2639,294 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void
+            testInstallAttribution_reinstallReattributionEnabled_skipsAttributionForReinstall() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableReinstallReattribution();
+        long currentTimestamp = System.currentTimeMillis();
+        long reinstallWindow = DAYS.toMillis(50);
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA1",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setReinstallReattributionWindow(reinstallWindow)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setInstallAttributed(true)
+                        .build(),
+                /* sourceId= */ "IA1");
+
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA2",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setReinstallReattributionWindow(reinstallWindow)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                /* sourceId= */ "IA2");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA3",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setReinstallReattributionWindow(reinstallWindow)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                /* sourceId= */ "IA3");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA4",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setReinstallReattributionWindow(reinstallWindow)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                /* sourceId= */ "IA4");
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.insertOrUpdateAppReportHistory(
+                                    INSTALLED_PACKAGE, REGISTRATION_ORIGIN, currentTimestamp);
+                        }));
+
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.doInstallAttribution(
+                                    INSTALLED_PACKAGE, currentTimestamp);
+                        }));
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA1", db));
+        assertFalse(getInstallAttributionStatus(/* sourceDbId= */ "IA2", db));
+        assertFalse(getInstallAttributionStatus(/* sourceDbId= */ "IA3", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA4", db));
+
+        removeSources(Arrays.asList("IA1", "IA2", "IA3", "IA4"), db);
+    }
+
+    @Test
+    public void testInstallAttribution_reinstallReattributionDisabled_doesNotSkipReinstall() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(false).when(mFlags).getMeasurementEnableReinstallReattribution();
+        long currentTimestamp = System.currentTimeMillis();
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA1",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setInstallAttributed(true)
+                        .build(),
+                "IA1");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA2",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                "IA2");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA3",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                "IA3");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA4",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .build(),
+                "IA4");
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.insertOrUpdateAppReportHistory(
+                                    INSTALLED_PACKAGE, REGISTRATION_ORIGIN, currentTimestamp);
+                        }));
+        // Should select id=IA2 as it is latest
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.doInstallAttribution(
+                                    INSTALLED_PACKAGE, currentTimestamp);
+                        }));
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA1", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA2", db));
+        assertFalse(getInstallAttributionStatus(/* sourceDbId= */ "IA3", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA4", db));
+
+        removeSources(Arrays.asList("IA1", "IA2", "IA3", "IA4"), db);
+    }
+
+    @Test
+    public void
+            testInstallAttribution_reinstallReattributionEnabledNoWindow_doesNotSkipReinstall() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableReinstallReattribution();
+        long currentTimestamp = System.currentTimeMillis();
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA1",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .setInstallAttributed(true)
+                        .build(),
+                "IA1");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA2",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .build(),
+                "IA2");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA3",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .build(),
+                "IA3");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA4",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                ENROLLMENT_ID1,
+                                REGISTRATION_ORIGIN_2)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .build(),
+                "IA4");
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.insertOrUpdateAppReportHistory(
+                                    INSTALLED_PACKAGE, REGISTRATION_ORIGIN, currentTimestamp);
+                        }));
+        // Should select id=IA2 as it is latest
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.doInstallAttribution(
+                                    INSTALLED_PACKAGE, currentTimestamp);
+                        }));
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA1", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA2", db));
+        assertFalse(getInstallAttributionStatus(/* sourceDbId= */ "IA3", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA4", db));
+
+        removeSources(Arrays.asList("IA1", "IA2", "IA3", "IA4"), db);
+    }
+
+    @Test
+    public void testInstallAttribution_reinstallReattributionEnabledNoReinstall_doesNotSkip() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableReinstallReattribution();
+        long currentTimestamp = System.currentTimeMillis();
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA1",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 10,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .build(),
+                "IA1");
+        insertSource(
+                createSourceForIATest(
+                                /* id= */ "IA2",
+                                currentTimestamp,
+                                /* priority= */ -1,
+                                /* eventTimePastDays= */ 5,
+                                /* expiredIAWindow= */ false,
+                                DEFAULT_ENROLLMENT_ID)
+                        .setInstallCooldownWindow(COOLDOWN_WINDOW)
+                        .setReinstallReattributionWindow(0L)
+                        .build(),
+                "IA2");
+
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.insertOrUpdateAppReportHistory(
+                                    INSTALLED_PACKAGE, REGISTRATION_ORIGIN, currentTimestamp);
+                        }));
+        // Should select id=IA2 as it is latest
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao -> {
+                            measurementDao.doInstallAttribution(
+                                    INSTALLED_PACKAGE, currentTimestamp);
+                        }));
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        assertFalse(getInstallAttributionStatus(/* sourceDbId= */ "IA1", db));
+        assertTrue(getInstallAttributionStatus(/* sourceDbId= */ "IA2", db));
+
+        removeSources(Arrays.asList("IA1", "IA2"), db);
+    }
+
+    @Test
     public void doInstallAttribution_noValidSourceStatus_IgnoresSources() {
         long currentTimestamp = System.currentTimeMillis();
         Source source =
@@ -4932,45 +5230,6 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testGetAttributionsPerRateLimitWindow_atTimeWindow() {
-        // Setup
-        Source source = SourceFixture.getValidSource();
-        Trigger trigger =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(source.getEventTime() + TimeUnit.HOURS.toMillis(1))
-                        .build();
-        Attribution attribution =
-                new Attribution.Builder()
-                        .setEnrollmentId(source.getEnrollmentId())
-                        .setDestinationOrigin(source.getWebDestinations().get(0).toString())
-                        .setDestinationSite(source.getAppDestinations().get(0).toString())
-                        .setSourceOrigin(source.getPublisher().toString())
-                        .setSourceSite(source.getPublisher().toString())
-                        .setRegistrant(source.getRegistrant().toString())
-                        .setTriggerTime(
-                                trigger.getTriggerTime()
-                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
-                                        + 1)
-                        .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                        .build();
-
-        // Execution
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    dao.insertAttribution(attribution);
-                });
-
-        // Assertion
-        AtomicLong attributionsCount = new AtomicLong();
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    attributionsCount.set(dao.getAttributionsPerRateLimitWindow(source, trigger));
-                });
-
-        assertEquals(1L, attributionsCount.get());
-    }
-
-    @Test
     public void getAttributionsPerRateLimitWindow_atTimeWindowScoped_countsAttribution() {
         // Setup
         Source source = SourceFixture.getValidSource();
@@ -5061,44 +5320,6 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testGetAttributionsPerRateLimitWindow_beyondTimeWindow() {
-        // Setup
-        Source source = SourceFixture.getValidSource();
-        Trigger trigger =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setTriggerTime(source.getEventTime() + TimeUnit.HOURS.toMillis(1))
-                        .build();
-        Attribution attribution =
-                new Attribution.Builder()
-                        .setEnrollmentId(source.getEnrollmentId())
-                        .setDestinationOrigin(source.getWebDestinations().get(0).toString())
-                        .setDestinationSite(source.getAppDestinations().get(0).toString())
-                        .setSourceOrigin(source.getPublisher().toString())
-                        .setSourceSite(source.getPublisher().toString())
-                        .setRegistrant(source.getRegistrant().toString())
-                        .setTriggerTime(
-                                trigger.getTriggerTime()
-                                        - MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS)
-                        .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                        .build();
-
-        // Execution
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    dao.insertAttribution(attribution);
-                });
-
-        // Assertion
-        AtomicLong attributionsCount = new AtomicLong();
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    attributionsCount.set(dao.getAttributionsPerRateLimitWindow(source, trigger));
-                });
-
-        assertEquals(0L, attributionsCount.get());
-    }
-
-    @Test
     public void testTransactionRollbackForRuntimeException() {
         assertThrows(
                 IllegalArgumentException.class,
@@ -5128,6 +5349,107 @@ public class MeasurementDaoTest {
                                 null,
                                 null)
                         .getCount());
+    }
+
+    @Test
+    public void testDeleteEventReportAndAttribution() throws JSONException {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Source s1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId("S1")
+                        .build();
+        Trigger t1 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("T1")
+                        .build();
+        Trigger t2 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                        .setId("T2")
+                        .build();
+        EventReport e11 = createEventReportForSourceAndTrigger("E11", s1, t1);
+        EventReport e12 = createEventReportForSourceAndTrigger("E12", s1, t2);
+
+        Attribution aggregateAttribution11 =
+                createAttribution(
+                        "ATT11_aggregate",
+                        Attribution.Scope.AGGREGATE,
+                        s1.getId(),
+                        t1.getId(),
+                        "E11");
+        Attribution aggregateAttribution12 =
+                createAttribution(
+                        "ATT12_aggregate",
+                        Attribution.Scope.AGGREGATE,
+                        s1.getId(),
+                        t2.getId(),
+                        "E12");
+        Attribution eventAttribution11 =
+                createAttribution(
+                        "ATT11_event",
+                        Attribution.Scope.EVENT,
+                        s1.getId(),
+                        t1.getId(),
+                        "E11");
+        Attribution eventAttribution12 =
+                createAttribution(
+                        "ATT12_event",
+                        Attribution.Scope.EVENT,
+                        s1.getId(),
+                        t2.getId(),
+                        "E12");
+
+        insertSource(s1, s1.getId());
+        AbstractDbIntegrationTest.insertToDb(t1, db);
+        AbstractDbIntegrationTest.insertToDb(t2, db);
+        AbstractDbIntegrationTest.insertToDb(e11, db);
+        AbstractDbIntegrationTest.insertToDb(e12, db);
+        AbstractDbIntegrationTest.insertToDb(aggregateAttribution11, db);
+        AbstractDbIntegrationTest.insertToDb(aggregateAttribution12, db);
+        AbstractDbIntegrationTest.insertToDb(eventAttribution11, db);
+        AbstractDbIntegrationTest.insertToDb(eventAttribution12, db);
+
+        // Assert attributions present
+        assertNotNull(getAttribution("ATT11_aggregate", db));
+        assertNotNull(getAttribution("ATT12_aggregate", db));
+        assertNotNull(getAttribution("ATT11_event", db));
+        assertNotNull(getAttribution("ATT12_event", db));
+
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    // Assert sources and triggers present
+                    assertNotNull(measurementDao.getSource("S1"));
+                    assertNotNull(measurementDao.getTrigger("T1"));
+                    assertNotNull(measurementDao.getTrigger("T2"));
+
+                    // Validate presence of event reports
+                    measurementDao.getEventReport("E11");
+                    measurementDao.getEventReport("E12");
+
+                    // Deletion
+                    measurementDao.deleteEventReportAndAttribution(e11);
+
+                    // Validate event report deletion
+                    assertThrows(
+                            DatastoreException.class,
+                            () -> {
+                                measurementDao.getEventReport("E11");
+                            });
+                    assertNotNull(measurementDao.getEventReport("E12"));
+
+                    // Validate sources and triggers present
+                    assertNotNull(measurementDao.getSource("S1"));
+                    assertNotNull(measurementDao.getTrigger("T1"));
+                    assertNotNull(measurementDao.getTrigger("T2"));
+                });
+
+        // Validate attribution deletion
+        assertNotNull(getAttribution("ATT11_aggregate", db));
+        assertNotNull(getAttribution("ATT12_aggregate", db));
+        assertNull(getAttribution("ATT11_event", db));
+        assertNotNull(getAttribution("ATT12_event", db));
     }
 
     @Test
@@ -5877,6 +6199,66 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void deleteExpiredRecords_reinstallAttributionEnabled_deletesExpiredAppInstallHistory() {
+        Flags mockFlags = Mockito.mock(Flags.class);
+        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(true).when(mockFlags).getMeasurementEnableReinstallReattribution();
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getReadableDatabase();
+        long now = System.currentTimeMillis();
+        mDatastoreManager.runInTransaction(
+                (dao) ->
+                        dao.insertOrUpdateAppReportHistory(
+                                INSTALLED_PACKAGE,
+                                REGISTRATION_ORIGIN,
+                                /* lastReportDeliveredTimestamp= */ now
+                                        - TimeUnit.DAYS.toMillis(1)));
+        mDatastoreManager.runInTransaction(
+                (dao) ->
+                        dao.insertOrUpdateAppReportHistory(
+                                INSTALLED_PACKAGE,
+                                REGISTRATION_ORIGIN_2,
+                                /* lastReportDeliveredTimestamp= */ now
+                                        - TimeUnit.DAYS.toMillis(3)));
+
+        long earliestValidInsertion = now - TimeUnit.DAYS.toMillis(2);
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        measurementDao ->
+                                measurementDao.deleteExpiredRecords(
+                                        earliestValidInsertion,
+                                        /* registrationRetryLimit= */ 0,
+                                        earliestValidInsertion)));
+        // Assert Record 1 remains because not expired and Retry Limiting Off.
+        assertEquals(
+                1,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.AppReportHistoryContract.REGISTRATION_ORIGIN
+                                + ") FROM "
+                                + MeasurementTables.AppReportHistoryContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.AppReportHistoryContract.REGISTRATION_ORIGIN
+                                + " = ?",
+                        new String[] {REGISTRATION_ORIGIN.toString()}));
+
+        // Assert Record 2 Removed because expired.
+        assertEquals(
+                0,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + MeasurementTables.AppReportHistoryContract.REGISTRATION_ORIGIN
+                                + ") FROM "
+                                + MeasurementTables.AppReportHistoryContract.TABLE
+                                + " WHERE "
+                                + MeasurementTables.AppReportHistoryContract.REGISTRATION_ORIGIN
+                                + " = ?",
+                        new String[] {REGISTRATION_ORIGIN_2.toString()}));
+    }
+
+    @Test
     public void getRegistrationRedirectCount_keyMissing() {
         Optional<KeyValueData> optKeyValueData =
                 mDatastoreManager.runInTransactionWithResult(
@@ -6619,6 +7001,10 @@ public class MeasurementDaoTest {
         values.put(SourceContract.REGISTRATION_ID, source.getRegistrationId());
         values.put(SourceContract.SHARED_AGGREGATION_KEYS, source.getSharedAggregationKeys());
         values.put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin().toString());
+        values.put(SourceContract.IS_INSTALL_ATTRIBUTED, source.isInstallAttributed());
+        values.put(
+                SourceContract.REINSTALL_REATTRIBUTION_WINDOW,
+                source.getReinstallReattributionWindow());
         long row = db.insert(SourceContract.TABLE, null, values);
         assertNotEquals("Source insertion failed", -1, row);
 
@@ -10265,6 +10651,389 @@ public class MeasurementDaoTest {
                 .forEach(verifyAttributionScopeUnchangedFn);
     }
 
+    @Test
+    public void getLatestReportTimeInBatchWindow_singleAggregateReport_returnsSingleReportTime() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId("source1")
+                        .build();
+
+        long scheduledReportTime = 1L;
+        AggregateReport report =
+                generateMockAggregateReport(
+                        WebUtil.validUrl("https://destination-1.test"),
+                        1,
+                        "source1",
+                        scheduledReportTime);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        getAggregateReportConsumer(db).accept(report);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(scheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void testGetLatestReportTimeInBatchWindow_singleEventReport_returnsSingleReportTime() {
+        long reportTime = 1L;
+        EventReport report =
+                generateMockEventReport(
+                        WebUtil.validUrl("https://destination-1.test"), 1, reportTime);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        getEventReportConsumer(db).accept(report);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(reportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_twoAggregateReport_bothInBatchWindow_returnsTwoReportTimes() {
+        String sourceId = "source1";
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId(sourceId)
+                        .build();
+
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        - 1L;
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        List<AggregateReport> reports =
+                Arrays.asList(
+                        generateMockAggregateReport(
+                                destination, 1, sourceId, firstScheduledReportTime),
+                        generateMockAggregateReport(
+                                destination, 2, sourceId, secondScheduledReportTime));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        reports.forEach(getAggregateReportConsumer(db));
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(secondScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_twoAggReport_oneAfterBatchWindow_returnOneReportTime() {
+        String sourceId = "source1";
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId(sourceId)
+                        .build();
+
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        + 1L;
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        List<AggregateReport> reports =
+                Arrays.asList(
+                        generateMockAggregateReport(
+                                destination, 1, sourceId, firstScheduledReportTime),
+                        generateMockAggregateReport(
+                                destination, 2, sourceId, secondScheduledReportTime));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        reports.forEach(getAggregateReportConsumer(db));
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        // secondScheduledReportTime should not be returned as it was outside the batch window.
+        assertEquals(firstScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_twoEventReport_bothInBatchWindow_returnSecondReportTime() {
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        - 1L;
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        List<EventReport> reports =
+                Arrays.asList(
+                        generateMockEventReport(destination, 1, firstScheduledReportTime),
+                        generateMockEventReport(destination, 2, secondScheduledReportTime));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+
+        Consumer<EventReport> eventReportConsumer = getEventReportConsumer(db);
+        reports.forEach(eventReportConsumer);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(secondScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_twoEventReport_oneAfterBatchWindow_returnFirstReportTime() {
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        + 1L;
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        List<EventReport> reports =
+                Arrays.asList(
+                        generateMockEventReport(destination, 1, firstScheduledReportTime),
+                        generateMockEventReport(destination, 2, secondScheduledReportTime));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+
+        Consumer<EventReport> eventReportConsumer = getEventReportConsumer(db);
+        reports.forEach(eventReportConsumer);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        // secondScheduledReportTime should not be returned as it was outside the batch window.
+        assertEquals(firstScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_oneAggReport_oneEventReport_bothInBatchWindow_returnSecondReportTime() {
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        - 1L;
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId("source1")
+                        .build();
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        AggregateReport aggregateReport =
+                generateMockAggregateReport(destination, 1, "source1", firstScheduledReportTime);
+        EventReport eventReport =
+                generateMockEventReport(destination, 1, secondScheduledReportTime);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        getEventReportConsumer(db).accept(eventReport);
+        getAggregateReportConsumer(db).accept(aggregateReport);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(secondScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_oneAggReport_oneEventReport_oneAfterBatchWindow_returnFirstReportTime() {
+        long firstScheduledReportTime = 1L;
+        long secondScheduledReportTime =
+                firstScheduledReportTime
+                        + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
+                        + 1L;
+
+        String sourceId = "source1";
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId(sourceId)
+                        .build();
+
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        AggregateReport aggregateReport =
+                generateMockAggregateReport(destination, 1, sourceId, firstScheduledReportTime);
+        EventReport eventReport =
+                generateMockEventReport(destination, 1, secondScheduledReportTime);
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        getEventReportConsumer(db).accept(eventReport);
+        getAggregateReportConsumer(db).accept(aggregateReport);
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(firstScheduledReportTime, result.longValue());
+    }
+
+    @Test
+    public void
+            testGetLatestReportTimeInBatchWindow_manyAggReport_manyEventReport_returnLatestReportTime() {
+        String sourceId = "source1";
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setId(sourceId)
+                        .build();
+        List<EventReport> eventReports = new ArrayList<>();
+        List<AggregateReport> aggregateReports = new ArrayList<>();
+        int firstReportTime = 1;
+        String destination = WebUtil.validUrl("https://destination-1.test");
+        for (int i = firstReportTime; i < MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION; i++) {
+            eventReports.add(
+                    generateMockEventReport(destination, /* id= */ i, /* reportTime= */ i));
+        }
+
+        for (int i = firstReportTime; i < MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE; i++) {
+            aggregateReports.add(
+                    generateMockAggregateReport(
+                            destination, /* id= */ i, sourceId, /* reportTime= */ i));
+        }
+
+        // Add one more aggregate report that is scheduled at the very edge of the batch window.
+        // The report time for this report should be returned as the report time.
+        long lastReportTime = MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
+        int lastId = MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+        aggregateReports.add(
+                generateMockAggregateReport(destination, lastId, sourceId, lastReportTime));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        eventReports.forEach(getEventReportConsumer(db));
+        aggregateReports.forEach(getAggregateReportConsumer(db));
+
+        Long result =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getLatestReportTimeInBatchWindow(
+                                                mFlags
+                                                        .getMeasurementReportingJobServiceBatchWindowMillis()))
+                        .orElseThrow();
+
+        assertEquals(lastReportTime, result.longValue());
+    }
+
+    @Test
+    public void testGetLatestReportTimeInBatchWindow_noReports_returnNull() {
+        Optional<Long> results =
+                mDatastoreManager.runInTransactionWithResult(
+                        measurementDao ->
+                                measurementDao.getLatestReportTimeInBatchWindow(
+                                        mFlags
+                                                .getMeasurementReportingJobServiceBatchWindowMillis()));
+
+        assertTrue(results.isEmpty());
+    }
+
+    private static Consumer<AggregateReport> getAggregateReportConsumer(SQLiteDatabase db) {
+        Consumer<AggregateReport> aggregateReportConsumer =
+                aggregateReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
+                    values.put(
+                            MeasurementTables.AggregateReport.SOURCE_ID,
+                            aggregateReport.getSourceId());
+                    values.put(
+                            MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                            aggregateReport.getAttributionDestination().toString());
+                    values.put(
+                            MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                            aggregateReport.getScheduledReportTime());
+                    values.put(
+                            MeasurementTables.AggregateReport.STATUS, aggregateReport.getStatus());
+                    db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
+                };
+        return aggregateReportConsumer;
+    }
+
+    private static Consumer<EventReport> getEventReportConsumer(SQLiteDatabase db) {
+        Consumer<EventReport> eventReportConsumer =
+                eventReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(EventReportContract.ID, eventReport.getId());
+                    values.put(
+                            EventReportContract.ATTRIBUTION_DESTINATION,
+                            eventReport.getAttributionDestinations().get(0).toString());
+                    values.put(EventReportContract.REPORT_TIME, eventReport.getReportTime());
+                    values.put(EventReportContract.STATUS, EventReport.Status.PENDING);
+
+                    db.insert(EventReportContract.TABLE, null, values);
+                };
+        return eventReportConsumer;
+    }
+
     private void insertInDb(SQLiteDatabase db, Source source) {
         ContentValues values = new ContentValues();
         values.put(SourceContract.ID, source.getId());
@@ -10705,6 +11474,24 @@ public class MeasurementDaoTest {
             int eventTimePastDays,
             boolean expiredIAWindow,
             String enrollmentId) {
+        return createSourceForIATest(
+                id,
+                currentTime,
+                priority,
+                eventTimePastDays,
+                expiredIAWindow,
+                enrollmentId,
+                REGISTRATION_ORIGIN);
+    }
+
+    private Source.Builder createSourceForIATest(
+            String id,
+            long currentTime,
+            long priority,
+            int eventTimePastDays,
+            boolean expiredIAWindow,
+            String enrollmentId,
+            Uri registrationOrigin) {
         return new Source.Builder()
                 .setId(id)
                 .setPublisher(Uri.parse("android-app://com.example.sample"))
@@ -10717,7 +11504,7 @@ public class MeasurementDaoTest {
                         currentTime
                                 - DAYS.toMillis(eventTimePastDays == -1 ? 10 : eventTimePastDays))
                 .setPriority(priority == -1 ? 100 : priority)
-                .setRegistrationOrigin(REGISTRATION_ORIGIN);
+                .setRegistrationOrigin(registrationOrigin);
     }
 
     private AggregateReport generateMockAggregateReport(String attributionDestination, int id) {
@@ -10736,10 +11523,29 @@ public class MeasurementDaoTest {
                 .build();
     }
 
+    private AggregateReport generateMockAggregateReport(
+            String attributionDestination, int id, String sourceId, long reportTime) {
+        return new AggregateReport.Builder()
+                .setId(String.valueOf(id))
+                .setSourceId(sourceId)
+                .setAttributionDestination(Uri.parse(attributionDestination))
+                .setScheduledReportTime(reportTime)
+                .build();
+    }
+
     private EventReport generateMockEventReport(String attributionDestination, int id) {
         return new EventReport.Builder()
                 .setId(String.valueOf(id))
                 .setAttributionDestinations(List.of(Uri.parse(attributionDestination)))
+                .build();
+    }
+
+    private EventReport generateMockEventReport(
+            String attributionDestination, int id, long reportTime) {
+        return new EventReport.Builder()
+                .setId(String.valueOf(id))
+                .setAttributionDestinations(List.of(Uri.parse(attributionDestination)))
+                .setReportTime(reportTime)
                 .build();
     }
 

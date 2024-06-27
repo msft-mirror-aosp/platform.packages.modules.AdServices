@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.hosttestutils.AwaitUtils;
-import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+import android.app.sdksandbox.hosttestutils.SdkSandboxDeviceSupportedHostRule;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
@@ -35,11 +35,16 @@ import com.android.tradefed.testtype.junit4.BeforeClassWithInfo;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
 public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
+
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedHostRule deviceSupportRule =
+            new SdkSandboxDeviceSupportedHostRule(this);
 
     private static final String APP_PACKAGE = "com.android.sdksandbox.app";
     private static final String APP_APK = "SdkSandboxTestApp.apk";
@@ -70,7 +75,6 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
             APP_SHARED_2_PACKAGE + "_sdk_sandbox";
 
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
-    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     private DeviceSdkLevel mDeviceSdkLevel;
 
@@ -88,8 +92,6 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
-        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
-
         assertThat(getBuild()).isNotNull();
         assertThat(getDevice()).isNotNull();
 

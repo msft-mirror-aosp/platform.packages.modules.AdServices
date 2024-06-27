@@ -340,6 +340,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testEnrollmentDataDownload_Production()
             throws ExecutionException, InterruptedException, TimeoutException {
+        when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(true);
         createMddForEnrollment(PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL, /* getProto= */ false);
 
         ClientFileGroup clientFileGroup =
@@ -360,6 +361,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testEnrollmentDataDownload_OEM()
             throws ExecutionException, InterruptedException, TimeoutException {
+        when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(true);
         createMddForEnrollment(OEM_ENROLLMENT_MANIFEST_FILE_URL, /* getProto= */ false);
 
         ClientFileGroup clientFileGroup =
@@ -379,6 +381,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testEnrollmentDataDownload_PTB()
             throws ExecutionException, InterruptedException, TimeoutException {
+        when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(true);
         when(mMockFlags.getEnrollmentMddRecordDeletionEnabled()).thenReturn(true);
         createMddForEnrollment(PTB_ENROLLMENT_MANIFEST_FILE_URL, /* getProto= */ false);
 
@@ -409,6 +412,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     /** This method verifies that the file group does not exist when an empty url is provided. */
     @Test
     public void testEnrollmentProtoDataDownload_emptyUrl() throws Exception {
+        when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(true);
         createMddForEnrollment("", /* getProto= */ true);
 
         ClientFileGroup clientFileGroup =

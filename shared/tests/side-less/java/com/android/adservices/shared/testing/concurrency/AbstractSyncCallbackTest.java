@@ -28,9 +28,13 @@ public final class AbstractSyncCallbackTest extends SyncCallbackTestCase<Abstrac
 
     @Override
     protected String callCallback(AbstractSyncCallback callback) {
-        String methodName = "callCallback()";
-        callback.internalSetCalled(methodName);
-        return methodName;
+        return callback.internalSetCalled("internalSetCalled()");
+    }
+
+    @Override
+    protected void assertCalled(AbstractSyncCallback callback, long timeoutMs)
+            throws InterruptedException {
+        callback.internalAssertCalled(timeoutMs);
     }
 
     @Test
@@ -108,6 +112,7 @@ public final class AbstractSyncCallbackTest extends SyncCallbackTestCase<Abstrac
 
     private static final class ConcreteSyncCallback extends AbstractSyncCallback {
 
+        @SuppressWarnings("unused") // Called by superclass using reflection
         ConcreteSyncCallback() {
             super(new SyncCallbackSettings.Builder(new FakeLogger()).build());
         }

@@ -29,63 +29,46 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.CustomAudienceManager;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.customaudience.LeaveCustomAudienceRequest;
-import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.AdServicesEndToEndTestCase;
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
-public final class CustomAudienceManagerTest {
+@RequiresSdkLevelAtLeastS
+@SetFlagDisabled(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE)
+@SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
+@SetIntegerFlag(name = KEY_SDK_REQUEST_PERMITS_PER_SECOND, value = Integer.MAX_VALUE)
+@SetPpapiAppAllowList
+public final class CustomAudienceManagerTest extends AdServicesEndToEndTestCase {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final String TAG = "CustomAudienceManagerTest";
     private static final String SERVICE_APK_NAME = "com.android.adservices.api";
     private static final int MAX_RETRY = 50;
 
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
-
-    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
-    // Ignore tests when device is not at least S
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    // Skip the test if it runs on unsupported platforms.
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(CONTEXT.getPackageName())
-                    .setFlag(KEY_ENABLE_ENROLLMENT_TEST_SEED, true)
-                    // Disable API throttling
-                    .setFlag(KEY_SDK_REQUEST_PERMITS_PER_SECOND, Integer.MAX_VALUE)
-                    // This test is running in background
-                    .setFlag(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE, false);
 
     @Before
     public void setUp() throws TimeoutException {
@@ -94,17 +77,17 @@ public final class CustomAudienceManagerTest {
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
 
         // Kill AdServices process
-        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     private void measureJoinCustomAudience(String label) throws Exception {
         Log.i(TAG, "Calling joinCustomAudience()");
         Thread.sleep(DELAY_TO_AVOID_THROTTLE_MS);
-        final long start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
         AdvertisingCustomAudienceClient client =
                 new AdvertisingCustomAudienceClient.Builder()
-                        .setContext(CONTEXT)
+                        .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
@@ -113,17 +96,17 @@ public final class CustomAudienceManagerTest {
                                 .build())
                 .get();
 
-        final long duration = System.currentTimeMillis() - start;
+        long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "joinCustomAudience() took " + duration + " ms: " + label);
     }
 
     private void measureLeaveCustomAudience(String label) throws Exception {
         Log.i(TAG, "Calling joinCustomAudience()");
-        final long start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
         AdvertisingCustomAudienceClient client =
                 new AdvertisingCustomAudienceClient.Builder()
-                        .setContext(CONTEXT)
+                        .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
@@ -132,7 +115,7 @@ public final class CustomAudienceManagerTest {
                         CustomAudienceFixture.VALID_NAME)
                 .get();
 
-        final long duration = System.currentTimeMillis() - start;
+        long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "joinCustomAudience() took " + duration + " ms: " + label);
     }
 
@@ -195,10 +178,10 @@ public final class CustomAudienceManagerTest {
     @Ignore("TODO(b/295231590): remove annotation when bug is fixed")
     @Test
     @RequiresLowRamDevice
-    public void testGetchAndJoinCustomAudience_lowRamDevice() throws Exception {
+    public void testFetchAndJoinCustomAudience_lowRamDevice() throws Exception {
         OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
 
-        CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);
+        CustomAudienceManager manager = CustomAudienceManager.get(sContext);
         assertWithMessage("manager").that(manager).isNotNull();
 
         manager.fetchAndJoinCustomAudience(
@@ -216,7 +199,7 @@ public final class CustomAudienceManagerTest {
     @RequiresLowRamDevice
     public void testLeaveCustomAudienceRequest_lowRamDevice() throws Exception {
         OutcomeReceiverForTests<Object> receiver = new OutcomeReceiverForTests<>();
-        CustomAudienceManager manager = CustomAudienceManager.get(CONTEXT);
+        CustomAudienceManager manager = CustomAudienceManager.get(sContext);
         assertWithMessage("manager").that(manager).isNotNull();
 
         manager.leaveCustomAudience(
