@@ -167,44 +167,4 @@ public class ExtGaUxGraduationChannelRowTest {
         AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
     }
-
-    /**
-     * Verify that for beta, ROW devices with non zeroed-out AdId, the beta ROW notification is
-     * displayed.
-     */
-    @Test
-    public void testRowU18ToBetaAdIdEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.setAsRowDevice();
-        UiUtils.enableU18();
-
-        AdServicesStates u18States =
-                new AdServicesStates.Builder()
-                        .setU18Account(true)
-                        .setAdIdEnabled(false)
-                        .setAdultAccount(false)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(u18States, Executors.newCachedThreadPool(), mCallback);
-
-        AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.U18_UX);
-
-        UiUtils.enableBeta();
-        AdServicesStates adultStates =
-                new AdServicesStates.Builder()
-                        .setU18Account(false)
-                        .setAdIdEnabled(true)
-                        .setAdultAccount(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
-
-        // No notifications should be shown as there is no enrollment channel from U18 to Beta UX.
-        AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.BETA_UX);
-    }
 }

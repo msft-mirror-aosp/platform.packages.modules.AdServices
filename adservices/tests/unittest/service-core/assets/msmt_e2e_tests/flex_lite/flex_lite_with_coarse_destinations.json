@@ -1,8 +1,5 @@
 {
   "description": "Interplay of the source field, coarse_event_report_destinations, with information gain. See comments on the registrations.",
-  "phflags_override": {
-    "measurement_flex_lite_api_enabled": "true"
-  },
   "input": {
     "sources": [
       // Source is registered - it has a single destination type.
@@ -167,7 +164,7 @@
         "report_time": "800008002000",
         "report_url": "https://www.ad-tech3.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
-          "attribution_destination": ["android-app://example.2d1.com","https://2d1.com"],
+          "attribution_destination": ["android-app://example.2d1.test","https://2d1.test"],
           "scheduled_report_time": "800008002",
           "source_event_id": "789",
           "trigger_data": "3",

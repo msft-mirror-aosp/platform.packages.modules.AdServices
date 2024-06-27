@@ -33,6 +33,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.MeasurementTables.SourceAttributionScopeContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceDestination;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Attribution;
@@ -76,7 +77,6 @@ import java.util.stream.Stream;
 class MeasurementDao implements IMeasurementDao {
 
     private static final int MAX_COMPOUND_SELECT = 250;
-
     private Supplier<Boolean> mDbFileMaxSizeLimitReachedSupplier;
     private Supplier<Integer> mReportingRetryLimitSupplier;
     private Supplier<Boolean> mReportingRetryLimitEnabledSupplier;
@@ -1173,16 +1173,32 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void deleteEventReport(EventReport eventReport) throws DatastoreException {
-        long rows =
+    public void deleteEventReportAndAttribution(EventReport eventReport) throws DatastoreException {
+        long eventReportRows =
                 mSQLTransaction
                         .getDatabase()
                         .delete(
                                 MeasurementTables.EventReportContract.TABLE,
                                 MeasurementTables.EventReportContract.ID + " = ?",
                                 new String[] {eventReport.getId()});
-        if (rows != 1) {
-            throw new DatastoreException("EventReport deletion failed.");
+
+        long attributionRows =
+                mSQLTransaction
+                        .getDatabase()
+                        .delete(
+                                MeasurementTables.AttributionContract.TABLE,
+                                MeasurementTables.AttributionContract.SCOPE + " = ? "
+                                + "AND " + MeasurementTables.AttributionContract.SOURCE_ID
+                                        + " = ? "
+                                + "AND " + MeasurementTables.AttributionContract.TRIGGER_ID
+                                        + " = ?",
+                                new String[] {
+                                        String.valueOf(Attribution.Scope.EVENT),
+                                        eventReport.getSourceId(),
+                                        eventReport.getTriggerId()});
+
+        if (eventReportRows != 1 || attributionRows != 1) {
+            throw new DatastoreException("EventReport and/or Attribution deletion failed.");
         }
     }
 
@@ -1435,53 +1451,6 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
-            throws DatastoreException {
-        Optional<Uri> publisherBaseUri =
-                extractBaseUri(source.getPublisher(), source.getPublisherType());
-        Optional<Uri> destinationBaseUri =
-                extractBaseUri(trigger.getAttributionDestination(), trigger.getDestinationType());
-
-        if (publisherBaseUri.isEmpty() || destinationBaseUri.isEmpty()) {
-            throw new IllegalArgumentException(
-                    String.format(
-                            Locale.ENGLISH,
-                            "getAttributionsPerRateLimitWindow:"
-                                    + " getSourceAndDestinationTopPrivateDomains failed. Publisher:"
-                                    + " %s; Attribution destination: %s",
-                            source.getPublisher().toString(),
-                            trigger.getAttributionDestination().toString()));
-        }
-
-        String publisherTopPrivateDomain = publisherBaseUri.get().toString();
-        String triggerDestinationTopPrivateDomain = destinationBaseUri.get().toString();
-
-        return DatabaseUtils.queryNumEntries(
-                mSQLTransaction.getDatabase(),
-                MeasurementTables.AttributionContract.TABLE,
-                MeasurementTables.AttributionContract.SOURCE_SITE
-                        + " = ? AND "
-                        + MeasurementTables.AttributionContract.DESTINATION_SITE
-                        + " = ? AND "
-                        + MeasurementTables.AttributionContract.ENROLLMENT_ID
-                        + " = ? AND "
-                        + MeasurementTables.AttributionContract.TRIGGER_TIME
-                        + " > ? AND "
-                        + MeasurementTables.AttributionContract.TRIGGER_TIME
-                        + " <= ? ",
-                new String[] {
-                    publisherTopPrivateDomain,
-                    triggerDestinationTopPrivateDomain,
-                    trigger.getEnrollmentId(),
-                    String.valueOf(
-                            trigger.getTriggerTime()
-                                    - FlagsFactory.getFlags()
-                                            .getMeasurementRateLimitWindowMilliseconds()),
-                    String.valueOf(trigger.getTriggerTime())
-                });
-    }
-
-    @Override
     public long getAttributionsPerRateLimitWindow(@Attribution.Scope int scope,
             @NonNull Source source, @NonNull Trigger trigger) throws DatastoreException {
         Optional<Uri> publisherBaseUri =
@@ -1581,6 +1550,49 @@ class MeasurementDao implements IMeasurementDao {
             }
         }
         return uninstallAppNames;
+    }
+
+    @Override
+    public Long getLatestReportTimeInBatchWindow(long batchWindow) throws DatastoreException {
+        final String cte =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT %2$s AS report_time "
+                                + "FROM %1$s "
+                                + "WHERE %3$s = %4$s "
+                                + "UNION "
+                                + "SELECT %6$s AS report_time "
+                                + "FROM %5$s "
+                                + "WHERE %7$s = %8$s",
+                        MeasurementTables.AggregateReport.TABLE,
+                        MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                        MeasurementTables.AggregateReport.STATUS,
+                        AggregateReport.Status.PENDING,
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.EventReportContract.REPORT_TIME,
+                        MeasurementTables.EventReportContract.STATUS,
+                        EventReport.Status.PENDING);
+
+        final String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "WITH t AS (%1$s) SELECT MAX(t.report_time) FROM t WHERE t.report_time <="
+                                + " (SELECT MIN(t.report_time) FROM t) + %2$s",
+                        cte,
+                        batchWindow);
+
+        try (Cursor cursor =
+                mSQLTransaction.getDatabase().rawQuery(query, /* selectionArgs= */ null)) {
+            if (cursor != null && cursor.moveToNext()) {
+                long timestamp = cursor.getLong(0);
+                if (timestamp == 0) {
+                    return null;
+                }
+                return timestamp;
+            }
+
+            return null;
+        }
     }
 
     @Override
@@ -2500,6 +2512,33 @@ class MeasurementDao implements IMeasurementDao {
                         SourceContract.TABLE,
                         whereString);
 
+        Flags flags = FlagsFactory.getFlags();
+        if (flags.getMeasurementEnableReinstallReattribution()) {
+            String reinstallSubQuery =
+                    getReinstallRegistrationOriginsQuery(uri, eventTimestamp, whereString);
+
+            // Filter out sources where registration origin has reinstall signal
+            String reinstallWhereString =
+                    String.format(
+                            Locale.ENGLISH,
+                            mergeConditions(
+                                    " AND ",
+                                    whereString,
+                                    SourceContract.TABLE
+                                            + "."
+                                            + SourceContract.REGISTRATION_ORIGIN
+                                            + " NOT IN (%1$s)"),
+                            reinstallSubQuery);
+
+            filterQuery =
+                    String.format(
+                            Locale.ENGLISH,
+                            " ( WITH source_ids AS (%1$s) SELECT * from %2$s WHERE %3$s )",
+                            sourceIdSubQuery,
+                            SourceContract.TABLE,
+                            reinstallWhereString);
+        }
+
         // The inner query picks the top record based on priority and recency order after applying
         // the filter. But first_value generates one value per partition but applies to all the rows
         // that input has, so we have to nest it with distinct in order to get unique source_ids.
@@ -3044,6 +3083,74 @@ class MeasurementDao implements IMeasurementDao {
 
     private static Long getNullableUnsignedLong(@Nullable UnsignedLong ulong) {
         return Optional.ofNullable(ulong).map(UnsignedLong::getValue).orElse(null);
+    }
+
+    /**
+     * Return registration origins that recognizes the app install as a re-install i.e. exists rows
+     * in AppReportHistory table with the app destination for the report origin and the last report
+     * is within reinstall reattribution window and is install attributed.
+     */
+    private static String getReinstallRegistrationOriginsQuery(
+            Uri uri, long eventTimestamp, String whereString) {
+        String earliestReportTime =
+                String.format(
+                        Locale.ENGLISH,
+                        "%1$d - "
+                                + "("
+                                + SourceContract.TABLE
+                                + "."
+                                + SourceContract.REINSTALL_REATTRIBUTION_WINDOW
+                                + ")",
+                        eventTimestamp);
+
+        // Check if install is reinstall by filtering sources that are install attributed and
+        // are within the reinstall window.
+        final String reinstallWhereClause =
+                mergeConditions(
+                        " AND ",
+                        whereString,
+                        MeasurementTables.SourceContract.TABLE
+                                + "."
+                                + MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED
+                                + " = 1",
+                        // Only consider app report history within the signal lifetime
+                        MeasurementTables.AppReportHistoryContract.TABLE
+                                + "."
+                                + MeasurementTables.AppReportHistoryContract
+                                        .LAST_REPORT_DELIVERED_TIME
+                                + " > "
+                                + earliestReportTime);
+
+        final String sourceAppReportHistoryJoinClause =
+                mergeConditions(
+                        " AND ",
+                        MeasurementTables.SourceContract.TABLE
+                                + "."
+                                + MeasurementTables.SourceContract.REGISTRATION_ORIGIN
+                                + " = "
+                                + MeasurementTables.AppReportHistoryContract.TABLE
+                                + "."
+                                + MeasurementTables.AppReportHistoryContract.REGISTRATION_ORIGIN,
+                        MeasurementTables.AppReportHistoryContract.TABLE
+                                + "."
+                                + MeasurementTables.AppReportHistoryContract.APP_DESTINATION
+                                + " = "
+                                + DatabaseUtils.sqlEscapeString(uri.toString()));
+
+        String reinstallQuery =
+                "SELECT DISTINCT "
+                        + SourceContract.TABLE
+                        + "."
+                        + SourceContract.REGISTRATION_ORIGIN
+                        + " FROM "
+                        + MeasurementTables.SourceContract.TABLE
+                        + " INNER JOIN "
+                        + MeasurementTables.AppReportHistoryContract.TABLE
+                        + " ON "
+                        + sourceAppReportHistoryJoinClause
+                        + " WHERE "
+                        + reinstallWhereClause;
+        return reinstallQuery;
     }
 
     /**

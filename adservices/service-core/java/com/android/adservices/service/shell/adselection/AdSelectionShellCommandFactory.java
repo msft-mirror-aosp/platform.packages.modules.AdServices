@@ -32,9 +32,12 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
+import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.AuctionServerDataCompressorFactory;
 import com.android.adservices.service.adselection.AuctionServerPayloadMetricsStrategyDisabled;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFactory;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorHelper;
 import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
@@ -63,7 +66,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
             boolean isConsentedDebugCliEnabled,
             boolean isAdSelectionCliEnabled,
             ConsentedDebugConfigurationDao consentedDebugConfigurationDao,
-            BuyerInputGenerator buyerInputGenerator) {
+            BuyerInputGenerator buyerInputGenerator,
+            AuctionServerDataCompressor auctionServerDataCompressor) {
         Objects.requireNonNull(consentedDebugConfigurationDao);
 
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
@@ -71,7 +75,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
         Set<ShellCommand> allCommands =
                 ImmutableSet.of(
                         new ConsentedDebugShellCommand(consentedDebugConfigurationDao),
-                        new GetAdSelectionDataCommand(buyerInputGenerator),
+                        new GetAdSelectionDataCommand(
+                                buyerInputGenerator, auctionServerDataCompressor),
                         new MockAuctionResultCommand());
         mAllCommandsMap =
                 allCommands.stream()
@@ -86,7 +91,25 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
     public static AdSelectionShellCommandFactory getInstance(
             DebugFlags debugFlags, Flags flags, Context context) {
         SharedStorageDatabase sharedStorageDatabase = SharedStorageDatabase.getInstance(context);
+        AuctionServerDataCompressor auctionServerDataCompressor =
+                AuctionServerDataCompressorFactory.getDataCompressor(
+                        flags.getFledgeAuctionServerCompressionAlgorithmVersion());
         // TODO(b/342574944): Decide which fields need to be configurable and update.
+        AuctionServerDataCompressor dataCompressor =
+                AuctionServerDataCompressorFactory.getDataCompressor(
+                        flags.getFledgeAuctionServerCompressionAlgorithmVersion());
+        CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper =
+                new CompressedBuyerInputCreatorHelper(
+                        new AuctionServerPayloadMetricsStrategyDisabled(),
+                        flags.getPasExtendedMetricsEnabled(),
+                        flags.getFledgeAuctionServerOmitAdsEnabled());
+        CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
+                new CompressedBuyerInputCreatorFactory(
+                        compressedBuyerInputCreatorHelper,
+                        dataCompressor,
+                        flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
+                        CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                        ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao());
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
                         CustomAudienceDatabase.getInstance(context).customAudienceDao(),
@@ -97,21 +120,18 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         flags.getFledgeCustomAudienceActiveTimeWindowInMs(),
                         flags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
                         flags.getProtectedSignalsPeriodicEncodingEnabled(),
-                        AuctionServerDataCompressorFactory.getDataCompressor(
-                                flags.getFledgeAuctionServerCompressionAlgorithmVersion()),
-                        flags.getFledgeAuctionServerOmitAdsEnabled(),
-                        new AuctionServerPayloadMetricsStrategyDisabled(),
-                        flags,
                         new AdFilteringFeatureFactory(
                                         sharedStorageDatabase.appInstallDao(),
                                         sharedStorageDatabase.frequencyCapDao(),
                                         flags)
-                                .getAppInstallAdFilterer());
+                                .getAppInstallAdFilterer(),
+                        compressedBuyerInputCreatorFactory);
         return new AdSelectionShellCommandFactory(
                 debugFlags.getFledgeConsentedDebuggingCliEnabledStatus(),
                 debugFlags.getAdSelectionCommandsEnabled(),
                 AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao(),
-                buyerInputGenerator);
+                buyerInputGenerator,
+                auctionServerDataCompressor);
     }
 
     @SuppressLint("VisibleForTests")
