@@ -35,6 +35,7 @@ import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.FetchProcessLogger;
@@ -106,6 +107,7 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
     public FluentFuture<ObliviousHttpKeyConfig> getLatestActiveOhttpKeyConfigOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             long timeoutMs,
+            DevContext devContext,
             FetchProcessLogger keyFetchLogger) {
         return FluentFuture.from(
                         immediateFuture(getLatestActiveKeyOfType(adSelectionEncryptionKeyType)))
@@ -115,6 +117,7 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
                                         ? fetchPersistAndGetActiveKeyOfType(
                                                 adSelectionEncryptionKeyType,
                                                 timeoutMs,
+                                                devContext,
                                                 keyFetchLogger)
                                         : immediateFuture(encryptionKey),
                         mLightweightExecutor)
@@ -140,7 +143,8 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
     public FluentFuture<ObliviousHttpKeyConfig> getLatestOhttpKeyConfigOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             long timeoutMs,
-            @Nullable Uri coordinatorUrl) {
+            @Nullable Uri coordinatorUrl,
+            DevContext devContext) {
         sLogger.v("Ignoring the coordinatorUrl passed, if any.");
         ServerAuctionKeyFetchExecutionLoggerFactory serverAuctionKeyFetchExecutionLoggerFactory =
                 new ServerAuctionKeyFetchExecutionLoggerFactory(
@@ -152,7 +156,7 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
         keyFetchLogger.setSource(SERVER_AUCTION_KEY_FETCH_SOURCE_AUCTION);
         keyFetchLogger.setCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
         return getLatestOhttpKeyConfigOfType(
-                adSelectionEncryptionKeyType, timeoutMs, keyFetchLogger);
+                adSelectionEncryptionKeyType, timeoutMs, devContext, keyFetchLogger);
     }
 
     @Nullable
@@ -180,6 +184,7 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
     private FluentFuture<ObliviousHttpKeyConfig> getLatestOhttpKeyConfigOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionEncryptionKeyType,
             long timeoutMs,
+            DevContext devContext,
             FetchProcessLogger keyFetchLogger) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_LATEST_OHTTP_KEY_CONFIG);
         return FluentFuture.from(
@@ -192,6 +197,7 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
                                         ? fetchPersistAndGetActiveKeyOfType(
                                                 adSelectionEncryptionKeyType,
                                                 timeoutMs,
+                                                devContext,
                                                 keyFetchLogger)
                                         : immediateFuture(encryptionKey),
                         mLightweightExecutor)
@@ -230,7 +236,6 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
                         mClock.instant(),
                         getKeyCountForType(adSelectionEncryptionKeyType));
 
-
         return keys.isEmpty() ? null : selectRandomDbKeyAndParse(keys);
     }
 
@@ -265,10 +270,16 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
     public FluentFuture<AdSelectionEncryptionKey> fetchPersistAndGetActiveKeyOfType(
             @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int adSelectionKeyType,
             long timeoutMs,
+            DevContext devContext,
             FetchProcessLogger keyFetchLogger) {
         Instant fetchInstant = mClock.instant();
         return fetchAndPersistActiveKeysOfType(
-                        adSelectionKeyType, fetchInstant, timeoutMs, null, keyFetchLogger)
+                        adSelectionKeyType,
+                        fetchInstant,
+                        timeoutMs,
+                        null,
+                        devContext,
+                        keyFetchLogger)
                 .transform(keys -> selectRandomDbKeyAndParse(keys), mLightweightExecutor);
     }
 
@@ -283,6 +294,7 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
             Instant keyExpiryInstant,
             long timeoutMs,
             @Nullable Uri unusedCoordinatorUrl,
+            DevContext devContext,
             FetchProcessLogger keyFetchLogger) {
         Uri fetchUri = getKeyFetchUriOfType(adSelectionKeyType, null, null, keyFetchLogger);
         if (fetchUri == null) {
@@ -290,7 +302,8 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
                     "Uri to fetch active key of type " + adSelectionKeyType + " is null.");
         }
 
-        return FluentFuture.from(fetchKeyPayload(adSelectionKeyType, fetchUri, keyFetchLogger))
+        return FluentFuture.from(
+                        fetchKeyPayload(adSelectionKeyType, fetchUri, devContext, keyFetchLogger))
                 .transform(
                         response -> parseKeyResponse(response, adSelectionKeyType),
                         mLightweightExecutor)
@@ -330,5 +343,4 @@ public class AdSelectionEncryptionKeyManager extends ProtectedServersEncryptionC
         Random random = new Random();
         return parseDbEncryptionKey(keys.get(random.nextInt(keys.size())));
     }
-
 }

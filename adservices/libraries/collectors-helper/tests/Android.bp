@@ -27,4 +27,8 @@ android_test {
 
     min_sdk_version: "30",
     sdk_version: "current",
+
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+    },
 }

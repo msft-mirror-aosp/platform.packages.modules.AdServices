@@ -35,7 +35,6 @@ import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 import android.net.Uri;
 
-import com.android.adservices.common.AbstractAdServicesShellCommandHelper.CommandResult;
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.WebViewSupportUtil;
@@ -44,8 +43,10 @@ import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.shell.CommandResult;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -93,6 +94,7 @@ public class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggab
     }
 
     @Test
+    @Ignore("BudId=343259894")
     public void testRun_generateInputForEncoding_happyPath() throws Exception {
         ScenarioDispatcherFactory scenarioDispatcherFactory =
                 ScenarioDispatcherFactory.createFromScenarioFile(

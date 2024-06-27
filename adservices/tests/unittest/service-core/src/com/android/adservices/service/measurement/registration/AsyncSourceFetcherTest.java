@@ -2920,7 +2920,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertEquals(
-                Long.valueOf(TimeUnit.DAYS.toSeconds(1)),
+                Long.valueOf(TimeUnit.DAYS.toMillis(1)),
                 (Long) result.getReinstallReattributionWindow());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
     }
@@ -2967,7 +2967,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
-        when(mFlags.getMeasurementMaxReinstallReattributionWindowSeconds()).thenReturn(7776000L);
+        when(mFlags.getMeasurementMaxReinstallReattributionWindowSeconds()).thenReturn(100L);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2995,7 +2995,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
-        assertEquals(7776000L, result.getReinstallReattributionWindow());
+        assertEquals(100000L, result.getReinstallReattributionWindow());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
     }
 

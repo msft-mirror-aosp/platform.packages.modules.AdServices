@@ -16,13 +16,13 @@
 
 package com.android.adservices.shared.testing;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
 import static com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback.MSG_WRONG_ERROR_RECEIVED;
 
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallbackTestCase;
+import com.android.adservices.shared.testing.concurrency.SyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.adservices.shared.testing.junit.SafeAndroidJUnitRunner;
@@ -45,7 +45,7 @@ public final class OutcomeReceiverForTestsTest
     private final Exception mError = new UnsupportedOperationException("D'OH!");
 
     @Override
-    protected OutcomeReceiverForTests<String> newCallback(SyncCallbackSettings settings) {
+    protected SyncCallback newRawCallback(SyncCallbackSettings settings) {
         return new OutcomeReceiverForTests<>(settings);
     }
 

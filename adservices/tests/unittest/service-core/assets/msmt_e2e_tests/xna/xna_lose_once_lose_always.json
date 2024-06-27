@@ -1,8 +1,8 @@
 {
   "description": "The timeline is as follows: at T0: Source1 from AdTech1 is registered; at T1: Source2 from AdTech2 is registered; at T2: Trigger1 from AdTech4 is registered. Then the attribution happens for Trigger2 where Source2's derived source wins against Source1's derived source. At T3: Source3 from AdTech3 gets registered; at T4: Trigger2 from AdTech4 gets registered. For Trigger2's attribution Source1's derived source isn't picked because it had lost for attribution for AdTech1's trigger (trigger1) already so Source3 wins despite having a lower priority",
   "phflags_override": {
-    "measurement_enable_xna" : "true",
-    "web_context_client_allow_list" : "*"
+    "measurement_enable_xna": "true",
+    "web_context_client_allow_list": "*"
   },
   "input": {
     "sources": [
@@ -227,9 +227,9 @@
                     "expiry": "172801"
                   }
                 ],
-                "x_network_key_mapping" : {
-                  "enrollment-id-ad-tech1.test" : "0x1",
-                  "enrollment-id-ad-tech2.test" : "0x2"
+                "x_network_key_mapping": {
+                  "enrollment-id-ad-tech1.test": "0x1",
+                  "enrollment-id-ad-tech2.test": "0x2"
                 }
               },
               "Location": null,
@@ -334,9 +334,9 @@
                     "expiry": "172801"
                   }
                 ],
-                "x_network_key_mapping" : {
-                  "enrollment-id-ad-tech1.test" : "0x1",
-                  "enrollment-id-ad-tech3.test" : "0x3"
+                "x_network_key_mapping": {
+                  "enrollment-id-ad-tech1.test": "0x1",
+                  "enrollment-id-ad-tech3.test": "0x3"
                 }
               },
               "Location": null,
@@ -355,30 +355,42 @@
         "report_time": "800003604001",
         "report_url": "https://www.ad-tech4.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech4.test",
+            "scheduled_report_time": "800003604",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0xb87",
               "value": 1664
             }
-          ],
-          "source_registration_time": "799977600"
+          ]
         }
       },
       {
         "report_time": "800003602001",
         "report_url": "https://www.ad-tech4.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech4.test",
+            "scheduled_report_time": "800003602",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x55b",
               "value": 32768
             }
-          ],
-          "source_registration_time": "799977600"
+          ]
         }
       }
     ]

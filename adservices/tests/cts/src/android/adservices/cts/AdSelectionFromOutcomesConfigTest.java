@@ -22,35 +22,32 @@ import static android.adservices.adselection.AdSelectionFromOutcomesConfigFixtur
 import static android.adservices.adselection.AdSelectionFromOutcomesConfigFixture.SAMPLE_SELECTION_LOGIC_URI_2;
 import static android.adservices.adselection.AdSelectionFromOutcomesConfigFixture.SAMPLE_SELECTION_SIGNALS;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
-import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Collections;
 
-public class AdSelectionFromOutcomesConfigTest {
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
+@RequiresSdkLevelAtLeastS
+public final class AdSelectionFromOutcomesConfigTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testBuildValidAdSelectionFromOutcomesConfigSuccess() {
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
 
-        assertEquals(1, config.getAdSelectionIds().size());
-        assertEquals(SAMPLE_AD_SELECTION_ID_1, (long) config.getAdSelectionIds().get(0));
-        assertEquals(SAMPLE_SELECTION_SIGNALS, config.getSelectionSignals());
-        assertEquals(SAMPLE_SELECTION_LOGIC_URI_1, config.getSelectionLogicUri());
+        assertThat(config.getAdSelectionIds()).hasSize(1);
+        expect.that(config.getAdSelectionIds().get(0)).isEqualTo(SAMPLE_AD_SELECTION_ID_1);
+        expect.that(config.getSelectionSignals()).isEqualTo(SAMPLE_SELECTION_SIGNALS);
+        expect.that(config.getSelectionLogicUri()).isEqualTo(SAMPLE_SELECTION_LOGIC_URI_1);
     }
 
     @Test
@@ -64,45 +61,44 @@ public class AdSelectionFromOutcomesConfigTest {
         AdSelectionFromOutcomesConfig fromParcel =
                 AdSelectionFromOutcomesConfig.CREATOR.createFromParcel(p);
 
-        assertEquals(config.getAdSelectionIds(), fromParcel.getAdSelectionIds());
-        assertEquals(config.getSelectionSignals(), fromParcel.getSelectionSignals());
-        assertEquals(config.getSelectionLogicUri(), fromParcel.getSelectionLogicUri());
+        expect.that(fromParcel.getAdSelectionIds()).isEqualTo(config.getAdSelectionIds());
+        expect.that(fromParcel.getSelectionSignals()).isEqualTo(config.getSelectionSignals());
+        expect.that(fromParcel.getSelectionLogicUri()).isEqualTo(config.getSelectionLogicUri());
     }
 
     @Test
     public void testBuildAdSelectionFromOutcomesConfigUnsetAdOutcomeIds() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new AdSelectionFromOutcomesConfig.Builder()
-                            .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
-                            .setSelectionLogicUri(SAMPLE_SELECTION_LOGIC_URI_1)
-                            .build();
-                });
+                () ->
+                        new AdSelectionFromOutcomesConfig.Builder()
+                                .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
+                                .setSelectionLogicUri(SAMPLE_SELECTION_LOGIC_URI_1)
+                                .build());
     }
 
     @Test
     public void testBuildAdSelectionFromOutcomesConfigUnsetSelectionSignals() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new AdSelectionFromOutcomesConfig.Builder()
-                            .setAdSelectionIds(Collections.singletonList(SAMPLE_AD_SELECTION_ID_1))
-                            .setSelectionLogicUri(SAMPLE_SELECTION_LOGIC_URI_1)
-                            .build();
-                });
+                () ->
+                        new AdSelectionFromOutcomesConfig.Builder()
+                                .setAdSelectionIds(
+                                        Collections.singletonList(SAMPLE_AD_SELECTION_ID_1))
+                                .setSelectionLogicUri(SAMPLE_SELECTION_LOGIC_URI_1)
+                                .build());
     }
 
     @Test
     public void testBuildAdSelectionFromOutcomesConfigUnsetSelectionUri() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new AdSelectionFromOutcomesConfig.Builder()
-                            .setAdSelectionIds(Collections.singletonList(SAMPLE_AD_SELECTION_ID_1))
-                            .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
-                            .build();
-                });
+                () ->
+                        new AdSelectionFromOutcomesConfig.Builder()
+                                .setAdSelectionIds(
+                                        Collections.singletonList(SAMPLE_AD_SELECTION_ID_1))
+                                .setSelectionSignals(SAMPLE_SELECTION_SIGNALS)
+                                .build());
     }
 
     @Test
@@ -110,7 +106,7 @@ public class AdSelectionFromOutcomesConfigTest {
         AdSelectionFromOutcomesConfig obj =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
 
-        assertEquals(obj.describeContents(), 0);
+        expect.that(obj.describeContents()).isEqualTo(0);
     }
 
     @Test
@@ -120,20 +116,17 @@ public class AdSelectionFromOutcomesConfigTest {
         AdSelectionFromOutcomesConfig obj2 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
 
-        CommonFixture.assertHaveSameHashCode(obj1, obj2);
-    }
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(obj1, obj2);
 
-    @Test
-    public void testNotEqualInputsHaveDifferentHashCode() {
-        AdSelectionFromOutcomesConfig obj1 =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
-        AdSelectionFromOutcomesConfig obj2 =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
-                        Collections.singletonList(SAMPLE_AD_SELECTION_ID_2));
         AdSelectionFromOutcomesConfig obj3 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        Collections.singletonList(SAMPLE_AD_SELECTION_ID_2));
+        AdSelectionFromOutcomesConfig obj4 =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
                         SAMPLE_SELECTION_LOGIC_URI_2);
-
-        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
+        et.expectObjectsAreNotEqual(obj1, obj3);
+        et.expectObjectsAreNotEqual(obj1, obj4);
+        et.expectObjectsAreNotEqual(obj3, obj4);
     }
 }

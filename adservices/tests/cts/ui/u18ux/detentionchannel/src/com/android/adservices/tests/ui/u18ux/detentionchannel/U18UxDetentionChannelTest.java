@@ -35,7 +35,6 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,7 +42,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /** CTS test for U18 users */
-public class U18UxDetentionChannelTest {
+public final class U18UxDetentionChannelTest
+        extends AdServicesU18UxDetentionChannelCtsRootTestCase {
 
     private AdServicesCommonManager mCommonManager;
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -55,8 +55,6 @@ public class U18UxDetentionChannelTest {
 
     @Before
     public void setUp() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         UiUtils.setBinderTimeout();
         AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.resetAdServicesConsentData(sContext);
@@ -72,7 +70,7 @@ public class U18UxDetentionChannelTest {
 
         // General purpose callback used for expected success calls.
         mCallback =
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
@@ -96,7 +94,7 @@ public class U18UxDetentionChannelTest {
                         .setPrivacySandboxUiEnabled(true)
                         .build(),
                 Executors.newCachedThreadPool(),
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         responseFuture.set(result);
@@ -118,8 +116,6 @@ public class U18UxDetentionChannelTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         mDevice.pressHome();
 
         UiUtils.restartAdservices();
