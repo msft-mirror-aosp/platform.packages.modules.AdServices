@@ -136,14 +136,12 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         new AuctionServerPayloadMetricsStrategyDisabled(),
                         /* pasExtendedMetricsEnabled= */ false,
                         /* omitAdsEnabled= */ false);
-        when(mCompressedBuyerInputCreatorFactoryMock.createCompressedBuyerInputCreator())
+        when(mCompressedBuyerInputCreatorFactoryMock.createCompressedBuyerInputCreator(696969))
                 .thenReturn(
                         new CompressedBuyerInputCreatorNoOptimizations(
                                 helper, auctionServerDataCompressor));
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
-                        customAudienceDao,
-                        encodedPayloadDao,
                         new FrequencyCapAdFiltererNoOpImpl(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getBackgroundExecutor(),
