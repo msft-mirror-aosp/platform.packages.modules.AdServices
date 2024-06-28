@@ -195,6 +195,22 @@ public class GetAdSelectionDataRunner {
 
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mAuctionServerPayloadMetricsStrategy = auctionServerPayloadMetricsStrategy;
+        mDataCompressor =
+                AuctionServerDataCompressorFactory.getDataCompressor(
+                        mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+        CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper =
+                new CompressedBuyerInputCreatorHelper(
+                        mAuctionServerPayloadMetricsStrategy,
+                        mFlags.getPasExtendedMetricsEnabled(),
+                        mFlags.getFledgeAuctionServerOmitAdsEnabled());
+        CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
+                new CompressedBuyerInputCreatorFactory(
+                        compressedBuyerInputCreatorHelper,
+                        mDataCompressor,
+                        mFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao);
+
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
@@ -205,15 +221,8 @@ public class GetAdSelectionDataRunner {
                         mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
                         mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
                         mFlags.getProtectedSignalsPeriodicEncodingEnabled(),
-                        AuctionServerDataCompressorFactory.getDataCompressor(
-                                mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()),
-                        mFlags.getFledgeAuctionServerOmitAdsEnabled(),
-                        auctionServerPayloadMetricsStrategy,
-                        mFlags,
-                        appInstallAdFilterer);
-        mDataCompressor =
-                AuctionServerDataCompressorFactory.getDataCompressor(
-                        mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+                        appInstallAdFilterer,
+                        compressedBuyerInputCreatorFactory);
         mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
@@ -290,6 +299,21 @@ public class GetAdSelectionDataRunner {
 
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mAuctionServerPayloadMetricsStrategy = auctionServerPayloadMetricsStrategy;
+        mDataCompressor =
+                AuctionServerDataCompressorFactory.getDataCompressor(
+                        mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+        CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper =
+                new CompressedBuyerInputCreatorHelper(
+                        mAuctionServerPayloadMetricsStrategy,
+                        mFlags.getPasExtendedMetricsEnabled(),
+                        mFlags.getFledgeAuctionServerOmitAdsEnabled());
+        CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
+                new CompressedBuyerInputCreatorFactory(
+                        compressedBuyerInputCreatorHelper,
+                        mDataCompressor,
+                        mFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao);
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
                         mCustomAudienceDao,
@@ -300,15 +324,8 @@ public class GetAdSelectionDataRunner {
                         mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
                         mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
                         mFlags.getProtectedSignalsPeriodicEncodingEnabled(),
-                        AuctionServerDataCompressorFactory.getDataCompressor(
-                                mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()),
-                        mFlags.getFledgeAuctionServerOmitAdsEnabled(),
-                        auctionServerPayloadMetricsStrategy,
-                        mFlags,
-                        appInstallAdFilterer);
-        mDataCompressor =
-                AuctionServerDataCompressorFactory.getDataCompressor(
-                        mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+                        appInstallAdFilterer,
+                        compressedBuyerInputCreatorFactory);
         mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(

@@ -20,6 +20,10 @@ import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_1;
 import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_2;
 
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import android.adservices.common.AdTechIdentifier;
 import android.util.Pair;
@@ -49,8 +53,9 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
         extends AdServicesExtendedMockitoTestCase {
     private CompressedBuyerInputCreator mCompressedBuyerInputCreator;
     private AuctionServerDataCompressor mAuctionServerDataCompressor;
-    private CompressedBuyerInputCreatorHelper mCompressedBuyerInputCreatorHelper;
-    @Mock private AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategy;
+    @Mock private AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategyMock;
+    private static final boolean OMIT_ADS_DISABLED = false;
+    private static final boolean PAS_METRICS_DISABLED = false;
 
     @Before
     public void setup() throws Exception {
@@ -58,16 +63,15 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION);
 
-        boolean omitAdsDisabled = false;
-        boolean pasMetricsDisabled = false;
-
-        mCompressedBuyerInputCreatorHelper =
+        CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper =
                 new CompressedBuyerInputCreatorHelper(
-                        mAuctionServerPayloadMetricsStrategy, pasMetricsDisabled, omitAdsDisabled);
+                        mAuctionServerPayloadMetricsStrategyMock,
+                        PAS_METRICS_DISABLED,
+                        OMIT_ADS_DISABLED);
 
         mCompressedBuyerInputCreator =
                 new CompressedBuyerInputCreatorNoOptimizations(
-                        mCompressedBuyerInputCreatorHelper, mAuctionServerDataCompressor);
+                        compressedBuyerInputCreatorHelper, mAuctionServerDataCompressor);
     }
 
     @Test
@@ -117,6 +121,10 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
             expect.that(ByteString.copyFrom(encodedPayloadMap.get(buyer).getEncodedPayload()))
                     .isEqualTo(appSignals.getAppInstallSignals());
         }
+        verify(mAuctionServerPayloadMetricsStrategyMock, times(dbCustomAudienceList.size()))
+                .addToBuyerIntermediateStats(any(), any(), any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
     }
 
     @Test
@@ -147,6 +155,10 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
             expect.that(ByteString.copyFrom(encodedPayloadMap.get(buyer).getEncodedPayload()))
                     .isEqualTo(appSignals.getAppInstallSignals());
         }
+        verify(mAuctionServerPayloadMetricsStrategyMock, never())
+                .addToBuyerIntermediateStats(any(), any(), any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
     }
 
     @Test
@@ -191,6 +203,10 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                     buyerInput.getProtectedAppSignals();
             expect.that(appSignals.getSerializedSize()).isEqualTo(0);
         }
+        verify(mAuctionServerPayloadMetricsStrategyMock, times(dbCustomAudienceList.size()))
+                .addToBuyerIntermediateStats(any(), any(), any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
     }
 
     private Map<AdTechIdentifier, DBEncodedPayload> generateEncodedPayload(

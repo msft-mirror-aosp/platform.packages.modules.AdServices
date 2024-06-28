@@ -44,6 +44,7 @@ public class CompressedBuyerInputCreatorHelper {
     private int mEncodedSignalsTotalSizeInBytes = 0;
     private int mEncodedSignalsMaxSizeInBytes = 0;
     private int mEncodedSignalsMinSizeInBytes = Integer.MAX_VALUE;
+    private boolean mPasExtendedMetricsIncremented = false;
 
     public CompressedBuyerInputCreatorHelper(
             AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
@@ -138,6 +139,7 @@ public class CompressedBuyerInputCreatorHelper {
     /** Increments PAS extended metrics based on the length of the encoded payload. */
     public void incrementPasExtendedMetrics(byte[] encodedPayload) {
         if (mPasExtendedMetricsEnabled) {
+            mPasExtendedMetricsIncremented = true;
             int encodedSignalsInBytes = calculateEncodedSignalsInBytes(encodedPayload);
             mEncodedSignalsCount += 1;
             mEncodedSignalsTotalSizeInBytes += encodedSignalsInBytes;
@@ -151,15 +153,16 @@ public class CompressedBuyerInputCreatorHelper {
     /** Logs the buyer input generated stats. */
     public void logBuyerInputGeneratedStats(
             Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats) {
-        // Log per buyer stats if feature is enabled
         if (mPasExtendedMetricsEnabled) {
+            int encodedSignalsMinSizeInBytes =
+                    mPasExtendedMetricsIncremented ? mEncodedSignalsMinSizeInBytes : 0;
             mAuctionServerPayloadMetricsStrategy
                     .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
                             perBuyerStats,
                             mEncodedSignalsCount,
                             mEncodedSignalsTotalSizeInBytes,
                             mEncodedSignalsMaxSizeInBytes,
-                            mEncodedSignalsMinSizeInBytes);
+                            encodedSignalsMinSizeInBytes);
         } else {
             mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataBuyerInputGeneratedStats(
                     perBuyerStats);

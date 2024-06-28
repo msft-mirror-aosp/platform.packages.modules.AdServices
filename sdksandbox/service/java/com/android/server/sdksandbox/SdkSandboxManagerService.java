@@ -1685,8 +1685,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         if (requestAllowedPerAllowlist(
                 intent.getAction(),
                 intent.getPackage(),
-                /*componentClassName=*/ (component == null) ? null : component.getClassName(),
-                /*componentPackageName=*/ (component == null)
+                /* componentClassName= */ (component == null) ? null : component.getClassName(),
+                /* componentPackageName= */ (component == null)
                         ? null
                         : component.getPackageName())) {
             return;
@@ -2241,7 +2241,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
                         ? mSdkSandboxSettingsListener.getNextServiceAllowlist()
                         : mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
-                                /*targetSdkVersion=*/ 34);
+                                /* targetSdkVersion= */ 34);
 
         if (Objects.isNull(allowedServices)) {
             return false;
@@ -2250,19 +2250,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
             AllowedService allowedService = allowedServices.getAllowedServices(i);
             if (StringHelper.doesInputMatchWildcardPattern(
-                            allowedService.getAction(), action, /*matchOnNullInput=*/ true)
+                            allowedService.getAction(), action, /* matchOnNullInput= */ true)
                     && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getPackageName(),
                             packageName,
-                            /*matchOnNullInput=*/ true)
+                            /* matchOnNullInput= */ true)
                     && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getComponentClassName(),
                             componentClassName,
-                            /*matchOnNullInput=*/ true)
+                            /* matchOnNullInput= */ true)
                     && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getComponentPackageName(),
                             componentPackageName,
-                            /*matchOnNullInput=*/ true)) {
+                            /* matchOnNullInput= */ true)) {
                 return true;
             }
         }

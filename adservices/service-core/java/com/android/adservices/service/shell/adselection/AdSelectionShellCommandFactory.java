@@ -36,6 +36,8 @@ import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.AuctionServerDataCompressorFactory;
 import com.android.adservices.service.adselection.AuctionServerPayloadMetricsStrategyDisabled;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFactory;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorHelper;
 import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
@@ -93,6 +95,21 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         flags.getFledgeAuctionServerCompressionAlgorithmVersion());
         // TODO(b/342574944): Decide which fields need to be configurable and update.
+        AuctionServerDataCompressor dataCompressor =
+                AuctionServerDataCompressorFactory.getDataCompressor(
+                        flags.getFledgeAuctionServerCompressionAlgorithmVersion());
+        CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper =
+                new CompressedBuyerInputCreatorHelper(
+                        new AuctionServerPayloadMetricsStrategyDisabled(),
+                        flags.getPasExtendedMetricsEnabled(),
+                        flags.getFledgeAuctionServerOmitAdsEnabled());
+        CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
+                new CompressedBuyerInputCreatorFactory(
+                        compressedBuyerInputCreatorHelper,
+                        dataCompressor,
+                        flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
+                        CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                        ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao());
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
                         CustomAudienceDatabase.getInstance(context).customAudienceDao(),
@@ -103,15 +120,12 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         flags.getFledgeCustomAudienceActiveTimeWindowInMs(),
                         flags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
                         flags.getProtectedSignalsPeriodicEncodingEnabled(),
-                        auctionServerDataCompressor,
-                        flags.getFledgeAuctionServerOmitAdsEnabled(),
-                        new AuctionServerPayloadMetricsStrategyDisabled(),
-                        flags,
                         new AdFilteringFeatureFactory(
                                         sharedStorageDatabase.appInstallDao(),
                                         sharedStorageDatabase.frequencyCapDao(),
                                         flags)
-                                .getAppInstallAdFilterer());
+                                .getAppInstallAdFilterer(),
+                        compressedBuyerInputCreatorFactory);
         return new AdSelectionShellCommandFactory(
                 debugFlags.getFledgeConsentedDebuggingCliEnabledStatus(),
                 debugFlags.getAdSelectionCommandsEnabled(),
