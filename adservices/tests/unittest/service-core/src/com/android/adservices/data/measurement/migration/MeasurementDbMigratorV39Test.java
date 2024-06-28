@@ -19,6 +19,7 @@ import static com.android.adservices.data.DbTestUtil.getDbHelperForTest;
 import static com.android.adservices.data.measurement.migration.MigrationTestHelper.populateDb;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -37,28 +38,28 @@ import java.util.Map;
 import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MeasurementDbMigratorV38Test extends MeasurementDbMigratorTestBase {
+public class MeasurementDbMigratorV39Test extends MeasurementDbMigratorTestBase {
     @Test
-    public void performMigration_v37ToV38WithData_maintainsDataIntegrity() {
+    public void performMigration_v38ToV39WithData_maintainsDataIntegrity() {
         // Setup
         MeasurementDbHelper dbHelper =
                 new MeasurementDbHelper(
                         sContext,
                         MEASUREMENT_DATABASE_NAME_FOR_MIGRATION,
-                        37,
+                        38,
                         getDbHelperForTest());
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        Map<String, List<ContentValues>> fakeData = createFakeDataSourceV36();
+        Map<String, List<ContentValues>> fakeData = createFakeDataSourceV38();
         populateDb(db, fakeData);
         // Execution
-        getTestSubject().performMigration(db, 37, 38);
+        getTestSubject().performMigration(db, 38, 39);
         // Assertion
         MigrationTestHelper.verifyDataInDb(db, fakeData);
-        // Check that new column is initialized with zero
+        // Check that new column is initialized with null
         try (Cursor cursor =
                 db.query(
                         MeasurementTables.SourceContract.TABLE,
-                        new String[] {MeasurementTables.SourceContract.DESTINATION_LIMIT_PRIORITY},
+                        new String[] {MeasurementTables.SourceContract.TRIGGER_DATA},
                         null,
                         null,
                         null,
@@ -66,37 +67,35 @@ public class MeasurementDbMigratorV38Test extends MeasurementDbMigratorTestBase 
                         null)) {
             assertEquals(2, cursor.getCount());
             while (cursor.moveToNext()) {
-                int defaultDestinationLimitPriority =
-                        cursor.getInt(
+                assertNull(
+                        cursor.getString(
                                 cursor.getColumnIndex(
-                                        MeasurementTables.SourceContract
-                                                .DESTINATION_LIMIT_PRIORITY));
-                assertEquals(0, defaultDestinationLimitPriority);
+                                        MeasurementTables.SourceContract.TRIGGER_DATA)));
             }
         }
     }
 
-    private Map<String, List<ContentValues>> createFakeDataSourceV36() {
+    private Map<String, List<ContentValues>> createFakeDataSourceV38() {
         Map<String, List<ContentValues>> tableRowsMap = new LinkedHashMap<>();
         // Source Table
         String sourceId = UUID.randomUUID().toString();
-        ContentValues source = ContentValueFixtures.generateSourceContentValuesV36();
+        ContentValues source = ContentValueFixtures.generateSourceContentValuesV38();
         source.put(MeasurementTables.SourceContract.ID, sourceId);
         tableRowsMap.put(
                 MeasurementTables.SourceContract.TABLE,
                 List.of(
                         source,
-                        ContentValueFixtures.generateSourceContentValuesV36()));
+                        ContentValueFixtures.generateSourceContentValuesV38()));
         return tableRowsMap;
     }
 
     @Override
     int getTargetVersion() {
-        return 38;
+        return 39;
     }
 
     @Override
     AbstractMeasurementDbMigrator getTestSubject() {
-        return new MeasurementDbMigratorV38();
+        return new MeasurementDbMigratorV39();
     }
 }

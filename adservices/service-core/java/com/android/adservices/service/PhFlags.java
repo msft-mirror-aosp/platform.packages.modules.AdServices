@@ -2983,6 +2983,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableV1SourceTriggerData() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
+                MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA);
+    }
+
+    @Override
     public boolean getMeasurementFlexibleEventReportingApiEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
@@ -3840,6 +3847,11 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getAdservicesVersionMappings());
 
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA
+                        + " = "
+                        + getMeasurementEnableV1SourceTriggerData());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED

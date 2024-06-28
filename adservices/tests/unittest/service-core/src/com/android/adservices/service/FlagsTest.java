@@ -473,6 +473,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableV1SourceTriggerData() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA",
+                Flags::getMeasurementEnableV1SourceTriggerData);
+    }
+
+    @Test
     public void testGetCustomErrorCodeSamplingEnabled() {
         testFeatureFlag(
                 "DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED",

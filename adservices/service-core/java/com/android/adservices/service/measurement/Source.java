@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
@@ -98,6 +99,7 @@ public class Source {
     @Nullable private Long mInstallTime;
     @Nullable private String mParentId;
     @Nullable private String mDebugJoinKey;
+    @Nullable private Set<UnsignedLong> mTriggerData;
     @Nullable private List<AttributedTrigger> mAttributedTriggers;
     @Nullable private TriggerSpecs mTriggerSpecs;
     @Nullable private String mTriggerSpecsString;
@@ -515,9 +517,20 @@ public class Source {
         if (getTriggerSpecs() != null) {
             return getTriggerSpecs().getTriggerDataCardinality();
         }
+        if (getTriggerData() != null) {
+            return getTriggerData().size();
+        }
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
                 : PrivacyParams.getNavigationTriggerDataCardinality();
+    }
+
+    /**
+     * @return the list of trigger data
+     */
+    @Nullable
+    public Set<UnsignedLong> getTriggerData() {
+        return mTriggerData;
     }
 
     /**
@@ -615,6 +628,7 @@ public class Source {
                 && Objects.equals(mDebugAdId, source.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
                 && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations
+                && Objects.equals(mTriggerData, source.mTriggerData)
                 && Objects.equals(mAttributedTriggers, source.mAttributedTriggers)
                 && Objects.equals(mTriggerSpecs, source.mTriggerSpecs)
                 && Objects.equals(mTriggerSpecsString, source.mTriggerSpecsString)
@@ -669,6 +683,7 @@ public class Source {
                 mDebugAdId,
                 mRegistrationOrigin,
                 mDebugJoinKey,
+                mTriggerData,
                 mAttributedTriggers,
                 mTriggerSpecs,
                 mTriggerSpecsString,
@@ -1729,6 +1744,13 @@ public class Source {
         @NonNull
         public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
+        /** See {@link Source#getTriggerData()} */
+        @NonNull
+        public Builder setTriggerData(@NonNull Set<UnsignedLong> triggerData) {
+            mBuilding.mTriggerData = triggerData;
             return this;
         }
 
