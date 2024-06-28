@@ -3103,13 +3103,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO,
-                MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO);
-    }
-
-    @Override
     public boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,
@@ -4255,12 +4248,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON
                         + " = "
                         + getMeasurementPrivacyEpsilon());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO
-                        + " = "
-                        + getMeasurementEnableDestinationXPublisherXEnrollmentFifo());
 
         writer.println(
                 "\t"
