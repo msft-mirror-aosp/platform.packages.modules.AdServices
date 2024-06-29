@@ -457,6 +457,20 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableDestinationLimitPriority() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY",
+                Flags::getMeasurementEnableSourceDestinationLimitPriority);
+    }
+
+    @Test
+    public void testGetMeasurementEnableSourceDestinationLimitAlgorithmField() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD",
+                Flags::getMeasurementEnableSourceDestinationLimitAlgorithmField);
+    }
+
+    @Test
     public void testGetCustomErrorCodeSamplingEnabled() {
         testFeatureFlag(
                 "DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED",
@@ -504,6 +518,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     public void testGetEnrollmentProtoFileEnabled() {
         testFeatureFlag(
                 "DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED", Flags::getEnrollmentProtoFileEnabled);
+    }
+
+    @Test
+    public void testGetCobaltRegistryOutOfBandUpdateEnabled() {
+        testFeatureFlag(
+                "COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED",
+                Flags::getCobaltRegistryOutOfBandUpdateEnabled);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -589,6 +610,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getTopicsEpochJobFlexMs()",
                 TOPICS_EPOCH_JOB_FLEX_MS,
                 Flags::getTopicsEpochJobFlexMs);
+    }
+
+    @Test
+    public void testGetMeasurementDefaultDestinationLimitAlgorithm() {
+        testFlag(
+                "getMeasurementDefaultSourceDestinationLimitAlgorithm()",
+                0,
+                Flags::getMeasurementDefaultSourceDestinationLimitAlgorithm);
     }
 
     @Test

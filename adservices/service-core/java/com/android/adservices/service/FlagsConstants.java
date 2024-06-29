@@ -137,6 +137,8 @@ public final class FlagsConstants {
     public static final String KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS =
             "cobalt_upload_service_unbind_delay_ms";
     public static final String KEY_COBALT_LOGGING_ENABLED = "cobalt_logging_enabled";
+    public static final String KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED =
+            "cobalt_registry_out_of_band_update_enabled";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -501,6 +503,12 @@ public final class FlagsConstants {
             "measurement_reporting_job_service_batch_window_millis";
     public static final String KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS =
             "measurement_reporting_job_service_min_execution_window_millis";
+    public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY =
+            "measurement_enable_source_destination_limit_priority";
+    public static final String KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM =
+            "measurement_default_destination_limit_algorithm";
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD =
+            "measurement_enable_destination_limit_algorithm_field";
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -1251,9 +1259,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
             "measurement_event_reports_ctc_early_reporting_windows";
-
-    public static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY =
-            "measurement_enable_configurable_aggregate_report_delay";
 
     public static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             "measurement_aggregate_report_delay_config";

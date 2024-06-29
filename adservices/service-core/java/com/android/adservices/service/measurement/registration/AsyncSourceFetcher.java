@@ -488,6 +488,31 @@ public class AsyncSourceFetcher {
                 && !populateAttributionScopeFields(json, builder)) {
             return false;
         }
+
+        if (mFlags.getMeasurementEnableSourceDestinationLimitPriority()
+                && !json.isNull(SourceHeaderContract.DESTINATION_LIMIT_PRIORITY)) {
+            Optional<Long> destinationLimitPriority =
+                    FetcherUtil.extractLongString(
+                            json, SourceHeaderContract.DESTINATION_LIMIT_PRIORITY);
+            if (destinationLimitPriority.isEmpty()) {
+                return false;
+            }
+            builder.setDestinationLimitPriority(destinationLimitPriority.get());
+        }
+
+        if (mFlags.getMeasurementEnableSourceDestinationLimitAlgorithmField()) {
+            if (json.isNull(SourceHeaderContract.DESTINATION_LIMIT_ALGORITHM)) {
+                builder.setDestinationLimitAlgorithm(
+                        Source.DestinationLimitAlgorithm.values()[
+                                mFlags.getMeasurementDefaultSourceDestinationLimitAlgorithm()]);
+            } else {
+                String destinationLimitAlgorithm =
+                        json.getString(SourceHeaderContract.DESTINATION_LIMIT_ALGORITHM)
+                                .toUpperCase();
+                builder.setDestinationLimitAlgorithm(
+                        Source.DestinationLimitAlgorithm.valueOf(destinationLimitAlgorithm));
+            }
+        }
         return true;
     }
 
@@ -1073,6 +1098,8 @@ public class AsyncSourceFetcher {
         String ATTRIBUTION_SCOPES = "attribution_scopes";
         String ATTRIBUTION_SCOPE_LIMIT = "attribution_scope_limit";
         String MAX_EVENT_STATES = "max_event_states";
+        String DESTINATION_LIMIT_PRIORITY = "destination_limit_priority";
+        String DESTINATION_LIMIT_ALGORITHM = "destination_limit_algorithm";
     }
 
     private interface SourceRequestContract {
