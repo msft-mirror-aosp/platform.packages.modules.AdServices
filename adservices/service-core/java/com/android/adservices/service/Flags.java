@@ -3894,16 +3894,11 @@ public interface Flags extends ModuleSharedFlags {
 
     boolean MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO = false;
 
-    /** Enable FIFO destinations based deletion of sources to accommodate an incoming source. */
-    default boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
-        return MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO;
-    }
-
     boolean MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS = false;
 
     /**
      * Enable deletion of reports along with FIFO destinations. In practice it's a sub flag to
-     * {@link #getMeasurementEnableDestinationXPublisherXEnrollmentFifo}
+     * {@link #getMeasurementEnableSourceDestinationLimitPriority()}
      */
     default boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
         return MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
@@ -4785,6 +4780,28 @@ public interface Flags extends ModuleSharedFlags {
 
     default float getMeasurementPrivacyEpsilon() {
         return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY = false;
+
+    default boolean getMeasurementEnableSourceDestinationLimitPriority() {
+        return MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY;
+    }
+
+    /**
+     * Default destination limit algorithm configuration. LIFO (0) by default, can be configured as
+     * FIFO (1).
+     */
+    @ConfigFlag int MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM = 0;
+
+    default int getMeasurementDefaultSourceDestinationLimitAlgorithm() {
+        return MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD = false;
+
+    default boolean getMeasurementEnableSourceDestinationLimitAlgorithmField() {
+        return MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
     }
 
     /**
