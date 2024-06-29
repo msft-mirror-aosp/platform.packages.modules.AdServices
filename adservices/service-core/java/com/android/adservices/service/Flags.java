@@ -3865,14 +3865,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS;
     }
 
-    /** Disable aggregate report delay by default. */
-    boolean MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY = false;
-
-    /** Returns true if aggregate report delay configurability is enabled, false otherwise. */
-    default boolean getMeasurementEnableConfigurableAggregateReportDelay() {
-        return MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
-    }
-
     /**
      * Default aggregate report delay. Derived from {@link
      * com.android.adservices.service.measurement.PrivacyParams#AGGREGATE_REPORT_MIN_DELAY} and
@@ -3902,16 +3894,11 @@ public interface Flags extends ModuleSharedFlags {
 
     boolean MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO = false;
 
-    /** Enable FIFO destinations based deletion of sources to accommodate an incoming source. */
-    default boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
-        return MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO;
-    }
-
     boolean MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS = false;
 
     /**
      * Enable deletion of reports along with FIFO destinations. In practice it's a sub flag to
-     * {@link #getMeasurementEnableDestinationXPublisherXEnrollmentFifo}
+     * {@link #getMeasurementEnableSourceDestinationLimitPriority()}
      */
     default boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
         return MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
@@ -4694,6 +4681,14 @@ public interface Flags extends ModuleSharedFlags {
         return ADSERVICES_RELEASE_STAGE_FOR_COBALT;
     }
 
+    /** Default value of whether Cobalt registry out of band update feature is enabled */
+    @FeatureFlag boolean COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED = false;
+
+    /** Returns whether Cobalt registry out of band update feature is enabled. */
+    default boolean getCobaltRegistryOutOfBandUpdateEnabled() {
+        return COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
+    }
+
     /**
      * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
      * logged_topic column to ReturnedTopic table.
@@ -4785,6 +4780,28 @@ public interface Flags extends ModuleSharedFlags {
 
     default float getMeasurementPrivacyEpsilon() {
         return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY = false;
+
+    default boolean getMeasurementEnableSourceDestinationLimitPriority() {
+        return MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY;
+    }
+
+    /**
+     * Default destination limit algorithm configuration. LIFO (0) by default, can be configured as
+     * FIFO (1).
+     */
+    @ConfigFlag int MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM = 0;
+
+    default int getMeasurementDefaultSourceDestinationLimitAlgorithm() {
+        return MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD = false;
+
+    default boolean getMeasurementEnableSourceDestinationLimitAlgorithmField() {
+        return MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
     }
 
     /**
