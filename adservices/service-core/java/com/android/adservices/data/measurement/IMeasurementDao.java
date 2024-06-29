@@ -779,8 +779,9 @@ public interface IMeasurementDao {
 
     /**
      * Let matchingSources be unexpired sources that match the provided publisher, publisher type
-     * destination surface type and enrollmentId. Pick and return the sources that have the least
-     * recently used destination excluding the provided list of destinations.
+     * destination surface type and enrollmentId. Pick and return the sources that have the lowest
+     * destination priority value or secondarily the least recently used destination excluding the
+     * provided list of destinations.
      *
      * @param publisher publisher to match
      * @param publisherType publisher surface type, i.e. app/web to match
@@ -788,10 +789,10 @@ public interface IMeasurementDao {
      * @param excludedDestinations destinations to exclude while matching
      * @param destinationType destination type app/web
      * @param windowEndTime selected sources' expiry needs to be greater than this time
-     * @return sources with least recently used destination
+     * @return sources with least recently used destination along with the priority value
      * @throws DatastoreException when accessing the DB fails
      */
-    List<String> fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+    Pair<Long, List<String>> fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
             Uri publisher,
             int publisherType,
             String enrollmentId,
@@ -808,6 +809,17 @@ public interface IMeasurementDao {
      * @throws DatastoreException when accessing the DB fails
      */
     void deletePendingAggregateReportsAndAttributionsForSources(List<String> sourceIds)
+            throws DatastoreException;
+
+    /**
+     * Deletes pending fake event reports for the provided sources. Attributions are not deleted.
+     *
+     * @param sourceIds sources to consider to query the pending reports
+     * @param currentTimeStamp it's practically the current time stamp, we delete only those reports
+     *     that have trigger time in future indicating that they are fake
+     * @throws DatastoreException when deletion fails
+     */
+    void deleteFutureFakeEventReportsForSources(List<String> sourceIds, long currentTimeStamp)
             throws DatastoreException;
 
     /**

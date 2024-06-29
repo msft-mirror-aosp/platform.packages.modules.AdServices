@@ -182,6 +182,8 @@ public class SourceTest {
                         .setAttributionScopes(List.of("1", "2", "3"))
                         .setAttributionScopeLimit(4L)
                         .setMaxEventStates(10L)
+                        .setDestinationLimitPriority(100L)
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -236,6 +238,8 @@ public class SourceTest {
                         .setAttributionScopes(List.of("1", "2", "3"))
                         .setAttributionScopeLimit(4L)
                         .setMaxEventStates(10L)
+                        .setDestinationLimitPriority(100L)
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
                         .build());
     }
 
@@ -528,6 +532,20 @@ public class SourceTest {
                         .build(),
                 SourceFixture.getMinimalValidSourceWithAttributionScope()
                         .setMaxEventStates(2L)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitPriority(10L)
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitPriority(20L)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.LIFO)
                         .build());
     }
 

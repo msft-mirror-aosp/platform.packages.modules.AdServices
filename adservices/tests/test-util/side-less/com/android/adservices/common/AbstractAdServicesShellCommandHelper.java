@@ -88,7 +88,8 @@ public abstract class AbstractAdServicesShellCommandHelper {
             String cmd =
                     (level == AndroidSdk.TM && !isAdServicesManagerServicePublished())
                             ? String.format(
-                                    "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs))
+                                    "cmd sdk_sandbox adservices-cmd %s",
+                                    String.format(cmdFmt, cmdArgs))
                             : String.format(
                                     "cmd adservices_manager %s", String.format(cmdFmt, cmdArgs));
             String res = runShellCommand(cmd);
@@ -126,7 +127,8 @@ public abstract class AbstractAdServicesShellCommandHelper {
             String cmd =
                     (level == AndroidSdk.TM && !isAdServicesManagerServicePublished())
                             ? String.format(
-                                    "cmd sdk_sandbox adservices %s", String.format(cmdFmt, cmdArgs))
+                                    "cmd sdk_sandbox adservices-cmd %s",
+                                    String.format(cmdFmt, cmdArgs))
                             : String.format(
                                     "cmd adservices_manager %s", String.format(cmdFmt, cmdArgs));
             CommandResult res = runShellCommandRwe(cmd);

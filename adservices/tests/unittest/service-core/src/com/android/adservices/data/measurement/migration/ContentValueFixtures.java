@@ -152,6 +152,9 @@ public class ContentValueFixtures {
 
         // Added in V36
         public static final long REINSTALL_REATTRIBUTION_WINDOW = 841839879274L;
+
+        // Added in V38
+        public static final long DESTINATION_LIMIT_PRIORITY = 10L;
     }
 
     public static class SourceDestinationValues {
@@ -817,6 +820,20 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.SourceContract.REINSTALL_REATTRIBUTION_WINDOW,
                 SourceValues.REINSTALL_REATTRIBUTION_WINDOW);
+        return values;
+    }
+
+    /** Returns content values for source version 37 */
+    public static ContentValues generateSourceContentValuesV37() {
+        return generateSourceContentValuesV36();
+    }
+
+    /** Returns content values for source version 38 */
+    public static ContentValues generateSourceContentValuesV38() {
+        ContentValues values = generateSourceContentValuesV37();
+        values.put(
+                MeasurementTables.SourceContract.DESTINATION_LIMIT_PRIORITY,
+                SourceValues.DESTINATION_LIMIT_PRIORITY);
         return values;
     }
 

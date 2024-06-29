@@ -39,7 +39,8 @@ public class SdkSandboxMediaHostTest extends BaseHostJUnit4Test {
 
     private static final String TEST_APP_PACKAGE_NAME = "com.android.sdksandbox.cts.app";
     private static final String TEST_APP_APK_NAME = "CtsSdkSandboxHostTestApp.apk";
-    public static final int TIME_OUT = 600_000;
+    private static final int TIME_OUT_MS = 600_000;
+    private static final long WAIT_AFTER_REBOOT_MS = 10_000;
 
     /**
      * Runs the given phase of a test by calling into the device. Throws an exception if the test
@@ -82,7 +83,10 @@ public class SdkSandboxMediaHostTest extends BaseHostJUnit4Test {
         installPackage(TEST_APP_APK_NAME);
 
         getDevice().reboot();
-        getDevice().waitForBootComplete(TIME_OUT);
+        getDevice().waitForBootComplete(TIME_OUT_MS);
+        // Allow 10 seconds after boot to avoid zygote contention.
+        Thread.sleep(WAIT_AFTER_REBOOT_MS);
+
         // Explicitly update device config to ensure SDK Sandbox is enabled
         getDevice().executeShellCommand("device_config put adservices disable_sdk_sandbox false");
 

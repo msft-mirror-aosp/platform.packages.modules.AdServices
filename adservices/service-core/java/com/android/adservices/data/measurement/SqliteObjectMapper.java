@@ -21,7 +21,6 @@ import static java.util.function.Predicate.not;
 import android.database.Cursor;
 import android.net.Uri;
 
-
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -240,6 +239,11 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.MAX_EVENT_STATES,
                 builder::setMaxEventStates);
+        setLongColumn(
+                cursor,
+                MeasurementTables.SourceContract.DESTINATION_LIMIT_PRIORITY,
+                builder::setDestinationLimitPriority);
+
         return builder.build();
     }
 

@@ -503,6 +503,12 @@ public final class FlagsConstants {
             "measurement_reporting_job_service_batch_window_millis";
     public static final String KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS =
             "measurement_reporting_job_service_min_execution_window_millis";
+    public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY =
+            "measurement_enable_source_destination_limit_priority";
+    public static final String KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM =
+            "measurement_default_destination_limit_algorithm";
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD =
+            "measurement_enable_destination_limit_algorithm_field";
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
