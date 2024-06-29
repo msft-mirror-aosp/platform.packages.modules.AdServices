@@ -3103,13 +3103,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO,
-                MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO);
-    }
-
-    @Override
     public boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,
@@ -3266,6 +3259,27 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION,
                 MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION);
+    }
+
+    @Override
+    public boolean getMeasurementEnableSourceDestinationLimitPriority() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY,
+                MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY);
+    }
+
+    @Override
+    public int getMeasurementDefaultSourceDestinationLimitAlgorithm() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM,
+                MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM);
+    }
+
+    @Override
+    public boolean getMeasurementEnableSourceDestinationLimitAlgorithmField() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD,
+                MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD);
     }
 
     @Override
@@ -4234,12 +4248,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON
                         + " = "
                         + getMeasurementPrivacyEpsilon());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO
-                        + " = "
-                        + getMeasurementEnableDestinationXPublisherXEnrollmentFifo());
 
         writer.println(
                 "\t"
@@ -4247,6 +4255,21 @@ public final class PhFlags implements Flags {
                                 .KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS
                         + " = "
                         + getMeasurementEnableFifoDestinationsDeleteAggregateReports());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY
+                        + " = "
+                        + getMeasurementEnableSourceDestinationLimitPriority());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD
+                        + " = "
+                        + getMeasurementEnableSourceDestinationLimitAlgorithmField());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM
+                        + " = "
+                        + getMeasurementDefaultSourceDestinationLimitAlgorithm());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
