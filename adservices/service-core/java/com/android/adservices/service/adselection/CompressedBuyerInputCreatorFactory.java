@@ -19,18 +19,29 @@ package com.android.adservices.service.adselection;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 
 /** Factory for {@link CompressedBuyerInputCreator} */
 public class CompressedBuyerInputCreatorFactory {
     private final CompressedBuyerInputCreatorHelper mCompressedBuyerInputCreatorHelper;
     private final AuctionServerDataCompressor mDataCompressor;
+    private final boolean mSellerConfigurationEnabled;
+    private final CustomAudienceDao mCustomAudienceDao;
+    private final EncodedPayloadDao mEncodedPayloadDao;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     public CompressedBuyerInputCreatorFactory(
             CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper,
-            AuctionServerDataCompressor dataCompressor) {
+            AuctionServerDataCompressor dataCompressor,
+            boolean sellerConfigurationEnabled,
+            CustomAudienceDao customAudienceDao,
+            EncodedPayloadDao encodedPayloadDao) {
         mCompressedBuyerInputCreatorHelper = compressedBuyerInputCreatorHelper;
         mDataCompressor = dataCompressor;
+        mSellerConfigurationEnabled = sellerConfigurationEnabled;
+        mCustomAudienceDao = customAudienceDao;
+        mEncodedPayloadDao = encodedPayloadDao;
     }
 
     /** Returns an implementation for the {@link CompressedBuyerInputCreator} */
@@ -40,5 +51,16 @@ public class CompressedBuyerInputCreatorFactory {
         sLogger.v("Returning CompressedBuyerInputCreatorNoOptimizations");
         return new CompressedBuyerInputCreatorNoOptimizations(
                 mCompressedBuyerInputCreatorHelper, mDataCompressor);
+    }
+
+    /**
+     * Returns an implementation of {@link BuyerInputDataFetcher} depending on the seller
+     * configuration flag.
+     */
+    public BuyerInputDataFetcher getBuyerInputDataFetcher() {
+        return mSellerConfigurationEnabled
+                ? new BuyerInputDataFetcherBuyerAllowListImpl(
+                        mCustomAudienceDao, mEncodedPayloadDao)
+                : new BuyerInputDataFetcherAllBuyersImpl(mCustomAudienceDao, mEncodedPayloadDao);
     }
 }

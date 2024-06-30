@@ -103,6 +103,8 @@ public final class SourceFixture {
                 .setAttributionScopes(ValidSourceParams.ATTRIBUTION_SCOPES)
                 .setAttributionScopeLimit(ValidSourceParams.ATTRIBUTION_SCOPE_LIMIT)
                 .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES)
+                .setDestinationLimitPriority(ValidSourceParams.DESTINATION_LIMIT_PRIORITY)
+                .setDestinationLimitAlgorithm(ValidSourceParams.DESTINATION_LIMIT_ALGORITHM)
                 .setAttributedTriggers(new ArrayList<>());
     }
 
@@ -122,8 +124,10 @@ public final class SourceFixture {
         public static final Long INSTALL_ATTRIBUTION_WINDOW = 841839879274L;
         public static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;
         public static final UnsignedLong DEBUG_KEY = new UnsignedLong(7834690L);
-        public static final @Source.AttributionMode int ATTRIBUTION_MODE =
-                Source.AttributionMode.TRUTHFULLY;
+
+        @Source.AttributionMode
+        public static final int ATTRIBUTION_MODE = Source.AttributionMode.TRUTHFULLY;
+
         public static final int AGGREGATE_CONTRIBUTIONS = 0;
         public static final String REGISTRATION_ID = "R1";
         public static final String SHARED_AGGREGATE_KEYS = "[\"key1\"]";
@@ -139,6 +143,9 @@ public final class SourceFixture {
         public static final Long ATTRIBUTION_SCOPE_LIMIT = 5L;
         public static final Long MAX_NUM_VIEW_STATES = 10L;
         public static final Long REINSTALL_REATTRIBUTION_WINDOW = 841839879274L;
+        public static final long DESTINATION_LIMIT_PRIORITY = 841849879274L;
+        public static final Source.DestinationLimitAlgorithm DESTINATION_LIMIT_ALGORITHM =
+                Source.DestinationLimitAlgorithm.FIFO;
 
         public static final String buildAggregateSource() {
             try {

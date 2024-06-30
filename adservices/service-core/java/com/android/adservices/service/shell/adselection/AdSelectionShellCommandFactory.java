@@ -105,7 +105,11 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         flags.getFledgeAuctionServerOmitAdsEnabled());
         CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
                 new CompressedBuyerInputCreatorFactory(
-                        compressedBuyerInputCreatorHelper, dataCompressor);
+                        compressedBuyerInputCreatorHelper,
+                        dataCompressor,
+                        flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
+                        CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                        ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao());
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
                         CustomAudienceDatabase.getInstance(context).customAudienceDao(),
