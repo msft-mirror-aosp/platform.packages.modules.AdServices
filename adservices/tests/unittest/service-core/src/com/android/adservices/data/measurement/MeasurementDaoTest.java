@@ -277,6 +277,7 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getTriggerDataMatching(), source.getTriggerDataMatching());
         assertEquals(validSource.getEventReportWindows(), source.getEventReportWindows());
         assertEquals(SourceFixture.ValidSourceParams.SHARED_DEBUG_KEY, source.getSharedDebugKey());
+        assertEquals(0L, source.getDestinationLimitPriority());
 
         // Assert destinations were inserted into the source destination table.
 
@@ -6407,7 +6408,161 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void markLruDestSourcesAsDeleted_appDestEmptyExclusions_deletesLruDestinationSource() {
+    public void
+            fetchSourceIdsForLowestPriorityDest_appDestEmptyExclusions_delLowPriorityDestination() {
+        // Setup
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableSourceDestinationLimitPriority();
+        long baseEventTime = System.currentTimeMillis();
+        long commonExpiryTime = baseEventTime + DAYS.toMillis(30);
+        insertSource(
+                createSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.example.app1")))
+                        .setWebDestinations(List.of(Uri.parse("https://web1.example.com")))
+                        .setEventTime(baseEventTime)
+                        .setExpiryTime(commonExpiryTime)
+                        .setDestinationLimitPriority(10)
+                        .build(),
+                "s11");
+        insertSource(
+                createSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.example.app2")))
+                        .setWebDestinations(List.of(Uri.parse("https://web2.example.com")))
+                        .setEventTime(baseEventTime + DAYS.toMillis(1))
+                        .setExpiryTime(commonExpiryTime)
+                        .setDestinationLimitPriority(20)
+                        .build(),
+                "s21");
+        insertSource(
+                createSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.example.app3")))
+                        .setWebDestinations(List.of(Uri.parse("https://web3.example.com")))
+                        .setEventTime(baseEventTime + DAYS.toMillis(2))
+                        .setExpiryTime(commonExpiryTime)
+                        .setDestinationLimitPriority(30)
+                        .build(),
+                "s31");
+        insertSource(
+                createSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.example.app1")))
+                        .setWebDestinations(List.of(Uri.parse("https://web1.example.com")))
+                        .setEventTime(baseEventTime + DAYS.toMillis(3))
+                        .setExpiryTime(commonExpiryTime)
+                        .setDestinationLimitPriority(10)
+                        .build(),
+                "s12");
+        insertSource(
+                createSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.example.app2")))
+                        .setWebDestinations(List.of(Uri.parse("https://web2.example.com")))
+                        .setEventTime(baseEventTime + DAYS.toMillis(4))
+                        .setExpiryTime(commonExpiryTime)
+                        .setDestinationLimitPriority(20)
+                        .build(),
+                "s22");
+
+        // Execute
+        // com.example.app1 has the least priority of all as 10
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    Pair<Long, List<String>> destinationPriorityAndSourcesTodelete =
+                            dao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
+                                    SourceFixture.ValidSourceParams.PUBLISHER,
+                                    EventSurfaceType.APP,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    Collections.emptyList(),
+                                    EventSurfaceType.APP,
+                                    baseEventTime + DAYS.toMillis(10) // request time
+                                    );
+
+                    assertEquals(10L, (long) destinationPriorityAndSourcesTodelete.first);
+                    assertEquals(
+                            Sets.newSet("s11", "s12"),
+                            new HashSet<>(destinationPriorityAndSourcesTodelete.second));
+                });
+    }
+
+    @Test
+    public void
+            fetchSourceIdsForLowPriorityDest_webDestEmptyExclusions_delLowPriorityDestinations() {
+        // Setup
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableSourceDestinationLimitPriority();
+        long baseEventTime = System.currentTimeMillis();
+        long commonExpiryTime = baseEventTime + DAYS.toMillis(30);
+        insertSource(
+                createSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.example.app1")))
+                        .setWebDestinations(List.of(Uri.parse("https://web1.example.com")))
+                        .setEventTime(baseEventTime)
+                        .setExpiryTime(commonExpiryTime)
+                        .setDestinationLimitPriority(10)
+                        .build(),
+                "s11");
+        insertSource(
+                createSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.example.app2")))
+                        .setWebDestinations(List.of(Uri.parse("https://web2.example.com")))
+                        .setEventTime(baseEventTime + DAYS.toMillis(1))
+                        .setExpiryTime(commonExpiryTime)
+                        .setDestinationLimitPriority(20)
+                        .build(),
+                "s21");
+        insertSource(
+                createSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.example.app3")))
+                        .setWebDestinations(List.of(Uri.parse("https://web3.example.com")))
+                        .setEventTime(baseEventTime + DAYS.toMillis(2))
+                        .setExpiryTime(commonExpiryTime)
+                        .setDestinationLimitPriority(30)
+                        .build(),
+                "s31");
+        insertSource(
+                createSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.example.app1")))
+                        .setWebDestinations(List.of(Uri.parse("https://web1.example.com")))
+                        .setEventTime(baseEventTime + DAYS.toMillis(3))
+                        .setExpiryTime(commonExpiryTime)
+                        .setDestinationLimitPriority(40)
+                        .build(),
+                "s12");
+        insertSource(
+                createSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.example.app2")))
+                        .setWebDestinations(List.of(Uri.parse("https://web2.example.com")))
+                        .setEventTime(baseEventTime + DAYS.toMillis(4))
+                        .setExpiryTime(commonExpiryTime)
+                        .setDestinationLimitPriority(20)
+                        .build(),
+                "s22");
+
+        // Execute
+        // web1.example.com has priority 10 with s11 and priority 40 with s12, the higher one will
+        // be considered, i.e. 40. web2.example.com" has priority as 20 through both s21 and s22,
+        // its associated sources will be deleted instead.
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    Pair<Long, List<String>> destinationPriorityAndSourcesToDelete =
+                            dao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
+                                    SourceFixture.ValidSourceParams.PUBLISHER,
+                                    EventSurfaceType.APP,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    Collections.emptyList(),
+                                    EventSurfaceType.WEB,
+                                    baseEventTime + DAYS.toMillis(10) // request time
+                                    );
+
+                    assertEquals(20L, (long) destinationPriorityAndSourcesToDelete.first);
+                    assertEquals(
+                            Sets.newSet("s21", "s22"),
+                            new HashSet<>(destinationPriorityAndSourcesToDelete.second));
+                });
+    }
+
+    @Test
+    public void fetchSourceIdsForLowPriorityDest_appDestEmptyExclusions_delLruDestinations() {
         // Setup
         long baseEventTime = System.currentTimeMillis();
         insert5SourcesForLruDestDeletion(baseEventTime);
@@ -6417,8 +6572,8 @@ public class MeasurementDaoTest {
         // afterwards
         mDatastoreManager.runInTransaction(
                 (dao) -> {
-                    List<String> sourceIds =
-                            dao.fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+                    Pair<Long, List<String>> destinationPriorityAndSourcesToDelete =
+                            dao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
                                     SourceFixture.ValidSourceParams.PUBLISHER,
                                     EventSurfaceType.APP,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -6427,12 +6582,14 @@ public class MeasurementDaoTest {
                                     baseEventTime + DAYS.toMillis(10) // request time
                                     );
 
-                    assertEquals(Sets.newSet("s31"), new HashSet<>(sourceIds));
+                    assertEquals(0, (long) destinationPriorityAndSourcesToDelete.first);
+                    assertEquals(List.of("s31"), destinationPriorityAndSourcesToDelete.second);
                 });
     }
 
     @Test
-    public void markLruDestSourcesAsDeleted_appDestWebPubEmptyExclusions_deletesLruDestSource() {
+    public void
+            fetchSourceIdsForLowPriorityDest_appDestWebPubEmptyExclusions_delLowPrioDestSource() {
         // Setup
         long baseEventTime = System.currentTimeMillis();
         long commonExpiryTime = baseEventTime + DAYS.toMillis(30);
@@ -6487,8 +6644,8 @@ public class MeasurementDaoTest {
         // afterwards
         mDatastoreManager.runInTransaction(
                 (dao) -> {
-                    List<String> sourceIds =
-                            dao.fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+                    Pair<Long, List<String>> destinationPriorityAndSourcesToDelete =
+                            dao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
                                     Uri.parse("https://web.example.com"),
                                     EventSurfaceType.WEB,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -6497,13 +6654,14 @@ public class MeasurementDaoTest {
                                     baseEventTime + DAYS.toMillis(10) // request time
                                     );
 
-                    assertEquals(Sets.newSet("s31"), new HashSet<>(sourceIds));
+                    assertEquals(0L, (long) destinationPriorityAndSourcesToDelete.first);
+                    assertEquals(List.of("s31"), destinationPriorityAndSourcesToDelete.second);
                 });
     }
 
     @Test
     public void
-            markLruDestSourcesAsDeleted_diffEnrollments_deletesLruDestSourceForChosenEnrollment() {
+            fetchSourceIdsForLowPriorityDest_diffEnrollments_delOldDestSourceForChosenEnrollment() {
         // Setup
         long baseEventTime = System.currentTimeMillis();
         long commonExpiryTime = baseEventTime + DAYS.toMillis(30);
@@ -6553,8 +6711,8 @@ public class MeasurementDaoTest {
         // be deleted
         mDatastoreManager.runInTransaction(
                 (dao) -> {
-                    List<String> sourceIds =
-                            dao.fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+                    Pair<Long, List<String>> destinationPriorityAndSourcesToDelete =
+                            dao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
                                     SourceFixture.ValidSourceParams.PUBLISHER,
                                     EventSurfaceType.APP,
                                     "enrollment2",
@@ -6563,12 +6721,14 @@ public class MeasurementDaoTest {
                                     baseEventTime + DAYS.toMillis(10) // request time
                                     );
 
-                    assertEquals(Sets.newSet("s12"), new HashSet<>(sourceIds));
+                    assertEquals(0L, (long) destinationPriorityAndSourcesToDelete.first);
+                    assertEquals(List.of("s12"), destinationPriorityAndSourcesToDelete.second);
                 });
     }
 
     @Test
-    public void markLruDestSourcesAsDeleted_appDestExcludeLruSource_deletes2ndLruDestSources() {
+    public void
+            fetchSourceIdsForLowPriorityDest_appDestExcludeLruSource_deletes2ndLruDestSources() {
         // Setup
         long baseEventTime = System.currentTimeMillis();
         insert5SourcesForLruDestDeletion(System.currentTimeMillis());
@@ -6578,8 +6738,8 @@ public class MeasurementDaoTest {
         // afterwards and 3 is ignored to be deleted.
         mDatastoreManager.runInTransaction(
                 (dao) -> {
-                    List<String> sourceIds =
-                            dao.fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+                    Pair<Long, List<String>> destinationPriorityAndSourcesToDelete =
+                            dao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
                                     SourceFixture.ValidSourceParams.PUBLISHER,
                                     EventSurfaceType.APP,
                                     SourceFixture.ValidSourceParams.ENROLLMENT_ID,
@@ -6588,7 +6748,9 @@ public class MeasurementDaoTest {
                                     baseEventTime + DAYS.toMillis(10) // request time
                                     );
 
-                    assertEquals(Sets.newSet("s11", "s12"), new HashSet<>(sourceIds));
+                    assertEquals(0L, (long) destinationPriorityAndSourcesToDelete.first);
+                    assertEquals(
+                            List.of("s11", "s12"), destinationPriorityAndSourcesToDelete.second);
                 });
     }
 
@@ -6713,6 +6875,133 @@ public class MeasurementDaoTest {
             }
         }
         assertEquals(Set.of("Agg2", "Agg3"), reportIds);
+    }
+
+    @Test
+    public void deletePendingFakeEventReportsForSources_success() {
+        // Setup
+        long baseTime = SOURCE_EVENT_TIME;
+        // Sources
+        insertSource(SourceFixture.getValidSource(), "S1");
+        insertSource(SourceFixture.getValidSource(), "S2");
+        insertSource(SourceFixture.getValidSource(), "S3");
+        insertSource(SourceFixture.getValidSource(), "S4");
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    // Event reports
+                    // Should get deleted
+                    EventReport eventReport1 =
+                            EventReportFixture.getBaseEventReportBuild()
+                                    .setId("Event1")
+                                    .setSourceId("S1")
+                                    .setReportTime(baseTime + TimeUnit.HOURS.toMillis(1))
+                                    // trigger time > source event time => fake report
+                                    .setTriggerTime(baseTime + TimeUnit.HOURS.toMillis(1) + 1L)
+                                    .setStatus(EventReport.Status.PENDING)
+                                    .setTriggerId(null)
+                                    .build();
+                    dao.insertEventReport(eventReport1);
+                    dao.insertAttribution(
+                            createAttribution(
+                                    "Att1",
+                                    Attribution.Scope.EVENT,
+                                    "S1",
+                                    null,
+                                    eventReport1.getId()));
+
+                    // Should not get deleted because S2 is not provided
+                    EventReport eventReport2 =
+                            EventReportFixture.getBaseEventReportBuild()
+                                    .setId("Event2")
+                                    .setSourceId("S2")
+                                    .setReportTime(baseTime + TimeUnit.HOURS.toMillis(1))
+                                    // trigger time > source event time => fake report
+                                    .setTriggerTime(
+                                            baseTime
+                                                    + TimeUnit.HOURS.toMillis(1)
+                                                    + TimeUnit.MINUTES.toMillis(1))
+                                    .setStatus(EventReport.Status.PENDING)
+                                    .setTriggerId(null)
+                                    .build();
+                    dao.insertEventReport(eventReport2);
+                    dao.insertAttribution(
+                            createAttribution(
+                                    "Att2",
+                                    Attribution.Scope.EVENT,
+                                    "S2",
+                                    null,
+                                    eventReport2.getId()));
+
+                    // Should not get deleted because it's a real report
+                    EventReport eventReport3 =
+                            EventReportFixture.getBaseEventReportBuild()
+                                    .setId("Event3")
+                                    .setSourceId("S1")
+                                    .setReportTime(baseTime + TimeUnit.HOURS.toMillis(1))
+                                    // trigger time < source event time => real report
+                                    .setTriggerTime(baseTime - 1L)
+                                    .setStatus(EventReport.Status.PENDING)
+                                    .setTriggerId(null)
+                                    .build();
+                    dao.insertEventReport(eventReport3);
+                    dao.insertAttribution(
+                            createAttribution(
+                                    "Att3",
+                                    Attribution.Scope.EVENT,
+                                    "S1",
+                                    null,
+                                    eventReport3.getId()));
+
+                    // Infeasible case, but it should not get deleted because its status is
+                    // DELIVERED
+                    EventReport eventReport4 =
+                            EventReportFixture.getBaseEventReportBuild()
+                                    .setId("Event4")
+                                    .setSourceId("S3")
+                                    .setReportTime(baseTime + TimeUnit.HOURS.toMillis(1))
+                                    // trigger time > source event time => fake report
+                                    .setTriggerTime(
+                                            baseTime
+                                                    + TimeUnit.HOURS.toMillis(1)
+                                                    + TimeUnit.SECONDS.toMillis(1))
+                                    .setStatus(EventReport.Status.DELIVERED)
+                                    .setTriggerId(null)
+                                    .build();
+                    dao.insertEventReport(eventReport4);
+                    dao.insertAttribution(
+                            createAttribution(
+                                    "Att4",
+                                    Attribution.Scope.EVENT,
+                                    "S3",
+                                    null,
+                                    eventReport4.getId()));
+
+                    // Execution
+                    dao.deleteFutureFakeEventReportsForSources(List.of("S1", "S3"), baseTime);
+
+                    // Assertion
+                    assertThrows(DatastoreException.class, () -> dao.getEventReport("Event1"));
+                    assertEquals(eventReport2, dao.getEventReport("Event2"));
+                    assertEquals(eventReport3, dao.getEventReport("Event3"));
+                    assertEquals(eventReport4, dao.getEventReport("Event4"));
+                });
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        assertEquals(4, DatabaseUtils.queryNumEntries(db, AttributionContract.TABLE));
+        Set<String> reportIds = new HashSet<>();
+        try (Cursor cursor =
+                db.rawQuery(
+                        "SELECT "
+                                + AttributionContract.REPORT_ID
+                                + " FROM "
+                                + AttributionContract.TABLE,
+                        null)) {
+            while (cursor.moveToNext()) {
+                reportIds.add(cursor.getString(0));
+            }
+        }
+        assertEquals(Set.of("Event1", "Event2", "Event3", "Event4"), reportIds);
     }
 
     private static Source getSourceWithDifferentDestinations(
@@ -7001,6 +7290,7 @@ public class MeasurementDaoTest {
         values.put(SourceContract.REGISTRATION_ID, source.getRegistrationId());
         values.put(SourceContract.SHARED_AGGREGATION_KEYS, source.getSharedAggregationKeys());
         values.put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin().toString());
+        values.put(SourceContract.DESTINATION_LIMIT_PRIORITY, source.getDestinationLimitPriority());
         values.put(SourceContract.IS_INSTALL_ATTRIBUTED, source.isInstallAttributed());
         values.put(
                 SourceContract.REINSTALL_REATTRIBUTION_WINDOW,
@@ -10995,6 +11285,34 @@ public class MeasurementDaoTest {
                                                 .getMeasurementReportingJobServiceBatchWindowMillis()));
 
         assertTrue(results.isEmpty());
+    }
+
+    @Test
+    public void testInsertSource_withDestinationLimitPriorityEnabled_fetchesTheSetValue() {
+        // Setup
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableSourceDestinationLimitPriority();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+
+        // Execution
+        Source validSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setDestinationLimitPriority(
+                                SourceFixture.ValidSourceParams.DESTINATION_LIMIT_PRIORITY)
+                        .build();
+        mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
+
+        // Assertion
+        String sourceId = getFirstSourceIdFromDatastore();
+        Source source =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSource(sourceId))
+                        .orElseThrow(() -> new IllegalStateException("Source is null"));
+        assertEquals(
+                SourceFixture.ValidSourceParams.DESTINATION_LIMIT_PRIORITY,
+                source.getDestinationLimitPriority());
     }
 
     private static Consumer<AggregateReport> getAggregateReportConsumer(SQLiteDatabase db) {
