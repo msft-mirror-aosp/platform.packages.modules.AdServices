@@ -1531,8 +1531,13 @@ class MeasurementDao implements IMeasurementDao {
         return DatabaseUtils.queryNumEntries(
                 mSQLTransaction.getDatabase(),
                 SourceContract.TABLE,
-                SourceContract.PUBLISHER + " = ?",
-                new String[] {publisherUri.toString()});
+                mergeConditions(
+                        " AND ",
+                        SourceContract.PUBLISHER + " = ?",
+                        SourceContract.STATUS + " != ?"),
+                new String[] {
+                    publisherUri.toString(), String.valueOf(Source.Status.MARKED_TO_DELETE)
+                });
     }
 
     @Override
@@ -1759,18 +1764,16 @@ class MeasurementDao implements IMeasurementDao {
                                 + "AND %4$s > ? "
                                 + "AND %4$s <= ? "
                                 + "AND %5$s > ?"
-                                + "AND %6$s != ?"
                                 + ") "
-                                + "SELECT COUNT(DISTINCT %7$s) FROM %8$s "
-                                + "WHERE %9$s IN source_ids AND %10$s = ? "
-                                + "AND %7$s NOT IN "
+                                + "SELECT COUNT(DISTINCT %6$s) FROM %7$s "
+                                + "WHERE %8$s IN source_ids AND %9$s = ? "
+                                + "AND %6$s NOT IN "
                                 + flattenAsSqlQueryList(excludedDestinations),
                         SourceContract.ID,
                         SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
                         SourceContract.EVENT_TIME,
                         SourceContract.EXPIRY_TIME,
-                        SourceContract.STATUS,
                         SourceDestination.DESTINATION,
                         SourceDestination.TABLE,
                         SourceDestination.SOURCE_ID,
@@ -1783,7 +1786,6 @@ class MeasurementDao implements IMeasurementDao {
                             String.valueOf(windowStartTime),
                             String.valueOf(windowEndTime),
                             String.valueOf(windowEndTime),
-                            String.valueOf(Source.Status.MARKED_TO_DELETE),
                             String.valueOf(destinationType)
                         });
     }
@@ -3449,7 +3451,8 @@ class MeasurementDao implements IMeasurementDao {
         String unexpiredSources =
                 String.format(
                         Locale.ENGLISH,
-                        // Unexpired sources, excludes MARKED_TO_DELETE sources
+                        // Unexpired sources, excludes MARKED_TO_DELETE sources as they are
+                        // deactivated already
                         "WITH source_ids AS ( "
                                 + "SELECT %1$s FROM %2$s "
                                 + "WHERE %3$s "
