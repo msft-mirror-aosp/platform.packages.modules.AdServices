@@ -15,33 +15,32 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
-
 import static org.junit.Assert.assertThrows;
 
-
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Base test for classes that extend ResultTestSyncCallback. */
-abstract class IResultSyncCallbackTestCase<R, CB extends IResultSyncCallback<R> & FreezableToString>
+public abstract class IResultSyncCallbackTestCase<
+                R, CB extends AbstractSyncCallback & IResultSyncCallback<R>>
         extends IBinderSyncCallbackTestCase<CB> {
 
     private static final AtomicInteger sNextId = new AtomicInteger();
 
-    protected final CB mCallback =
-            newCallback(
-                    SyncCallbackFactory.newSettingsBuilder()
-                            .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
-                            .build());
-
-    /** Gets a new instance of the callback class being test. */
-    protected abstract CB newCallback(SyncCallbackSettings settings);
+    // Must be set on @Before otherwise OutcomeReceiverForTestsTest would fail on R
+    protected CB mCallback;
 
     /** Gets a new, unique result object, preferably with a user-friendly string representation. */
     protected abstract R newResult();
+
+    @Before
+    public final void setFixtures() {
+        mCallback = newCallback(mDefaultSettings);
+        mLog.v("setFixtures(): mCallback=%s", mCallback);
+    }
 
     /**
      * Gets a unique id.
@@ -74,7 +73,7 @@ abstract class IResultSyncCallbackTestCase<R, CB extends IResultSyncCallback<R> 
         assertInitialState(mCallback);
         R injectedResult = newResult();
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.injectResult(injectedResult));
         R receivedResult = mCallback.assertResultReceived();
 
         expect.withMessage("%s.assertResultReceived()", mCallback)
@@ -100,7 +99,7 @@ abstract class IResultSyncCallbackTestCase<R, CB extends IResultSyncCallback<R> 
         assertInitialState(mCallback);
         R injectedResult = null;
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.injectResult(injectedResult));
         R receivedResult = mCallback.assertResultReceived();
 
         expect.withMessage("%s.assertResultReceived()", mCallback).that(receivedResult).isNull();
@@ -116,7 +115,7 @@ abstract class IResultSyncCallbackTestCase<R, CB extends IResultSyncCallback<R> 
         assertInitialState(mCallback);
         R injectedResult = newResult();
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.injectResult(injectedResult));
         mCallback.assertCalled();
 
         assertGetResultMethods(mCallback, "after injectResult()", injectedResult);
@@ -127,7 +126,7 @@ abstract class IResultSyncCallbackTestCase<R, CB extends IResultSyncCallback<R> 
         assertInitialState(mCallback);
         R injectedResult = null;
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.injectResult(injectedResult));
         mCallback.assertCalled();
 
         assertGetResultMethods(mCallback, "after injectResult()", injectedResult);

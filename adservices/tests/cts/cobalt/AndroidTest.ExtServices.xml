@@ -42,14 +42,6 @@
         <option name="check-min-sdk" value="true"/>
     </target_preparer>
 
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
-        <option name="run-command" value="device_config put adservices enable_back_compat true"/>
-
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
-    </target_preparer>
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="com.android.adextservices.tests.cobalt"/>
     </test>

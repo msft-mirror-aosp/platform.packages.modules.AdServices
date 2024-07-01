@@ -395,8 +395,8 @@ public interface IMeasurementDao {
     /** Saves the {@link EventReport} to the datastore. */
     void insertEventReport(EventReport eventReport) throws DatastoreException;
 
-    /** Deletes the {@link EventReport} from the datastore. */
-    void deleteEventReport(EventReport eventReport) throws DatastoreException;
+    /** Deletes the {@link EventReport} and associated {@link Attribution} from the datastore. */
+    void deleteEventReportAndAttribution(EventReport eventReport) throws DatastoreException;
 
     /** Deletes the {@link DebugReport} from the datastore. */
     void deleteDebugReport(String debugReportId) throws DatastoreException;
@@ -424,15 +424,6 @@ public interface IMeasurementDao {
 
     /** Returns list of all pending event reports for a given app right away. */
     List<String> getPendingEventReportIdsForGivenApp(Uri appName) throws DatastoreException;
-
-    /**
-     * Find the number of entries for a rate limit window using the {@link Source} and {@link
-     * Trigger}. Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
-     *
-     * @return the number of entries for the window.
-     */
-    long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
-            throws DatastoreException;
 
     /**
      * Find the number of entries for a rate limit window, scoped to event- or aggregate-level using
@@ -788,8 +779,9 @@ public interface IMeasurementDao {
 
     /**
      * Let matchingSources be unexpired sources that match the provided publisher, publisher type
-     * destination surface type and enrollmentId. Pick and return the sources that have the least
-     * recently used destination excluding the provided list of destinations.
+     * destination surface type and enrollmentId. Pick and return the sources that have the lowest
+     * destination priority value or secondarily the least recently used destination excluding the
+     * provided list of destinations.
      *
      * @param publisher publisher to match
      * @param publisherType publisher surface type, i.e. app/web to match
@@ -797,10 +789,10 @@ public interface IMeasurementDao {
      * @param excludedDestinations destinations to exclude while matching
      * @param destinationType destination type app/web
      * @param windowEndTime selected sources' expiry needs to be greater than this time
-     * @return sources with least recently used destination
+     * @return sources with least recently used destination along with the priority value
      * @throws DatastoreException when accessing the DB fails
      */
-    List<String> fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+    Pair<Long, List<String>> fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
             Uri publisher,
             int publisherType,
             String enrollmentId,
@@ -818,4 +810,26 @@ public interface IMeasurementDao {
      */
     void deletePendingAggregateReportsAndAttributionsForSources(List<String> sourceIds)
             throws DatastoreException;
+
+    /**
+     * Deletes pending fake event reports for the provided sources. Attributions are not deleted.
+     *
+     * @param sourceIds sources to consider to query the pending reports
+     * @param currentTimeStamp it's practically the current time stamp, we delete only those reports
+     *     that have trigger time in future indicating that they are fake
+     * @throws DatastoreException when deletion fails
+     */
+    void deleteFutureFakeEventReportsForSources(List<String> sourceIds, long currentTimeStamp)
+            throws DatastoreException;
+
+    /**
+     * Return the timestamp of the latest pending report (Event or Aggregate) in the batching
+     * window. The batching window is calculated as the earliest report's timestamp + batchWindow.
+     * If there are no reports, return null.
+     *
+     * @param batchWindow Size of the batching window, in ms, starting at the next pending report.
+     * @return Latest report's timestamp, in ms, within the batching window.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    Long getLatestReportTimeInBatchWindow(long batchWindow) throws DatastoreException;
 }

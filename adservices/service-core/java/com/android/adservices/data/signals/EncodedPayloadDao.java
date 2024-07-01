@@ -52,6 +52,12 @@ public interface EncodedPayloadDao {
     List<DBEncodedPayload> getAllEncodedPayloads();
 
     /**
+     * @return a list of all {@link DBEncodedPayload} that match the buyers in the list
+     */
+    @Query("SELECT * FROM encoded_payload WHERE buyer in (:buyers)")
+    List<DBEncodedPayload> getAllEncodedPayloadsForBuyers(List<AdTechIdentifier> buyers);
+
+    /**
      * @param buyer Ad-tech owner for the encoded payload
      * @return true if the encoded payload for the buyer exists
      */

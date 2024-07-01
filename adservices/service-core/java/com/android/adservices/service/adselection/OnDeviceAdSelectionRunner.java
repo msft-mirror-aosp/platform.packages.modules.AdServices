@@ -24,7 +24,6 @@ import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.os.Build;
 import android.util.Pair;
 
@@ -80,7 +79,6 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     @NonNull protected final AdCounterKeyCopier mAdCounterKeyCopier;
 
     public OnDeviceAdSelectionRunner(
-            @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final EncryptionKeyDao encryptionKeyDao,
@@ -106,7 +104,6 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AppInstallAdFilterer appInstallAdFilterer,
             boolean consoleMessageInLogsEnabled) {
         super(
-                context,
                 customAudienceDao,
                 adSelectionEntryDao,
                 encryptionKeyDao,
@@ -140,7 +137,6 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
-                                context,
                                 flags::getEnforceIsolateMaxHeapSize,
                                 flags::getIsolateMaxHeapSizeBytes,
                                 mAdCounterKeyCopier,
@@ -161,7 +157,6 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         mPerBuyerBiddingRunner =
                 new PerBuyerBiddingRunner(
                         new AdBidGeneratorImpl(
-                                context,
                                 mAdServicesHttpsClient,
                                 mLightweightExecutorService,
                                 mBackgroundExecutorService,
@@ -189,7 +184,6 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
 
     @VisibleForTesting
     OnDeviceAdSelectionRunner(
-            @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final EncryptionKeyDao encryptionKeyDao,
@@ -216,7 +210,6 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory,
             @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
         super(
-                context,
                 customAudienceDao,
                 adSelectionEntryDao,
                 encryptionKeyDao,

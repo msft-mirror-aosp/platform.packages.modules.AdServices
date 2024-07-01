@@ -15,12 +15,10 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
-
 import org.junit.Test;
 
 abstract class OnResultSyncCallbackTestCase<
-                R, CB extends IOnResultSyncCallback<R> & FreezableToString>
+                R, CB extends AbstractSyncCallback & IOnResultSyncCallback<R>>
         extends IResultSyncCallbackTestCase<R, CB> {
 
     @Test
@@ -36,7 +34,7 @@ abstract class OnResultSyncCallbackTestCase<
                 .contains("(no result yet)");
         R injectedResult = newResult();
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.onResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.onResult(injectedResult));
         R receivedResult = mCallback.assertResultReceived();
 
         expect.withMessage("%s.assertResultReceived()", mCallback)

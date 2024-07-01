@@ -1,8 +1,5 @@
 {
   "description": "One source with source type \"event\" and no \"expiry\" field. Event report task within the expiry window sends data with report time at default expiry.",
-  "phflags_override": {
-    "measurement_flex_lite_api_enabled": "true"
-  },
   "input": {
     "sources": [{
       "registration_request": {

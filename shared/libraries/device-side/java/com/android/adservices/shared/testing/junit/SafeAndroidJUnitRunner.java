@@ -111,6 +111,7 @@ public class SafeAndroidJUnitRunner extends EasilyExtensibleBlockJUnit4ClassRunn
                     }
                     // Try to "access" the method to force an exception it uses classes not
                     // available on this device SDK version.
+                    @SuppressWarnings("unused")
                     String unused = method.toString();
                     safeMethodsList.add(method);
                 } catch (Throwable e) {

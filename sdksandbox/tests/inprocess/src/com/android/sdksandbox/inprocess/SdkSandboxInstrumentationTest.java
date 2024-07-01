@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.app.Activity;
 import android.app.sdksandbox.testutils.EmptyActivity;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.os.Process;
 import android.platform.test.annotations.RequiresFlagsEnabled;
@@ -50,10 +51,13 @@ public class SdkSandboxInstrumentationTest {
     private Context mContext;
     private Context mTargetContext;
 
-    @Rule
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
+    @Rule(order = 1)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
-    @Rule
+    @Rule(order = 2)
     public final ActivityTestRule mActivityRule =
             new ActivityTestRule<>(
                     EmptyActivity.class,

@@ -2920,7 +2920,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
         assertEquals(
-                Long.valueOf(TimeUnit.DAYS.toSeconds(1)),
+                Long.valueOf(TimeUnit.DAYS.toMillis(1)),
                 (Long) result.getReinstallReattributionWindow());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
     }
@@ -2967,7 +2967,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
-        when(mFlags.getMeasurementMaxReinstallReattributionWindowSeconds()).thenReturn(7776000L);
+        when(mFlags.getMeasurementMaxReinstallReattributionWindowSeconds()).thenReturn(100L);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2995,7 +2995,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(0, result.getPriority());
-        assertEquals(7776000L, result.getReinstallReattributionWindow());
+        assertEquals(100000L, result.getReinstallReattributionWindow());
         assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
     }
 
@@ -10002,6 +10002,224 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertThat(fetch.get().getAttributionScopes()).isEqualTo(List.of());
         assertThat(fetch.get().getAttributionScopeLimit()).isEqualTo(4L);
         verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_destinationPriorityDisabled_destinationPriorityDefaultedToZero()
+            throws Exception {
+        when(mFlags.getMeasurementEnableSourceDestinationLimitPriority()).thenReturn(false);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\""
+                                                + "source_event_id\":\"35\","
+                                                + "\"destination_limit_priority\":\"4\"}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getDestinationLimitPriority()).isEqualTo(0L);
+    }
+
+    @Test
+    public void fetchSource_destinationPriorityEnabled_parsesDestinationPriority()
+            throws Exception {
+        when(mFlags.getMeasurementEnableSourceDestinationLimitPriority()).thenReturn(true);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\""
+                                                + "source_event_id\":\"35\","
+                                                + "\"destination_limit_priority\":\"4\"}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getDestinationLimitPriority()).isEqualTo(4L);
+    }
+
+    @Test
+    public void fetchSource_destinationPriorityNotSet_destinationPriorityDefaultedToZero()
+            throws Exception {
+        when(mFlags.getMeasurementEnableSourceDestinationLimitPriority()).thenReturn(true);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\""
+                                                + "source_event_id\":\"35\""
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getDestinationLimitPriority()).isEqualTo(0L);
+    }
+
+    @Test
+    public void fetchSource_destinationAlgorithmDisabled_ignoreDestinationAlgorithm()
+            throws Exception {
+        when(mFlags.getMeasurementEnableSourceDestinationLimitAlgorithmField()).thenReturn(false);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\""
+                                                + "source_event_id\":\"35\","
+                                                + "\"destination_limit_algorithm\":\"fifo\"}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getDestinationLimitAlgorithm()).isNull();
+    }
+
+    @Test
+    public void fetchSource_destinationAlgorithmEnabled_parsesDestinationAlgorithm()
+            throws Exception {
+        when(mFlags.getMeasurementEnableSourceDestinationLimitAlgorithmField()).thenReturn(true);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\""
+                                                + "source_event_id\":\"35\","
+                                                + "\"destination_limit_algorithm\":\"fifo\"}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getDestinationLimitAlgorithm())
+                .isEqualTo(Source.DestinationLimitAlgorithm.FIFO);
+    }
+
+    @Test
+    public void fetchSource_invalidDestinationAlgoritm_failsSourceCreation() throws Exception {
+        when(mFlags.getMeasurementEnableSourceDestinationLimitAlgorithmField()).thenReturn(true);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\""
+                                                + "source_event_id\":\"35\","
+                                                + "\"destination_limit_algorithm\":\"invalid\"}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void fetchSource_destinationAlgorithmNotProvided_usesFallbackAlgorithm()
+            throws Exception {
+        when(mFlags.getMeasurementEnableSourceDestinationLimitAlgorithmField()).thenReturn(true);
+        when(mFlags.getMeasurementDefaultSourceDestinationLimitAlgorithm()).thenReturn(1);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\""
+                                                + "source_event_id\":\"35\""
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getDestinationLimitAlgorithm())
+                .isEqualTo(Source.DestinationLimitAlgorithm.FIFO);
     }
 
     @Test
