@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell.adselection;
+package android.adservices.common;
 
-public class MockAuctionResultArgs {
-    static final int FIRST_ARG_FOR_PARSING = 2;
-
-    public static final String AUCTION_RESULT = "--auction-result";
-
-    private MockAuctionResultArgs() {
-        throw new UnsupportedOperationException();
-    }
-}
+/**
+ * Defines the notification type for adservices apis consent.
+ *
+ * @hide
+ */
+parcelable NotificationTypeParams;

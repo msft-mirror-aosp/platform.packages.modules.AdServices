@@ -43,6 +43,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.flags.Flags;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -224,6 +225,51 @@ public class AdServicesCommonManager {
                 adServicesStates,
                 executor,
                 OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
+    }
+
+    /**
+     * Sets overrides for the AdServices Module(s).
+     *
+     * <p>Api that will enable/disable adServices modules. Once the value is off, the modules being
+     * not available in the platform side, it is equivalent to the modules is not available on the
+     * device. This Api also sets the notification type through NotificationTypeParams
+     * (Ongoing|Regular|None).
+     *
+     * @param adServicesModuleStateList parcel containing state information for modules.
+     * @param notificationType parcel containing notification type.
+     * @param executor the executor for the callback.
+     * @param callback callback function to confirm modules overrides is set up correctly.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    public void setAdServicesModuleOverrides(
+            @NonNull List<AdServicesModuleState> adServicesModuleStateList,
+            @NonNull NotificationTypeParams notificationType,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
+        // TODO: Add implementation
+    }
+
+    /**
+     * Sets the AdServices Module(s) user choices.
+     *
+     * <p>Api sets the user consent value for each AdServices module(Pas/Measurement/Topic etc).
+     *
+     * @param adServicesModuleUserChoiceList parcel containing user choices for modules.
+     * @param executor the executor for the callback.
+     * @param callback callback function to confirm module user choice is set up correctly.
+     * @hide
+     */
+    @SystemApi
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    public void setAdServicesModuleUserChoices(
+            @NonNull List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
+        // TODO: Add implementation
     }
 
     /**

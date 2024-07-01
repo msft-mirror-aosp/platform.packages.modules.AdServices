@@ -50,7 +50,6 @@ public class SignalsScriptGeneratorTest extends AdServicesUnitTestCase {
                     + "}";
     private final IsolateSettings mIsolateSettings =
             IsolateSettings.builder()
-                    .setEnforceMaxHeapSizeFeature(true)
                     .setMaxHeapSizeBytes(50000)
                     .setIsolateConsoleMessageInLogsEnabled(true)
                     .build();

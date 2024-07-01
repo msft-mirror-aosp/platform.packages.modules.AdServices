@@ -1,4 +1,1 @@
-# Bug component: 1159752
-set noparent
-
 include platform/packages/modules/AdServices:/adservices/OWNERS_UX

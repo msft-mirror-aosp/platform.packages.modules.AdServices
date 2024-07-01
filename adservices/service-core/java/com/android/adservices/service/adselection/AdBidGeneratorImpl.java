@@ -134,7 +134,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mFlags = flags;
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
-                        mFlags::getEnforceIsolateMaxHeapSize,
                         mFlags::getIsolateMaxHeapSizeBytes,
                         mAdCounterKeyCopier,
                         debugReporting.getScriptStrategy(),

@@ -59,17 +59,14 @@ public final class SignalsScriptEngine {
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
-    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
     private final Supplier<Long> mMaxHeapSizeBytesSupplier;
     private final RetryStrategy mRetryStrategy;
     private final Supplier<Boolean> mIsolateConsoleMessageInLogsEnabled;
 
     public SignalsScriptEngine(
-            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             RetryStrategy retryStrategy,
             Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
-        mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRetryStrategy = retryStrategy;
         mIsolateConsoleMessageInLogsEnabled = isolateConsoleMessageInLogsEnabled;
@@ -119,7 +116,6 @@ public final class SignalsScriptEngine {
                                 args,
                                 ENCODE_SIGNALS_DRIVER_FUNCTION_NAME,
                                 buildIsolateSettings(
-                                        mEnforceMaxHeapSizeFeatureSupplier,
                                         mMaxHeapSizeBytesSupplier,
                                         mIsolateConsoleMessageInLogsEnabled),
                                 mRetryStrategy))
@@ -189,11 +185,9 @@ public final class SignalsScriptEngine {
     }
 
     private static IsolateSettings buildIsolateSettings(
-            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
         return IsolateSettings.builder()
-                .setEnforceMaxHeapSizeFeature(enforceMaxHeapSizeFeatureSupplier.get())
                 .setMaxHeapSizeBytes(maxHeapSizeBytesSupplier.get())
                 .setIsolateConsoleMessageInLogsEnabled(isolateConsoleMessageInLogsEnabled.get())
                 .build();
