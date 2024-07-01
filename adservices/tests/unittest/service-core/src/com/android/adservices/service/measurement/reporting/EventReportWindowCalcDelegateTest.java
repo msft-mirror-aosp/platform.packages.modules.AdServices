@@ -437,7 +437,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void noiseReportingAndTriggerTime_flexLiteApi_triggerTime() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         Source oneWindowNoStart =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1581,7 +1580,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTimeForNoising_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         Source oneWindowNoStart =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1658,7 +1656,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         Source oneWindowNoStart =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1760,7 +1757,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getMaxReportCount_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
                 .when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         long sourceTime = System.currentTimeMillis();
@@ -1828,7 +1824,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingWindowCountForNoising_flexLiteApi() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         Source defaultSourceEventInstallAttributed =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1936,7 +1931,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void fallsWithinWindow_windowNotStarted() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         long triggerTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1) - 1;
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
@@ -1988,7 +1982,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void fallsWithinWindow_windowWithin() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         long triggerTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1);
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
@@ -2043,7 +2036,6 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void fallsWithinWindow_windowPassed() {
-        doReturn(true).when(mFlags).getMeasurementFlexLiteApiEnabled();
         long sourceTime = System.currentTimeMillis();
         long triggerTime = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(20);
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()

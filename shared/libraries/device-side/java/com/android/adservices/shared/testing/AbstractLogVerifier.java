@@ -86,6 +86,26 @@ public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerif
     }
 
     /**
+     * Ensures log call parameter is > 0 for a given annotation type. Throws exception otherwise.
+     *
+     * @param times times to validate
+     * @param annotation name of annotation that holds the times value
+     */
+    public void validateTimes(int times, String annotation) {
+        if (times == 0) {
+            throw new IllegalArgumentException(
+                    "Detected @"
+                            + annotation
+                            + " with times = 0. Remove annotation as the "
+                            + "test will automatically fail if any log calls are detected.");
+        }
+
+        if (times < 0) {
+            throw new IllegalArgumentException("Detected @" + annotation + " with times < 0!");
+        }
+    }
+
+    /**
      * Matching algorithm that detects any mismatches within expected and actual calls. This works
      * for verifying wild card argument cases as well.
      */

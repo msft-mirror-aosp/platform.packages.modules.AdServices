@@ -208,8 +208,6 @@ public class AttributionJobHandlerTest {
                         mLogger,
                         new XnaSourceCreator(mFlags));
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
-        when(mFlags.getMeasurementEnableScopedAttributionRateLimit())
-                .thenReturn(Flags.MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT);
         when(mFlags.getMeasurementMaxAttributionPerRateLimitWindow())
                 .thenReturn(Flags.MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
         when(mFlags.getMeasurementMaxEventAttributionPerRateLimitWindow())
@@ -1120,7 +1118,8 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList = new ArrayList<>();
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                anyInt(), any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
         when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
@@ -1190,7 +1189,8 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList = new ArrayList<>();
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                anyInt(), any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
         when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
@@ -1826,7 +1826,7 @@ public class AttributionJobHandlerTest {
                         List.of(APP_DESTINATION),
                         List.of()));
         mHandler.performPendingAttributions();
-        verify(mMeasurementDao).deleteEventReport(eventReport1);
+        verify(mMeasurementDao).deleteEventReportAndAttribution(eventReport1);
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())),
@@ -2364,7 +2364,6 @@ public class AttributionJobHandlerTest {
 
         long reportMinDelay = TimeUnit.MINUTES.toMillis(61);
         long reportDelaySpan = TimeUnit.MINUTES.toMillis(10);
-        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
         when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn(
                 String.valueOf(reportMinDelay) + "," + String.valueOf(reportDelaySpan));
 
@@ -2437,7 +2436,6 @@ public class AttributionJobHandlerTest {
         Trigger trigger = getAggregateTrigger();
         Source source = getAggregateSource();
 
-        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
         when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn(null);
 
         when(mMeasurementDao.getPendingTriggerIds())
@@ -2475,7 +2473,6 @@ public class AttributionJobHandlerTest {
         Trigger trigger = getAggregateTrigger();
         Source source = getAggregateSource();
 
-        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
         when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn("12");
 
         when(mMeasurementDao.getPendingTriggerIds())
@@ -2513,7 +2510,6 @@ public class AttributionJobHandlerTest {
         Trigger trigger = getAggregateTrigger();
         Source source = getAggregateSource();
 
-        when(mFlags.getMeasurementEnableConfigurableAggregateReportDelay()).thenReturn(true);
         when(mFlags.getMeasurementAggregateReportDelayConfig()).thenReturn("1200u0000r,3600000");
 
         when(mMeasurementDao.getPendingTriggerIds())
@@ -6356,7 +6352,7 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).getSourceEventReports(any());
 
         verify(mMeasurementDao, never()).insertEventReport(any());
-        verify(mMeasurementDao, never()).deleteEventReport(any());
+        verify(mMeasurementDao, never()).deleteEventReportAndAttribution(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
 
@@ -6450,7 +6446,7 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).fetchMatchingEventReports(any(), any());
         verify(mMeasurementDao, times(1)).getSourceEventReports(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
-        verify(mMeasurementDao, never()).deleteEventReport(any());
+        verify(mMeasurementDao, never()).deleteEventReportAndAttribution(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
 
@@ -6547,7 +6543,7 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, times(1)).getSourceEventReports(any());
         verify(mMeasurementDao, times(1)).updateSourceEventReportDedupKeys(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
-        verify(mMeasurementDao, never()).deleteEventReport(any());
+        verify(mMeasurementDao, never()).deleteEventReportAndAttribution(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
 
@@ -8214,7 +8210,8 @@ public class AttributionJobHandlerTest {
         List<Source> matchingSourceList = new ArrayList<>();
         matchingSourceList.add(source);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                anyInt(), any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
         when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
