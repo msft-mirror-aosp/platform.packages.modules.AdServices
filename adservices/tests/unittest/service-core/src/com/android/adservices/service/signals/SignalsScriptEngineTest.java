@@ -56,7 +56,7 @@ import java.util.concurrent.TimeoutException;
 public class SignalsScriptEngineTest {
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
     private static final IsolateSettings ISOLATE_SETTINGS =
-            IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+            IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                     ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
     private SignalsScriptEngine mSignalsScriptEngine;
@@ -318,7 +318,6 @@ public class SignalsScriptEngineTest {
     private SignalsScriptEngine createSignalsScriptEngine(
             IsolateSettings isolateSettings, RetryStrategy retryStrategy) {
         return new SignalsScriptEngine(
-                isolateSettings::getEnforceMaxHeapSizeFeature,
                 isolateSettings::getMaxHeapSizeBytes,
                 retryStrategy,
                 isolateSettings::getIsolateConsoleMessageInLogsEnabled);

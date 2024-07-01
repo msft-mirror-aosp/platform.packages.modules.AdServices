@@ -2468,6 +2468,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS,
+                FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerMultiCloudEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
