@@ -19,6 +19,7 @@ package android.adservices.utils;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
@@ -133,7 +134,8 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
                 .setPpapiAppAllowList(sContext.getPackageName())
                 .setFlag(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, 5_000)
                 .setFlag(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, 5_000)
-                .setFlag(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, 10_000);
+                .setFlag(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, 10_000)
+                .setFlag(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED, true);
     }
 
     @Before

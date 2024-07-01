@@ -91,7 +91,9 @@ import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
+import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FledgeConsentFilter;
 import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
@@ -308,7 +310,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 new AdSelectionServiceFilter(
                         context,
-                        ConsentManager.getInstance(),
+                        new FledgeConsentFilter(
+                                ConsentManager.getInstance(), AdServicesLoggerImpl.getInstance()),
                         FlagsFactory.getFlags(),
                         AppImportanceFilter.create(
                                 context,
@@ -320,7 +323,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
-                        Throttler.getInstance(FlagsFactory.getFlags())),
+                        new FledgeApiThrottleFilter(
+                                Throttler.getInstance(FlagsFactory.getFlags()),
+                                AdServicesLoggerImpl.getInstance())),
                 new AdFilteringFeatureFactory(
                         SharedStorageDatabase.getInstance(context).appInstallDao(),
                         SharedStorageDatabase.getInstance(context).frequencyCapDao(),
@@ -456,6 +461,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
 
         if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerKillSwitch)) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName,
+                    inputParams.getCallerPackageName(),
+                    STATUS_KILLSWITCH_ENABLED,
+                    /* latencyMs= */ 0);
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
         }
 
@@ -782,7 +792,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         OnDeviceAdSelectionRunner runner =
                 new OnDeviceAdSelectionRunner(
-                        mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mEncryptionKeyDao,
@@ -914,7 +923,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         if (BinderFlagReader.readFlag(mFlags::getFledgeAuctionServerEnabledForReportImpression)) {
             ImpressionReporter reporter =
                     new ImpressionReporter(
-                            mContext,
                             mLightweightExecutor,
                             mBackgroundExecutor,
                             mScheduledExecutor,
@@ -937,7 +945,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         } else {
             ImpressionReporterLegacy reporter =
                     new ImpressionReporterLegacy(
-                            mContext,
                             mLightweightExecutor,
                             mBackgroundExecutor,
                             mScheduledExecutor,
@@ -1600,7 +1607,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void destroy() {
         sLogger.i("Shutting down AdSelectionService");
         try {
-            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance(mContext, sLogger);
+            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance(sLogger);
             jsScriptEngine.shutdown();
         } catch (JSSandboxIsNotAvailableException exception) {
             sLogger.i("Java script sandbox is not available, not shutting down JSScriptEngine.");

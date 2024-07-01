@@ -287,7 +287,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock));
 
@@ -309,7 +309,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
         Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
         verify(mObliviousHttpEncryptorMock, times(1))
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
         verify(mAdSelectionEntryDaoSpy, times(1))
                 .persistAdSelectionInitialization(
                         callback.mGetAdSelectionDataResponse.getAdSelectionId(),
@@ -340,7 +340,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
 
         when(mFledgeAuctionServerExecutionLoggerClockMock.elapsedRealtime())
                 .thenReturn(
@@ -390,7 +390,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
         Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
         verify(mObliviousHttpEncryptorMock, times(1))
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
         verify(mAdSelectionEntryDaoSpy, times(1))
                 .persistAdSelectionInitialization(
                         callback.mGetAdSelectionDataResponse.getAdSelectionId(),
@@ -442,7 +442,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
 
         when(mFledgeAuctionServerExecutionLoggerClockMock.elapsedRealtime())
                 .thenReturn(
@@ -493,7 +493,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
         Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
         verify(mObliviousHttpEncryptorMock, times(1))
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
         verify(mAdSelectionEntryDaoSpy, times(1))
                 .persistAdSelectionInitialization(
                         callback.mGetAdSelectionDataResponse.getAdSelectionId(),
@@ -548,7 +548,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
 
         when(mFledgeAuctionServerExecutionLoggerClockMock.elapsedRealtime())
                 .thenReturn(
@@ -600,7 +600,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                 CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
         Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
         verify(mObliviousHttpEncryptorMock, times(1))
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
         verify(mAdSelectionEntryDaoSpy, times(1))
                 .persistAdSelectionInitialization(
                         callback.mGetAdSelectionDataResponse.getAdSelectionId(),
@@ -656,7 +656,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -681,7 +681,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
 
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
                 MultiCloudTestStrategyFactory.getEnabledTestStrategy(
@@ -711,7 +711,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
 
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
                 MultiCloudTestStrategyFactory.getEnabledTestStrategy(
@@ -741,7 +741,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
 
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock));
@@ -767,7 +767,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
             throws InterruptedException, IOException {
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
 
         mFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
@@ -803,7 +803,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         // Assert result is expected
         Assert.assertArrayEquals(CIPHER_TEXT_BYTES, result);
         verify(mObliviousHttpEncryptorMock, times(1))
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
         verify(mAdSelectionEntryDaoSpy, times(1))
                 .persistAdSelectionInitialization(
                         callback.mGetAdSelectionDataResponse.getAdSelectionId(),
@@ -832,7 +832,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
-                .encryptBytes(any(), anyLong(), anyLong(), any());
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -1086,7 +1086,7 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                     }
                 };
 
-        when(mObliviousHttpEncryptorMock.encryptBytes(any(), anyLong(), anyLong(), any()))
+        when(mObliviousHttpEncryptorMock.encryptBytes(any(), anyLong(), anyLong(), any(), any()))
                 .thenAnswer(
                         new AnswersWithDelay(
                                 2 * shortTimeoutFlags.getFledgeAuctionServerOverallTimeoutMs(),

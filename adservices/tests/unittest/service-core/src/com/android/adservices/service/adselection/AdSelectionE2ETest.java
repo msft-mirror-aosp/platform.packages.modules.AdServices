@@ -71,8 +71,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
-import static com.google.common.truth.Truth.assertWithMessage;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -106,7 +104,6 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
 
-import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
@@ -156,7 +153,6 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.exception.FilterException;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -197,7 +193,6 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This test the actual flow of Ad Selection internal flow without any mocking. The dependencies in
@@ -207,7 +202,6 @@ import java.util.concurrent.TimeUnit;
 // injecting mocked flags everywhere is annoying and non-trivial for static methods
 @RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
-@SpyStatic(JavaScriptSandbox.class)
 public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -7775,101 +7769,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
-    }
-
-    @Test
-    public void testRunAdSelection_webViewNotInstalled_failsGracefully() throws Exception {
-        // A null package means WebView is not installed
-        doReturn(false).when(JavaScriptSandbox::isSupported);
-        int jsScriptEngineShutdownTimeoutInSeconds = 1;
-
-        // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-        JSScriptEngine.getInstance(mSpyContext, LoggerFactory.getFledgeLogger())
-                .shutdown()
-                .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
-
-        try {
-            // Create a new local service impl so that the WebView stub takes effect
-            AdSelectionServiceImpl adSelectionServiceImpl =
-                    new AdSelectionServiceImpl(
-                            mAdSelectionEntryDaoSpy,
-                            mAppInstallDao,
-                            mCustomAudienceDao,
-                            mEncodedPayloadDao,
-                            mFrequencyCapDao,
-                            mEncryptionKeyDao,
-                            mEnrollmentDao,
-                            mAdServicesHttpsClient,
-                            mDevContextFilter,
-                            mLightweightExecutorService,
-                            mBackgroundExecutorService,
-                            mScheduledExecutor,
-                            mSpyContext,
-                            mAdServicesLoggerMock,
-                            mFlags,
-                            CallingAppUidSupplierProcessImpl.create(),
-                            mFledgeAuthorizationFilterSpy,
-                            mAdSelectionServiceFilter,
-                            mAdFilteringFeatureFactory,
-                            mConsentManagerMock,
-                            mMultiCloudSupportStrategy,
-                            mAdSelectionDebugReportDao,
-                            mAdIdFetcher,
-                            mUnusedKAnonSignJoinFactory,
-                            false,
-                            mRetryStrategyFactory,
-                            mConsentedDebugConfigurationGeneratorFactory,
-                            mEgressConfigurationGenerator,
-                            CONSOLE_MESSAGE_IN_LOGS_ENABLED);
-
-            mMockWebServerRule.startMockWebServer(mDispatcher);
-            List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
-            List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
-
-            DBCustomAudience dBCustomAudienceForBuyer1 =
-                    createDBCustomAudience(
-                            BUYER_1,
-                            mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
-                            bidsForBuyer1,
-                            BUYER_TRUSTED_SIGNAL_URI_PATH);
-            DBCustomAudience dBCustomAudienceForBuyer2 =
-                    createDBCustomAudience(
-                            BUYER_2,
-                            mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
-                            bidsForBuyer2,
-                            BUYER_TRUSTED_SIGNAL_URI_PATH);
-
-            // Populating the Custom Audience DB
-            mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                    dBCustomAudienceForBuyer1,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
-                    false);
-            mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                    dBCustomAudienceForBuyer2,
-                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
-                    false);
-
-            // Ad selection should fail gracefully and not crash
-            AdSelectionTestCallback resultsCallback =
-                    invokeSelectAds(
-                            adSelectionServiceImpl, mAdSelectionConfig, CALLER_PACKAGE_NAME);
-            assertCallbackFailed(resultsCallback);
-            assertWithMessage("Error code")
-                    .that(resultsCallback.mFledgeErrorResponse.getStatusCode())
-                    .isEqualTo(STATUS_INTERNAL_ERROR);
-
-            verify(mAdServicesLoggerMock)
-                    .logFledgeApiCallStats(
-                            eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
-                            eq(TEST_PACKAGE_NAME),
-                            eq(STATUS_INTERNAL_ERROR),
-                            geq((int) BINDER_ELAPSED_TIME_MS));
-        } finally {
-            // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-            JSScriptEngine.getInstance(mSpyContext, LoggerFactory.getFledgeLogger())
-                    .shutdown()
-                    .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
-        }
     }
 
     /**

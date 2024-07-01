@@ -363,10 +363,10 @@ public class SdkSandboxRestrictionsUnitTest {
                 SecurityException.class,
                 () ->
                         testServiceRestriction(
-                                /*action=*/ null,
-                                /*packageName=*/ null,
-                                /*componentClassName=*/ null,
-                                /*componentPackageName=*/ null));
+                                /* action= */ null,
+                                /* packageName= */ null,
+                                /* componentClassName= */ null,
+                                /* componentPackageName= */ null));
     }
 
     @Test
@@ -407,59 +407,59 @@ public class SdkSandboxRestrictionsUnitTest {
         List<ArrayMap<String, String>> services = new ArrayList<>();
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "action.test",
-                        /*packageName=*/ "*",
-                        /*componentClassName=*/ "*",
-                        /*componentPackageName=*/ "*"));
+                        /* action= */ "action.test",
+                        /* packageName= */ "*",
+                        /* componentClassName= */ "*",
+                        /* componentPackageName= */ "*"));
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "*",
-                        /*packageName=*/ "packageName.test",
-                        /*componentClassName=*/ "*",
-                        /*componentPackageName=*/ "*"));
+                        /* action= */ "*",
+                        /* packageName= */ "packageName.test",
+                        /* componentClassName= */ "*",
+                        /* componentPackageName= */ "*"));
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "*",
-                        /*packageName=*/ "*",
-                        /*componentClassName=*/ "className.test",
-                        /*componentPackageName=*/ "*"));
+                        /* action= */ "*",
+                        /* packageName= */ "*",
+                        /* componentClassName= */ "className.test",
+                        /* componentPackageName= */ "*"));
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "*",
-                        /*packageName=*/ "*",
-                        /*componentClassName=*/ "*",
-                        /*componentPackageName=*/ "componentPackageName.test"));
+                        /* action= */ "*",
+                        /* packageName= */ "*",
+                        /* componentClassName= */ "*",
+                        /* componentPackageName= */ "componentPackageName.test"));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         mDeviceConfigUtil.setDeviceConfigProperty(
                 PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ null,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ null);
+                INTENT_ACTION,
+                /* packageName= */ null,
+                /* componentClassName= */ null,
+                /* componentPackageName= */ null);
 
         testServiceRestriction(
-                /*action=*/ null,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ null);
+                /* action= */ null,
+                PACKAGE_NAME,
+                /* componentClassName= */ null,
+                /* componentPackageName= */ null);
 
         testServiceRestriction(
-                /*action=*/ null,
-                /*packageName=*/ null,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ null);
+                /* action= */ null,
+                /* packageName= */ null,
+                COMPONENT_CLASS_NAME,
+                /* componentPackageName= */ null);
 
         assertThrows(
                 SecurityException.class,
                 () ->
                         testServiceRestriction(
-                                /*action=*/ null,
-                                /*packageName=*/ null,
-                                /*componentClassName=*/ null,
-                                /*componentPackageName=*/ null));
+                                /* action= */ null,
+                                /* packageName= */ null,
+                                /* componentClassName= */ null,
+                                /* componentPackageName= */ null));
     }
 
     @Test
@@ -494,62 +494,62 @@ public class SdkSandboxRestrictionsUnitTest {
         List<ArrayMap<String, String>> services = new ArrayList<>();
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "action.test",
-                        /*packageName=*/ "packageName.test",
-                        /*componentClassName=*/ "*",
-                        /*componentPackageName=*/ "*"));
+                        /* action= */ "action.test",
+                        /* packageName= */ "packageName.test",
+                        /* componentClassName= */ "*",
+                        /* componentPackageName= */ "*"));
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "action.test",
-                        /*packageName=*/ "*",
-                        /*componentClassName=*/ "className.test",
-                        /*componentPackageName=*/ "*"));
+                        /* action= */ "action.test",
+                        /* packageName= */ "*",
+                        /* componentClassName= */ "className.test",
+                        /* componentPackageName= */ "*"));
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "*",
-                        /*packageName=*/ "packageName.test",
-                        /*componentClassName=*/ "className.test",
-                        /*componentPackageName=*/ "*"));
+                        /* action= */ "*",
+                        /* packageName= */ "packageName.test",
+                        /* componentClassName= */ "className.test",
+                        /* componentPackageName= */ "*"));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         mDeviceConfigUtil.setDeviceConfigProperty(
                 PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ null);
+                INTENT_ACTION,
+                PACKAGE_NAME,
+                /* componentClassName= */ null,
+                /* componentPackageName= */ null);
 
         testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ null,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ null);
+                INTENT_ACTION,
+                /* packageName= */ null,
+                COMPONENT_CLASS_NAME,
+                /* componentPackageName= */ null);
 
         testServiceRestriction(
-                /*action=*/ null,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ null);
+                /* action= */ null,
+                PACKAGE_NAME,
+                COMPONENT_CLASS_NAME,
+                /* componentPackageName= */ null);
 
         assertThrows(
                 SecurityException.class,
                 () ->
                         testServiceRestriction(
-                                /*action=*/ null,
-                                /*packageName=*/ null,
-                                /*componentClassName=*/ null,
-                                /*componentPackageName=*/ null));
+                                /* action= */ null,
+                                /* packageName= */ null,
+                                /* componentClassName= */ null,
+                                /* componentPackageName= */ null));
 
         assertThrows(
                 SecurityException.class,
                 () ->
                         testServiceRestriction(
-                                /*action=*/ INTENT_ACTION,
-                                /*packageName=*/ null,
-                                /*componentClassName=*/ null,
-                                /*componentPackageName=*/ null));
+                                INTENT_ACTION,
+                                /* packageName= */ null,
+                                /* componentClassName= */ null,
+                                /* componentPackageName= */ null));
     }
 
     @Test
@@ -590,65 +590,62 @@ public class SdkSandboxRestrictionsUnitTest {
         List<ArrayMap<String, String>> services = new ArrayList<>();
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "action.test",
-                        /*packageName=*/ "packageName.test",
-                        /*componentClassName=*/ "className.test",
-                        /*componentPackageName=*/ "*"));
+                        /* action= */ "action.test",
+                        /* packageName= */ "packageName.test",
+                        /* componentClassName= */ "className.test",
+                        /* componentPackageName= */ "*"));
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "action.test",
-                        /*packageName=*/ "packageName.test",
-                        /*componentClassName=*/ "*",
-                        /*componentPackageName=*/ "componentPackageName.test"));
+                        /* action= */ "action.test",
+                        /* packageName= */ "packageName.test",
+                        /* componentClassName= */ "*",
+                        /* componentPackageName= */ "componentPackageName.test"));
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "action.test",
-                        /*packageName=*/ "*",
-                        /*componentClassName=*/ "className.test",
-                        /*componentPackageName=*/ "componentPackageName.test"));
+                        /* action= */ "action.test",
+                        /* packageName= */ "*",
+                        /* componentClassName= */ "className.test",
+                        /* componentPackageName= */ "componentPackageName.test"));
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "*",
-                        /*packageName=*/ "packageName.test",
-                        /*componentClassName=*/ "className.test",
-                        /*componentPackageName=*/ "componentPackageName.test"));
+                        /* action= */ "*",
+                        /* packageName= */ "packageName.test",
+                        /* componentClassName= */ "className.test",
+                        /* componentPackageName= */ "componentPackageName.test"));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         mDeviceConfigUtil.setDeviceConfigProperty(
                 PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ null);
+                INTENT_ACTION,
+                PACKAGE_NAME,
+                COMPONENT_CLASS_NAME,
+                /* componentPackageName= */ null);
 
         testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ COMPONENT_PACKAGE_NAME);
+                INTENT_ACTION,
+                PACKAGE_NAME,
+                /* componentClassName= */ null,
+                COMPONENT_PACKAGE_NAME);
 
         testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ null,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ COMPONENT_PACKAGE_NAME);
+                INTENT_ACTION,
+                /* packageName= */ null,
+                COMPONENT_CLASS_NAME,
+                COMPONENT_PACKAGE_NAME);
 
         testServiceRestriction(
-                /*action=*/ null,
-                /*packageName=*/ PACKAGE_NAME,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ COMPONENT_PACKAGE_NAME);
+                /* action= */ null, PACKAGE_NAME, COMPONENT_CLASS_NAME, COMPONENT_PACKAGE_NAME);
 
         assertThrows(
                 SecurityException.class,
                 () ->
                         testServiceRestriction(
-                                /*action=*/ INTENT_ACTION,
-                                /*packageName=*/ null,
-                                /*componentClassName=*/ null,
-                                /*componentPackageName=*/ null));
+                                INTENT_ACTION,
+                                /* packageName= */ null,
+                                /* componentClassName= */ null,
+                                /* componentPackageName= */ null));
     }
 
     @Test
@@ -677,26 +674,26 @@ public class SdkSandboxRestrictionsUnitTest {
         List<ArrayMap<String, String>> services = new ArrayList<>();
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "action.test1",
-                        /*packageName=*/ "packageName.test1",
-                        /*componentClassName=*/ "className.test1",
-                        /*componentPackageName=*/ "componentPackageName.test1"));
+                        "action.test1",
+                        "packageName.test1",
+                        "className.test1",
+                        "componentPackageName.test1"));
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "action.test2",
-                        /*packageName=*/ "packageName.test2",
-                        /*componentClassName=*/ "className.test2",
-                        /*componentPackageName=*/ "componentPackageName.test2"));
+                        "action.test2",
+                        "packageName.test2",
+                        "className.test2",
+                        "componentPackageName.test2"));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         mDeviceConfigUtil.setDeviceConfigProperty(
                 PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         testServiceRestriction(
-                /*action=*/ "action.test1",
-                /*packageName=*/ "packageName.test1",
-                /*componentClassName=*/ "className.test1",
-                /*componentPackageName=*/ "componentPackageName.test1");
+                "action.test1",
+                "packageName.test1",
+                "className.test1",
+                "componentPackageName.test1");
     }
 
     @Test
@@ -721,10 +718,10 @@ public class SdkSandboxRestrictionsUnitTest {
         List<ArrayMap<String, String>> services = new ArrayList<>();
         services.add(
                 getAllowedServicesMap(
-                        /*action=*/ "action.test",
-                        /*packageName=*/ "packageName.test",
-                        /*componentClassName=*/ "className.test",
-                        /*componentPackageName=*/ "*"));
+                        INTENT_ACTION,
+                        PACKAGE_NAME,
+                        COMPONENT_CLASS_NAME,
+                        /* componentPackageName= */ "*"));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         mDeviceConfigUtil.setDeviceConfigProperty(
@@ -743,28 +740,28 @@ public class SdkSandboxRestrictionsUnitTest {
                 new ArrayList<>(
                         Arrays.asList(
                                 getAllowedServicesMap(
-                                        /*action=*/ "action.next",
-                                        /*packageName=*/ "packageName.next",
-                                        /*componentClassName=*/ "className.next",
-                                        /*componentPackageName=*/ "*")));
+                                        "action.next",
+                                        "packageName.next",
+                                        "className.next",
+                                        /* componentPackageName= */ "*")));
         String encodedNextServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedNextServices);
         mDeviceConfigUtil.setDeviceConfigProperty(
                 PROPERTY_NEXT_SERVICE_ALLOWLIST, encodedNextServiceAllowlist);
 
         testServiceRestriction(
-                /*action=*/ "action.next",
-                /*packageName=*/ "packageName.next",
-                /*componentClassName=*/ "className.next",
-                /*componentPackageName=*/ null);
+                "action.next",
+                "packageName.next",
+                "className.next",
+                /* componentPackageName= */ null);
 
         assertThrows(
                 SecurityException.class,
                 () ->
                         testServiceRestriction(
-                                /*action=*/ "action.test",
-                                /*packageName=*/ "packageName.test",
-                                /*componentClassName=*/ "className.test",
-                                /*componentPackageName=*/ null));
+                                "action.test",
+                                "packageName.test",
+                                "className.test",
+                                /* componentPackageName= */ null));
     }
 
     @Test
@@ -788,10 +785,10 @@ public class SdkSandboxRestrictionsUnitTest {
                 new ArrayList<>(
                         Arrays.asList(
                                 getAllowedServicesMap(
-                                        /*action=*/ "action.test",
-                                        /*packageName=*/ "*",
-                                        /*componentClassName=*/ "*",
-                                        /*componentPackageName=*/ "*")));
+                                        INTENT_ACTION,
+                                        /* packageName= */ "*",
+                                        /* componentClassName= */ "*",
+                                        /* componentPackageName= */ "*")));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         mDeviceConfigUtil.setDeviceConfigProperty(
@@ -822,32 +819,32 @@ public class SdkSandboxRestrictionsUnitTest {
                 new ArrayList<>(
                         Arrays.asList(
                                 getAllowedServicesMap(
-                                        /*action=*/ "*",
-                                        /*packageName=*/ "*",
-                                        /*componentClassName=*/ "*",
-                                        /*componentPackageName=*/ "*")));
+                                        /* action= */ "*",
+                                        /* packageName= */ "*",
+                                        /* componentClassName= */ "*",
+                                        /* componentPackageName= */ "*")));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         mDeviceConfigUtil.setDeviceConfigProperty(
                 PROPERTY_SERVICES_ALLOWLIST, encodedServiceAllowlist);
 
         testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ COMPONENT_PACKAGE_NAME,
-                /*componentClassName=*/ COMPONENT_CLASS_NAME,
-                /*componentPackageName=*/ COMPONENT_PACKAGE_NAME);
+                INTENT_ACTION,
+                PACKAGE_NAME,
+                /* componentClassName= */ null,
+                /* componentPackageName= */ null);
 
         testServiceRestriction(
-                /*action=*/ null,
-                /*packageName=*/ null,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ null);
+                /* action= */ null,
+                /* packageName= */ null,
+                /* componentClassName= */ null,
+                /* componentPackageName= */ null);
 
         testServiceRestriction(
-                /*action=*/ INTENT_ACTION,
-                /*packageName=*/ null,
-                /*componentClassName=*/ null,
-                /*componentPackageName=*/ null);
+                INTENT_ACTION,
+                /* packageName= */ null,
+                /* componentClassName= */ null,
+                /* componentPackageName= */ null);
     }
 
     @Test
@@ -871,10 +868,10 @@ public class SdkSandboxRestrictionsUnitTest {
                 new ArrayList<>(
                         Arrays.asList(
                                 getAllowedServicesMap(
-                                        /*action=*/ "action.test",
-                                        /*packageName=*/ "packageName.test",
-                                        /*componentClassName=*/ "className.test",
-                                        /*componentPackageName=*/ "componentPackageName.test")));
+                                        /* action= */ "action.test",
+                                        /* packageName= */ "packageName.test",
+                                        /* componentClassName= */ "className.test",
+                                        /* componentPackageName= */ "componentPackageName.test")));
         allowedServices.put(Build.VERSION_CODES.UPSIDE_DOWN_CAKE, services);
         String encodedServiceAllowlist = ProtoUtil.encodeServiceAllowlist(allowedServices);
         mDeviceConfigUtil.setDeviceConfigProperty(

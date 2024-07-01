@@ -182,6 +182,8 @@ public class SourceTest {
                         .setAttributionScopes(List.of("1", "2", "3"))
                         .setAttributionScopeLimit(4L)
                         .setMaxEventStates(10L)
+                        .setDestinationLimitPriority(100L)
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -236,6 +238,8 @@ public class SourceTest {
                         .setAttributionScopes(List.of("1", "2", "3"))
                         .setAttributionScopeLimit(4L)
                         .setMaxEventStates(10L)
+                        .setDestinationLimitPriority(100L)
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
                         .build());
     }
 
@@ -528,6 +532,20 @@ public class SourceTest {
                         .build(),
                 SourceFixture.getMinimalValidSourceWithAttributionScope()
                         .setMaxEventStates(2L)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitPriority(10L)
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitPriority(20L)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.LIFO)
                         .build());
     }
 
@@ -1365,7 +1383,6 @@ public class SourceTest {
     @Test
     public void validateAndSetNumReportStates_flexLiteValid_returnsTrue() {
         Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementFlexLiteApiEnabled();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
                 .when(flags).getMeasurementMaxReportStatesPerSourceRegistration();
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
@@ -1390,7 +1407,6 @@ public class SourceTest {
     @Test
     public void validateAndSetMaxEventStates_attributionScopeEnabledValid_returnsTrue() {
         Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementFlexLiteApiEnabled();
         doReturn(true).when(flags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
                 .when(flags)
@@ -1421,7 +1437,6 @@ public class SourceTest {
     @Test
     public void validateAndSetMaxEventStates_maxEventStatesNullNonDefaultVtc_returnsFalse() {
         Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementFlexLiteApiEnabled();
         doReturn(true).when(flags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
                 .when(flags)
@@ -1452,7 +1467,6 @@ public class SourceTest {
     @Test
     public void validateAndSetMaxEventStates_maxEventStatesNullNavigation_returnsFalse() {
         Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementFlexLiteApiEnabled();
         doReturn(true).when(flags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
                 .when(flags)
@@ -1484,7 +1498,6 @@ public class SourceTest {
     @Test
     public void validateAndSetMaxEventStates_attributionScopeMaxEventStatesTooLow_returnsFalse() {
         Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementFlexLiteApiEnabled();
         doReturn(true).when(flags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
                 .when(flags)
@@ -1515,7 +1528,6 @@ public class SourceTest {
     @Test
     public void validateAndSetNumReportStates_flexLiteInvalid_returnsFalse() {
         Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementFlexLiteApiEnabled();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
                 .when(flags).getMeasurementMaxReportStatesPerSourceRegistration();
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)

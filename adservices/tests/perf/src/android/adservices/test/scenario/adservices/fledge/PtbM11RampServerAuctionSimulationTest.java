@@ -146,10 +146,14 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
                         getSeller(),
                         CONTEXTUAL_SIGNALS_ONE_BUYER,
                         getServer(),
-                        true);
+                        SERVER_RESPONSE_LOGGING_ENABLED);
         Thread.sleep(2000L);
 
-        runServerAuction(CONTEXTUAL_SIGNALS_ONE_BUYER, getAdSelectionData, getServer(), true);
+        runServerAuction(
+                CONTEXTUAL_SIGNALS_ONE_BUYER,
+                getAdSelectionData,
+                getServer(),
+                SERVER_RESPONSE_LOGGING_ENABLED);
         Thread.sleep(2000L);
     }
 

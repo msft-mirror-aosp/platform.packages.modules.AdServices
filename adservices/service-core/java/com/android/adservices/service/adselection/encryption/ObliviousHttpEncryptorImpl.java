@@ -29,6 +29,7 @@ import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequest;
 import com.android.adservices.ohttp.ObliviousHttpRequestContext;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -64,10 +65,14 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
     /** Encrypts the given byte and stores the encryption context data keyed by given contextId */
     @Override
     public FluentFuture<byte[]> encryptBytes(
-            byte[] plainText, long contextId, long keyFetchTimeoutMs, @Nullable Uri coordinator) {
+            byte[] plainText,
+            long contextId,
+            long keyFetchTimeoutMs,
+            @Nullable Uri coordinator,
+            DevContext devContext) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.OHTTP_ENCRYPT_BYTES);
         return mEncryptionConfigManager
-                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs, coordinator)
+                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs, coordinator, devContext)
                 .transform(
                         key -> {
                             byte[] serializedRequest =

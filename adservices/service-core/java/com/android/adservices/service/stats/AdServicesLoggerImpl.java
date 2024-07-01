@@ -18,7 +18,9 @@ package com.android.adservices.service.stats;
 
 
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
+import com.android.adservices.cobalt.MeasurementCobaltLogger;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
@@ -69,6 +71,7 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
         mStatsdAdServicesLogger.logMeasurementReports(measurementReportsStats);
+        cobaltLogMsmtReportingStats(measurementReportsStats);
     }
 
     @Override
@@ -104,6 +107,9 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     public void logMeasurementRegistrationsResponseSize(
             MeasurementRegistrationResponseStats stats) {
         mStatsdAdServicesLogger.logMeasurementRegistrationsResponseSize(stats);
+
+        // Log to Cobalt system in parallel with existing logging.
+        cobaltLogMsmtRegistration(stats);
     }
 
     @Override
@@ -167,6 +173,7 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     public void logMeasurementAttributionStats(
             MeasurementAttributionStats measurementAttributionStats) {
         mStatsdAdServicesLogger.logMeasurementAttributionStats(measurementAttributionStats);
+        cobaltLogMsmtAttribution(measurementAttributionStats);
     }
 
     @Override
@@ -415,6 +422,53 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                             AppNameApiErrorLogger.getInstance();
 
                     appNameApiErrorLogger.logErrorOccurrence(appPackageName, apiName, errorCode);
+                });
+    }
+
+    /** Logs measurement registration status using {@code CobaltLogger}. */
+    private void cobaltLogMsmtRegistration(MeasurementRegistrationResponseStats stats) {
+        sBackgroundExecutor.execute(
+                () -> {
+                    MeasurementCobaltLogger measurementCobaltLogger =
+                            MeasurementCobaltLogger.getInstance();
+                    measurementCobaltLogger.logRegistrationStatus(
+                            /* appPackageName= */ stats.getSourceRegistrant(),
+                            /* surfaceType= */ stats.getSurfaceType(),
+                            /* type= */ stats.getRegistrationType(),
+                            /* sourceType= */ stats.getInteractionType(),
+                            /* statusCode= */ stats.getRegistrationStatus(),
+                            /* errorCode= */ stats.getFailureType(),
+                            /* isEeaDevice= */ FlagsFactory.getFlags().isEeaDevice());
+                });
+    }
+
+    /** Logs measurement attribution status using {@code CobaltLogger}. */
+    private void cobaltLogMsmtAttribution(MeasurementAttributionStats stats) {
+        sBackgroundExecutor.execute(
+                () -> {
+                    MeasurementCobaltLogger measurementCobaltLogger =
+                            MeasurementCobaltLogger.getInstance();
+                    measurementCobaltLogger.logAttributionStatusWithAppName(
+                            /* appPackageName= */ stats.getSourceRegistrant(),
+                            /* attrSurfaceType= */ stats.getSurfaceType(),
+                            /* sourceType= */ stats.getSourceType(),
+                            /* statusCode= */ stats.getResult(),
+                            /* errorCode= */ stats.getFailureType());
+                });
+    }
+
+    /** Logs measurement reporting status using {@code CobaltLogger}. */
+    private void cobaltLogMsmtReportingStats(MeasurementReportsStats stats) {
+        sBackgroundExecutor.execute(
+                () -> {
+                    MeasurementCobaltLogger measurementCobaltLogger =
+                            MeasurementCobaltLogger.getInstance();
+                    measurementCobaltLogger.logReportingStatusWithAppName(
+                            /* appPackageName= */ stats.getSourceRegistrant(),
+                            /* reportType= */ stats.getType(),
+                            /* reportUploadMethod= */ stats.getUploadMethod(),
+                            /* statusCode= */ stats.getResultCode(),
+                            /* errorCode= */ stats.getFailureType());
                 });
     }
 }

@@ -61,6 +61,9 @@ java_sdk_library {
     aconfig_declarations: [
         "adservices_flags",
     ],
+    lint: {
+        baseline_filename: "lint-baseline.xml",
+    },
 }
 
 java_library {
@@ -79,7 +82,7 @@ java_library {
     min_sdk_version: "30",
     defaults: ["framework-module-defaults"],
     lint: {
-        extra_check_modules: ["AdServicesLintChecker"],
+        extra_check_modules: ["AdServicesProdLintChecker"],
     },
 }
 

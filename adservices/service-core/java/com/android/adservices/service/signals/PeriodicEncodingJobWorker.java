@@ -39,7 +39,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.SingletonRunner;
-import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
@@ -91,7 +91,6 @@ public final class PeriodicEncodingJobWorker {
     private final SignalsScriptEngine mScriptEngine;
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
-    private final DevContextFilter mDevContextFilter;
     private final EnrollmentDao mEnrollmentDao;
     private final Clock mClock;
     private final AdServicesLogger mAdServicesLogger;
@@ -110,7 +109,6 @@ public final class PeriodicEncodingJobWorker {
             SignalsScriptEngine scriptEngine,
             ListeningExecutorService backgroundExecutor,
             ListeningExecutorService lightWeightExecutor,
-            DevContextFilter devContextFilter,
             Flags flags,
             EnrollmentDao enrollmentDao,
             Clock clock,
@@ -123,7 +121,6 @@ public final class PeriodicEncodingJobWorker {
         mScriptEngine = scriptEngine;
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
-        mDevContextFilter = devContextFilter;
         mFlags = flags;
         mEncodedPayLoadMaxSizeBytes = mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes();
         mEncoderLogicMaximumFailure =
@@ -163,7 +160,6 @@ public final class PeriodicEncodingJobWorker {
                     new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
                     signalsDatabase.protectedSignalsDao(),
                     new SignalsScriptEngine(
-                            context,
                             flags::getEnforceIsolateMaxHeapSize,
                             flags::getIsolateMaxHeapSizeBytes,
                             retryStrategy,
@@ -172,7 +168,6 @@ public final class PeriodicEncodingJobWorker {
                                             .getAdServicesJsIsolateConsoleMessagesInLogsEnabled()),
                     AdServicesExecutors.getBackgroundExecutor(),
                     AdServicesExecutors.getLightWeightExecutor(),
-                    DevContextFilter.create(context),
                     flags,
                     EnrollmentDao.getInstance(),
                     Clock.getInstance(),
@@ -289,7 +284,7 @@ public final class PeriodicEncodingJobWorker {
                         .map(
                                 buyer ->
                                         mEncoderLogicHandler.downloadAndUpdate(
-                                                buyer, mDevContextFilter.createDevContext()))
+                                                buyer, DevContext.createForDevOptionsDisabled()))
                         .collect(Collectors.toList());
         return FluentFuture.from(Futures.successfulAsList(encoderUpdates))
                 .transform(ignored -> null, mLightWeightExecutor);
