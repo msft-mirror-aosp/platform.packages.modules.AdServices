@@ -27,6 +27,10 @@ import static com.google.cobalt.ReportDefinition.ReportType.STRING_COUNTS;
 import static com.google.cobalt.ReportDefinition.ReportingInterval.DAYS_1;
 import static com.google.cobalt.ReportDefinition.ReportingInterval.HOURS_1;
 import static com.google.cobalt.ReportDefinition.ReportingInterval.REPORTING_INTERVAL_UNSET;
+import static com.google.cobalt.SystemProfileField.APP_VERSION;
+import static com.google.cobalt.SystemProfileField.CHANNEL;
+import static com.google.cobalt.SystemProfileSelectionPolicy.REPORT_ALL;
+import static com.google.cobalt.SystemProfileSelectionPolicy.SELECT_FIRST;
 import static com.google.cobalt.WindowSize.WINDOW_1_DAY;
 import static com.google.cobalt.WindowSize.WINDOW_28_DAYS;
 import static com.google.cobalt.WindowSize.WINDOW_30_DAYS;
@@ -44,6 +48,8 @@ import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ReportingInterval;
+import com.google.cobalt.SystemProfileField;
+import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.cobalt.WindowSize;
 
 import org.junit.Test;
@@ -158,6 +164,70 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         assertThat(
                         RegistryValidator.validateIntegerBuckets(
                                 IntegerBuckets.newBuilder().setSparseOutput(true).build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidateSystemProfileSelection_reportAllRequired() {
+        for (SystemProfileSelectionPolicy systemProfileSelection :
+                SystemProfileSelectionPolicy.values()) {
+            switch (systemProfileSelection) {
+                case REPORT_ALL:
+                    expect.withMessage("validateSystemProfileSelection(REPORT_ALL)")
+                            .that(
+                                    RegistryValidator.validateSystemProfileSelection(
+                                            systemProfileSelection))
+                            .isTrue();
+                    break;
+                default:
+                    expect.withMessage("validateSystemProfileSelection(%s)", systemProfileSelection)
+                            .that(
+                                    RegistryValidator.validateSystemProfileSelection(
+                                            systemProfileSelection))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testValidateSystemProfileFields_emptySupported() {
+        assertThat(RegistryValidator.validateSystemProfileFields(List.of())).isTrue();
+    }
+
+    @Test
+    public void testValidateSystemProfileFields_supportedFields() {
+        for (SystemProfileField systemProfileField : SystemProfileField.values()) {
+            switch (systemProfileField) {
+                case APP_VERSION:
+                case ARCH:
+                case BOARD_NAME:
+                case OS:
+                case SYSTEM_VERSION:
+                    expect.withMessage("validateSystemProfileFields(%s)", systemProfileField)
+                            .that(
+                                    RegistryValidator.validateSystemProfileFields(
+                                            List.of(systemProfileField)))
+                            .isTrue();
+                    break;
+                default:
+                    expect.withMessage("validateSystemProfileFields(%s)", systemProfileField)
+                            .that(
+                                    RegistryValidator.validateSystemProfileFields(
+                                            List.of(systemProfileField)))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testValidateExperimentIds_requiredEmpty() {
+        expect.withMessage("validateExperimentIds([])")
+                .that(RegistryValidator.validateExperimentIds(List.of()))
+                .isTrue();
+        expect.withMessage("validateExperimentIds([1])")
+                .that(RegistryValidator.validateExperimentIds(List.of(1L)))
                 .isFalse();
     }
 
@@ -476,6 +546,59 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_supportedSystemProfileSelection() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report =
+                getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setSystemProfileSelection(REPORT_ALL)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_unsupportedSystemProfileSelection() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report =
+                getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setSystemProfileSelection(SELECT_FIRST)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_supportedSystemProfileField() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report =
+                getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .addSystemProfileField(APP_VERSION)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_unsupportedSystemProfileField() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report =
+                getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .addSystemProfileField(CHANNEL)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_experimentIdsSetFails() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report =
+                getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .addExperimentId(1L)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
     public void testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_minAndMax() {
         MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
@@ -689,6 +812,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 .setReportType(reportType)
                 .setPrivacyMechanism(privacyMechanism)
                 .setReportingInterval(DAYS_1)
+                .setSystemProfileSelection(REPORT_ALL)
                 .build();
     }
 

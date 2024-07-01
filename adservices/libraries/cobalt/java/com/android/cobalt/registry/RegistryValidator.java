@@ -24,6 +24,7 @@ import static com.google.cobalt.ReportDefinition.PrivacyMechanism.SHUFFLED_DIFFE
 import static com.google.cobalt.ReportDefinition.ReportType.FLEETWIDE_OCCURRENCE_COUNTS;
 import static com.google.cobalt.ReportDefinition.ReportType.STRING_COUNTS;
 import static com.google.cobalt.ReportDefinition.ReportingInterval.DAYS_1;
+import static com.google.cobalt.SystemProfileSelectionPolicy.REPORT_ALL;
 
 import android.util.Log;
 
@@ -38,6 +39,8 @@ import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ReportingInterval;
+import com.google.cobalt.SystemProfileField;
+import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.cobalt.WindowSize;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -87,6 +90,26 @@ public final class RegistryValidator {
 
         if (!validateIntegerBuckets(report.getIntBuckets())) {
             logValidationFailure("Integer buckets failed validation");
+            return false;
+        }
+
+        if (!validateSystemProfileSelection(report.getSystemProfileSelection())) {
+            logValidationFailure(
+                    "System profile selection policy (%s) failed validation",
+                    report.getSystemProfileSelection());
+            return false;
+        }
+
+        if (!validateSystemProfileFields(report.getSystemProfileFieldList())) {
+            logValidationFailure(
+                    "System profile fields (%s) failed validation",
+                    report.getSystemProfileFieldList());
+            return false;
+        }
+
+        if (!validateExperimentIds(report.getExperimentIdList())) {
+            logValidationFailure(
+                    "Experiment ids (%s) failed validation", report.getExperimentIdList());
             return false;
         }
 
@@ -163,8 +186,6 @@ public final class RegistryValidator {
         // includes:
         //   * poisson fields for different privacy mechanisms
         //   * max release stage (set and report's is less than metric's)
-        //   * system profile selection (is REPORT_ALL)
-        //   * system profile fields (is one of the supported values and experiment ids are empty)
         //   * report specific validations
 
         return true;
@@ -248,6 +269,35 @@ public final class RegistryValidator {
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static boolean validateExemptFromConsent(boolean exemptFromConsent) {
         return !exemptFromConsent;
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateSystemProfileSelection(
+            SystemProfileSelectionPolicy systemProfileSelection) {
+        return systemProfileSelection.equals(REPORT_ALL);
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateSystemProfileFields(List<SystemProfileField> systemProfileFields) {
+        for (int i = 0; i < systemProfileFields.size(); ++i) {
+            switch (systemProfileFields.get(i)) {
+                case APP_VERSION:
+                case ARCH:
+                case BOARD_NAME:
+                case OS:
+                case SYSTEM_VERSION:
+                    break;
+                default:
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateExperimentIds(List<Long> experimentIds) {
+        return experimentIds.isEmpty();
     }
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
