@@ -78,7 +78,7 @@ public class ReportImpressionScriptEngineTest extends AdServicesMockitoTestCase 
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED =
             true; // Enabling console messages for tests.
     private final IsolateSettings mIsolateSettings =
-            IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+            IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                     ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
@@ -1337,7 +1337,6 @@ public class ReportImpressionScriptEngineTest extends AdServicesMockitoTestCase 
                     new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperDisabled();
         }
         return new ReportImpressionScriptEngine(
-                mIsolateSettings::getEnforceMaxHeapSizeFeature,
                 mIsolateSettings::getMaxHeapSizeBytes,
                 registerAdBeaconScriptEngineHelper,
                 new NoOpRetryStrategyImpl(),
