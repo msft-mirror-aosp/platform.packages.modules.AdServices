@@ -15,6 +15,7 @@
  */
 package com.android.adservices.mockito;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -39,6 +40,9 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
@@ -77,13 +81,19 @@ public final class ExtendedMockitoExpectations {
     // CHECKSTYLE:OFF Generated code
     public static final AdServicesStaticMockitoMocker mocker =
             new AdServicesExtendedMockitoMocker(new StaticClassChecker() {});
+
     // CHECKSTYLE:ON
 
     /**
      * Mocks a call to {@link ErrorLogUtil#e()}, does nothing.
      *
      * <p>Mocks behavior for both variants of the method.
+     *
+     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
+     *     Tests using this rule should NOT mock {@link ErrorLogUtil#e()} calls as it's taken care
+     *     of under the hood.
      */
+    @Deprecated
     public static void doNothingOnErrorLogUtilError() {
         doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
@@ -269,7 +279,12 @@ public final class ExtendedMockitoExpectations {
      * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
      * #mockErrorLogUtilWithThrowable()} before the test calls {@link ErrorLogUtil#e(Throwable, int,
      * int)}.
+     *
+     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
+     *     To specify excepted calls with any exception, use {@link
+     *     ExpectErrorLogUtilWithExceptionCall} along with {@link Any}.
      */
+    @Deprecated
     public static void verifyErrorLogUtilErrorWithAnyException(int errorCode, int ppapiName) {
         verifyErrorLogUtilErrorWithAnyException(errorCode, ppapiName, times(1));
     }
@@ -281,7 +296,12 @@ public final class ExtendedMockitoExpectations {
      * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
      * #mockErrorLogUtilWithThrowable()} before the test calls {@link ErrorLogUtil#e(Throwable, int,
      * int)}.
+     *
+     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
+     *     To specify excepted calls with any exception, use {@link
+     *     ExpectErrorLogUtilWithExceptionCall} along with {@link Any} as the throwable parameter.
      */
+    @Deprecated
     public static void verifyErrorLogUtilErrorWithAnyException(
             int errorCode, int ppapiName, VerificationMode mode) {
         verify(() -> ErrorLogUtil.e(any(), eq(errorCode), eq(ppapiName)), mode);
@@ -293,7 +313,11 @@ public final class ExtendedMockitoExpectations {
      * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
      * #mockErrorLogUtilWithThrowable()} before the test calls {@link ErrorLogUtil#e(Throwable, int,
      * int)}.
+     *
+     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
+     *     Use {@link ExpectErrorLogUtilWithExceptionCall} to specify expected calls with exception.
      */
+    @Deprecated
     public static void verifyErrorLogUtilError(Throwable throwable, int errorCode, int ppapiName) {
         verifyErrorLogUtilError(throwable, errorCode, ppapiName, times(1));
     }
@@ -305,7 +329,11 @@ public final class ExtendedMockitoExpectations {
      * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
      * #mockErrorLogUtilWithThrowable()} before the test calls {@link ErrorLogUtil#e(Throwable, int,
      * int)}.
+     *
+     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
+     *     Use {@link ExpectErrorLogUtilWithExceptionCall} to specify expected calls with exception.
      */
+    @Deprecated
     public static void verifyErrorLogUtilError(
             Throwable throwable, int errorCode, int ppapiName, VerificationMode mode) {
         verify(() -> ErrorLogUtil.e(throwable, errorCode, ppapiName), mode);
@@ -316,7 +344,11 @@ public final class ExtendedMockitoExpectations {
      *
      * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
      * #mockErrorLogUtilWithoutThrowable()} before the test calls {@link ErrorLogUtil#e(int, int)}.
+     *
+     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
+     *     Use {@link ExpectErrorLogUtilCall} to specify expected calls without exception.
      */
+    @Deprecated
     public static void verifyErrorLogUtilError(int errorCode, int ppapiName) {
         verify(() -> ErrorLogUtil.e(errorCode, ppapiName));
     }
@@ -327,7 +359,11 @@ public final class ExtendedMockitoExpectations {
      *
      * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
      * #mockErrorLogUtilWithoutThrowable()} before the test calls {@link ErrorLogUtil#e(int, int)}.
+     *
+     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
+     *     Use {@link ExpectErrorLogUtilCall} to specify expected calls without exception.
      */
+    @Deprecated
     public static void verifyErrorLogUtilError(
             int errorCode, int ppapiName, VerificationMode mode) {
         verify(() -> ErrorLogUtil.e(errorCode, ppapiName), mode);

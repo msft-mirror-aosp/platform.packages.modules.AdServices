@@ -17,18 +17,27 @@ package com.android.adservices.shared.testing;
 
 import com.android.adservices.shared.testing.Logger.RealLogger;
 
-import java.util.Objects;
-
 /** Base class for all tests on shared testing infra. */
 public abstract class SharedSidelessTestCase extends SidelessTestCase {
 
-    protected final Logger mLog;
+    // TODO(b/342639109): set order / move to superclass (which should rely on an abstract method
+    // to get it, so it would be properly implemented by host/device-side)
+    public final AbstractProcessLifeguardRule processLifeguard =
+            new AbstractProcessLifeguardRule(
+                    DynamicLogger.getInstance(), AbstractProcessLifeguardRule.Mode.FAIL) {
+
+                @Override
+                protected boolean isMainThread() {
+                    mLog.i("isMainThread(): undefined on sideless, returning false");
+                    return false;
+                }
+            };
 
     protected SharedSidelessTestCase() {
-        this(StandardStreamsLogger.getInstance());
+        this(DynamicLogger.getInstance());
     }
 
     protected SharedSidelessTestCase(RealLogger realLogger) {
-        mLog = new Logger(Objects.requireNonNull(realLogger), getClass());
+        super(realLogger);
     }
 }

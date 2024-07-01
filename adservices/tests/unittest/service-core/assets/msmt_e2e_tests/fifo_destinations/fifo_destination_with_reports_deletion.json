@@ -2,7 +2,8 @@
   "description": "The sources with the oldest destination get deleted if number of distinct destinations per enrollment per publisher exceed the limit. Corresponding aggregate reports and attributions are deleted.",
   "phflags_override": {
     "measurement_debug_key_ad_id_matching_enrollment_blocklist": "",
-    "measurement_enable_destination_publisher_enrollment_fifo": "true",
+    "measurement_enable_source_destination_limit_priority": "true",
+    "measurement_default_destination_limit_algorithm": 1,
     "measurement_max_distinct_destinations_in_active_source": 3,
     "measurement_enable_fifo_destinations_delete_aggregate_reports": "true",
     "measurement_flex_api_max_information_gain_dual_destination_event": "9",
@@ -457,7 +458,15 @@
         "report_time": "800003600008",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.destinationS4.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.destinationS4.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -466,15 +475,22 @@
             }
           ],
           "source_debug_key": "444",
-          "trigger_debug_key": "444",
-          "source_registration_time": "799977600"
+          "trigger_debug_key": "444"
         }
       },
       {
         "report_time": "800003600010",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.destinationS3.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.destinationS3.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -483,8 +499,7 @@
             }
           ],
           "source_debug_key": "333",
-          "trigger_debug_key": "666",
-          "source_registration_time": "799977600"
+          "trigger_debug_key": "666"
         }
       }
     ],
@@ -493,7 +508,15 @@
         "report_time": "800000000007",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.destinationS1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.destinationS1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -502,15 +525,22 @@
             }
           ],
           "source_debug_key": "111",
-          "trigger_debug_key": "333",
-          "source_registration_time": "799977600"
+          "trigger_debug_key": "333"
         }
       },
       {
         "report_time": "800000000004",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "https://webdestinations21.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://webdestinations21.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -519,15 +549,22 @@
             }
           ],
           "source_debug_key": "222",
-          "trigger_debug_key": "222",
-          "source_registration_time": "799977600"
+          "trigger_debug_key": "222"
         }
       },
       {
         "report_time": "800000000008",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.destinationS4.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.destinationS4.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -536,15 +573,22 @@
             }
           ],
           "source_debug_key": "444",
-          "trigger_debug_key": "444",
-          "source_registration_time": "799977600"
+          "trigger_debug_key": "444"
         }
       },
       {
         "report_time": "800000000002",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "https://webdestinations1ands4.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://webdestinations1ands4.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -553,15 +597,22 @@
             }
           ],
           "source_debug_key": "111",
-          "trigger_debug_key": "111",
-          "source_registration_time": "799977600"
+          "trigger_debug_key": "111"
         }
       },
       {
         "report_time": "800000000010",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.destinationS3.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.destinationS3.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -570,8 +621,7 @@
             }
           ],
           "source_debug_key": "333",
-          "trigger_debug_key": "666",
-          "source_registration_time": "799977600"
+          "trigger_debug_key": "666"
         }
       }
     ],
@@ -580,7 +630,7 @@
         "report_time": "800172800001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
-          "attribution_destination": "https://webdestinations1ands4.com",
+          "attribution_destination": "https://webdestinations1ands4.test",
           "scheduled_report_time": "800172800",
           "source_event_id": "1",
           "trigger_data": "1",
@@ -594,7 +644,7 @@
         "report_time": "800172800001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.destinationS1.com",
+          "attribution_destination": "android-app://example.destinationS1.test",
           "scheduled_report_time": "800172800",
           "source_event_id": "1",
           "trigger_data": "3",
@@ -608,7 +658,7 @@
         "report_time": "800172800003",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
-          "attribution_destination": ["https://webdestinations21.com","https://webdestinations22.com"],
+          "attribution_destination": ["https://webdestinations21.test","https://webdestinations22.test"],
           "scheduled_report_time": "800172800",
           "source_event_id": "2",
           "trigger_data": "2",
@@ -622,7 +672,7 @@
         "report_time": "800172800005",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.destinationS3.com",
+          "attribution_destination": "android-app://example.destinationS3.test",
           "scheduled_report_time": "800172800",
           "source_event_id": "3",
           "trigger_data": "6",
@@ -636,7 +686,7 @@
         "report_time": "800172800006",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.destinationS4.com",
+          "attribution_destination": "android-app://example.destinationS4.test",
           "scheduled_report_time": "800172800",
           "source_event_id": "4",
           "trigger_data": "4",
@@ -652,7 +702,7 @@
         "report_time": "800000000002",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "payload": {
-          "attribution_destination": "https://webdestinations1ands4.com",
+          "attribution_destination": "https://webdestinations1ands4.test",
           "scheduled_report_time": "800172800",
           "source_event_id": "1",
           "trigger_data": "1",
@@ -666,7 +716,7 @@
         "report_time": "800000000004",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "payload": {
-          "attribution_destination": ["https://webdestinations21.com","https://webdestinations22.com"],
+          "attribution_destination": ["https://webdestinations21.test","https://webdestinations22.test"],
           "scheduled_report_time": "800172800",
           "source_event_id": "2",
           "trigger_data": "2",
@@ -680,7 +730,7 @@
         "report_time": "800000000007",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.destinationS1.com",
+          "attribution_destination": "android-app://example.destinationS1.test",
           "scheduled_report_time": "800172800",
           "source_event_id": "1",
           "trigger_data": "3",
@@ -694,7 +744,7 @@
         "report_time": "800000000008",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.destinationS4.com",
+          "attribution_destination": "android-app://example.destinationS4.test",
           "scheduled_report_time": "800172800",
           "source_event_id": "4",
           "trigger_data": "4",
@@ -708,7 +758,7 @@
         "report_time": "800000000010",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.destinationS3.com",
+          "attribution_destination": "android-app://example.destinationS3.test",
           "scheduled_report_time": "800172800",
           "source_event_id": "3",
           "trigger_data": "6",
@@ -728,10 +778,10 @@
             "body": {
               "source_event_id": "1",
               "attribution_destination": [
-                "android-app://example.destinationS1.com",
-                "https://webdestinations1ands4.com"
+                "android-app://example.destinationS1.test",
+                "https://webdestinations1ands4.test"
               ],
-              "source_site": "android-app://example.publisher1.com",
+              "source_site": "android-app://example.publisher1.test",
               "source_debug_key": "111"
             }
           }
@@ -746,11 +796,11 @@
             "body": {
               "source_event_id": "2",
               "attribution_destination": [
-                "android-app://example.destinationS2.com",
-                "https://webdestinations21.com",
-                "https://webdestinations22.com"
+                "android-app://example.destinationS2.test",
+                "https://webdestinations21.test",
+                "https://webdestinations22.test"
               ],
-              "source_site": "android-app://example.publisher1.com",
+              "source_site": "android-app://example.publisher1.test",
               "source_debug_key": "222"
             }
           }
@@ -765,11 +815,11 @@
             "body": {
               "source_event_id": "3",
               "attribution_destination": [
-                "android-app://example.destinationS3.com",
-                "https://webdestinations21.com",
-                "https://webdestinations22.com"
+                "android-app://example.destinationS3.test",
+                "https://webdestinations21.test",
+                "https://webdestinations22.test"
               ],
-              "source_site": "android-app://example.publisher2.com",
+              "source_site": "android-app://example.publisher2.test",
               "source_debug_key": "333"
             }
           }
@@ -784,11 +834,11 @@
             "body": {
               "source_event_id": "4",
               "attribution_destination": [
-                "android-app://example.destinationS4.com",
-                "https://webdestinations1ands4.com",
-                "https://webdestinations4.com"
+                "android-app://example.destinationS4.test",
+                "https://webdestinations1ands4.test",
+                "https://webdestinations4.test"
               ],
-              "source_site": "android-app://example.publisher1.com",
+              "source_site": "android-app://example.publisher1.test",
               "source_debug_key": "444",
               "source_destination_limit": "3"
             }
@@ -802,7 +852,7 @@
           {
             "type": "trigger-no-matching-source",
             "body": {
-              "attribution_destination": "android-app://example.destinationS2.com",
+              "attribution_destination": "android-app://example.destinationS2.test",
               "trigger_debug_key": "555"
             }
           }
@@ -816,8 +866,8 @@
             "type": "source-success",
             "body": {
               "source_event_id": "5",
-              "attribution_destination": "android-app://example.destinationS5.com",
-              "source_site": "android-app://example.publisher1.com",
+              "attribution_destination": "android-app://example.destinationS5.test",
+              "source_site": "android-app://example.publisher1.test",
               "source_debug_key": "555"
             }
           }
@@ -831,8 +881,8 @@
             "type": "source-success",
             "body": {
               "source_event_id": "6",
-              "attribution_destination": "android-app://example.destinationS6.com",
-              "source_site": "android-app://example.publisher1.com",
+              "attribution_destination": "android-app://example.destinationS6.test",
+              "source_site": "android-app://example.publisher1.test",
               "source_debug_key": "666",
               "source_destination_limit": "3"
             }
@@ -846,7 +896,7 @@
           {
             "type": "trigger-no-matching-source",
             "body": {
-              "attribution_destination": "android-app://example.destinationS1.com",
+              "attribution_destination": "android-app://example.destinationS1.test",
               "trigger_debug_key": "777"
             }
           }

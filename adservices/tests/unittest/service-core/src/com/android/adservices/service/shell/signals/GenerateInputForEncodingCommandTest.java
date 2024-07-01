@@ -82,8 +82,7 @@ public final class GenerateInputForEncodingCommandTest
 
     @Before
     public void setUp() {
-        this.mJSScriptEngine =
-                JSScriptEngine.getInstance(appContext.get(), LoggerFactory.getFledgeLogger());
+        this.mJSScriptEngine = JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger());
     }
 
     @Test

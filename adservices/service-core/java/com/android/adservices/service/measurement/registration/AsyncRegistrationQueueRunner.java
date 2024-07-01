@@ -16,10 +16,6 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.InsertSourcePermission.ALLOWED;
-import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.InsertSourcePermission.ALLOWED_FIFO_SUCCESS;
-import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.InsertSourcePermission.NOT_ALLOWED;
-
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.ContentProviderClient;
@@ -27,6 +23,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.os.RemoteException;
+import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
@@ -311,8 +308,8 @@ public class AsyncRegistrationQueueRunner {
                 source.setStatus(Source.Status.MARKED_TO_DELETE);
             }
             Map<String, String> additionalDebugReportParams = null;
-            if (mFlags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()
-                    && ALLOWED_FIFO_SUCCESS.equals(sourceAllowedToInsert)) {
+            if (mFlags.getMeasurementEnableSourceDestinationLimitPriority()
+                    && InsertSourcePermission.ALLOWED_FIFO_SUCCESS.equals(sourceAllowedToInsert)) {
                 int limit = mFlags.getMeasurementMaxDistinctDestinationsInActiveSource();
                 additionalDebugReportParams =
                         Map.of(DebugReportApi.Body.SOURCE_DESTINATION_LIMIT, String.valueOf(limit));
@@ -393,7 +390,7 @@ public class AsyncRegistrationQueueRunner {
         // Do not persist the navigation source if the same reporting origin has been registered
         // for the registration.
         if (isNavigationOriginAlreadyRegisteredForRegistration(source, dao, flags)) {
-            return NOT_ALLOWED;
+            return InsertSourcePermission.NOT_ALLOWED;
         }
         long windowStartTime =
                 source.getEventTime() - flags.getMeasurementRateLimitWindowMilliseconds();
@@ -401,7 +398,7 @@ public class AsyncRegistrationQueueRunner {
         if (publisher.isEmpty()) {
             LoggerFactory.getMeasurementLogger()
                     .d("insertSources: getTopLevelPublisher failed, topOrigin: %s", topOrigin);
-            return NOT_ALLOWED;
+            return InsertSourcePermission.NOT_ALLOWED;
         }
         if (flags.getMeasurementEnableDestinationRateLimit()) {
             if (source.getAppDestinations() != null
@@ -415,7 +412,7 @@ public class AsyncRegistrationQueueRunner {
                             EventSurfaceType.APP,
                             source.getEventTime(),
                             dao)) {
-                return NOT_ALLOWED;
+                return InsertSourcePermission.NOT_ALLOWED;
             }
 
             if (source.getWebDestinations() != null
@@ -429,7 +426,7 @@ public class AsyncRegistrationQueueRunner {
                             EventSurfaceType.WEB,
                             source.getEventTime(),
                             dao)) {
-                return NOT_ALLOWED;
+                return InsertSourcePermission.NOT_ALLOWED;
             }
         }
         long numOfSourcesPerPublisher =
@@ -441,7 +438,7 @@ public class AsyncRegistrationQueueRunner {
                     flags.getMeasurementMaxSourcesPerPublisher(), publisher);
             debugReportApi.scheduleSourceStorageLimitDebugReport(
                     source, String.valueOf(numOfSourcesPerPublisher), dao);
-            return NOT_ALLOWED;
+            return InsertSourcePermission.NOT_ALLOWED;
         }
         if (source.getAppDestinations() != null
                 && !isDestinationWithinBounds(
@@ -455,7 +452,7 @@ public class AsyncRegistrationQueueRunner {
                         windowStartTime,
                         source.getEventTime(),
                         dao)) {
-            return NOT_ALLOWED;
+            return InsertSourcePermission.NOT_ALLOWED;
         }
 
         if (source.getWebDestinations() != null
@@ -470,7 +467,7 @@ public class AsyncRegistrationQueueRunner {
                         windowStartTime,
                         source.getEventTime(),
                         dao)) {
-            return NOT_ALLOWED;
+            return InsertSourcePermission.NOT_ALLOWED;
         }
         int numOfOriginExcludingRegistrationOrigin =
                 dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
@@ -488,25 +485,27 @@ public class AsyncRegistrationQueueRunner {
                             "insertSources: Max limit of 1 reporting origin for publisher - %s and"
                                     + " enrollment - %s reached.",
                             publisher, source.getEnrollmentId());
-            return NOT_ALLOWED;
+            return InsertSourcePermission.NOT_ALLOWED;
         }
         try {
             if (!source.validateAndSetNumReportStates(flags)
                     || !source.validateAndSetMaxEventStates(flags)
                     || !source.hasValidInformationGain(flags)) {
                 debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
-                return NOT_ALLOWED;
+                return InsertSourcePermission.NOT_ALLOWED;
             }
         } catch (ArithmeticException e) {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Calculating the number of report states overflowed.");
             debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
-            return NOT_ALLOWED;
+            return InsertSourcePermission.NOT_ALLOWED;
         }
 
-        if (flags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()) {
+        // Should be deprecated once destination priority is fully launched
+        if (extractSourceDestinationLimitingAlgo(flags, source)
+                == Source.DestinationLimitAlgorithm.FIFO) {
             InsertSourcePermission appDestSourceAllowedToInsert =
-                    maybeDeleteSourcesForLruDestination(
+                    deleteLowPriorityDestinationSourcesToAccommodateNewSource(
                             source,
                             publisherType,
                             dao,
@@ -514,8 +513,12 @@ public class AsyncRegistrationQueueRunner {
                             publisher.get(),
                             EventSurfaceType.APP,
                             source.getAppDestinations());
+            if (appDestSourceAllowedToInsert == InsertSourcePermission.NOT_ALLOWED) {
+                // Return early without checking web destinations
+                return InsertSourcePermission.NOT_ALLOWED;
+            }
             InsertSourcePermission webDestSourceAllowedToInsert =
-                    maybeDeleteSourcesForLruDestination(
+                    deleteLowPriorityDestinationSourcesToAccommodateNewSource(
                             source,
                             publisherType,
                             dao,
@@ -523,18 +526,20 @@ public class AsyncRegistrationQueueRunner {
                             publisher.get(),
                             EventSurfaceType.WEB,
                             source.getWebDestinations());
-            // NOT_ALLOWED is not an expected response from maybeDeleteSourcesForLruDestination, so
-            // we are not handling that.
-            if (appDestSourceAllowedToInsert == ALLOWED_FIFO_SUCCESS
-                    || webDestSourceAllowedToInsert == ALLOWED_FIFO_SUCCESS) {
-                // TODO(b/332647639): Handle debug success report for this case.
-                return ALLOWED_FIFO_SUCCESS;
+            if (webDestSourceAllowedToInsert == InsertSourcePermission.NOT_ALLOWED) {
+                return InsertSourcePermission.NOT_ALLOWED;
+            }
+
+            if (appDestSourceAllowedToInsert == InsertSourcePermission.ALLOWED_FIFO_SUCCESS
+                    || webDestSourceAllowedToInsert
+                            == InsertSourcePermission.ALLOWED_FIFO_SUCCESS) {
+                return InsertSourcePermission.ALLOWED_FIFO_SUCCESS;
             }
         }
-        return ALLOWED;
+        return InsertSourcePermission.ALLOWED;
     }
 
-    private static InsertSourcePermission maybeDeleteSourcesForLruDestination(
+    private static InsertSourcePermission deleteLowPriorityDestinationSourcesToAccommodateNewSource(
             Source source,
             @EventSurfaceType int publisherType,
             IMeasurementDao dao,
@@ -548,9 +553,7 @@ public class AsyncRegistrationQueueRunner {
         }
         int fifoLimit = flags.getMeasurementMaxDistinctDestinationsInActiveSource();
         if (destinations.size() > fifoLimit) {
-            // This is an unexpected scenario, i.e. flags are configured incorrectly.
-            throw new IllegalStateException(
-                    "Incoming destinations: " + destinations.size() + "; FIFO limit:" + fifoLimit);
+            return InsertSourcePermission.NOT_ALLOWED;
         }
         int distinctDestinations =
                 dao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
@@ -561,8 +564,8 @@ public class AsyncRegistrationQueueRunner {
                         destinationType,
                         source.getEventTime());
         if (distinctDestinations + destinations.size() <= fifoLimit) {
-            return InsertSourcePermission
-                    .ALLOWED; // Source is allowed to be inserted without any deletion
+            // Source is allowed to be inserted without any deletion
+            return InsertSourcePermission.ALLOWED;
         }
 
         // Delete sources associated to the oldest destination per enrollment per publisher.
@@ -571,15 +574,23 @@ public class AsyncRegistrationQueueRunner {
         // Although it should not be more than 4 iterations because the new source can have
         // at max 1 app destination and 3 web destinations (configurable).
         while (distinctDestinations + destinations.size() > fifoLimit) {
-            // Delete sources for the oldest destination
-            List<String> sourceIdsToDelete =
-                    dao.fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+            // Delete sources for the lowest priority / oldest destination
+            Pair<Long, List<String>> destinationPriorityWithSourcesToDelete =
+                    dao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
                             publisher,
                             publisherType,
                             source.getEnrollmentId(),
                             destinations,
                             destinationType,
                             source.getEventTime());
+            if (source.getDestinationLimitPriority()
+                    < destinationPriorityWithSourcesToDelete.first) {
+                // If the incoming source has a lower priority than the least prioritized
+                // destination, reject the incoming source.
+                return InsertSourcePermission.NOT_ALLOWED;
+            }
+
+            List<String> sourceIdsToDelete = destinationPriorityWithSourcesToDelete.second;
             if (sourceIdsToDelete.isEmpty()) {
                 // If destination limit exceeds, the oldest destination deletion should be
                 // successful. This is an unexpected state.
@@ -603,6 +614,7 @@ public class AsyncRegistrationQueueRunner {
                                         + sourceIdsToDelete.size()
                                         + " sources to insert the new source.");
             }
+            dao.deleteFutureFakeEventReportsForSources(sourceIdsToDelete, source.getEventTime());
             distinctDestinations =
                     dao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                             publisher,
@@ -612,7 +624,7 @@ public class AsyncRegistrationQueueRunner {
                             destinationType,
                             source.getEventTime());
         }
-        return ALLOWED_FIFO_SUCCESS;
+        return InsertSourcePermission.ALLOWED_FIFO_SUCCESS;
     }
 
     private static boolean sourceIsWithinTimeBasedDestinationLimits(
@@ -697,9 +709,10 @@ public class AsyncRegistrationQueueRunner {
             throws DatastoreException {
         Flags flags = FlagsFactory.getFlags();
 
-        // If FIFO is enabled, we push the least recently used destination out for the enrollment
-        // and publisher combination by deleting the sources.
-        if (!flags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()) {
+        // If the source has destination algorithm overridden as LIFO, the source is rejected if the
+        // destination rate limit is exceeded.
+        if (extractSourceDestinationLimitingAlgo(flags, source)
+                == Source.DestinationLimitAlgorithm.LIFO) {
             int destinationCount;
             if (flags.getMeasurementEnableDestinationRateLimit()) {
                 destinationCount =
@@ -817,6 +830,8 @@ public class AsyncRegistrationQueueRunner {
                                                 mSourceNoiseHandler.getRandomizedTriggerRate(
                                                         source))
                                         .setRegistrationOrigin(source.getRegistrationOrigin())
+                                        .setTriggerSummaryBucket(
+                                                fakeReport.getTriggerSummaryBucket())
                                         .setSourceDebugKey(getSourceDebugKeyForNoisedReport(source))
                                         .build())
                 .collect(Collectors.toList());
@@ -867,6 +882,22 @@ public class AsyncRegistrationQueueRunner {
                 }
             }
         }
+    }
+
+    /**
+     * Returns the effective source destination limiting algorithm. Return if the source has
+     * overridden the algorithm, otherwise fallback to the configured default destination algorithm.
+     *
+     * @param flags flags
+     * @param source incoming source
+     * @return the effective source destination limiting algorithm
+     */
+    private static Source.DestinationLimitAlgorithm extractSourceDestinationLimitingAlgo(
+            Flags flags, Source source) {
+        return Optional.ofNullable(source.getDestinationLimitAlgorithm())
+                .orElse(
+                        Source.DestinationLimitAlgorithm.values()[
+                                flags.getMeasurementDefaultSourceDestinationLimitAlgorithm()]);
     }
 
     private String insertSource(Source source, IMeasurementDao dao) throws DatastoreException {
