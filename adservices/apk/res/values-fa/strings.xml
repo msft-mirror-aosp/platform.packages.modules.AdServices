@@ -50,7 +50,7 @@
     <string name="notificationUI_notification_cta_eu" msgid="2548139830894655548">"بیشتر بدانید"</string>
     <string name="notificationUI_header_title_eu" msgid="9044572957854364091">"نسخه بتای حریم خصوصی آگهی‌های Android"</string>
     <string name="notificationUI_container1_title_eu" msgid="1373016756109206670">"تازه‌ها"</string>
-    <string name="notificationUI_container1_body_text_eu" msgid="6852401002023449018">"ویژگی‌های جدید حریم خصوصی در «جعبه شنی حریم خصوصی» به برنامه‌ها اجازه می‌دهد آگهی‌های مرتبط به شما نشان دهند، اما آنچه را که این برنامه‌ها می‌توانند درباره فعالیت‌های شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر متوجه شوند محدود می‌کند."</string>
+    <string name="notificationUI_container1_body_text_eu" msgid="6852401002023449018">"ویژگی‌های جدید حریم خصوصی در «جعبه امن حریم خصوصی» به برنامه‌ها اجازه می‌دهد آگهی‌های مرتبط به شما نشان دهند، اما آنچه را که این برنامه‌ها می‌توانند درباره فعالیت‌های شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر متوجه شوند محدود می‌کند."</string>
     <string name="notificationUI_container1_control_text_eu" msgid="3328459492928352390">"روش کار"</string>
     <string name="notificationUI_container2_title_eu" msgid="3473572343314878715">"نحوه مشارکت"</string>
     <string name="notificationUI_container2_body_text_eu" msgid="5566431917133361267">"روشن کردن نسخه بتا به برنامه‌ها اجازه می‌دهد این روش‌های خصوصی‌تر جدید را برای نمایش آگهی به شما آزمایش کنند. هرزمان خواستید می‌توانید نسخه بتا را در تنظیمات حریم خصوصی خاموش کنید."</string>
@@ -58,16 +58,16 @@
     <string name="notificationUI_right_control_button_text_eu" msgid="515640904971092242">"روشن کردن"</string>
     <string name="notificationUI_more_button_text" msgid="5675315920171576420">"بیشتر"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="404510501246686605">"از مشارکت شما سپاس‌گزاریم"</string>
-    <string name="notificationUI_confirmation_accept_subtitle" msgid="7583794584528601080">"شما عضوی از نسخه بتای حریم خصوصی آگهی‌های Android هستید. «جعبه شنی حریم خصوصی» برای دستگاه شما روشن شده است.\n\nهرزمان بخواهید می‌توانید در تنظیمات حریم خصوصی اطلاعات بیشتری کسب کنید یا نسخه بتا را خاموش کنید."</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="7583794584528601080">"شما عضوی از نسخه بتای حریم خصوصی آگهی‌های Android هستید. «جعبه امن حریم خصوصی» برای دستگاه شما روشن شده است.\n\nهرزمان بخواهید می‌توانید در تنظیمات حریم خصوصی اطلاعات بیشتری کسب کنید یا نسخه بتا را خاموش کنید."</string>
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"انتخاب کرده‌اید که شرکت نکنید"</string>
-    <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"از پاسختان سپاس‌گزاریم. «جعبه شنی حریم خصوصی» برای دستگاه خاموش شده است.\n\nاگر نظرتان تغییر کرد یا خواستید اطلاعات بیشتری کسب کنید، به تنظیمات حریم خصوصی بروید."</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"از پاسختان سپاس‌گزاریم. «جعبه امن حریم خصوصی» برای دستگاه خاموش شده است.\n\nاگر نظرتان تغییر کرد یا خواستید اطلاعات بیشتری کسب کنید، به تنظیمات حریم خصوصی بروید."</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"تنظیمات حریم خصوصی"</string>
     <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"متوجه‌ام"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"شما عضوی از نسخه بتا هستید"</string>
-    <string name="notificationUI_container2_body_text" msgid="939678704046987170">"«جعبه شنی حریم خصوصی» در دستگاهتان روشن است و برنامه‌ها می‌توانند این روش‌های خصوصی‌تر جدید را برای نمایش آگهی به شما آزمایش کنند. هرزمان خواستید می‌توانید نسخه بتا را در تنظیمات حریم خصوصی خاموش کنید."</string>
+    <string name="notificationUI_container2_body_text" msgid="939678704046987170">"«جعبه امن حریم خصوصی» در دستگاهتان روشن است و برنامه‌ها می‌توانند این روش‌های خصوصی‌تر جدید را برای نمایش آگهی به شما آزمایش کنند. هرزمان خواستید می‌توانید نسخه بتا را در تنظیمات حریم خصوصی خاموش کنید."</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"متوجه‌ام"</string>
-    <string name="notificationUI_how_it_works_expanded_text1" msgid="510882738544330831">"«جعبه شنی حریم خصوصی Android» ویژگی‌های جدیدی را ارائه می‌کند که برنامه‌ها می‌توانند بااستفاده از آن‌ها آگهی‌هایی به شما نشان دهند که شاید بپسندید. این فناوری‌ها از شناسه‌های دستگاه استفاده نمی‌کنند.\n\nAndroid و برنامه‌های شما می‌توانند انواع آگهی‌هایی را که ممکن است به آن‌ها علاقه داشته باشید ارزیابی کنند و این علایق را به‌طور موقت در دستگاهتان ذخیره کنند. این ویژگی به برنامه‌ها امکان می‌دهد بدون ردیابی فعالیت شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر، آگهی‌هایی را که ممکن است بپسندید به شما نشان دهند."</string>
-    <string name="notificationUI_how_it_works_expanded_text2" msgid="4718413599985793343">"شخصی‌سازی آگهی با «جعبه شنی حریم خصوصی»"</string>
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="510882738544330831">"«جعبه امن حریم خصوصی Android» ویژگی‌های جدیدی را ارائه می‌کند که برنامه‌ها می‌توانند بااستفاده از آن‌ها آگهی‌هایی به شما نشان دهند که شاید بپسندید. این فناوری‌ها از شناسه‌های دستگاه استفاده نمی‌کنند.\n\nAndroid و برنامه‌های شما می‌توانند انواع آگهی‌هایی را که ممکن است به آن‌ها علاقه داشته باشید ارزیابی کنند و این علایق را به‌طور موقت در دستگاهتان ذخیره کنند. این ویژگی به برنامه‌ها امکان می‌دهد بدون ردیابی فعالیت شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر، آگهی‌هایی را که ممکن است بپسندید به شما نشان دهند."</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="4718413599985793343">"شخصی‌سازی آگهی با «جعبه امن حریم خصوصی»"</string>
     <string name="notificationUI_how_it_works_expanded_text3" msgid="1721682192376354439">"•  علایق ارزیابی‌شده توسط Android"</string>
     <string name="notificationUI_how_it_works_expanded_text4" msgid="2441076226555310232">"Android به‌طور دوره‌ای موضوع‌های اصلی موردعلاقه‌تان را براساس برنامه‌هایی که استفاده می‌کنید ارزیابی می‌کند؛ به‌عنوان مثال «ورزش» یا «سفر».\n\nبعداً، برنامه‌ها می‌توانند به Android درخواست دهند که از این موضوع‌ها برای نشان دادن آگهی‌های مرتبط‌تر به شما استفاده کنند.\n\nمی‌توانید فهرست موضوع‌های فعلی را در تنظیمات حریم خصوصی خود ببینید و هر موردی را که نمی‌پسندید مسدود کنید."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="8257214835811317663">"•  علایق ارزیابی‌شده توسط برنامه‌ها"</string>
@@ -135,13 +135,13 @@
     <string name="notificationUI_header_ga_title_v2" msgid="7278405488204886217">"اکنون ویژگی‌های جدیدی برای حریم خصوصی آگهی‌ها دردسترس است"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="8607352345994852038">"Android اکنون ویژگی‌های حریم خصوصی جدیدی ارائه می‌دهد که انتخاب بیشتری برای آگهی‌هایی که می‌بینید دراختیارتان قرار می‌دهد."</string>
     <string name="notificationUI_next_button_text" msgid="6150546034144405663">"بعدی"</string>
-    <string name="settingsUI_main_view_title" msgid="8506265544709344889">"جعبه شنی حریم خصوصی"</string>
+    <string name="settingsUI_main_view_title" msgid="8506265544709344889">"جعبه امن حریم خصوصی"</string>
     <string name="settingsUI_main_view_subtitle" msgid="4192045492059726083">"شرکت در نسخه بتای حریم خصوصی آگهی‌های Android"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="8281037143852126401">"جعبه شنی حریم خصوصی"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="8281037143852126401">"جعبه امن حریم خصوصی"</string>
     <string name="settingsUI_topics_title" msgid="5339945741183473274">"علایق ارزیابی‌شده توسط Android"</string>
     <string name="settingsUI_apps_title" msgid="5995350116551596477">"برنامه‌هایی که علایق را ارزیابی می‌کنند"</string>
     <string name="settingsUI_main_view_info_text8" msgid="3283348237139281934">"سنجش آگهی"</string>
-    <string name="settingsUI_main_view_info_text9" msgid="8099947772206651223">"برنامه‌ها می‌توانند از «جعبه شنی حریم خصوصی» برای سنجش اثربخشی آگهی‌هایشان استفاده کنند. برای انجام این کار، تبلیغ‌کنندگان می‌توانند داده‌های مربوط به تعاملات شما بین آگهی‌ها و برنامه‌هایشان را به‌طور موقت در Android ذخیره کنند. مقدار داده‌ای که آن‌ها می‌توانند ذخیره کنند محدود است و این داده‌ها به‌طور منظم حذف خواهند شد.\n\nهرزمان خواستید با خاموش کردن «جعبه شنی حریم خصوصی» می‌توانید این داده‌ها را حذف کنید."</string>
+    <string name="settingsUI_main_view_info_text9" msgid="8099947772206651223">"برنامه‌ها می‌توانند از «جعبه امن حریم خصوصی» برای سنجش اثربخشی آگهی‌هایشان استفاده کنند. برای انجام این کار، تبلیغ‌کنندگان می‌توانند داده‌های مربوط به تعاملات شما بین آگهی‌ها و برنامه‌هایشان را به‌طور موقت در Android ذخیره کنند. مقدار داده‌ای که آن‌ها می‌توانند ذخیره کنند محدود است و این داده‌ها به‌طور منظم حذف خواهند شد.\n\nهرزمان خواستید با خاموش کردن «جعبه امن حریم خصوصی» می‌توانید این داده‌ها را حذف کنید."</string>
     <string name="settingsUI_topics_view_subtitle" msgid="2555242128148608108">"Android به‌طور دوره‌ای موضوع‌های اصلی موردعلاقه‌تان را براساس برنامه‌هایی که استفاده می‌کنید ارزیابی می‌کند. برنامه‌ها می‌توانند به Android درخواست بدهند که از این موضوع‌ها برای نشان دادن آگهی‌های مرتبط‌تر به شما استفاده کنند.\n\nاگر موضوعی را مسدود کنید، تا زمانی‌که آن را رفع انسداد نکنید دوباره به فهرست اضافه نخواهد شد. ممکن است همچنان برخی‌از آگهی‌های مرتبط را مشاهده کنید."</string>
     <string name="settingsUI_block_topic_title" msgid="542801436874037128">"مسدود کردن"</string>
     <string name="settingsUI_unblock_topic_title" msgid="9183891456548567284">"لغو انسداد"</string>
@@ -149,7 +149,7 @@
     <string name="settingsUI_reset_topics_title" msgid="4659272636850648155">"بازنشاندن همه موضوع‌های موردعلاقه"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="8337078176142128219">"درحال‌حاضر علاقه‌ای برای نمایش وجود ندارد."</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="4232374024129407829">"درحال‌حاضر موضوعی برای نمایش وجود ندارد.\nدرباره "<a href="https://support.google.com/android?p=ad_privacy">"موضوعات آگهی"</a>" بیشتر بدانید"</string>
-    <string name="settingsUI_topics_view_info_text1" msgid="1837427989556474858">"جعبه شنی حریم خصوصی"</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="1837427989556474858">"جعبه امن حریم خصوصی"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="3814232857139974524">"نسخه بتای حریم خصوصی آگهی‌های Android ویژگی‌های جدیدی را ارائه می‌کند که برنامه‌ها بااستفاده از آن‌ها می‌توانند آگهی‌هایی به شما نشان دهند که شاید بپسندید. این فناوری‌ها از شناسه‌های دستگاه استفاده نمی‌کنند.\n\nAndroid می‌تواند انواع آگهی‌هایی را که ممکن است به آن‌ها علاقه داشته باشید ارزیابی کند و این علایق را به‌طور موقت در دستگاهتان ذخیره کند. این ویژگی به برنامه‌ها امکان می‌دهد بدون ردیابی فعالیت شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر، آگهی‌های مرتبط به شما نشان دهند."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="2592506251182454751">"موضوع موردعلاقه‌ای که مسدود شده باشد ندارید"</string>
     <string name="settingsUI_no_blocked_topics_ga_text" msgid="3571887649896533532">"موضوعی مسدود نشده است"</string>
@@ -162,7 +162,7 @@
     <string name="settingsUI_reset_apps_title" msgid="3102875782600625477">"بازنشانی علایق ارزیابی‌شده توسط برنامه‌ها"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="5821437091309568626">"درحال‌حاضر هیچ برنامه‌ای برای شما علاقه ایجاد نمی‌کند"</string>
     <string name="settingsUI_apps_view_no_apps_ga_text" msgid="827670084273365802">"درحال‌حاضر برنامه‌ای برای نمایش وجود ندارد. \nدرباره "<a href="https://support.google.com/android?p=ad_privacy">"آگهی‌های پیشنهادی برنامه"</a>" بیشتر بدانید"</string>
-    <string name="settingsUI_apps_view_info_text1" msgid="8524518056879001890">"جعبه شنی حریم خصوصی"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="8524518056879001890">"جعبه امن حریم خصوصی"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="6191835773793395323">"نسخه بتای حریم خصوصی آگهی‌های Android ویژگی‌های جدیدی را ارائه می‌کند که برنامه‌ها بااستفاده از آن‌ها می‌توانند آگهی‌هایی به شما نشان دهند که شاید بپسندید. این فناوری‌ها از شناسه‌های دستگاه استفاده نمی‌کنند.\n\nبرنامه‌ها می‌توانند انواع آگهی‌هایی را که ممکن است به آن‌ها علاقه داشته باشید ارزیابی کنند و این علایق را به‌طور موقت در دستگاهتان ذخیره کنند. این ویژگی به برنامه‌ها امکان می‌دهد بدون ردیابی فعالیت شما در وب‌سایت‌ها و برنامه‌های توسعه‌دهندگان دیگر، آگهی‌های مرتبط به شما نشان دهند."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="6386103688779633888">"هیچ برنامه مسدودشده‌ای ندارید"</string>
     <string name="settingsUI_no_blocked_apps_ga_text" msgid="5715916198159277202">"برنامه‌ای مسدود نشده است"</string>
@@ -172,7 +172,7 @@
     <string name="settingsUI_measurement_view_footer_text" msgid="823743750634137761">"Android با محدود کردن اطلاعاتی که برنامه‌ها می‌توانند با یکدیگر هم‌رسانی کنند، از حریم خصوصی شما محافظت می‌کند. برای محافظت از هویت شما، گزارش‌ها با تأخیر ارسال می‌شود.\n\nمرورگر شما ممکن است تنظیم مشابهی داشته باشد. اگر سنجش آگهی هم برای Android و هم برای مرورگر روشن باشد، ممکن است شرکتی بتواند اثربخشی آگهی بین برنامه‌هایی را که از آن‌ها استفاده می‌کنید و سایت‌هایی که بازدید می‌کنید بسنجد. سابقه مرورتان به‌صورت خصوصی در دستگاهتان نگهداری می‌شود.\n\nدر "<a href="https://policies.google.com/privacy">"خط‌مشی رازداری"</a>" ما، اطلاعات بیشتری درباره اینکه Android چگونه از داده‌هایتان محافظت می‌کند کسب کنید."</string>
     <string name="settingsUI_measurement_are_reset" msgid="3109724238284555411">"داده‌های سنجش آگهی بازنشانی شد"</string>
     <string name="settingsUI_dialog_negative_text" msgid="2991743327829379614">"لغو"</string>
-    <string name="settingsUI_dialog_opt_out_title" msgid="7364417538227823889">"«جعبه شنی حریم خصوصی» خاموش شود؟"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="7364417538227823889">"«جعبه امن حریم خصوصی» خاموش شود؟"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="277021855863398163">"اگر نظرتان عوض شد یا خواستید درباره نسخه بتای حریم خصوصی آگهی‌های Android اطلاعات بیشتری کسب کنید، به تنظیمات حریم خصوصی‌تان بروید"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="8325131452422895574">"خاموش کردن"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="2250176723499905800">"‫«<xliff:g id="TOPIC">%1$s</xliff:g>» مسدود شود؟"</string>
@@ -518,7 +518,7 @@
     <string name="topic10254" msgid="3407688580587226586">"بازی‌های نقش‌آفرینی"</string>
     <string name="topic10255" msgid="5123382868307815261">"تنیس روی میز"</string>
     <string name="topic10256" msgid="3732657908002298514">"بازی با کاشی"</string>
-    <string name="topic10257" msgid="1563737702727245186">"بازی با واژه‌ها"</string>
+    <string name="topic10257" msgid="1563737702727245186">"بازی با کلمات"</string>
     <string name="topic10258" msgid="3098024313656910144">"سرگرمی و تفریح"</string>
     <string name="topic10259" msgid="4943419230459875946">"سالگرد"</string>
     <string name="topic10260" msgid="8082531986100775125">"تاریخ تولد و روز نام‌گذاری"</string>
