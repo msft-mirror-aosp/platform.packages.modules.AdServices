@@ -196,7 +196,10 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     "true"),
             entry(
                     FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
-                    WebUtil.validUrl("https://coordinator.test")));
+                    WebUtil.validUrl("https://coordinator.test")),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
+                    "true"));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {

@@ -384,6 +384,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_SOURCE_DEB
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_XNA;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
@@ -860,6 +861,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_XNA;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
@@ -4342,6 +4344,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS,
                 MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS,
                 Flags::getMeasurementReportingJobServiceBatchWindowMillis);
+    }
+
+    @Test
+    public void testGetMeasurementEnableV1SourceTriggerData() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
+                MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
+                Flags::getMeasurementEnableV1SourceTriggerData);
     }
 
     @Test

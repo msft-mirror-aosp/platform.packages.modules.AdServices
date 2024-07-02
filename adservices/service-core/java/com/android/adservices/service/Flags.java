@@ -3782,6 +3782,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
+    /** Default value for Measurement V1 source trigger data */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA = false;
+
+    /** Returns whether to enable Measurement V1 source trigger data */
+    default boolean getMeasurementEnableV1SourceTriggerData() {
+        return MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
+    }
+
     /** Default value for Measurement flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
