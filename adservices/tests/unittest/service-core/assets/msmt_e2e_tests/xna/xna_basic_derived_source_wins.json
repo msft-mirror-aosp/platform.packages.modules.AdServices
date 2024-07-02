@@ -1,8 +1,8 @@
 {
   "description": "Given a source with matching enrollment ID with trigger and another source with non-matching enrollment ID. 2nd source transforms into a derived source and wins attribution. Two entries in \"Attribution-Reporting-Register-Aggregatable-Source\" header, many \"Attribution-Reporting-Register-Aggregatable-Trigger-Data\", generate an aggregate report with two contributions and the value is accumulated for each entry.",
   "phflags_override": {
-    "measurement_enable_xna" : "true",
-    "web_context_client_allow_list" : "*"
+    "measurement_enable_xna": "true",
+    "web_context_client_allow_list": "*"
   },
   "input": {
     "sources": [
@@ -85,18 +85,20 @@
             "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
-                "filters": [{
-                  "conversion_subdomain": [
-                    "electronics.megastore"
-                  ],
-                  "product": [
-                    "1234",
-                    "234"
-                  ],
-                  "ctid": [
-                    "id"
-                  ]
-                }],
+                "filters": [
+                  {
+                    "conversion_subdomain": [
+                      "electronics.megastore"
+                    ],
+                    "product": [
+                      "1234",
+                      "234"
+                    ],
+                    "ctid": [
+                      "id"
+                    ]
+                  }
+                ],
                 "event_trigger_data": [
                   {
                     "trigger_data": "2",
@@ -198,7 +200,14 @@
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app://example.2d1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "source_site": "android-app://example.1s2.test",
           "histograms": [
@@ -210,8 +219,7 @@
               "key": "0xb85",
               "value": 1664
             }
-          ],
-          "source_registration_time": "799977600"
+          ]
         }
       }
     ]

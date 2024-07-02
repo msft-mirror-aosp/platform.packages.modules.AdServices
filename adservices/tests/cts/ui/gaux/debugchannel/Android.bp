@@ -19,7 +19,7 @@ package {
 android_test {
     name: "AdServicesGaUxDebugChannelCtsRootTest",
     srcs: [
-        "src/com/android/adservices/tests/ui/gaux/debugchannel/GaUxDebugChannelTest.java",
+        "**/*.java",
     ],
     static_libs: [
         "adservices-assets",
