@@ -1,7 +1,7 @@
 {
   "description": "Second trigger at the end of report window 1 does not affect reports scheduled for that time.",
   "phflags_override": {
-    "measurement_flexible_event_reporting_api_enabled": "true"
+    "measurement_enable_v1_source_trigger_data": "true"
   },
   "input": {
     "sources": [
@@ -84,7 +84,6 @@
           "source_event_id": "123",
           "trigger_data": "1",
           "source_type": "navigation",
-          "trigger_summary_bucket": [1, 1],
           "randomized_trigger_rate": 0.0003782
         }
       },
@@ -97,7 +96,6 @@
           "source_event_id": "123",
           "trigger_data": "3",
           "source_type": "navigation",
-          "trigger_summary_bucket": [1, 1],
           "randomized_trigger_rate": 0.0003782
         }
       }
