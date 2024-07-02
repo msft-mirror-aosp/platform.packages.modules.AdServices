@@ -397,7 +397,7 @@ public class AdBidGeneratorImplTest {
 
         boolean isolateConsoleMessageInLogsEnabled = true; // Enabling console messages for tests.
         mIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+                IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                         isolateConsoleMessageInLogsEnabled);
 
         mRequestMatcherExactMatch =

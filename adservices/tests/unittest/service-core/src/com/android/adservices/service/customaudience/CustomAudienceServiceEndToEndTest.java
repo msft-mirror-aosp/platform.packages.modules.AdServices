@@ -103,6 +103,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
+import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
@@ -1629,7 +1630,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
-    public void testScheduleCustomAudienceUpdate_MultipleUpdates_Success() throws Exception {
+    public void testScheduleCustomAudienceUpdate_MultipleUpdates_OnlyFirstUpdateSuccess()
+            throws Exception {
         // Wire the mock web server for handling two updates
         String responsePayload1 =
                 createJsonResponsePayload(
@@ -1717,14 +1719,15 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         ScheduleUpdateTestCallback callback2 = new ScheduleUpdateTestCallback(resultLatch2);
         mService.scheduleCustomAudienceUpdate(input2, callback2);
         resultLatch2.await();
-        assertTrue(callback2.isSuccess());
-
+        assertFalse(callback2.isSuccess());
+        assertEquals(
+                AdServicesStatusUtils.STATUS_UPDATE_ALREADY_PENDING_ERROR,
+                callback2.mFledgeErrorResponse.getStatusCode());
         // Ensure that job that maintains update-scheduled is itself scheduled
         verify(
                 () ->
                         ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
-                                any(), any(), eq(false)),
-                times(2));
+                                any(), any(), eq(false)));
 
         assertTrue(
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()).size()
@@ -1737,7 +1740,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .get(10, TimeUnit.SECONDS);
 
         // Check that the request for updates was made to server successfully
-        assertEquals(2, mockWebServer.getRequestCount());
+        assertEquals(1, mockWebServer.getRequestCount());
 
         // Check that updates processed successfully
         // Join
@@ -1753,11 +1756,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         DBCustomAudience persistedCustomAudience2 =
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2);
-        assertNotNull("The custom audience should have been joined", persistedCustomAudience2);
-        assertEquals(
-                "The signals should have been overridden from partial custom audience",
-                VALID_BIDDING_SIGNALS,
-                persistedCustomAudience2.getUserBiddingSignals());
+        assertNull(
+                "The second custom audience should not have been joined", persistedCustomAudience2);
 
         // Check handled updates are cleared
         assertTrue(
@@ -1986,10 +1986,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
-    public void testScheduleCustomAudienceUpdate_MultipleInvalidUpdates_SilentFailure()
+    public void testScheduleCustomAudienceUpdate_InvalidServerResponses_SilentFailure()
             throws Exception {
         // Wire the mock web server for handling two updates
-
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
@@ -2008,7 +2007,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
 
         Uri updateUri1 = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
-        Uri updateUri2 = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH_2).toString());
 
         // Make two requests to the API to schedule updates
         Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
@@ -2025,29 +2023,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         resultLatch1.await();
         assertTrue(callback1.isSuccess());
 
-        ScheduleCustomAudienceUpdateInput input2 =
-                new ScheduleCustomAudienceUpdateInput.Builder(
-                                updateUri2,
-                                VALID_OWNER,
-                                negativeDelayForTest,
-                                List.of(
-                                        DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
-                                        DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
-                        .build();
-        CountDownLatch resultLatch2 = new CountDownLatch(1);
-        ScheduleUpdateTestCallback callback2 = new ScheduleUpdateTestCallback(resultLatch2);
-        mService.scheduleCustomAudienceUpdate(input2, callback2);
-        resultLatch2.await();
-        assertTrue(callback2.isSuccess());
-
         // Ensure that job that maintains update-scheduled is itself scheduled
         verify(
                 () ->
                         ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
-                                any(), any(), eq(false)),
-                times(2));
+                                any(), any(), eq(false)));
 
         assertTrue(
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()).size()
@@ -2060,7 +2040,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .get(10, TimeUnit.SECONDS);
 
         // Check that the request for updates was made to server successfully
-        assertEquals(2, mockWebServer.getRequestCount());
+        assertEquals(1, mockWebServer.getRequestCount());
 
         // Check that updates processed successfully but nothing updated
         // Join
@@ -2417,6 +2397,87 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 "No custom audience should have been joined",
                 0,
                 mCustomAudienceDao.getCustomAudienceCount());
+    }
+
+    @Test
+    public void testScheduleCAUpdate_withPendingUpdatesAndRemoveUpdatesFalse_fails()
+            throws Exception {
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(Collections.EMPTY_LIST);
+        Uri updateUri = mMockWebServerRule.uriForPath(UPDATE_URI_PATH);
+
+        DBScheduledCustomAudienceUpdate oldScheduledCA =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setBuyer(LOCALHOST_BUYER)
+                        .setOwner(VALID_OWNER)
+                        .setUpdateUri(updateUri)
+                        .setScheduledTime(
+                                CommonFixture.FIXED_NEXT_ONE_DAY.truncatedTo(ChronoUnit.MILLIS))
+                        .setCreationTime(CommonFixture.FIXED_NOW.truncatedTo(ChronoUnit.MILLIS))
+                        .setUpdateId(null)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(oldScheduledCA);
+
+        // Make a request to the API with empty overrides
+        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                negativeDelayForTest,
+                                Collections.EMPTY_LIST)
+                        .setShouldReplacePendingUpdates(false)
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is unsuccessful.
+        assertFalse(callback.isSuccess());
+        assertEquals(
+                AdServicesStatusUtils.STATUS_UPDATE_ALREADY_PENDING_ERROR,
+                callback.mFledgeErrorResponse.getStatusCode());
+    }
+
+    @Test
+    public void testScheduleCAUpdate_withPendingUpdatesAndRemovePendingTrue_replacesPendingUpdates()
+            throws Exception {
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(Collections.EMPTY_LIST);
+        Uri updateUri = mMockWebServerRule.uriForPath(UPDATE_URI_PATH);
+
+        DBScheduledCustomAudienceUpdate oldScheduledCA =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setBuyer(LOCALHOST_BUYER)
+                        .setOwner(VALID_OWNER)
+                        .setUpdateUri(updateUri)
+                        .setScheduledTime(
+                                CommonFixture.FIXED_NEXT_ONE_DAY.truncatedTo(ChronoUnit.MILLIS))
+                        .setCreationTime(CommonFixture.FIXED_NOW.truncatedTo(ChronoUnit.MILLIS))
+                        .setUpdateId(null)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(oldScheduledCA);
+
+        // Make a request to the API with empty overrides
+        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                negativeDelayForTest,
+                                Collections.EMPTY_LIST)
+                        .setShouldReplacePendingUpdates(true)
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+        List<DBScheduledCustomAudienceUpdate> newScheduledCAUpdates =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(VALID_OWNER);
+        expect.that(newScheduledCAUpdates).doesNotContain(oldScheduledCA);
+        assertEquals(1, newScheduledCAUpdates.size());
     }
 
     @Test

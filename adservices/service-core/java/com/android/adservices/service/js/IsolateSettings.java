@@ -18,6 +18,7 @@ package com.android.adservices.service.js;
 
 import androidx.javascriptengine.JavaScriptIsolate;
 
+import com.android.adservices.service.Flags;
 import com.android.internal.util.Preconditions;
 
 import com.google.auto.value.AutoValue;
@@ -35,15 +36,6 @@ public abstract class IsolateSettings {
     public abstract long getMaxHeapSizeBytes();
 
     /**
-     * Gets the condition if the Max Heap feature is enforced for JS Isolate
-     *
-     * <p>The default value is false
-     *
-     * @return boolean value stating if the feature is enforced
-     */
-    public abstract boolean getEnforceMaxHeapSizeFeature();
-
-    /**
      * Gets the condition if the console message in logs is enabled for JS Isolate.
      *
      * <p>The default value is false
@@ -53,11 +45,10 @@ public abstract class IsolateSettings {
     public abstract boolean getIsolateConsoleMessageInLogsEnabled();
 
     /** Creates setting for which memory restrictions are not enforced */
-    public static IsolateSettings forMaxHeapSizeEnforcementDisabled(
+    public static IsolateSettings forMaxHeapSizeEnforcementEnabled(
             boolean isolateConsoleMessageInLogsEnabled) {
         return IsolateSettings.builder()
-                .setEnforceMaxHeapSizeFeature(false)
-                .setMaxHeapSizeBytes(0)
+                .setMaxHeapSizeBytes(Flags.ISOLATE_MAX_HEAP_SIZE_BYTES)
                 .setIsolateConsoleMessageInLogsEnabled(isolateConsoleMessageInLogsEnabled)
                 .build();
     }
@@ -74,19 +65,12 @@ public abstract class IsolateSettings {
     public abstract static class Builder {
         abstract Builder maxHeapSizeBytes(long maxHeapSizeBytes);
 
-        abstract Builder enforceMaxHeapSizeFeature(boolean value);
-
         abstract Builder isolateConsoleMessageInLogsEnabled(boolean value);
 
         /** Sets the max heap size used by the {@link JavaScriptIsolate}. */
         public Builder setMaxHeapSizeBytes(long maxHeapSizeBytes) {
             Preconditions.checkArgument(maxHeapSizeBytes >= 0, "maxHeapSizeBytes should be >= 0");
             return maxHeapSizeBytes(maxHeapSizeBytes);
-        }
-
-        /** Sets the condition if the max heap size is enforced for JS Isolate. */
-        public Builder setEnforceMaxHeapSizeFeature(boolean value) {
-            return enforceMaxHeapSizeFeature(value);
         }
 
         /** Sets the condition if the console message in logs is enabled for JS Isolate. */
