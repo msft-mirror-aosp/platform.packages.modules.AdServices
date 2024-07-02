@@ -38,6 +38,7 @@ import com.android.adservices.service.adselection.AuctionServerPayloadMetricsStr
 import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFactory;
 import com.android.adservices.service.adselection.CompressedBuyerInputCreatorHelper;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorNoOptimizations;
 import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
@@ -108,11 +109,12 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         dataCompressor,
                         flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
                         CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                        ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao());
+                        ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION,
+                        flags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
+                        flags.getProtectedSignalsEncodedPayloadMaxSizeBytes());
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
-                        CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                        ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                         new FrequencyCapAdFiltererNoOpImpl(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getBackgroundExecutor(),

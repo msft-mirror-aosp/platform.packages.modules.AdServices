@@ -29,24 +29,44 @@ public class CompressedBuyerInputCreatorFactory {
     private final boolean mSellerConfigurationEnabled;
     private final CustomAudienceDao mCustomAudienceDao;
     private final EncodedPayloadDao mEncodedPayloadDao;
+    private final int mCompressedBuyerInputCreatorVersion;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private final int mMaxNumRecompressions;
+    private final int mPasMaxPerBuyerSizeBytes;
 
     public CompressedBuyerInputCreatorFactory(
             CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper,
             AuctionServerDataCompressor dataCompressor,
             boolean sellerConfigurationEnabled,
             CustomAudienceDao customAudienceDao,
-            EncodedPayloadDao encodedPayloadDao) {
+            EncodedPayloadDao encodedPayloadDao,
+            int compressedBuyerInputCreatorVersion,
+            int maxNumRecompressions,
+            int pasMaxPerBuyerSizeBytes) {
         mCompressedBuyerInputCreatorHelper = compressedBuyerInputCreatorHelper;
         mDataCompressor = dataCompressor;
         mSellerConfigurationEnabled = sellerConfigurationEnabled;
         mCustomAudienceDao = customAudienceDao;
         mEncodedPayloadDao = encodedPayloadDao;
+        mCompressedBuyerInputCreatorVersion = compressedBuyerInputCreatorVersion;
+        mMaxNumRecompressions = maxNumRecompressions;
+        mPasMaxPerBuyerSizeBytes = pasMaxPerBuyerSizeBytes;
     }
 
     /** Returns an implementation for the {@link CompressedBuyerInputCreator} */
     @NonNull
-    public CompressedBuyerInputCreator createCompressedBuyerInputCreator() {
+    public CompressedBuyerInputCreator createCompressedBuyerInputCreator(int maxPayloadSizeBytes) {
+        if (mSellerConfigurationEnabled
+                && mCompressedBuyerInputCreatorVersion
+                        == CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION) {
+            sLogger.v("Returning CompressedBuyerInputCreatorSellerMaxImpl");
+            return new CompressedBuyerInputCreatorSellerPayloadMaxImpl(
+                    mCompressedBuyerInputCreatorHelper,
+                    mDataCompressor,
+                    mMaxNumRecompressions,
+                    maxPayloadSizeBytes,
+                    mPasMaxPerBuyerSizeBytes);
+        }
         // Update this whn more implementations are available
         sLogger.v("Returning CompressedBuyerInputCreatorNoOptimizations");
         return new CompressedBuyerInputCreatorNoOptimizations(
@@ -62,5 +82,15 @@ public class CompressedBuyerInputCreatorFactory {
                 ? new BuyerInputDataFetcherBuyerAllowListImpl(
                         mCustomAudienceDao, mEncodedPayloadDao)
                 : new BuyerInputDataFetcherAllBuyersImpl(mCustomAudienceDao, mEncodedPayloadDao);
+    }
+
+    /**
+     * Returns an implementation of {@link BuyerInputGeneratorArgumentsPreparer} depending on the
+     * seller configuration flag.
+     */
+    public BuyerInputGeneratorArgumentsPreparer getBuyerInputGeneratorArgumentsPreparer() {
+        return mSellerConfigurationEnabled
+                ? new BuyerInputGeneratorArgumentsPreparerSellerConfigurationEnabled()
+                : new BuyerInputGeneratorArgumentsPreparerSellerConfigurationDisabled();
     }
 }

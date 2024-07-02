@@ -27,6 +27,7 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVE
 import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.GetAdSelectionDataResponse;
+import android.adservices.adselection.SellerConfiguration;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.AssetFileDescriptorUtil;
 import android.adservices.common.FledgeErrorResponse;
@@ -132,6 +133,7 @@ public class GetAdSelectionDataRunner {
     private final ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
 
     @NonNull private final EgressConfigurationGenerator mEgressConfigurationGenerator;
+    private final BuyerInputGeneratorArgumentsPreparer mBuyerInputGeneratorArgumentsPreparer;
 
     public GetAdSelectionDataRunner(
             @NonNull final Context context,
@@ -209,12 +211,16 @@ public class GetAdSelectionDataRunner {
                         mDataCompressor,
                         mFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
                         mCustomAudienceDao,
-                        mEncodedPayloadDao);
+                        mEncodedPayloadDao,
+                        mFlags.getFledgeGetAdSelectionDataBuyerInputCreatorVersion(),
+                        mFlags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
+                        mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes());
+
+        mBuyerInputGeneratorArgumentsPreparer =
+                compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();
 
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
-                        mCustomAudienceDao,
-                        mEncodedPayloadDao,
                         frequencyCapAdFilterer,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -313,11 +319,16 @@ public class GetAdSelectionDataRunner {
                         mDataCompressor,
                         mFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
                         mCustomAudienceDao,
-                        mEncodedPayloadDao);
+                        mEncodedPayloadDao,
+                        mFlags.getFledgeGetAdSelectionDataBuyerInputCreatorVersion(),
+                        mFlags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
+                        mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes());
+
+        mBuyerInputGeneratorArgumentsPreparer =
+                compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();
+
         mBuyerInputGenerator =
                 new BuyerInputGenerator(
-                        mCustomAudienceDao,
-                        mEncodedPayloadDao,
                         frequencyCapAdFilterer,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
@@ -388,7 +399,8 @@ public class GetAdSelectionDataRunner {
                                                     adSelectionId,
                                                     inputParams.getCallerPackageName(),
                                                     inputParams.getCoordinatorOriginUri(),
-                                                    apiCalledStatsBuilder),
+                                                    apiCalledStatsBuilder,
+                                                    inputParams.getSellerConfiguration()),
                                     mLightweightExecutorService);
 
             Futures.addCallback(
@@ -444,7 +456,8 @@ public class GetAdSelectionDataRunner {
             long adSelectionId,
             @NonNull String packageName,
             @Nullable Uri coordinatorUrl,
-            GetAdSelectionDataApiCalledStats.Builder apiCalledStatsBuilder) {
+            GetAdSelectionDataApiCalledStats.Builder apiCalledStatsBuilder,
+            SellerConfiguration sellerConfiguration) {
         Objects.requireNonNull(seller);
         Objects.requireNonNull(packageName);
 
@@ -458,11 +471,19 @@ public class GetAdSelectionDataRunner {
                         .setConsentedDebugConfigurationOptional(
                                 mConsentedDebugConfigurationGenerator
                                         .getConsentedDebugConfiguration());
-        return setCompressedBuyerInputs(auctionServerPayloadInfoBuilder)
+        return setUnlimitedEgressEnabled(auctionServerPayloadInfoBuilder, packageName, mCallerUid)
                 .transformAsync(
                         auctionServerPayloadInfoBuilder2 ->
-                                setUnlimitedEgressEnabled(
-                                        auctionServerPayloadInfoBuilder2, packageName, mCallerUid),
+                                setCompressedBuyerInputs(
+                                        auctionServerPayloadInfoBuilder2,
+                                        mBuyerInputGeneratorArgumentsPreparer
+                                                .preparePayloadOptimizationContext(
+                                                        sellerConfiguration,
+                                                        getCurrentPayloadSize(
+                                                                auctionServerPayloadInfoBuilder2
+                                                                        .setCompressedBuyerInput(
+                                                                                ImmutableMap.of())
+                                                                        .build()))),
                         mLightweightExecutorService)
                 .transform(
                         auctionServerPayloadInfoBuilder3 ->
@@ -502,9 +523,10 @@ public class GetAdSelectionDataRunner {
     }
 
     private FluentFuture<AuctionServerPayloadInfo.Builder> setCompressedBuyerInputs(
-            AuctionServerPayloadInfo.Builder auctionServerPayloadInfoBuilder) {
+            AuctionServerPayloadInfo.Builder auctionServerPayloadInfoBuilder,
+            PayloadOptimizationContext payloadOptimizationContext) {
         return mBuyerInputGenerator
-                .createCompressedBuyerInputs()
+                .createCompressedBuyerInputs(payloadOptimizationContext)
                 .transform(
                         compressedBuyerInput ->
                                 auctionServerPayloadInfoBuilder.setCompressedBuyerInput(
@@ -549,10 +571,23 @@ public class GetAdSelectionDataRunner {
                         auctionServerPayloadInfo.getConsentedDebugConfigurationOptional());
         sLogger.v("ProtectedAuctionInput composed");
         AuctionServerPayloadFormattedData formattedData =
-                applyPayloadFormatter(protectedAudienceInput, apiCalledStatsBuilder);
+                applyPayloadFormatter(protectedAudienceInput);
 
         Tracing.endAsyncSection(Tracing.CREATE_GET_AD_SELECTION_DATA_PAYLOAD, traceCookie);
         return formattedData;
+    }
+
+    private int getCurrentPayloadSize(AuctionServerPayloadInfo auctionServerPayloadInfo) {
+        sLogger.v("Calling get current payload size");
+        return composeProtectedAuctionInputBytes(
+                        auctionServerPayloadInfo.getCompressedBuyerInput(),
+                        auctionServerPayloadInfo.getPackageName(),
+                        auctionServerPayloadInfo.getAdSelectionDataId(),
+                        auctionServerPayloadInfo.getDebugReportingEnabled(),
+                        auctionServerPayloadInfo.getUnlimitedEgressEnabled(),
+                        auctionServerPayloadInfo.getConsentedDebugConfigurationOptional())
+                .toByteArray()
+                .length;
     }
 
     private ListenableFuture<byte[]> persistAdSelectionIdRequest(
@@ -577,7 +612,7 @@ public class GetAdSelectionDataRunner {
     }
 
     @VisibleForTesting
-    ProtectedAuctionInput composeProtectedAuctionInputBytes(
+    protected static ProtectedAuctionInput composeProtectedAuctionInputBytes(
             Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInputs,
             String packageName,
             long adSelectionId,
@@ -610,8 +645,7 @@ public class GetAdSelectionDataRunner {
     }
 
     private AuctionServerPayloadFormattedData applyPayloadFormatter(
-            ProtectedAuctionInput protectedAudienceInput,
-            GetAdSelectionDataApiCalledStats.Builder apiCalledStatsBuilder) {
+            ProtectedAuctionInput protectedAudienceInput) {
         int version = mFlags.getFledgeAuctionServerCompressionAlgorithmVersion();
         sLogger.v("Applying formatter V" + version + " on protected audience input bytes");
         AuctionServerPayloadUnformattedData unformattedData =
