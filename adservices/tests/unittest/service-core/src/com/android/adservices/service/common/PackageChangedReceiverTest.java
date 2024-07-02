@@ -1049,4 +1049,24 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
         verify(mConsentManager, never()).clearConsentForUninstalledApp(anyString());
     }
+
+    @Test
+    public void testPackageAdded_OnS() {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_ADDED);
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+
+        // Mock static method MeasurementImpl.getInstance that executes on a separate thread
+        MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+
+        // Initialize package receiver meant for Measurement
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
+        spyReceiver.onReceive(sContext, intent);
+
+        verify(spyReceiver).measurementOnPackageAdded(any(), any());
+    }
 }
