@@ -51,6 +51,7 @@ public class ScheduleCustomAudienceUpdateTestUtils {
     public static final Long UPDATE_ID = 1L;
     public static final String PARTIAL_CA_1 = "partial_ca_1";
     public static final String PARTIAL_CA_2 = "partial_ca_2";
+    public static final String PARTIAL_CA_3 = "partial_ca_3";
     public static final String LEAVE_CA_1 = "leave_ca_1";
     public static final String LEAVE_CA_2 = "leave_ca_2";
     public static final Instant ACTIVATION_TIME = CommonFixture.FIXED_NOW;
@@ -71,6 +72,15 @@ public class ScheduleCustomAudienceUpdateTestUtils {
             DBPartialCustomAudience.builder()
                     .setUpdateId(UPDATE_ID)
                     .setName(PARTIAL_CA_2)
+                    .setActivationTime(ACTIVATION_TIME)
+                    .setExpirationTime(EXPIRATION_TIME)
+                    .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
+                    .build();
+
+    public static final DBPartialCustomAudience PARTIAL_CUSTOM_AUDIENCE_3 =
+            DBPartialCustomAudience.builder()
+                    .setUpdateId(UPDATE_ID)
+                    .setName(PARTIAL_CA_3)
                     .setActivationTime(ACTIVATION_TIME)
                     .setExpirationTime(EXPIRATION_TIME)
                     .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
@@ -113,7 +123,8 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         return responseJson;
     }
 
-    private static JSONObject generateCustomAudienceWithName(
+    /** Creates a CustomAudience JSONObject with the given buyer, owner and name. */
+    public static JSONObject generateCustomAudienceWithName(
             AdTechIdentifier buyer, String owner, String name) throws JSONException {
 
         CustomAudience ca =

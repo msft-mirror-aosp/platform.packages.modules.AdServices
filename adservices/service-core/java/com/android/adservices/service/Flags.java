@@ -288,6 +288,28 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
+    /* The default value for whether the trigger debugging availability signal is enabled for event
+    reports. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL = false;
+
+    /** Returns whether the trigger debugging availability signal is enabled for event reports. */
+    default boolean getMeasurementEnableEventTriggerDebugSignal() {
+        return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
+    }
+
+    /* The default value for whether the trigger debugging availability signal is enabled for event
+    reports that have coarse_event_report_destinations = true. */
+    @FeatureFlag
+    boolean MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION = false;
+
+    /**
+     * Returns whether the trigger debugging availability signal is enabled for event reports that
+     * have coarse_event_report_destinations = true.
+     */
+    default boolean getMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
+    }
+
     /**
      * The suffix that is appended to the aggregation coordinator origin for retrieving the
      * encryption keys.
@@ -1850,11 +1872,21 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
     }
 
-    @FeatureFlag int FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION = 0;
+    @ConfigFlag int FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION = 0;
 
     /** Returns the getAdSelectionData data buyer input creator version */
     default int getFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         return FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
+    }
+
+    @ConfigFlag int FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS = 5;
+
+    /**
+     * Returns the maximum number of times we can re-compress the entire payload during
+     * getAdSelectionData payload optimization.
+     */
+    default int getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions() {
+        return FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
     }
 
     // Protected signals cleanup feature flag disabled by default
