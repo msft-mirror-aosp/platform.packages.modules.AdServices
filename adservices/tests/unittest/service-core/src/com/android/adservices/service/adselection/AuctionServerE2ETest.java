@@ -1142,7 +1142,7 @@ public class AuctionServerE2ETest {
         assertThat(argumentCaptorApiCalledStats.getValue().getStatusCode())
                 .isEqualTo(STATUS_SUCCESS);
         assertThat(argumentCaptorApiCalledStats.getValue().getPayloadSizeKb())
-                .isEqualTo(encryptedBytes.length / 1000);
+                .isEqualTo(encryptedBytes.length / 1024);
         assertThat(argumentCaptorApiCalledStats.getValue().getNumBuyers()).isEqualTo(NUM_BUYERS);
         assertThat(argumentCaptorApiCalledStats.getValue().getServerAuctionCoordinatorSource())
                 .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET);
@@ -1255,7 +1255,7 @@ public class AuctionServerE2ETest {
         assertThat(argumentCaptorApiCalledStats.getValue().getStatusCode())
                 .isEqualTo(STATUS_SUCCESS);
         assertThat(argumentCaptorApiCalledStats.getValue().getPayloadSizeKb())
-                .isEqualTo(encryptedBytes.length / 1000);
+                .isEqualTo(encryptedBytes.length / 1024);
         assertThat(argumentCaptorApiCalledStats.getValue().getNumBuyers()).isEqualTo(NUM_BUYERS);
         assertThat(argumentCaptorApiCalledStats.getValue().getServerAuctionCoordinatorSource())
                 .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
