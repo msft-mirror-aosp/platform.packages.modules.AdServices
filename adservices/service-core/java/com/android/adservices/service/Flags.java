@@ -288,6 +288,28 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
+    /* The default value for whether the trigger debugging availability signal is enabled for event
+    reports. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL = false;
+
+    /** Returns whether the trigger debugging availability signal is enabled for event reports. */
+    default boolean getMeasurementEnableEventTriggerDebugSignal() {
+        return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
+    }
+
+    /* The default value for whether the trigger debugging availability signal is enabled for event
+    reports that have coarse_event_report_destinations = true. */
+    @FeatureFlag
+    boolean MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION = false;
+
+    /**
+     * Returns whether the trigger debugging availability signal is enabled for event reports that
+     * have coarse_event_report_destinations = true.
+     */
+    default boolean getMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
+    }
+
     /**
      * The suffix that is appended to the aggregation coordinator origin for retrieving the
      * encryption keys.
@@ -1850,11 +1872,21 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
     }
 
-    @FeatureFlag int FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION = 0;
+    @ConfigFlag int FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION = 0;
 
     /** Returns the getAdSelectionData data buyer input creator version */
     default int getFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         return FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
+    }
+
+    @ConfigFlag int FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS = 5;
+
+    /**
+     * Returns the maximum number of times we can re-compress the entire payload during
+     * getAdSelectionData payload optimization.
+     */
+    default int getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions() {
+        return FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
     }
 
     // Protected signals cleanup feature flag disabled by default
@@ -3894,16 +3926,11 @@ public interface Flags extends ModuleSharedFlags {
 
     boolean MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO = false;
 
-    /** Enable FIFO destinations based deletion of sources to accommodate an incoming source. */
-    default boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
-        return MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO;
-    }
-
     boolean MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS = false;
 
     /**
      * Enable deletion of reports along with FIFO destinations. In practice it's a sub flag to
-     * {@link #getMeasurementEnableDestinationXPublisherXEnrollmentFifo}
+     * {@link #getMeasurementEnableSourceDestinationLimitPriority()}
      */
     default boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
         return MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
@@ -4785,6 +4812,28 @@ public interface Flags extends ModuleSharedFlags {
 
     default float getMeasurementPrivacyEpsilon() {
         return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY = false;
+
+    default boolean getMeasurementEnableSourceDestinationLimitPriority() {
+        return MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY;
+    }
+
+    /**
+     * Default destination limit algorithm configuration. LIFO (0) by default, can be configured as
+     * FIFO (1).
+     */
+    @ConfigFlag int MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM = 0;
+
+    default int getMeasurementDefaultSourceDestinationLimitAlgorithm() {
+        return MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD = false;
+
+    default boolean getMeasurementEnableSourceDestinationLimitAlgorithmField() {
+        return MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
     }
 
     /**
