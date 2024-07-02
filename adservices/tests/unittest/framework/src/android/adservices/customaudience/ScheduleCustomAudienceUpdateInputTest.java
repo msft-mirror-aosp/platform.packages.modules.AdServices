@@ -57,6 +57,9 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
         expect.withMessage("Partial Custom Audience List")
                 .that(request.getPartialCustomAudienceList())
                 .containsExactly(VALID_PARTIAL_CA);
+        expect.withMessage("Should replace pending updates")
+                .that(request.shouldReplacePendingUpdates())
+                .isFalse();
     }
 
     @Test
@@ -74,6 +77,7 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
                         .setUpdateUri(uri2)
                         .setMinDelay(delay2)
                         .setPartialCustomAudienceList(emptyCaList)
+                        .setShouldReplacePendingUpdates(true)
                         .build();
 
         expect.withMessage("Update Uri").that(request.getUpdateUri()).isEqualTo(uri2);
@@ -84,6 +88,9 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
         expect.withMessage("Partial Custom Audience List")
                 .that(request.getPartialCustomAudienceList())
                 .isEmpty();
+        expect.withMessage("Should replace pending updates")
+                .that(request.shouldReplacePendingUpdates())
+                .isTrue();
     }
 
     @Test
@@ -94,6 +101,26 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
                                 CustomAudienceFixture.VALID_OWNER,
                                 VALID_DELAY,
                                 VALID_PARTIAL_CA_LIST)
+                        .build();
+
+        Parcel p = Parcel.obtain();
+        request.writeToParcel(p, 0);
+        p.setDataPosition(0);
+        ScheduleCustomAudienceUpdateInput fromParcel =
+                ScheduleCustomAudienceUpdateInput.CREATOR.createFromParcel(p);
+
+        expect.that(request).isEqualTo(fromParcel);
+    }
+
+    @Test
+    public void testBuildValidRequestParcel_withShouldReplacePendingUpdatesTrue_Success() {
+        ScheduleCustomAudienceUpdateInput request =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                VALID_UPDATE_URI_1,
+                                CustomAudienceFixture.VALID_OWNER,
+                                VALID_DELAY,
+                                VALID_PARTIAL_CA_LIST)
+                        .setShouldReplacePendingUpdates(true)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -248,26 +275,31 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
 
     @Test
     public void testToString() {
-        String request =
+        String requestString =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 VALID_UPDATE_URI_1,
                                 CustomAudienceFixture.VALID_OWNER,
                                 VALID_DELAY,
                                 VALID_PARTIAL_CA_LIST)
+                        .setShouldReplacePendingUpdates(true)
                         .build()
                         .toString();
 
-        String expected =
-                String.format(
-                        "ScheduleCustomAudienceUpdateInput {updateUri=%s, "
-                                + "callerPackageName=%s, "
-                                + "delayTimeMinutes=%s, "
-                                + "partialCustomAudienceList=%s}",
-                        VALID_UPDATE_URI_1,
-                        CustomAudienceFixture.VALID_OWNER,
-                        VALID_DELAY.toMinutes(),
-                        VALID_PARTIAL_CA_LIST);
-
-        expect.withMessage("Object to string").that(request.toString()).isEqualTo(expected);
+        expect.withMessage("toString()")
+                .that(requestString)
+                .contains("ScheduleCustomAudienceUpdateInput");
+        expect.withMessage("toString()")
+                .that(requestString)
+                .contains("mUpdateUri=" + VALID_UPDATE_URI_1);
+        expect.withMessage("toString()")
+                .that(requestString)
+                .contains("mCallerPackageName=" + CustomAudienceFixture.VALID_OWNER);
+        expect.withMessage("toString()").that(requestString).contains("mMinDelay=" + VALID_DELAY);
+        expect.withMessage("toString()")
+                .that(requestString)
+                .contains("mPartialCustomAudienceList=" + VALID_PARTIAL_CA_LIST);
+        expect.withMessage("toString()")
+                .that(requestString)
+                .contains("mShouldReplacePendingUpdates=true");
     }
 }

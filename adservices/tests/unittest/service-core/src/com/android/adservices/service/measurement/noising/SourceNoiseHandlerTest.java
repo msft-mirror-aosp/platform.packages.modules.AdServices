@@ -68,10 +68,12 @@ public class SourceNoiseHandlerTest {
         doReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)
                 .when(mFlags)
                 .getMeasurementPrivacyEpsilon();
-        mSourceNoiseHandler =
-                spy(new SourceNoiseHandler(mFlags, new EventReportWindowCalcDelegate(mFlags)));
         mEventReportWindowCalcDelegate = new EventReportWindowCalcDelegate(mFlags);
-        mSourceNoiseHandler = spy(new SourceNoiseHandler(mFlags, mEventReportWindowCalcDelegate));
+        mSourceNoiseHandler = spy(
+                new SourceNoiseHandler(
+                        mFlags,
+                        mEventReportWindowCalcDelegate,
+                        new ImpressionNoiseUtil()));
     }
 
     @Test

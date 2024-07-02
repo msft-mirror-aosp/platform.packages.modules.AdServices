@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.adselection.PerBuyerConfiguration;
 import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -24,6 +25,7 @@ import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BuyerInputDataFetcherBuyerAllowListImpl implements BuyerInputDataFetcher {
@@ -38,13 +40,34 @@ public class BuyerInputDataFetcherBuyerAllowListImpl implements BuyerInputDataFe
 
     @Override
     public List<DBCustomAudience> getActiveCustomAudiences(
-            List<AdTechIdentifier> buyers, Instant currentTime, long activeWindowTimeMs) {
+            List<PerBuyerConfiguration> perBuyerConfigurations,
+            Instant currentTime,
+            long activeWindowTimeMs) {
+        List<AdTechIdentifier> buyers = getBuyersFromPerBuyerConfigurations(perBuyerConfigurations);
+        if (buyers.isEmpty()) {
+            return mCustomAudienceDao.getAllActiveCustomAudienceForServerSideAuction(
+                    currentTime, activeWindowTimeMs);
+        }
         return mCustomAudienceDao.getActiveCustomAudienceByBuyers(
                 buyers, currentTime, activeWindowTimeMs);
     }
 
     @Override
-    public List<DBEncodedPayload> getProtectedAudienceSignals(List<AdTechIdentifier> buyers) {
+    public List<DBEncodedPayload> getProtectedAudienceSignals(
+            List<PerBuyerConfiguration> perBuyerConfigurations) {
+        List<AdTechIdentifier> buyers = getBuyersFromPerBuyerConfigurations(perBuyerConfigurations);
+        if (buyers.isEmpty()) {
+            return mEncodedPayloadDao.getAllEncodedPayloads();
+        }
         return mEncodedPayloadDao.getAllEncodedPayloadsForBuyers(buyers);
+    }
+
+    private List<AdTechIdentifier> getBuyersFromPerBuyerConfigurations(
+            List<PerBuyerConfiguration> perBuyerConfigurations) {
+        List<AdTechIdentifier> buyers = new ArrayList<>();
+        for (PerBuyerConfiguration perBuyerConfiguration : perBuyerConfigurations) {
+            buyers.add(perBuyerConfiguration.getBuyer());
+        }
+        return buyers;
     }
 }

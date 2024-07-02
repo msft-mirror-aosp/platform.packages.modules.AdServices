@@ -37,6 +37,7 @@ android_test {
         "androidx.test.ext.truth",
         "androidx.test.ext.junit",
         "SdkSandboxTestUtils",
+        "sdk_sandbox_flags_lib",
         "truth",
     ],
     test_suites: ["general-tests"],

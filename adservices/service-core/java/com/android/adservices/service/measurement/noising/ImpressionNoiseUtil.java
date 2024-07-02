@@ -28,7 +28,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class ImpressionNoiseUtil {
 
-    private ImpressionNoiseUtil() {}
+    public ImpressionNoiseUtil() {}
 
     /**
      * Randomly generate report configs based on noise params
@@ -37,7 +37,7 @@ public final class ImpressionNoiseUtil {
      * @param rand random number generator
      * @return list of reporting configs
      */
-    public static List<int[]> selectRandomStateAndGenerateReportConfigs(
+    public List<int[]> selectRandomStateAndGenerateReportConfigs(
             ImpressionNoiseParams noiseParams, ThreadLocalRandom rand) {
         // Get total possible combinations
         long numCombinations =
@@ -52,7 +52,7 @@ public final class ImpressionNoiseUtil {
     }
 
     @VisibleForTesting
-    static List<int[]> getReportConfigsForSequenceIndex(
+    public List<int[]> getReportConfigsForSequenceIndex(
             ImpressionNoiseParams noiseParams, long sequenceIndex) {
         List<int[]> reportConfigs = new ArrayList<>();
         // Get the configuration for the sequenceIndex
@@ -99,7 +99,7 @@ public final class ImpressionNoiseUtil {
      * @param rand random number generator
      * @return list of reporting configs
      */
-    public static List<int[]> selectFlexEventReportRandomStateAndGenerateReportConfigs(
+    public List<int[]> selectFlexEventReportRandomStateAndGenerateReportConfigs(
             TriggerSpecs triggerSpecs, int destinationMultiplier, ThreadLocalRandom rand) {
 
         // Assumes trigger specs already built privacy parameters.

@@ -35,10 +35,10 @@ import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.topics.GetTopicsResponse;
+import android.adservices.utils.CtsWebViewSupportUtil;
 import android.net.Uri;
 
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.js.JSScriptEngine;
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -119,7 +119,7 @@ public final class PermissionsValidTest extends CtsAdServicesPermissionsValidEnd
 
     @Test
     public void testValidPermissions_selectAds_adSelectionConfig() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
         AdSelectionClient mAdSelectionClient =
@@ -138,7 +138,7 @@ public final class PermissionsValidTest extends CtsAdServicesPermissionsValidEnd
 
     @Test
     public void testValidPermissions_selectAds_adSelectionFromOutcomesConfig() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
 
@@ -157,7 +157,7 @@ public final class PermissionsValidTest extends CtsAdServicesPermissionsValidEnd
 
     @Test
     public void testValidPermissions_reportImpression() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
         long adSelectionId = 1;

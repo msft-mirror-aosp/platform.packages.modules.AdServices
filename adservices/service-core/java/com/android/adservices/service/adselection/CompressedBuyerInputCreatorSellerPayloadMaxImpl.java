@@ -31,6 +31,7 @@ import java.util.Map;
 
 public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
         implements CompressedBuyerInputCreator {
+    public static final int VERSION = 1;
 
     private final CompressedBuyerInputCreatorHelper mCompressedBuyerInputCreatorHelper;
     private final AuctionServerDataCompressor mDataCompressor;
@@ -135,6 +136,10 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
     private void addPASToBuyerInput(
             Map<AdTechIdentifier, BiddingAuctionServers.BuyerInput.Builder> buyerInputs,
             Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap) {
+        if (mSellerMaxSizeBytes <= 0) {
+            sLogger.v("Max size is 0, returning an empty payload");
+            return;
+        }
         int numBuyers = encodedPayloadMap.keySet().size();
         if (numBuyers * mPerBuyerPasMaxSizeBytes > mSellerMaxSizeBytes) {
             sLogger.v("Not enough space for PAS");
@@ -165,6 +170,10 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
             List<DBCustomAudience> dbCustomAudiences,
             Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats,
             int currentEstimatedTotalSize) {
+        if (mSellerMaxSizeBytes <= 0) {
+            sLogger.v("Max size is 0, returning an empty payload");
+            return;
+        }
         int currentRecalculations = 0;
         for (DBCustomAudience dBcustomAudience : dbCustomAudiences) {
             if (currentEstimatedTotalSize >= mStoppingPointBytes

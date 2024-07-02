@@ -16,19 +16,19 @@
 
 package com.android.adservices.service.measurement.actions;
 
-import static com.android.adservices.service.measurement.E2ETest.getInputEvent;
-import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
-import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
-import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
-import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
-import static com.android.adservices.service.measurement.E2ETest.hasSourceDebugReportingPermission;
+import static com.android.adservices.service.measurement.E2EAbstractTest.getInputEvent;
+import static com.android.adservices.service.measurement.E2EAbstractTest.getUriConfigsMap;
+import static com.android.adservices.service.measurement.E2EAbstractTest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2EAbstractTest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2EAbstractTest.hasArDebugPermission;
+import static com.android.adservices.service.measurement.E2EAbstractTest.hasSourceDebugReportingPermission;
 
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.E2ETest.TestFormatJsonMapping;
+import com.android.adservices.service.measurement.E2EAbstractTest.TestFormatJsonMapping;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,7 +41,7 @@ import java.util.Map;
 public final class RegisterWebSource implements Action {
     public final WebSourceRegistrationRequestInternal mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
-    public final Map<String, UriConfig> mUriConfigMap;
+    public final Map<String, List<UriConfig>> mUriConfigsMap;
     public final long mTimestamp;
     public final boolean mDebugReporting;
     public final boolean mAdIdPermission;
@@ -95,7 +95,7 @@ public final class RegisterWebSource implements Action {
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
         mDebugReporting = hasSourceDebugReportingPermission(obj);
         mAdIdPermission = hasAdIdPermission(obj);
-        mUriConfigMap = getUriConfigMap(obj);
+        mUriConfigsMap = getUriConfigsMap(obj);
     }
 
     @Override

@@ -347,6 +347,49 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
     }
 
+    @Test
+    public void
+            generateCompressedBuyerInputFromDBCAsAndEncodedSignalsReturnsEmptyPayloadWithZeroMaxSize()
+                    throws Exception {
+
+        int zeroMaxSize = 0;
+        CompressedBuyerInputCreator compressedBuyerInputCreator =
+                new CompressedBuyerInputCreatorSellerPayloadMaxImpl(
+                        mCompressedBuyerInputCreatorHelper,
+                        mAuctionServerDataCompressor,
+                        NUM_RECALCULATIONS,
+                        zeroMaxSize,
+                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES);
+
+        Map<String, AdTechIdentifier> nameAndBuyersMap =
+                Map.of(
+                        "Shoes CA of Buyer 1", BUYER_1,
+                        "Shirts CA of Buyer 1", BUYER_1,
+                        "Shoes CA Of Buyer 2", BUYER_2);
+
+        List<AdTechIdentifier> buyersList = ImmutableList.of(BUYER_1, BUYER_2);
+        Pair<List<DBCustomAudience>, Map<String, DBCustomAudience>> resultPair =
+                createDBCustomAudiences(nameAndBuyersMap);
+
+        Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap =
+                generateExpectedEncodedPayloadForBuyers(buyersList);
+
+        List<DBCustomAudience> dbCustomAudienceList = resultPair.first;
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
+                compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
+                        dbCustomAudienceList, encodedPayloadMap);
+
+        expect.that(compressedDataMap).isEmpty();
+
+        // Verify this is not called because we don't add any buyer inputs
+        verify(mAuctionServerPayloadMetricsStrategyMock, never())
+                .addToBuyerIntermediateStats(any(), any(), any());
+
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+    }
+
     private int getTotalSize(
             Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedInputs) {
         int totalSize = 0;

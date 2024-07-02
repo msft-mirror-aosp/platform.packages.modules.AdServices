@@ -16,17 +16,17 @@
 
 package com.android.adservices.service.measurement.actions;
 
-import static com.android.adservices.service.measurement.E2ETest.getFirstUrl;
-import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
-import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
-import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
-import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
-import static com.android.adservices.service.measurement.E2ETest.hasTriggerDebugReportingPermission;
+import static com.android.adservices.service.measurement.E2EAbstractTest.getFirstUrl;
+import static com.android.adservices.service.measurement.E2EAbstractTest.getUriConfigsMap;
+import static com.android.adservices.service.measurement.E2EAbstractTest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2EAbstractTest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2EAbstractTest.hasArDebugPermission;
+import static com.android.adservices.service.measurement.E2EAbstractTest.hasTriggerDebugReportingPermission;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.E2ETest.TestFormatJsonMapping;
+import com.android.adservices.service.measurement.E2EAbstractTest.TestFormatJsonMapping;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,7 +37,7 @@ import java.util.Map;
 public final class RegisterTrigger implements Action {
     public final RegistrationRequest mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
-    public final Map<String, UriConfig> mUriConfigMap;
+    public final Map<String, List<UriConfig>> mUriConfigsMap;
     public final long mTimestamp;
     // Used in interop tests
     public final String mDestination;
@@ -70,7 +70,7 @@ public final class RegisterTrigger implements Action {
         mDebugReporting = hasTriggerDebugReportingPermission(obj);
         mAdIdPermission = hasAdIdPermission(obj);
         mArDebugPermission = hasArDebugPermission(obj);
-        mUriConfigMap = getUriConfigMap(obj);
+        mUriConfigsMap = getUriConfigsMap(obj);
     }
 
     @Override

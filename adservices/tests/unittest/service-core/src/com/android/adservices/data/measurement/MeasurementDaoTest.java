@@ -75,6 +75,7 @@ import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.EventSurfaceType;
+import com.android.adservices.service.measurement.EventTrigger;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.Source;
@@ -229,6 +230,7 @@ public class MeasurementDaoTest {
                         .setEventReportWindows("{'start_time': 1, 'end_times': ['3600', '7200']}")
                         .setStatus(Source.Status.MARKED_TO_DELETE)
                         .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
+                        .setTriggerData(Set.of(new UnsignedLong(23L), new UnsignedLong(1L)))
                         .build();
         mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
 
@@ -275,6 +277,7 @@ public class MeasurementDaoTest {
                 validSource.hasCoarseEventReportDestinations(),
                 source.hasCoarseEventReportDestinations());
         assertEquals(validSource.getTriggerDataMatching(), source.getTriggerDataMatching());
+        assertEquals(validSource.getTriggerData(), source.getTriggerData());
         assertEquals(validSource.getEventReportWindows(), source.getEventReportWindows());
         assertEquals(SourceFixture.ValidSourceParams.SHARED_DEBUG_KEY, source.getSharedDebugKey());
         assertEquals(0L, source.getDestinationLimitPriority());
@@ -11466,12 +11469,14 @@ public class MeasurementDaoTest {
 
     private EventReport createEventReportForSourceAndTrigger(
             String reportId, Source source, Trigger trigger) throws JSONException {
-
+        EventTrigger eventTrigger = trigger.parseEventTriggers(
+                FakeFlagsFactory.getFlagsForTest()).get(0);
         return new EventReport.Builder()
                 .populateFromSourceAndTrigger(
                         source,
                         trigger,
-                        trigger.parseEventTriggers(FakeFlagsFactory.getFlagsForTest()).get(0),
+                        eventTrigger.getTriggerData(),
+                        eventTrigger,
                         new Pair<>(null, null),
                         new EventReportWindowCalcDelegate(mFlags),
                         new SourceNoiseHandler(mFlags),

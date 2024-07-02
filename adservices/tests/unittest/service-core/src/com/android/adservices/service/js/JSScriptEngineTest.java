@@ -118,41 +118,51 @@ public class JSScriptEngineTest {
      */
     public static final String WASM_MODULE = "simple_test_functions.wasm";
 
-    private static final String TAG = JSScriptEngineTest.class.getSimpleName();
-
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Profiler sMockProfiler = mock(Profiler.class);
     private static final StopWatch sSandboxInitWatch = mock(StopWatch.class);
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private static final int JS_SANDBOX_TIMEOUT_MS = 5000;
+
     private static JSScriptEngine sJSScriptEngine;
+    private static boolean sIsConfigurableHeapSizeSupported = false;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
     private final boolean mDefaultIsolateConsoleMessageInLogs = false;
     private final IsolateSettings mDefaultIsolateSettings =
             IsolateSettings.forMaxHeapSizeEnforcementEnabled(mDefaultIsolateConsoleMessageInLogs);
     private final RetryStrategy mNoOpRetryStrategy = new NoOpRetryStrategyImpl();
+
+
     @Mock JSScriptEngine.JavaScriptSandboxProvider mMockSandboxProvider;
     @Mock private StopWatch mIsolateCreateWatch;
     @Mock private StopWatch mJavaExecutionWatch;
     @Mock private JavaScriptSandbox mMockedSandbox;
     @Mock private JavaScriptIsolate mMockedIsolate;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @BeforeClass
-    public static void initJavaScriptSandbox() {
+    public static void initJavaScriptSandbox() throws Exception {
         when(sMockProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
                 .thenReturn(sSandboxInitWatch);
         doNothing().when(sSandboxInitWatch).stop();
         if (JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
             sJSScriptEngine =
                     JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler, sLogger);
+            sIsConfigurableHeapSizeSupported =
+                    sJSScriptEngine
+                            .isConfigurableHeapSizeSupported()
+                            .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.SECONDS);
         }
     }
 
     @Before
     public void setup() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(
+                "JSSandbox does not support configurable heap size",
+                sIsConfigurableHeapSizeSupported);
         MockitoAnnotations.initMocks(this);
 
         reset(sMockProfiler);
@@ -696,28 +706,6 @@ public class JSScriptEngineTest {
                 .hasMessageThat()
                 .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
-    }
-
-    @Test
-    public void testLenientHeapMemorySize() throws Exception {
-        // This exception though wired to be thrown will not be thrown
-        when(mMockedSandbox.createIsolate(Mockito.any(IsolateStartupParameters.class)))
-                .thenThrow(
-                        new IllegalStateException(
-                                "simulating a failure caused by JavaScriptSandbox not"
-                                        + " supporting max heap size"));
-        IsolateSettings lenientHeapIsolateSettings =
-                IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                        mDefaultIsolateConsoleMessageInLogs);
-
-        assertThat(
-                        callJSEngine(
-                                "function test() { return \"hello world\"; }",
-                                ImmutableList.of(),
-                                "test",
-                                lenientHeapIsolateSettings,
-                                mNoOpRetryStrategy))
-                .isEqualTo("\"hello world\"");
     }
 
     @Test

@@ -79,7 +79,7 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
 
     @Test
     public void testRun_withUnknownBuyer_throwsException() {
-        when(mBuyerInputGenerator.createCompressedBuyerInputs())
+        when(mBuyerInputGenerator.createCompressedBuyerInputs(null))
                 .thenReturn(FluentFuture.from(Futures.immediateFuture(Map.of())));
 
         Result result =
@@ -102,7 +102,7 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
     public void testRun_withAllArguments_returnsSuccess()
             throws InvalidProtocolBufferException, JSONException {
         BuyerInput buyerInput = BuyerInput.newBuilder().build();
-        when(mBuyerInputGenerator.createCompressedBuyerInputs())
+        when(mBuyerInputGenerator.createCompressedBuyerInputs(null))
                 .thenReturn(
                         FluentFuture.from(
                                 Futures.immediateFuture(

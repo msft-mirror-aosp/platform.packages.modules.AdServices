@@ -39,6 +39,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
+import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableMap;
@@ -47,6 +48,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -799,7 +801,11 @@ public abstract class CustomAudienceDao {
             @NonNull Instant currentTime);
 
     /**
-     * Persists a delayed Custom Audience Update along with the overrides
+     * Persists a delayed Custom Audience Update along with the overrides If
+     * shouldReplacePendingUpdates is {@code true}, then we remove the pending updates with the same
+     * buyer and owner from the tables. If is {@code false} then we make sure that there are no
+     * pending updates and throw an {@link IllegalStateException} if there are pending updates with
+     * the same buyer and owner
      *
      * @param update delayed update
      * @param partialCustomAudienceList overrides for incoming custom audiences
@@ -808,7 +814,24 @@ public abstract class CustomAudienceDao {
     @Transaction
     public void insertScheduledUpdateAndPartialCustomAudienceList(
             @NonNull DBScheduledCustomAudienceUpdate update,
-            @NonNull List<PartialCustomAudience> partialCustomAudienceList) {
+            @NonNull List<PartialCustomAudience> partialCustomAudienceList,
+            boolean shouldReplacePendingUpdates) {
+        if (shouldReplacePendingUpdates) {
+            deleteScheduleCAUpdatesByOwnerAndBuyer(update.getOwner(), update.getBuyer());
+        } else {
+            int pendingUpdates =
+                    getNumberOfScheduleCAUpdatesByOwnerAndBuyer(
+                            update.getOwner(), update.getBuyer());
+            if (pendingUpdates != 0) {
+                throw new PersistScheduleCAUpdateException(
+                        String.format(
+                                Locale.ENGLISH,
+                                "Failed to persist scheduled update due to %d existing pending"
+                                        + " update(s)",
+                                pendingUpdates));
+            }
+        }
+
         long updateId = insertScheduledCustomAudienceUpdate(update);
 
         List<DBPartialCustomAudience> dbPartialCustomAudienceList =
@@ -877,6 +900,18 @@ public abstract class CustomAudienceDao {
     /** Removes all the Custom Audience Update with the given owner */
     @Query("DELETE FROM scheduled_custom_audience_update WHERE owner = :owner")
     protected abstract void deleteScheduledCustomAudienceUpdatesByOwner(String owner);
+
+    /** Deletes all the Custom Audience Updates which matches the given owner and buyer */
+    @Query("DELETE FROM scheduled_custom_audience_update where owner = :owner AND buyer = :buyer")
+    public abstract void deleteScheduleCAUpdatesByOwnerAndBuyer(
+            String owner, AdTechIdentifier buyer);
+
+    /** Returns the number of Custom Audience Updates with matching owner and buyer */
+    @Query(
+            "SELECT COUNT(*) FROM scheduled_custom_audience_update where owner = :owner AND buyer ="
+                    + " :buyer")
+    public abstract int getNumberOfScheduleCAUpdatesByOwnerAndBuyer(
+            String owner, AdTechIdentifier buyer);
 
     /**
      * Deletes all the Custom Audience Updates data

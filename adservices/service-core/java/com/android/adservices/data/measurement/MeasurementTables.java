@@ -132,6 +132,7 @@ public final class MeasurementTables {
         String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String INSTALL_TIME = "install_time";
         String DEBUG_JOIN_KEY = "debug_join_key";
+        String TRIGGER_DATA = "trigger_data";
         String TRIGGER_SPECS = "trigger_specs";
         String PLATFORM_AD_ID = "platform_ad_id";
         String DEBUG_AD_ID = "debug_ad_id";
@@ -556,7 +557,9 @@ public final class MeasurementTables {
                     + SourceContract.REINSTALL_REATTRIBUTION_WINDOW
                     + " INTEGER, "
                     + SourceContract.DESTINATION_LIMIT_PRIORITY
-                    + " INTEGER "
+                    + " INTEGER, "
+                    + SourceContract.TRIGGER_DATA
+                    + " TEXT "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_DESTINATION_LATEST =

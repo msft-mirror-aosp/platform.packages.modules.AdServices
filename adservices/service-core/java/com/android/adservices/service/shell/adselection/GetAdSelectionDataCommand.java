@@ -162,7 +162,7 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                     InvalidProtocolBufferException {
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerInputs =
                 mBuyerInputGenerator
-                        .createCompressedBuyerInputs()
+                        .createCompressedBuyerInputs(null)
                         .get(DB_TIMEOUT_SEC, TimeUnit.SECONDS);
 
         if (!buyerInputs.containsKey(buyer)) {

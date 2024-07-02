@@ -16,17 +16,17 @@
 
 package com.android.adservices.service.measurement.actions;
 
-import static com.android.adservices.service.measurement.E2ETest.getInputEvent;
-import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
-import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
-import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
-import static com.android.adservices.service.measurement.E2ETest.hasSourceDebugReportingPermission;
+import static com.android.adservices.service.measurement.E2EAbstractTest.getInputEvent;
+import static com.android.adservices.service.measurement.E2EAbstractTest.getUriConfigsMap;
+import static com.android.adservices.service.measurement.E2EAbstractTest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2EAbstractTest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2EAbstractTest.hasSourceDebugReportingPermission;
 
 import android.adservices.measurement.SourceRegistrationRequest;
 import android.adservices.measurement.SourceRegistrationRequestInternal;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.E2ETest.TestFormatJsonMapping;
+import com.android.adservices.service.measurement.E2EAbstractTest.TestFormatJsonMapping;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,7 +39,7 @@ import java.util.Map;
 public final class RegisterListSources implements Action {
     public final SourceRegistrationRequestInternal mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
-    public final Map<String, UriConfig> mUriConfigMap;
+    public final Map<String, List<UriConfig>> mUriConfigsMap;
     public final long mTimestamp;
     // Used in interop tests
     public final String mPublisher;
@@ -81,7 +81,7 @@ public final class RegisterListSources implements Action {
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
         mDebugReporting = hasSourceDebugReportingPermission(obj);
         mAdIdPermission = hasAdIdPermission(obj);
-        mUriConfigMap = getUriConfigMap(obj);
+        mUriConfigsMap = getUriConfigsMap(obj);
     }
 
     private List<Uri> createRegistrationUris(JSONArray jsonArray) throws JSONException {

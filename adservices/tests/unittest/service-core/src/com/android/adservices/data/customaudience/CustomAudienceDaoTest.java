@@ -61,6 +61,7 @@ import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
+import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -2663,7 +2664,7 @@ public class CustomAudienceDaoTest {
         DBScheduledCustomAudienceUpdate similarUpdate =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER
                         .setUpdateId(null)
-                        .setScheduledTime(differentScheduleTime)
+                        .setScheduledTime(differentScheduleTime.truncatedTo(ChronoUnit.MILLIS))
                         .build();
 
         assertNotEquals(
@@ -2691,7 +2692,8 @@ public class CustomAudienceDaoTest {
         DBScheduledCustomAudienceUpdate anUpdateInFuture =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER
                         .setUpdateId(null)
-                        .setScheduledTime(CommonFixture.FIXED_NEXT_ONE_DAY)
+                        .setScheduledTime(
+                                CommonFixture.FIXED_NEXT_ONE_DAY.truncatedTo(ChronoUnit.MILLIS))
                         .build();
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(anUpdateInFuture);
 
@@ -2886,7 +2888,9 @@ public class CustomAudienceDaoTest {
         assertThat(updates).isEmpty();
 
         mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
-                anUpdate, List.of(partialCustomAudience1, partialCustomAudience2));
+                anUpdate,
+                List.of(partialCustomAudience1, partialCustomAudience2),
+                /* shouldReplacePendingUpdates= */ false);
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -2914,7 +2918,7 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
-    public void testInsertAndQueryScheduledCustomAudienceUpdateInFuture_PartialCAsReplaced() {
+    public void testInsertScheduledCAUpdateInFuture_removePendingUpdatesTrue_PartialCAsReplaced() {
         DBScheduledCustomAudienceUpdate anUpdate =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
         DBPartialCustomAudience dbPartialCustomAudience =
@@ -2934,7 +2938,9 @@ public class CustomAudienceDaoTest {
         assertThat(updates).isEmpty();
 
         mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
-                anUpdate, List.of(partialCustomAudience1));
+                anUpdate,
+                List.of(partialCustomAudience1),
+                /* shouldReplacePendingUpdates= */ false);
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -2959,7 +2965,9 @@ public class CustomAudienceDaoTest {
                         .setUserBiddingSignals(dbPartialCustomAudience.getUserBiddingSignals())
                         .build();
         mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
-                similarUpdate, List.of(partialCustomAudience_2));
+                similarUpdate,
+                List.of(partialCustomAudience_2),
+                /* shouldReplacePendingUpdates= */ true);
         List<DBScheduledCustomAudienceUpdate> newUpdates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -2979,6 +2987,246 @@ public class CustomAudienceDaoTest {
                 "Partial CAs for previous update should have been cleared",
                 0,
                 partialCustomAudienceList.size());
+    }
+
+    @Test
+    public void testInsertScheduledCAUpdateInFuture_withShouldRemoveUpdatesFalse_throwsException() {
+        DBScheduledCustomAudienceUpdate anUpdate =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
+        DBPartialCustomAudience dbPartialCustomAudience =
+                DB_PARTIAL_CUSTOM_AUDIENCE_BUILDER.build();
+        String partialCaName1 = "partial_ca_1";
+
+        PartialCustomAudience partialCustomAudience1 =
+                new PartialCustomAudience.Builder(partialCaName1)
+                        .setActivationTime(dbPartialCustomAudience.getActivationTime())
+                        .setExpirationTime(dbPartialCustomAudience.getExpirationTime())
+                        .setUserBiddingSignals(dbPartialCustomAudience.getUserBiddingSignals())
+                        .build();
+
+        List<DBScheduledCustomAudienceUpdate> updates =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertThat(updates).isEmpty();
+
+        mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
+                anUpdate,
+                List.of(partialCustomAudience1),
+                /* shouldReplacePendingUpdates= */ false);
+        updates =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+
+        long previousUpdateId = updates.get(0).getUpdateId();
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                mCustomAudienceDao.getPartialAudienceListForUpdateId(previousUpdateId);
+        assertThat(
+                        partialCustomAudienceList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(partialCaName1);
+
+        DBScheduledCustomAudienceUpdate similarUpdate =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
+        String partialCaName2 = "partial_ca_2";
+
+        PartialCustomAudience partialCustomAudience_2 =
+                new PartialCustomAudience.Builder(partialCaName2)
+                        .setActivationTime(dbPartialCustomAudience.getActivationTime())
+                        .setExpirationTime(dbPartialCustomAudience.getExpirationTime())
+                        .setUserBiddingSignals(dbPartialCustomAudience.getUserBiddingSignals())
+                        .build();
+        assertThrows(
+                PersistScheduleCAUpdateException.class,
+                () ->
+                        mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
+                                similarUpdate,
+                                List.of(partialCustomAudience_2),
+                                /* shouldReplacePendingUpdates= */ false));
+        List<DBScheduledCustomAudienceUpdate> updatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertEquals("Only 1 entry should have been inserted", 1, updatesInDB.size());
+
+        long newUpdateId = updatesInDB.get(0).getUpdateId();
+        assertEquals(previousUpdateId, newUpdateId);
+        List<DBPartialCustomAudience> newPartialCustomAudienceList =
+                mCustomAudienceDao.getPartialAudienceListForUpdateId(newUpdateId);
+        assertThat(
+                        newPartialCustomAudienceList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(partialCaName1);
+    }
+
+    @Test
+    public void
+            testInsertScheduledCA_WithShouldReplacePendingUpdatesTrue_shouldReplaceOldUpdates() {
+        DBScheduledCustomAudienceUpdate oldUpdate =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
+        DBPartialCustomAudience oldDBPartialCustomAudience =
+                DB_PARTIAL_CUSTOM_AUDIENCE_BUILDER.build();
+        String oldPartialCaName1 = "old_partial_ca_1";
+        String oldPartialCaName2 = "old_partial_ca_2";
+        PartialCustomAudience oldPartialCustomAudience1 =
+                new PartialCustomAudience.Builder(oldPartialCaName1)
+                        .setActivationTime(oldDBPartialCustomAudience.getActivationTime())
+                        .setExpirationTime(oldDBPartialCustomAudience.getExpirationTime())
+                        .setUserBiddingSignals(oldDBPartialCustomAudience.getUserBiddingSignals())
+                        .build();
+
+        PartialCustomAudience oldPartialCustomAudience2 =
+                new PartialCustomAudience.Builder(oldPartialCaName2)
+                        .setActivationTime(oldDBPartialCustomAudience.getActivationTime())
+                        .setExpirationTime(oldDBPartialCustomAudience.getExpirationTime())
+                        .setUserBiddingSignals(oldDBPartialCustomAudience.getUserBiddingSignals())
+                        .build();
+
+        // insert old Scheduled Updates and Partial Custom Audience List
+        mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
+                oldUpdate,
+                List.of(oldPartialCustomAudience1, oldPartialCustomAudience2),
+                /* shouldReplacePendingUpdates= */ false);
+
+        DBScheduledCustomAudienceUpdate anUpdate =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
+        DBPartialCustomAudience dbPartialCustomAudience =
+                DB_PARTIAL_CUSTOM_AUDIENCE_BUILDER.build();
+        String newPartialCaName1 = "new_partial_ca_1";
+        String newPartialCaName2 = "new_partial_ca_2";
+        PartialCustomAudience newPartialCustomAudience1 =
+                new PartialCustomAudience.Builder(newPartialCaName1)
+                        .setActivationTime(dbPartialCustomAudience.getActivationTime())
+                        .setExpirationTime(dbPartialCustomAudience.getExpirationTime())
+                        .setUserBiddingSignals(dbPartialCustomAudience.getUserBiddingSignals())
+                        .build();
+        PartialCustomAudience newPartialCustomAudience2 =
+                new PartialCustomAudience.Builder(newPartialCaName2)
+                        .setActivationTime(dbPartialCustomAudience.getActivationTime())
+                        .setExpirationTime(dbPartialCustomAudience.getExpirationTime())
+                        .setUserBiddingSignals(dbPartialCustomAudience.getUserBiddingSignals())
+                        .build();
+
+        List<DBScheduledCustomAudienceUpdate> oldUpdates =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        long oldUpdateId = oldUpdates.get(0).getUpdateId();
+        List<DBPartialCustomAudience> oldPartialCustomAudienceList =
+                mCustomAudienceDao.getPartialAudienceListForUpdateId(oldUpdateId);
+        assertThat(
+                        oldPartialCustomAudienceList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(oldPartialCaName1, oldPartialCaName2);
+
+        // inserting new scheduled updates and partial custom audience. This should delete the
+        // pending updates.
+        mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
+                anUpdate,
+                List.of(newPartialCustomAudience1, newPartialCustomAudience2),
+                /* shouldReplacePendingUpdates= */ true);
+        List<DBScheduledCustomAudienceUpdate> updates =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertEquals("1 entry should have been inserted", 1, updates.size());
+
+        long updateId = updates.get(0).getUpdateId();
+        List<DBPartialCustomAudience> newPartialCustomAudienceList =
+                mCustomAudienceDao.getPartialAudienceListForUpdateId(updateId);
+        assertThat(
+                        newPartialCustomAudienceList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(newPartialCaName1, newPartialCaName2);
+
+        List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>
+                updateAndOverridesPair =
+                        mCustomAudienceDao.getScheduledUpdatesAndOverridesBeforeTime(
+                                anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertThat(updateAndOverridesPair.get(0).first.getUpdateId()).isEqualTo(updateId);
+        assertThat(
+                        updateAndOverridesPair.get(0).second.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(newPartialCaName1, newPartialCaName2);
+    }
+
+    @Test
+    public void
+            testDeleteScheduledCustomAudienceUpdatesWithGivenOwnerAndBuyer_removesCorrectEntries() {
+        DBScheduledCustomAudienceUpdate dbScheduledCAUpdateOwner1Buyer1 =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER
+                        .setOwner(OWNER_1)
+                        .setBuyer(BUYER_1)
+                        .setUpdateId(1L)
+                        .build();
+        DBScheduledCustomAudienceUpdate dbScheduledCAUpdateOwner2Buyer2 =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER
+                        .setOwner(OWNER_2)
+                        .setBuyer(BUYER_2)
+                        .setUpdateId(2L)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(dbScheduledCAUpdateOwner1Buyer1);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(dbScheduledCAUpdateOwner2Buyer2);
+
+        mCustomAudienceDao.deleteScheduleCAUpdatesByOwnerAndBuyer(OWNER_1, BUYER_1);
+
+        assertTrue(
+                "Update with the owner: " + OWNER_1 + "should be deleted",
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).isEmpty());
+        assertEquals(
+                1, mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_2).size());
+        assertEquals(
+                dbScheduledCAUpdateOwner2Buyer2,
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_2).get(0));
+    }
+
+    @Test
+    public void testDeleteScheduledCAUpdatesWithGivenOwnerAndBuyer_removesCorrectEntries() {
+        DBScheduledCustomAudienceUpdate dbScheduledCAUpdateOwner1Buyer1 =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER
+                        .setOwner(OWNER_1)
+                        .setBuyer(BUYER_1)
+                        .setUpdateId(1L)
+                        .build();
+        DBScheduledCustomAudienceUpdate dbScheduledCAUpdateOwner1Buyer2 =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER
+                        .setOwner(OWNER_1)
+                        .setBuyer(BUYER_2)
+                        .setUpdateId(2L)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(dbScheduledCAUpdateOwner1Buyer1);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(dbScheduledCAUpdateOwner1Buyer2);
+
+        mCustomAudienceDao.deleteScheduleCAUpdatesByOwnerAndBuyer(OWNER_1, BUYER_1);
+
+        assertEquals(
+                1, mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).size());
+        assertEquals(
+                dbScheduledCAUpdateOwner1Buyer2,
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1).get(0));
+    }
+
+    @Test
+    public void testGetNumberOfScheduledCAUpdatesByOwnerAndBuyer_returnsCorrectNumber() {
+        DBScheduledCustomAudienceUpdate dbScheduledCAUpdateOwner1Buyer1 =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER
+                        .setOwner(OWNER_1)
+                        .setBuyer(BUYER_1)
+                        .setUpdateId(1L)
+                        .build();
+        DBScheduledCustomAudienceUpdate dbScheduledCAUpdateOwner1Buyer2 =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER
+                        .setOwner(OWNER_1)
+                        .setBuyer(BUYER_2)
+                        .setUpdateId(2L)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(dbScheduledCAUpdateOwner1Buyer1);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(dbScheduledCAUpdateOwner1Buyer2);
+
+        assertEquals(
+                1,
+                mCustomAudienceDao.getNumberOfScheduleCAUpdatesByOwnerAndBuyer(OWNER_1, BUYER_1));
     }
 
     private void assertUpdateEqualsExceptId(

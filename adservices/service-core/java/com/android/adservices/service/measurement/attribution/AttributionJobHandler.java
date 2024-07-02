@@ -985,6 +985,7 @@ class AttributionJobHandler {
                             .populateFromSourceAndTrigger(
                                     source,
                                     trigger,
+                                    maybeEffectiveTriggerData.get(),
                                     eventTrigger,
                                     debugKeyPair,
                                     mEventReportWindowCalcDelegate,
@@ -1688,19 +1689,30 @@ class AttributionJobHandler {
                 return Optional.empty();
             }
             return Optional.of(triggerData);
-        // V1 source
-        } else if (!mFlags.getMeasurementEnableTriggerDataMatching()) {
-            return Optional.of(triggerData);
         }
 
-        if (source.getTriggerDataMatching() == Source.TriggerDataMatching.EXACT) {
-            UnsignedLong triggerDataCardinalityBound = new UnsignedLong(
-                    ((long) source.getTriggerDataCardinality()) - 1L);
-            if (eventTrigger.getTriggerData().compareTo(triggerDataCardinalityBound) > 0) {
-                return Optional.empty();
+        // V1 source
+        if (mFlags.getMeasurementEnableTriggerDataMatching()
+                && source.getTriggerDataMatching() == Source.TriggerDataMatching.EXACT) {
+            if (source.getTriggerData() != null) {
+                return source.getTriggerData().contains(triggerData)
+                        ? Optional.of(triggerData)
+                        : Optional.empty();
+            } else {
+                UnsignedLong triggerDataCardinalityBound = new UnsignedLong(
+                        ((long) source.getTriggerDataCardinality()) - 1L);
+                if (triggerData.compareTo(triggerDataCardinalityBound) > 0) {
+                    return Optional.empty();
+                }
             }
         }
-        return Optional.of(triggerData);
+
+        // V1 source with trigger data matching type modulus (default)
+        if (source.getTriggerDataCardinality() == 0) {
+            return Optional.empty();
+        }
+
+        return Optional.of(triggerData.mod(source.getTriggerDataCardinality()));
     }
 
     private static Optional<Pair<Uri, Uri>> getPublisherAndDestinationTopPrivateDomains(

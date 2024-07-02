@@ -1,7 +1,7 @@
 {
   "description": "One source followed by three triggers and no competition",
   "phflags_override": {
-    "measurement_flexible_event_reporting_api_enabled": "true"
+    "measurement_enable_v1_source_trigger_data": "true"
   },
   "input": {
     "sources": [
@@ -120,7 +120,6 @@
           "source_event_id": "2",
           "trigger_data": "2",
           "source_type": "navigation",
-          "trigger_summary_bucket": [1, 1],
           "randomized_trigger_rate": 0.0000291
         }
       },
@@ -133,7 +132,6 @@
           "source_event_id": "2",
           "trigger_data": "1",
           "source_type": "navigation",
-          "trigger_summary_bucket": [1, 1],
           "randomized_trigger_rate": 0.0000291
         }
       },
@@ -146,7 +144,6 @@
           "source_event_id": "2",
           "trigger_data": "0",
           "source_type": "navigation",
-          "trigger_summary_bucket": "[1,1]",
           "randomized_trigger_rate": 0.0000291
         }
       }

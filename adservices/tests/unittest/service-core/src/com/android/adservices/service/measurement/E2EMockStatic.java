@@ -33,9 +33,9 @@ import org.mockito.stubbing.Answer;
 /** Combines TestableDeviceConfig with other needed static mocks. */
 final class E2EMockStatic implements StaticMockFixture {
 
-    private final E2ETest.ParamsProvider mParams;
+    private final E2EAbstractTest.ParamsProvider mParams;
 
-    public E2EMockStatic(E2ETest.ParamsProvider paramsProvider) {
+    E2EMockStatic(E2EAbstractTest.ParamsProvider paramsProvider) {
         mParams = paramsProvider;
     }
 
@@ -61,7 +61,7 @@ final class E2EMockStatic implements StaticMockFixture {
     public void tearDown() {}
 
     public static AdServicesExtendedMockitoRule newE2EMockStaticRule(
-            E2ETest.ParamsProvider paramsProvider) {
+            E2EAbstractTest.ParamsProvider paramsProvider) {
         return new AdServicesExtendedMockitoRule(
                 TestableDeviceConfig::new, () -> new E2EMockStatic(paramsProvider));
     }

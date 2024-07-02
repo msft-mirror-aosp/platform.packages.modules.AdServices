@@ -16,9 +16,9 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterV0.DATA_SIZE_PADDING_LENGTH_BYTE;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterV0.PAYLOAD_SIZE_EXCEEDS_LIMIT;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.BYTES_CONVERSION_FACTOR;
+import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.DATA_SIZE_PADDING_LENGTH_BYTE;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.META_INFO_LENGTH_BYTE;
 
 import static com.google.common.truth.Truth.assertThat;

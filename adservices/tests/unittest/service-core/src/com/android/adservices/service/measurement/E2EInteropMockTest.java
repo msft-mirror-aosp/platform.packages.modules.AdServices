@@ -32,6 +32,8 @@ import com.android.adservices.service.measurement.registration.AsyncFetchStatus;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.Enrollment;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
@@ -55,10 +57,57 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * cc1188897a30bed7e53a80487ef8aacd64f50395.
+ * 9307efde88ad78d22ea8321888f9fb20bee50bf6.
  */
 @RunWith(Parameterized.class)
-public class E2EInteropMockTest extends E2EMockTest {
+public class E2EInteropMockTest extends E2EAbstractMockTest {
+    static {
+        sTestsToSkip = ImmutableSet.of(
+                "unsuitable_response_url.json",
+                "aggregatable_debug_reports.json",
+                "aggregatable_report_trigger_context_id.json",
+                "aggregatable_reports_fake_source.json",
+                "aggregatable_values_filtering.json",
+                "aggregation_coordinator_origin.json",
+                "channel_capacity.json",
+                "custom_trigger_data.json",
+                "destination_limit.json",
+                "destination_rate_limit.json",
+                "destination_validation.json",
+                "event_level_epsilon.json",
+                "event_level_report_time.json",
+                "event_level_storage_limit_replacement.json",
+                "event_level_trigger_filter_data.json",
+                "event_report_window.json",
+                "event_source_rounds_expiry.json",
+                "fenced.json",
+                "filter_data_validation.json",
+                "header_presence.json",
+                "max_trigger_state_cardinality.json",
+                "null_aggregatable_report.json",
+                "os_debug_reports.json",
+                "parse_failures.json",
+                "preferred_platform.json",
+                "randomized_response_0_reports.json",
+                "randomized_response_1_report.json",
+                "rate_limit_max_attributions.json",
+                "rate_limit_max_distinct_reporting_origins_per_source_reporting_site.json",
+                "rate_limit_max_reporting_origins_per_source_reporting_site.json",
+                "redirect_source_trigger.json",
+                "same_destination_site.json",
+                "source_destination_limit_fifo.json",
+                "source_destination_limit_fifo_and_destination_rate_limit.json",
+                "source_destination_limit_fifo_rate_limits.json",
+                "source_destination_limit_priority_fifo.json",
+                "source_destination_limits.json",
+                "source_header_error_debug_report.json",
+                "source_registration_limits.json",
+                "source_storage_limit_and_destination_rate_limit.json",
+                "source_storage_limit_expiry.json",
+                "trigger_header_error_debug_report.json",
+                "verbose_debug_report_multiple_data.json");
+    }
+
     // The following keys are to JSON fields that should be interpreted in milliseconds.
     public static final Set<String> TIMESTAMP_KEYS_IN_MILLIS =
             new HashSet<>(
@@ -147,7 +196,10 @@ public class E2EInteropMockTest extends E2EMockTest {
                     "true"),
             entry(
                     FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
-                    WebUtil.validUrl("https://coordinator.test")));
+                    WebUtil.validUrl("https://coordinator.test")),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
+                    "true"));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -186,7 +238,7 @@ public class E2EInteropMockTest extends E2EMockTest {
                         mMockContentResolver);
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
-                        TestObjectProvider.Type.DENOISED,
+                        mSourceNoiseHandler,
                         mDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
@@ -200,6 +252,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         // For interop tests, we currently expect only one HTTPS response per registration with no
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
+            prepareReportNoising(getNextUriConfig(sourceRegistration.mUriConfigsMap.get(uri)));
             updateEnrollment(uri);
             insertSourceOrAssertUnparsable(
                     sourceRegistration.getPublisher(),
