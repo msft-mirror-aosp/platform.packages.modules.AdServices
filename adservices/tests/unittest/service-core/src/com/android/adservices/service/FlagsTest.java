@@ -36,6 +36,8 @@ import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
@@ -473,6 +475,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableV1SourceTriggerData() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA",
+                Flags::getMeasurementEnableV1SourceTriggerData);
+    }
+
+    @Test
     public void testGetCustomErrorCodeSamplingEnabled() {
         testFeatureFlag(
                 "DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED",
@@ -755,6 +764,22 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions",
                 FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS,
                 Flags::getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions);
+    }
+
+    @Test
+    public void testGetMeasurementEnableEventTriggerDebugSignal() {
+        testFlag(
+                "getMeasurementEnableEventTriggerDebugSignal",
+                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL,
+                Flags::getMeasurementEnableEventTriggerDebugSignal);
+    }
+
+    @Test
+    public void testGetMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        testFlag(
+                "getMeasurementEnableEventTriggerDebugSignalForCoarseDestination",
+                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION,
+                Flags::getMeasurementEnableEventTriggerDebugSignalForCoarseDestination);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

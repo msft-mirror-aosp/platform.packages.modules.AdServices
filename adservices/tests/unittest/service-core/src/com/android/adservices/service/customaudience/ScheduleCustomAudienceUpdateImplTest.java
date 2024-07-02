@@ -149,13 +149,15 @@ public class ScheduleCustomAudienceUpdateImplTest {
     }
 
     @Test
-    public void testScheduleCustomAudienceUpdate_Success() throws Exception {
+    public void testScheduleCustomAudienceUpdate_withShouldReplacePendingUpdateFalse_Success()
+            throws Exception {
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 UPDATE_URI,
                                 PACKAGE,
                                 Duration.ofMinutes(50),
                                 Collections.emptyList())
+                        .setShouldReplacePendingUpdates(false)
                         .build();
 
         ScheduleUpdateTestCallback callback =
@@ -175,7 +177,42 @@ public class ScheduleCustomAudienceUpdateImplTest {
 
         verify(mCustomAudienceDaoMock)
                 .insertScheduledUpdateAndPartialCustomAudienceList(
-                        mUpdateCaptor.capture(), mListArgumentCaptor.capture());
+                        mUpdateCaptor.capture(), mListArgumentCaptor.capture(), eq(false));
+        assertEquals(BUYER, mUpdateCaptor.getValue().getBuyer());
+        assertTrue(mListArgumentCaptor.getValue().isEmpty());
+        assertTrue(callback.isSuccess());
+    }
+
+    @Test
+    public void testScheduleCustomAudienceUpdate_withShouldReplacePendingUpdateTrue_Success()
+            throws Exception {
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                UPDATE_URI,
+                                PACKAGE,
+                                Duration.ofMinutes(50),
+                                Collections.emptyList())
+                        .setShouldReplacePendingUpdates(true)
+                        .build();
+
+        ScheduleUpdateTestCallback callback =
+                callScheduleUpdate(input, mScheduleCustomAudienceUpdateImpl);
+
+        verify(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        eq(UPDATE_URI),
+                        eq(PACKAGE),
+                        eq(false),
+                        eq(false),
+                        eq(true),
+                        eq(mCallingAppUid),
+                        eq(API_NAME),
+                        eq(FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE),
+                        eq(mDevContext));
+
+        verify(mCustomAudienceDaoMock)
+                .insertScheduledUpdateAndPartialCustomAudienceList(
+                        mUpdateCaptor.capture(), mListArgumentCaptor.capture(), eq(true));
         assertEquals(BUYER, mUpdateCaptor.getValue().getBuyer());
         assertTrue(mListArgumentCaptor.getValue().isEmpty());
         assertTrue(callback.isSuccess());
@@ -189,6 +226,7 @@ public class ScheduleCustomAudienceUpdateImplTest {
                                 PACKAGE,
                                 Duration.ofMinutes(10000),
                                 Collections.emptyList())
+                        .setShouldReplacePendingUpdates(false)
                         .build();
 
         ScheduleUpdateTestCallback callback =
@@ -284,6 +322,7 @@ public class ScheduleCustomAudienceUpdateImplTest {
                                 PACKAGE,
                                 Duration.ofMinutes(50),
                                 Collections.emptyList())
+                        .setShouldReplacePendingUpdates(false)
                         .build();
 
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))

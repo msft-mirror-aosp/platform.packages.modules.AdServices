@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.common.AdTechIdentifier;
+import android.adservices.adselection.PerBuyerConfiguration;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -38,13 +38,16 @@ public class BuyerInputDataFetcherAllBuyersImpl implements BuyerInputDataFetcher
 
     @Override
     public List<DBCustomAudience> getActiveCustomAudiences(
-            List<AdTechIdentifier> buyers, Instant currentTime, long activeWindowTimeMs) {
+            List<PerBuyerConfiguration> perBuyerConfigurations,
+            Instant currentTime,
+            long activeWindowTimeMs) {
         return mCustomAudienceDao.getAllActiveCustomAudienceForServerSideAuction(
                 currentTime, activeWindowTimeMs);
     }
 
     @Override
-    public List<DBEncodedPayload> getProtectedAudienceSignals(List<AdTechIdentifier> buyers) {
+    public List<DBEncodedPayload> getProtectedAudienceSignals(
+            List<PerBuyerConfiguration> perBuyerConfigurations) {
         return mEncodedPayloadDao.getAllEncodedPayloads();
     }
 }
