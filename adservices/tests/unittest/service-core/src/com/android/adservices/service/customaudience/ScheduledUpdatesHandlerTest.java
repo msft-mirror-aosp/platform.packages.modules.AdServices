@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.CommonFixture.FIXED_NOW;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
@@ -26,9 +27,11 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_2;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_3;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.UPDATE_ID;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayload;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateCustomAudienceWithName;
 import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.JOIN_CUSTOM_AUDIENCE_KEY;
 import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.STALE_DELAYED_UPDATE_AGE;
 
@@ -49,8 +52,12 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
+import android.annotation.NonNull;
 import android.net.Uri;
 import android.util.Pair;
+
+import androidx.room.Room;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -58,9 +65,11 @@ import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
@@ -98,10 +107,14 @@ import java.util.stream.Collectors;
 public final class ScheduledUpdatesHandlerTest {
 
     private static final String OWNER = CustomAudienceFixture.VALID_OWNER;
+    private static final String OWNER_2 = "com.android.test.2";
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
+    private static final String CUSTOM_AUDIENCE_NAME_1 = "custom_audience_1";
+    private static final String CUSTOM_AUDIENCE_NAME_2 = "custom_audience_2";
+    private static final String CUSTOM_AUDIENCE_NAME_3 = "custom_audience_3";
     private static final Uri UPDATE_URI = CommonFixture.getUri(BUYER, "/updateUri");
-    private static final Instant CREATION_TIME = CommonFixture.FIXED_NOW;
-    private static final Instant SCHEDULED_TIME = CommonFixture.FIXED_NEXT_ONE_DAY;
+    private static final Instant CREATION_TIME = FIXED_NOW;
+    private static final Instant SCHEDULED_TIME = CREATION_TIME.plus(180, ChronoUnit.MINUTES);
     private static final DBScheduledCustomAudienceUpdate UPDATE =
             DBScheduledCustomAudienceUpdate.builder()
                     .setUpdateId(UPDATE_ID)
@@ -125,10 +138,12 @@ public final class ScheduledUpdatesHandlerTest {
     private boolean mAuctionServerRequestFlags;
     private long mFledgeAuctionServerAdRenderIdMaxLength;
     private Flags mFlags;
+    @NonNull private CustomAudienceDao mCustomAudienceDao;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     @Mock private CustomAudienceImpl mCustomAudienceImplMock;
+    @Mock private CustomAudienceQuantityChecker mCustomAudienceQuantityCheckerMock;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
     private ScheduledUpdatesHandler mHandler;
@@ -150,7 +165,8 @@ public final class ScheduledUpdatesHandlerTest {
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         mAdRenderIdValidator,
                         AD_DATA_CONVERSION_STRATEGY,
-                        mCustomAudienceImplMock);
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock);
 
         mFledgeFrequencyCapFilteringEnabled = mFlags.getFledgeFrequencyCapFilteringEnabled();
         mFledgeAppInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
@@ -158,6 +174,13 @@ public final class ScheduledUpdatesHandlerTest {
         mFledgeAuctionServerAdRenderIdMaxLength =
                 mFlags.getFledgeAuctionServerAdRenderIdMaxLength();
         mAuctionServerRequestFlags = mFlags.getFledgeAuctionServerRequestFlagsEnabled();
+        mCustomAudienceDao =
+                Room.inMemoryDatabaseBuilder(
+                                ApplicationProvider.getApplicationContext(),
+                                CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
+                        .build()
+                        .customAudienceDao();
     }
 
     @Test
@@ -231,6 +254,254 @@ public final class ScheduledUpdatesHandlerTest {
                 "Bidding signals should have been overridden",
                 VALID_BIDDING_SIGNALS.toString(),
                 joinedCustomAudiences.get(0).getUserBiddingSignals().toString());
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_withQuantityChecker_Success()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        // We set the flag values such that the max number of CA per owner is 2.
+        // We return 3 CA from the server response and assert that only two has been joined.
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(
+                        PARTIAL_CUSTOM_AUDIENCE_1,
+                        PARTIAL_CUSTOM_AUDIENCE_2,
+                        PARTIAL_CUSTOM_AUDIENCE_3);
+
+        Flags flagsWithCAQuantityCheckerValues =
+                new FakeFlagsFactory.TestFlags() {
+                    @Override
+                    public long getFledgeCustomAudienceMaxOwnerCount() {
+                        return 2;
+                    }
+
+                    @Override
+                    public long getFledgeCustomAudienceMaxCount() {
+                        return 2;
+                    }
+                };
+        CustomAudienceQuantityChecker customAudienceQuantityChecker =
+                new CustomAudienceQuantityChecker(
+                        mCustomAudienceDao, flagsWithCAQuantityCheckerValues);
+
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        flagsWithCAQuantityCheckerValues,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        customAudienceQuantityChecker);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(UPDATE);
+
+        String responsePayload =
+                createJsonResponsePayload(
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()),
+                                List.of(),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(UPDATE.getScheduledTime().plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+
+        // Scheduled updates should be deleted from the database.
+        assertEquals(0, customAudienceScheduledUpdatesInDB.size());
+
+        List<DBCustomAudience> joinedCustomAudiences =
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                        List.of(UPDATE.getBuyer()), FIXED_NOW, 10000);
+        assertTrue(
+                "There should be only 2 joined Custom Audiences",
+                joinedCustomAudiences.stream()
+                        .map(DBCustomAudience::getName)
+                        .collect(Collectors.toList())
+                        .containsAll(List.of(PARTIAL_CA_1, PARTIAL_CA_2)));
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_twoOwners_oneCaPerOwner_joinsOneCAForEachOwner()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        // We set the flag values such that the max number of CA per owner is 1.
+        // We return 3 CA from the server response: CA1 & CA2 from OWNER_1 and CA3 from OWNER_2  and
+        // assert that CA1 and CA3 has joined.
+
+        Flags flagsWithCAQuantityCheckerValues =
+                new FakeFlagsFactory.TestFlags() {
+                    @Override
+                    public long getFledgeCustomAudienceMaxOwnerCount() {
+                        return 100;
+                    }
+
+                    @Override
+                    public long getFledgeCustomAudienceMaxCount() {
+                        return 100;
+                    }
+
+                    @Override
+                    public long getFledgeCustomAudiencePerAppMaxCount() {
+                        return 1;
+                    }
+                };
+        CustomAudienceQuantityChecker customAudienceQuantityChecker =
+                new CustomAudienceQuantityChecker(
+                        mCustomAudienceDao, flagsWithCAQuantityCheckerValues);
+
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        flagsWithCAQuantityCheckerValues,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        customAudienceQuantityChecker);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(UPDATE);
+
+        JSONObject responseJson = new JSONObject();
+        JSONArray joinCustomAudienceArray = new JSONArray();
+        joinCustomAudienceArray.put(
+                0, generateCustomAudienceWithName(BUYER, OWNER, CUSTOM_AUDIENCE_NAME_1));
+        joinCustomAudienceArray.put(
+                1, generateCustomAudienceWithName(BUYER, OWNER, CUSTOM_AUDIENCE_NAME_2));
+        joinCustomAudienceArray.put(
+                2, generateCustomAudienceWithName(BUYER, OWNER_2, CUSTOM_AUDIENCE_NAME_3));
+        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
+        String responsePayload = responseJson.toString();
+
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(UPDATE.getScheduledTime().plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+
+        // Scheduled updates should be deleted from the database.
+        assertEquals(0, customAudienceScheduledUpdatesInDB.size());
+
+        List<DBCustomAudience> joinedCustomAudiences =
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                        List.of(UPDATE.getBuyer()), FIXED_NOW, 10000);
+        assertTrue(
+                "There should be only 2 joined Custom Audiences",
+                joinedCustomAudiences.stream()
+                        .map(DBCustomAudience::getName)
+                        .collect(Collectors.toList())
+                        .containsAll(List.of(CUSTOM_AUDIENCE_NAME_1, CUSTOM_AUDIENCE_NAME_3)));
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_withQuantityCheckerLimitZero_doesNotJoinAnyCA()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        // We set the flag values such that the max number of CA per owner is 0.
+        // We return 3 CA from the server response and assert that no custom audience has been
+        // joined.
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(
+                        PARTIAL_CUSTOM_AUDIENCE_1,
+                        PARTIAL_CUSTOM_AUDIENCE_2,
+                        PARTIAL_CUSTOM_AUDIENCE_3);
+
+        Flags flagsWithCAQuantityCheckerValues =
+                new FakeFlagsFactory.TestFlags() {
+                    @Override
+                    public long getFledgeCustomAudienceMaxOwnerCount() {
+                        return 0;
+                    }
+
+                    @Override
+                    public long getFledgeCustomAudienceMaxCount() {
+                        return 0;
+                    }
+                };
+        CustomAudienceQuantityChecker customAudienceQuantityChecker =
+                new CustomAudienceQuantityChecker(
+                        mCustomAudienceDao, flagsWithCAQuantityCheckerValues);
+
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        flagsWithCAQuantityCheckerValues,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        customAudienceQuantityChecker);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(UPDATE);
+
+        String responsePayload =
+                createJsonResponsePayload(
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()),
+                                List.of(),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(UPDATE.getScheduledTime().plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+
+        // Scheduled updates should be deleted from the database.
+        assertEquals(0, customAudienceScheduledUpdatesInDB.size());
+
+        List<DBCustomAudience> joinedCustomAudiences =
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                        List.of(UPDATE.getBuyer()), FIXED_NOW, 10000);
+        assertTrue(
+                "There should be only 0 joined Custom Audiences", joinedCustomAudiences.isEmpty());
     }
 
     @Test
@@ -823,7 +1094,8 @@ public final class ScheduledUpdatesHandlerTest {
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         mAdRenderIdValidator,
                         AD_DATA_CONVERSION_STRATEGY,
-                        mCustomAudienceImplMock);
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock);
         Void ignored =
                 handlerWithSmallSizeLimits
                         .performScheduledUpdates(Instant.now())
@@ -869,7 +1141,7 @@ public final class ScheduledUpdatesHandlerTest {
     @Test
     public void testPerformScheduledUpdates_ClearsStaleUpdates_Success()
             throws ExecutionException, InterruptedException, TimeoutException {
-        Instant invocationTime = CommonFixture.FIXED_NOW;
+        Instant invocationTime = FIXED_NOW;
         Void ignored = mHandler.performScheduledUpdates(invocationTime).get(10, TimeUnit.SECONDS);
 
         verify(mCustomAudienceDaoMock)
@@ -945,6 +1217,7 @@ public final class ScheduledUpdatesHandlerTest {
                         mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
                         mAdRenderIdValidator,
                         AD_DATA_CONVERSION_STRATEGY,
-                        mCustomAudienceImplMock);
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock);
     }
 }

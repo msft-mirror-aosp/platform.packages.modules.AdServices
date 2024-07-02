@@ -71,6 +71,8 @@ public class CustomAudienceQuantityChecker {
      * @param callerPackageName the package name for the calling application, used as the owner
      *     application identifier
      */
+    // TODO(b/350584330): CustomAudience is not used in this method and can be removed from
+    // argument.
     public void check(@NonNull CustomAudience customAudience, @NonNull String callerPackageName) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(callerPackageName);

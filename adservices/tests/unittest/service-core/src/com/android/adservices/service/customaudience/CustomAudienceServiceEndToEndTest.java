@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
+import static android.adservices.common.CommonFixture.FIXED_NOW;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTIVATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME;
@@ -355,7 +356,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                COMMON_FLAGS_WITH_FILTERS_ENABLED));
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
+                        mCustomAudienceQuantityChecker);
     }
 
     @Test
@@ -1511,7 +1513,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flagsWithAuctionServerRequestFlagsEnabled));
+                                flagsWithAuctionServerRequestFlagsEnabled),
+                        mCustomAudienceQuantityChecker);
 
         // Wire the mock web server
         String responsePayload =
@@ -1874,6 +1877,270 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 mCustomAudienceDao
                         .getCustomAudienceUpdatesScheduledBeforeTime(Instant.now())
                         .isEmpty());
+    }
+
+    @Test
+    public void testScheduleCustomAudienceUpdate_CAQuantityCheckerFail_shouldNotJoinCustomAudience()
+            throws Exception {
+        Flags flagsWithCAQuantityCheckerFlags =
+                new FakeFlagsFactory.TestFlags() {
+                    @Override
+                    public long getFledgeCustomAudienceMaxOwnerCount() {
+                        return 0;
+                    }
+
+                    @Override
+                    public long getFledgeCustomAudienceMaxCount() {
+                        return 0;
+                    }
+                };
+
+        doReturn(flagsWithCAQuantityCheckerFlags).when(FlagsFactory::getFlags);
+        reInitServiceWithFlags(flagsWithCAQuantityCheckerFlags);
+
+        mScheduledUpdatesHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        new AdServicesHttpsClient(
+                                AdServicesExecutors.getBlockingExecutor(),
+                                CacheProviderFactory.createNoOpCache()),
+                        flagsWithCAQuantityCheckerFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        RENDER_ID_VALIDATOR_NO_OP,
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                                true, true, true),
+                        new CustomAudienceImpl(
+                                mCustomAudienceDao,
+                                mCustomAudienceQuantityChecker,
+                                mCustomAudienceValidator,
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                flagsWithCAQuantityCheckerFlags),
+                        new CustomAudienceQuantityChecker(
+                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags));
+
+        // Wire the mock web server
+        String responsePayload =
+                createJsonResponsePayload(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1),
+                                List.of(LEAVE_CA_1),
+                                /* auctionServerRequestFlagsEnabled= */ false)
+                        .toString();
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request)
+                            throws InterruptedException {
+                        // We can validate the request within server
+                        if (request.getPath().equals(UPDATE_URI_PATH)) {
+                            List<CustomAudienceBlob> caBlobs =
+                                    extractPartialCustomAudiencesFromRequest(request.getBody());
+                            assertTrue(
+                                    caBlobs.stream()
+                                            .map(b -> b.getName())
+                                            .collect(Collectors.toList())
+                                            .containsAll(List.of(PARTIAL_CA_1)));
+                            return new MockResponse().setBody(responsePayload);
+                        }
+                        return new MockResponse();
+                    }
+                };
+
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
+
+        Uri updateUri1 = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
+
+        // Make two requests to the API to schedule updates
+        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
+        ScheduleCustomAudienceUpdateInput input1 =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri1,
+                                VALID_OWNER,
+                                negativeDelayForTest,
+                                List.of(
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                        .build();
+        CountDownLatch resultLatch1 = new CountDownLatch(1);
+        ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
+        mService.scheduleCustomAudienceUpdate(input1, callback1);
+        resultLatch1.await();
+        assertTrue(callback1.isSuccess());
+
+        // Ensure that job that maintains update-scheduled is itself scheduled
+        verify(
+                () ->
+                        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                any(), any(), eq(false)),
+                times(1));
+
+        assertTrue(
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()).size()
+                        > 0);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        mScheduledUpdatesHandler.performScheduledUpdates(Instant.now()).get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Check that updates processed successfully
+        // Join
+        DBCustomAudience persistedCustomAudience =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1);
+        assertNull("The custom audience should not have been joined", persistedCustomAudience);
+
+        // Check handled updates are cleared
+        assertTrue(
+                "The handled updates should have been removed from DB",
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledBeforeTime(Instant.now())
+                        .isEmpty());
+    }
+
+    @Test
+    public void testScheduleCAUpdate_TwoCAToJoin_CAQuantityCheckerFailForOne_shouldOnlyJoinOneCA()
+            throws Exception {
+        Flags flagsWithCAQuantityCheckerFlags =
+                new FakeFlagsFactory.TestFlags() {
+                    @Override
+                    public long getFledgeCustomAudienceMaxOwnerCount() {
+                        return 1;
+                    }
+
+                    @Override
+                    public long getFledgeCustomAudienceMaxCount() {
+                        return 1;
+                    }
+
+                    @Override
+                    public long getFledgeCustomAudiencePerAppMaxCount() {
+                        // Lets the delay be set in past for easier testing
+                        return 1;
+                    }
+                };
+
+        doReturn(flagsWithCAQuantityCheckerFlags).when(FlagsFactory::getFlags);
+        reInitServiceWithFlags(flagsWithCAQuantityCheckerFlags);
+
+        mScheduledUpdatesHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        new AdServicesHttpsClient(
+                                AdServicesExecutors.getBlockingExecutor(),
+                                CacheProviderFactory.createNoOpCache()),
+                        flagsWithCAQuantityCheckerFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        RENDER_ID_VALIDATOR_NO_OP,
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                                true, true, true),
+                        new CustomAudienceImpl(
+                                mCustomAudienceDao,
+                                mCustomAudienceQuantityChecker,
+                                mCustomAudienceValidator,
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                flagsWithCAQuantityCheckerFlags),
+                        new CustomAudienceQuantityChecker(
+                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags));
+
+        // Wire the mock web server
+        String responsePayload =
+                createJsonResponsePayload(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1, PARTIAL_CA_2),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ true)
+                        .toString();
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request)
+                            throws InterruptedException {
+                        // We can validate the request within server
+                        List<CustomAudienceBlob> caBlobs =
+                                extractPartialCustomAudiencesFromRequest(request.getBody());
+                        assertTrue(
+                                caBlobs.stream()
+                                        .map(b -> b.getName())
+                                        .collect(Collectors.toList())
+                                        .containsAll(List.of(PARTIAL_CA_1, PARTIAL_CA_2)));
+                        return new MockResponse().setBody(responsePayload);
+                    }
+                };
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
+
+        Uri updateUri = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
+
+        // Join a custom audience using the joinCustomAudience API which would be "left" by update
+        ResultCapturingCallback joinCallback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER)
+                        .setName(LEAVE_CA_1)
+                        .build(),
+                CustomAudienceFixture.VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        // Make a request to the API
+        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                negativeDelayForTest,
+                                List.of(
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        // Ensure that job that maintains update-scheduled is itself scheduled
+        verify(
+                () ->
+                        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                any(), any(), eq(false)),
+                times(1));
+
+        assertTrue(
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()).size()
+                        > 0);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        Void unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        List<DBCustomAudience> joinedCustomAudiences =
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                        List.of(LOCALHOST_BUYER), FIXED_NOW, 10000);
+
+        assertEquals("Only 1 custom audience should be joined", 1, joinedCustomAudiences.size());
+        assertEquals(PARTIAL_CA_1, joinedCustomAudiences.get(0).getName());
     }
 
     @Test
