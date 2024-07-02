@@ -160,7 +160,6 @@ public final class PeriodicEncodingJobWorker {
                     new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
                     signalsDatabase.protectedSignalsDao(),
                     new SignalsScriptEngine(
-                            flags::getEnforceIsolateMaxHeapSize,
                             flags::getIsolateMaxHeapSizeBytes,
                             retryStrategy,
                             () ->
