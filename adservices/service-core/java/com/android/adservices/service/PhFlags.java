@@ -86,6 +86,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
@@ -5199,6 +5201,16 @@ public final class PhFlags implements Flags {
                         + getMeasurementEventReportingJobPersisted());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL
+                        + " = "
+                        + getMeasurementEnableEventTriggerDebugSignal());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION
+                        + " = "
+                        + getMeasurementEnableEventTriggerDebugSignalForCoarseDestination());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
                         + " = "
                         + getMeasurementEventFallbackReportingJobRequiredBatteryNotLow());
@@ -6026,6 +6038,20 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED,
                 MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED);
+    }
+
+    @Override
+    public boolean getMeasurementEnableEventTriggerDebugSignal() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL,
+                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL);
+    }
+
+    @Override
+    public boolean getMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION,
+                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION);
     }
 
     @Override

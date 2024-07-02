@@ -373,6 +373,13 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED =
             "measurement_event_reporting_job_persisted";
 
+    public static final String KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL =
+            "measurement_enable_event_trigger_debug_signal";
+
+    public static final String
+            KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION =
+                    "measurement_enable_event_trigger_debug_signal_for_coarse_destination";
+
     public static final String
             KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
                     "measurement_event_fallback_reporting_job_required_battery_not_low";
