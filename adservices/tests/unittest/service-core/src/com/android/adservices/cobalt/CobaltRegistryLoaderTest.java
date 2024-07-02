@@ -26,7 +26,6 @@ import com.android.cobalt.registry.RegistryValidator;
 
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.StringSketchParameters;
 
 import org.junit.Test;
 
@@ -64,8 +63,6 @@ public final class CobaltRegistryLoaderTest extends AdServicesUnitTestCase {
                 if (report.getReportName().endsWith(REPORT_NAME_DOGFOOD_SUFFIX)) {
                     assertThat(report.getMaxReleaseStage()).isEqualTo(DOGFOOD);
                 }
-                assertThat(report.getStringSketchParams())
-                        .isEqualTo(StringSketchParameters.getDefaultInstance());
             }
         }
     }

@@ -39,6 +39,7 @@ import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ReportingInterval;
+import com.google.cobalt.StringSketchParameters;
 import com.google.cobalt.SystemProfileField;
 import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.cobalt.WindowSize;
@@ -113,6 +114,15 @@ public final class RegistryValidator {
             return false;
         }
 
+        if (!validatePoissonFields(
+                report.getReportType(),
+                report.getPrivacyMechanism(),
+                report.getNumIndexPoints(),
+                report.getStringSketchParams())) {
+            logValidationFailure("Poisson fields failed validation");
+            return false;
+        }
+
         if (!validateMinAndMaxValues(
                 report.getReportType(),
                 report.getPrivacyMechanism(),
@@ -184,7 +194,6 @@ public final class RegistryValidator {
 
         // TODO(b/343722587): Add remaining validations from the Cobalt config validator. This
         // includes:
-        //   * poisson fields for different privacy mechanisms
         //   * max release stage (set and report's is less than metric's)
         //   * report specific validations
 
@@ -298,6 +307,33 @@ public final class RegistryValidator {
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static boolean validateExperimentIds(List<Long> experimentIds) {
         return experimentIds.isEmpty();
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validatePoissonFields(
+            ReportType reportType,
+            PrivacyMechanism privacyMechanism,
+            int numIndexPoints,
+            StringSketchParameters stringSketchParams) {
+        if (privacyMechanism.equals(DE_IDENTIFICATION)) {
+            return true;
+        }
+
+        if (!reportType.equals(FLEETWIDE_OCCURRENCE_COUNTS)) {
+            return false;
+        }
+
+        if (numIndexPoints == 0) {
+            return false;
+        }
+
+        if (!stringSketchParams.equals(StringSketchParameters.getDefaultInstance())) {
+            // Note, STRING_COUNTS and UNIQUE_DEVICE_STRING_COUNTS require StringSketchParams to be
+            // checked and this function must be updated to account for report types.
+            return false;
+        }
+
+        return true;
     }
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)

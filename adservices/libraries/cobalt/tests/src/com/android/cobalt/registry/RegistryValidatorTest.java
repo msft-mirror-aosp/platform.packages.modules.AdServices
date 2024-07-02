@@ -48,6 +48,7 @@ import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ReportingInterval;
+import com.google.cobalt.StringSketchParameters;
 import com.google.cobalt.SystemProfileField;
 import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.cobalt.WindowSize;
@@ -228,6 +229,61 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 .isTrue();
         expect.withMessage("validateExperimentIds([1])")
                 .that(RegistryValidator.validateExperimentIds(List.of(1L)))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidatePoissonFields_supported() {
+        assertThat(
+                        RegistryValidator.validatePoissonFields(
+                                FLEETWIDE_OCCURRENCE_COUNTS,
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                /* numIndexPoints= */ 1,
+                                StringSketchParameters.getDefaultInstance()))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidatePoissonFields_numIndexPointsZeroFails() {
+        assertThat(
+                        RegistryValidator.validatePoissonFields(
+                                FLEETWIDE_OCCURRENCE_COUNTS,
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                /* numIndexPoints= */ 0,
+                                StringSketchParameters.getDefaultInstance()))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidatePoissonFields_stringSketchParamsSetFails() {
+        assertThat(
+                        RegistryValidator.validatePoissonFields(
+                                FLEETWIDE_OCCURRENCE_COUNTS,
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                /* numIndexPoints= */ 1,
+                                StringSketchParameters.newBuilder().setNumHashes(1).build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidatePoissonFields_deIdentifiedReportPasses() {
+        assertThat(
+                        RegistryValidator.validatePoissonFields(
+                                FLEETWIDE_OCCURRENCE_COUNTS,
+                                DE_IDENTIFICATION,
+                                /* numIndexPoints= */ 1,
+                                StringSketchParameters.getDefaultInstance()))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidatePoissonFields_nonFleetwideOccurrenceCountsFails() {
+        assertThat(
+                        RegistryValidator.validatePoissonFields(
+                                STRING_COUNTS,
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                /* numIndexPoints= */ 1,
+                                StringSketchParameters.getDefaultInstance()))
                 .isFalse();
     }
 
@@ -486,6 +542,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         ReportDefinition report =
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
                         .toBuilder()
+                        .setNumIndexPoints(1)
                         .setMinValue(1L)
                         .setMaxValue(2L)
                         .build();
@@ -599,6 +656,51 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void
+            testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_validPoissonFields() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setNumIndexPoints(1)
+                        .setMinValue(1)
+                        .setMaxValue(2)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+    }
+
+    @Test
+    public void
+            testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_zeroNumIndexPointsFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setNumIndexPoints(0)
+                        .setMinValue(1)
+                        .setMaxValue(2)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void
+            testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_stringSketchSetFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setNumIndexPoints(1)
+                        .setMinValue(1)
+                        .setMaxValue(2)
+                        .setStringSketchParams(StringSketchParameters.newBuilder().setNumHashes(1))
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
     public void testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_minAndMax() {
         MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
@@ -612,7 +714,11 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                                 metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
                 .isFalse();
 
-        report = getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY);
+        report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setNumIndexPoints(1)
+                        .build();
 
         // Private reports must have 0 < minValue <= maxValue
         expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
