@@ -132,8 +132,6 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
         Truth.assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
                 .containsExactlyElementsIn(
                         Sets.newHashSet(
-                                ConsentedDebugShellCommand.HELP,
-                                GetAdSelectionDataCommand.HELP,
-                                MockAuctionResultCommand.HELP));
+                                ConsentedDebugShellCommand.HELP, GetAdSelectionDataCommand.HELP));
     }
 }

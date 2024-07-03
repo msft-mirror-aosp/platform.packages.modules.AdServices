@@ -16,12 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
-import android.annotation.IntDef;
 import android.content.ContentResolver;
 import android.test.mock.MockContentResolver;
 
@@ -41,28 +37,10 @@ import com.android.adservices.service.measurement.registration.AsyncSourceFetche
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
-import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
-import org.mockito.stubbing.Answer;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.util.Collections;
-
 class TestObjectProvider {
-    @IntDef(
-            value = {
-                Type.DENOISED,
-                Type.NOISY,
-            })
-    @Retention(RetentionPolicy.SOURCE)
-    @interface Type {
-        int DENOISED = 1;
-        int NOISY = 2;
-    }
-
     static AttributionJobHandlerWrapper getAttributionJobHandler(
             DatastoreManager datastoreManager, Flags flags, AdServicesErrorLogger errorLogger) {
         return new AttributionJobHandlerWrapper(
@@ -96,38 +74,12 @@ class TestObjectProvider {
     }
 
     static AsyncRegistrationQueueRunner getAsyncRegistrationQueueRunner(
-            @Type int type,
+            SourceNoiseHandler sourceNoiseHandler,
             DatastoreManager datastoreManager,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
             DebugReportApi debugReportApi,
             Flags flags) {
-        SourceNoiseHandler sourceNoiseHandler =
-                spy(new SourceNoiseHandler(FakeFlagsFactory.getFlagsForTest()));
-        if (type == Type.DENOISED) {
-            // Disable Impression Noise
-            doReturn(null)
-                    .when(sourceNoiseHandler)
-                    .assignAttributionModeAndGenerateFakeReports(any(Source.class));
-        } else if (type == Type.NOISY) {
-            // Create impression noise with 100% probability
-            Answer<?> answerSourceEventReports =
-                    invocation -> {
-                        Source source = invocation.getArgument(0);
-                        source.setAttributionMode(Source.AttributionMode.FALSELY);
-                        return Collections.singletonList(
-                                new Source.FakeReport(
-                                        new UnsignedLong(0L),
-                                        source.getExpiryTime(),
-                                        source.getEventTime(),
-                                        source.getAppDestinations(),
-                                        null));
-                    };
-            doAnswer(answerSourceEventReports)
-                    .when(sourceNoiseHandler)
-                    .assignAttributionModeAndGenerateFakeReports(any(Source.class));
-        }
-
         return new AsyncRegistrationQueueRunner(
                 ApplicationProvider.getApplicationContext(),
                 new MockContentResolver(),

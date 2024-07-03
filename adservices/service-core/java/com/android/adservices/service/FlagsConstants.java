@@ -373,6 +373,13 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED =
             "measurement_event_reporting_job_persisted";
 
+    public static final String KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL =
+            "measurement_enable_event_trigger_debug_signal";
+
+    public static final String
+            KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION =
+                    "measurement_enable_event_trigger_debug_signal_for_coarse_destination";
+
     public static final String
             KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
                     "measurement_event_fallback_reporting_job_required_battery_not_low";
@@ -800,6 +807,10 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION =
             "fledge_get_ad_selection_data_buyer_input_creator_version";
 
+    public static final String
+            KEY_FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS =
+                    "fledge_get_ad_selection_data_max_num_entire_payload_compressions";
+
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
@@ -1191,6 +1202,9 @@ public final class FlagsConstants {
             "measurement_debug_key_ad_id_matching_limit";
     public static final String KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST =
             "measurement_debug_key_ad_id_matching_enrollment_blocklist";
+
+    public static final String KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA =
+            "measurement_enable_v1_source_trigger_data";
 
     public static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
             "measurement_flexible_event_reporting_api_enabled";

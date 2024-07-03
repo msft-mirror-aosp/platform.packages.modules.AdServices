@@ -709,6 +709,11 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
                 source.hasCoarseEventReportDestinations());
+        if (source.getTriggerData() != null) {
+            values.put(
+                    SourceContract.TRIGGER_DATA,
+                    collectionToCommaSeparatedString(source.getTriggerData()));
+        }
         if (source.getTriggerSpecs() != null) {
             values.put(SourceContract.TRIGGER_SPECS, source.getTriggerSpecs().encodeToJson());
             values.put(
@@ -1359,7 +1364,7 @@ class MeasurementDao implements IMeasurementDao {
                 getNullableUnsignedLong(eventReport.getTriggerDebugKey()));
         values.put(
                 MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEYS,
-                listToCommaSeparatedString(eventReport.getTriggerDebugKeys()));
+                collectionToCommaSeparatedString(eventReport.getTriggerDebugKeys()));
         values.put(MeasurementTables.EventReportContract.SOURCE_ID, eventReport.getSourceId());
         values.put(MeasurementTables.EventReportContract.TRIGGER_ID, eventReport.getTriggerId());
         values.put(
@@ -1385,7 +1390,7 @@ class MeasurementDao implements IMeasurementDao {
         ContentValues values = new ContentValues();
         values.put(
                 SourceContract.EVENT_REPORT_DEDUP_KEYS,
-                listToCommaSeparatedString(source.getEventReportDedupKeys()));
+                collectionToCommaSeparatedString(source.getEventReportDedupKeys()));
         long rows =
                 mSQLTransaction
                         .getDatabase()
@@ -1405,7 +1410,7 @@ class MeasurementDao implements IMeasurementDao {
         ContentValues values = new ContentValues();
         values.put(
                 SourceContract.AGGREGATE_REPORT_DEDUP_KEYS,
-                listToCommaSeparatedString(source.getAggregateReportDedupKeys()));
+                collectionToCommaSeparatedString(source.getAggregateReportDedupKeys()));
         long rows =
                 mSQLTransaction
                         .getDatabase()
@@ -2340,8 +2345,8 @@ class MeasurementDao implements IMeasurementDao {
                 columnName + " = " + DatabaseUtils.sqlEscapeString(registrant.toString());
     }
 
-    private String listToCommaSeparatedString(List<UnsignedLong> list) {
-        return list.stream().map(UnsignedLong::toString).collect(Collectors.joining(","));
+    private String collectionToCommaSeparatedString(Collection<UnsignedLong> collection) {
+        return collection.stream().map(UnsignedLong::toString).collect(Collectors.joining(","));
     }
 
     private static Function<String, String> getTimeMatcher(Instant start, Instant end) {
