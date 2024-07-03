@@ -1418,7 +1418,7 @@ public class SourceTest {
     }
 
     @Test
-    public void validateAndSetMaxEventStates_attributionScopeEnabledValid_returnsTrue() {
+    public void validateMaxEventStates_attributionScopeEnabledValid_returnsTrue() {
         Flags flags = mock(Flags.class);
         doReturn(true).when(flags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
@@ -1444,11 +1444,11 @@ public class SourceTest {
                         .setAttributionScopeLimit(3L)
                         .setMaxEventStates(100L)
                         .build();
-        assertTrue(source.validateAndSetMaxEventStates(flags));
+        assertTrue(source.validateMaxEventStates(flags));
     }
 
     @Test
-    public void validateAndSetMaxEventStates_maxEventStatesNullNonDefaultVtc_returnsFalse() {
+    public void validateMaxEventStates_maxEventStatesNullNonDefaultVtc_returnsFalse() {
         Flags flags = mock(Flags.class);
         doReturn(true).when(flags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
@@ -1473,12 +1473,13 @@ public class SourceTest {
                         .setMaxEventLevelReports(2)
                         .setAttributionScopes(List.of("1", "2"))
                         .setAttributionScopeLimit(3L)
+                        .setMaxEventStates(3L)
                         .build();
-        assertFalse(source.validateAndSetMaxEventStates(flags));
+        assertFalse(source.validateMaxEventStates(flags));
     }
 
     @Test
-    public void validateAndSetMaxEventStates_maxEventStatesNullNavigation_returnsFalse() {
+    public void validateMaxEventStates_maxEventStatesNullNavigation_returnsFalse() {
         Flags flags = mock(Flags.class);
         doReturn(true).when(flags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
@@ -1503,13 +1504,14 @@ public class SourceTest {
                         .setMaxEventLevelReports(2)
                         .setAttributionScopes(List.of("1", "2"))
                         .setAttributionScopeLimit(3L)
+                        .setMaxEventStates(3L)
                         .build();
-        assertThat(source.validateAndSetMaxEventStates(flags)).isTrue();
+        assertThat(source.validateMaxEventStates(flags)).isTrue();
         assertThat(source.getMaxEventStates()).isEqualTo(DEFAULT_MAX_EVENT_STATES);
     }
 
     @Test
-    public void validateAndSetMaxEventStates_attributionScopeMaxEventStatesTooLow_returnsFalse() {
+    public void validateMaxEventStates_attributionScopeMaxEventStatesTooLow_returnsFalse() {
         Flags flags = mock(Flags.class);
         doReturn(true).when(flags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
@@ -1535,7 +1537,7 @@ public class SourceTest {
                         .setAttributionScopeLimit(5L)
                         .setMaxEventStates(3L)
                         .build();
-        assertFalse(source.validateAndSetMaxEventStates(flags));
+        assertFalse(source.validateMaxEventStates(flags));
     }
 
     @Test
@@ -1706,9 +1708,8 @@ public class SourceTest {
     }
 
     @Test
-    public void
-            validateAndSetMaxEventStates_fullFlexAttributionScopeMaxEventStatesNull_returnsFalse()
-                    throws JSONException {
+    public void validateMaxEventStates_fullFlexAttributionScopeMaxEventStatesNull_returnsFalse()
+            throws JSONException {
         Flags flags = mock(Flags.class);
         doReturn(true).when(flags).getMeasurementEnableAttributionScope();
         doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
@@ -1744,8 +1745,9 @@ public class SourceTest {
                         .setTriggerSpecs(
                                 new TriggerSpecs(triggerSpecsArray, maxEventLevelReports, null))
                         .setAttributionScopeLimit(3L)
+                        .setMaxEventStates(3L)
                         .build();
-        assertFalse(testSource.validateAndSetMaxEventStates(flags));
+        assertFalse(testSource.validateMaxEventStates(flags));
     }
 
     @Test

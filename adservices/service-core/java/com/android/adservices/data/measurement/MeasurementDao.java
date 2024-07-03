@@ -344,17 +344,13 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     private void ignoreSourcesAndDeleteFakeReportsForAttributionScope(
-            @NonNull Source pendingSource, @NonNull String attributionScopeWhereStatement)
+            @NonNull Source pendingSource, @NonNull String selectActiveSourceIdsStatement)
             throws DatastoreException {
-        String selectSourceIdStatement =
-                selectSourceIdsByOriginAndDestination(
-                        pendingSource.getRegistrationOrigin().toString(),
-                        pendingSource.getAllAttributionDestinations(),
-                        attributionScopeWhereStatement);
         final SQLiteDatabase db = mSQLTransaction.getDatabase();
         // Delete any pending reports which have trigger_time >= new source’s registration time.
-        // Note selectSourceIdStatement will only select ACTIVE sources, which means we need to
-        // delete pending reports before deactivating the sources (before they are de-activated).
+        // Note selectActiveSourceIdsStatement will only select ACTIVE sources, which means we
+        // need to delete pending reports before deactivating the sources (before they are
+        // de-activated).
         ContentValues eventReportValues = new ContentValues();
         eventReportValues.put(
                 MeasurementTables.EventReportContract.STATUS, EventReport.Status.MARKED_TO_DELETE);
@@ -365,7 +361,7 @@ class MeasurementDao implements IMeasurementDao {
                         " AND ",
                         MeasurementTables.EventReportContract.SOURCE_ID
                                 + " IN ("
-                                + selectSourceIdStatement
+                                + selectActiveSourceIdsStatement
                                 + ")",
                         MeasurementTables.EventReportContract.TRIGGER_TIME
                                 + " >= "
@@ -378,39 +374,11 @@ class MeasurementDao implements IMeasurementDao {
         db.update(
                 SourceContract.TABLE,
                 sourceValues,
-                SourceContract.ID + " IN (" + selectSourceIdStatement + ")",
+                SourceContract.ID + " IN (" + selectActiveSourceIdsStatement + ")",
                 new String[] {});
     }
 
-    private void deactivateSourcesWithDifferentMaxViewStates(@NonNull Source pendingSource)
-            throws DatastoreException {
-        if (pendingSource.getMaxEventStates() == null) {
-            return;
-        }
-
-        String sourceWhereStatement =
-                mergeConditions(
-                        " AND ",
-                        SourceContract.MAX_EVENT_STATES + " IS NOT NULL",
-                        SourceContract.MAX_EVENT_STATES
-                                + " != "
-                                + pendingSource.getMaxEventStates());
-        ignoreSourcesAndDeleteFakeReportsForAttributionScope(pendingSource, sourceWhereStatement);
-    }
-
-    private void deactivateSourcesWithSmallerAttributionScopeLimit(@NonNull Source pendingSource)
-            throws DatastoreException {
-        String sourceWhereStatement =
-                mergeConditions(
-                        " AND ",
-                        SourceContract.ATTRIBUTION_SCOPE_LIMIT + " IS NOT NULL",
-                        SourceContract.ATTRIBUTION_SCOPE_LIMIT
-                                + " < "
-                                + pendingSource.getAttributionScopeLimit());
-        ignoreSourcesAndDeleteFakeReportsForAttributionScope(pendingSource, sourceWhereStatement);
-    }
-
-    private String getDeleteAttributionScopesWhereStatement(
+    private String selectSourcesWithOldAttributionScopesWhereStatement(
             @EventSurfaceType int destinationType,
             @NonNull String destination,
             @NonNull String registrationOrigin,
@@ -463,22 +431,20 @@ class MeasurementDao implements IMeasurementDao {
 
         return String.format(
                 Locale.ENGLISH,
-                "%1$s IN ("
-                        + " SELECT DISTINCT a.%1$s"
+                "SELECT DISTINCT s.%1$s"
                         + joinString
                         + " INNER JOIN ("
                         + attributionScopeRankQuery
                         + ") rank ON a.%3$s = rank.%3$s WHERE rank.rn > %4$s"
                         + " AND "
-                        + whereString
-                        + ")",
-                SourceAttributionScopeContract.SOURCE_ID,
+                        + whereString,
+                SourceContract.ID,
                 SourceAttributionScopeContract.TABLE,
                 SourceAttributionScopeContract.ATTRIBUTION_SCOPE,
                 attributionScopeLimit);
     }
 
-    private void removeOldAttributionScopes(@NonNull Source pendingSource)
+    private void ignoreSourcesWithOldAttributionScopes(@NonNull Source pendingSource)
             throws DatastoreException {
         if (pendingSource.getAttributionScopeLimit() == null
                 || pendingSource.getAttributionScopes() == null
@@ -490,26 +456,74 @@ class MeasurementDao implements IMeasurementDao {
         List<Pair<Integer, String>> destinations = pendingSource.getAllAttributionDestinations();
         Collections.sort(destinations, Comparator.comparing(pair -> pair.second));
         for (Pair<Integer, String> destination : destinations) {
-            db.delete(
-                    SourceAttributionScopeContract.TABLE,
-                    getDeleteAttributionScopesWhereStatement(
+            ignoreSourcesAndDeleteFakeReportsForAttributionScope(
+                    pendingSource,
+                    selectSourcesWithOldAttributionScopesWhereStatement(
                             destination.first,
                             destination.second,
                             pendingSource.getRegistrationOrigin().toString(),
-                            pendingSource.getAttributionScopeLimit()),
-                    new String[] {});
+                            pendingSource.getAttributionScopeLimit()));
         }
+    }
+
+    private void removeAttributionScopesForOldSources(@NonNull Source pendingSource)
+            throws DatastoreException {
+        String selectSourceIdStatement =
+                selectSourceIdsByOriginAndDestination(
+                        pendingSource.getRegistrationOrigin().toString(),
+                        pendingSource.getAllAttributionDestinations(),
+                        "");
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+        db.delete(
+                SourceAttributionScopeContract.TABLE,
+                SourceAttributionScopeContract.SOURCE_ID + " IN (" + selectSourceIdStatement + ")",
+                new String[] {});
+        ContentValues attributionScopeValues = new ContentValues();
+        attributionScopeValues.putNull(SourceContract.ATTRIBUTION_SCOPE_LIMIT);
+        attributionScopeValues.putNull(SourceContract.MAX_EVENT_STATES);
+        db.update(
+                SourceContract.TABLE,
+                attributionScopeValues,
+                SourceContract.ID + " IN (" + selectSourceIdStatement + ")",
+                new String[] {});
     }
 
     @Override
     public void updateSourcesForAttributionScope(@NonNull Source pendingSource)
             throws DatastoreException {
         if (pendingSource.getAttributionScopeLimit() == null) {
+            removeAttributionScopesForOldSources(pendingSource);
             return;
         }
-        deactivateSourcesWithDifferentMaxViewStates(pendingSource);
-        deactivateSourcesWithSmallerAttributionScopeLimit(pendingSource);
-        removeOldAttributionScopes(pendingSource);
+        String incompatibleAttributionScopeLimitWhereStatement =
+                mergeConditions(
+                        " OR ",
+                        SourceContract.ATTRIBUTION_SCOPE_LIMIT + " IS NULL",
+                        SourceContract.ATTRIBUTION_SCOPE_LIMIT
+                                + " < "
+                                + pendingSource.getAttributionScopeLimit());
+        String incompatibleMaxEventStatesWhereStatement =
+                mergeConditions(
+                        " AND ",
+                        SourceContract.MAX_EVENT_STATES + " IS NOT NULL",
+                        SourceContract.MAX_EVENT_STATES
+                                + " != "
+                                + pendingSource.getMaxEventStates());
+        String incompatibleWhereStatement =
+                mergeConditions(
+                        " OR ",
+                        incompatibleMaxEventStatesWhereStatement,
+                        incompatibleAttributionScopeLimitWhereStatement);
+
+        String selectIncompatibleSourceIdStatement =
+                selectSourceIdsByOriginAndDestination(
+                        pendingSource.getRegistrationOrigin().toString(),
+                        pendingSource.getAllAttributionDestinations(),
+                        incompatibleWhereStatement);
+
+        ignoreSourcesAndDeleteFakeReportsForAttributionScope(
+                pendingSource, selectIncompatibleSourceIdStatement);
+        ignoreSourcesWithOldAttributionScopes(pendingSource);
     }
 
     @Override

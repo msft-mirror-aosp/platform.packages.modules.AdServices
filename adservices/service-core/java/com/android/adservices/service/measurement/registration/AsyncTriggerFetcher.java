@@ -341,8 +341,8 @@ public class AsyncTriggerFetcher {
                         FetcherUtil.extractStringArray(
                                 json,
                                 TriggerHeaderContract.ATTRIBUTION_SCOPES,
-                                mFlags.getMeasurementMaxAttributionScopesPerSource(),
-                                mFlags.getMeasurementMaxAttributionScopeLength());
+                                Integer.MAX_VALUE,
+                                Integer.MAX_VALUE);
                 if (attributionScopes.isEmpty() || attributionScopes.get().isEmpty()) {
                     LoggerFactory.getMeasurementLogger()
                             .e("parseTrigger: attribution_scopes is invalid.");

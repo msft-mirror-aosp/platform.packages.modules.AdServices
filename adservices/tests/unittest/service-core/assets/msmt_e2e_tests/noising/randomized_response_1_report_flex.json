@@ -1,7 +1,8 @@
 {
   "description": "source with randomized response sends debug reports and fake report",
   "phflags_override": {
-    "measurement_flexible_event_reporting_api_enabled": "true"
+    "measurement_flexible_event_reporting_api_enabled": "true",
+    "measurement_enable_v1_source_trigger_data": "true"
   },
   "input": {
     "registrations": [
@@ -63,7 +64,6 @@
           "scheduled_report_time": "2592000",
           "source_event_id": "123",
           "source_type": "navigation",
-          "trigger_summary_bucket": [1, 1],
           "trigger_data": "1"
         },
         "report_time": "2592000000",

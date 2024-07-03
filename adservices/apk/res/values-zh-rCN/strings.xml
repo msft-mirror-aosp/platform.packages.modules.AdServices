@@ -71,7 +71,7 @@
     <string name="notificationUI_how_it_works_expanded_text4" msgid="2441076226555310232">"Android 会定期根据您使用的应用推测您的主要兴趣，例如“体育”或“旅行”。\n\n之后，应用可请求 Android 基于这些兴趣向您展示与您更相关的广告。\n\n您可在隐私设置中查看当前兴趣列表并屏蔽您不喜欢的主题。"</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="8257214835811317663">"•  应用推测兴趣"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="5002571400213036779">"应用可推测您的兴趣并将这些兴趣暂时存储在 Android 上。例如，您用来购买跑鞋的某个应用可能会推测您的兴趣为“跑马拉松”。\n\n之后，另一个应用可基于这项兴趣向您展示与马拉松相关的广告。\n\n您可在隐私设置中管理已保存兴趣的应用的列表。"</string>
-    <string name="notificationUI_notification_ga_title" msgid="2396067549986723667">"新的广告隐私权功能"</string>
+    <string name="notificationUI_notification_ga_title" msgid="2396067549986723667">"新广告隐私权功能"</string>
     <string name="notificationUI_notification_ga_content" msgid="6996769289378595646">"利用广告主题和新控件进一步掌控您看到的广告"</string>
     <string name="notificationUI_header_ga_title" msgid="71431748916938411">"全新广告隐私功能现已上线"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="7475765551849576649">"Android 会根据您最近使用过的应用来推测您感兴趣的主题。此外，您使用的应用也能判断您的喜好。之后，应用可请求获取这类信息，以便向您展示个性化广告。您可以选择允许使用哪些主题和网站向您展示广告。"</string>
@@ -139,7 +139,7 @@
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="8281037143852126401">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_title" msgid="5339945741183473274">"Android 推测出的兴趣"</string>
     <string name="settingsUI_apps_title" msgid="5995350116551596477">"会推测兴趣的应用"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="3283348237139281934">"广告衡量"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="3283348237139281934">"广告效果衡量"</string>
     <string name="settingsUI_main_view_info_text9" msgid="8099947772206651223">"应用可以使用 Privacy Sandbox 衡量广告效果。为此，广告客户可将您与其广告/应用之间的互动数据暂时存储在 Android 上。广告客户可保存的数据量有限，并会被定期删除。\n\n您随时可通过关闭 Privacy Sandbox 删除此类数据。"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="2555242128148608108">"Android 会定期根据您使用的应用推测您的主要兴趣。应用可以请求 Android 基于这些兴趣向您展示与您更相关的广告。\n\n如果您屏蔽了某项兴趣，它将不再添加到列表中，除非您取消屏蔽它。您可能仍会看到一些与这项兴趣相关的广告。"</string>
     <string name="settingsUI_block_topic_title" msgid="542801436874037128">"屏蔽"</string>
@@ -165,11 +165,11 @@
     <string name="settingsUI_apps_view_info_text2" msgid="6191835773793395323">"Android 广告隐私权 Beta 版提供了新功能，以便应用向您展示您可能会喜欢的广告。这些技术不使用标识符。\n\n应用可推测您可能会对哪些类型的广告感兴趣，并将这些兴趣暂时存储在您的设备上。这样一来，应用不必追踪您在其他开发者的网站和应用上的活动便能向您展示与您相关的广告。"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="6386103688779633888">"您未屏蔽任何应用"</string>
     <string name="settingsUI_no_blocked_apps_ga_text" msgid="5715916198159277202">"没有被屏蔽的应用"</string>
-    <string name="settingsUI_measurement_switch_title" msgid="2111625410373329760">"允许广告衡量"</string>
+    <string name="settingsUI_measurement_switch_title" msgid="2111625410373329760">"允许衡量广告效果"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="2780083472100004780">"应用和广告主可请求 Android 提供某些信息，以帮助他们衡量其广告效果。\n\n系统会定期从您的设备中删除广告衡量数据。"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="518549441454274773">"重置衡量数据"</string>
     <string name="settingsUI_measurement_view_footer_text" msgid="823743750634137761">"Android 会限制各种应用相互之间可以分享的信息，从而保护您的隐私。系统会延迟发送报告，以便保护您的身份信息。\n\n您的浏览器可能有相似的设置。如果 Android 和您的浏览器都开启了广告衡量功能，相关公司或许就能够衡量广告在您使用的应用和访问的网站中的效果。您的浏览记录会保留在设备上，确保其私密性。\n\n如需详细了解 Android 如何保护您的数据，请参阅我们的"<a href="https://policies.google.com/privacy">"隐私权政策"</a>"。"</string>
-    <string name="settingsUI_measurement_are_reset" msgid="3109724238284555411">"广告衡量数据已重置"</string>
+    <string name="settingsUI_measurement_are_reset" msgid="3109724238284555411">"广告效果衡量数据已重置"</string>
     <string name="settingsUI_dialog_negative_text" msgid="2991743327829379614">"取消"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="7364417538227823889">"要关闭 Privacy Sandbox 吗？"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="277021855863398163">"如果您改变了主意，或者想要详细了解 Android 广告隐私权 Beta 版，请前往您的隐私设置"</string>
@@ -225,12 +225,12 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="3403673196085504304">"您屏蔽的应用"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="8096477193202146197">"重置应用建议的数据"</string>
     <string name="settingsUI_apps_view_footer" msgid="5502656868680626279">"您使用的应用常常会记住您感兴趣的内容，以便为您提供个性化体验。应用还可以将与您的主题相关的信息存储在 Android 中。\n\n例如，如果您使用马拉松训练方面的应用，应用可能会判断您对跑鞋感兴趣。之后，如果您使用其他应用，可能会在其中看到第一款应用建议的跑鞋广告。\n\nAndroid 会定期自动删除应用建议的数据。您再次使用的应用可能会重新出现在列表中。或者，您可以阻止应用为您建议广告。\n\n您在应用中看到的广告可能已经过个性化定制，具体取决于此设置、广告主题设置、您的广告 ID 设置，以及您使用的应用是否展示个性化广告。"</string>
-    <string name="notificationUI_u18_notification_title" msgid="3039567502781358382">"全新广告隐私权功能现已上线"</string>
+    <string name="notificationUI_u18_notification_title" msgid="3039567502781358382">"新广告隐私权功能现已上线"</string>
     <string name="notificationUI_u18_notification_content" msgid="782224580271117368">"只在应用之间分享非常有限的信息，以帮助衡量广告效果"</string>
     <string name="notificationUI_u18_body1" msgid="95107947575995393">"我们即将推出一项名为“广告效果衡量”的全新广告隐私权功能。Android 只会在应用之间分享非常有限的信息（例如向您展示广告的时段），以帮助应用衡量广告效果。"</string>
     <string name="notificationUI_u18_body3" msgid="4149294335097045465">"您可以在广告隐私权设置中进行更改。"</string>
     <string name="settingsUI_u18_main_view_measurement_info" msgid="5164208931246902715">"您使用的应用可请求 Android 提供相关信息，以便衡量其广告效果。Android 仅允许应用收集有限类型的数据。"</string>
-    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"新的广告隐私权功能"</string>
+    <string name="notificationUI_pas_notification_title" msgid="1802264465856796661">"新广告隐私权功能"</string>
     <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"让您更好地掌控自己看到的广告，同时帮助保护您的身份信息"</string>
     <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"广告隐私权功能的更新内容"</string>
     <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"让您更好地掌控自己看到的广告，同时帮助保护您的身份信息"</string>
