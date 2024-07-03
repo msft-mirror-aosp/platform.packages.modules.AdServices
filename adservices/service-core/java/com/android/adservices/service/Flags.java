@@ -288,6 +288,28 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
+    /* The default value for whether the trigger debugging availability signal is enabled for event
+    reports. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL = false;
+
+    /** Returns whether the trigger debugging availability signal is enabled for event reports. */
+    default boolean getMeasurementEnableEventTriggerDebugSignal() {
+        return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
+    }
+
+    /* The default value for whether the trigger debugging availability signal is enabled for event
+    reports that have coarse_event_report_destinations = true. */
+    @FeatureFlag
+    boolean MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION = false;
+
+    /**
+     * Returns whether the trigger debugging availability signal is enabled for event reports that
+     * have coarse_event_report_destinations = true.
+     */
+    default boolean getMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
+    }
+
     /**
      * The suffix that is appended to the aggregation coordinator origin for retrieving the
      * encryption keys.
@@ -3758,6 +3780,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Get adservices version mappings */
     default String getAdservicesVersionMappings() {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
+    }
+
+    /** Default value for Measurement V1 source trigger data */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA = false;
+
+    /** Returns whether to enable Measurement V1 source trigger data */
+    default boolean getMeasurementEnableV1SourceTriggerData() {
+        return MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
     }
 
     /** Default value for Measurement flexible event reporting API */

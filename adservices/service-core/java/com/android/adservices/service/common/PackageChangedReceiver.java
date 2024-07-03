@@ -154,6 +154,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                     // The broadcast is received from the system service. On T+ devices, we do this
                     // so
                     // that the PP API process is not woken up if the flag is disabled.
+                case Intent.ACTION_PACKAGE_ADDED:
+                    handlePackageAdded(context, packageUri);
+                    break;
                 case PACKAGE_CHANGED_BROADCAST:
                     switch (intent.getStringExtra(ACTION_KEY)) {
                         case PACKAGE_FULLY_REMOVED:
