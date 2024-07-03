@@ -65,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -77,6 +78,8 @@ public class SourceTest {
     private static final UnsignedLong DEBUG_KEY_2 = new UnsignedLong(23487834L);
     private static final UnsignedLong SHARED_DEBUG_KEY_1 = new UnsignedLong(1786463L);
     private static final UnsignedLong SHARED_DEBUG_KEY_2 = new UnsignedLong(3487834L);
+    private static final Set<UnsignedLong> SOURCE_TRIGGER_DATA =
+            Set.of(new UnsignedLong(23L), new UnsignedLong(1L));
     private static final List<AttributedTrigger> ATTRIBUTED_TRIGGERS =
             List.of(
                     new AttributedTrigger(
@@ -104,6 +107,7 @@ public class SourceTest {
         assertEquals(Source.SourceType.EVENT, source.getSourceType());
         assertEquals(Source.AttributionMode.UNASSIGNED, source.getAttributionMode());
         assertEquals(Source.TriggerDataMatching.MODULUS, source.getTriggerDataMatching());
+        assertNull(source.getTriggerData());
         assertNull(source.getAttributedTriggers());
     }
 
@@ -172,6 +176,7 @@ public class SourceTest {
                         .setCoarseEventReportDestinations(true)
                         .setSharedDebugKey(SHARED_DEBUG_KEY_1)
                         .setAttributedTriggers(ATTRIBUTED_TRIGGERS)
+                        .setTriggerData(SOURCE_TRIGGER_DATA)
                         .setTriggerSpecs(triggerSpecs)
                         .setTriggerSpecsString(triggerSpecs.encodeToJson())
                         .setMaxEventLevelReports(triggerSpecs.getMaxReports())
@@ -182,6 +187,8 @@ public class SourceTest {
                         .setAttributionScopes(List.of("1", "2", "3"))
                         .setAttributionScopeLimit(4L)
                         .setMaxEventStates(10L)
+                        .setDestinationLimitPriority(100L)
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -226,6 +233,7 @@ public class SourceTest {
                         .setCoarseEventReportDestinations(true)
                         .setSharedDebugKey(SHARED_DEBUG_KEY_1)
                         .setAttributedTriggers(ATTRIBUTED_TRIGGERS)
+                        .setTriggerData(SOURCE_TRIGGER_DATA)
                         .setTriggerSpecs(triggerSpecs)
                         .setTriggerSpecsString(triggerSpecs.encodeToJson())
                         .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
@@ -236,6 +244,8 @@ public class SourceTest {
                         .setAttributionScopes(List.of("1", "2", "3"))
                         .setAttributionScopeLimit(4L)
                         .setMaxEventStates(10L)
+                        .setDestinationLimitPriority(100L)
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
                         .build());
     }
 
@@ -462,6 +472,13 @@ public class SourceTest {
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributedTriggers(new ArrayList<>())
                         .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setTriggerData(SOURCE_TRIGGER_DATA)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setTriggerData(Set.of(new UnsignedLong(24L), new UnsignedLong(1L)))
+                        .build());
 
         TriggerSpecs triggerSpecsValueSumBased = SourceFixture.getValidTriggerSpecsValueSum(5);
         TriggerSpecs triggerSpecsCountBased = SourceFixture.getValidTriggerSpecsCountBased();
@@ -528,6 +545,20 @@ public class SourceTest {
                         .build(),
                 SourceFixture.getMinimalValidSourceWithAttributionScope()
                         .setMaxEventStates(2L)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitPriority(10L)
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitPriority(20L)
+                        .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
+                        .build(),
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.LIFO)
                         .build());
     }
 

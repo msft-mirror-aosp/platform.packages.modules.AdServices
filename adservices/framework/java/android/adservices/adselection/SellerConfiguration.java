@@ -16,12 +16,17 @@
 
 package android.adservices.adselection;
 
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
+
+import android.annotation.FlaggedApi;
+import android.annotation.IntRange;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.internal.util.Preconditions;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,15 +39,14 @@ import java.util.concurrent.Executor;
  * This object will be part of the {@link GetAdSelectionDataRequest} and will be constructed and
  * used by the SDK to influence the size of the response of {@link
  * AdSelectionManager#getAdSelectionData(GetAdSelectionDataRequest, Executor, OutcomeReceiver)}
- *
- * @hide
  */
+@FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
 public final class SellerConfiguration implements Parcelable {
-    private final int mTargetPayloadSizeBytes;
+    private final int mMaximumPayloadSizeBytes;
     private final Set<PerBuyerConfiguration> mPerBuyerConfigurations;
 
     private SellerConfiguration(Parcel in) {
-        mTargetPayloadSizeBytes = in.readInt();
+        mMaximumPayloadSizeBytes = in.readInt();
         List<PerBuyerConfiguration> perBuyerConfigurationList =
                 AdServicesParcelableUtil.readNullableFromParcel(
                         in,
@@ -54,6 +58,7 @@ public final class SellerConfiguration implements Parcelable {
         }
     }
 
+    @NonNull
     public static final Creator<SellerConfiguration> CREATOR =
             new Creator<>() {
                 @Override
@@ -70,9 +75,9 @@ public final class SellerConfiguration implements Parcelable {
             };
 
     private SellerConfiguration(
-            int targetPayloadSizeBytes, Set<PerBuyerConfiguration> perBuyerConfigurations) {
+            int maximumPayloadSizeBytes, Set<PerBuyerConfiguration> perBuyerConfigurations) {
 
-        mTargetPayloadSizeBytes = targetPayloadSizeBytes;
+        mMaximumPayloadSizeBytes = maximumPayloadSizeBytes;
         mPerBuyerConfigurations = perBuyerConfigurations;
     }
 
@@ -85,7 +90,7 @@ public final class SellerConfiguration implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        dest.writeInt(mTargetPayloadSizeBytes);
+        dest.writeInt(mMaximumPayloadSizeBytes);
         AdServicesParcelableUtil.writeNullableToParcel(
                 dest,
                 mPerBuyerConfigurations,
@@ -97,7 +102,7 @@ public final class SellerConfiguration implements Parcelable {
         if (o instanceof SellerConfiguration) {
             SellerConfiguration sellerConfiguration = (SellerConfiguration) o;
             return Objects.equals(
-                            mTargetPayloadSizeBytes, sellerConfiguration.mTargetPayloadSizeBytes)
+                            mMaximumPayloadSizeBytes, sellerConfiguration.mMaximumPayloadSizeBytes)
                     && Objects.equals(
                             mPerBuyerConfigurations, sellerConfiguration.mPerBuyerConfigurations);
         }
@@ -106,27 +111,24 @@ public final class SellerConfiguration implements Parcelable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTargetPayloadSizeBytes, mPerBuyerConfigurations);
+        return Objects.hash(mMaximumPayloadSizeBytes, mPerBuyerConfigurations);
     }
 
-    /**
-     * Returns the size of the payload in bytes that the service will return. If there is not enough
-     * data to fill up the payload to this limit, the service will fill up the rest of the payload
-     * with padding.
-     */
-    public int getTargetPayloadSizeBytes() {
-        return mTargetPayloadSizeBytes;
+    /** Returns the maximum size of the payload in bytes that the service will return. */
+    @IntRange(from = 1, to = Integer.MAX_VALUE)
+    public int getMaximumPayloadSizeBytes() {
+        return mMaximumPayloadSizeBytes;
     }
 
     /**
      * Returns a set of per buyer configurations that the service will do a best effort to respect
-     * when constructing the response without exceeding {@link #getTargetPayloadSizeBytes()}.
+     * when constructing the response without exceeding {@link #getMaximumPayloadSizeBytes()}.
      *
      * <p>If this is empty, the service will fill up the response with buyer data until {@link
-     * #getTargetPayloadSizeBytes()} is reached. Otherwise, only data from buyers from the per buyer
-     * configuration will be included. If the sum of {@link
+     * #getMaximumPayloadSizeBytes()} is reached. Otherwise, only data from buyers from the per
+     * buyer configuration will be included. If the sum of {@link
      * PerBuyerConfiguration#getTargetInputSizeBytes()} sizes is larger than {@link
-     * #getTargetPayloadSizeBytes()}, the service will do a best effort attempt to proportionally
+     * #getMaximumPayloadSizeBytes()}, the service will do a best effort attempt to proportionally
      * include the buyer data based on the ratio between that specific buyer's target and the sum of
      * {@link PerBuyerConfiguration#getTargetInputSizeBytes()}.
      */
@@ -137,20 +139,22 @@ public final class SellerConfiguration implements Parcelable {
 
     /** Builder for {@link SellerConfiguration} objects. */
     public static final class Builder {
-        private int mTargetPayloadSizeBytes;
+        private int mMaximumPayloadSizeBytes;
         @NonNull private Set<PerBuyerConfiguration> mPerBuyerConfigurations = new HashSet<>();
 
         /**
          * Sets the target payload size in bytes. For more information see {@link
-         * #getTargetPayloadSizeBytes()}
+         * #getMaximumPayloadSizeBytes()}
          */
         @NonNull
-        public Builder setTargetPayloadSizeBytes(int targetPayloadSizeBytes) {
-            if (targetPayloadSizeBytes <= 0) {
-                throw new IllegalArgumentException("Target size must be greater than 0.");
-            }
+        public Builder setMaximumPayloadSizeBytes(
+                @IntRange(from = 1, to = Integer.MAX_VALUE) int maximumPayloadSizeBytes) {
+            mMaximumPayloadSizeBytes = maximumPayloadSizeBytes;
 
-            mTargetPayloadSizeBytes = targetPayloadSizeBytes;
+            Preconditions.checkArgument(
+                    maximumPayloadSizeBytes > 0,
+                    "Maximum payload of size %d must be greater than 0.",
+                    maximumPayloadSizeBytes);
             return this;
         }
 
@@ -170,11 +174,11 @@ public final class SellerConfiguration implements Parcelable {
         /** Builds a {@link SellerConfiguration} instance. */
         @NonNull
         public SellerConfiguration build() {
-            if (mTargetPayloadSizeBytes == 0) {
-                throw new IllegalStateException("Target size must be set.");
+            if (mMaximumPayloadSizeBytes == 0) {
+                throw new IllegalStateException("Maximum size must be set.");
             }
 
-            return new SellerConfiguration(mTargetPayloadSizeBytes, mPerBuyerConfigurations);
+            return new SellerConfiguration(mMaximumPayloadSizeBytes, mPerBuyerConfigurations);
         }
     }
 }

@@ -32,8 +32,12 @@ import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
+import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
+import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
@@ -331,6 +335,27 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMsmtRegistrationCobaltLoggingEnabled() {
+        testFeatureFlagGuardedByGlobalKillSwitch(
+                "MSMT_REGISTRATION_COBALT_LOGGING_ENABLED",
+                Flags::getMsmtRegistrationCobaltLoggingEnabled);
+    }
+
+    @Test
+    public void testGetMsmtAttributionCobaltLoggingEnabled() {
+        testFeatureFlagGuardedByGlobalKillSwitch(
+                "MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED",
+                Flags::getMsmtAttributionCobaltLoggingEnabled);
+    }
+
+    @Test
+    public void testGetMsmtReportigCobaltLoggingEnabled() {
+        testFeatureFlagGuardedByGlobalKillSwitch(
+                "MSMT_REPORTING_COBALT_LOGGING_ENABLED",
+                Flags::getMsmtReportingCobaltLoggingEnabled);
+    }
+
+    @Test
     public void testGetMeasurementEnableHeaderErrorDebugReport() {
         testFeatureFlagGuardedByGlobalKillSwitch(
                 "MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT",
@@ -436,6 +461,27 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableDestinationLimitPriority() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY",
+                Flags::getMeasurementEnableSourceDestinationLimitPriority);
+    }
+
+    @Test
+    public void testGetMeasurementEnableSourceDestinationLimitAlgorithmField() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD",
+                Flags::getMeasurementEnableSourceDestinationLimitAlgorithmField);
+    }
+
+    @Test
+    public void testGetMeasurementEnableV1SourceTriggerData() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA",
+                Flags::getMeasurementEnableV1SourceTriggerData);
+    }
+
+    @Test
     public void testGetCustomErrorCodeSamplingEnabled() {
         testFeatureFlag(
                 "DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED",
@@ -483,6 +529,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     public void testGetEnrollmentProtoFileEnabled() {
         testFeatureFlag(
                 "DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED", Flags::getEnrollmentProtoFileEnabled);
+    }
+
+    @Test
+    public void testGetCobaltRegistryOutOfBandUpdateEnabled() {
+        testFeatureFlag(
+                "COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED",
+                Flags::getCobaltRegistryOutOfBandUpdateEnabled);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -568,6 +621,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getTopicsEpochJobFlexMs()",
                 TOPICS_EPOCH_JOB_FLEX_MS,
                 Flags::getTopicsEpochJobFlexMs);
+    }
+
+    @Test
+    public void testGetMeasurementDefaultDestinationLimitAlgorithm() {
+        testFlag(
+                "getMeasurementDefaultSourceDestinationLimitAlgorithm()",
+                0,
+                Flags::getMeasurementDefaultSourceDestinationLimitAlgorithm);
     }
 
     @Test
@@ -687,6 +748,38 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementReportingJobServiceMinExecutionWindowMillis",
                 MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS,
                 Flags::getMeasurementReportingJobServiceMinExecutionWindowMillis);
+    }
+
+    @Test
+    public void testGetFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
+        testFlag(
+                "getFledgeGetAdSelectionDataBuyerInputCreatorVersion",
+                FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION,
+                Flags::getFledgeGetAdSelectionDataBuyerInputCreatorVersion);
+    }
+
+    @Test
+    public void testGetFledgeGetAdSelectionDataBuyerInputMaxNumEntirePayloadCompressions() {
+        testFlag(
+                "getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions",
+                FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS,
+                Flags::getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions);
+    }
+
+    @Test
+    public void testGetMeasurementEnableEventTriggerDebugSignal() {
+        testFlag(
+                "getMeasurementEnableEventTriggerDebugSignal",
+                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL,
+                Flags::getMeasurementEnableEventTriggerDebugSignal);
+    }
+
+    @Test
+    public void testGetMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        testFlag(
+                "getMeasurementEnableEventTriggerDebugSignalForCoarseDestination",
+                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION,
+                Flags::getMeasurementEnableEventTriggerDebugSignalForCoarseDestination);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

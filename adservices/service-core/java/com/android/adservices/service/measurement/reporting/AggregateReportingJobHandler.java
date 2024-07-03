@@ -356,7 +356,7 @@ public class AggregateReportingJobHandler {
             throws DatastoreException {
         Pair<List<Uri>, List<Uri>> destinations =
                 dao.getSourceDestinations(aggregateReport.getSourceId());
-        List<Uri> appDestinations = destinations.second;
+        List<Uri> appDestinations = destinations.first;
         if (appDestinations.isEmpty()
                 || !appDestinations.get(0).equals(aggregateReport.getAttributionDestination())
                 || aggregateReport.isFakeReport()) {
@@ -365,7 +365,7 @@ public class AggregateReportingJobHandler {
         dao.insertOrUpdateAppReportHistory(
                 appDestinations.get(0),
                 aggregateReport.getRegistrationOrigin(),
-                System.currentTimeMillis());
+                aggregateReport.getScheduledReportTime());
     }
 
     /** Creates the JSON payload for the POST request from the AggregateReport. */

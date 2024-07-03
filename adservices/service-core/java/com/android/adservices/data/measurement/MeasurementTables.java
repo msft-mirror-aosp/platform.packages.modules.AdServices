@@ -132,6 +132,7 @@ public final class MeasurementTables {
         String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String INSTALL_TIME = "install_time";
         String DEBUG_JOIN_KEY = "debug_join_key";
+        String TRIGGER_DATA = "trigger_data";
         String TRIGGER_SPECS = "trigger_specs";
         String PLATFORM_AD_ID = "platform_ad_id";
         String DEBUG_AD_ID = "debug_ad_id";
@@ -146,6 +147,7 @@ public final class MeasurementTables {
         String ATTRIBUTION_SCOPE_LIMIT = "attribution_scope_limit";
         String MAX_EVENT_STATES = "max_event_states";
         String REINSTALL_REATTRIBUTION_WINDOW = "reinstall_reattribution_window";
+        String DESTINATION_LIMIT_PRIORITY = "destination_limit_priority";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -553,7 +555,11 @@ public final class MeasurementTables {
                     + SourceContract.MAX_EVENT_STATES
                     + " INTEGER, "
                     + SourceContract.REINSTALL_REATTRIBUTION_WINDOW
-                    + " INTEGER "
+                    + " INTEGER, "
+                    + SourceContract.DESTINATION_LIMIT_PRIORITY
+                    + " INTEGER, "
+                    + SourceContract.TRIGGER_DATA
+                    + " TEXT "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_DESTINATION_LATEST =

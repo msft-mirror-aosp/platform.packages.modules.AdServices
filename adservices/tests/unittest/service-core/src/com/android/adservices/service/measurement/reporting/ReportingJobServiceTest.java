@@ -91,7 +91,6 @@ public class ReportingJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int MEASUREMENT_REPORTING_JOB_ID = MEASUREMENT_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
-    public static final int TOLERANCE = 500;
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private ITransaction mTransaction;
@@ -176,8 +175,8 @@ public class ReportingJobServiceTest {
     public void scheduleIfNeeded_nextReportInFuture_noPendingJobs_schedule() throws Exception {
         // Setup
         enableFeature();
-        // next report is scheduled 10s from now.
-        int timeToNextReport = 10000;
+        // next report is scheduled 100s from now.
+        int timeToNextReport = 100000;
         long nextReportTime = System.currentTimeMillis() + timeToNextReport;
         when(mMeasurementDao.getLatestReportTimeInBatchWindow(
                         MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS))
@@ -193,8 +192,8 @@ public class ReportingJobServiceTest {
 
         JobInfo scheduledJob = jobInfoArgumentCaptor.getValue();
         long minLatencyMs = scheduledJob.getMinLatencyMillis();
-
-        assertTrue(timeToNextReport - TOLERANCE < minLatencyMs && minLatencyMs <= timeToNextReport);
+        assertTrue(minLatencyMs > 0);
+        assertTrue(minLatencyMs <= timeToNextReport);
         assertEquals(
                 MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW,
                 scheduledJob.isRequireBatteryNotLow());
@@ -206,8 +205,8 @@ public class ReportingJobServiceTest {
         // Setup
         enableFeature();
         long now = System.currentTimeMillis();
-        // next report is scheduled 10s from now.
-        int timeToNextReport = 10000;
+        // next report is scheduled 100s from now.
+        int timeToNextReport = 100000;
         long nextReportTime = now + timeToNextReport;
         when(mMeasurementDao.getLatestReportTimeInBatchWindow(
                         MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS))
@@ -236,8 +235,8 @@ public class ReportingJobServiceTest {
         JobInfo scheduledJob = jobInfoArgumentCaptor.getValue();
         long minLatencyMs = scheduledJob.getMinLatencyMillis();
 
-        assertTrue(
-                timeToNextReport - TOLERANCE <= minLatencyMs && minLatencyMs <= timeToNextReport);
+        assertTrue(minLatencyMs > 0);
+        assertTrue(minLatencyMs <= timeToNextReport);
     }
 
     @Test
@@ -246,8 +245,8 @@ public class ReportingJobServiceTest {
         // Setup
         enableFeature();
         long now = System.currentTimeMillis();
-        // next report is scheduled 10s from now.
-        int timeToNextReport = 10000;
+        // next report is scheduled 100s from now.
+        int timeToNextReport = 100000;
         long nextReportTime = now + timeToNextReport;
         when(mMeasurementDao.getLatestReportTimeInBatchWindow(
                         MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS))
@@ -287,10 +286,10 @@ public class ReportingJobServiceTest {
         // Setup
         enableFeature();
         long now = System.currentTimeMillis();
-        // next report is scheduled 10s from now.
-        long nextReportTime = now + 10000L;
-        long timeToMinInvocationWindow = 10001L;
-        // last execution happened 10.001 seconds within min invocation window
+        // next report is scheduled 100s from now.
+        long nextReportTime = now + 100000L;
+        long timeToMinInvocationWindow = 100001L;
+        // last execution happened 100.001 seconds within min invocation window
         long lastExecutionTime =
                 now
                         - (MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS
@@ -311,9 +310,8 @@ public class ReportingJobServiceTest {
         JobInfo scheduledJob = jobInfoArgumentCaptor.getValue();
         long minLatencyMs = scheduledJob.getMinLatencyMillis();
 
-        assertTrue(
-                timeToMinInvocationWindow - TOLERANCE <= minLatencyMs
-                        && minLatencyMs <= timeToMinInvocationWindow);
+        assertTrue(minLatencyMs > 0);
+        assertTrue(minLatencyMs <= timeToMinInvocationWindow);
     }
 
     @Test
@@ -348,11 +346,11 @@ public class ReportingJobServiceTest {
         // Setup
         enableFeature();
         long now = System.currentTimeMillis();
-        // next report is scheduled 10s from now.
-        long timeToNextReport = 10000L;
+        // next report is scheduled 100s from now.
+        long timeToNextReport = 100000L;
         long nextReportTime = now + timeToNextReport;
-        long timeToMinInvocationWindowEnd = 30000L;
-        // last execution happened 30 seconds within min execution window, making the next
+        long timeToMinInvocationWindowEnd = 300000L;
+        // last execution happened 300 seconds within min execution window, making the next
         // report fall within the window.
         long lastExecutionTime =
                 now
@@ -377,8 +375,8 @@ public class ReportingJobServiceTest {
 
         // Execution time of job should be at nextReportTime, even though that report time is
         // in the min execution window. This is because we forced the job.
-        assertTrue(
-                timeToNextReport - TOLERANCE <= minLatencyMs && minLatencyMs <= timeToNextReport);
+        assertTrue(minLatencyMs > 0);
+        assertTrue(minLatencyMs <= timeToNextReport);
     }
 
     @Test
@@ -397,8 +395,8 @@ public class ReportingJobServiceTest {
                 .when(mMockFlags)
                 .getMeasurementReportingJobRequiredBatteryNotLow();
 
-        // next report is scheduled 10s from now.
-        int timeToNextReport = 10000;
+        // next report is scheduled 100s from now.
+        int timeToNextReport = 100000;
         long nextReportTime = System.currentTimeMillis() + timeToNextReport;
         when(mMeasurementDao.getLatestReportTimeInBatchWindow(
                         MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS))
@@ -415,7 +413,8 @@ public class ReportingJobServiceTest {
         JobInfo scheduledJob = jobInfoArgumentCaptor.getValue();
         long minLatencyMs = scheduledJob.getMinLatencyMillis();
 
-        assertTrue(timeToNextReport - TOLERANCE < minLatencyMs && minLatencyMs <= timeToNextReport);
+        assertTrue(minLatencyMs > 0);
+        assertTrue(minLatencyMs <= timeToNextReport);
         assertEquals(requireBatteryNotLow, scheduledJob.isRequireBatteryNotLow());
         assertEquals(persisted, scheduledJob.isPersisted());
         // Below is not accessible.

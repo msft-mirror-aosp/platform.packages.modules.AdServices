@@ -116,7 +116,7 @@ public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
 
         // TODO(b/345835218): Create an Exception Checker for internal exceptions in tests.
         Exception e = callback.assertFailure(IllegalStateException.class);
-        assertThat(e.getCause().getClass().getSimpleName())
+        assertThat(e.getClass().getSimpleName())
                 .isEqualTo(ServiceUnavailableException.class.getSimpleName());
     }
 }

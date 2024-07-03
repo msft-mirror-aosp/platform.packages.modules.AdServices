@@ -115,7 +115,9 @@ public class MeasurementDataDeleter {
         Optional<Boolean> result =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> {
-                            dao.undoInstallAttribution(packageName);
+                            if (!mFlags.getMeasurementEnableReinstallReattribution()) {
+                                dao.undoInstallAttribution(packageName);
+                            }
                             return delete(dao, deletionParam);
                         });
         return result.orElse(false);

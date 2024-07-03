@@ -24,11 +24,14 @@ import static com.android.adservices.service.measurement.registration.AsyncRegis
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -52,6 +55,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.RemoteException;
+import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
@@ -88,8 +92,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
-
-import com.google.common.truth.Truth;
 
 import org.json.JSONException;
 import org.junit.After;
@@ -3159,7 +3161,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
                 .thenReturn(0L);
 
-        Truth.assertThat(isTriggerAllowedToInsert(mMeasurementDao, TRIGGER)).isTrue();
+        assertThat(isTriggerAllowedToInsert(mMeasurementDao, TRIGGER)).isTrue();
     }
 
     @Test
@@ -3167,7 +3169,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
                 .thenReturn(Flags.MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION - 1L);
 
-        Truth.assertThat(isTriggerAllowedToInsert(mMeasurementDao, TRIGGER)).isTrue();
+        assertThat(isTriggerAllowedToInsert(mMeasurementDao, TRIGGER)).isTrue();
     }
 
     @Test
@@ -3175,7 +3177,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
                 .thenReturn((long) Flags.MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION);
 
-        Truth.assertThat(isTriggerAllowedToInsert(mMeasurementDao, TRIGGER)).isFalse();
+        assertThat(isTriggerAllowedToInsert(mMeasurementDao, TRIGGER)).isFalse();
     }
 
     @Test
@@ -4025,7 +4027,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()).thenReturn(true);
         when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
@@ -4043,15 +4044,15 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 // 4 - verification after deletion
                 .thenReturn(6, 5, 4);
 
-        when(mMeasurementDao.fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+        when(mMeasurementDao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
                         eq(sourceToInsert.getPublisher()),
                         eq(sourceToInsert.getPublisherType()),
                         eq(sourceToInsert.getEnrollmentId()),
                         eq(sourceToInsert.getAppDestinations()),
                         eq(EventSurfaceType.APP),
                         eq(sourceToInsert.getEventTime())))
-                .thenReturn(List.of("S1"))
-                .thenReturn(List.of("S2"));
+                .thenReturn(new Pair<>(0L, List.of("S1")))
+                .thenReturn(new Pair<>(0L, List.of("S2")));
 
         // Execution
         assertEquals(
@@ -4065,17 +4066,25 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Verification
         ArgumentCaptor<List<String>> updatedStatus = ArgumentCaptor.forClass(List.class);
+        List<List<String>> sourcesToDelete = List.of(List.of("S1"), List.of("S2"));
         verify(mMeasurementDao, times(2))
                 .updateSourceStatus(updatedStatus.capture(), eq(Source.Status.MARKED_TO_DELETE));
-        assertEquals(List.of("S1"), updatedStatus.getAllValues().get(0));
-        assertEquals(List.of("S2"), updatedStatus.getAllValues().get(1));
+        assertThat(updatedStatus.getAllValues()).containsExactlyElementsIn(sourcesToDelete);
 
-        ArgumentCaptor<List<String>> deletedReportSources = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<String>> deletedAggReportSources = ArgumentCaptor.forClass(List.class);
         verify(mMeasurementDao, times(2))
                 .deletePendingAggregateReportsAndAttributionsForSources(
-                        deletedReportSources.capture());
-        assertEquals(List.of("S1"), deletedReportSources.getAllValues().get(0));
-        assertEquals(List.of("S2"), deletedReportSources.getAllValues().get(1));
+                        deletedAggReportSources.capture());
+        assertThat(deletedAggReportSources.getAllValues())
+                .containsExactlyElementsIn(sourcesToDelete);
+
+        ArgumentCaptor<List<String>> deletedFakeEventReportSources =
+                ArgumentCaptor.forClass(List.class);
+        verify(mMeasurementDao, times(2))
+                .deleteFutureFakeEventReportsForSources(
+                        deletedFakeEventReportSources.capture(), eq(sourceToInsert.getEventTime()));
+        assertThat(deletedFakeEventReportSources.getAllValues())
+                .containsExactlyElementsIn(sourcesToDelete);
     }
 
     @Test
@@ -4101,7 +4110,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()).thenReturn(true);
         when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
@@ -4118,14 +4126,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 // 4 - verification after deletion
                 .thenReturn(6, 4);
 
-        when(mMeasurementDao.fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+        when(mMeasurementDao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
                         eq(sourceToInsert.getPublisher()),
                         eq(sourceToInsert.getPublisherType()),
                         eq(sourceToInsert.getEnrollmentId()),
                         eq(sourceToInsert.getWebDestinations()),
                         eq(EventSurfaceType.WEB),
                         eq(sourceToInsert.getEventTime())))
-                .thenReturn(sourceIdsWithLruDestination);
+                .thenReturn(new Pair<>(0L, sourceIdsWithLruDestination));
 
         // Execution
         assertEquals(
@@ -4147,6 +4155,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .deletePendingAggregateReportsAndAttributionsForSources(
                         deletedReportSources.capture());
         assertEquals(sourceIdsWithLruDestination, deletedReportSources.getValue());
+
+        ArgumentCaptor<List<String>> deletedFakeEventReportSources =
+                ArgumentCaptor.forClass(List.class);
+        verify(mMeasurementDao)
+                .deleteFutureFakeEventReportsForSources(
+                        deletedFakeEventReportSources.capture(), eq(sourceToInsert.getEventTime()));
+        assertThat(deletedFakeEventReportSources.getValue())
+                .containsExactlyElementsIn(sourceIdsWithLruDestination);
     }
 
     @Test
@@ -4173,7 +4189,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()).thenReturn(true);
         when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
@@ -4190,14 +4205,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 // 4 - verification after deletion
                 .thenReturn(6, 4);
 
-        when(mMeasurementDao.fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+        when(mMeasurementDao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
                         eq(sourceToInsert.getPublisher()),
                         eq(sourceToInsert.getPublisherType()),
                         eq(sourceToInsert.getEnrollmentId()),
                         eq(sourceToInsert.getAppDestinations()),
                         eq(EventSurfaceType.APP),
                         eq(sourceToInsert.getEventTime())))
-                .thenReturn(appDestSourceIdsWithLruDestination);
+                .thenReturn(new Pair<>(0L, appDestSourceIdsWithLruDestination));
 
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         eq(sourceToInsert.getPublisher()),
@@ -4211,14 +4226,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 // 4 - verification after deletion
                 .thenReturn(6, 4);
 
-        when(mMeasurementDao.fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+        when(mMeasurementDao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
                         eq(sourceToInsert.getPublisher()),
                         eq(sourceToInsert.getPublisherType()),
                         eq(sourceToInsert.getEnrollmentId()),
                         eq(sourceToInsert.getWebDestinations()),
                         eq(EventSurfaceType.WEB),
                         eq(sourceToInsert.getEventTime())))
-                .thenReturn(webDestSourceIdsWithLruDestination);
+                .thenReturn(new Pair<>(0L, webDestSourceIdsWithLruDestination));
 
         // Execution
         assertEquals(
@@ -4245,6 +4260,16 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         List<List<String>> deletedReportSourcesAllValues = deletedReportSources.getAllValues();
         assertEquals(appDestSourceIdsWithLruDestination, deletedReportSourcesAllValues.get(0));
         assertEquals(webDestSourceIdsWithLruDestination, deletedReportSourcesAllValues.get(1));
+
+        ArgumentCaptor<List<String>> deletedFakeEventReportSources =
+                ArgumentCaptor.forClass(List.class);
+        verify(mMeasurementDao, times(2))
+                .deleteFutureFakeEventReportsForSources(
+                        deletedFakeEventReportSources.capture(), eq(sourceToInsert.getEventTime()));
+        assertThat(deletedFakeEventReportSources.getAllValues().get(0))
+                .containsExactlyElementsIn(appDestSourceIdsWithLruDestination);
+        assertThat(deletedFakeEventReportSources.getAllValues().get(1))
+                .containsExactlyElementsIn(webDestSourceIdsWithLruDestination);
     }
 
     @Test
@@ -4271,7 +4296,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()).thenReturn(true);
         when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(false);
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
@@ -4288,14 +4312,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 // 4 - verification after deletion
                 .thenReturn(6, 4);
 
-        when(mMeasurementDao.fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+        when(mMeasurementDao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
                         eq(sourceToInsert.getPublisher()),
                         eq(sourceToInsert.getPublisherType()),
                         eq(sourceToInsert.getEnrollmentId()),
                         eq(sourceToInsert.getAppDestinations()),
                         eq(EventSurfaceType.APP),
                         eq(sourceToInsert.getEventTime())))
-                .thenReturn(appDestSourceIdsWithLruDestination);
+                .thenReturn(new Pair<>(0L, appDestSourceIdsWithLruDestination));
 
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         eq(sourceToInsert.getPublisher()),
@@ -4309,14 +4333,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 // 4 - verification after deletion
                 .thenReturn(6, 4);
 
-        when(mMeasurementDao.fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+        when(mMeasurementDao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
                         eq(sourceToInsert.getPublisher()),
                         eq(sourceToInsert.getPublisherType()),
                         eq(sourceToInsert.getEnrollmentId()),
                         eq(sourceToInsert.getWebDestinations()),
                         eq(EventSurfaceType.WEB),
                         eq(sourceToInsert.getEventTime())))
-                .thenReturn(webDestSourceIdsWithLruDestination);
+                .thenReturn(new Pair<>(0L, webDestSourceIdsWithLruDestination));
 
         // Execution
         assertEquals(
@@ -4338,6 +4362,16 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         verify(mMeasurementDao, never())
                 .deletePendingAggregateReportsAndAttributionsForSources(any());
+
+        ArgumentCaptor<List<String>> deletedFakeEventReportSources =
+                ArgumentCaptor.forClass(List.class);
+        verify(mMeasurementDao, times(2))
+                .deleteFutureFakeEventReportsForSources(
+                        deletedFakeEventReportSources.capture(), eq(sourceToInsert.getEventTime()));
+        assertThat(deletedFakeEventReportSources.getAllValues().get(0))
+                .containsExactlyElementsIn(appDestSourceIdsWithLruDestination);
+        assertThat(deletedFakeEventReportSources.getAllValues().get(1))
+                .containsExactlyElementsIn(webDestSourceIdsWithLruDestination);
     }
 
     @Test
@@ -4345,10 +4379,20 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException {
         // setup
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
-                getSpyAsyncRegistrationQueueRunner();
+                new AsyncRegistrationQueueRunner(
+                        sContext,
+                        mContentResolver,
+                        mAsyncSourceFetcher,
+                        mAsyncTriggerFetcher,
+                        new FakeDatastoreManager(),
+                        mDebugReportApi,
+                        mSourceNoiseHandler,
+                        mFlags,
+                        mLogger);
         Source sourceToInsert =
                 SourceFixture.getValidSourceBuilder()
                         .setId("S5")
+                        .setPublisher(WEB_TOP_ORIGIN)
                         .setWebDestinations(
                                 List.of(
                                         Uri.parse("https://www.example1.com"),
@@ -4372,7 +4416,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()).thenReturn(true);
         when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
         // Destinations are 4 vs the limit is 3
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(3);
@@ -4415,7 +4458,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()).thenReturn(true);
         when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
         // 1 app destination vs the limit = 100
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(100);
@@ -4446,6 +4488,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         verify(mMeasurementDao, never()).updateSourceStatus(anyList(), anyInt());
         verify(mMeasurementDao, never())
                 .deletePendingAggregateReportsAndAttributionsForSources(anyList());
+        verify(mMeasurementDao, never())
+                .deleteFutureFakeEventReportsForSources(anyList(), anyLong());
     }
 
     @Test
@@ -4479,7 +4523,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()).thenReturn(true);
         when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
         // Destinations are 4 vs the limit is 100
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(100);
@@ -4510,6 +4553,101 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         verify(mMeasurementDao, never()).updateSourceStatus(anyList(), anyInt());
         verify(mMeasurementDao, never())
                 .deletePendingAggregateReportsAndAttributionsForSources(anyList());
+        verify(mMeasurementDao, never())
+                .deleteFutureFakeEventReportsForSources(anyList(), anyLong());
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_newSourceHasLowerDestPriority_rejectsNewSource()
+            throws DatastoreException {
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+        Source sourceToInsert =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("S5")
+                        // Lower than the priority of the other sources in DB
+                        .setDestinationLimitPriority(10L)
+                        .build();
+        List<String> appDestSourceIdsWithLruDestination = List.of("S1", "S2");
+        List<String> webDestSourceIdsWithLruDestination = List.of("S3", "S4");
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                        any(Uri.class),
+                        any(Uri.class),
+                        anyInt(),
+                        anyString(),
+                        anyLong(),
+                        anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
+        when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
+        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
+        when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
+        // For app destination
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        eq(sourceToInsert.getPublisher()),
+                        eq(sourceToInsert.getPublisherType()),
+                        eq(sourceToInsert.getEnrollmentId()),
+                        eq(sourceToInsert.getAppDestinations()),
+                        eq(EventSurfaceType.APP),
+                        eq(sourceToInsert.getEventTime())))
+                // The destinations reduce after the deletion through FIFO -
+                // 6 - initial check
+                // 4 - verification after deletion
+                .thenReturn(6, 4);
+
+        when(mMeasurementDao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
+                        eq(sourceToInsert.getPublisher()),
+                        eq(sourceToInsert.getPublisherType()),
+                        eq(sourceToInsert.getEnrollmentId()),
+                        eq(sourceToInsert.getAppDestinations()),
+                        eq(EventSurfaceType.APP),
+                        eq(sourceToInsert.getEventTime())))
+                .thenReturn(new Pair<>(20L, appDestSourceIdsWithLruDestination));
+
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        eq(sourceToInsert.getPublisher()),
+                        eq(sourceToInsert.getPublisherType()),
+                        eq(sourceToInsert.getEnrollmentId()),
+                        eq(sourceToInsert.getWebDestinations()),
+                        eq(EventSurfaceType.WEB),
+                        eq(sourceToInsert.getEventTime())))
+                // The destinations reduce after the deletion through FIFO -
+                // 6 - initial check
+                // 4 - verification after deletion
+                .thenReturn(6, 4);
+
+        when(mMeasurementDao.fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
+                        eq(sourceToInsert.getPublisher()),
+                        eq(sourceToInsert.getPublisherType()),
+                        eq(sourceToInsert.getEnrollmentId()),
+                        eq(sourceToInsert.getWebDestinations()),
+                        eq(EventSurfaceType.WEB),
+                        eq(sourceToInsert.getEventTime())))
+                .thenReturn(new Pair<>(0L, webDestSourceIdsWithLruDestination));
+
+        // Execution
+        assertEquals(
+                InsertSourcePermission.NOT_ALLOWED,
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        sourceToInsert,
+                        sourceToInsert.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi));
+
+        // Verification
+        verify(mMeasurementDao, never()).updateSourceStatus(anyCollection(), anyInt());
+        verify(mMeasurementDao, never())
+                .deletePendingAggregateReportsAndAttributionsForSources(anyList());
+        verify(mMeasurementDao, never())
+                .deleteFutureFakeEventReportsForSources(anyList(), anyLong());
     }
 
     @Test
@@ -4873,7 +5011,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         // Setup
         int limit = 5;
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(limit);
-        when(mFlags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()).thenReturn(true);
+        when(mFlags.getMeasurementEnableSourceDestinationLimitPriority()).thenReturn(true);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         doReturn(InsertSourcePermission.ALLOWED_FIFO_SUCCESS)
@@ -4901,7 +5039,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         // Setup
         int limit = 5;
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(limit);
-        when(mFlags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()).thenReturn(false);
+        when(mFlags.getMeasurementEnableSourceDestinationLimitPriority()).thenReturn(false);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         // It's infeasible that isSourceAllowedToInsert returns ALLOWED_FIFO_SUCCESS when FIFO is
@@ -4929,7 +5067,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         // Setup
         int limit = 5;
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(limit);
-        when(mFlags.getMeasurementEnableDestinationXPublisherXEnrollmentFifo()).thenReturn(true);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         doReturn(InsertSourcePermission.ALLOWED)

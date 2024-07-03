@@ -1,8 +1,8 @@
 {
   "description": "Given a source with matching enrollment ID with trigger and another source with non-matching enrollment ID. 2nd source transforms into a derived source and wins attribution. Two entries in \"Attribution-Reporting-Register-Aggregatable-Source\" header, many \"Attribution-Reporting-Register-Aggregatable-Trigger-Data\", generate an aggregate report with two contributions and the value is accumulated for each entry.",
   "phflags_override": {
-    "measurement_enable_xna" : "true",
-    "web_context_client_allow_list" : "*"
+    "measurement_enable_xna": "true",
+    "web_context_client_allow_list": "*"
   },
   "input": {
     "sources": [
@@ -13,7 +13,7 @@
         },
         "responses": [
           {
-            "url": "https://www.ad-tech1.com",
+            "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Source": {
                 "source_event_id": "1",
@@ -51,7 +51,7 @@
         },
         "responses": [
           {
-            "url": "https://www.ad-tech2.com",
+            "url": "https://www.ad-tech2.test",
             "response": {
               "Attribution-Reporting-Register-Source": {
                 "source_event_id": "1",
@@ -82,10 +82,10 @@
         },
         "responses": [
           {
-            "url": "https://www.ad-tech1.com",
+            "url": "https://www.ad-tech1.test",
             "response": {
               "Attribution-Reporting-Register-Trigger": {
-                "filters" : [
+                "filters": [
                   {
                     "ctid": [
                       "not_matching_trigger"
@@ -150,7 +150,7 @@
                 },
                 "attribution_config": [
                   {
-                    "source_network": "enrollment-id-www.ad-tech2.com",
+                    "source_network": "enrollment-id-www.ad-tech2.test",
                     "source_priority_range": {
                       "start": 1,
                       "end": 1000

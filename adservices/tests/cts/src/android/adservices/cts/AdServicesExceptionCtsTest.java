@@ -20,13 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.exceptions.AdServicesException;
 
-import androidx.test.runner.AndroidJUnit4;
-
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
-public class AdServicesExceptionCtsTest {
+public final class AdServicesExceptionCtsTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testAdServicesExceptionWithMessageCreation() {
         String expectedErrorMessage = "Expected error message";

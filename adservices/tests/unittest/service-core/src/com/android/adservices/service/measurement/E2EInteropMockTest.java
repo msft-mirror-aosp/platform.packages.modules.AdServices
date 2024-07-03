@@ -25,7 +25,6 @@ import android.os.RemoteException;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.measurement.actions.Action;
-import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
@@ -33,9 +32,9 @@ import com.android.adservices.service.measurement.registration.AsyncFetchStatus;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.Enrollment;
 
-import org.json.JSONArray;
+import com.google.common.collect.ImmutableSet;
+
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -58,10 +57,57 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * 659f682b6482a48ce9ab5e7d3c25e93c24f5054d.
+ * 9307efde88ad78d22ea8321888f9fb20bee50bf6.
  */
 @RunWith(Parameterized.class)
-public class E2EInteropMockTest extends E2EMockTest {
+public class E2EInteropMockTest extends E2EAbstractMockTest {
+    static {
+        sTestsToSkip = ImmutableSet.of(
+                "unsuitable_response_url.json",
+                "aggregatable_debug_reports.json",
+                "aggregatable_report_trigger_context_id.json",
+                "aggregatable_reports_fake_source.json",
+                "aggregatable_values_filtering.json",
+                "aggregation_coordinator_origin.json",
+                "channel_capacity.json",
+                "custom_trigger_data.json",
+                "destination_limit.json",
+                "destination_rate_limit.json",
+                "destination_validation.json",
+                "event_level_epsilon.json",
+                "event_level_report_time.json",
+                "event_level_storage_limit_replacement.json",
+                "event_level_trigger_filter_data.json",
+                "event_report_window.json",
+                "event_source_rounds_expiry.json",
+                "fenced.json",
+                "filter_data_validation.json",
+                "header_presence.json",
+                "max_trigger_state_cardinality.json",
+                "null_aggregatable_report.json",
+                "os_debug_reports.json",
+                "parse_failures.json",
+                "preferred_platform.json",
+                "randomized_response_0_reports.json",
+                "randomized_response_1_report.json",
+                "rate_limit_max_attributions.json",
+                "rate_limit_max_distinct_reporting_origins_per_source_reporting_site.json",
+                "rate_limit_max_reporting_origins_per_source_reporting_site.json",
+                "redirect_source_trigger.json",
+                "same_destination_site.json",
+                "source_destination_limit_fifo.json",
+                "source_destination_limit_fifo_and_destination_rate_limit.json",
+                "source_destination_limit_fifo_rate_limits.json",
+                "source_destination_limit_priority_fifo.json",
+                "source_destination_limits.json",
+                "source_header_error_debug_report.json",
+                "source_registration_limits.json",
+                "source_storage_limit_and_destination_rate_limit.json",
+                "source_storage_limit_expiry.json",
+                "trigger_header_error_debug_report.json",
+                "verbose_debug_report_multiple_data.json");
+    }
+
     // The following keys are to JSON fields that should be interpreted in milliseconds.
     public static final Set<String> TIMESTAMP_KEYS_IN_MILLIS =
             new HashSet<>(
@@ -125,14 +171,10 @@ public class E2EInteropMockTest extends E2EMockTest {
                     FlagsConstants.KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
 
     private static String preprocessor(String json) {
-        // TODO(b/290098169): Cleanup anchorTime when this bug is addressed. Handling cases where
-        // Source event report window is already stored as mEventTime + mEventReportWindow.
-        return anchorTime(
-                json.replaceAll("\\.test(?=[\"\\/])", ".com")
-                        // Remove comments
-                        .replaceAll("^\\s*\\/\\/.+\\n", "")
-                        .replaceAll("\"destination\":", "\"web_destination\":"),
-                START_TIME);
+        return json.replaceAll("\\.test(?=[\"\\/])", ".com")
+                // Remove comments
+                .replaceAll("^\\s*\\/\\/.+\\n", "")
+                .replaceAll("\"destination\":", "\"web_destination\":");
     }
 
     private static Map<String, String> sPhFlagsForInterop = Map.ofEntries(
@@ -154,7 +196,10 @@ public class E2EInteropMockTest extends E2EMockTest {
                     "true"),
             entry(
                     FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
-                    WebUtil.validUrl("https://coordinator.test")));
+                    WebUtil.validUrl("https://coordinator.test")),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
+                    "true"));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -193,7 +238,7 @@ public class E2EInteropMockTest extends E2EMockTest {
                         mMockContentResolver);
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
-                        TestObjectProvider.Type.DENOISED,
+                        mSourceNoiseHandler,
                         mDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
@@ -207,6 +252,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         // For interop tests, we currently expect only one HTTPS response per registration with no
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
+            prepareReportNoising(getNextUriConfig(sourceRegistration.mUriConfigsMap.get(uri)));
             updateEnrollment(uri);
             insertSourceOrAssertUnparsable(
                     sourceRegistration.getPublisher(),
@@ -245,25 +291,6 @@ public class E2EInteropMockTest extends E2EMockTest {
         processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
         if (triggerRegistration.mDebugReporting) {
             processActualDebugReportApiJob(triggerRegistration.mTimestamp);
-        }
-    }
-
-    @Override
-    void processAction(AggregateReportingJob reportingJob) throws IOException, JSONException {
-        super.processAction(reportingJob);
-        // Test json files for interop tests come verbatim from chromium, so they don't have
-        // source_registration_time as a field. Remove them from the actual reports so that
-        // comparisons don't fail.
-        removeSourceRegistrationTime(mActualOutput.mAggregateReportObjects);
-        removeSourceRegistrationTime(mActualOutput.mDebugAggregateReportObjects);
-    }
-
-    private void removeSourceRegistrationTime(List<JSONObject> aggregateReportObjects)
-            throws JSONException {
-        for (JSONObject jsonObject : aggregateReportObjects) {
-            jsonObject
-                    .getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY)
-                    .remove(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME);
         }
     }
 
@@ -364,50 +391,5 @@ public class E2EInteropMockTest extends E2EMockTest {
 
     private static Uri getRegistrant(String packageName) {
         return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
-    }
-
-    private static String anchorTime(String jsonStr, long time) {
-        try {
-            JSONObject json = new JSONObject(jsonStr);
-            long t0 = json.getJSONObject(TestFormatJsonMapping.TEST_INPUT_KEY)
-                    .getJSONArray(TestFormatJsonMapping.REGISTRATIONS_KEY)
-                    .getJSONObject(0)
-                    .getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
-            return ((JSONObject) anchorTime(json, t0, time)).toString();
-        } catch (JSONException ignored) {
-            return null;
-        }
-    }
-
-    private static Object anchorTime(Object obj, long t0, long anchor) throws JSONException {
-        if (obj instanceof JSONArray) {
-            JSONArray newJson = new JSONArray();
-            JSONArray jsonArray = (JSONArray) obj;
-            for (int i = 0; i < jsonArray.length(); i++) {
-                newJson.put(i, anchorTime(jsonArray.get(i), t0, anchor));
-            }
-            return newJson;
-        } else if (obj instanceof JSONObject) {
-            JSONObject newJson = new JSONObject();
-            JSONObject jsonObj = (JSONObject) obj;
-            Set<String> keys = jsonObj.keySet();
-
-            for (String key : keys) {
-                if (TIMESTAMP_KEYS_IN_MILLIS.contains(key)) {
-                    long time = jsonObj.getLong(key);
-                    newJson.put(key, String.valueOf(time - t0 + anchor));
-                } else if (TIMESTAMP_KEYS_IN_SECONDS.contains(key)) {
-                    long time = TimeUnit.SECONDS.toMillis(jsonObj.getLong(key));
-                    newJson.put(
-                            key,
-                            String.valueOf(TimeUnit.MILLISECONDS.toSeconds(time - t0 + anchor)));
-                } else {
-                    newJson.put(key, anchorTime(jsonObj.get(key), t0, anchor));
-                }
-            }
-            return newJson;
-        } else {
-            return obj;
-        }
     }
 }

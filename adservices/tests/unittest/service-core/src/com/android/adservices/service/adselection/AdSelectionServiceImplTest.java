@@ -105,12 +105,12 @@ import android.os.LimitExceededException;
 import android.os.Process;
 import android.os.RemoteException;
 
-import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
@@ -340,7 +340,6 @@ public class AdSelectionServiceImplTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(JSScriptEngine.class)
-                        .spyStatic(JavaScriptSandbox.class)
                         .mockStatic(ConsentManager.class)
                         .mockStatic(FlagsFactory.class)
                         .mockStatic(MeasurementImpl.class)
@@ -447,7 +446,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessWithRegisterAdBeaconDisabled() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         // Re init flags with registerAdBeaconDisabled
         boolean enrollmentCheckDisabled = false;
         mFlags =
@@ -575,7 +574,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessCallbackThrowsErrorAuctionServerEnabled()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -703,7 +702,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionFailureCallbackThrowsErrorAuctionServerEnabled()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -824,7 +823,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessCallbackThrowsErrorAuctionServerDisabled()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -952,7 +951,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionFailureCallbackThrowsErrorAuctionServerDisabled()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -1072,7 +1071,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessfullyReportsAdCost() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1203,7 +1202,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessfullyReportsDataVersionHeader() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1347,7 +1346,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessfullyReportsSellerDataVersionHeader() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1478,7 +1477,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1598,7 +1597,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerDisabled()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -1741,7 +1740,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerEnabled()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -1885,7 +1884,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2023,7 +2022,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2161,7 +2160,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
 
         Flags auctionServerReportingDisabledFlags =
@@ -2283,7 +2282,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
 
         Flags auctionServerReportingEnabledFlags =
@@ -2405,7 +2404,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2529,7 +2528,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2651,7 +2650,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessWithEmptyBuyerSignals() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2775,7 +2774,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessAndDoesNotCrashAfterSellerThrowsAnException()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -2901,7 +2900,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessAndDoesNotCrashAfterBuyerReportThrowsAnException()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3026,7 +3025,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessfullyRegistersEventUris() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3196,7 +3195,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithRegisterAdBeaconDisabled() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         // Re init flags with registerAdBeaconDisabled
         boolean enrollmentCheckDisabled = false;
         mFlags =
@@ -3351,7 +3350,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterUrisThatFailDomainValidation()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3520,7 +3519,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSucceedsAndRegistersUrisWithSubdomains() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3694,7 +3693,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterMalformedUris() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -3862,7 +3861,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionOnlyRegisterSellerUrisWhenBuyerJSFails() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4016,7 +4015,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionDoesNotRegisterUrisWhenSellerJSFails() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4162,7 +4161,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionDoesNotRegisterMoreThanMaxInteractionUrisFromPhFlag()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4329,7 +4328,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionSucceedsButDesNotRegisterUrisWithInteractionKeySizeThatExceedsMax()
                     throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4514,7 +4513,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterUrisWithUriSizeThatExceedsMax()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4692,7 +4691,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionWithRevokedUserConsentSuccess() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4807,7 +4806,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenReportResultTakesTooLong() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4919,7 +4918,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenReportWinTakesTooLong() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5031,7 +5030,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenOverallJSTimesOut() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5149,7 +5148,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenJSFetchTakesTooLong() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5262,7 +5261,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithInvalidAdSelectionId() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5370,7 +5369,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionBadSellerJavascriptFailsWithInternalError() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5477,7 +5476,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionBadBuyerJavascriptFailsWithInternalError() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5585,7 +5584,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionUseDevOverrideForSellerJS() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5718,7 +5717,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionUseDevOverrideForSellerJSSuccessfullyRegistersEventUris()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -7001,7 +7000,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionForegroundCheckEnabledFails_throwsException() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -7457,7 +7456,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithInvalidPackageName() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -7574,7 +7573,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenAppCannotUsePPApi() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -7702,7 +7701,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenSellerFailsEnrollmentCheck() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -7826,7 +7825,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         // Reset flags to perform enrollment check
         boolean enrollmentCheckEnabled = true;
@@ -7959,7 +7958,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testAdSelectionConfigInvalidSellerAndSellerUris() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8064,7 +8063,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessThrottledSubsequentCallFailure() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8202,7 +8201,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         // Instantiate a server with different domain from buyer and seller for reporting
         MockWebServer reportingServer = new MockWebServer();
         reportingServer.play();
@@ -8318,7 +8317,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionOnlyReportsBuyerWhenSellerReportingUriDoesNotMatchDomain()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8440,7 +8439,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriDoesNotMatchDomain()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
 
@@ -8562,7 +8561,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessWithValidImpressionReportingSubdomains()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUriWithSubdomain =
                 CommonFixture.getUriWithValidSubdomain(
@@ -8708,7 +8707,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriIsNotEnrolled()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -8842,7 +8841,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionReportsToBothWithEnrollmentCheckDisabledBuyerNotEnrolled()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -8963,147 +8962,6 @@ public class AdSelectionServiceImplTest {
                         eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         anyInt());
-    }
-
-    @Test
-    public void testReportImpression_webViewNotInstalled_failsGracefully() throws Exception {
-        // A null package means WebView is not installed
-        doReturn(false).when(JavaScriptSandbox::isSupported);
-        int jsScriptEngineShutdownTimeoutInSeconds = 1;
-
-        // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-        JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger())
-                .shutdown()
-                .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
-
-        try {
-            Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
-            Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
-
-            Flags flagsWithEnrollment = new AdSelectionServicesTestsFlags(true);
-
-            Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
-
-            String sellerDecisionLogicJs =
-                    "function reportResult(ad_selection_config, render_uri, bid, "
-                            + "contextual_signals) {"
-                            + " \n"
-                            + " return {'status': 0, 'results': {'signals_for_buyer':"
-                            + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                            + sellerReportingUri
-                            + "' } };\n"
-                            + "}";
-
-            String buyerDecisionLogicJs =
-                    "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
-                            + " contextual_signals, custom_audience_signals) { \n"
-                            + " return {'status': 0, 'results': {'reporting_uri': '"
-                            + buyerReportingUri
-                            + "' } };\n"
-                            + "}";
-
-            mMockWebServerRule.startMockWebServer(
-                    new Dispatcher() {
-                        @Override
-                        public MockResponse dispatch(RecordedRequest request) {
-                            switch (request.getPath()) {
-                                case mFetchJavaScriptPathSeller:
-                                    return new MockResponse().setBody(sellerDecisionLogicJs);
-                                default:
-                                    throw new IllegalStateException(
-                                            "Only JavaScript logic fetch can occur");
-                            }
-                        }
-                    });
-
-            DBBuyerDecisionLogic dbBuyerDecisionLogic =
-                    new DBBuyerDecisionLogic.Builder()
-                            .setBiddingLogicUri(biddingLogicUri)
-                            .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
-                            .build();
-
-            DBAdSelection dbAdSelection =
-                    new DBAdSelection.Builder()
-                            .setAdSelectionId(AD_SELECTION_ID)
-                            .setCustomAudienceSignals(mCustomAudienceSignals)
-                            .setBuyerContextualSignals(mContextualSignals.toString())
-                            .setBiddingLogicUri(biddingLogicUri)
-                            .setWinningAdRenderUri(RENDER_URI)
-                            .setWinningAdBid(BID)
-                            .setCreationTimestamp(ACTIVATION_TIME)
-                            .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                            .build();
-
-            mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
-            mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
-
-            AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
-
-            when(mDevContextFilterMock.createDevContext())
-                    .thenReturn(DevContext.createForDevOptionsDisabled());
-
-            // Create new service impl to let the WebView stub take effect
-            AdSelectionServiceImpl adSelectionService =
-                    new AdSelectionServiceImpl(
-                            mAdSelectionEntryDao,
-                            mAppInstallDao,
-                            mCustomAudienceDao,
-                            mEncodedPayloadDao,
-                            mFrequencyCapDao,
-                            mEncryptionKeyDao,
-                            mEnrollmentDao,
-                            mClientSpy,
-                            mDevContextFilterMock,
-                            mLightweightExecutorService,
-                            mBackgroundExecutorService,
-                            mScheduledExecutor,
-                            CONTEXT,
-                            mAdServicesLoggerMock,
-                            flagsWithEnrollment,
-                            CallingAppUidSupplierProcessImpl.create(),
-                            mFledgeAuthorizationFilterMock,
-                            mAdSelectionServiceFilterMock,
-                            mAdFilteringFeatureFactory,
-                            mConsentManagerMock,
-                            mMultiCloudSupportStrategy,
-                            mAdSelectionDebugReportDao,
-                            mAdIdFetcher,
-                            mUnusedKAnonSignJoinFactory,
-                            false,
-                            mRetryStrategyFactory,
-                            mConsentedDebugConfigurationGeneratorFactory,
-                            mEgressConfigurationGenerator,
-                            CONSOLE_MESSAGE_IN_LOGS_ENABLED);
-
-            ReportImpressionInput input =
-                    new ReportImpressionInput.Builder()
-                            .setAdSelectionId(AD_SELECTION_ID)
-                            .setAdSelectionConfig(adSelectionConfig)
-                            .setCallerPackageName(TEST_PACKAGE_NAME)
-                            .build();
-
-            // Count down callback + log interaction.
-            // Impression reporting should still fail due to unsupported WebView,
-            // but gracefully instead of crashing the process
-            ReportImpressionTestCallback callback =
-                    callReportImpression(adSelectionService, input, true);
-            assertWithMessage("Callback success").that(callback.mIsSuccess).isFalse();
-            assertWithMessage("Error status code")
-                    .that(callback.mFledgeErrorResponse.getStatusCode())
-                    .isEqualTo(STATUS_INTERNAL_ERROR);
-
-            verify(mAdServicesLoggerMock)
-                    .logFledgeApiCallStats(
-                            eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                            eq(TEST_PACKAGE_NAME),
-                            eq(STATUS_INTERNAL_ERROR),
-                            anyInt());
-        } finally {
-            // Shut down any running JSScriptEngine to ensure the new singleton gets picked up
-            JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger())
-                    .shutdown()
-                    .get(jsScriptEngineShutdownTimeoutInSeconds, TimeUnit.SECONDS);
-        }
     }
 
     @Test
@@ -10142,7 +10000,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testOverrideAdSelectionConfigRemoteOverridesSuccess() throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -10846,7 +10704,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOff()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         boolean enrollmentCheck = false;
         Flags unifiedFlowReportingDisabled =
@@ -10913,7 +10771,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOn()
             throws Exception {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
 
         boolean enrollmentCheck = false;
         Flags unifiedFlowReportingEnabled =
