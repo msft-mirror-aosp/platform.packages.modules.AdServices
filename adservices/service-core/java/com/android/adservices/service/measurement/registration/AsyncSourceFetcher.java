@@ -549,9 +549,9 @@ public class AsyncSourceFetcher {
                 return false;
             }
             attributionScopes = maybeAttributionScopes.get();
-            builder.setAttributionScopes(attributionScopes);
         }
 
+        // Parses attribution scope limit, can be optional.
         if (json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT)) {
             if (!attributionScopes.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
@@ -569,24 +569,23 @@ public class AsyncSourceFetcher {
             }
             return true;
         }
-        // Parses attribution scope limit, can be optional.
-        long attributionScopeLimit =
-                Long.parseLong(json.optString(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT));
-        if (attributionScopeLimit <= 0 || attributionScopes.size() > attributionScopeLimit) {
-            LoggerFactory.getMeasurementLogger()
-                    .e(
-                            "Attribution scope limit should be positive and not be smaller "
-                                    + "than the number of attribution scopes.");
+        Optional<Long> maybeAttributionScopeLimit =
+                FetcherUtil.extractLong(json, SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT);
+        if (maybeAttributionScopeLimit.isEmpty()) {
             return false;
         }
-        builder.setAttributionScopeLimit(attributionScopeLimit);
+        long attributionScopeLimit = maybeAttributionScopeLimit.get();
 
-        // Parsing max event states, can be optional.
+        // Parses max event states, can be optional, fallback to default max event states.
+        long maxEventStates = Source.DEFAULT_MAX_EVENT_STATES;
         if (!json.isNull(SourceHeaderContract.MAX_EVENT_STATES)) {
-            long maxEventStates =
-                    Long.parseLong(json.optString(SourceHeaderContract.MAX_EVENT_STATES));
-            if (maxEventStates <= 0
-                    || maxEventStates
+            Optional<Long> maybeMaxEventStates =
+                    FetcherUtil.extractLong(json, SourceHeaderContract.MAX_EVENT_STATES);
+            if (maybeMaxEventStates.isEmpty()) {
+                return false;
+            }
+            if (maybeMaxEventStates.get() <= 0
+                    || maybeMaxEventStates.get()
                             > mFlags.getMeasurementMaxReportStatesPerSourceRegistration()) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
@@ -594,8 +593,27 @@ public class AsyncSourceFetcher {
                                         + " report states per source registration.");
                 return false;
             }
-            builder.setMaxEventStates(maxEventStates);
+            maxEventStates = maybeMaxEventStates.get();
         }
+
+        if (attributionScopeLimit <= 0 || attributionScopes.size() > attributionScopeLimit) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            "Attribution scope limit should be positive and not be smaller "
+                                    + "than the number of attribution scopes.");
+            return false;
+        }
+        if (attributionScopes.isEmpty()) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            "Attribution scopes should not be empty if attribution scope limit is"
+                                    + " set.");
+            return false;
+        }
+
+        builder.setAttributionScopeLimit(attributionScopeLimit);
+        builder.setAttributionScopes(attributionScopes);
+        builder.setMaxEventStates(maxEventStates);
         return true;
     }
 
