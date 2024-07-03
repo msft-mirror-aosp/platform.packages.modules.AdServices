@@ -1,7 +1,7 @@
 {
   "description": "One source followed by three triggers and no competition",
   "phflags_override": {
-    "measurement_flexible_event_reporting_api_enabled": "true"
+    "measurement_enable_v1_source_trigger_data": "true"
   },
   "input": {
     "sources": [

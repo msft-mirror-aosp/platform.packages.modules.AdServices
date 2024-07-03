@@ -18,7 +18,7 @@ package com.android.adservices.service.measurement.actions;
 
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.E2ETest.TestFormatJsonMapping;
+import com.android.adservices.service.measurement.E2EAbstractTest.TestFormatJsonMapping;
 
 import org.json.JSONException;
 import org.json.JSONObject;

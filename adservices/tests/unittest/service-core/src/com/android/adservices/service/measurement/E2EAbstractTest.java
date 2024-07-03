@@ -88,7 +88,7 @@ import java.util.function.Function;
  *
  * <p>Consider @RunWith(Parameterized.class)
  */
-public abstract class E2ETest extends AdServicesUnitTestCase {
+public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
     // Used to fuzzy-match expected report (not delivery) time
     private static final String LOG_TAG = "ADSERVICES_MSMT_E2E_TEST";
 
@@ -98,6 +98,8 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
     private final Map<String, String> mPhFlagsMap;
     // Extenders of the class populate in their own ways this container for actual output.
     final ReportObjects mActualOutput;
+
+    static Set<String> sTestsToSkip = new HashSet<>();
 
     public static final long AGGREGATE_REPORT_DELAY = TimeUnit.HOURS.toMillis(1);
 
@@ -202,6 +204,9 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         String DEBUG_KEY = "debug_key";
         String DEBUG_PERMISSION_KEY = "debug_permission";
         String DEBUG_REPORTING_KEY = "debug_reporting";
+        String RANDOMIZED_RESPONSE_KEY = "randomized_response";
+        String RANDOMIZED_RESPONSE_TRIGGER_DATA_KEY = "trigger_data";
+        String RANDOMIZED_RESPONSE_REPORT_WINDOW_INDEX_KEY = "report_window_index";
         String INPUT_EVENT_KEY = "source_type";
         String SOURCE_VIEW_TYPE = "event";
         String INTEROP_INPUT_EVENT_KEY = "Attribution-Reporting-Eligible";
@@ -267,13 +272,16 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         List<String> testFileList = new ArrayList<>();
         while (dirPathList.size() > 0) {
             testDirName = dirPathList.remove(0);
-            String[] testAssets = assetManager.list(testDirName);
-            for (String testAsset : testAssets) {
-                if (isDirectory(testDirName + "/" + testAsset)) {
-                    dirPathList.add(testDirName + "/" + testAsset);
+            String[] testNames = assetManager.list(testDirName);
+            for (String testName : testNames) {
+                if (sTestsToSkip.contains(testName)) {
+                    continue;
+                }
+                if (isDirectory(testDirName + "/" + testName)) {
+                    dirPathList.add(testDirName + "/" + testName);
                 } else {
-                    inputStreams.add(assetManager.open(testDirName + "/" + testAsset));
-                    testFileList.add(testAsset);
+                    inputStreams.add(assetManager.open(testDirName + "/" + testName));
+                    testFileList.add(testName);
                 }
             }
         }
@@ -301,6 +309,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                 .getString(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_URL_KEY);
     }
 
+    /** Does the registration have AR debug permission */
     public static boolean hasArDebugPermission(JSONObject obj) throws JSONException {
         JSONObject urlToResponse =
                 obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
@@ -308,6 +317,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         return urlToResponse.optBoolean(TestFormatJsonMapping.DEBUG_PERMISSION_KEY, false);
     }
 
+    /** Does the registration have Ad ID debug permission */
     public static boolean hasAdIdPermission(JSONObject obj) throws JSONException {
         JSONObject urlToResponse =
                 obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
@@ -315,6 +325,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         return urlToResponse.optBoolean(TestFormatJsonMapping.HAS_AD_ID_PERMISSION, false);
     }
 
+    /** Does the source registration have debug reporting permission */
     public static boolean hasSourceDebugReportingPermission(JSONObject obj) throws JSONException {
         JSONObject headersMapJson =
                 obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
@@ -332,6 +343,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                 TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
     }
 
+    /** Does the trigger registration have debug reporting permission */
     public static boolean hasTriggerDebugReportingPermission(JSONObject obj) throws JSONException {
         JSONObject headersMapJson =
                 obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
@@ -349,6 +361,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                 TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
     }
 
+    /** Map of URI to registration headers */
     public static Map<String, List<Map<String, List<String>>>> getUriToResponseHeadersMap(
             JSONObject obj) throws JSONException {
         JSONArray uriToResArray = obj.getJSONArray(
@@ -390,19 +403,47 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         return uriToResponseHeadersMap;
     }
 
-    public static Map<String, UriConfig> getUriConfigMap(JSONObject obj) throws JSONException {
+    /** Get fake report configs for the source */
+    public static List<int[]> getFakeReportConfigs(JSONObject obj) throws JSONException {
+        if (obj.isNull(TestFormatJsonMapping.RANDOMIZED_RESPONSE_KEY)) {
+            return null;
+        }
+
+        List<int[]> fakeReportConfigs = new ArrayList<>();
+
+        JSONArray randomisedResponseArray =
+                obj.getJSONArray(TestFormatJsonMapping.RANDOMIZED_RESPONSE_KEY);
+
+        for (int i = 0; i < randomisedResponseArray.length(); i++) {
+            JSONObject randomisedResponseObj = randomisedResponseArray.getJSONObject(i);
+            int destinationTypeIndex = 1; // Web destination for interop noising tests
+            int triggerData = randomisedResponseObj.getInt(
+                    TestFormatJsonMapping.RANDOMIZED_RESPONSE_TRIGGER_DATA_KEY);
+            int reportingWindowIndex = randomisedResponseObj.getInt(
+                    TestFormatJsonMapping.RANDOMIZED_RESPONSE_REPORT_WINDOW_INDEX_KEY);
+            fakeReportConfigs.add(
+                    new int[] {triggerData, reportingWindowIndex, destinationTypeIndex});
+        }
+
+        return fakeReportConfigs;
+    }
+
+    /** Get configuration object for the registration */
+    public static Map<String, List<UriConfig>> getUriConfigsMap(JSONObject obj)
+            throws JSONException {
         JSONArray uriToResArray =
                 obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY);
-        Map<String, UriConfig> uriConfigMap = new HashMap<>();
+        Map<String, List<UriConfig>> uriConfigsMap = new HashMap<>();
 
         for (int i = 0; i < uriToResArray.length(); i++) {
             JSONObject urlToResponse = uriToResArray.getJSONObject(i);
             String uri =
                     urlToResponse.getString(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_URL_KEY);
-            uriConfigMap.put(uri, new UriConfig(urlToResponse));
+            uriConfigsMap.computeIfAbsent(
+                    uri, k -> new ArrayList<>()).add(new UriConfig(urlToResponse));
         }
 
-        return uriConfigMap;
+        return uriConfigsMap;
     }
 
     public static InputEvent getInputEvent() {
@@ -450,7 +491,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
 
     // The 'name' parameter is needed for the JUnit parameterized test, although it's ostensibly
     // unused by this constructor.
-    E2ETest(
+    E2EAbstractTest(
             Collection<Action> actions,
             ReportObjects expectedOutput,
             String name,
@@ -491,6 +532,7 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         clearDatabase();
     }
 
+    /** Utility method to log */
     public void log(String message) {
         Log.i(LOG_TAG, String.format("%s: %s", mName, message));
     }
@@ -787,15 +829,15 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
         eventReportObjects.sort(
                 // Report time can vary across implementations so cannot be included in the hash;
                 // they should be similarly ordered, however, so we can use them to sort.
-                Comparator.comparing(E2ETest::reportTimeFrom)
+                Comparator.comparing(E2EAbstractTest::reportTimeFrom)
                         .thenComparing(obj -> hashForEventReportObject(outputType, obj)));
     }
 
     private static void sortAggregateReportObjects(OutputType outputType,
             List<JSONObject> aggregateReportObjects) {
         aggregateReportObjects.sort(
-                Comparator.comparing(E2ETest::reportTimeFrom)
-                        .thenComparing(E2ETest::sourceRegistrationTimeFrom)
+                Comparator.comparing(E2EAbstractTest::reportTimeFrom)
+                        .thenComparing(E2EAbstractTest::sourceRegistrationTimeFrom)
                         .thenComparing(obj -> aggregateReportToFrom(outputType, obj)));
     }
 
@@ -1183,11 +1225,11 @@ public abstract class E2ETest extends AdServicesUnitTestCase {
                 // Interop test configuration uses a single key for both event and aggregate
                 // level attribution limits.
                 if (key.equals("rate_limit_max_attributions")) {
-                    phFlagsMap.put(
-                            FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                    phFlagsMap.put(FlagsConstants
+                            .KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
                             apiConfigObj.optString(key));
-                    phFlagsMap.put(
-                            FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                    phFlagsMap.put(FlagsConstants
+                            .KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
                             apiConfigObj.optString(key));
                 } else {
                     phFlagsMap.put(apiConfigPhFlags.get(key),
