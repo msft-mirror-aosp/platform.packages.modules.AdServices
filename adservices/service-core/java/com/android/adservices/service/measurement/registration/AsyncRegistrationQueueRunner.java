@@ -489,7 +489,7 @@ public class AsyncRegistrationQueueRunner {
         }
         try {
             if (!source.validateAndSetNumReportStates(flags)
-                    || !source.validateAndSetMaxEventStates(flags)
+                    || !source.validateMaxEventStates(flags)
                     || !source.hasValidInformationGain(flags)) {
                 debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
                 return InsertSourcePermission.NOT_ALLOWED;
