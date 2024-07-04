@@ -1740,7 +1740,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao ->
                         assertEquals(
-                                Integer.valueOf(3),
+                                Integer.valueOf(4),
                                 measurementDao
                                         .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                                 publisher,
@@ -11819,16 +11819,23 @@ public class MeasurementDaoTest {
                         .setPublisher(APP_ONE_PUBLISHER)
                         .setPublisherType(EventSurfaceType.APP)
                         .build());
-        for (Source source : sourcesList) {
-            ContentValues values = new ContentValues();
-            values.put("_id", source.getId());
-            values.put("registrant", source.getRegistrant().toString());
-            values.put("publisher", source.getPublisher().toString());
-            values.put("publisher_type", source.getPublisherType());
-
-            long row = db.insert("msmt_source", null, values);
-            assertNotEquals("Source insertion failed", -1, row);
-        }
+        sourcesList.add(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S4")
+                        .setRegistrant(APP_ONE_SOURCE)
+                        .setPublisher(APP_ONE_PUBLISHER)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .setStatus(Source.Status.MARKED_TO_DELETE)
+                        .build());
+        sourcesList.add(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S5")
+                        .setRegistrant(APP_TWO_SOURCES)
+                        .setPublisher(APP_TWO_PUBLISHER)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .setStatus(Source.Status.MARKED_TO_DELETE)
+                        .build());
+        sourcesList.forEach(source -> insertSource(source, source.getId()));
         List<Trigger> triggersList = new ArrayList<>();
         triggersList.add(
                 TriggerFixture.getValidTriggerBuilder()
@@ -11918,7 +11925,6 @@ public class MeasurementDaoTest {
     }
 
     private void setupSourceDataForPublisherTypeWeb() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Source> sourcesList = new ArrayList<>();
         sourcesList.add(
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -11940,19 +11946,18 @@ public class MeasurementDaoTest {
                         .build());
         sourcesList.add(
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("W23")
+                        .setPublisher(WEB_PUBLISHER_TWO)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setStatus(Source.Status.MARKED_TO_DELETE)
+                        .build());
+        sourcesList.add(
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("S3")
                         .setPublisher(WEB_PUBLISHER_THREE)
                         .setPublisherType(EventSurfaceType.WEB)
                         .build());
-        for (Source source : sourcesList) {
-            ContentValues values = new ContentValues();
-            values.put("_id", source.getId());
-            values.put("publisher", source.getPublisher().toString());
-            values.put("publisher_type", source.getPublisherType());
-
-            long row = db.insert("msmt_source", null, values);
-            assertNotEquals("Source insertion failed", -1, row);
-        }
+        sourcesList.forEach(source -> insertSource(source, source.getId()));
     }
 
     private Source.Builder createSourceForIATest(

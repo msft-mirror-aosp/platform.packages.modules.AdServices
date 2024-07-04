@@ -51,7 +51,38 @@ android_test {
         "general-tests",
         "mcts-adservices",
     ],
-    test_options: {
-        extra_test_configs: ["AndroidTest_MultiUser.xml"],
-    },
+}
+
+android_test {
+    name: "SdkSandboxMultiUserInprocessTests",
+
+    target_sdk_version: "Tiramisu",
+    min_sdk_version: "Tiramisu",
+
+    test_config: "AndroidTest_MultiUser.xml",
+    srcs: [
+        "src/**/*.java",
+    ],
+
+    libs: [
+        "android.test.base",
+        "android.test.runner",
+        "framework-adservices.impl",
+    ],
+    static_libs: [
+        "androidx.core_core",
+        "androidx.test.rules",
+        "androidx.test.ext.truth",
+        "androidx.test.ext.junit",
+        "truth",
+        "modules-utils-build",
+        "SdkSandboxTestUtils",
+    ],
+    data: [
+        ":SocketApp",
+        ":SocketSdkProvider",
+    ],
+    test_suites: [
+        "general-tests",
+    ],
 }

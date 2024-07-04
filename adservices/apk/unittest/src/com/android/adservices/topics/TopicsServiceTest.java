@@ -26,7 +26,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.spy;
@@ -111,10 +110,7 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
 
         doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance());
         doReturn(mMockAppImportanceFilter)
-                .when(
-                        () ->
-                                AppImportanceFilter.create(
-                                        any(Context.class), anyInt(), any(Supplier.class)));
+                .when(() -> AppImportanceFilter.create(any(Context.class), any(Supplier.class)));
 
         spyTopicsService.onCreate();
         IBinder binder = spyTopicsService.onBind(getIntentForTopicsService());
@@ -173,10 +169,7 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
 
         doReturn(mMockEnrollmentDao).when(() -> EnrollmentDao.getInstance());
         doReturn(mMockAppImportanceFilter)
-                .when(
-                        () ->
-                                AppImportanceFilter.create(
-                                        any(Context.class), anyInt(), any(Supplier.class)));
+                .when(() -> AppImportanceFilter.create(any(Context.class), any(Supplier.class)));
 
         spyTopicsService.onCreate();
         IBinder binder = spyTopicsService.onBind(getIntentForTopicsService());

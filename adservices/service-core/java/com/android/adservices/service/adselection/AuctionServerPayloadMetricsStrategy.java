@@ -32,6 +32,24 @@ public interface AuctionServerPayloadMetricsStrategy {
     /** Sets the number of buyers to the {@link GetAdSelectionDataApiCalledStats#builder()} */
     void setNumBuyers(GetAdSelectionDataApiCalledStats.Builder builder, int numBuyers);
 
+    /** Sets the seller configuration metrics. */
+    void setSellerConfigurationMetrics(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            GetAdSelectionDataApiCalledStats.PayloadOptimizationResult payloadOptimizationResult,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion,
+            int numReEstimations);
+
+    /** Sets the seller's requested payload max size in kb. */
+    void setSellerMaxPayloadSizeKb(
+            GetAdSelectionDataApiCalledStats.Builder builder, int sellerMaxPayloadSizeKb);
+
+    /** Sets the input generation latency and compressed buyer input creator version. */
+    void setInputGenerationLatencyMsAndBuyerCreatorVersion(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion);
+
     /** Sets the number of buyers to the {@link GetAdSelectionDataApiCalledStats#builder()} */
     void setServerAuctionCoordinatorSource(
             GetAdSelectionDataApiCalledStats.Builder builder,

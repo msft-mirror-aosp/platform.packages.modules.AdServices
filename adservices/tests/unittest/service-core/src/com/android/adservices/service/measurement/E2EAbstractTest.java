@@ -21,6 +21,8 @@ import static android.view.MotionEvent.obtain;
 
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.measurement.reporting.AggregateReportSender.AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.AggregateReportSender.DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.DebugReportSender.DEBUG_REPORT_URI_PATH;
@@ -42,7 +44,6 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.DbTestUtil;
-import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
@@ -1220,23 +1221,12 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
             // with Ph Flags.
             Map<String, String> apiConfigPhFlags) {
         Map<String, String> phFlagsMap = new HashMap<>();
-        apiConfigPhFlags.keySet().forEach((key) -> {
-            if (!apiConfigObj.isNull(key)) {
-                // Interop test configuration uses a single key for both event and aggregate
-                // level attribution limits.
-                if (key.equals("rate_limit_max_attributions")) {
-                    phFlagsMap.put(FlagsConstants
-                            .KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
-                            apiConfigObj.optString(key));
-                    phFlagsMap.put(FlagsConstants
-                            .KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
-                            apiConfigObj.optString(key));
-                } else {
-                    phFlagsMap.put(apiConfigPhFlags.get(key),
-                            apiConfigObj.optString(key));
-                }
-            }
-        });
+        apiConfigPhFlags
+                .keySet()
+                .forEach(
+                        key ->
+                                insertPhFlagEquivalentOverrides(
+                                        apiConfigObj, apiConfigPhFlags, phFlagsMap, key));
         if (testObj.isNull(TestFormatJsonMapping.PH_FLAGS_OVERRIDE_KEY)) {
             return phFlagsMap;
         }
@@ -1247,10 +1237,35 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
         return phFlagsMap;
     }
 
+    private static void insertPhFlagEquivalentOverrides(
+            JSONObject apiConfigObj,
+            Map<String, String> apiConfigPhFlags,
+            Map<String, String> phFlagsMap,
+            String key) {
+        if (!apiConfigObj.isNull(key)) {
+            // Interop test configuration uses a single key for both event and
+            // aggregate level attribution limits.
+            if (key.equals("rate_limit_max_attributions")) {
+                phFlagsMap.put(
+                        KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                        apiConfigObj.optString(key));
+                phFlagsMap.put(
+                        KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                        apiConfigObj.optString(key));
+            } else {
+                phFlagsMap.put(apiConfigPhFlags.get(key), apiConfigObj.optString(key));
+            }
+        }
+    }
+
     private static boolean isSourceRegistration(JSONObject obj) throws JSONException {
         JSONObject request = obj.getJSONObject(TestFormatJsonMapping.REGISTRATION_REQUEST_KEY);
         return !request.isNull(TestFormatJsonMapping.INPUT_EVENT_KEY)
-                || !request.isNull(TestFormatJsonMapping.INTEROP_INPUT_EVENT_KEY);
+                || (!request.isNull(TestFormatJsonMapping.INTEROP_INPUT_EVENT_KEY)
+                        && !"trigger"
+                                .equalsIgnoreCase(
+                                        request.getString(
+                                                TestFormatJsonMapping.INTEROP_INPUT_EVENT_KEY)));
     }
 
     private static void addSourceRegistration(JSONObject sourceObj, List<Action> actions,

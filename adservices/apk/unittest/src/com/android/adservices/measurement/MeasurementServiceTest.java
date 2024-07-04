@@ -19,7 +19,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -210,7 +209,7 @@ public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestC
                 .when(() -> MeasurementImpl.getInstance(any()));
 
         ExtendedMockito.doReturn(mMockAppImportanceFilter)
-                .when(() -> AppImportanceFilter.create(any(), anyInt(), any()));
+                .when(() -> AppImportanceFilter.create(any(), any()));
 
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));

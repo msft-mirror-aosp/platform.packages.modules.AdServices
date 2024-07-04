@@ -25,6 +25,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -167,5 +168,29 @@ public class CompressedBuyerInputCreatorHelper {
             mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataBuyerInputGeneratedStats(
                     perBuyerStats);
         }
+    }
+
+    /** Adds seller configuration stats to {@code GetAdSelectionDataApiCalledStats} */
+    public void addSellerConfigurationStats(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            GetAdSelectionDataApiCalledStats.PayloadOptimizationResult payloadOptimizationResult,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion,
+            int numReEstimations) {
+        mAuctionServerPayloadMetricsStrategy.setSellerConfigurationMetrics(
+                builder,
+                payloadOptimizationResult,
+                inputGenerationLatencyMs,
+                compressedBuyerInputCreatorVersion,
+                numReEstimations);
+    }
+
+    /** Adds buyer input latency stats to {@code GetAdSelectionDataApiCalledStats} */
+    public void addBuyerInputLatencyAndCompressedBuyerInputCreatorVersionToStats(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion) {
+        mAuctionServerPayloadMetricsStrategy.setInputGenerationLatencyMsAndBuyerCreatorVersion(
+                builder, inputGenerationLatencyMs, compressedBuyerInputCreatorVersion);
     }
 }

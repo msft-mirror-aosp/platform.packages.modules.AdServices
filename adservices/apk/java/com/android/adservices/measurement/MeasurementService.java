@@ -15,8 +15,6 @@
  */
 package com.android.adservices.measurement;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT;
-
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
@@ -70,7 +68,6 @@ public class MeasurementService extends Service {
             final AppImportanceFilter appImportanceFilter =
                     AppImportanceFilter.create(
                             this,
-                            AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT,
                             () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
 
             mMeasurementService =

@@ -21,7 +21,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -315,7 +314,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         FlagsFactory.getFlags(),
                         AppImportanceFilter.create(
                                 context,
-                                AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getForegroundStatuslLevelForValidation()),
@@ -712,11 +710,20 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     private AuctionServerPayloadMetricsStrategy getAuctionServerPayloadMetricsStrategy(
             Flags flags) {
         if (flags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled()) {
+            SellerConfigurationMetricsStrategy sellerConfigurationMetricsStrategy;
+            if (flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled()) {
+                sellerConfigurationMetricsStrategy =
+                        new SellerConfigurationMetricsStrategyEnabled();
+            } else {
+                sellerConfigurationMetricsStrategy =
+                        new SellerConfigurationMetricsStrategyDisabled();
+            }
             if (flags.getFledgeAuctionServerKeyFetchMetricsEnabled()) {
                 return new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
-                        mAdServicesLogger);
+                        mAdServicesLogger, sellerConfigurationMetricsStrategy);
             }
-            return new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLogger);
+            return new AuctionServerPayloadMetricsStrategyEnabled(
+                    mAdServicesLogger, sellerConfigurationMetricsStrategy);
         }
         return new AuctionServerPayloadMetricsStrategyDisabled();
     }
@@ -1168,7 +1175,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
-                                AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getForegroundStatuslLevelForValidation()),
@@ -1246,7 +1252,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
-                                AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getForegroundStatuslLevelForValidation()),
@@ -1300,7 +1305,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
-                                AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getForegroundStatuslLevelForValidation()),
@@ -1358,7 +1362,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
-                                AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getForegroundStatuslLevelForValidation()),
@@ -1413,7 +1416,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
-                                AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getForegroundStatuslLevelForValidation()),
@@ -1466,7 +1468,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         AppImportanceFilter.create(
                                 mContext,
-                                AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getForegroundStatuslLevelForValidation()),

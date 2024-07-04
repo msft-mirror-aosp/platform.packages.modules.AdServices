@@ -214,7 +214,8 @@ public class GetAdSelectionDataRunner {
                         mEncodedPayloadDao,
                         mFlags.getFledgeGetAdSelectionDataBuyerInputCreatorVersion(),
                         mFlags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
-                        mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes());
+                        mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
+                        mClock);
 
         mBuyerInputGeneratorArgumentsPreparer =
                 compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();
@@ -322,7 +323,8 @@ public class GetAdSelectionDataRunner {
                         mEncodedPayloadDao,
                         mFlags.getFledgeGetAdSelectionDataBuyerInputCreatorVersion(),
                         mFlags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
-                        mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes());
+                        mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
+                        mClock);
 
         mBuyerInputGeneratorArgumentsPreparer =
                 compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();
@@ -361,15 +363,27 @@ public class GetAdSelectionDataRunner {
 
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
         long adSelectionId = mAdSelectionIdGenerator.generateId();
-        mAuctionServerPayloadMetricsStrategy.setServerAuctionCoordinatorSource(
-                apiCalledStatsBuilder,
-                getServerAuctionCoordinatorSourceFromUri(inputParams.getCoordinatorOriginUri()));
 
         try {
             ListenableFuture<Void> filteredRequest =
                     Futures.submit(
                             () -> {
                                 try {
+                                    mAuctionServerPayloadMetricsStrategy
+                                            .setServerAuctionCoordinatorSource(
+                                                    apiCalledStatsBuilder,
+                                                    getServerAuctionCoordinatorSourceFromUri(
+                                                            inputParams.getCoordinatorOriginUri()));
+
+                                    if (Objects.nonNull(inputParams.getSellerConfiguration())) {
+                                        mAuctionServerPayloadMetricsStrategy
+                                                .setSellerMaxPayloadSizeKb(
+                                                        apiCalledStatsBuilder,
+                                                        inputParams
+                                                                        .getSellerConfiguration()
+                                                                        .getMaximumPayloadSizeBytes()
+                                                                / 1024);
+                                    }
                                     sLogger.v("Starting filtering for GetAdSelectionData API.");
                                     mAdSelectionServiceFilter.filterRequest(
                                             inputParams.getSeller(),
@@ -462,6 +476,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(packageName);
 
         int traceCookie = Tracing.beginAsyncSection(Tracing.ORCHESTRATE_GET_AD_SELECTION_DATA);
+
         long keyFetchTimeout = mFlags.getFledgeAuctionServerAuctionKeyFetchTimeoutMs();
         final AuctionServerPayloadInfo.Builder auctionServerPayloadInfoBuilder =
                 AuctionServerPayloadInfo.builder()
@@ -483,7 +498,8 @@ public class GetAdSelectionDataRunner {
                                                                 auctionServerPayloadInfoBuilder2
                                                                         .setCompressedBuyerInput(
                                                                                 ImmutableMap.of())
-                                                                        .build()))),
+                                                                        .build())),
+                                        apiCalledStatsBuilder),
                         mLightweightExecutorService)
                 .transform(
                         auctionServerPayloadInfoBuilder3 ->
@@ -524,9 +540,10 @@ public class GetAdSelectionDataRunner {
 
     private FluentFuture<AuctionServerPayloadInfo.Builder> setCompressedBuyerInputs(
             AuctionServerPayloadInfo.Builder auctionServerPayloadInfoBuilder,
-            PayloadOptimizationContext payloadOptimizationContext) {
+            PayloadOptimizationContext payloadOptimizationContext,
+            GetAdSelectionDataApiCalledStats.Builder apiCalledStatsBuilder) {
         return mBuyerInputGenerator
-                .createCompressedBuyerInputs(payloadOptimizationContext)
+                .createCompressedBuyerInputs(payloadOptimizationContext, apiCalledStatsBuilder)
                 .transform(
                         compressedBuyerInput ->
                                 auctionServerPayloadInfoBuilder.setCompressedBuyerInput(
@@ -700,7 +717,7 @@ public class GetAdSelectionDataRunner {
                 mAdsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
             }
             mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataApiCalledStats(
-                    apiCalledStatsBuilder, result.length / 1000, resultCode);
+                    apiCalledStatsBuilder, result.length / 1024, resultCode);
         }
     }
 

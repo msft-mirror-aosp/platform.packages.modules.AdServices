@@ -26,6 +26,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
@@ -94,7 +95,8 @@ public class BuyerInputGenerator {
      */
     public FluentFuture<Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>>
             createCompressedBuyerInputs(
-                    @NonNull PayloadOptimizationContext payloadOptimizationContext) {
+                    @NonNull PayloadOptimizationContext payloadOptimizationContext,
+                    @NonNull GetAdSelectionDataApiCalledStats.Builder statsBuilder) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.CREATE_BUYER_INPUTS);
         sLogger.v("Starting create buyer input");
 
@@ -131,7 +133,8 @@ public class BuyerInputGenerator {
                                             generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
                                                     combined.first,
                                                     combined.second,
-                                                    payloadOptimizationContext);
+                                                    payloadOptimizationContext,
+                                                    statsBuilder);
                             Tracing.endAsyncSection(Tracing.CREATE_BUYER_INPUTS, traceCookie);
                             return buyerInputFromCustomAudience;
                         },
@@ -142,7 +145,8 @@ public class BuyerInputGenerator {
             generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
                     @NonNull final List<DBCustomAudience> dbCustomAudiences,
                     @NonNull final Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap,
-                    @NonNull PayloadOptimizationContext payloadOptimizationContext) {
+                    @NonNull PayloadOptimizationContext payloadOptimizationContext,
+                    @NonNull GetAdSelectionDataApiCalledStats.Builder statsBuilder) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS);
 
         int maxPayloadSizeBytes = 0;
@@ -152,7 +156,7 @@ public class BuyerInputGenerator {
 
         CompressedBuyerInputCreator compressedBuyerInputCreator =
                 mCompressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
-                        maxPayloadSizeBytes);
+                        maxPayloadSizeBytes, statsBuilder);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedInputs =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(

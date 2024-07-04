@@ -28,6 +28,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
+import static org.mockito.Mockito.when;
+
 import android.adservices.common.AdTechIdentifier;
 import android.util.Pair;
 
@@ -37,6 +39,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncodedPayloadFixture;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,6 +49,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +66,10 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
     private static final int MAX_SELLER_BYTES = 20 * 1024; // 20KB
     private static final boolean OMIT_ADS_DISABLED = false;
     private static final boolean PAS_METRICS_DISABLED = false;
+    @Mock private Clock mClockMock;
+    @Mock private GetAdSelectionDataApiCalledStats.Builder mStatsBuilderMock;
+    private static final int LATENCY_MS = 100;
+    private static final int NO_RECALCULATIONS = 0;
 
     @Before
     public void setup() throws Exception {
@@ -75,16 +83,22 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
                         PAS_METRICS_DISABLED,
                         OMIT_ADS_DISABLED);
 
+        // Make latency difference 100
+        when(mClockMock.millis()).thenReturn(0L).thenReturn(100L);
+
         mCompressedBuyerInputCreator =
                 new CompressedBuyerInputCreatorSellerPayloadMaxImpl(
                         mCompressedBuyerInputCreatorHelper,
                         mAuctionServerDataCompressor,
                         NUM_RECALCULATIONS,
                         MAX_SELLER_BYTES,
-                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES);
+                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES,
+                        mClockMock,
+                        mStatsBuilderMock);
     }
 
     @Test
+    @SuppressWarnings("ReturnValueIgnored")
     public void generateCompressedBuyerInputFromDBCAsAndEncodedSignalsReturnsCompressedInputs()
             throws Exception {
         Map<String, AdTechIdentifier> nameAndBuyersMap =
@@ -140,9 +154,19 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
                 .addToBuyerIntermediateStats(any(), any(), any());
         verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setSellerConfigurationMetrics(
+                        mStatsBuilderMock,
+                        GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                                .PAYLOAD_WITHIN_REQUESTED_MAX,
+                        LATENCY_MS,
+                        CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION,
+                        NO_RECALCULATIONS);
+        verify(mClockMock, times(2)).millis();
     }
 
     @Test
+    @SuppressWarnings("ReturnValueIgnored")
     public void
             generateCompressedBuyerInputFromDBCAsAndEncodedSignalsReturnsCompressedInputs_OnlyPAS()
                     throws Exception {
@@ -175,9 +199,19 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
                 .addToBuyerIntermediateStats(any(), any(), any());
         verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setSellerConfigurationMetrics(
+                        mStatsBuilderMock,
+                        GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                                .PAYLOAD_WITHIN_REQUESTED_MAX,
+                        LATENCY_MS,
+                        CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION,
+                        NO_RECALCULATIONS);
+        verify(mClockMock, times(2)).millis();
     }
 
     @Test
+    @SuppressWarnings("ReturnValueIgnored")
     public void
             generateCompressedBuyerInputFromDBCAsAndEncodedSignalsReturnsCompressedInputs_OnlyPA()
                     throws Exception {
@@ -227,9 +261,19 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
                 .addToBuyerIntermediateStats(any(), any(), any());
         verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setSellerConfigurationMetrics(
+                        mStatsBuilderMock,
+                        GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                                .PAYLOAD_WITHIN_REQUESTED_MAX,
+                        LATENCY_MS,
+                        CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION,
+                        NO_RECALCULATIONS);
+        verify(mClockMock, times(2)).millis();
     }
 
     @Test
+    @SuppressWarnings("ReturnValueIgnored")
     public void
             generateCompressedBuyerInputFromDBCAsAndEncodedSignalsReturnsCompressedInputs_NotEnoughSpaceForPAS()
                     throws Exception {
@@ -242,7 +286,9 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
                         mAuctionServerDataCompressor,
                         NUM_RECALCULATIONS,
                         PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES,
-                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES);
+                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES,
+                        mClockMock,
+                        mStatsBuilderMock);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -293,9 +339,19 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
                 .addToBuyerIntermediateStats(any(), any(), any());
         verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setSellerConfigurationMetrics(
+                        mStatsBuilderMock,
+                        GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                                .PAYLOAD_WITHIN_REQUESTED_MAX,
+                        LATENCY_MS,
+                        CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION,
+                        NO_RECALCULATIONS);
+        verify(mClockMock, times(2)).millis();
     }
 
     @Test
+    @SuppressWarnings("ReturnValueIgnored")
     public void generateCompressedBuyerInputFromDBCAsAndEncodedSignalsRespectsMaxSize()
             throws Exception {
 
@@ -307,7 +363,9 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
                         mAuctionServerDataCompressor,
                         NUM_RECALCULATIONS,
                         smallerMaxSize,
-                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES);
+                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES,
+                        mClockMock,
+                        mStatsBuilderMock);
 
         List<AdTechIdentifier> buyersList = ImmutableList.of(BUYER_1, BUYER_2);
 
@@ -345,9 +403,19 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
                 .addToBuyerIntermediateStats(any(), any(), any());
         verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setSellerConfigurationMetrics(
+                        mStatsBuilderMock,
+                        GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                                .PAYLOAD_TRUNCATED_FOR_REQUESTED_MAX,
+                        LATENCY_MS,
+                        CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION,
+                        NUM_RECALCULATIONS);
+        verify(mClockMock, times(2)).millis();
     }
 
     @Test
+    @SuppressWarnings("ReturnValueIgnored")
     public void
             generateCompressedBuyerInputFromDBCAsAndEncodedSignalsReturnsEmptyPayloadWithZeroMaxSize()
                     throws Exception {
@@ -359,7 +427,9 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
                         mAuctionServerDataCompressor,
                         NUM_RECALCULATIONS,
                         zeroMaxSize,
-                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES);
+                        PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES,
+                        mClockMock,
+                        mStatsBuilderMock);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -388,6 +458,15 @@ public class CompressedBuyerInputCreatorSellerMaxImplTest
 
         verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setSellerConfigurationMetrics(
+                        mStatsBuilderMock,
+                        GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                                .PAYLOAD_WITHIN_REQUESTED_MAX,
+                        LATENCY_MS,
+                        CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION,
+                        NO_RECALCULATIONS);
+        verify(mClockMock, times(2)).millis();
     }
 
     private int getTotalSize(

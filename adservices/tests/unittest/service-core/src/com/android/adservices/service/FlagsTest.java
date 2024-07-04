@@ -36,6 +36,10 @@ import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
+import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
+import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
+import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
@@ -468,6 +472,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableDestinationPerDayRateLimitWindow() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW",
+                Flags::getMeasurementEnableDestinationPerDayRateLimitWindow);
+    }
+
+    @Test
     public void testGetMeasurementEnableSourceDestinationLimitAlgorithmField() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD",
@@ -627,8 +638,32 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     public void testGetMeasurementDefaultDestinationLimitAlgorithm() {
         testFlag(
                 "getMeasurementDefaultSourceDestinationLimitAlgorithm()",
-                0,
+                MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM,
                 Flags::getMeasurementDefaultSourceDestinationLimitAlgorithm);
+    }
+
+    @Test
+    public void testGetMeasurementDestinationRateLimitWindow() {
+        testFlag(
+                "getMeasurementDestinationRateLimitWindow()",
+                MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW,
+                Flags::getMeasurementDestinationRateLimitWindow);
+    }
+
+    @Test
+    public void testGetMeasurementDestinationPerDayRateLimitWindowInMs() {
+        testFlag(
+                "getMeasurementDestinationPerDayRateLimitWindowInMs()",
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS,
+                Flags::getMeasurementDestinationPerDayRateLimitWindowInMs);
+    }
+
+    @Test
+    public void testGetMeasurementDestinationPerDayRateLimit() {
+        testFlag(
+                "getMeasurementDestinationPerDayRateLimit()",
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT,
+                Flags::getMeasurementDestinationPerDayRateLimit);
     }
 
     @Test

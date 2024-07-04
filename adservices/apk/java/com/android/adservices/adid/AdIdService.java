@@ -15,8 +15,6 @@
  */
 package com.android.adservices.adid;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
-
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
@@ -52,7 +50,6 @@ public class AdIdService extends Service {
         AppImportanceFilter appImportanceFilter =
                 AppImportanceFilter.create(
                         this,
-                        AD_SERVICES_API_CALLED__API_CLASS__ADID,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
 
         if (mAdIdService == null) {

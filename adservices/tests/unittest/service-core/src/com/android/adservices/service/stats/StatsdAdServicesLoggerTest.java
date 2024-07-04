@@ -1704,7 +1704,53 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(64),
                                 eq(3),
                                 eq(STATUS_SUCCESS),
-                                eq(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET));
+                                eq(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET),
+                                eq(-1),
+                                eq(0),
+                                eq(-1),
+                                eq(-1),
+                                eq(-1));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogGetAdSelectionDataApiCalledStatsWithSellerConfigurationMetrics_success() {
+        GetAdSelectionDataApiCalledStats stats =
+                GetAdSelectionDataApiCalledStats.builder()
+                        .setPayloadSizeKb(64)
+                        .setNumBuyers(3)
+                        .setStatusCode(STATUS_SUCCESS)
+                        .setSellerMaxSizeKb(10)
+                        .setPayloadOptimizationResult(
+                                GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                                        .PAYLOAD_TRUNCATED_FOR_REQUESTED_MAX)
+                        .setInputGenerationLatencyMs(45)
+                        .setCompressedBuyerInputCreatorVersion(2)
+                        .setNumReEstimations(5)
+                        .build();
+
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logGetAdSelectionDataApiCalledStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(GET_AD_SELECTION_DATA_API_CALLED),
+                                eq(64),
+                                eq(3),
+                                eq(STATUS_SUCCESS),
+                                eq(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET),
+                                eq(10),
+                                eq(1),
+                                eq(45),
+                                eq(2),
+                                eq(5));
 
         verify(writeInvocation);
 
@@ -1734,7 +1780,12 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(64),
                                 eq(3),
                                 eq(STATUS_SUCCESS),
-                                eq(SERVER_AUCTION_COORDINATOR_SOURCE_API));
+                                eq(SERVER_AUCTION_COORDINATOR_SOURCE_API),
+                                eq(-1),
+                                eq(0),
+                                eq(-1),
+                                eq(-1),
+                                eq(-1));
 
         verify(writeInvocation);
 

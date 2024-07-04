@@ -35,15 +35,50 @@ import java.util.Map;
 public class AuctionServerPayloadMetricsStrategyEnabled
         implements AuctionServerPayloadMetricsStrategy {
     private final AdServicesLogger mAdServicesLogger;
+    private final SellerConfigurationMetricsStrategy mSellerConfigurationMetricsStrategy;
 
     /** Constructs a {@link AuctionServerPayloadMetricsStrategyEnabled} instance. */
-    public AuctionServerPayloadMetricsStrategyEnabled(AdServicesLogger adServicesLogger) {
+    public AuctionServerPayloadMetricsStrategyEnabled(
+            AdServicesLogger adServicesLogger,
+            SellerConfigurationMetricsStrategy sellerConfigurationMetricsStrategy) {
         mAdServicesLogger = adServicesLogger;
+        mSellerConfigurationMetricsStrategy = sellerConfigurationMetricsStrategy;
     }
 
     @Override
     public void setNumBuyers(GetAdSelectionDataApiCalledStats.Builder builder, int numBuyers) {
         builder.setNumBuyers(numBuyers);
+    }
+
+    @Override
+    public void setSellerConfigurationMetrics(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            GetAdSelectionDataApiCalledStats.PayloadOptimizationResult payloadOptimizationResult,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion,
+            int numReEstimations) {
+        mSellerConfigurationMetricsStrategy.setSellerConfigurationMetrics(
+                builder,
+                payloadOptimizationResult,
+                inputGenerationLatencyMs,
+                compressedBuyerInputCreatorVersion,
+                numReEstimations);
+    }
+
+    @Override
+    public void setSellerMaxPayloadSizeKb(
+            GetAdSelectionDataApiCalledStats.Builder builder, int sellerMaxPayloadSizeKb) {
+        mSellerConfigurationMetricsStrategy.setSellerMaxPayloadSizeKb(
+                builder, sellerMaxPayloadSizeKb);
+    }
+
+    @Override
+    public void setInputGenerationLatencyMsAndBuyerCreatorVersion(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion) {
+        mSellerConfigurationMetricsStrategy.setInputGenerationLatencyMsAndBuyerCreatorVersion(
+                builder, inputGenerationLatencyMs, compressedBuyerInputCreatorVersion);
     }
 
     @Override

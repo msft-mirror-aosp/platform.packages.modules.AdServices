@@ -23,9 +23,11 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVE
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
@@ -44,9 +46,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import java.util.HashMap;
 import java.util.List;
@@ -54,38 +54,84 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class AuctionServerPayloadMetricsStrategyEnabledTest {
-    @Spy private GetAdSelectionDataApiCalledStats.Builder mBuilder;
+    @Mock private GetAdSelectionDataApiCalledStats.Builder mBuilderMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
+    @Mock private SellerConfigurationMetricsStrategy mSellerConfigurationMetricsStrategyMock;
     private AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategy;
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        mBuilder = Mockito.spy(GetAdSelectionDataApiCalledStats.builder());
         mAuctionServerPayloadMetricsStrategy =
-                new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLoggerMock);
+                new AuctionServerPayloadMetricsStrategyEnabled(
+                        mAdServicesLoggerMock, mSellerConfigurationMetricsStrategyMock);
     }
 
     @Test
     public void testSetNumBuyersSetsNumBuyers() {
-        mAuctionServerPayloadMetricsStrategy.setNumBuyers(mBuilder, 2);
-        verify(mBuilder).setNumBuyers(2);
+        mAuctionServerPayloadMetricsStrategy.setNumBuyers(mBuilderMock, 2);
+        verify(mBuilderMock).setNumBuyers(2);
+    }
+
+    @Test
+    public void testSetSellerConfigurationMetrics() {
+        GetAdSelectionDataApiCalledStats.PayloadOptimizationResult payloadOptimizationResult =
+                GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                        .PAYLOAD_WITHIN_REQUESTED_MAX;
+        int inputGenerationLatencyMs = 3;
+        int compressedBuyerInputCreatorVersion = 1;
+        int numReEstimations = 2;
+        mAuctionServerPayloadMetricsStrategy.setSellerConfigurationMetrics(
+                mBuilderMock,
+                payloadOptimizationResult,
+                inputGenerationLatencyMs,
+                compressedBuyerInputCreatorVersion,
+                numReEstimations);
+        verify(mSellerConfigurationMetricsStrategyMock)
+                .setSellerConfigurationMetrics(
+                        mBuilderMock,
+                        payloadOptimizationResult,
+                        inputGenerationLatencyMs,
+                        compressedBuyerInputCreatorVersion,
+                        numReEstimations);
+    }
+
+    @Test
+    public void testSetSellerMaxPayloadSizeKBMetrics() {
+        int sellerMaxPayloadSize = 5;
+        mAuctionServerPayloadMetricsStrategy.setSellerMaxPayloadSizeKb(
+                mBuilderMock, sellerMaxPayloadSize);
+        verify(mSellerConfigurationMetricsStrategyMock)
+                .setSellerMaxPayloadSizeKb(mBuilderMock, sellerMaxPayloadSize);
+    }
+
+    @Test
+    public void testSetInputGenerationLatencyMsMetricsAndCompressedBuyerInputCreatorVersion() {
+        int inputGenerationLatencyMs = 3;
+        int intBuyerCreatorVersion = 1;
+        mAuctionServerPayloadMetricsStrategy.setInputGenerationLatencyMsAndBuyerCreatorVersion(
+                mBuilderMock, inputGenerationLatencyMs, intBuyerCreatorVersion);
+        verify(mSellerConfigurationMetricsStrategyMock)
+                .setInputGenerationLatencyMsAndBuyerCreatorVersion(
+                        mBuilderMock, inputGenerationLatencyMs, intBuyerCreatorVersion);
     }
 
     @Test
     public void testSetServerAuctionCoordinatorSourceDoesNothing() {
         mAuctionServerPayloadMetricsStrategy.setServerAuctionCoordinatorSource(
-                mBuilder, SERVER_AUCTION_COORDINATOR_SOURCE_API);
-        verifyZeroInteractions(mBuilder);
+                mBuilderMock, SERVER_AUCTION_COORDINATOR_SOURCE_API);
+        verifyZeroInteractions(mBuilderMock);
     }
 
     @Test
     public void testLogGetAdSelectionDataApiCalledStatsDoesLog() {
         int payloadSize = 2000;
+        when(mBuilderMock.setStatusCode(anyInt())).thenReturn(mBuilderMock);
+        when(mBuilderMock.setPayloadSizeKb(anyInt())).thenReturn(mBuilderMock);
         mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataApiCalledStats(
-                mBuilder.setNumBuyers(2), payloadSize, AdServicesStatusUtils.STATUS_SUCCESS);
-        verify(mBuilder).setStatusCode(AdServicesStatusUtils.STATUS_SUCCESS);
-        verify(mBuilder).setPayloadSizeKb(payloadSize);
+                mBuilderMock, payloadSize, AdServicesStatusUtils.STATUS_SUCCESS);
+        verify(mBuilderMock).setStatusCode(AdServicesStatusUtils.STATUS_SUCCESS);
+        verify(mBuilderMock).setPayloadSizeKb(payloadSize);
 
         verify(mAdServicesLoggerMock).logGetAdSelectionDataApiCalledStats(any());
     }

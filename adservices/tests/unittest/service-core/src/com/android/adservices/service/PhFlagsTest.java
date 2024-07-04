@@ -350,6 +350,8 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DELETE_EXPIRED_JO
 import static com.android.adservices.service.Flags.MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.Flags.MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
+import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
+import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
@@ -361,6 +363,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DEBUG_REPO
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
@@ -384,8 +387,8 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_SOURCE_DEB
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_XNA;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
@@ -825,6 +828,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
@@ -836,6 +841,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
@@ -861,8 +867,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_XNA;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
@@ -1949,6 +1955,30 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT,
                 MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT,
                 Flags::getMeasurementEnableDestinationRateLimit);
+    }
+
+    @Test
+    public void testGetMeasurementEnableDestinationPerDayRateLimitWindow() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW,
+                MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW,
+                Flags::getMeasurementEnableDestinationPerDayRateLimitWindow);
+    }
+
+    @Test
+    public void testGetMeasurementDestinationPerDayRateLimitWindowInMs() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS,
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS,
+                Flags::getMeasurementDestinationPerDayRateLimitWindowInMs);
+    }
+
+    @Test
+    public void testGetMeasurementDestinationPerDayRateLimit() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT,
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT,
+                Flags::getMeasurementDestinationPerDayRateLimit);
     }
 
     @Test

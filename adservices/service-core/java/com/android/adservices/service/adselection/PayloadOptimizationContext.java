@@ -27,14 +27,15 @@ import java.util.Set;
 
 /** POJO to hold fields used for payload optimization. */
 @AutoValue
-abstract class PayloadOptimizationContext {
+public abstract class PayloadOptimizationContext {
     abstract boolean getOptimizationsEnabled();
 
     abstract int getMaxBuyerInputSizeBytes();
 
     abstract Set<PerBuyerConfiguration> getPerBuyerConfigurations();
 
-    static Builder builder() {
+    /** Returns a builder for a {@link PayloadOptimizationContext}. */
+    public static Builder builder() {
         return new AutoValue_PayloadOptimizationContext.Builder()
                 .setOptimizationsEnabled(false)
                 .setMaxBuyerInputSizeBytes(0)
@@ -42,7 +43,7 @@ abstract class PayloadOptimizationContext {
     }
 
     @AutoValue.Builder
-    abstract static class Builder {
+    public abstract static class Builder {
         /** Sets whether optimizations are enabled. */
         public abstract Builder setOptimizationsEnabled(boolean optimizationsEnabled);
 
@@ -56,6 +57,7 @@ abstract class PayloadOptimizationContext {
         public abstract Builder setPerBuyerConfigurations(
                 @NonNull Set<PerBuyerConfiguration> value);
 
-        abstract PayloadOptimizationContext build();
+        /** Builds a {@link PayloadOptimizationContext}. */
+        public abstract PayloadOptimizationContext build();
     }
 }

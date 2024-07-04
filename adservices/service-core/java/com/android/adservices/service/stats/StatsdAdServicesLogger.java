@@ -715,7 +715,12 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getPayloadSizeKb(),
                 stats.getNumBuyers(),
                 stats.getStatusCode(),
-                stats.getServerAuctionCoordinatorSource());
+                stats.getServerAuctionCoordinatorSource(),
+                stats.getSellerMaxSizeKb(),
+                stats.getPayloadOptimizationResult().getValue(),
+                stats.getInputGenerationLatencyMs(),
+                stats.getCompressedBuyerInputCreatorVersion(),
+                stats.getNumReEstimations());
     }
 
     @Override
