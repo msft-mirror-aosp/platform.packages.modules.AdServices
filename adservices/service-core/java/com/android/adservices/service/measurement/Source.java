@@ -267,14 +267,17 @@ public class Source {
     }
 
     /**
-     * Verifies whether the source contains a valid maximum event states value and assigns the
-     * default value if it's not specified in certain instances.
+     * Verifies whether the source contains a valid maximum event states value.
      *
      * @param flags flag values
      */
-    public boolean validateAndSetMaxEventStates(Flags flags) {
+    public boolean validateMaxEventStates(Flags flags) {
         if (!flags.getMeasurementEnableAttributionScope() || getAttributionScopeLimit() == null) {
             return true;
+        }
+        if (getMaxEventStates() == null) {
+            throw new IllegalStateException(
+                    "maxEventStates should be set if attributionScopeLimit is set.");
         }
         Long numStates =
                 mTriggerSpecs == null
@@ -283,10 +286,6 @@ public class Source {
         if (numStates == null || numStates == 0L) {
             throw new IllegalStateException(
                     "Num states should be validated before validating max event states");
-        }
-        if (mMaxEventStates == null) {
-            // Fallback to default max event states.
-            setMaxEventStates(DEFAULT_MAX_EVENT_STATES);
         }
         if (getSourceType() == SourceType.EVENT && numStates > getMaxEventStates()) {
             return false;
