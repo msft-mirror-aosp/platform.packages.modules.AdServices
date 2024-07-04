@@ -712,11 +712,20 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     private AuctionServerPayloadMetricsStrategy getAuctionServerPayloadMetricsStrategy(
             Flags flags) {
         if (flags.getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled()) {
+            SellerConfigurationMetricsStrategy sellerConfigurationMetricsStrategy;
+            if (flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled()) {
+                sellerConfigurationMetricsStrategy =
+                        new SellerConfigurationMetricsStrategyEnabled();
+            } else {
+                sellerConfigurationMetricsStrategy =
+                        new SellerConfigurationMetricsStrategyDisabled();
+            }
             if (flags.getFledgeAuctionServerKeyFetchMetricsEnabled()) {
                 return new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
-                        mAdServicesLogger);
+                        mAdServicesLogger, sellerConfigurationMetricsStrategy);
             }
-            return new AuctionServerPayloadMetricsStrategyEnabled(mAdServicesLogger);
+            return new AuctionServerPayloadMetricsStrategyEnabled(
+                    mAdServicesLogger, sellerConfigurationMetricsStrategy);
         }
         return new AuctionServerPayloadMetricsStrategyDisabled();
     }
