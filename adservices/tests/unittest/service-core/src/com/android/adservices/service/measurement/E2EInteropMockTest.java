@@ -96,10 +96,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 "redirect_source_trigger.json",
                 "same_destination_site.json",
                 "source_destination_limit_fifo.json",
-                "source_destination_limit_fifo_and_destination_rate_limit.json",
                 "source_destination_limit_fifo_rate_limits.json",
-                "source_destination_limit_priority_fifo.json",
-                "source_destination_limits.json",
                 "source_header_error_debug_report.json",
                 "source_registration_limits.json",
                 "source_storage_limit_and_destination_rate_limit.json",
@@ -155,10 +152,11 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     "max_destinations_per_rate_limit_window",
                     FlagsConstants.KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW),
             entry(
-                    "max_destinations_per_rate_limit_window_reporting_site",
+                    "max_destinations_per_reporting_site_per_day",
+                    FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT),
+            entry("max_destinations_per_rate_limit_window_reporting_site",
                     FlagsConstants.KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW),
-            entry(
-                    "max_sources_per_origin",
+            entry("max_sources_per_origin",
                     FlagsConstants.KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER),
             entry(
                     "max_event_level_reports_per_destination",
@@ -177,7 +175,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 .replaceAll("\"destination\":", "\"web_destination\":");
     }
 
-    private static Map<String, String> sPhFlagsForInterop = Map.ofEntries(
+    private static final Map<String, String> sPhFlagsForInterop = Map.ofEntries(
             entry(
                     // TODO (b/295382171): remove this after the flag is removed.
                     FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
@@ -199,7 +197,25 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     WebUtil.validUrl("https://coordinator.test")),
             entry(
                     FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
-                    "true"));
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM,
+                    "1"));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {

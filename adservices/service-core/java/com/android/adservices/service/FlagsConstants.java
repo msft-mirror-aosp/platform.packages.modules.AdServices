@@ -325,6 +325,15 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW =
             "measurement_destination_rate_limit_window";
 
+    public static final String KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT =
+            "measurement_destination_per_day_rate_limit";
+
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW =
+            "measurement_enable_destination_per_day_rate_limit_window";
+
+    public static final String KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS =
+            "measurement_destination_per_day_rate_limit_window_in_ms";
+
     public static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
             "measurement_enable_coarse_event_report_destinations";
 
