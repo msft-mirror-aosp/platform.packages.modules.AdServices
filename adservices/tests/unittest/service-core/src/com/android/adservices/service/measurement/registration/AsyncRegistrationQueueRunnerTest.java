@@ -2851,7 +2851,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
-    public void testRegister_registrationTypeSource_exceedsDestinationRateLimit()
+    public void testRegister_registrationTypeSource_exceedsAppGlobalDestinationRateLimit()
             throws DatastoreException {
         // setup
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
@@ -2860,16 +2860,21 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         // Execution
         when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
-                        any(), anyInt(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(500));
+                .thenReturn(0);
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
+                .thenReturn(0);
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(),
+                        anyInt(),
+                        eq(SOURCE_1.getAppDestinations()),
+                        eq(EventSurfaceType.APP),
+                        anyLong(),
+                        anyLong()))
+                .thenReturn(500);
 
         // Assert
         assertFalse(
@@ -2883,13 +2888,397 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .isAllowed());
         verify(mMeasurementDao, times(1))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.APP),
+                        anyLong(),
+                        anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.WEB),
+                        anyLong(),
+                        anyLong());
         verify(mMeasurementDao, times(1)).countDistinctDestinationsPerPublisherPerRateLimitWindow(
                 any(), anyInt(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(2))
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong());
+        verify(mMeasurementDao, times(2))
+                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+        // this check occurs after global destination limit check
+        verify(mMeasurementDao, never())
+                .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                        any(), any(), anyInt(), anyString(), anyLong(), anyLong());
+        verify(mDebugReportApi)
+                .scheduleSourceSuccessDebugReport(eq(SOURCE_1), eq(mMeasurementDao), eq(null));
+    }
+
+    @Test
+    public void testRegister_registrationTypeSource_exceedsWebGlobalDestinationRateLimit()
+            throws DatastoreException {
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(),
+                        anyInt(),
+                        eq(SOURCE_1.getAppDestinations()),
+                        eq(EventSurfaceType.APP),
+                        anyLong(),
+                        anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(),
+                        anyInt(),
+                        eq(SOURCE_1.getWebDestinations()),
+                        eq(EventSurfaceType.WEB),
+                        anyLong(),
+                        anyLong()))
+                .thenReturn(500);
+
+        // Assert
+        assertFalse(
+                asyncRegistrationQueueRunner
+                        .isSourceAllowedToInsert(
+                                SOURCE_1,
+                                SOURCE_1.getPublisher(),
+                                EventSurfaceType.APP,
+                                mMeasurementDao,
+                                mDebugReportApi)
+                        .isAllowed());
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.APP),
+                        anyLong(),
+                        anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.WEB),
+                        anyLong(),
+                        anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(),
+                        anyInt(),
+                        eq(SOURCE_1.getAppDestinations()),
+                        eq(EventSurfaceType.APP),
+                        anyLong(),
+                        anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(),
+                        anyInt(),
+                        eq(SOURCE_1.getWebDestinations()),
+                        eq(EventSurfaceType.WEB),
+                        anyLong(),
+                        anyLong());
+        verify(mMeasurementDao, times(2))
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong());
+        verify(mMeasurementDao, times(2))
+                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+        // this check occurs after global destination limit check
+        verify(mMeasurementDao, never())
+                .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                        any(), any(), anyInt(), anyString(), anyLong(), anyLong());
+        verify(mDebugReportApi)
+                .scheduleSourceSuccessDebugReport(eq(SOURCE_1), eq(mMeasurementDao), eq(null));
+    }
+
+    @Test
+    public void testRegisterSource_exceedsPerDayAppDestinationsRateLimit_notAllowedToInsert()
+            throws DatastoreException {
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+        int perDayRateLimit = 100;
+        when(mFlags.getMeasurementEnableDestinationPerDayRateLimitWindow()).thenReturn(true);
+        when(mFlags.getMeasurementDestinationPerDayRateLimit()).thenReturn(perDayRateLimit);
+        when(mFlags.getMeasurementDestinationPerDayRateLimitWindowInMs())
+                .thenReturn(TimeUnit.DAYS.toMillis(1));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.APP),
+                        // per minute rate limit
+                        eq(SOURCE_1.getEventTime() - TimeUnit.MINUTES.toMillis(1)),
+                        eq(SOURCE_1.getEventTime())))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.APP),
+                        // per day rate limit
+                        eq(SOURCE_1.getEventTime() - TimeUnit.DAYS.toMillis(1)),
+                        eq(SOURCE_1.getEventTime())))
+                .thenReturn(500);
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(0);
+        // Event if global rate limit fails, per day rate limit failure is reported
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(), anyInt(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(500);
+
+        // Assert
+        assertFalse(
+                asyncRegistrationQueueRunner
+                        .isSourceAllowedToInsert(
+                                SOURCE_1,
+                                SOURCE_1.getPublisher(),
+                                EventSurfaceType.APP,
+                                mMeasurementDao,
+                                mDebugReportApi)
+                        .isAllowed());
+        verify(mMeasurementDao, times(2))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        anyInt(),
+                        eq(SOURCE_1.getEventTime() - TimeUnit.MINUTES.toMillis(1)),
+                        eq(SOURCE_1.getEventTime()));
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.APP),
+                        eq(SOURCE_1.getEventTime() - TimeUnit.DAYS.toMillis(1)),
+                        eq(SOURCE_1.getEventTime()));
+        verify(mMeasurementDao, never())
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.WEB),
+                        eq(SOURCE_1.getEventTime() - TimeUnit.DAYS.toMillis(1)),
+                        eq(SOURCE_1.getEventTime()));
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(), anyInt(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, never())
                 .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
         verify(mMeasurementDao, never())
+                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+        verify(mDebugReportApi)
+                .scheduleSourceDestinationPerDayRateLimitDebugReport(
+                        eq(SOURCE_1), eq(String.valueOf(perDayRateLimit)), eq(mMeasurementDao));
+    }
+
+    @Test
+    public void testRegisterSource_exceedsPerDayWebDestinationsRateLimit_notAllowedToInsert()
+            throws DatastoreException {
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+        int perDayRateLimit = 100;
+        when(mFlags.getMeasurementEnableDestinationPerDayRateLimitWindow()).thenReturn(true);
+        when(mFlags.getMeasurementDestinationPerDayRateLimit()).thenReturn(perDayRateLimit);
+        when(mFlags.getMeasurementDestinationPerDayRateLimitWindowInMs())
+                .thenReturn(TimeUnit.DAYS.toMillis(1));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        anyInt(),
+                        // per minute rate limit
+                        eq(SOURCE_1.getEventTime() - TimeUnit.MINUTES.toMillis(1)),
+                        eq(SOURCE_1.getEventTime())))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.APP),
+                        // per day rate limit
+                        eq(SOURCE_1.getEventTime() - TimeUnit.DAYS.toMillis(1)),
+                        eq(SOURCE_1.getEventTime())))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.WEB),
+                        // per day rate limit
+                        eq(SOURCE_1.getEventTime() - TimeUnit.DAYS.toMillis(1)),
+                        eq(SOURCE_1.getEventTime())))
+                .thenReturn(500);
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(), anyInt(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(500);
+
+        // Assert
+        assertFalse(
+                asyncRegistrationQueueRunner
+                        .isSourceAllowedToInsert(
+                                SOURCE_1,
+                                SOURCE_1.getPublisher(),
+                                EventSurfaceType.APP,
+                                mMeasurementDao,
+                                mDebugReportApi)
+                        .isAllowed());
+        verify(mMeasurementDao, times(2))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        anyInt(),
+                        eq(SOURCE_1.getEventTime() - TimeUnit.MINUTES.toMillis(1)),
+                        eq(SOURCE_1.getEventTime()));
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.APP),
+                        eq(SOURCE_1.getEventTime() - TimeUnit.DAYS.toMillis(1)),
+                        eq(SOURCE_1.getEventTime()));
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        eq(EventSurfaceType.WEB),
+                        eq(SOURCE_1.getEventTime() - TimeUnit.DAYS.toMillis(1)),
+                        eq(SOURCE_1.getEventTime()));
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(), anyInt(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, never())
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong());
+        verify(mMeasurementDao, never())
+                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+        verify(mDebugReportApi)
+                .scheduleSourceDestinationPerDayRateLimitDebugReport(
+                        eq(SOURCE_1), eq(String.valueOf(perDayRateLimit)), eq(mMeasurementDao));
+    }
+
+    @Test
+    public void testRegisterSource_perDayRateLimitDisabled_IgnoresPerDayDestinationRateLimit()
+            throws DatastoreException {
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+        int perDayRateLimit = 100;
+        when(mFlags.getMeasurementEnableDestinationPerDayRateLimitWindow()).thenReturn(false);
+        when(mFlags.getMeasurementDestinationPerDayRateLimit()).thenReturn(perDayRateLimit);
+        when(mFlags.getMeasurementDestinationPerDayRateLimitWindowInMs())
+                .thenReturn(TimeUnit.DAYS.toMillis(1));
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        anyInt(),
+                        // per minute rate limit
+                        eq(SOURCE_1.getEventTime() - TimeUnit.MINUTES.toMillis(1)),
+                        eq(SOURCE_1.getEventTime())))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(0);
+        when(mMeasurementDao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(), anyInt(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(0);
+
+        // Assert
+        assertTrue(
+                asyncRegistrationQueueRunner
+                        .isSourceAllowedToInsert(
+                                SOURCE_1,
+                                SOURCE_1.getPublisher(),
+                                EventSurfaceType.APP,
+                                mMeasurementDao,
+                                mDebugReportApi)
+                        .isAllowed());
+        verify(mMeasurementDao, times(2))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        anyInt(),
+                        eq(SOURCE_1.getEventTime() - TimeUnit.MINUTES.toMillis(1)),
+                        eq(SOURCE_1.getEventTime()));
+        verify(mMeasurementDao, never())
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(),
+                        anyInt(),
+                        any(),
+                        any(),
+                        anyInt(),
+                        eq(SOURCE_1.getEventTime() - TimeUnit.DAYS.toMillis(1)),
+                        eq(SOURCE_1.getEventTime()));
+        verify(mMeasurementDao, times(2))
+                .countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(), anyInt(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(2))
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong());
+        verify(mMeasurementDao, times(2))
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong());
     }
@@ -2904,16 +3293,18 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         // Execution
         when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(500));
+                .thenReturn(500);
         when(mMeasurementDao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
                         any(), anyInt(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
+                .thenReturn(0);
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
+                .thenReturn(0);
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
+                .thenReturn(0);
+        when(mFlags.getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow())
+                .thenReturn(200);
 
         // Assert
         assertFalse(
@@ -2928,14 +3319,18 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         verify(mMeasurementDao, times(1))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(1)).countDistinctDestinationsPerPublisherPerRateLimitWindow(
-                any(), anyInt(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, never())
+                .countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(), anyInt(), any(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, never())
                 .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
         verify(mMeasurementDao, never())
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong());
+        verify(mDebugReportApi)
+                .scheduleSourceDestinationPerMinuteRateLimitDebugReport(
+                        eq(SOURCE_1), eq("200"), eq(mMeasurementDao));
     }
 
     @Test
@@ -2963,6 +3358,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         verify(mMeasurementDao, times(1))
                 .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
                         any(), any(), anyInt(), any(), anyLong(), anyLong());
+        // verify global destination rate limit before publisher per enrollment
+        verify(mMeasurementDao, times(2))
+                .countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(), anyInt(), anyList(), anyInt(), anyLong(), anyLong());
     }
 
     @Test
@@ -2988,6 +3387,24 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 mDebugReportApi)
                         .isAllowed());
         verify(mMeasurementDao, times(1)).getNumSourcesPerPublisher(any(), anyInt());
+        verify(mMeasurementDao, never())
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), anyString(), anyList(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, never())
+                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), anyList(), any(), anyLong(), anyLong());
+        verify(mMeasurementDao, never())
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), anyString(), anyList(), anyInt(), anyLong());
+        verify(mMeasurementDao, never())
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), anyString(), anyList(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, never())
+                .countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        any(), anyInt(), anyList(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, never())
+                .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                        any(), any(), anyInt(), anyString(), anyLong(), anyLong());
     }
 
     @Test
@@ -4571,6 +4988,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .build();
         List<String> appDestSourceIdsWithLruDestination = List.of("S1", "S2");
         List<String> webDestSourceIdsWithLruDestination = List.of("S3", "S4");
+        int fifoLimit = 5;
         when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(0);
@@ -4587,7 +5005,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
         when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
+        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(fifoLimit);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
         // For app destination
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
@@ -4648,6 +5066,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .deletePendingAggregateReportsAndAttributionsForSources(anyList());
         verify(mMeasurementDao, never())
                 .deleteFutureFakeEventReportsForSources(anyList(), anyLong());
+        verify(mDebugReportApi, times(1))
+                .scheduleSourceDestinationLimitDebugReport(
+                        eq(sourceToInsert), eq(String.valueOf(fifoLimit)), any());
     }
 
     @Test
