@@ -759,17 +759,43 @@ public interface Flags extends ModuleSharedFlags {
 
     /**
      * Returns the maximum number of distinct destination sites per source site X enrollment per
-     * rate limit window.
+     * minute rate limit window.
      */
     default int getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow() {
         return MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW;
     }
 
+    @ConfigFlag
     long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
 
-    /** Returns the duration that controls the rate-limiting window for destinations. */
+    /** Returns the duration that controls the rate-limiting window for destinations per minute. */
     default long getMeasurementDestinationRateLimitWindow() {
         return MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
+    }
+
+    /**
+     * Returns the maximum number of distinct destination sites per source site X enrollment per day
+     * rate limit.
+     */
+    @ConfigFlag int MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT = 100;
+
+    default int getMeasurementDestinationPerDayRateLimit() {
+        return MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW = false;
+
+    /** Returns true, if rate-limiting window for destinations per day is enabled. */
+    default boolean getMeasurementEnableDestinationPerDayRateLimitWindow() {
+        return MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW;
+    }
+
+    @ConfigFlag
+    long MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS = TimeUnit.DAYS.toMillis(1);
+
+    /** Returns the duration that controls the per day rate-limiting window for destinations. */
+    default long getMeasurementDestinationPerDayRateLimitWindowInMs() {
+        return MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
     }
 
     float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT = 6.5F;
@@ -3931,8 +3957,6 @@ public interface Flags extends ModuleSharedFlags {
     default int getMeasurementVtcConfigurableMaxEventReportsCount() {
         return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
     }
-
-    boolean MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO = false;
 
     boolean MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS = false;
 
