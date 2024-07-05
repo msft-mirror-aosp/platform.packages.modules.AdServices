@@ -139,7 +139,6 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         FlagsFactory.getFlags(),
                         AppImportanceFilter.create(
                                 context,
-                                AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getForegroundStatuslLevelForValidation()),

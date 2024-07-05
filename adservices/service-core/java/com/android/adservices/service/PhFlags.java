@@ -902,6 +902,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableDestinationPerDayRateLimitWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW,
+                MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
+    public int getMeasurementDestinationPerDayRateLimit() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT,
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT);
+    }
+
+    @Override
+    public long getMeasurementDestinationPerDayRateLimitWindowInMs() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS,
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS);
+    }
+
+    @Override
     public boolean getFledgeAppPackageNameLoggingEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED,
@@ -4058,6 +4079,22 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
                         + " = "
                         + getMeasurementRateLimitWindowMilliseconds());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementEnableDestinationPerDayRateLimitWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT
+                        + " = "
+                        + getMeasurementDestinationPerDayRateLimit());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS
+                        + " = "
+                        + getMeasurementDestinationPerDayRateLimitWindowInMs());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW
