@@ -25,7 +25,6 @@ import static org.junit.Assume.assumeTrue;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.SdkLifecycleHelper;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -36,6 +35,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.server.sdksandbox.SandboxKillerBeforeTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -50,9 +50,6 @@ public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
     private static final String SDK_NAME_2 = "com.android.emptysdkprovider";
 
     @Rule(order = 0)
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
-    @Rule(order = 1)
     public final ActivityScenarioRule<TestActivity> activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
 

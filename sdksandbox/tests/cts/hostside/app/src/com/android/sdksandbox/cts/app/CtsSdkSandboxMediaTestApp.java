@@ -44,7 +44,7 @@ public class CtsSdkSandboxMediaTestApp {
 
     private static final String SDK_NAME = "com.android.ctssdkprovider";
 
-    @Rule
+    @Rule(order = 0)
     public final ActivityScenarioRule<TestActivity> activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
 
