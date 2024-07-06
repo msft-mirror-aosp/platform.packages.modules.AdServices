@@ -18,6 +18,7 @@ package com.android.adservices.service.shell.adselection;
 
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
@@ -79,7 +80,7 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
 
     @Test
     public void testRun_withUnknownBuyer_throwsException() {
-        when(mBuyerInputGenerator.createCompressedBuyerInputs())
+        when(mBuyerInputGenerator.createCompressedBuyerInputs(any(), any()))
                 .thenReturn(FluentFuture.from(Futures.immediateFuture(Map.of())));
 
         Result result =
@@ -102,7 +103,7 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
     public void testRun_withAllArguments_returnsSuccess()
             throws InvalidProtocolBufferException, JSONException {
         BuyerInput buyerInput = BuyerInput.newBuilder().build();
-        when(mBuyerInputGenerator.createCompressedBuyerInputs())
+        when(mBuyerInputGenerator.createCompressedBuyerInputs(any(), any()))
                 .thenReturn(
                         FluentFuture.from(
                                 Futures.immediateFuture(

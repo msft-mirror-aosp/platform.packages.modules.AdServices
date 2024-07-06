@@ -26,17 +26,20 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 
+import androidx.test.core.app.ApplicationProvider;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.js.IsolateSettings;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,10 +56,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class SignalsScriptEngineTest {
+public class SignalsScriptEngineTest extends AdServicesUnitTestCase {
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
     private static final IsolateSettings ISOLATE_SETTINGS =
-            IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+            IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                     ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
     private SignalsScriptEngine mSignalsScriptEngine;
@@ -66,9 +69,16 @@ public class SignalsScriptEngineTest {
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
+    // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+    // availability depends on an external component (the system webview) being higher than a
+    // certain minimum version.
+    @Rule(order = 11)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule(
+                    ApplicationProvider.getApplicationContext());
+
     @Before
     public void setUp() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         mSignalsScriptEngine =
                 createSignalsScriptEngine(ISOLATE_SETTINGS, new NoOpRetryStrategyImpl());
         MockitoAnnotations.initMocks(this);
@@ -318,7 +328,6 @@ public class SignalsScriptEngineTest {
     private SignalsScriptEngine createSignalsScriptEngine(
             IsolateSettings isolateSettings, RetryStrategy retryStrategy) {
         return new SignalsScriptEngine(
-                isolateSettings::getEnforceMaxHeapSizeFeature,
                 isolateSettings::getMaxHeapSizeBytes,
                 retryStrategy,
                 isolateSettings::getIsolateConsoleMessageInLogsEnabled);

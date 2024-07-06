@@ -46,7 +46,6 @@ import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
 import com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand;
-import com.android.adservices.service.shell.adselection.MockAuctionResultCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceRefreshCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
@@ -253,8 +252,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                                 CustomAudienceRefreshCommand.HELP,
                                 ConsentedDebugShellCommand.HELP,
                                 GenerateInputForEncodingCommand.HELP,
-                                GetAdSelectionDataCommand.HELP,
-                                MockAuctionResultCommand.HELP));
+                                GetAdSelectionDataCommand.HELP));
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {

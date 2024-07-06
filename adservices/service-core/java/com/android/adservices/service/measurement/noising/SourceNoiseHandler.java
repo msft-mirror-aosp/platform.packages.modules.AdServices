@@ -43,18 +43,22 @@ public class SourceNoiseHandler {
 
     private final Flags mFlags;
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+    private final ImpressionNoiseUtil mImpressionNoiseUtil;
 
     public SourceNoiseHandler(@NonNull Flags flags) {
         mFlags = flags;
         mEventReportWindowCalcDelegate = new EventReportWindowCalcDelegate(flags);
+        mImpressionNoiseUtil = new ImpressionNoiseUtil();
     }
 
     @VisibleForTesting
-    SourceNoiseHandler(
+    public SourceNoiseHandler(
             @NonNull Flags flags,
-            @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate) {
+            @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+            @NonNull ImpressionNoiseUtil impressionNoiseUtil) {
         mFlags = flags;
         mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
+        mImpressionNoiseUtil = impressionNoiseUtil;
     }
 
     /** Multiplier is 1, when only one destination needs to be considered. */
@@ -75,7 +79,7 @@ public class SourceNoiseHandler {
     public List<Source.FakeReport> assignAttributionModeAndGenerateFakeReports(
             @NonNull Source source) {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
-        double value = rand.nextDouble();
+        double value = getRandomDouble(rand);
         if (value >= getRandomizedSourceResponsePickRate(source)) {
             source.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
             return null;
@@ -87,8 +91,8 @@ public class SourceNoiseHandler {
         if (triggerSpecs == null) {
             // There will at least be one (app or web) destination available
             ImpressionNoiseParams noiseParams = getImpressionNoiseParams(source);
-            fakeReports =
-                    ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(noiseParams, rand)
+            fakeReports = mImpressionNoiseUtil
+                    .selectRandomStateAndGenerateReportConfigs(noiseParams, rand)
                             .stream()
                             .map(
                                     reportConfig -> {
@@ -117,7 +121,7 @@ public class SourceNoiseHandler {
         } else {
             int destinationTypeMultiplier = source.getDestinationTypeMultiplier(mFlags);
             List<int[]> fakeReportConfigs =
-                    ImpressionNoiseUtil.selectFlexEventReportRandomStateAndGenerateReportConfigs(
+                    mImpressionNoiseUtil.selectFlexEventReportRandomStateAndGenerateReportConfigs(
                             triggerSpecs, destinationTypeMultiplier, rand);
 
             // Group configurations by trigger data, ordered by window index.
@@ -190,7 +194,7 @@ public class SourceNoiseHandler {
     }
 
     @VisibleForTesting
-    double getRandomizedSourceResponsePickRate(Source source) {
+    public double getRandomizedSourceResponsePickRate(Source source) {
         // Methods on Source and EventReportWindowCalcDelegate that calculate flip probability for
         // the source rely on reporting windows and max reports that are obtained with consideration
         // to install-state and its interaction with configurable report windows and configurable
@@ -245,5 +249,11 @@ public class SourceNoiseHandler {
                 source.getTriggerDataCardinality(),
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(source),
                 destinationTypeMultiplier);
+    }
+
+    /** Return a random double */
+    @VisibleForTesting
+    public double getRandomDouble(ThreadLocalRandom rand) {
+        return rand.nextDouble();
     }
 }
