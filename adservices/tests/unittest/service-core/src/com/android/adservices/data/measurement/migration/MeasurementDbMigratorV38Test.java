@@ -84,7 +84,9 @@ public class MeasurementDbMigratorV38Test extends MeasurementDbMigratorTestBase 
         source.put(MeasurementTables.SourceContract.ID, sourceId);
         tableRowsMap.put(
                 MeasurementTables.SourceContract.TABLE,
-                List.of(source, ContentValueFixtures.generateSourceContentValuesV36()));
+                List.of(
+                        source,
+                        ContentValueFixtures.generateSourceContentValuesV36()));
         return tableRowsMap;
     }
 

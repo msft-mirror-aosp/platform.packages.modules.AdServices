@@ -56,6 +56,35 @@ public class AuctionServerPayloadMetricsStrategyDisabledTest {
     }
 
     @Test
+    public void testSellerConfigurationMetricsDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy.setSellerConfigurationMetrics(
+                mBuilder,
+                GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                        .PAYLOAD_WITHIN_REQUESTED_MAX,
+                /* inputGenerationLatencyMs= */ 3,
+                /* compressedBuyerInputCreatorVersion= */ 1,
+                /* numReEstimations= */ 2);
+        verifyZeroInteractions(mBuilder);
+    }
+
+    @Test
+    public void testSetSellerMaxSizeDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy.setSellerMaxPayloadSizeKb(
+                mBuilder, /* sellerMaxSize= */ 5);
+        verifyZeroInteractions(mBuilder);
+    }
+
+    @Test
+    public void
+            testSetInputGenerationLatencyMsMetricsAndCompressedBuyerInputCreatorVersionDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy.setInputGenerationLatencyMsAndBuyerCreatorVersion(
+                mBuilder,
+                /* inputGenerationLatencyMs= */ 5,
+                CompressedBuyerInputCreatorNoOptimizations.VERSION);
+        verifyZeroInteractions(mBuilder);
+    }
+
+    @Test
     public void testSetServerAuctionCoordinatorSourceDoesNothing() {
         mAuctionServerPayloadMetricsStrategy.setServerAuctionCoordinatorSource(
                 mBuilder, SERVER_AUCTION_COORDINATOR_SOURCE_API);

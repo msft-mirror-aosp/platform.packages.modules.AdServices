@@ -17,7 +17,11 @@
 package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_1;
+import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_2;
+import static android.adservices.adselection.SellerConfigurationFixture.PER_BUYER_CONFIGURATION_1;
+import static android.adservices.adselection.SellerConfigurationFixture.PER_BUYER_CONFIGURATION_2;
 
+import android.adservices.adselection.PerBuyerConfiguration;
 import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
@@ -40,7 +44,9 @@ public class BuyerInputDataFetcherBuyerAllowListImplTest extends AdServicesMocki
 
     private BuyerInputDataFetcher mBuyerInputDataFetcher;
 
-    private static final List<AdTechIdentifier> BUYERS_LIST = List.of(BUYER_1);
+    private static final List<PerBuyerConfiguration> PER_BUYER_CONFIGURATION_LIST =
+            List.of(PER_BUYER_CONFIGURATION_1, PER_BUYER_CONFIGURATION_2);
+    private static final List<AdTechIdentifier> BUYERS_LIST = List.of(BUYER_1, BUYER_2);
 
     @Before
     public void setup() {
@@ -54,7 +60,8 @@ public class BuyerInputDataFetcherBuyerAllowListImplTest extends AdServicesMocki
         Instant now = Instant.now();
         long activeWindowMs = 10;
 
-        mBuyerInputDataFetcher.getActiveCustomAudiences(BUYERS_LIST, now, activeWindowMs);
+        mBuyerInputDataFetcher.getActiveCustomAudiences(
+                PER_BUYER_CONFIGURATION_LIST, now, activeWindowMs);
 
         ExtendedMockito.verify(mCustomAudienceDaoMock)
                 .getActiveCustomAudienceByBuyers(BUYERS_LIST, now, activeWindowMs);
@@ -62,10 +69,30 @@ public class BuyerInputDataFetcherBuyerAllowListImplTest extends AdServicesMocki
     }
 
     @Test
+    public void testGetActiveCustomAudiencesEmptyPerBuyerConfigurations() {
+        Instant now = Instant.now();
+        long activeWindowMs = 10;
+
+        mBuyerInputDataFetcher.getActiveCustomAudiences(List.of(), now, activeWindowMs);
+
+        ExtendedMockito.verify(mCustomAudienceDaoMock)
+                .getAllActiveCustomAudienceForServerSideAuction(now, activeWindowMs);
+        ExtendedMockito.verifyNoMoreInteractions(mCustomAudienceDaoMock);
+    }
+
+    @Test
     public void testGetProtectedAudienceSignals() {
-        mBuyerInputDataFetcher.getProtectedAudienceSignals(BUYERS_LIST);
+        mBuyerInputDataFetcher.getProtectedAudienceSignals(PER_BUYER_CONFIGURATION_LIST);
 
         ExtendedMockito.verify(mEncodedPayloadDaoMock).getAllEncodedPayloadsForBuyers(BUYERS_LIST);
+        ExtendedMockito.verifyNoMoreInteractions(mEncodedPayloadDaoMock);
+    }
+
+    @Test
+    public void testGetProtectedAudienceSignalsEmptyPerBuyerConfigurations() {
+        mBuyerInputDataFetcher.getProtectedAudienceSignals(List.of());
+
+        ExtendedMockito.verify(mEncodedPayloadDaoMock).getAllEncodedPayloads();
         ExtendedMockito.verifyNoMoreInteractions(mEncodedPayloadDaoMock);
     }
 }
