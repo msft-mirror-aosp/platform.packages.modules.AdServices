@@ -400,35 +400,7 @@ public class AsyncRegistrationQueueRunner {
                     .d("insertSources: getTopLevelPublisher failed, topOrigin: %s", topOrigin);
             return InsertSourcePermission.NOT_ALLOWED;
         }
-        if (flags.getMeasurementEnableDestinationRateLimit()) {
-            if (source.getAppDestinations() != null
-                    && !sourceIsWithinTimeBasedDestinationLimits(
-                            debugReportApi,
-                            source,
-                            publisher.get(),
-                            publisherType,
-                            source.getEnrollmentId(),
-                            source.getAppDestinations(),
-                            EventSurfaceType.APP,
-                            source.getEventTime(),
-                            dao)) {
-                return InsertSourcePermission.NOT_ALLOWED;
-            }
 
-            if (source.getWebDestinations() != null
-                    && !sourceIsWithinTimeBasedDestinationLimits(
-                            debugReportApi,
-                            source,
-                            publisher.get(),
-                            publisherType,
-                            source.getEnrollmentId(),
-                            source.getWebDestinations(),
-                            EventSurfaceType.WEB,
-                            source.getEventTime(),
-                            dao)) {
-                return InsertSourcePermission.NOT_ALLOWED;
-            }
-        }
         long numOfSourcesPerPublisher =
                 dao.getNumSourcesPerPublisher(
                         BaseUriExtractor.getBaseUri(topOrigin), publisherType);
@@ -440,8 +412,49 @@ public class AsyncRegistrationQueueRunner {
                     source, String.valueOf(numOfSourcesPerPublisher), dao);
             return InsertSourcePermission.NOT_ALLOWED;
         }
+
+        // Blocks ad-techs to register multiple sources with various destinations in a short window
+        // (per minute)
+        int destinationsPerMinuteRateLimit =
+                flags.getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow();
+        if (flags.getMeasurementEnableDestinationRateLimit()
+                && sourceExceedsTimeBasedDestinationLimits(
+                        source,
+                        publisher.get(),
+                        publisherType,
+                        flags.getMeasurementDestinationRateLimitWindow(),
+                        destinationsPerMinuteRateLimit,
+                        dao)) {
+            debugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
+                    source, String.valueOf(destinationsPerMinuteRateLimit), dao);
+            return InsertSourcePermission.NOT_ALLOWED;
+        }
+
+        // Global (cross reporting-origin) destinations rate limit. This needs to be recorded before
+        // FIFO based deletion as it's a LIFO based rate limit. Although reject the source if it
+        // fails only if every other (enrollment based) rate limit passes to not reveal cross site
+        // data.
+        boolean destinationExceedsGlobalRateLimit =
+                destinationExceedsGlobalRateLimit(source, publisher.get(), dao);
+
+        // Blocks ad-techs to reconstruct browser history by registering multiple sources with
+        // various destinations in a medium window (per day). The larger window is 30 days.
+        int destinationsPerDayRateLimit = flags.getMeasurementDestinationPerDayRateLimit();
+        if (flags.getMeasurementEnableDestinationPerDayRateLimitWindow()
+                && sourceExceedsTimeBasedDestinationLimits(
+                        source,
+                        publisher.get(),
+                        publisherType,
+                        flags.getMeasurementDestinationPerDayRateLimitWindowInMs(),
+                        destinationsPerDayRateLimit,
+                        dao)) {
+            debugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
+                    source, String.valueOf(destinationsPerDayRateLimit), dao);
+            return InsertSourcePermission.NOT_ALLOWED;
+        }
+
         if (source.getAppDestinations() != null
-                && !isDestinationWithinBounds(
+                && isDestinationOutOfBounds(
                         debugReportApi,
                         source,
                         publisher.get(),
@@ -456,7 +469,7 @@ public class AsyncRegistrationQueueRunner {
         }
 
         if (source.getWebDestinations() != null
-                && !isDestinationWithinBounds(
+                && isDestinationOutOfBounds(
                         debugReportApi,
                         source,
                         publisher.get(),
@@ -469,27 +482,10 @@ public class AsyncRegistrationQueueRunner {
                         dao)) {
             return InsertSourcePermission.NOT_ALLOWED;
         }
-        int numOfOriginExcludingRegistrationOrigin =
-                dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
-                        source.getRegistrationOrigin(),
-                        publisher.get(),
-                        publisherType,
-                        source.getEnrollmentId(),
-                        source.getEventTime(),
-                        flags.getMeasurementMinReportingOriginUpdateWindow());
-        if (numOfOriginExcludingRegistrationOrigin
-                >= flags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
-            debugReportApi.scheduleSourceSuccessDebugReport(source, dao, null);
-            LoggerFactory.getMeasurementLogger()
-                    .d(
-                            "insertSources: Max limit of 1 reporting origin for publisher - %s and"
-                                    + " enrollment - %s reached.",
-                            publisher, source.getEnrollmentId());
-            return InsertSourcePermission.NOT_ALLOWED;
-        }
+
         try {
             if (!source.validateAndSetNumReportStates(flags)
-                    || !source.validateAndSetMaxEventStates(flags)
+                    || !source.validateMaxEventStates(flags)
                     || !source.hasValidInformationGain(flags)) {
                 debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
                 return InsertSourcePermission.NOT_ALLOWED;
@@ -501,6 +497,8 @@ public class AsyncRegistrationQueueRunner {
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
+        Map<String, String> additionalDebugReportParams = null;
+        InsertSourcePermission result = InsertSourcePermission.ALLOWED;
         // Should be deprecated once destination priority is fully launched
         if (extractSourceDestinationLimitingAlgo(flags, source)
                 == Source.DestinationLimitAlgorithm.FIFO) {
@@ -515,6 +513,10 @@ public class AsyncRegistrationQueueRunner {
                             source.getAppDestinations());
             if (appDestSourceAllowedToInsert == InsertSourcePermission.NOT_ALLOWED) {
                 // Return early without checking web destinations
+                debugReportApi.scheduleSourceDestinationLimitDebugReport(
+                        source,
+                        String.valueOf(flags.getMeasurementMaxDistinctDestinationsInActiveSource()),
+                        dao);
                 return InsertSourcePermission.NOT_ALLOWED;
             }
             InsertSourcePermission webDestSourceAllowedToInsert =
@@ -527,16 +529,53 @@ public class AsyncRegistrationQueueRunner {
                             EventSurfaceType.WEB,
                             source.getWebDestinations());
             if (webDestSourceAllowedToInsert == InsertSourcePermission.NOT_ALLOWED) {
+                debugReportApi.scheduleSourceDestinationLimitDebugReport(
+                        source,
+                        String.valueOf(flags.getMeasurementMaxDistinctDestinationsInActiveSource()),
+                        dao);
                 return InsertSourcePermission.NOT_ALLOWED;
             }
 
             if (appDestSourceAllowedToInsert == InsertSourcePermission.ALLOWED_FIFO_SUCCESS
                     || webDestSourceAllowedToInsert
                             == InsertSourcePermission.ALLOWED_FIFO_SUCCESS) {
-                return InsertSourcePermission.ALLOWED_FIFO_SUCCESS;
+                int limit = mFlags.getMeasurementMaxDistinctDestinationsInActiveSource();
+                additionalDebugReportParams =
+                        Map.of(DebugReportApi.Body.SOURCE_DESTINATION_LIMIT, String.valueOf(limit));
+                result = InsertSourcePermission.ALLOWED_FIFO_SUCCESS;
             }
         }
-        return InsertSourcePermission.ALLOWED;
+
+        // Global (cross ad-tech) destinations rate limit
+        if (destinationExceedsGlobalRateLimit) {
+            // Source won't be inserted, yet we produce a success to debug report to avoid side
+            // channel leakage of cross site data
+            debugReportApi.scheduleSourceSuccessDebugReport(
+                    source, dao, additionalDebugReportParams);
+            return InsertSourcePermission.NOT_ALLOWED;
+        }
+
+        int numOfOriginExcludingRegistrationOrigin =
+                dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                        source.getRegistrationOrigin(),
+                        publisher.get(),
+                        publisherType,
+                        source.getEnrollmentId(),
+                        source.getEventTime(),
+                        flags.getMeasurementMinReportingOriginUpdateWindow());
+        if (numOfOriginExcludingRegistrationOrigin
+                >= flags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
+            debugReportApi.scheduleSourceSuccessDebugReport(
+                    source, dao, additionalDebugReportParams);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "insertSources: Max limit of 1 reporting origin for publisher - %s and"
+                                    + " enrollment - %s reached.",
+                            publisher, source.getEnrollmentId());
+            return InsertSourcePermission.NOT_ALLOWED;
+        }
+
+        return result;
     }
 
     private static InsertSourcePermission deleteLowPriorityDestinationSourcesToAccommodateNewSource(
@@ -627,75 +666,61 @@ public class AsyncRegistrationQueueRunner {
         return InsertSourcePermission.ALLOWED_FIFO_SUCCESS;
     }
 
-    private static boolean sourceIsWithinTimeBasedDestinationLimits(
-            DebugReportApi debugReportApi,
+    private static boolean sourceExceedsTimeBasedDestinationLimits(
             Source source,
             Uri publisher,
             @EventSurfaceType int publisherType,
-            String enrollmentId,
-            List<Uri> destinations,
-            @EventSurfaceType int destinationType,
-            long requestTime,
+            long window,
+            int limit,
             IMeasurementDao dao)
             throws DatastoreException {
-        long windowStartTime = source.getEventTime()
-                - FlagsFactory.getFlags().getMeasurementDestinationRateLimitWindow();
-        int destinationReportingCount =
-                dao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        publisher,
-                        publisherType,
-                        enrollmentId,
-                        destinations,
-                        destinationType,
-                        windowStartTime,
-                        requestTime);
-        // Same reporting-site destination limit
-        int maxDistinctReportingDestinations =
-                FlagsFactory.getFlags()
-                        .getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow();
-        boolean hitSameReportingRateLimit =
-                destinationReportingCount + destinations.size() > maxDistinctReportingDestinations;
-        if (hitSameReportingRateLimit) {
-            LoggerFactory.getMeasurementLogger().d(
-                    "AsyncRegistrationQueueRunner: "
-                            + (destinationType == EventSurfaceType.APP ? "App" : "Web")
-                            + " MaxDestPerPublisherXEnrollmentPerRateLimitWindow exceeded");
+        List<Uri> appDestinations = source.getAppDestinations();
+        if (appDestinations != null) {
+            int appDestinationReportingCount =
+                    dao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                            publisher,
+                            publisherType,
+                            source.getEnrollmentId(),
+                            appDestinations,
+                            EventSurfaceType.APP,
+                            /* window start time */ source.getEventTime() - window,
+                            /*window end time*/ source.getEventTime());
+            // Same reporting-site destination limit
+            if (appDestinationReportingCount + appDestinations.size() > limit) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "AsyncRegistrationQueueRunner: App time based destination limit"
+                                        + " exceeded");
+                return true;
+            }
         }
 
-        // TODO(b/336628903): Move this check at the end of other checks to not leak cross site data
-        // Global destination limit
-        int destinationCount =
-                dao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
-                        publisher,
-                        publisherType,
-                        destinations,
-                        destinationType,
-                        windowStartTime,
-                        requestTime);
-        int maxDistinctDestinations =
-                FlagsFactory.getFlags()
-                        .getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow();
-        boolean hitRateLimit = destinationCount + destinations.size() > maxDistinctDestinations;
-        if (hitRateLimit) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(
-                            "AsyncRegistrationQueueRunner: "
-                                    + (destinationType == EventSurfaceType.APP ? "App" : "Web")
-                                    + " MaxDestinationsPerPublisherPerRateLimitWindow exceeded");
+        List<Uri> webDestinations = source.getWebDestinations();
+        if (webDestinations != null) {
+            int webDestinationReportingCount =
+                    dao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                            publisher,
+                            publisherType,
+                            source.getEnrollmentId(),
+                            webDestinations,
+                            EventSurfaceType.WEB,
+                            /* window start time */ source.getEventTime() - window,
+                            /*window end time*/ source.getEventTime());
+
+            // Same reporting-site destination limit
+            if (webDestinationReportingCount + webDestinations.size() > limit) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "AsyncRegistrationQueueRunner: Web time based destination limit"
+                                        + " exceeded");
+                return true;
+            }
         }
 
-        if (hitSameReportingRateLimit) {
-            debugReportApi.scheduleSourceDestinationRateLimitDebugReport(
-                    source, String.valueOf(maxDistinctReportingDestinations), dao);
-            return false;
-        } else if (hitRateLimit) {
-            debugReportApi.scheduleSourceSuccessDebugReport(source, dao, null);
-            return false;
-        }
-        return true;
+        return false;
     }
 
-    private static boolean isDestinationWithinBounds(
+    private static boolean isDestinationOutOfBounds(
             DebugReportApi debugReportApi,
             Source source,
             Uri publisher,
@@ -745,7 +770,7 @@ public class AsyncRegistrationQueueRunner {
                                         + "PerPublisherXEnrollmentInActiveSource");
                 debugReportApi.scheduleSourceDestinationLimitDebugReport(
                         source, String.valueOf(maxDistinctDestinations), dao);
-                return false;
+                return true;
             }
         }
 
@@ -766,9 +791,9 @@ public class AsyncRegistrationQueueRunner {
                                     + (destinationType == EventSurfaceType.APP ? "App" : "Web")
                                     + " distinct reporting origin count >= "
                                     + "MaxDistinctRepOrigPerPublisherXDestInSource exceeded");
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     @VisibleForTesting
@@ -785,6 +810,54 @@ public class AsyncRegistrationQueueRunner {
         }
         return triggerInsertedPerDestination
                 < FlagsFactory.getFlags().getMeasurementMaxTriggersPerDestination();
+    }
+
+    private boolean destinationExceedsGlobalRateLimit(
+            Source source, Uri publisher, IMeasurementDao dao) throws DatastoreException {
+        long window = mFlags.getMeasurementDestinationRateLimitWindow();
+        long limit = mFlags.getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow();
+        long windowStartTime = source.getEventTime() - window;
+        List<Uri> appDestinations = source.getAppDestinations();
+        if (appDestinations != null) {
+            int destinationCount =
+                    dao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                            publisher,
+                            source.getPublisherType(),
+                            /* excluded destinations */ appDestinations,
+                            EventSurfaceType.APP,
+                            windowStartTime,
+                            /* windowEndTime */ source.getEventTime());
+
+            if (destinationCount + appDestinations.size() > limit) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "AsyncRegistrationQueueRunner: App destination global rate limit "
+                                        + "exceeded");
+                return true;
+            }
+        }
+
+        List<Uri> webDestinations = source.getWebDestinations();
+        if (webDestinations != null) {
+            int destinationCount =
+                    dao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                            publisher,
+                            source.getPublisherType(),
+                            /* excluded destinations */ webDestinations,
+                            EventSurfaceType.WEB,
+                            windowStartTime,
+                            /* windowEndTime */ source.getEventTime());
+
+            if (destinationCount + webDestinations.size() > limit) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "AsyncRegistrationQueueRunner: App destination global rate limit "
+                                        + "exceeded");
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private AsyncRegistration createAsyncRegistrationFromRedirect(

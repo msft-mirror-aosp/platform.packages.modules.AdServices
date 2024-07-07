@@ -142,7 +142,7 @@
           }
         ]
       },
-      // S5: A that increases app destination count so that S6 can delete the oldest app destination
+      // S5: A source that increases app destination count so that S6 can delete the oldest app destination
       {
         "timestamp": "800000000011",
         "registration_request": {

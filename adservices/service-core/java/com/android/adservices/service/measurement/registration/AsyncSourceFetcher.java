@@ -420,31 +420,46 @@ public class AsyncSourceFetcher {
             builder.setEventReportWindows(eventReportWindows.toString());
         }
 
-        if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()
-                && (!json.isNull(SourceHeaderContract.TRIGGER_SPECS)
-                        || !json.isNull(SourceHeaderContract.TRIGGER_DATA))) {
-            String triggerSpecString;
-            if (!json.isNull(SourceHeaderContract.TRIGGER_DATA)) {
-                if (!json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
-                    LoggerFactory.getMeasurementLogger().d(
-                            "Only one of trigger_data or trigger_specs is expected");
-                    return false;
-                }
-                JSONArray triggerData = json.getJSONArray(SourceHeaderContract.TRIGGER_DATA);
-                // Empty top-level trigger data results in an empty trigger specs list.
-                if (triggerData.length() == 0) {
-                    triggerSpecString = triggerData.toString();
-                // Populated top-level trigger data results in one trigger spec object.
-                } else {
-                    JSONArray triggerSpecsArray = new JSONArray();
-                    JSONObject triggerSpec = new JSONObject();
-                    triggerSpec.put(SourceHeaderContract.TRIGGER_DATA, triggerData);
-                    triggerSpecsArray.put(triggerSpec);
-                    triggerSpecString = triggerSpecsArray.toString();
-                }
-            } else {
-                triggerSpecString = json.getString(SourceHeaderContract.TRIGGER_SPECS);
+        if (mFlags.getMeasurementEnableV1SourceTriggerData()
+                && !json.isNull(SourceHeaderContract.TRIGGER_DATA)) {
+            if (!json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
+                LoggerFactory.getMeasurementLogger().d(
+                        "Only one of trigger_data or trigger_specs is expected");
+                return false;
             }
+            // Validate input type
+            Optional<JSONArray> maybeTriggerDataListJson = extractLongJsonArray(
+                    json, TriggerSpecs.FlexEventReportJsonKeys.TRIGGER_DATA);
+            if (maybeTriggerDataListJson.isEmpty()) {
+                return false;
+            }
+
+            List<UnsignedLong> triggerDataList =
+                    TriggerSpec.getTriggerDataArrayFromJson(maybeTriggerDataListJson.get());
+            Set<UnsignedLong> triggerDataSet = new HashSet<>();
+
+            // Validate unique trigger data and their magnitude
+            Optional<Set<UnsignedLong>> maybeTriggerDataSet = populateAndValidateTriggerDataSet(
+                    triggerDataSet, triggerDataList);
+            if (maybeTriggerDataSet.isEmpty()) {
+                return false;
+            }
+            // Validate overall set size and contiguity if matching is modulus
+            if (!isValidTriggerDataSet(triggerDataSet, triggerDataMatching)) {
+                return false;
+            }
+            builder.setTriggerData(triggerDataSet);
+        }
+
+        if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()
+                && !json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
+            if (!json.isNull(SourceHeaderContract.TRIGGER_DATA)) {
+                LoggerFactory.getMeasurementLogger().d(
+                        "Only one of trigger_data or trigger_specs is expected");
+                return false;
+            }
+
+            String triggerSpecString = json.getString(SourceHeaderContract.TRIGGER_SPECS);
 
             final int finalMaxEventLevelReports =
                     Source.getOrDefaultMaxEventLevelReports(
@@ -534,9 +549,9 @@ public class AsyncSourceFetcher {
                 return false;
             }
             attributionScopes = maybeAttributionScopes.get();
-            builder.setAttributionScopes(attributionScopes);
         }
 
+        // Parses attribution scope limit, can be optional.
         if (json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT)) {
             if (!attributionScopes.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
@@ -554,24 +569,23 @@ public class AsyncSourceFetcher {
             }
             return true;
         }
-        // Parses attribution scope limit, can be optional.
-        long attributionScopeLimit =
-                Long.parseLong(json.optString(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT));
-        if (attributionScopeLimit <= 0 || attributionScopes.size() > attributionScopeLimit) {
-            LoggerFactory.getMeasurementLogger()
-                    .e(
-                            "Attribution scope limit should be positive and not be smaller "
-                                    + "than the number of attribution scopes.");
+        Optional<Long> maybeAttributionScopeLimit =
+                FetcherUtil.extractLong(json, SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT);
+        if (maybeAttributionScopeLimit.isEmpty()) {
             return false;
         }
-        builder.setAttributionScopeLimit(attributionScopeLimit);
+        long attributionScopeLimit = maybeAttributionScopeLimit.get();
 
-        // Parsing max event states, can be optional.
+        // Parses max event states, can be optional, fallback to default max event states.
+        long maxEventStates = Source.DEFAULT_MAX_EVENT_STATES;
         if (!json.isNull(SourceHeaderContract.MAX_EVENT_STATES)) {
-            long maxEventStates =
-                    Long.parseLong(json.optString(SourceHeaderContract.MAX_EVENT_STATES));
-            if (maxEventStates <= 0
-                    || maxEventStates
+            Optional<Long> maybeMaxEventStates =
+                    FetcherUtil.extractLong(json, SourceHeaderContract.MAX_EVENT_STATES);
+            if (maybeMaxEventStates.isEmpty()) {
+                return false;
+            }
+            if (maybeMaxEventStates.get() <= 0
+                    || maybeMaxEventStates.get()
                             > mFlags.getMeasurementMaxReportStatesPerSourceRegistration()) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
@@ -579,7 +593,39 @@ public class AsyncSourceFetcher {
                                         + " report states per source registration.");
                 return false;
             }
-            builder.setMaxEventStates(maxEventStates);
+            maxEventStates = maybeMaxEventStates.get();
+        }
+
+        if (attributionScopeLimit <= 0 || attributionScopes.size() > attributionScopeLimit) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            "Attribution scope limit should be positive and not be smaller "
+                                    + "than the number of attribution scopes.");
+            return false;
+        }
+        if (attributionScopes.isEmpty()) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            "Attribution scopes should not be empty if attribution scope limit is"
+                                    + " set.");
+            return false;
+        }
+
+        builder.setAttributionScopeLimit(attributionScopeLimit);
+        builder.setAttributionScopes(attributionScopes);
+        builder.setMaxEventStates(maxEventStates);
+        return true;
+    }
+
+    private boolean isValidTriggerDataSet(Set<UnsignedLong> triggerDataSet,
+            Source.TriggerDataMatching triggerDataMatching) {
+        if (triggerDataSet.size() > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
+            return false;
+        }
+        if (mFlags.getMeasurementEnableTriggerDataMatching()
+                && triggerDataMatching == Source.TriggerDataMatching.MODULUS
+                && !isContiguousStartingAtZero(triggerDataSet)) {
+            return false;
         }
         return true;
     }
@@ -614,13 +660,7 @@ public class AsyncSourceFetcher {
                 }
                 validTriggerSpecs[i] = maybeTriggerSpec.get();
             }
-            // Check cardinality of trigger_data across the whole trigger spec array
-            if (triggerDataSet.size() > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
-                return Optional.empty();
-            }
-            if (mFlags.getMeasurementEnableTriggerDataMatching()
-                    && triggerDataMatching == Source.TriggerDataMatching.MODULUS
-                    && !isContiguousStartingAtZero(triggerDataSet)) {
+            if (!isValidTriggerDataSet(triggerDataSet, triggerDataMatching)) {
                 return Optional.empty();
             }
             return Optional.of(validTriggerSpecs);
@@ -628,6 +668,19 @@ public class AsyncSourceFetcher {
             LoggerFactory.getMeasurementLogger().d(ex, "Trigger Spec parsing failed");
             return Optional.empty();
         }
+    }
+
+    private static Optional<Set<UnsignedLong>> populateAndValidateTriggerDataSet(
+            Set<UnsignedLong> triggerDataSet, List<UnsignedLong> triggerDataList) {
+        // Check exclusivity of trigger_data across the whole trigger spec array, and validate
+        // trigger data magnitude.
+        for (UnsignedLong triggerData : triggerDataList) {
+            if (!triggerDataSet.add(triggerData)
+                    || triggerData.compareTo(TriggerSpecs.MAX_TRIGGER_DATA_VALUE) > 0) {
+                return Optional.empty();
+            }
+        }
+        return Optional.of(triggerDataSet);
     }
 
     private Optional<TriggerSpec> getValidTriggerSpec(
@@ -642,20 +695,17 @@ public class AsyncSourceFetcher {
         if (maybeTriggerDataListJson.isEmpty()) {
             return Optional.empty();
         }
+
         List<UnsignedLong> triggerDataList =
-                TriggerSpec.getTriggerDataArrayFromJSON(maybeTriggerDataListJson.get());
-        if (triggerDataList.isEmpty()
-                || triggerDataList.size()
-                        > mFlags.getMeasurementFlexApiMaxTriggerDataCardinality()) {
+                TriggerSpec.getTriggerDataArrayFromJson(maybeTriggerDataListJson.get());
+        if (triggerDataList.isEmpty()) {
             return Optional.empty();
         }
-        // Check exclusivity of trigger_data across the whole trigger spec array, and validate
-        // trigger data magnitude.
-        for (UnsignedLong triggerData : triggerDataList) {
-            if (!triggerDataSet.add(triggerData)
-                    || triggerData.compareTo(TriggerSpecs.MAX_TRIGGER_DATA_VALUE) > 0) {
-                return Optional.empty();
-            }
+
+        Optional<Set<UnsignedLong>> maybeTriggerDataSet = populateAndValidateTriggerDataSet(
+                triggerDataSet, triggerDataList);
+        if (maybeTriggerDataSet.isEmpty()) {
+            return Optional.empty();
         }
 
         if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS)) {
@@ -691,7 +741,7 @@ public class AsyncSourceFetcher {
                 return Optional.empty();
             }
 
-            summaryBuckets = TriggerSpec.getLongListFromJSON(maybeSummaryBucketsJson.get());
+            summaryBuckets = TriggerSpec.getLongListFromJson(maybeSummaryBucketsJson.get());
 
             if (summaryBuckets.isEmpty() || summaryBuckets.size() > maxEventLevelReports
                     || !TriggerSpec.isStrictIncreasing(summaryBuckets)) {
@@ -740,7 +790,7 @@ public class AsyncSourceFetcher {
             return Optional.empty();
         }
 
-        List<Long> windowEnds = TriggerSpec.getLongListFromJSON(maybeWindowEndsJson.get());
+        List<Long> windowEnds = TriggerSpec.getLongListFromJson(maybeWindowEndsJson.get());
 
         int windowEndsSize = windowEnds.size();
         if (windowEnds.isEmpty()
