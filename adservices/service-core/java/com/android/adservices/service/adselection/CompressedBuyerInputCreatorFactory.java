@@ -21,6 +21,9 @@ import android.annotation.NonNull;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
+
+import java.time.Clock;
 
 /** Factory for {@link CompressedBuyerInputCreator} */
 public class CompressedBuyerInputCreatorFactory {
@@ -33,6 +36,7 @@ public class CompressedBuyerInputCreatorFactory {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final int mMaxNumRecompressions;
     private final int mPasMaxPerBuyerSizeBytes;
+    private final Clock mClock;
 
     public CompressedBuyerInputCreatorFactory(
             CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper,
@@ -42,7 +46,8 @@ public class CompressedBuyerInputCreatorFactory {
             EncodedPayloadDao encodedPayloadDao,
             int compressedBuyerInputCreatorVersion,
             int maxNumRecompressions,
-            int pasMaxPerBuyerSizeBytes) {
+            int pasMaxPerBuyerSizeBytes,
+            Clock clock) {
         mCompressedBuyerInputCreatorHelper = compressedBuyerInputCreatorHelper;
         mDataCompressor = dataCompressor;
         mSellerConfigurationEnabled = sellerConfigurationEnabled;
@@ -51,11 +56,13 @@ public class CompressedBuyerInputCreatorFactory {
         mCompressedBuyerInputCreatorVersion = compressedBuyerInputCreatorVersion;
         mMaxNumRecompressions = maxNumRecompressions;
         mPasMaxPerBuyerSizeBytes = pasMaxPerBuyerSizeBytes;
+        mClock = clock;
     }
 
     /** Returns an implementation for the {@link CompressedBuyerInputCreator} */
     @NonNull
-    public CompressedBuyerInputCreator createCompressedBuyerInputCreator(int maxPayloadSizeBytes) {
+    public CompressedBuyerInputCreator createCompressedBuyerInputCreator(
+            int maxPayloadSizeBytes, GetAdSelectionDataApiCalledStats.Builder builder) {
         if (mSellerConfigurationEnabled
                 && mCompressedBuyerInputCreatorVersion
                         == CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION) {
@@ -65,12 +72,14 @@ public class CompressedBuyerInputCreatorFactory {
                     mDataCompressor,
                     mMaxNumRecompressions,
                     maxPayloadSizeBytes,
-                    mPasMaxPerBuyerSizeBytes);
+                    mPasMaxPerBuyerSizeBytes,
+                    mClock,
+                    builder);
         }
         // Update this whn more implementations are available
         sLogger.v("Returning CompressedBuyerInputCreatorNoOptimizations");
         return new CompressedBuyerInputCreatorNoOptimizations(
-                mCompressedBuyerInputCreatorHelper, mDataCompressor);
+                mCompressedBuyerInputCreatorHelper, mDataCompressor, mClock, builder);
     }
 
     /**
