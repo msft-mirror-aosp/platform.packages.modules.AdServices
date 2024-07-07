@@ -288,6 +288,28 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
+    /* The default value for whether the trigger debugging availability signal is enabled for event
+    reports. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL = false;
+
+    /** Returns whether the trigger debugging availability signal is enabled for event reports. */
+    default boolean getMeasurementEnableEventTriggerDebugSignal() {
+        return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
+    }
+
+    /* The default value for whether the trigger debugging availability signal is enabled for event
+    reports that have coarse_event_report_destinations = true. */
+    @FeatureFlag
+    boolean MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION = false;
+
+    /**
+     * Returns whether the trigger debugging availability signal is enabled for event reports that
+     * have coarse_event_report_destinations = true.
+     */
+    default boolean getMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
+    }
+
     /**
      * The suffix that is appended to the aggregation coordinator origin for retrieving the
      * encryption keys.
@@ -737,17 +759,43 @@ public interface Flags extends ModuleSharedFlags {
 
     /**
      * Returns the maximum number of distinct destination sites per source site X enrollment per
-     * rate limit window.
+     * minute rate limit window.
      */
     default int getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow() {
         return MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW;
     }
 
+    @ConfigFlag
     long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
 
-    /** Returns the duration that controls the rate-limiting window for destinations. */
+    /** Returns the duration that controls the rate-limiting window for destinations per minute. */
     default long getMeasurementDestinationRateLimitWindow() {
         return MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
+    }
+
+    /**
+     * Returns the maximum number of distinct destination sites per source site X enrollment per day
+     * rate limit.
+     */
+    @ConfigFlag int MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT = 100;
+
+    default int getMeasurementDestinationPerDayRateLimit() {
+        return MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW = false;
+
+    /** Returns true, if rate-limiting window for destinations per day is enabled. */
+    default boolean getMeasurementEnableDestinationPerDayRateLimitWindow() {
+        return MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW;
+    }
+
+    @ConfigFlag
+    long MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS = TimeUnit.DAYS.toMillis(1);
+
+    /** Returns the duration that controls the per day rate-limiting window for destinations. */
+    default long getMeasurementDestinationPerDayRateLimitWindowInMs() {
+        return MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
     }
 
     float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT = 6.5F;
@@ -1850,11 +1898,21 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
     }
 
-    @FeatureFlag int FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION = 0;
+    @ConfigFlag int FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION = 0;
 
     /** Returns the getAdSelectionData data buyer input creator version */
     default int getFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         return FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
+    }
+
+    @ConfigFlag int FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS = 5;
+
+    /**
+     * Returns the maximum number of times we can re-compress the entire payload during
+     * getAdSelectionData payload optimization.
+     */
+    default int getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions() {
+        return FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
     }
 
     // Protected signals cleanup feature flag disabled by default
@@ -3750,6 +3808,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
+    /** Default value for Measurement V1 source trigger data */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA = false;
+
+    /** Returns whether to enable Measurement V1 source trigger data */
+    default boolean getMeasurementEnableV1SourceTriggerData() {
+        return MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
+    }
+
     /** Default value for Measurement flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
@@ -3891,8 +3957,6 @@ public interface Flags extends ModuleSharedFlags {
     default int getMeasurementVtcConfigurableMaxEventReportsCount() {
         return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
     }
-
-    boolean MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO = false;
 
     boolean MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS = false;
 

@@ -86,6 +86,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
@@ -897,6 +899,27 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW,
                 MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
+    public boolean getMeasurementEnableDestinationPerDayRateLimitWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW,
+                MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
+    public int getMeasurementDestinationPerDayRateLimit() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT,
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT);
+    }
+
+    @Override
+    public long getMeasurementDestinationPerDayRateLimitWindowInMs() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS,
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS);
     }
 
     @Override
@@ -2468,6 +2491,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS,
+                FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerMultiCloudEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
@@ -2973,6 +3003,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
                 FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S);
+    }
+
+    @Override
+    public boolean getMeasurementEnableV1SourceTriggerData() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
+                MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA);
     }
 
     @Override
@@ -3835,6 +3872,11 @@ public final class PhFlags implements Flags {
 
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA
+                        + " = "
+                        + getMeasurementEnableV1SourceTriggerData());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
                         + " = "
                         + getMeasurementFlexibleEventReportingApiEnabled());
@@ -4037,6 +4079,22 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_RATE_LIMIT_WINDOW_MILLISECONDS
                         + " = "
                         + getMeasurementRateLimitWindowMilliseconds());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementEnableDestinationPerDayRateLimitWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT
+                        + " = "
+                        + getMeasurementDestinationPerDayRateLimit());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS
+                        + " = "
+                        + getMeasurementDestinationPerDayRateLimitWindowInMs());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW
@@ -5192,6 +5250,16 @@ public final class PhFlags implements Flags {
                         + getMeasurementEventReportingJobPersisted());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL
+                        + " = "
+                        + getMeasurementEnableEventTriggerDebugSignal());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION
+                        + " = "
+                        + getMeasurementEnableEventTriggerDebugSignalForCoarseDestination());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
                         + " = "
                         + getMeasurementEventFallbackReportingJobRequiredBatteryNotLow());
@@ -6019,6 +6087,20 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED,
                 MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED);
+    }
+
+    @Override
+    public boolean getMeasurementEnableEventTriggerDebugSignal() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL,
+                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL);
+    }
+
+    @Override
+    public boolean getMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION,
+                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION);
     }
 
     @Override

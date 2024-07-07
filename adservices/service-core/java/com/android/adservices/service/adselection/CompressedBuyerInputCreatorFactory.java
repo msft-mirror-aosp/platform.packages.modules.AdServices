@@ -21,6 +21,9 @@ import android.annotation.NonNull;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
+
+import java.time.Clock;
 
 /** Factory for {@link CompressedBuyerInputCreator} */
 public class CompressedBuyerInputCreatorFactory {
@@ -29,28 +32,54 @@ public class CompressedBuyerInputCreatorFactory {
     private final boolean mSellerConfigurationEnabled;
     private final CustomAudienceDao mCustomAudienceDao;
     private final EncodedPayloadDao mEncodedPayloadDao;
+    private final int mCompressedBuyerInputCreatorVersion;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private final int mMaxNumRecompressions;
+    private final int mPasMaxPerBuyerSizeBytes;
+    private final Clock mClock;
 
     public CompressedBuyerInputCreatorFactory(
             CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper,
             AuctionServerDataCompressor dataCompressor,
             boolean sellerConfigurationEnabled,
             CustomAudienceDao customAudienceDao,
-            EncodedPayloadDao encodedPayloadDao) {
+            EncodedPayloadDao encodedPayloadDao,
+            int compressedBuyerInputCreatorVersion,
+            int maxNumRecompressions,
+            int pasMaxPerBuyerSizeBytes,
+            Clock clock) {
         mCompressedBuyerInputCreatorHelper = compressedBuyerInputCreatorHelper;
         mDataCompressor = dataCompressor;
         mSellerConfigurationEnabled = sellerConfigurationEnabled;
         mCustomAudienceDao = customAudienceDao;
         mEncodedPayloadDao = encodedPayloadDao;
+        mCompressedBuyerInputCreatorVersion = compressedBuyerInputCreatorVersion;
+        mMaxNumRecompressions = maxNumRecompressions;
+        mPasMaxPerBuyerSizeBytes = pasMaxPerBuyerSizeBytes;
+        mClock = clock;
     }
 
     /** Returns an implementation for the {@link CompressedBuyerInputCreator} */
     @NonNull
-    public CompressedBuyerInputCreator createCompressedBuyerInputCreator() {
+    public CompressedBuyerInputCreator createCompressedBuyerInputCreator(
+            int maxPayloadSizeBytes, GetAdSelectionDataApiCalledStats.Builder builder) {
+        if (mSellerConfigurationEnabled
+                && mCompressedBuyerInputCreatorVersion
+                        == CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION) {
+            sLogger.v("Returning CompressedBuyerInputCreatorSellerMaxImpl");
+            return new CompressedBuyerInputCreatorSellerPayloadMaxImpl(
+                    mCompressedBuyerInputCreatorHelper,
+                    mDataCompressor,
+                    mMaxNumRecompressions,
+                    maxPayloadSizeBytes,
+                    mPasMaxPerBuyerSizeBytes,
+                    mClock,
+                    builder);
+        }
         // Update this whn more implementations are available
         sLogger.v("Returning CompressedBuyerInputCreatorNoOptimizations");
         return new CompressedBuyerInputCreatorNoOptimizations(
-                mCompressedBuyerInputCreatorHelper, mDataCompressor);
+                mCompressedBuyerInputCreatorHelper, mDataCompressor, mClock, builder);
     }
 
     /**
@@ -62,5 +91,15 @@ public class CompressedBuyerInputCreatorFactory {
                 ? new BuyerInputDataFetcherBuyerAllowListImpl(
                         mCustomAudienceDao, mEncodedPayloadDao)
                 : new BuyerInputDataFetcherAllBuyersImpl(mCustomAudienceDao, mEncodedPayloadDao);
+    }
+
+    /**
+     * Returns an implementation of {@link BuyerInputGeneratorArgumentsPreparer} depending on the
+     * seller configuration flag.
+     */
+    public BuyerInputGeneratorArgumentsPreparer getBuyerInputGeneratorArgumentsPreparer() {
+        return mSellerConfigurationEnabled
+                ? new BuyerInputGeneratorArgumentsPreparerSellerConfigurationEnabled()
+                : new BuyerInputGeneratorArgumentsPreparerSellerConfigurationDisabled();
     }
 }
