@@ -30,12 +30,14 @@ import android.util.Log;
 
 import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.PayloadOptimizationContext;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ClientType;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.GetBidsRequest;
 import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandArgParserHelper;
 import com.android.adservices.service.shell.ShellCommandResult;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -162,7 +164,9 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                     InvalidProtocolBufferException {
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerInputs =
                 mBuyerInputGenerator
-                        .createCompressedBuyerInputs(null)
+                        .createCompressedBuyerInputs(
+                                PayloadOptimizationContext.builder().build(),
+                                GetAdSelectionDataApiCalledStats.builder())
                         .get(DB_TIMEOUT_SEC, TimeUnit.SECONDS);
 
         if (!buyerInputs.containsKey(buyer)) {

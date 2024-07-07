@@ -19,7 +19,6 @@ package com.android.adservices.adid;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -93,7 +92,7 @@ public class AdIdServiceTest {
                     .when(
                             () ->
                                     AppImportanceFilter.create(
-                                            any(Context.class), anyInt(), any(Supplier.class)));
+                                            any(Context.class), any(Supplier.class)));
 
             spyAdIdService.onCreate();
             IBinder binder = spyAdIdService.onBind(getIntentForAdIdService());

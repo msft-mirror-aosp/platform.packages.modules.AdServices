@@ -1740,7 +1740,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao ->
                         assertEquals(
-                                Integer.valueOf(3),
+                                Integer.valueOf(4),
                                 measurementDao
                                         .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                                                 publisher,
@@ -10316,17 +10316,6 @@ public class MeasurementDaoTest {
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
         doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
-        Source source0 =
-                insertSourceForAttributionScope(
-                        null,
-                        null,
-                        null,
-                        SOURCE_EVENT_TIME,
-                        List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION),
-                        List.of(APP_ONE_DESTINATION));
-        mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source0));
-        Arrays.asList(source0).stream()
-                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         Source source1 =
                 insertSourceForAttributionScope(
@@ -10379,7 +10368,7 @@ public class MeasurementDaoTest {
                     dao.insertEventReport(fakeEventReport1);
                     dao.updateSourcesForAttributionScope(source1);
                 });
-        Arrays.asList(source0, source1).stream()
+        Arrays.asList(source1).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
         assertThat(
                         mDatastoreManager
@@ -10400,7 +10389,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source2));
         Arrays.asList(source1).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
-        Arrays.asList(source0, source2).stream()
+        Arrays.asList(source2).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
         assertThat(
                         mDatastoreManager
@@ -10421,7 +10410,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source3));
         Arrays.asList(source1).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
-        Arrays.asList(source0, source2, source3).stream()
+        Arrays.asList(source2, source3).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         Source source4 =
@@ -10435,7 +10424,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source4));
         Arrays.asList(source1, source2).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
-        Arrays.asList(source0, source3, source4).stream()
+        Arrays.asList(source3, source4).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         Source source5 =
@@ -10449,7 +10438,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source5));
         Arrays.asList(source1, source2, source3, source4).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
-        Arrays.asList(source0, source5).stream()
+        Arrays.asList(source5).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // Sources for different reporting origin with different max event states.
@@ -10465,7 +10454,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source6));
         Arrays.asList(source1, source2, source3, source4).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
-        Arrays.asList(source0, source5, source6).stream()
+        Arrays.asList(source5, source6).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // Sources for different reporting origin with the same max event states.
@@ -10481,7 +10470,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source7));
         Arrays.asList(source1, source2, source3, source4).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
-        Arrays.asList(source0, source5, source6, source7).stream()
+        Arrays.asList(source5, source6, source7).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         Source source8 =
@@ -10495,7 +10484,7 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source8));
         Arrays.asList(source1, source2, source3, source4).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
-        Arrays.asList(source0, source5, source6, source7, source8).stream()
+        Arrays.asList(source5, source6, source7, source8).stream()
                 .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
     }
 
@@ -10691,7 +10680,107 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testUpdateSourcesForAttributionScope_scopesNotSelected_removesScopes() {
+    public void
+            testUpdateSourcesForAttributionScope_scopedSource_ignoresNonScopedAndDeletesReports() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+
+        Source source1 =
+                insertSourceForAttributionScope(
+                        null, null, null, SOURCE_EVENT_TIME, List.of(WEB_ONE_DESTINATION), null);
+        EventReport pastFakeEventReport =
+                new EventReport.Builder()
+                        .setId("1")
+                        .setSourceId(source1.getId())
+                        .setSourceEventId(source1.getEventId())
+                        .setReportTime(SOURCE_EVENT_TIME)
+                        .setAttributionDestinations(List.of(WEB_ONE_DESTINATION))
+                        .setTriggerTime(SOURCE_EVENT_TIME)
+                        .setSourceType(source1.getSourceType())
+                        .setStatus(EventReport.Status.PENDING)
+                        .setRegistrationOrigin(source1.getRegistrationOrigin())
+                        .build();
+        EventReport fakeEventReport1 =
+                new EventReport.Builder()
+                        .setId("2")
+                        .setSourceId(source1.getId())
+                        .setSourceEventId(source1.getEventId())
+                        .setReportTime(SOURCE_EVENT_TIME + 1000)
+                        .setAttributionDestinations(List.of(WEB_ONE_DESTINATION))
+                        .setTriggerTime(SOURCE_EVENT_TIME + 1000)
+                        .setSourceType(source1.getSourceType())
+                        .setStatus(EventReport.Status.PENDING)
+                        .setRegistrationOrigin(source1.getRegistrationOrigin())
+                        .build();
+        // Deleted fake event report for comparison.
+        EventReport deletedFakeEventReport1 =
+                new EventReport.Builder()
+                        .setId("3")
+                        .setSourceId(source1.getId())
+                        .setSourceEventId(source1.getEventId())
+                        .setReportTime(SOURCE_EVENT_TIME + 1000)
+                        .setAttributionDestinations(List.of(WEB_ONE_DESTINATION))
+                        .setTriggerTime(SOURCE_EVENT_TIME + 1000)
+                        .setSourceType(source1.getSourceType())
+                        .setStatus(EventReport.Status.MARKED_TO_DELETE)
+                        .setRegistrationOrigin(source1.getRegistrationOrigin())
+                        .build();
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertEventReport(pastFakeEventReport);
+                    dao.insertEventReport(fakeEventReport1);
+                    dao.updateSourcesForAttributionScope(source1);
+                });
+        Arrays.asList(source1).stream()
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
+        assertThat(
+                        mDatastoreManager
+                                .runInTransactionWithResult(
+                                        measurementDao ->
+                                                measurementDao.getSourceEventReports(source1))
+                                .get())
+                .containsExactly(pastFakeEventReport, fakeEventReport1);
+
+        Source source2 =
+                insertSourceForAttributionScope(
+                        List.of("2"),
+                        ATTRIBUTION_SCOPE_LIMIT,
+                        MAX_EVENT_STATES,
+                        SOURCE_EVENT_TIME + 1,
+                        List.of(WEB_ONE_DESTINATION),
+                        null);
+        mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source2));
+        Arrays.asList(source1).stream()
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
+        Arrays.asList(source2).stream()
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
+        assertThat(
+                        mDatastoreManager
+                                .runInTransactionWithResult(
+                                        measurementDao ->
+                                                measurementDao.getSourceEventReports(source1))
+                                .get())
+                .containsExactly(pastFakeEventReport, deletedFakeEventReport1);
+
+        Source source3 =
+                insertSourceForAttributionScope(
+                        List.of("3"),
+                        ATTRIBUTION_SCOPE_LIMIT,
+                        MAX_EVENT_STATES,
+                        SOURCE_EVENT_TIME + 2,
+                        List.of(WEB_TWO_DESTINATION),
+                        null);
+        mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source3));
+        Arrays.asList(source1).stream()
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
+        Arrays.asList(source2, source3).stream()
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
+    }
+
+    @Test
+    public void testUpdateSourcesForAttributionScope_newNonScopedSource_removesScopes() {
         mFlags = mock(Flags.class);
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
@@ -10707,6 +10796,14 @@ public class MeasurementDaoTest {
                                                                             source.getId()))
                                             .get())
                             .isEmpty();
+                    Source savedSource =
+                            mDatastoreManager
+                                    .runInTransactionWithResult(
+                                            measurementDao ->
+                                                    measurementDao.getSource(source.getId()))
+                                    .get();
+                    assertThat(savedSource.getAttributionScopeLimit()).isNull();
+                    assertThat(savedSource.getMaxEventStates()).isNull();
                 };
 
         Consumer<? super Source> verifyAttributionScopeUnchangedFn =
@@ -10720,7 +10817,79 @@ public class MeasurementDaoTest {
                                                                             source.getId()))
                                             .get())
                             .containsExactlyElementsIn(source.getAttributionScopes());
+                    Source savedSource =
+                            mDatastoreManager
+                                    .runInTransactionWithResult(
+                                            measurementDao ->
+                                                    measurementDao.getSource(source.getId()))
+                                    .get();
+                    assertThat(savedSource.getAttributionScopeLimit())
+                            .isEqualTo(savedSource.getAttributionScopeLimit());
+                    assertThat(savedSource.getMaxEventStates())
+                            .isEqualTo(savedSource.getMaxEventStates());
                 };
+
+        Source source1 =
+                insertSourceForAttributionScope(
+                        List.of("1"),
+                        ATTRIBUTION_SCOPE_LIMIT,
+                        MAX_EVENT_STATES,
+                        SOURCE_EVENT_TIME,
+                        List.of(WEB_ONE_DESTINATION),
+                        null);
+        mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source1));
+        Arrays.asList(source1).stream()
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
+        Arrays.asList(source1).stream().forEach(verifyAttributionScopeUnchangedFn);
+
+        Source source2 =
+                insertSourceForAttributionScope(
+                        List.of("2"),
+                        ATTRIBUTION_SCOPE_LIMIT,
+                        MAX_EVENT_STATES,
+                        SOURCE_EVENT_TIME + 1,
+                        List.of(WEB_ONE_DESTINATION),
+                        null);
+        mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source2));
+        Arrays.asList(source1, source2).stream()
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
+        Arrays.asList(source1, source2).stream().forEach(verifyAttributionScopeUnchangedFn);
+
+        Source source3 =
+                insertSourceForAttributionScope(
+                        null,
+                        null,
+                        null,
+                        SOURCE_EVENT_TIME + 2,
+                        List.of(WEB_TWO_DESTINATION),
+                        null);
+        mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source3));
+        Arrays.asList(source1, source2, source3).stream()
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
+        // Source3 is for a different destination, attribution scopes should not be cleared.
+        Arrays.asList(source1, source2).stream().forEach(verifyAttributionScopeUnchangedFn);
+
+        Source source4 =
+                insertSourceForAttributionScope(
+                        null,
+                        null,
+                        null,
+                        SOURCE_EVENT_TIME + 3,
+                        List.of(WEB_ONE_DESTINATION),
+                        null);
+        mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source4));
+        Arrays.asList(source1, source2, source3, source4).stream()
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
+        // Source4 is the same destination, clear attribution scopes for older sources.
+        Arrays.asList(source1, source2).stream().forEach(verifyAttributionScopeEmptyFn);
+    }
+
+    @Test
+    public void testUpdateSourcesForAttributionScope_scopesNotSelected_ignoreSources() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
         // Below are the sources registered with attribution scopes and destinations.
         // For each destination, two sources are registered, and only one's scopes are to be
         // deleted.
@@ -10757,7 +10926,8 @@ public class MeasurementDaoTest {
                         null,
                         List.of(APP_ONE_DESTINATION));
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source1));
-        Arrays.stream(new Source[] {source1}).forEach(verifyAttributionScopeUnchangedFn);
+        Arrays.stream(new Source[] {source1})
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // S2: attribution scopes -> [3, 4, 5], destinations -> [D1]
         Source source2 =
@@ -10769,8 +10939,10 @@ public class MeasurementDaoTest {
                         null,
                         List.of(APP_ONE_DESTINATION));
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source2));
-        Arrays.stream(new Source[] {source1}).forEach(verifyAttributionScopeEmptyFn);
-        Arrays.stream(new Source[] {source2}).forEach(verifyAttributionScopeUnchangedFn);
+        Arrays.stream(new Source[] {source1})
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
+        Arrays.stream(new Source[] {source2})
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // S3: attribution scopes -> [0, 1], destinations -> [D2]
         Source source3 =
@@ -10782,8 +10954,10 @@ public class MeasurementDaoTest {
                         List.of(WEB_ONE_DESTINATION),
                         null);
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source3));
-        Arrays.stream(new Source[] {source1}).forEach(verifyAttributionScopeEmptyFn);
-        Arrays.stream(new Source[] {source2, source3}).forEach(verifyAttributionScopeUnchangedFn);
+        Arrays.stream(new Source[] {source1})
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
+        Arrays.stream(new Source[] {source2, source3})
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // S4: attribution scopes -> [1, 3], destinations -> [D2]
         Source source4 =
@@ -10795,9 +10969,10 @@ public class MeasurementDaoTest {
                         List.of(WEB_ONE_DESTINATION),
                         null);
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source4));
-        Arrays.stream(new Source[] {source1}).forEach(verifyAttributionScopeEmptyFn);
+        Arrays.stream(new Source[] {source1})
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
         Arrays.stream(new Source[] {source2, source3, source4})
-                .forEach(verifyAttributionScopeUnchangedFn);
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // S5: attribution scopes -> [1, 2], destinations -> [D3]
         Source source5 =
@@ -10809,9 +10984,10 @@ public class MeasurementDaoTest {
                         List.of(WEB_TWO_DESTINATION),
                         null);
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source5));
-        Arrays.stream(new Source[] {source1}).forEach(verifyAttributionScopeEmptyFn);
+        Arrays.stream(new Source[] {source1})
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
         Arrays.stream(new Source[] {source2, source3, source4, source5})
-                .forEach(verifyAttributionScopeUnchangedFn);
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // S6: attribution scopes -> [2, 3, 4], destinations -> [D3]
         Source source6 =
@@ -10823,9 +10999,10 @@ public class MeasurementDaoTest {
                         List.of(WEB_TWO_DESTINATION),
                         null);
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source6));
-        Arrays.stream(new Source[] {source1, source5}).forEach(verifyAttributionScopeEmptyFn);
+        Arrays.stream(new Source[] {source1, source5})
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
         Arrays.stream(new Source[] {source2, source3, source4, source6})
-                .forEach(verifyAttributionScopeUnchangedFn);
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // S7: attribution scopes -> [2], destinations -> [D4]
         Source source7 =
@@ -10837,9 +11014,10 @@ public class MeasurementDaoTest {
                         List.of(WEB_THREE_DESTINATION),
                         null);
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source7));
-        Arrays.stream(new Source[] {source1, source5}).forEach(verifyAttributionScopeEmptyFn);
+        Arrays.stream(new Source[] {source1, source5})
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
         Arrays.stream(new Source[] {source2, source3, source4, source6, source7})
-                .forEach(verifyAttributionScopeUnchangedFn);
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // S8: attribution scopes -> [1, 2], destinations -> [D4], shares same timestamp as S7.
         Source source8 =
@@ -10851,9 +11029,10 @@ public class MeasurementDaoTest {
                         List.of(WEB_THREE_DESTINATION),
                         null);
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source8));
-        Arrays.stream(new Source[] {source1, source5}).forEach(verifyAttributionScopeEmptyFn);
+        Arrays.stream(new Source[] {source1, source5})
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
         Arrays.stream(new Source[] {source2, source3, source4, source6, source7, source8})
-                .forEach(verifyAttributionScopeUnchangedFn);
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // S9: attribution scopes -> [0], destinations -> [D1], reporting origin -> R2
         Source source9 =
@@ -10866,9 +11045,10 @@ public class MeasurementDaoTest {
                         List.of(APP_ONE_DESTINATION),
                         REGISTRATION_ORIGIN_2);
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source9));
-        Arrays.stream(new Source[] {source1, source5}).forEach(verifyAttributionScopeEmptyFn);
+        Arrays.stream(new Source[] {source1, source5})
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
         Arrays.stream(new Source[] {source2, source3, source4, source6, source7, source8, source9})
-                .forEach(verifyAttributionScopeUnchangedFn);
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // S10: attribution scopes -> [0, 1], destinations -> [D2], reporting origin -> R2
         Source source10 =
@@ -10881,12 +11061,13 @@ public class MeasurementDaoTest {
                         null,
                         REGISTRATION_ORIGIN_2);
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source10));
-        Arrays.stream(new Source[] {source1, source5}).forEach(verifyAttributionScopeEmptyFn);
+        Arrays.stream(new Source[] {source1, source5})
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
         Arrays.stream(
                         new Source[] {
                             source2, source3, source4, source6, source7, source8, source9, source10
                         })
-                .forEach(verifyAttributionScopeUnchangedFn);
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // S11: attribution scopes -> [1, 2], destinations -> [D3], reporting origin -> R2
         Source source11 =
@@ -10899,13 +11080,14 @@ public class MeasurementDaoTest {
                         null,
                         REGISTRATION_ORIGIN_2);
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source11));
-        Arrays.stream(new Source[] {source1, source5}).forEach(verifyAttributionScopeEmptyFn);
+        Arrays.stream(new Source[] {source1, source5})
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
         Arrays.stream(
                         new Source[] {
                             source2, source3, source4, source6, source7, source8, source9, source10,
                             source11
                         })
-                .forEach(verifyAttributionScopeUnchangedFn);
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
 
         // S12: attribution scopes -> [3, 4], destinations -> [D1, D2, D3, D4]
         Source source12 =
@@ -10917,31 +11099,14 @@ public class MeasurementDaoTest {
                         List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION, WEB_THREE_DESTINATION),
                         List.of(APP_ONE_DESTINATION));
         mDatastoreManager.runInTransaction((dao) -> dao.updateSourcesForAttributionScope(source12));
-        Arrays.stream(
-                        new Source[] {
-                            source1, source2, source3, source4, source5, source6, source7, source8,
-                            source9, source10, source11, source12
-                        })
-                .forEach(
-                        source -> {
-                            assertThat(
-                                            mDatastoreManager
-                                                    .runInTransactionWithResult(
-                                                            measurementDao ->
-                                                                    measurementDao.getSource(
-                                                                            source.getId()))
-                                                    .get()
-                                                    .getStatus())
-                                    .isEqualTo(Source.Status.ACTIVE);
-                        });
         Arrays.stream(new Source[] {source1, source3, source5, source8})
-                .forEach(verifyAttributionScopeEmptyFn);
+                .forEach(source -> verifySourceStatus(source, Source.Status.IGNORED));
         Arrays.stream(
                         new Source[] {
                             source2, source4, source6, source7, source9, source10, source11,
                             source12
                         })
-                .forEach(verifyAttributionScopeUnchangedFn);
+                .forEach(source -> verifySourceStatus(source, Source.Status.ACTIVE));
     }
 
     @Test
@@ -11654,16 +11819,23 @@ public class MeasurementDaoTest {
                         .setPublisher(APP_ONE_PUBLISHER)
                         .setPublisherType(EventSurfaceType.APP)
                         .build());
-        for (Source source : sourcesList) {
-            ContentValues values = new ContentValues();
-            values.put("_id", source.getId());
-            values.put("registrant", source.getRegistrant().toString());
-            values.put("publisher", source.getPublisher().toString());
-            values.put("publisher_type", source.getPublisherType());
-
-            long row = db.insert("msmt_source", null, values);
-            assertNotEquals("Source insertion failed", -1, row);
-        }
+        sourcesList.add(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S4")
+                        .setRegistrant(APP_ONE_SOURCE)
+                        .setPublisher(APP_ONE_PUBLISHER)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .setStatus(Source.Status.MARKED_TO_DELETE)
+                        .build());
+        sourcesList.add(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S5")
+                        .setRegistrant(APP_TWO_SOURCES)
+                        .setPublisher(APP_TWO_PUBLISHER)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .setStatus(Source.Status.MARKED_TO_DELETE)
+                        .build());
+        sourcesList.forEach(source -> insertSource(source, source.getId()));
         List<Trigger> triggersList = new ArrayList<>();
         triggersList.add(
                 TriggerFixture.getValidTriggerBuilder()
@@ -11753,7 +11925,6 @@ public class MeasurementDaoTest {
     }
 
     private void setupSourceDataForPublisherTypeWeb() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Source> sourcesList = new ArrayList<>();
         sourcesList.add(
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -11775,19 +11946,18 @@ public class MeasurementDaoTest {
                         .build());
         sourcesList.add(
                 SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("W23")
+                        .setPublisher(WEB_PUBLISHER_TWO)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setStatus(Source.Status.MARKED_TO_DELETE)
+                        .build());
+        sourcesList.add(
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("S3")
                         .setPublisher(WEB_PUBLISHER_THREE)
                         .setPublisherType(EventSurfaceType.WEB)
                         .build());
-        for (Source source : sourcesList) {
-            ContentValues values = new ContentValues();
-            values.put("_id", source.getId());
-            values.put("publisher", source.getPublisher().toString());
-            values.put("publisher_type", source.getPublisherType());
-
-            long row = db.insert("msmt_source", null, values);
-            assertNotEquals("Source insertion failed", -1, row);
-        }
+        sourcesList.forEach(source -> insertSource(source, source.getId()));
     }
 
     private Source.Builder createSourceForIATest(

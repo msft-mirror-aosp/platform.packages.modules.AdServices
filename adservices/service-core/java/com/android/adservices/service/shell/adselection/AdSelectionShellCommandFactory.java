@@ -48,6 +48,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -112,7 +113,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                         CompressedBuyerInputCreatorNoOptimizations.VERSION,
                         flags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
-                        flags.getProtectedSignalsEncodedPayloadMaxSizeBytes());
+                        flags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
+                        Clock.systemUTC());
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
                         new FrequencyCapAdFiltererNoOpImpl(),
