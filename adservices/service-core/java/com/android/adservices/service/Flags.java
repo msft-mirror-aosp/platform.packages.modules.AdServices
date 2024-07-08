@@ -289,12 +289,15 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /* The default value for whether the trigger debugging availability signal is enabled for event
-    reports. */
-    @FeatureFlag boolean MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL = false;
+    or aggregate reports. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL = false;
 
-    /** Returns whether the trigger debugging availability signal is enabled for event reports. */
-    default boolean getMeasurementEnableEventTriggerDebugSignal() {
-        return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
+    /**
+     * Returns whether the trigger debugging availability signal is enabled for event or aggregate
+     * reports.
+     */
+    default boolean getMeasurementEnableTriggerDebugSignal() {
+        return MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL;
     }
 
     /* The default value for whether the trigger debugging availability signal is enabled for event
