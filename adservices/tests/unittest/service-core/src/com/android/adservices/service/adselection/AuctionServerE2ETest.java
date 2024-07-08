@@ -1335,6 +1335,11 @@ public class AuctionServerE2ETest {
                     public boolean getFledgeAppInstallFilteringEnabled() {
                         return false;
                     }
+
+                    @Override
+                    public boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
+                        return false;
+                    }
                 };
 
         AdFilteringFeatureFactory adFilteringFeatureFactory =
