@@ -184,7 +184,6 @@ public class ImpressionReporter {
         }
         mJsEngine =
                 new ReportImpressionScriptEngine(
-                        flags::getEnforceIsolateMaxHeapSize,
                         flags::getIsolateMaxHeapSizeBytes,
                         registerAdBeaconScriptEngineHelper,
                         retryStrategy,

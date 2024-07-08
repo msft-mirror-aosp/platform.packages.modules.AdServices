@@ -36,6 +36,7 @@ import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncodedPayloadFixture;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +52,7 @@ import java.util.Map;
 public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMockitoTestCase {
     private CompressedBuyerInputCreatorHelper mCompressedBuyerInputCreatorHelper;
 
-    @Mock AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategy;
+    @Mock AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategyMock;
 
     private final boolean mOmitAdsEnabled = false;
     private final boolean mPasExtendedMetricsEnabled = false;
@@ -60,7 +61,7 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
     public void setup() {
         mCompressedBuyerInputCreatorHelper =
                 new CompressedBuyerInputCreatorHelper(
-                        mAuctionServerPayloadMetricsStrategy,
+                        mAuctionServerPayloadMetricsStrategyMock,
                         mPasExtendedMetricsEnabled,
                         mOmitAdsEnabled);
     }
@@ -86,7 +87,7 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
     public void testBuildCustomAudienceProtoOmitAdsEnabled_CADoesNotOmitsAds() {
         mCompressedBuyerInputCreatorHelper =
                 new CompressedBuyerInputCreatorHelper(
-                        mAuctionServerPayloadMetricsStrategy,
+                        mAuctionServerPayloadMetricsStrategyMock,
                         mPasExtendedMetricsEnabled, /* omitAdsEnabled */
                         true);
 
@@ -109,7 +110,7 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
     public void testBuildCustomAudienceProtoOmitAdsEnabled_CAOmitsAds() {
         mCompressedBuyerInputCreatorHelper =
                 new CompressedBuyerInputCreatorHelper(
-                        mAuctionServerPayloadMetricsStrategy,
+                        mAuctionServerPayloadMetricsStrategyMock,
                         mPasExtendedMetricsEnabled, /* omitAdsEnabled */
                         true);
 
@@ -156,7 +157,7 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
                 DBCustomAudienceFixture.VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS,
                 customAudience);
 
-        verify(mAuctionServerPayloadMetricsStrategy)
+        verify(mAuctionServerPayloadMetricsStrategyMock)
                 .addToBuyerIntermediateStats(any(), any(), any());
     }
 
@@ -164,7 +165,7 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
     public void logBuyerInputGeneratedStatsPasExtendedMetricsEnabled() {
         mCompressedBuyerInputCreatorHelper =
                 new CompressedBuyerInputCreatorHelper(
-                        mAuctionServerPayloadMetricsStrategy,
+                        mAuctionServerPayloadMetricsStrategyMock,
                         /* pasExtendedMetricsEnabled */ true,
                         mOmitAdsEnabled);
 
@@ -172,23 +173,23 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
                 ImmutableMap.of();
 
         mCompressedBuyerInputCreatorHelper.logBuyerInputGeneratedStats(perBuyerStats);
-        verify(mAuctionServerPayloadMetricsStrategy)
+        verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
-                        perBuyerStats, 0, 0, 0, Integer.MAX_VALUE);
+                        perBuyerStats, 0, 0, 0, 0);
 
         mCompressedBuyerInputCreatorHelper.incrementPasExtendedMetrics(new byte[5]);
         mCompressedBuyerInputCreatorHelper.logBuyerInputGeneratedStats(perBuyerStats);
-        verify(mAuctionServerPayloadMetricsStrategy)
+        verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
                         perBuyerStats, 1, 5, 5, 5);
 
         mCompressedBuyerInputCreatorHelper.incrementPasExtendedMetrics(new byte[10]);
         mCompressedBuyerInputCreatorHelper.logBuyerInputGeneratedStats(perBuyerStats);
-        verify(mAuctionServerPayloadMetricsStrategy)
+        verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
                         perBuyerStats, 2, 15, 10, 5);
 
-        verify(mAuctionServerPayloadMetricsStrategy, never())
+        verify(mAuctionServerPayloadMetricsStrategyMock, never())
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
     }
 
@@ -196,7 +197,7 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
     public void logBuyerInputGeneratedStatsPasExtendedMetricsDisabled() {
         mCompressedBuyerInputCreatorHelper =
                 new CompressedBuyerInputCreatorHelper(
-                        mAuctionServerPayloadMetricsStrategy,
+                        mAuctionServerPayloadMetricsStrategyMock,
                         /* pasExtendedMetricsEnabled */ false,
                         mOmitAdsEnabled);
 
@@ -204,10 +205,10 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
                 ImmutableMap.of();
 
         mCompressedBuyerInputCreatorHelper.logBuyerInputGeneratedStats(perBuyerStats);
-        verify(mAuctionServerPayloadMetricsStrategy)
+        verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStats(perBuyerStats);
 
-        verify(mAuctionServerPayloadMetricsStrategy, never())
+        verify(mAuctionServerPayloadMetricsStrategyMock, never())
                 .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
                         any(), anyInt(), anyInt(), anyInt(), anyInt());
     }
@@ -242,5 +243,48 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
                 mCompressedBuyerInputCreatorHelper.getTrustedBiddingSignalKeys(dbCustomAudience);
 
         expect.that(trustedBiddingSignalKeys).isEmpty();
+    }
+
+    @Test
+    public void testAddSellerConfigurationStats() {
+        GetAdSelectionDataApiCalledStats.Builder builder =
+                GetAdSelectionDataApiCalledStats.builder();
+        int inputGenerationLatencyMs = 20;
+        int creatorVersion = 1;
+        int numReEstimations = 3;
+        mCompressedBuyerInputCreatorHelper.addSellerConfigurationStats(
+                builder,
+                GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                        .PAYLOAD_WITHIN_REQUESTED_MAX,
+                inputGenerationLatencyMs,
+                creatorVersion,
+                numReEstimations);
+
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setSellerConfigurationMetrics(
+                        builder,
+                        GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                                .PAYLOAD_WITHIN_REQUESTED_MAX,
+                        inputGenerationLatencyMs,
+                        creatorVersion,
+                        numReEstimations);
+    }
+
+    @Test
+    public void testAddBuyerInputGenerationLatencyMs() {
+        GetAdSelectionDataApiCalledStats.Builder builder =
+                GetAdSelectionDataApiCalledStats.builder();
+        int inputGenerationLatencyMs = 20;
+        mCompressedBuyerInputCreatorHelper
+                .addBuyerInputLatencyAndCompressedBuyerInputCreatorVersionToStats(
+                        builder,
+                        inputGenerationLatencyMs,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION);
+
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setInputGenerationLatencyMsAndBuyerCreatorVersion(
+                        builder,
+                        inputGenerationLatencyMs,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION);
     }
 }

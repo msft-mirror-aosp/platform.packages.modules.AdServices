@@ -19,7 +19,9 @@ package com.android.adservices.service.shell;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.shell.IShellCommandCallback;
@@ -52,6 +54,9 @@ import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.AuctionServerDataCompressorFactory;
 import com.android.adservices.service.adselection.AuctionServerPayloadMetricsStrategyDisabled;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFactory;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorHelper;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorNoOptimizations;
 import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
@@ -60,6 +65,7 @@ import com.android.adservices.service.shell.customaudience.CustomAudienceListCom
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.testing.common.BlockingCallableWrapper;
 import com.android.adservices.shared.testing.concurrency.OnResultSyncCallback;
@@ -71,6 +77,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.io.PrintWriter;
+import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 
@@ -86,6 +93,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     private final Flags mFlags = FakeFlagsFactory.getFlagsForTest();
     private ShellCommandServiceImpl mShellCommandService;
     private SyncIShellCommandCallback mSyncIShellCommandCallback;
+    @Mock CompressedBuyerInputCreatorFactory mCompressedBuyerInputCreatorFactoryMock;
 
     @Before
     public void setup() {
@@ -125,22 +133,31 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
         AuctionServerDataCompressor auctionServerDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+
+        CompressedBuyerInputCreatorHelper helper =
+                new CompressedBuyerInputCreatorHelper(
+                        new AuctionServerPayloadMetricsStrategyDisabled(),
+                        /* pasExtendedMetricsEnabled= */ false,
+                        /* omitAdsEnabled= */ false);
+        when(mCompressedBuyerInputCreatorFactoryMock.createCompressedBuyerInputCreator(
+                        anyInt(), any()))
+                .thenReturn(
+                        new CompressedBuyerInputCreatorNoOptimizations(
+                                helper,
+                                auctionServerDataCompressor,
+                                Clock.systemUTC(),
+                                GetAdSelectionDataApiCalledStats.builder()));
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
-                        customAudienceDao,
-                        encodedPayloadDao,
                         new FrequencyCapAdFiltererNoOpImpl(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
                         mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
                         mFlags.getProtectedSignalsPeriodicEncodingEnabled(),
-                        auctionServerDataCompressor,
-                        mFlags.getFledgeAuctionServerOmitAdsEnabled(),
-                        new AuctionServerPayloadMetricsStrategyDisabled(),
-                        mFlags,
                         new AdFilteringFeatureFactory(appInstallDao, frequencyCapDao, mFlags)
-                                .getAppInstallAdFilterer());
+                                .getAppInstallAdFilterer(),
+                        mCompressedBuyerInputCreatorFactoryMock);
         ShellCommandFactorySupplier adServicesShellCommandHandlerFactory =
                 new TestShellCommandFactorySupplier(
                         CUSTOM_AUDIENCE_CLI_ENABLED,

@@ -697,32 +697,21 @@ public class JSScriptEngine {
      */
     private JavaScriptIsolate createIsolate(
             JavaScriptSandbox jsSandbox, IsolateSettings isolateSettings) {
-        // TODO: b/321237839. After upgrading the dependency on javascriptengine to beta1, revisit
-        // the exception handling of this method.
         int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE);
         StopWatch isolateStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         try {
-            if (!isConfigurableHeapSizeSupported(jsSandbox)
-                    && isolateSettings.getEnforceMaxHeapSizeFeature()) {
+            if (!isConfigurableHeapSizeSupported(jsSandbox)) {
                 mLogger.e("Memory limit enforcement required, but not supported by Isolate");
                 throw new IllegalStateException(NON_SUPPORTED_MAX_HEAP_SIZE_EXCEPTION_MSG);
             }
 
-            JavaScriptIsolate javaScriptIsolate;
-            if (isolateSettings.getEnforceMaxHeapSizeFeature()
-                    && isolateSettings.getMaxHeapSizeBytes() > 0) {
-                mLogger.d(
-                        "Creating JS isolate with memory limit: %d bytes",
-                        isolateSettings.getMaxHeapSizeBytes());
-                IsolateStartupParameters startupParams = new IsolateStartupParameters();
-                startupParams.setMaxHeapSizeBytes(isolateSettings.getMaxHeapSizeBytes());
-                javaScriptIsolate = jsSandbox.createIsolate(startupParams);
-            } else {
-                mLogger.d("Creating JS isolate with unbounded memory limit");
-                javaScriptIsolate = jsSandbox.createIsolate();
-            }
-            return javaScriptIsolate;
+            mLogger.d(
+                    "Creating JS isolate with memory limit: %d bytes",
+                    isolateSettings.getMaxHeapSizeBytes());
+            IsolateStartupParameters startupParams = new IsolateStartupParameters();
+            startupParams.setMaxHeapSizeBytes(isolateSettings.getMaxHeapSizeBytes());
+            return jsSandbox.createIsolate(startupParams);
         } catch (RuntimeException jsSandboxPossiblyDisconnected) {
             mLogger.e(
                     jsSandboxPossiblyDisconnected,

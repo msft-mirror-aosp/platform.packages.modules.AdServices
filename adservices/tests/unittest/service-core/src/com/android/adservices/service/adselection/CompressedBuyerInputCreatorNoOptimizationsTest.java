@@ -20,6 +20,12 @@ import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_1;
 import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_2;
 
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
+import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
 import android.util.Pair;
@@ -30,6 +36,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncodedPayloadFixture;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,6 +46,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,8 +57,12 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
         extends AdServicesExtendedMockitoTestCase {
     private CompressedBuyerInputCreator mCompressedBuyerInputCreator;
     private AuctionServerDataCompressor mAuctionServerDataCompressor;
-    private CompressedBuyerInputCreatorHelper mCompressedBuyerInputCreatorHelper;
-    @Mock private AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategy;
+    @Mock private AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategyMock;
+    private static final boolean OMIT_ADS_DISABLED = false;
+    private static final boolean PAS_METRICS_DISABLED = false;
+    @Mock private Clock mClockMock;
+    @Mock private GetAdSelectionDataApiCalledStats.Builder mStatsBuilderMock;
+    private static final int LATENCY_MS = 100;
 
     @Before
     public void setup() throws Exception {
@@ -58,19 +70,25 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION);
 
-        boolean omitAdsDisabled = false;
-        boolean pasMetricsDisabled = false;
-
-        mCompressedBuyerInputCreatorHelper =
+        CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper =
                 new CompressedBuyerInputCreatorHelper(
-                        mAuctionServerPayloadMetricsStrategy, pasMetricsDisabled, omitAdsDisabled);
+                        mAuctionServerPayloadMetricsStrategyMock,
+                        PAS_METRICS_DISABLED,
+                        OMIT_ADS_DISABLED);
+
+        // Make latency difference 100
+        when(mClockMock.millis()).thenReturn(0L).thenReturn(100L);
 
         mCompressedBuyerInputCreator =
                 new CompressedBuyerInputCreatorNoOptimizations(
-                        mCompressedBuyerInputCreatorHelper, mAuctionServerDataCompressor);
+                        compressedBuyerInputCreatorHelper,
+                        mAuctionServerDataCompressor,
+                        mClockMock,
+                        mStatsBuilderMock);
     }
 
     @Test
+    @SuppressWarnings("ReturnValueIgnored")
     public void generateCompressedBuyerInputFromDBCAsAndEncodedSignalsReturnsCompressedInputs()
             throws Exception {
         Map<String, AdTechIdentifier> nameAndBuyersMap =
@@ -117,9 +135,20 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
             expect.that(ByteString.copyFrom(encodedPayloadMap.get(buyer).getEncodedPayload()))
                     .isEqualTo(appSignals.getAppInstallSignals());
         }
+        verify(mAuctionServerPayloadMetricsStrategyMock, times(dbCustomAudienceList.size()))
+                .addToBuyerIntermediateStats(any(), any(), any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setInputGenerationLatencyMsAndBuyerCreatorVersion(
+                        mStatsBuilderMock,
+                        LATENCY_MS,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION);
+        verify(mClockMock, times(2)).millis();
     }
 
     @Test
+    @SuppressWarnings("ReturnValueIgnored")
     public void
             generateCompressedBuyerInputFromDBCAsAndEncodedSignalsReturnsCompressedInputs_OnlyPAS()
                     throws Exception {
@@ -147,9 +176,20 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
             expect.that(ByteString.copyFrom(encodedPayloadMap.get(buyer).getEncodedPayload()))
                     .isEqualTo(appSignals.getAppInstallSignals());
         }
+        verify(mAuctionServerPayloadMetricsStrategyMock, never())
+                .addToBuyerIntermediateStats(any(), any(), any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setInputGenerationLatencyMsAndBuyerCreatorVersion(
+                        mStatsBuilderMock,
+                        LATENCY_MS,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION);
+        verify(mClockMock, times(2)).millis();
     }
 
     @Test
+    @SuppressWarnings("ReturnValueIgnored")
     public void
             generateCompressedBuyerInputFromDBCAsAndEncodedSignalsReturnsCompressedInputs_OnlyPA()
                     throws Exception {
@@ -191,6 +231,16 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                     buyerInput.getProtectedAppSignals();
             expect.that(appSignals.getSerializedSize()).isEqualTo(0);
         }
+        verify(mAuctionServerPayloadMetricsStrategyMock, times(dbCustomAudienceList.size()))
+                .addToBuyerIntermediateStats(any(), any(), any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setInputGenerationLatencyMsAndBuyerCreatorVersion(
+                        mStatsBuilderMock,
+                        LATENCY_MS,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION);
+        verify(mClockMock, times(2)).millis();
     }
 
     private Map<AdTechIdentifier, DBEncodedPayload> generateEncodedPayload(

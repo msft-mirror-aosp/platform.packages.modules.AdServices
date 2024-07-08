@@ -2,7 +2,8 @@
   "description": "The sources with the oldest destination get deleted if number of distinct destinations per enrollment per publisher exceed the limit. Corresponding aggregate reports and attributions are deleted.",
   "phflags_override": {
     "measurement_debug_key_ad_id_matching_enrollment_blocklist": "",
-    "measurement_enable_destination_publisher_enrollment_fifo": "true",
+    "measurement_enable_source_destination_limit_priority": "true",
+    "measurement_default_destination_limit_algorithm": 1,
     "measurement_max_distinct_destinations_in_active_source": 3,
     "measurement_enable_fifo_destinations_delete_aggregate_reports": "true",
     "measurement_flex_api_max_information_gain_dual_destination_event": "9",
@@ -141,7 +142,7 @@
           }
         ]
       },
-      // S5: A that increases app destination count so that S6 can delete the oldest app destination
+      // S5: A source that increases app destination count so that S6 can delete the oldest app destination
       {
         "timestamp": "800000000011",
         "registration_request": {

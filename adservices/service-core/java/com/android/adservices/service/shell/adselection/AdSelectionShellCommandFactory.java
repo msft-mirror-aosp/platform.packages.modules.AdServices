@@ -36,6 +36,9 @@ import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.AuctionServerDataCompressorFactory;
 import com.android.adservices.service.adselection.AuctionServerPayloadMetricsStrategyDisabled;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFactory;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorHelper;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorNoOptimizations;
 import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
@@ -45,6 +48,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -74,8 +78,7 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                 ImmutableSet.of(
                         new ConsentedDebugShellCommand(consentedDebugConfigurationDao),
                         new GetAdSelectionDataCommand(
-                                buyerInputGenerator, auctionServerDataCompressor),
-                        new MockAuctionResultCommand());
+                                buyerInputGenerator, auctionServerDataCompressor));
         mAllCommandsMap =
                 allCommands.stream()
                         .collect(
@@ -93,25 +96,39 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         flags.getFledgeAuctionServerCompressionAlgorithmVersion());
         // TODO(b/342574944): Decide which fields need to be configurable and update.
-        BuyerInputGenerator buyerInputGenerator =
-                new BuyerInputGenerator(
+        AuctionServerDataCompressor dataCompressor =
+                AuctionServerDataCompressorFactory.getDataCompressor(
+                        flags.getFledgeAuctionServerCompressionAlgorithmVersion());
+        CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper =
+                new CompressedBuyerInputCreatorHelper(
+                        new AuctionServerPayloadMetricsStrategyDisabled(),
+                        flags.getPasExtendedMetricsEnabled(),
+                        flags.getFledgeAuctionServerOmitAdsEnabled());
+        CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
+                new CompressedBuyerInputCreatorFactory(
+                        compressedBuyerInputCreatorHelper,
+                        dataCompressor,
+                        flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
                         CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                         ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION,
+                        flags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
+                        flags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
+                        Clock.systemUTC());
+        BuyerInputGenerator buyerInputGenerator =
+                new BuyerInputGenerator(
                         new FrequencyCapAdFiltererNoOpImpl(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         flags.getFledgeCustomAudienceActiveTimeWindowInMs(),
                         flags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
                         flags.getProtectedSignalsPeriodicEncodingEnabled(),
-                        auctionServerDataCompressor,
-                        flags.getFledgeAuctionServerOmitAdsEnabled(),
-                        new AuctionServerPayloadMetricsStrategyDisabled(),
-                        flags,
                         new AdFilteringFeatureFactory(
                                         sharedStorageDatabase.appInstallDao(),
                                         sharedStorageDatabase.frequencyCapDao(),
                                         flags)
-                                .getAppInstallAdFilterer());
+                                .getAppInstallAdFilterer(),
+                        compressedBuyerInputCreatorFactory);
         return new AdSelectionShellCommandFactory(
                 debugFlags.getFledgeConsentedDebuggingCliEnabledStatus(),
                 debugFlags.getAdSelectionCommandsEnabled(),
@@ -142,7 +159,7 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                 }
                 return command;
             }
-            case GetAdSelectionDataCommand.CMD, MockAuctionResultCommand.CMD -> {
+            case GetAdSelectionDataCommand.CMD -> {
                 if (!mIsAdSelectionCliEnabled) {
                     return new NoOpShellCommand(
                             cmd, command.getMetricsLoggerCommand(), KEY_AD_SELECTION_CLI_ENABLED);
