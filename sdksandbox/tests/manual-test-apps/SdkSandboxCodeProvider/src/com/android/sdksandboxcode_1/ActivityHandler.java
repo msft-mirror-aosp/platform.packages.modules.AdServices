@@ -43,6 +43,10 @@ import android.widget.Toast;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 public class ActivityHandler implements SensorEventListener {
     private static final String DISABLE_BACK_NAVIGATION = "Disable Back Navigation";
     private static final String ENABLE_BACK_NAVIGATION = "Enable Back Navigation";
@@ -92,6 +96,18 @@ public class ActivityHandler implements SensorEventListener {
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.MATCH_PARENT));
         mediaViewContainer.addView(mView);
+
+        // Manually handle window insets post Android V to support edge-to-edge display.
+        ViewCompat.setOnApplyWindowInsetsListener(
+                mActivity.getWindow().getDecorView(),
+                (v, windowInsets) -> {
+                    Insets insets =
+                            windowInsets.getInsets(
+                                    WindowInsetsCompat.Type.systemBars()
+                                            | WindowInsetsCompat.Type.displayCutout());
+                    v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+                    return WindowInsetsCompat.CONSUMED;
+                });
 
         registerBackEnableButton();
         registerPortraitButton();
