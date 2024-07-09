@@ -384,10 +384,11 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL =
             "measurement_enable_event_trigger_debug_signal";
-
     public static final String
             KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION =
                     "measurement_enable_event_trigger_debug_signal_for_coarse_destination";
+    public static final String KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS =
+            "measurement_trigger_debug_signal_probability_for_fake_reports";
 
     public static final String
             KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =

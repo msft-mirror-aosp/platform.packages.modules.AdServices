@@ -90,7 +90,10 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
-                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), Mockito.any());
+                    .makeHttpPostRequest(
+                            Mockito.eq(Uri.parse(registration_origin)),
+                            Mockito.any(),
+                            Mockito.eq(null));
         } catch (IOException e) {
             Assert.fail();
         }

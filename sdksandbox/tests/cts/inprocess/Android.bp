@@ -51,6 +51,7 @@ android_test {
         "general-tests",
         "mcts-adservices",
     ],
+    jarjar_rules: ":test-jarjar-rules",
 }
 
 android_test {
@@ -85,4 +86,5 @@ android_test {
     test_suites: [
         "general-tests",
     ],
+    jarjar_rules: ":test-jarjar-rules",
 }

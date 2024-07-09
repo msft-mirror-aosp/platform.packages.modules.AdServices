@@ -23,6 +23,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Pair;
@@ -35,6 +36,8 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
@@ -46,6 +49,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -234,7 +238,18 @@ public class EventReportingJobHandler {
         try {
             Uri reportingOrigin = eventReport.getRegistrationOrigin();
             JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
-            int returnCode = makeHttpPostRequest(reportingOrigin, eventReportJsonPayload);
+            Boolean triggerDebuggingAvailable = null;
+            if (mFlags.getMeasurementEnableEventTriggerDebugSignal()) {
+                Optional<Boolean> hasTriggerDebug =
+                        mDatastoreManager.runInTransactionWithResult(
+                                dao -> getTriggerDebugAvailability(eventReport, dao));
+                if (hasTriggerDebug.isPresent()) {
+                    triggerDebuggingAvailable = hasTriggerDebug.get();
+                }
+            }
+            int returnCode =
+                    makeHttpPostRequest(
+                            reportingOrigin, eventReportJsonPayload, triggerDebuggingAvailable);
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
@@ -360,14 +375,53 @@ public class EventReportingJobHandler {
                 .toJson();
     }
 
-    /**
-     * Makes the POST request to the reporting URL.
-     */
+    /** Makes the POST request to the reporting URL. */
     @VisibleForTesting
-    public int makeHttpPostRequest(Uri adTechDomain, JSONObject eventReportPayload)
+    public int makeHttpPostRequest(
+            Uri adTechDomain, JSONObject eventReportPayload, @Nullable Boolean hasTriggerDebug)
             throws IOException {
         EventReportSender eventReportSender = new EventReportSender(mIsDebugInstance, mContext);
+        if (hasTriggerDebug != null) {
+            return eventReportSender.sendReportWithExtraHeaders(
+                    adTechDomain,
+                    eventReportPayload,
+                    Map.of("Trigger-Debugging-Available", hasTriggerDebug.toString()));
+        }
         return eventReportSender.sendReport(adTechDomain, eventReportPayload);
+    }
+
+    @Nullable
+    private Boolean getTriggerDebugAvailability(EventReport eventReport, IMeasurementDao dao)
+            throws DatastoreException {
+        Source source = dao.getSource(eventReport.getSourceId());
+        // Only get the data when web destinations are available.
+        if (!source.hasWebDestinations()) {
+            return null;
+        }
+
+        String triggerId = eventReport.getTriggerId();
+        // TriggerId is null for fake event reports. Randomize the value returned for fake reports
+        // with given probability which is adjusted based on the 3PCD progress.
+        if (triggerId == null) {
+            return ThreadLocalRandom.current().nextFloat()
+                    < mFlags.getMeasurementTriggerDebugSignalProbabilityForFakeReports();
+        }
+
+        Trigger trigger = dao.getTrigger(triggerId);
+        boolean hasTriggerArDebug = trigger.hasArDebugPermission();
+        boolean hasAdId = trigger.hasAdIdPermission();
+        // When coarse_event_report_destinations = true and both app and web destinations are
+        // available in source, check either adId or arDebug permission to avoid leaking the
+        // destination type.
+        if (source.hasAppDestinations() && source.hasCoarseEventReportDestinations()) {
+            if (!mFlags.getMeasurementEnableEventTriggerDebugSignalForCoarseDestination()) {
+                return null;
+            }
+            return hasAdId || hasTriggerArDebug;
+        }
+        // When coarse_event_report_destinations = false or only web destinations are available,
+        // check arDebug value.
+        return hasTriggerArDebug;
     }
 
     private void logReportingStats(ReportingStatus reportingStatus) {

@@ -17,6 +17,7 @@
 package android.adservices.lint.prod
 
 import android.adservices.lint.common.DeviceConfigUsageDetector
+import android.adservices.lint.common.KillSwitchFlagUsageDetector
 import android.adservices.lint.common.PreconditionsCheckStateDetector
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.Vendor
@@ -32,6 +33,7 @@ class AdServicesProdLintCheckerIssueRegistry : IssueRegistry() {
             BackCompatJobServiceDetector.ISSUE,
             BackCompatNewFileDetector.ISSUE,
             DeviceConfigUsageDetector.ISSUE,
+            KillSwitchFlagUsageDetector.ISSUE,
             PreconditionsCheckStateDetector.ISSUE,
             RoomDatabaseMigrationDetector.ISSUE_ERROR,
             RoomDatabaseMigrationDetector.ISSUE_WARNING,

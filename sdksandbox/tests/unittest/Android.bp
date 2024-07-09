@@ -36,6 +36,7 @@ java_defaults {
         "SdkSandboxTestUtils",
         "SdkSandbox-java-lib",
     ],
+    jarjar_rules: ":test-jarjar-rules",
     jni_libs: [
         // Required for ExtendedMockito
         "libdexmakerjvmtiagent",

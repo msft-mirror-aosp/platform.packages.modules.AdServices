@@ -31,6 +31,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 
 /**
  * Class to send reports by making a non-credentialed secure HTTP POST request to the reporting
@@ -52,6 +53,19 @@ public abstract class MeasurementReportSender {
         URL reportingFullUrl = createReportingFullUrl(adTechDomain);
 
         HttpURLConnection urlConnection = createHttpUrlConnection(reportingFullUrl);
+        returnCode = sendReportPostRequest(urlConnection, reportJson);
+        return returnCode;
+    }
+
+    /** Sends an event report to the reporting origin with extra headers. */
+    public int sendReportWithExtraHeaders(
+            Uri adTechDomain, JSONObject reportJson, Map<String, String> headers)
+            throws IOException {
+        int returnCode;
+        URL reportingFullUrl = createReportingFullUrl(adTechDomain);
+
+        HttpURLConnection urlConnection = createHttpUrlConnection(reportingFullUrl);
+        headers.forEach(urlConnection::setRequestProperty);
         returnCode = sendReportPostRequest(urlConnection, reportJson);
         return returnCode;
     }
