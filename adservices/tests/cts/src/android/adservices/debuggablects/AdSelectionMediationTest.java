@@ -24,6 +24,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.utils.ScenarioDispatcher;
@@ -48,6 +49,22 @@ public final class AdSelectionMediationTest extends FledgeDebuggableScenarioTest
     /** Test sellers can orchestrate waterfall mediation. Remarketing CUJ 069. */
     @Test
     public void testSelectAds_withAdSelectionFromOutcomes_happyPath() throws Exception {
+        testSelectAds_withAdSelectionFromOutcomes_happyPath_helper(mAdSelectionClient);
+    }
+
+    /**
+     * Test sellers can orchestrate waterfall mediation using ad selection client created using get
+     * method. Remarketing CUJ 069.
+     */
+    @Test
+    public void testSelectAds_withAdSelectionFromOutcomes_happyPath_usingGetMethod()
+            throws Exception {
+        testSelectAds_withAdSelectionFromOutcomes_happyPath_helper(
+                mAdSelectionClientUsingGetMethod);
+    }
+
+    public void testSelectAds_withAdSelectionFromOutcomes_happyPath_helper(
+            AdSelectionClient adSelectionClient) throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -58,6 +75,7 @@ public final class AdSelectionMediationTest extends FledgeDebuggableScenarioTest
             URL baseAddress = dispatcher.getBaseAddressWithPrefix();
             AdSelectionOutcome result =
                     doSelectAds(
+                            adSelectionClient,
                             makeAdSelectionFromOutcomesConfig(baseAddress)
                                     .setAdSelectionIds(
                                             List.of(
@@ -164,7 +182,13 @@ public final class AdSelectionMediationTest extends FledgeDebuggableScenarioTest
 
     private AdSelectionOutcome doSelectAds(AdSelectionFromOutcomesConfig config)
             throws ExecutionException, InterruptedException, TimeoutException {
-        return mAdSelectionClient.selectAds(config).get(TIMEOUT, TimeUnit.SECONDS);
+        return doSelectAds(mAdSelectionClient, config);
+    }
+
+    private AdSelectionOutcome doSelectAds(
+            AdSelectionClient adSelectionClient, AdSelectionFromOutcomesConfig config)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        return adSelectionClient.selectAds(config).get(TIMEOUT, TimeUnit.SECONDS);
     }
 
     private AdSelectionFromOutcomesConfig.Builder makeAdSelectionFromOutcomesConfig(
