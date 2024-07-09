@@ -50,6 +50,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQ
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
+import static com.android.adservices.service.Flags.MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
@@ -817,6 +818,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getMeasurementEnableEventTriggerDebugSignalForCoarseDestination);
     }
 
+    @Test
+    public void testGetMeasurementEnableTriggerDebugSignalForFakeReports() {
+        testFloatFlag(
+                "getMeasurementTriggerDebugSignalProbabilityForFakeReports",
+                MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS,
+                Flags::getMeasurementTriggerDebugSignalProbabilityForFakeReports);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal helpers - do not add new tests following this point.                              //
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -874,6 +883,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     private void testFlag(
             String getterName, long defaultValue, Flaginator<Flags, Long> flaginator) {
+        expect.withMessage("%s", getterName)
+                .that(flaginator.getFlagValue(mFlags))
+                .isEqualTo(defaultValue);
+    }
+
+    private void testFloatFlag(
+            String getterName, float defaultValue, Flaginator<Flags, Float> flaginator) {
         expect.withMessage("%s", getterName)
                 .that(flaginator.getFlagValue(mFlags))
                 .isEqualTo(defaultValue);
