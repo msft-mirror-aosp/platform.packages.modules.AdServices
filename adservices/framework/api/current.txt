@@ -141,6 +141,7 @@ package android.adservices.adselection {
   public final class GetAdSelectionDataRequest {
     method @FlaggedApi("com.android.adservices.flags.fledge_server_auction_multi_cloud_enabled") @Nullable public android.net.Uri getCoordinatorOriginUri();
     method @Nullable public android.adservices.common.AdTechIdentifier getSeller();
+    method @FlaggedApi("com.android.adservices.flags.fledge_get_ad_selection_data_seller_configuration_enabled") @Nullable public android.adservices.adselection.SellerConfiguration getSellerConfiguration();
   }
 
   public static final class GetAdSelectionDataRequest.Builder {
@@ -148,6 +149,22 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.GetAdSelectionDataRequest build();
     method @FlaggedApi("com.android.adservices.flags.fledge_server_auction_multi_cloud_enabled") @NonNull public android.adservices.adselection.GetAdSelectionDataRequest.Builder setCoordinatorOriginUri(@Nullable android.net.Uri);
     method @NonNull public android.adservices.adselection.GetAdSelectionDataRequest.Builder setSeller(@Nullable android.adservices.common.AdTechIdentifier);
+    method @FlaggedApi("com.android.adservices.flags.fledge_get_ad_selection_data_seller_configuration_enabled") @NonNull public android.adservices.adselection.GetAdSelectionDataRequest.Builder setSellerConfiguration(@Nullable android.adservices.adselection.SellerConfiguration);
+  }
+
+  @FlaggedApi("com.android.adservices.flags.fledge_get_ad_selection_data_seller_configuration_enabled") public final class PerBuyerConfiguration implements android.os.Parcelable {
+    method public int describeContents();
+    method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
+    method @IntRange(from=0, to=java.lang.Integer.MAX_VALUE) public int getTargetInputSizeBytes();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.PerBuyerConfiguration> CREATOR;
+  }
+
+  public static final class PerBuyerConfiguration.Builder {
+    ctor public PerBuyerConfiguration.Builder();
+    method @NonNull public android.adservices.adselection.PerBuyerConfiguration build();
+    method @NonNull public android.adservices.adselection.PerBuyerConfiguration.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
+    method @NonNull public android.adservices.adselection.PerBuyerConfiguration.Builder setTargetInputSizeBytes(@IntRange(from=0, to=java.lang.Integer.MAX_VALUE) int);
   }
 
   @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public final class PerBuyerDecisionLogic implements android.os.Parcelable {
@@ -210,6 +227,21 @@ package android.adservices.adselection {
     ctor public ReportImpressionRequest(long);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
     method public long getAdSelectionId();
+  }
+
+  @FlaggedApi("com.android.adservices.flags.fledge_get_ad_selection_data_seller_configuration_enabled") public final class SellerConfiguration implements android.os.Parcelable {
+    method public int describeContents();
+    method @IntRange(from=1, to=java.lang.Integer.MAX_VALUE) public int getMaximumPayloadSizeBytes();
+    method @NonNull public java.util.Set<android.adservices.adselection.PerBuyerConfiguration> getPerBuyerConfigurations();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.SellerConfiguration> CREATOR;
+  }
+
+  public static final class SellerConfiguration.Builder {
+    ctor public SellerConfiguration.Builder();
+    method @NonNull public android.adservices.adselection.SellerConfiguration build();
+    method @NonNull public android.adservices.adselection.SellerConfiguration.Builder setMaximumPayloadSizeBytes(@IntRange(from=1, to=java.lang.Integer.MAX_VALUE) int);
+    method @NonNull public android.adservices.adselection.SellerConfiguration.Builder setPerBuyerConfigurations(@NonNull java.util.Set<android.adservices.adselection.PerBuyerConfiguration>);
   }
 
   @FlaggedApi("com.android.adservices.flags.fledge_ad_selection_filtering_enabled") public class SetAppInstallAdvertisersRequest {
@@ -437,6 +469,7 @@ package android.adservices.customaudience {
     method @NonNull public android.net.Uri getDailyUpdateUri();
     method @Nullable public java.time.Instant getExpirationTime();
     method @NonNull public String getName();
+    method @FlaggedApi("com.android.adservices.flags.fledge_get_ad_selection_data_seller_configuration_enabled") public double getPriority();
     method @Nullable public android.adservices.customaudience.TrustedBiddingData getTrustedBiddingData();
     method @Nullable public android.adservices.common.AdSelectionSignals getUserBiddingSignals();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
@@ -455,6 +488,7 @@ package android.adservices.customaudience {
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setDailyUpdateUri(@NonNull android.net.Uri);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setExpirationTime(@Nullable java.time.Instant);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setName(@NonNull String);
+    method @FlaggedApi("com.android.adservices.flags.fledge_get_ad_selection_data_seller_configuration_enabled") @NonNull public android.adservices.customaudience.CustomAudience.Builder setPriority(double);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setTrustedBiddingData(@Nullable android.adservices.customaudience.TrustedBiddingData);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setUserBiddingSignals(@Nullable android.adservices.common.AdSelectionSignals);
   }
@@ -543,13 +577,15 @@ package android.adservices.customaudience {
     method @NonNull public java.time.Duration getMinDelay();
     method @NonNull public java.util.List<android.adservices.customaudience.PartialCustomAudience> getPartialCustomAudienceList();
     method @NonNull public android.net.Uri getUpdateUri();
+    method public boolean shouldReplacePendingUpdates();
   }
 
-  public static final class ScheduleCustomAudienceUpdateRequest.Builder {
+  @FlaggedApi("com.android.adservices.flags.fledge_schedule_custom_audience_update_enabled") public static final class ScheduleCustomAudienceUpdateRequest.Builder {
     ctor public ScheduleCustomAudienceUpdateRequest.Builder(@NonNull android.net.Uri, @NonNull java.time.Duration, @NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest build();
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setMinDelay(@NonNull java.time.Duration);
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setPartialCustomAudienceList(@NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);
+    method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setShouldReplacePendingUpdates(boolean);
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setUpdateUri(@NonNull android.net.Uri);
   }
 

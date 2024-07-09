@@ -107,11 +107,6 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     }
 
     @Override
-    public void initRvc() {
-        initU18();
-    }
-
-    @Override
     public void initGaUxWithPas() {
         initGA();
     }

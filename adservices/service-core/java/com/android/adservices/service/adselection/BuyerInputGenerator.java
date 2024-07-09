@@ -16,35 +16,27 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
-
+import android.adservices.adselection.PerBuyerConfiguration;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
-import com.android.adservices.data.signals.EncodedPayloadDao;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
-import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAppSignals;
-import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.protobuf.ByteString;
 
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -57,8 +49,6 @@ public class BuyerInputGenerator {
 
     private static final String EMPTY_USER_BIDDING_SIGNALS = "{}";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    @NonNull private final CustomAudienceDao mCustomAudienceDao;
-    @NonNull private final EncodedPayloadDao mEncodedSignalsDao;
     @NonNull private final FrequencyCapAdFilterer mFrequencyCapAdFilterer;
     @NonNull private final AppInstallAdFilterer mAppInstallAdFilterer;
     @NonNull private final Clock mClock;
@@ -67,53 +57,34 @@ public class BuyerInputGenerator {
     private final long mCustomAudienceActiveTimeWindowInMs;
     private final boolean mEnableAdFilter;
     private final boolean mEnableProtectedSignals;
-    private final boolean mEnableOmitAds;
-    private final boolean mPasExtendedMetricsEnabled;
 
-    @NonNull private final AuctionServerDataCompressor mDataCompressor;
-    @NonNull private final AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategy;
-    @NonNull private final Flags mFlags;
+    private final CompressedBuyerInputCreatorFactory mCompressedBuyerInputCreatorFactory;
 
     public BuyerInputGenerator(
-            @NonNull final CustomAudienceDao customAudienceDao,
-            @NonNull final EncodedPayloadDao encodedSignalsDaoDao,
             @NonNull final FrequencyCapAdFilterer frequencyCapAdFilterer,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ExecutorService backgroundExecutorService,
             long customAudienceActiveTimeWindowInMs,
             boolean enableAdFilter,
             boolean enableProtectedSignals,
-            @NonNull AuctionServerDataCompressor dataCompressor,
-            boolean enableOmitAds,
-            @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
-            @NonNull Flags flags,
-            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
-        Objects.requireNonNull(customAudienceDao);
-        Objects.requireNonNull(encodedSignalsDaoDao);
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer,
+            CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory) {
         Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
-        Objects.requireNonNull(dataCompressor);
-        Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
-        Objects.requireNonNull(flags);
         Objects.requireNonNull(appInstallAdFilterer);
+        Objects.requireNonNull(compressedBuyerInputCreatorFactory);
 
-        mCustomAudienceDao = customAudienceDao;
-        mEncodedSignalsDao = encodedSignalsDaoDao;
         mFrequencyCapAdFilterer = frequencyCapAdFilterer;
         mClock = Clock.systemUTC();
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
 
-        mDataCompressor = dataCompressor;
         mCustomAudienceActiveTimeWindowInMs = customAudienceActiveTimeWindowInMs;
         mEnableAdFilter = enableAdFilter;
         mEnableProtectedSignals = enableProtectedSignals;
-        mEnableOmitAds = enableOmitAds;
-        mAuctionServerPayloadMetricsStrategy = auctionServerPayloadMetricsStrategy;
-        mFlags = flags;
-        mPasExtendedMetricsEnabled = mFlags.getPasExtendedMetricsEnabled();
         mAppInstallAdFilterer = appInstallAdFilterer;
+        mCompressedBuyerInputCreatorFactory = compressedBuyerInputCreatorFactory;
     }
 
     /**
@@ -123,15 +94,26 @@ public class BuyerInputGenerator {
      * @return a map of buyer name and {@link BuyerInput}
      */
     public FluentFuture<Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>>
-            createCompressedBuyerInputs() {
+            createCompressedBuyerInputs(
+                    @NonNull PayloadOptimizationContext payloadOptimizationContext,
+                    @NonNull GetAdSelectionDataApiCalledStats.Builder statsBuilder) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.CREATE_BUYER_INPUTS);
         sLogger.v("Starting create buyer input");
 
+        List<PerBuyerConfiguration> perBuyerConfigurations;
+
+        if (payloadOptimizationContext.getOptimizationsEnabled()) {
+            perBuyerConfigurations =
+                    new ArrayList<>(payloadOptimizationContext.getPerBuyerConfigurations());
+        } else {
+            perBuyerConfigurations = List.of();
+        }
+
         ListenableFuture<List<DBCustomAudience>> filteredCAs =
-                FluentFuture.from(getBuyersCustomAudience())
+                FluentFuture.from(getBuyersCustomAudience(perBuyerConfigurations))
                         .transform(this::getFilteredCustomAudiences, mLightweightExecutorService);
         ListenableFuture<Map<AdTechIdentifier, DBEncodedPayload>> allSignals =
-                getAllEncodedProtectedSignals();
+                getAllEncodedProtectedSignals(perBuyerConfigurations);
         ListenableFuture<Pair<List<DBCustomAudience>, Map<AdTechIdentifier, DBEncodedPayload>>>
                 combinedCAsAndSignals =
                         Futures.whenAllSucceed(filteredCAs, allSignals)
@@ -149,7 +131,10 @@ public class BuyerInputGenerator {
                             Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
                                     buyerInputFromCustomAudience =
                                             generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                                                    combined.first, combined.second);
+                                                    combined.first,
+                                                    combined.second,
+                                                    payloadOptimizationContext,
+                                                    statsBuilder);
                             Tracing.endAsyncSection(Tracing.CREATE_BUYER_INPUTS, traceCookie);
                             return buyerInputFromCustomAudience;
                         },
@@ -159,100 +144,39 @@ public class BuyerInputGenerator {
     private Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
             generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
                     @NonNull final List<DBCustomAudience> dbCustomAudiences,
-                    @NonNull final Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap) {
+                    @NonNull final Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap,
+                    @NonNull PayloadOptimizationContext payloadOptimizationContext,
+                    @NonNull GetAdSelectionDataApiCalledStats.Builder statsBuilder) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS);
 
-        final Map<AdTechIdentifier, BuyerInput.Builder> buyerInputs = new HashMap<>();
-        final Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats =
-                new HashMap<>();
-
-        int encodedSignalsCount = 0;
-        int encodedSignalsTotalSizeInBytes = 0;
-        int encodedSignalsMaxSizeInBytes = 0;
-        int encodedSignalsMinSizeInBytes = Integer.MAX_VALUE;
-
-        // Creating a distinct loop over signals as buyers with CAs and Signals could be mutually
-        // exclusive
-        for (Map.Entry<AdTechIdentifier, DBEncodedPayload> entry : encodedPayloadMap.entrySet()) {
-            final AdTechIdentifier buyerName = entry.getKey();
-            if (!buyerInputs.containsKey(buyerName)) {
-                buyerInputs.put(buyerName, BuyerInput.newBuilder());
-            }
-
-            BuyerInput.Builder builderWithSignals = buyerInputs.get(buyerName);
-            builderWithSignals.setProtectedAppSignals(
-                    buildProtectedSignalsProtoFrom(entry.getValue()));
-
-            if (mPasExtendedMetricsEnabled) {
-                int encodedSignalsInBytes =
-                        calculateEncodedSignalsInBytes(entry.getValue().getEncodedPayload());
-                encodedSignalsCount += 1;
-                encodedSignalsTotalSizeInBytes += encodedSignalsInBytes;
-                encodedSignalsMaxSizeInBytes =
-                        Math.max(encodedSignalsMaxSizeInBytes, encodedSignalsInBytes);
-                encodedSignalsMinSizeInBytes =
-                        Math.min(encodedSignalsMinSizeInBytes, encodedSignalsInBytes);
-            }
-
-            buyerInputs.put(buyerName, builderWithSignals);
+        int maxPayloadSizeBytes = 0;
+        if (payloadOptimizationContext.getOptimizationsEnabled()) {
+            maxPayloadSizeBytes = payloadOptimizationContext.getMaxBuyerInputSizeBytes();
         }
 
-        for (DBCustomAudience dBcustomAudience : dbCustomAudiences) {
-            final AdTechIdentifier buyerName = dBcustomAudience.getBuyer();
-            if (!buyerInputs.containsKey(buyerName)) {
-                buyerInputs.put(buyerName, BuyerInput.newBuilder());
-            }
-            BuyerInput.CustomAudience customAudience =
-                    buildCustomAudienceProtoFrom(dBcustomAudience);
+        CompressedBuyerInputCreator compressedBuyerInputCreator =
+                mCompressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
+                        maxPayloadSizeBytes, statsBuilder);
 
-            buyerInputs.get(buyerName).addCustomAudiences(customAudience);
-
-            mAuctionServerPayloadMetricsStrategy.addToBuyerIntermediateStats(
-                    perBuyerStats, dBcustomAudience, customAudience);
-        }
-
-        // Log per buyer stats if feature is enabled
-        if (mPasExtendedMetricsEnabled) {
-            // Sets encodedSignalsMinSizeInBytes as 0 if no encoded signal is found.
-            if (encodedSignalsMinSizeInBytes == Integer.MAX_VALUE) {
-                encodedSignalsMinSizeInBytes = 0;
-            }
-            mAuctionServerPayloadMetricsStrategy
-                    .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
-                            perBuyerStats,
-                            encodedSignalsCount,
-                            encodedSignalsTotalSizeInBytes,
-                            encodedSignalsMaxSizeInBytes,
-                            encodedSignalsMinSizeInBytes);
-        } else {
-            mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataBuyerInputGeneratedStats(
-                    perBuyerStats);
-        }
-
-        sLogger.v(String.format("Created BuyerInput proto for %s buyers", buyerInputs.size()));
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedInputs =
-                buyerInputs.entrySet().stream()
-                        .collect(
-                                Collectors.toMap(
-                                        e -> e.getKey(),
-                                        e ->
-                                                mDataCompressor.compress(
-                                                        AuctionServerDataCompressor.UncompressedData
-                                                                .create(
-                                                                        e.getValue()
-                                                                                .build()
-                                                                                .toByteArray()))));
+                compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
+                        dbCustomAudiences, encodedPayloadMap);
         Tracing.endAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS, traceCookie);
         return compressedInputs;
     }
 
-    private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience() {
+    private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
+            List<PerBuyerConfiguration> perBuyerConfigurations) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYERS_CA);
         return mBackgroundExecutorService.submit(
                 () -> {
                     List<DBCustomAudience> allActiveCAs =
-                            mCustomAudienceDao.getAllActiveCustomAudienceForServerSideAuction(
-                                    mClock.instant(), mCustomAudienceActiveTimeWindowInMs);
+                            mCompressedBuyerInputCreatorFactory
+                                    .getBuyerInputDataFetcher()
+                                    .getActiveCustomAudiences(
+                                            perBuyerConfigurations,
+                                            mClock.instant(),
+                                            mCustomAudienceActiveTimeWindowInMs);
                     int numberOfCAsCollected =
                             (Objects.isNull(allActiveCAs) ? 0 : allActiveCAs.size());
                     sLogger.v(
@@ -290,32 +214,8 @@ public class BuyerInputGenerator {
         return filteredCustomAudiences;
     }
 
-    private BuyerInput.CustomAudience buildCustomAudienceProtoFrom(
-            DBCustomAudience customAudience) {
-        BuyerInput.CustomAudience.Builder customAudienceBuilder =
-                BuyerInput.CustomAudience.newBuilder();
-
-        customAudienceBuilder
-                .setName(customAudience.getName())
-                .setOwner(customAudience.getOwner())
-                .setUserBiddingSignals(getUserBiddingSignals(customAudience))
-                .addAllBiddingSignalsKeys(getTrustedBiddingSignalKeys(customAudience));
-
-        if (shouldIncludeAds(customAudience)) {
-            customAudienceBuilder.addAllAdRenderIds(getAdRenderIds(customAudience));
-        }
-        return customAudienceBuilder.build();
-    }
-
-    private boolean shouldIncludeAds(DBCustomAudience customAudience) {
-        return !(mEnableOmitAds
-                && ((customAudience.getAuctionServerRequestFlags()
-                                & FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
-                        != 0));
-    }
-
-    private ListenableFuture<Map<AdTechIdentifier, DBEncodedPayload>>
-            getAllEncodedProtectedSignals() {
+    private ListenableFuture<Map<AdTechIdentifier, DBEncodedPayload>> getAllEncodedProtectedSignals(
+            List<PerBuyerConfiguration> perBuyerConfigurations) {
         // If the feature flag is turned off we short circuit, and return empty signals
         if (!mEnableProtectedSignals) {
             return Futures.immediateFuture(Collections.emptyMap());
@@ -324,7 +224,9 @@ public class BuyerInputGenerator {
         return mBackgroundExecutorService.submit(
                 () -> {
                     List<DBEncodedPayload> allBuyerSignals =
-                            mEncodedSignalsDao.getAllEncodedPayloads();
+                            mCompressedBuyerInputCreatorFactory
+                                    .getBuyerInputDataFetcher()
+                                    .getProtectedAudienceSignals(perBuyerConfigurations);
                     int numberOfSignalsCollected =
                             (Objects.isNull(allBuyerSignals) ? 0 : allBuyerSignals.size());
                     sLogger.v(
@@ -336,46 +238,5 @@ public class BuyerInputGenerator {
                                     Collectors.toMap(
                                             DBEncodedPayload::getBuyer, Function.identity()));
                 });
-    }
-
-    private ProtectedAppSignals buildProtectedSignalsProtoFrom(
-            DBEncodedPayload dbEncodedSignalsPayload) {
-        ProtectedAppSignals.Builder protectedSignalsBuilder = ProtectedAppSignals.newBuilder();
-
-        return protectedSignalsBuilder
-                .setAppInstallSignals(
-                        ByteString.copyFrom(dbEncodedSignalsPayload.getEncodedPayload()))
-                .setEncodingVersion(dbEncodedSignalsPayload.getVersion())
-                .build();
-    }
-
-    private List<String> getTrustedBiddingSignalKeys(@NonNull DBCustomAudience customAudience) {
-        List<String> biddingSignalKeys = customAudience.getTrustedBiddingData().getKeys();
-        // If the bidding signal keys is just the CA name, we don't need to pass it to the server.
-        if (biddingSignalKeys.size() == 1
-                && customAudience.getName().equals(biddingSignalKeys.get(0))) {
-            return ImmutableList.of();
-        }
-
-        // Remove the CA name from the bidding signal keys list to save space.
-        biddingSignalKeys.remove(customAudience.getName());
-        return biddingSignalKeys;
-    }
-
-    private String getUserBiddingSignals(DBCustomAudience customAudience) {
-        return customAudience.getUserBiddingSignals() == null
-                ? EMPTY_USER_BIDDING_SIGNALS
-                : customAudience.getUserBiddingSignals().toString();
-    }
-
-    private List<String> getAdRenderIds(DBCustomAudience dbCustomAudience) {
-        return dbCustomAudience.getAds().stream()
-                .filter(ad -> !Strings.isNullOrEmpty(ad.getAdRenderId()))
-                .map(ad -> ad.getAdRenderId())
-                .collect(Collectors.toList());
-    }
-
-    private int calculateEncodedSignalsInBytes(byte[] encodedPayload) {
-        return encodedPayload.length;
     }
 }

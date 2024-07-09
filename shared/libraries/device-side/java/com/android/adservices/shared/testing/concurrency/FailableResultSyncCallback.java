@@ -160,7 +160,7 @@ public class FailableResultSyncCallback<R, F> extends AbstractSyncCallback
 
     @Override
     public final void assertCalled() throws InterruptedException {
-        mCallback.internalAssertCalled();
+        mCallback.internalAssertCalled(mSettings.getMaxTimeoutMs());
     }
 
     @Override
@@ -195,13 +195,5 @@ public class FailableResultSyncCallback<R, F> extends AbstractSyncCallback
         public String toString() {
             return String.valueOf(isResult ? result : failure);
         }
-    }
-
-    private static @Nullable Object getResultOrValue(Object value) {
-        if (!(value instanceof ResultOrFailure)) {
-            return null;
-        }
-        ResultOrFailure<?, ?> rof = (ResultOrFailure<?, ?>) value;
-        return rof.isResult ? rof.result : rof.failure;
     }
 }

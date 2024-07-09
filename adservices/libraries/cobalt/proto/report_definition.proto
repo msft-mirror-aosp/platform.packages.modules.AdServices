@@ -52,11 +52,12 @@ option java_package = "com.google.cobalt";
 // MetricDefinition called the owning MetricDefinition.
 // Next ID: 33
 message ReportDefinition {
-  reserved 4, 5, 6, 7, 8, 9, 11, 14, 15, 16, 12, 101, 102, 31, 21;
+  reserved 4, 5, 6, 7, 8, 9, 11, 14, 15, 16, 12, 20, 21, 30, 31, 101, 102;
   reserved "aggregation_type", "aggregation_window", "candidate_lis", "dp_release_config",
       "expected_population_size", "expected_string_set_size", "export_location_override",
       "local_privacy_noise_level", "output_location", "percentiles", "threshold", "window_size",
-      "use_poisson_mechanism_for_privacy", "prob_bit_flip", "candidate_file";
+      "use_poisson_mechanism_for_privacy", "prob_bit_flip", "candidate_file", "privacy_level",
+      "poisson_mean";
 
   // Unique name for this Report within its owning MetricDefinition.
   // The name must obey the syntax of a C variable name and must have length
@@ -405,41 +406,6 @@ message ReportDefinition {
 
   ////////////////  Fields for reports with privacy enabled  /////////////////
 
-  // The level of differential privacy applied to the report. Each level
-  // corresponds to an epsilon value in the shuffled model. The mapping
-  // from enum values to epsilon values is hard-coded in makePrivacyConstants()
-  // in the file //src/bin/config_parser/src/privacy/privacy_encoding_params.go
-  enum PrivacyLevel {
-    PRIVACY_LEVEL_UNKNOWN = 0;
-
-    // epsilon = infinity
-    NO_ADDED_PRIVACY = 1;
-
-    LOW_PRIVACY = 2;
-
-    MEDIUM_PRIVACY = 3;
-
-    HIGH_PRIVACY = 4;
-  }
-
-  // This field is used to specify the privacy level for a Cobalt report.
-  // All Cobalt report types support differential privacy and are required
-  // to set this field (use NO_ADDED_PRIVACY to disable differential privacy).
-  PrivacyLevel privacy_level = 20;
-
-  // The mean number of observations added per index point when performing the
-  // Poisson mechanism encoding for Cobalt reports. Should be set if and only if
-  // `privacy_level` is not NO_ADDED_PRIVACY.
-  //
-  // In the future, the value of this field will be computed by the registry
-  // parser as a function of other privacy-related fields and an estimate of the
-  // user population size. For now, it should be set manually in the Cobalt
-  // registry in consultation with the Cobalt team.
-  //
-  // TODO(b/295053509): update this comment once the field is populated by
-  // the registry parser.
-  double poisson_mean = 30;
-
   // When reporting numerical values with privacy, the values are mapped to
   // indices from 0 to num_index_points-1 with a randomized rounding method.
   //
@@ -477,7 +443,7 @@ message ReportDefinition {
   // to be averaged over one hour. (For FLEETWIDE_MEANS, the `max_count` field
   // is also required in order to bound the `count` value.)
   //
-  // If a privacy_level other than NO_ADDED_PRIVACY is specified, this field is
+  // If a privacy_mechanism other than DE_IDENTIFICATION is specified, this field is
   // required for reports of type:
   // * FLEETWIDE_OCCURRENCE_COUNTS
   // * UNIQUE_DEVICE_NUMERIC_STATS
@@ -497,7 +463,7 @@ message ReportDefinition {
   // For FLEETWIDE_MEANS, the bound applies to the per-device count of the
   // values to be averaged over one hour.
   //
-  // If a privacy_level other than NO_ADDED_PRIVACY is specified, this field is
+  // If a privacy_mechanism other than DE_IDENTIFICATION is specified, this field is
   // required for reports of type:
   // * FLEETWIDE_HISTOGRAMS
   // * FLEETWIDE_MEANS
@@ -615,8 +581,8 @@ message ReportDefinition {
   // event occurs, instead of waiting for the end of the day.
   //
   // This can only be enabled when using a local aggregation procedure of
-  // AT_LEAST_ONCE or SELECT_FIRST, and when the privacy level is
-  // NO_ADDED_PRIVACY. When used with a system_profile_selection of REPORT_ALL
+  // AT_LEAST_ONCE or SELECT_FIRST, and when the privacy mechanism is
+  // DE_IDENTIFICATION. When used with a system_profile_selection of REPORT_ALL
   // or SELECT_FIRST, enabling this is recommended as Cobalt will send the count
   // for the current day when the event occurs instead of at the end of the day.
   // For a system_profile_selection of SELECT_LAST, this may also be desirable,
@@ -677,8 +643,6 @@ message ReportDefinition {
   }
 
   // This field identifies what privacy protection is applied to the report.
-  // It will eventually be required once migration from privacy_level
-  // is complete.
   PrivacyMechanism privacy_mechanism = 106;
 
   // The object for grouping all parameters needed for SHUFFLED DP mode.

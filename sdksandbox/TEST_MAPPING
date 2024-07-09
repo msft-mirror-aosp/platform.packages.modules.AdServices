@@ -146,6 +146,9 @@
       "name": "SdkSandboxNextTests[com.google.android.adservices.apex]"
     },
     {
+      "name": "SdkSandboxMultiUserInprocessTests[com.google.android.adservices.apex]"
+    },
+    {
       "name": "SdkSandboxAuditTests[com.google.android.adservices.apex]"
     }
   ],
@@ -234,6 +237,9 @@
     },
     {
       "name": "SdkSandboxNextTests"
+    },
+    {
+      "name": "SdkSandboxMultiUserInprocessTests"
     },
     {
       "name": "SdkSandboxAuditTests"

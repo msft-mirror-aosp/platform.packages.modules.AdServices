@@ -18,38 +18,25 @@ package com.android.adservices.ui.settingsga;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 
-import android.os.RemoteException;
-
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.SettingsTestUtil;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
+@DisableGlobalKillSwitch
+@RequiresSdkLevelAtLeastS
+@SetAllLogcatTags
+@SetCompatModeFlags
+@SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
+@SetFlagEnabled(KEY_GA_UX_FEATURE_ENABLED)
 public final class SettingsGaUiAutomatorTest extends AdServicesUiTestCase {
-
-    @Rule(order = 11)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
-                    .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, false);
-
-    @Before
-    public void setup() throws RemoteException {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-    }
-
     @Test
-    public void settingsRemoveMainToggleAndMeasurementEntryTest() throws Exception {
+    public void settingsRemoveMainToggleAndMeasurementEntryTest() {
         SettingsTestUtil.settingsRemoveMainToggleAndMeasurementEntryTestUtil(mDevice);
     }
 
@@ -74,32 +61,32 @@ public final class SettingsGaUiAutomatorTest extends AdServicesUiTestCase {
     }
 
     @Test
-    public void topicsSubtitleTest() throws Exception {
+    public void topicsSubtitleTest() {
         SettingsTestUtil.topicsSubtitleTestUtil(mDevice);
     }
 
     @Test
-    public void appsSubtitleTest() throws Exception {
+    public void appsSubtitleTest() {
         SettingsTestUtil.appsSubtitleTestUtil(mDevice);
     }
 
     @Test
-    public void measurementSubtitleTest() throws Exception {
+    public void measurementSubtitleTest() {
         SettingsTestUtil.measurementSubtitleTestUtil(mDevice);
     }
 
     @Test
-    public void topicsToggleDialogTest() throws Exception {
+    public void topicsToggleDialogTest() {
         SettingsTestUtil.topicsToggleDialogTestUtil(mDevice);
     }
 
     @Test
-    public void appsToggleDialogTest() throws Exception {
+    public void appsToggleDialogTest() {
         SettingsTestUtil.appsToggleDialogTestUtil(mDevice);
     }
 
     @Test
-    public void measurementToggleDialogTest() throws Exception {
+    public void measurementToggleDialogTest() {
         SettingsTestUtil.measurementToggleDialogTestUtil(mDevice);
     }
 }

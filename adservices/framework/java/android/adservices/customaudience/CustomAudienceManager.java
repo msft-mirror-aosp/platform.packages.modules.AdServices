@@ -446,9 +446,9 @@ public class CustomAudienceManager {
      *
      * <p>Any partial custom audience field set by the caller cannot be overridden by the custom
      * audience fetched from the {@code updateUri}. Given multiple Custom Audiences could be
-     * returned by a DSP we will match the override restriction based on the names of the Custom
-     * Audiences. A DSP may skip returning a full Custom Audience for any Partial Custom Audience in
-     * request.
+     * returned by a buyer ad tech we will match the override restriction based on the names of the
+     * Custom Audiences. A buyer may skip returning a full Custom Audience for any Partial Custom
+     * Audience in request.
      *
      * <p>In case the API encounters transient errors while making the network call for update, like
      * 5xx, connection timeout, rate limit exceeded it would employ retries, with backoff up to a
@@ -493,13 +493,13 @@ public class CustomAudienceManager {
 
         try {
             final ICustomAudienceService service = getService();
-
             service.scheduleCustomAudienceUpdate(
                     new ScheduleCustomAudienceUpdateInput.Builder(
                                     request.getUpdateUri(),
                                     getCallerPackageName(),
                                     request.getMinDelay(),
                                     request.getPartialCustomAudienceList())
+                            .setShouldReplacePendingUpdates(request.shouldReplacePendingUpdates())
                             .build(),
                     new ScheduleCustomAudienceUpdateCallback.Stub() {
                         @Override
@@ -522,6 +522,7 @@ public class CustomAudienceManager {
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
+
 
     private String getCallerPackageName() {
         SandboxedSdkContext sandboxedSdkContext =

@@ -55,6 +55,7 @@ public class DebugReportApi {
     public interface Type {
         String SOURCE_DESTINATION_LIMIT = "source-destination-limit";
         String SOURCE_DESTINATION_RATE_LIMIT = "source-destination-rate-limit";
+        String SOURCE_DESTINATION_PER_DAY_RATE_LIMIT = "source-destination-per-day-rate-limit";
         String SOURCE_NOISED = "source-noised";
         String SOURCE_STORAGE_LIMIT = "source-storage-limit";
         String SOURCE_SUCCESS = "source-success";
@@ -190,10 +191,17 @@ public class DebugReportApi {
     }
 
     /** Schedules the Source Destination rate-limit Debug Report */
-    public void scheduleSourceDestinationRateLimitDebugReport(
+    public void scheduleSourceDestinationPerMinuteRateLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
         scheduleSourceDestinationLimitDebugReport(
                 source, limit, Type.SOURCE_DESTINATION_RATE_LIMIT, dao);
+    }
+
+    /** Schedules the Source Destination per day rate-limit Debug Report */
+    public void scheduleSourceDestinationPerDayRateLimitDebugReport(
+            Source source, String limit, IMeasurementDao dao) {
+        scheduleSourceDestinationLimitDebugReport(
+                source, limit, Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT, dao);
     }
 
     /** Schedules the Source Noised Debug Report */

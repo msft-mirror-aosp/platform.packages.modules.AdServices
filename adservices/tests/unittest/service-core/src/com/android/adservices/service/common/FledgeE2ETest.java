@@ -25,11 +25,6 @@ import static com.android.adservices.service.adselection.AdSelectionScriptEngine
 import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
 import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_SCORING_KEY;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
@@ -122,7 +117,6 @@ import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.DBAdSelectionDebugReport;
-import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
@@ -325,9 +319,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilterMock;
-    @Mock private Throttler mMockThrottler;
+    @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
     private AdSelectionConfig mAdSelectionConfig;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private CustomAudienceDao mCustomAudienceDao;
@@ -337,7 +332,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     private FrequencyCapDao mFrequencyCapDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private EnrollmentDao mEnrollmentDao;
-    private EncryptionContextDao mEncryptionContextDao;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -438,16 +432,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
 
-        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_SELECT_ADS), anyString())).thenReturn(true);
-        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_REPORT_IMPRESSIONS), anyString()))
-                .thenReturn(true);
-        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
-                .thenReturn(true);
-        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_FETCH_CUSTOM_AUDIENCE), anyString()))
-                .thenReturn(true);
-        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
-                .thenReturn(true);
-
         mLocalhostBuyerDomain = Uri.parse(mockWebServerRule.getServerBaseAddress());
         when(mSpyContext.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
@@ -463,8 +447,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         any(),
                         any());
         when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
-        when(AppImportanceFilter.create(any(), anyInt(), any()))
-                .thenReturn(mAppImportanceFilterMock);
+        when(AppImportanceFilter.create(any(), any())).thenReturn(mAppImportanceFilterMock);
         doNothing()
                 .when(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
@@ -4917,12 +4900,12 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mSpyContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 flags,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterSpy,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, flags));
 
         when(mDevContextFilterMock.createDevContext())

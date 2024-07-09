@@ -300,24 +300,14 @@ class AttributionJobHandler {
                     // alloted report quota, as well as limits calculated in different code paths
                     // from here so we retrieve it once and pass as needed.
                     long eventAttributionCount =
-                            mFlags.getMeasurementEnableScopedAttributionRateLimit()
-                                    ? measurementDao.getAttributionsPerRateLimitWindow(
-                                            Attribution.Scope.EVENT, source, trigger)
-                                    : measurementDao.getAttributionsPerRateLimitWindow(
-                                            source, trigger);
+                            measurementDao.getAttributionsPerRateLimitWindow(
+                                    Attribution.Scope.EVENT, source, trigger);
 
                     long aggregateAttributionCount =
-                            mFlags.getMeasurementEnableScopedAttributionRateLimit()
-                                    ? measurementDao.getAttributionsPerRateLimitWindow(
-                                            Attribution.Scope.AGGREGATE, source, trigger)
-                                    // If scoped attribution is not enabled, eventAttributionCount
-                                    // and aggregateAttributionCount are the same, total count.
-                                    : eventAttributionCount;
+                            measurementDao.getAttributionsPerRateLimitWindow(
+                                    Attribution.Scope.AGGREGATE, source, trigger);
 
-                    // Attribution count passed here can be either `eventAttributionCount` or
-                    // `aggregateAttributionCount` since this method won't use scoped attribution.
-                    if (shouldAttributionBeBlockedByRateLimits(
-                            eventAttributionCount, source, trigger, measurementDao)) {
+                    if (shouldAttributionBeBlockedByRateLimits(source, trigger, measurementDao)) {
                         attributionStatus.setAttributionResult(
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
@@ -360,16 +350,6 @@ class AttributionJobHandler {
                                     trigger.getEnrollmentId());
                         }
                         attributeTrigger(trigger, measurementDao);
-                        // Non-scoped attribution rate-limiting: insert attribution if aggregate
-                        // report was created or (if an event report was created and the source
-                        // is non-flex). Attribution insertion for flex and scoped attribution rate
-                        // limiting are already handled where the reports are generated.
-                        if (!mFlags.getMeasurementEnableScopedAttributionRateLimit()
-                                && ((isEventTriggeringStatusAttributed
-                                                && source.getTriggerSpecs() == null)
-                                        || isAggregateTriggeringStatusAttributed)) {
-                            insertAttribution(source, trigger, measurementDao);
-                        }
                         attributionStatus.setAttributionResult(
                                 isAggregateTriggeringStatusAttributed,
                                 isEventTriggeringStatusAttributed);
@@ -400,11 +380,9 @@ class AttributionJobHandler {
     }
 
     private boolean shouldAttributionBeBlockedByRateLimits(
-            long attributionCount, Source source, Trigger trigger, IMeasurementDao measurementDao)
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        if ((!mFlags.getMeasurementEnableScopedAttributionRateLimit()
-                && !hasAttributionQuota(attributionCount, source, trigger, measurementDao))
-                        || !isReportingOriginWithinPrivacyBounds(source, trigger, measurementDao)) {
+        if (!isReportingOriginWithinPrivacyBounds(source, trigger, measurementDao)) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "Attribution blocked by rate limits. Source ID: %s ; Trigger ID: %s ",
@@ -421,13 +399,12 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus)
             throws DatastoreException {
-        if (mFlags.getMeasurementEnableScopedAttributionRateLimit()
-                && !hasAttributionQuota(
-                      attributionCount,
-                      Attribution.Scope.AGGREGATE,
-                      source,
-                      trigger,
-                      measurementDao)) {
+        if (!hasAttributionQuota(
+                attributionCount,
+                Attribution.Scope.AGGREGATE,
+                source,
+                trigger,
+                measurementDao)) {
             LoggerFactory.getMeasurementLogger()
                     .d("Attribution blocked by aggregate rate limits. Source ID: %s ; "
                             + "Trigger ID: %s ", source.getId(), trigger.getId());
@@ -602,15 +579,12 @@ class AttributionJobHandler {
                     == AggregateReport.DebugReportStatus.PENDING) {
                 incrementAggregateDebugReportCountBy(attributionStatus, 1);
             }
-
-            if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
-                insertAttribution(
-                        measurementDao,
-                        source,
-                        trigger,
-                        Attribution.Scope.AGGREGATE,
-                        aggregateReport.getId());
-            }
+            insertAttribution(
+                    measurementDao,
+                    source,
+                    trigger,
+                    Attribution.Scope.AGGREGATE,
+                    aggregateReport.getId());
             return TriggeringStatus.ATTRIBUTED;
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
@@ -904,7 +878,6 @@ class AttributionJobHandler {
         // Non-flex source can determine attribution limit here. For flex sources, attribution count
         // can limit report quota rather than prevent reporting altogether.
         if (source.getTriggerSpecs() == null
-                && mFlags.getMeasurementEnableScopedAttributionRateLimit()
                 && !hasAttributionQuota(
                         attributionCount,
                         Attribution.Scope.EVENT,
@@ -992,7 +965,7 @@ class AttributionJobHandler {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(numReports),
+                    String.valueOf(mFlags.getMeasurementMaxEventReportsPerDestination()),
                     measurementDao,
                     Type.TRIGGER_EVENT_STORAGE_LIMIT);
             return TriggeringStatus.DROPPED;
@@ -1012,6 +985,7 @@ class AttributionJobHandler {
                             .populateFromSourceAndTrigger(
                                     source,
                                     trigger,
+                                    maybeEffectiveTriggerData.get(),
                                     eventTrigger,
                                     debugKeyPair,
                                     mEventReportWindowCalcDelegate,
@@ -1032,14 +1006,12 @@ class AttributionJobHandler {
             if (newEventReport.getDebugReportStatus() == EventReport.DebugReportStatus.PENDING) {
                 incrementEventDebugReportCountBy(attributionStatus, 1);
             }
-            if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
-                insertAttribution(
-                        measurementDao,
-                        source,
-                        trigger,
-                        Attribution.Scope.EVENT,
-                        newEventReport.getId());
-            }
+            insertAttribution(
+                    measurementDao,
+                    source,
+                    trigger,
+                    Attribution.Scope.EVENT,
+                    newEventReport.getId());
         // The source is using flexible event API
         } else if (!generateFlexEventReports(
                 source,
@@ -1322,7 +1294,7 @@ class AttributionJobHandler {
             source.getEventReportDedupKeys().remove(lowestPriorityEventReport.getTriggerDedupKey());
         }
 
-        measurementDao.deleteEventReport(lowestPriorityEventReport);
+        measurementDao.deleteEventReportAndAttribution(lowestPriorityEventReport);
         return true;
     }
 
@@ -1399,12 +1371,8 @@ class AttributionJobHandler {
                                         source, trigger.getDestinationType()))
                         .build();
         measurementDao.insertEventReport(eventReport);
-        if (mFlags.getMeasurementEnableScopedAttributionRateLimit()) {
-            insertAttribution(
-                    measurementDao, source, trigger, Attribution.Scope.EVENT, eventReport.getId());
-        } else {
-            insertAttribution(source, trigger, measurementDao);
-        }
+        insertAttribution(
+                measurementDao, source, trigger, Attribution.Scope.EVENT, eventReport.getId());
     }
 
     private static void finalizeAggregateReportCreation(
@@ -1642,7 +1610,7 @@ class AttributionJobHandler {
                 newAggregateContributions =
                         Math.addExact(newAggregateContributions, contribution.getValue());
                 if (newAggregateContributions
-                        >= PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
+                        > PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
                     // When histogram value is >= 65536 (aggregatable_budget_per_source),
                     // generate verbose debug report, record the actual histogram value.
                     mDebugReportApi.scheduleTriggerDebugReport(
@@ -1721,19 +1689,30 @@ class AttributionJobHandler {
                 return Optional.empty();
             }
             return Optional.of(triggerData);
-        // V1 source
-        } else if (!mFlags.getMeasurementEnableTriggerDataMatching()) {
-            return Optional.of(triggerData);
         }
 
-        if (source.getTriggerDataMatching() == Source.TriggerDataMatching.EXACT) {
-            UnsignedLong triggerDataCardinalityBound = new UnsignedLong(
-                    ((long) source.getTriggerDataCardinality()) - 1L);
-            if (eventTrigger.getTriggerData().compareTo(triggerDataCardinalityBound) > 0) {
-                return Optional.empty();
+        // V1 source
+        if (mFlags.getMeasurementEnableTriggerDataMatching()
+                && source.getTriggerDataMatching() == Source.TriggerDataMatching.EXACT) {
+            if (source.getTriggerData() != null) {
+                return source.getTriggerData().contains(triggerData)
+                        ? Optional.of(triggerData)
+                        : Optional.empty();
+            } else {
+                UnsignedLong triggerDataCardinalityBound = new UnsignedLong(
+                        ((long) source.getTriggerDataCardinality()) - 1L);
+                if (triggerData.compareTo(triggerDataCardinalityBound) > 0) {
+                    return Optional.empty();
+                }
             }
         }
-        return Optional.of(triggerData);
+
+        // V1 source with trigger data matching type modulus (default)
+        if (source.getTriggerDataCardinality() == 0) {
+            return Optional.empty();
+        }
+
+        return Optional.of(triggerData.mod(source.getTriggerDataCardinality()));
     }
 
     private static Optional<Pair<Uri, Uri>> getPublisherAndDestinationTopPrivateDomains(
@@ -1878,10 +1857,6 @@ class AttributionJobHandler {
     private long getAggregateReportDelay() {
         long reportDelayFromDefaults =
                 (long) (Math.random() * AGGREGATE_REPORT_DELAY_SPAN + AGGREGATE_REPORT_MIN_DELAY);
-
-        if (!mFlags.getMeasurementEnableConfigurableAggregateReportDelay()) {
-            return reportDelayFromDefaults;
-        }
 
         String aggregateReportDelayString = mFlags.getMeasurementAggregateReportDelayConfig();
 

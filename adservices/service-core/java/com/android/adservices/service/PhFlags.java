@@ -86,6 +86,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
@@ -108,6 +110,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPO
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
@@ -355,6 +358,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMsmtAttributionCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED,
+                        MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED);
+    }
+
+    @Override
+    public boolean getMsmtReportingCobaltLoggingEnabled() {
+        return getCobaltLoggingEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants.KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED,
+                        MSMT_REPORTING_COBALT_LOGGING_ENABLED);
+    }
+
+    @Override
     public boolean getAppNameApiErrorCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled()
                 && getDeviceConfigFlag(
@@ -420,6 +439,13 @@ public final class PhFlags implements Flags {
                         getSystemPropertyName(FlagsConstants.KEY_COBALT_LOGGING_ENABLED),
                         getDeviceConfigFlag(
                                 FlagsConstants.KEY_COBALT_LOGGING_ENABLED, COBALT_LOGGING_ENABLED));
+    }
+
+    @Override
+    public boolean getCobaltRegistryOutOfBandUpdateEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED,
+                COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED);
     }
 
     @Override
@@ -874,6 +900,27 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW,
                 MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
+    public boolean getMeasurementEnableDestinationPerDayRateLimitWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW,
+                MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
+    public int getMeasurementDestinationPerDayRateLimit() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT,
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT);
+    }
+
+    @Override
+    public long getMeasurementDestinationPerDayRateLimitWindowInMs() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS,
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS);
     }
 
     @Override
@@ -2431,6 +2478,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED,
+                FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED);
+    }
+
+    @Override
+    public int getFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION,
+                FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION);
+    }
+
+    @Override
+    public int getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS,
+                FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerMultiCloudEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
@@ -2939,6 +3007,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableV1SourceTriggerData() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
+                MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA);
+    }
+
+    @Override
     public boolean getMeasurementFlexibleEventReportingApiEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
@@ -2950,13 +3025,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING,
                 MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING);
-    }
-
-    @Override
-    public boolean getMeasurementFlexLiteApiEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_FLEX_LITE_API_ENABLED,
-                MEASUREMENT_FLEX_LITE_API_ENABLED);
     }
 
     @Override
@@ -3073,13 +3141,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO,
-                MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO);
-    }
-
-    @Override
     public boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,
@@ -3112,13 +3173,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS,
                 MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
-    }
-
-    @Override
-    public boolean getMeasurementEnableConfigurableAggregateReportDelay() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY,
-                MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY);
     }
 
     @Override
@@ -3175,8 +3229,7 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getMeasurementEnableAttributionScope() {
-        return getMeasurementFlexLiteApiEnabled()
-                && getDeviceConfigFlag(
+        return getDeviceConfigFlag(
                         FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
                         MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE);
     }
@@ -3244,6 +3297,27 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION,
                 MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION);
+    }
+
+    @Override
+    public boolean getMeasurementEnableSourceDestinationLimitPriority() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY,
+                MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY);
+    }
+
+    @Override
+    public int getMeasurementDefaultSourceDestinationLimitAlgorithm() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM,
+                MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM);
+    }
+
+    @Override
+    public boolean getMeasurementEnableSourceDestinationLimitAlgorithmField() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD,
+                MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD);
     }
 
     @Override
@@ -3799,6 +3873,11 @@ public final class PhFlags implements Flags {
 
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA
+                        + " = "
+                        + getMeasurementEnableV1SourceTriggerData());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
                         + " = "
                         + getMeasurementFlexibleEventReportingApiEnabled());
@@ -3807,11 +3886,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING
                         + " = "
                         + getMeasurementEnableTriggerDataMatching());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_FLEX_LITE_API_ENABLED
-                        + " = "
-                        + getMeasurementFlexLiteApiEnabled());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT
@@ -4008,6 +4082,22 @@ public final class PhFlags implements Flags {
                         + getMeasurementRateLimitWindowMilliseconds());
         writer.println(
                 "\t"
+                        + FlagsConstants
+                                .KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementEnableDestinationPerDayRateLimitWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT
+                        + " = "
+                        + getMeasurementDestinationPerDayRateLimit());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS
+                        + " = "
+                        + getMeasurementDestinationPerDayRateLimitWindowInMs());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW
                         + " = "
                         + getMeasurementMaxReinstallReattributionWindowSeconds());
@@ -4066,11 +4156,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS
                         + " = "
                         + getMeasurementEventReportsCtcEarlyReportingWindows());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY
-                        + " = "
-                        + getMeasurementEnableConfigurableAggregateReportDelay());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG
@@ -4158,11 +4243,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableSourceDeactivationAfterFiltering());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT
-                        + " = "
-                        + getMeasurementEnableScopedAttributionRateLimit());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_APP_PACKAGE_NAME_LOGGING
                         + " = "
                         + getMeasurementEnableAppPackageNameLogging());
@@ -4227,12 +4307,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON
                         + " = "
                         + getMeasurementPrivacyEpsilon());
-        writer.println(
-                "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO
-                        + " = "
-                        + getMeasurementEnableDestinationXPublisherXEnrollmentFifo());
 
         writer.println(
                 "\t"
@@ -4240,6 +4314,21 @@ public final class PhFlags implements Flags {
                                 .KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS
                         + " = "
                         + getMeasurementEnableFifoDestinationsDeleteAggregateReports());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY
+                        + " = "
+                        + getMeasurementEnableSourceDestinationLimitPriority());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD
+                        + " = "
+                        + getMeasurementEnableSourceDestinationLimitAlgorithmField());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM
+                        + " = "
+                        + getMeasurementDefaultSourceDestinationLimitAlgorithm());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
@@ -5000,6 +5089,16 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MSMT_REGISTRATION_COBALT_LOGGING_ENABLED
                         + " = "
                         + getMsmtRegistrationCobaltLoggingEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED
+                        + " = "
+                        + getMsmtAttributionCobaltLoggingEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED
+                        + " = "
+                        + getMsmtReportingCobaltLoggingEnabled());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println(
                 "\t" + FlagsConstants.KEY_ADSERVICES_ENABLED + " = " + getAdServicesEnabled());
@@ -5150,6 +5249,21 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED
                         + " = "
                         + getMeasurementEventReportingJobPersisted());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL
+                        + " = "
+                        + getMeasurementEnableEventTriggerDebugSignal());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION
+                        + " = "
+                        + getMeasurementEnableEventTriggerDebugSignalForCoarseDestination());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS
+                        + " = "
+                        + getMeasurementTriggerDebugSignalProbabilityForFakeReports());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW
@@ -5884,13 +5998,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableScopedAttributionRateLimit() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT,
-                MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT);
-    }
-
-    @Override
     public boolean getMeasurementEnableReportingJobsThrowUnaccountedException() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION,
@@ -5986,6 +6093,27 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED,
                 MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED);
+    }
+
+    @Override
+    public boolean getMeasurementEnableEventTriggerDebugSignal() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL,
+                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL);
+    }
+
+    @Override
+    public boolean getMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION,
+                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION);
+    }
+
+    @Override
+    public float getMeasurementTriggerDebugSignalProbabilityForFakeReports() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS,
+                MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS);
     }
 
     @Override

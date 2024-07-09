@@ -16,8 +16,14 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_1;
+import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_2;
+import static android.adservices.adselection.SellerConfigurationFixture.PER_BUYER_CONFIGURATION_1;
+import static android.adservices.adselection.SellerConfigurationFixture.PER_BUYER_CONFIGURATION_2;
+import static android.adservices.adselection.SellerConfigurationFixture.SELLER_CONFIGURATION;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.CommonFixture.getAlphaNumericString;
 import static android.adservices.common.KeyedFrequencyCapFixture.ONE_DAY_DURATION;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
@@ -29,6 +35,7 @@ import static com.android.adservices.service.adselection.AdSelectionFromOutcomes
 import static com.android.adservices.service.adselection.AdSelectionServiceImpl.AUCTION_SERVER_API_IS_NOT_AVAILABLE;
 import static com.android.adservices.service.adselection.GetAdSelectionDataRunner.REVOKED_CONSENT_RANDOM_DATA_SIZE;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.sCallerMetadata;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -72,6 +79,7 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
+import android.adservices.adselection.SellerConfiguration;
 import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.adselection.UpdateAdCounterHistogramCallback;
@@ -81,6 +89,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.AppInstallFilters;
+import android.adservices.common.AssetFileDescriptorUtil;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
@@ -88,6 +97,7 @@ import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCap;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.net.Uri;
 import android.os.IBinder;
 import android.os.Process;
@@ -192,6 +202,7 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
+import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -201,6 +212,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -216,7 +228,7 @@ public class AuctionServerE2ETest {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final AdTechIdentifier WINNER_BUYER = AdSelectionConfigFixture.BUYER;
-    private static final AdTechIdentifier DIFFERENT_BUYER = AdSelectionConfigFixture.BUYER_2;
+    private static final AdTechIdentifier DIFFERENT_BUYER = BUYER_2;
     private static final DBAdData WINNER_AD =
             DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(WINNER_BUYER).get(0);
     private static final Uri WINNER_AD_RENDER_URI = WINNER_AD.getRenderUri();
@@ -393,8 +405,7 @@ public class AuctionServerE2ETest {
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFlags);
         when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
-        when(AppImportanceFilter.create(any(), anyInt(), any()))
-                .thenReturn(mAppImportanceFilterMock);
+        when(AppImportanceFilter.create(any(), any())).thenReturn(mAppImportanceFilterMock);
         doNothing()
                 .when(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
@@ -1142,10 +1153,270 @@ public class AuctionServerE2ETest {
         assertThat(argumentCaptorApiCalledStats.getValue().getStatusCode())
                 .isEqualTo(STATUS_SUCCESS);
         assertThat(argumentCaptorApiCalledStats.getValue().getPayloadSizeKb())
-                .isEqualTo(encryptedBytes.length / 1000);
+                .isEqualTo(encryptedBytes.length / 1024);
         assertThat(argumentCaptorApiCalledStats.getValue().getNumBuyers()).isEqualTo(NUM_BUYERS);
         assertThat(argumentCaptorApiCalledStats.getValue().getServerAuctionCoordinatorSource())
                 .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET);
+        assertThat(argumentCaptorApiCalledStats.getValue().getSellerMaxSizeKb())
+                .isEqualTo(FIELD_UNSET);
+        assertThat(argumentCaptorApiCalledStats.getValue().getPayloadOptimizationResult())
+                .isEqualTo(
+                        GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                                .PAYLOAD_OPTIMIZATION_RESULT_UNKNOWN);
+        assertThat(argumentCaptorApiCalledStats.getValue().getInputGenerationLatencyMs())
+                .isEqualTo(FIELD_UNSET);
+        assertThat(argumentCaptorApiCalledStats.getValue().getCompressedBuyerInputCreatorVersion())
+                .isEqualTo(FIELD_UNSET);
+        assertThat(argumentCaptorApiCalledStats.getValue().getNumReEstimations())
+                .isEqualTo(FIELD_UNSET);
+    }
+
+    @Test
+    public void
+            testGetAdSelectionData_withoutEncrypt_validRequest_successPayloadMetricsEnabledWithSellerConfigurationEnabled()
+                    throws Exception {
+        ArgumentCaptor<GetAdSelectionDataApiCalledStats> argumentCaptorApiCalledStats =
+                ArgumentCaptor.forClass(GetAdSelectionDataApiCalledStats.class);
+
+        ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptorBuyerInputStats =
+                ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
+
+        Flags flags =
+                new AuctionServerE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public int getFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
+                        return CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION;
+                    }
+                };
+
+        doReturn(flags).when(FlagsFactory::getFlags);
+        // Create a logging latch with count of 3, 2 for buyer input logs and 1 for api logs
+        CountDownLatch loggingLatch = new CountDownLatch(3);
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    loggingLatch.countDown();
+                    return null;
+                };
+        ExtendedMockito.doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logGetAdSelectionDataApiCalledStats(any());
+        ExtendedMockito.doAnswer(countDownAnswer)
+                .when(mAdServicesLoggerMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+
+        AdSelectionService adSelectionService =
+                createAdSelectionService(
+                        flags,
+                        mAdFilteringFeatureFactory); // create the service again with new flags
+
+        Map<String, AdTechIdentifier> nameAndBuyersMap =
+                Map.of(
+                        "Shoes CA of Buyer 1", BUYER_1,
+                        "Shirts CA of Buyer 1", BUYER_2,
+                        "Shoes CA Of Buyer 2", BUYER_2);
+        Set<AdTechIdentifier> buyers = new HashSet<>(nameAndBuyersMap.values());
+        Map<String, DBCustomAudience> namesAndCustomAudiences =
+                createAndPersistDBCustomAudiences(nameAndBuyersMap);
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setSellerConfiguration(SELLER_CONFIGURATION)
+                        .build();
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(adSelectionService, input);
+
+        assertTrue(callback.mIsSuccess);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAdSelectionData());
+
+        byte[] encryptedBytes = callback.mGetAdSelectionDataResponse.getAdSelectionData();
+        // Since encryption is mocked to do nothing then just passing encrypted byte[]
+        Map<AdTechIdentifier, BuyerInput> buyerInputMap =
+                getBuyerInputMapFromDecryptedBytes(encryptedBytes);
+        Assert.assertEquals(buyers, buyerInputMap.keySet());
+        for (AdTechIdentifier buyer : buyerInputMap.keySet()) {
+            BuyerInput buyerInput = buyerInputMap.get(buyer);
+            for (BuyerInput.CustomAudience buyerInputsCA : buyerInput.getCustomAudiencesList()) {
+                String buyerInputsCAName = buyerInputsCA.getName();
+                assertTrue(namesAndCustomAudiences.containsKey(buyerInputsCAName));
+                DBCustomAudience deviceCA = namesAndCustomAudiences.get(buyerInputsCAName);
+                Assert.assertEquals(deviceCA.getName(), buyerInputsCAName);
+                Assert.assertEquals(deviceCA.getBuyer(), buyer);
+                assertCasEquals(buyerInputsCA, deviceCA);
+            }
+        }
+
+        loggingLatch.await();
+        // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics
+        verify(mAdServicesLoggerMock, times(2))
+                .logGetAdSelectionDataBuyerInputGeneratedStats(
+                        argumentCaptorBuyerInputStats.capture());
+        List<GetAdSelectionDataBuyerInputGeneratedStats> stats =
+                argumentCaptorBuyerInputStats.getAllValues();
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats1 = stats.get(0);
+        assertThat(stats1.getNumCustomAudiences()).isEqualTo(1);
+        assertThat(stats1.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats2 = stats.get(1);
+        assertThat(stats2.getNumCustomAudiences()).isEqualTo(2);
+        assertThat(stats2.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+
+        // Verify GetAdSelectionDataApiCalledStats metrics
+        verify(mAdServicesLoggerMock, times(1))
+                .logGetAdSelectionDataApiCalledStats(argumentCaptorApiCalledStats.capture());
+        assertThat(argumentCaptorApiCalledStats.getValue().getStatusCode())
+                .isEqualTo(STATUS_SUCCESS);
+        assertThat(argumentCaptorApiCalledStats.getValue().getPayloadSizeKb())
+                .isEqualTo(encryptedBytes.length / 1024);
+        assertThat(argumentCaptorApiCalledStats.getValue().getNumBuyers()).isEqualTo(NUM_BUYERS);
+        assertThat(argumentCaptorApiCalledStats.getValue().getServerAuctionCoordinatorSource())
+                .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET);
+        assertThat(argumentCaptorApiCalledStats.getValue().getSellerMaxSizeKb())
+                .isEqualTo(SELLER_CONFIGURATION.getMaximumPayloadSizeBytes() / 1024);
+        assertThat(argumentCaptorApiCalledStats.getValue().getPayloadOptimizationResult())
+                .isEqualTo(
+                        GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                                .PAYLOAD_WITHIN_REQUESTED_MAX);
+        assertThat(argumentCaptorApiCalledStats.getValue().getInputGenerationLatencyMs())
+                .isGreaterThan(0);
+        assertThat(argumentCaptorApiCalledStats.getValue().getCompressedBuyerInputCreatorVersion())
+                .isEqualTo(CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION);
+        assertThat(argumentCaptorApiCalledStats.getValue().getNumReEstimations()).isEqualTo(0);
+    }
+
+    @Test
+    public void
+            testGetAdSelectionData_withoutEncrypt_validRequest_WithSellerConfigurationSellerMaxEnabled()
+                    throws Exception {
+        Flags flags =
+                new AuctionServerE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public int getFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
+                        return CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION;
+                    }
+
+                    @Override
+                    public int getFledgeAuctionServerPayloadFormatVersion() {
+                        return AuctionServerPayloadFormatterExcessiveMaxSize.VERSION;
+                    }
+
+                    @Override
+                    // Disable filtering as it takes too much time
+                    public boolean getFledgeFrequencyCapFilteringEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
+                        return false;
+                    }
+                };
+
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, flags);
+
+        doReturn(flags).when(FlagsFactory::getFlags);
+
+        AdSelectionService adSelectionService =
+                createAdSelectionService(
+                        flags,
+                        adFilteringFeatureFactory); // create the service again with new flags
+
+        List<AdTechIdentifier> buyersList = ImmutableList.of(BUYER_1, BUYER_2);
+
+        // Init with 100 CAs, which by compressing everything is larger than 3Kb
+        createAndPersistBulkDBCustomAudiences(buyersList, 50);
+
+        byte[] encodedSignals = new byte[] {2, 3, 5, 7, 11, 13, 17, 19};
+        createAndPersistEncodedSignals(BUYER_1, encodedSignals);
+        createAndPersistEncodedSignals(BUYER_2, encodedSignals);
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
+
+        int maxPayloadSizeBytes = 4 * 1024; // 4KB
+
+        SellerConfiguration sellerConfiguration =
+                new SellerConfiguration.Builder()
+                        .setPerBuyerConfigurations(
+                                Set.of(PER_BUYER_CONFIGURATION_1, PER_BUYER_CONFIGURATION_2))
+                        .setMaximumPayloadSizeBytes(maxPayloadSizeBytes)
+                        .build();
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setSellerConfiguration(sellerConfiguration)
+                        .build();
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(adSelectionService, input);
+
+        assertTrue(callback.mIsSuccess);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAssetFileDescriptor());
+
+        int totalNumCAsInBuyerInput = 0;
+
+        byte[] encryptedBytes = getAdSelectionData(callback.mGetAdSelectionDataResponse);
+        // Since encryption is mocked to do nothing then just passing encrypted byte[]
+        Map<AdTechIdentifier, BuyerInput> buyerInputMap =
+                getBuyerInputMapFromDecryptedBytes(encryptedBytes);
+        for (AdTechIdentifier buyer : buyersList) {
+            BuyerInput buyerInput = buyerInputMap.get(buyer);
+
+            ProtectedAppSignals protectedAppSignals = buyerInput.getProtectedAppSignals();
+            Assert.assertArrayEquals(
+                    encodedSignals, protectedAppSignals.getAppInstallSignals().toByteArray());
+
+            totalNumCAsInBuyerInput += buyerInput.getCustomAudiencesList().size();
+        }
+
+        assertThat(totalNumCAsInBuyerInput).isGreaterThan(20);
+
+        // Make sure payload size is smaller than max, even ith persisting 100 CAs
+        assertThat(encryptedBytes.length)
+                .isLessThan(sellerConfiguration.getMaximumPayloadSizeBytes());
+
+        // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics are not called
+        verify(mAdServicesLoggerMock, never()).logGetAdSelectionDataBuyerInputGeneratedStats(any());
+
+        // Verify GetAdSelectionDataApiCalledStats metrics are not called
+        verify(mAdServicesLoggerMock, never()).logGetAdSelectionDataApiCalledStats(any());
     }
 
     @Test
@@ -1255,7 +1526,7 @@ public class AuctionServerE2ETest {
         assertThat(argumentCaptorApiCalledStats.getValue().getStatusCode())
                 .isEqualTo(STATUS_SUCCESS);
         assertThat(argumentCaptorApiCalledStats.getValue().getPayloadSizeKb())
-                .isEqualTo(encryptedBytes.length / 1000);
+                .isEqualTo(encryptedBytes.length / 1024);
         assertThat(argumentCaptorApiCalledStats.getValue().getNumBuyers()).isEqualTo(NUM_BUYERS);
         assertThat(argumentCaptorApiCalledStats.getValue().getServerAuctionCoordinatorSource())
                 .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT);
@@ -4152,6 +4423,22 @@ public class AuctionServerE2ETest {
         return customAudiences;
     }
 
+    private void createAndPersistBulkDBCustomAudiences(
+            List<AdTechIdentifier> buyers, int numCAsForBuyer) {
+        // Generates a 20 code point string, using only the letters a-z
+        for (AdTechIdentifier buyer : buyers) {
+            for (int i = 0; i < numCAsForBuyer; i++) {
+
+                DBCustomAudience thisCustomAudience =
+                        DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                                        buyer, getAlphaNumericString(15))
+                                .build();
+                mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                        thisCustomAudience, Uri.EMPTY, false);
+            }
+        }
+    }
+
     private DBEncodedPayload createAndPersistEncodedSignals(
             AdTechIdentifier buyer, byte[] signals) {
         DBEncodedPayload payload =
@@ -4331,6 +4618,15 @@ public class AuctionServerE2ETest {
             mIsSuccess = false;
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
+        }
+    }
+
+    private byte[] getAdSelectionData(GetAdSelectionDataResponse response) throws IOException {
+        if (Objects.nonNull(response.getAssetFileDescriptor())) {
+            AssetFileDescriptor assetFileDescriptor = response.getAssetFileDescriptor();
+            return AssetFileDescriptorUtil.readAssetFileDescriptorIntoBuffer(assetFileDescriptor);
+        } else {
+            return response.getAdSelectionData();
         }
     }
 

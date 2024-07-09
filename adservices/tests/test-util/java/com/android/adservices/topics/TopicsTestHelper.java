@@ -37,8 +37,7 @@ public final class TopicsTestHelper {
     public static GetTopicsResponse getTopicsWithBroadcast(
             Context context, AdvertisingTopicsClient advertisingTopicsClient) throws Exception {
         BroadcastReceiverSyncCallback receiverSyncCallback =
-                new BroadcastReceiverSyncCallback(context);
-        receiverSyncCallback.prepare(ACTION_RECORD_TOPICS_COMPLETE);
+                new BroadcastReceiverSyncCallback(context, ACTION_RECORD_TOPICS_COMPLETE);
         GetTopicsResponse sdkResult = advertisingTopicsClient.getTopics().get();
         receiverSyncCallback.assertResultReceived();
         return sdkResult;

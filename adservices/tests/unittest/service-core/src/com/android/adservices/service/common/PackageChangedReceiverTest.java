@@ -35,6 +35,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.anyBoolean;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -271,50 +273,68 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOff() throws Exception {
+        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
         runPackageFullyRemovedForFledgeKillSwitchOff(
                 intent,
-                /* frequencyCapFilteringEnabled =*/ true,
-                /* appInstallFilteringEnabled =*/ true);
+                /* frequencyCapFilteringEnabled= */ true,
+                /* appInstallFilteringEnabled= */ true);
     }
 
     @Test
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOffFrequencyCapFilteringDisabled()
             throws Exception {
         doReturn(false).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
+        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
         PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
         runPackageFullyRemovedForFledgeKillSwitchOff(
                 intent,
-                /* frequencyCapFilteringEnabled =*/ false,
-                /* appInstallFilteringEnabled =*/ true);
+                /* frequencyCapFilteringEnabled= */ false,
+                /* appInstallFilteringEnabled= */ true);
     }
 
     @Test
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOffAppInstallFilteringDisabled()
             throws Exception {
         doReturn(false).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
+        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
         PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
         runPackageFullyRemovedForFledgeKillSwitchOff(
                 intent,
-                /* frequencyCapFilteringEnabled =*/ true,
-                /* appInstallFilteringEnabled =*/ false);
+                /* frequencyCapFilteringEnabled= */ true,
+                /* appInstallFilteringEnabled= */ false);
     }
 
     @Test
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOff_backCompat() throws Exception {
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
         runPackageFullyRemovedForFledgeKillSwitchOff(
                 intent,
-                /* frequencyCapFilteringEnabled =*/ true,
-                /* appInstallFilteringEnabled =*/ true);
+                /* frequencyCapFilteringEnabled= */ true,
+                /* appInstallFilteringEnabled= */ true);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOffRemoveScheduleCAUpdateDisabled()
+            throws Exception {
+        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
+        PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForFledgeKillSwitchOff(
+                intent,
+                /* frequencyCapFilteringEnabled= */ true,
+                /* appInstallFilteringEnabled= */ true);
     }
 
     @Test
@@ -347,6 +367,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid()
             throws InterruptedException, IOException {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
@@ -364,6 +385,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
             throws InterruptedException, IOException {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
@@ -377,6 +399,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid_backCompat()
             throws InterruptedException, IOException {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.removeExtra(Intent.EXTRA_UID);
@@ -388,6 +411,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault_backCompat()
             throws InterruptedException, IOException {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
@@ -491,157 +515,157 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     private void runPackageFullyRemovedForTopicsKillSwitchOff(Intent intent) throws Exception {
-            long epochId = 1;
+        long epochId = 1;
 
-            // Kill switch is off.
-            doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+        // Kill switch is off.
+        doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
         // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
         doReturn(mSpyTopicsWorker).when(TopicsWorker::getInstance);
         doReturn(epochId).when(mMockEpochManager).getCurrentEpochId();
 
-            // Initialize package receiver meant for Topics
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForTopics();
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for Topics
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForTopics();
+        spyReceiver.onReceive(sContext, intent);
 
-            // Grant some time to allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+        // Grant some time to allow background thread to execute
+        Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
-            // Verify method in AppUpdateManager is invoked
-            // getCurrentEpochId() is invoked twice: handleAppUninstallation() + loadCache()
-            // Note that only package name is passed into following methods.
-            verify(mMockEpochManager, times(2)).getCurrentEpochId();
-            verify(mMockAppUpdateManager)
-                    .handleAppUninstallationInRealTime(Uri.parse(SAMPLE_PACKAGE), epochId);
+        // Verify method in AppUpdateManager is invoked
+        // getCurrentEpochId() is invoked twice: handleAppUninstallation() + loadCache()
+        // Note that only package name is passed into following methods.
+        verify(mMockEpochManager, times(2)).getCurrentEpochId();
+        verify(mMockAppUpdateManager)
+                .handleAppUninstallationInRealTime(Uri.parse(SAMPLE_PACKAGE), epochId);
     }
 
     private void runPackageFullyRemovedForTopicsKillSwitchOn(Intent intent) throws Exception {
-            // Kill switch is on.
-            doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+        // Kill switch is on.
+        doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
-            // Initialize package receiver meant for Topics and execute
-            createSpyPackageReceiverForTopics().onReceive(sContext, intent);
+        // Initialize package receiver meant for Topics and execute
+        createSpyPackageReceiverForTopics().onReceive(sContext, intent);
 
-            // Grant some time to allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+        // Grant some time to allow background thread to execute
+        Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
-            // When the kill switch is on, there is no Topics related work.
-            verify(mSpyTopicsWorker, never()).handleAppUninstallation(any());
+        // When the kill switch is on, there is no Topics related work.
+        verify(mSpyTopicsWorker, never()).handleAppUninstallation(any());
     }
 
     private void runPackageFullyRemovedForMsmtKillSwitchOff(Intent intent) throws Exception {
-            // Kill switch is off.
-            doReturn(false).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
+        // Kill switch is off.
+        doReturn(false).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
-            // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        // Mock static method MeasurementImpl.getInstance that executes on a separate thread
+        MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
-            // Initialize package receiver meant for Measurement
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for Measurement
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
+        spyReceiver.onReceive(sContext, intent);
 
-            // Verify only measurement fully removed method was executed from measurement methods
-            verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
-            verify(spyReceiver, times(1)).measurementOnPackageFullyRemoved(any(), any());
-            verify(spyReceiver, never()).measurementOnPackageAdded(any(), any());
+        // Verify only measurement fully removed method was executed from measurement methods
+        verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
+        verify(spyReceiver, times(1)).measurementOnPackageFullyRemoved(any(), any());
+        verify(spyReceiver, never()).measurementOnPackageAdded(any(), any());
 
-            // Grant some time to allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+        // Grant some time to allow background thread to execute
+        Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
-            // Verify method inside measurement background thread executes
-            verify(mockMeasurementImpl, times(1)).deletePackageRecords(any());
+        // Verify method inside measurement background thread executes
+        verify(mockMeasurementImpl, times(1)).deletePackageRecords(any());
     }
 
     private void runPackageFullyRemovedForMsmtKillSwitchOn(Intent intent) throws Exception {
-            // Kill Switch is on.
-            doReturn(true).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
+        // Kill Switch is on.
+        doReturn(true).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        // Mock static method MeasurementImpl.getInstance that executes on a separate thread
+        MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
-            // Initialize package receiver meant for Measurement
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for Measurement
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
+        spyReceiver.onReceive(sContext, intent);
 
-            // Verify only measurement fully removed method was executed from measurement methods
-            verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
-            verify(spyReceiver, times(1)).measurementOnPackageFullyRemoved(any(), any());
-            verify(spyReceiver, never()).measurementOnPackageAdded(any(), any());
+        // Verify only measurement fully removed method was executed from measurement methods
+        verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
+        verify(spyReceiver, times(1)).measurementOnPackageFullyRemoved(any(), any());
+        verify(spyReceiver, never()).measurementOnPackageAdded(any(), any());
 
-            // Allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+        // Allow background thread to execute
+        Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
-            // Verify method inside measurement background thread does not execute
-            verify(mockMeasurementImpl, never()).deletePackageRecords(any());
+        // Verify method inside measurement background thread does not execute
+        verify(mockMeasurementImpl, never()).deletePackageRecords(any());
     }
 
     private void runPackageFullyRemovedForFledgeKillSwitchOff(
             Intent intent, boolean frequencyCapFilteringEnabled, boolean appInstallFilteringEnabled)
             throws Exception {
-            // Kill switch is off; service is enabled
-            doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
-            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        // Kill switch is off; service is enabled
+        doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            // Mock static database .getInstance() methods executed on a separate thread
-            doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
-            doReturn(mAppInstallDaoMock).when(mSharedStorageDatabaseMock).appInstallDao();
-            doReturn(mFrequencyCapDaoMock).when(mSharedStorageDatabaseMock).frequencyCapDao();
+        // Mock static database .getInstance() methods executed on a separate thread
+        doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
+        doReturn(mAppInstallDaoMock).when(mSharedStorageDatabaseMock).appInstallDao();
+        doReturn(mFrequencyCapDaoMock).when(mSharedStorageDatabaseMock).frequencyCapDao();
 
-            CountDownLatch caCompletionLatch = new CountDownLatch(1);
-            Answer<Void> caAnswer =
-                    unusedInvocation -> {
-                        caCompletionLatch.countDown();
-                        return null;
-                    };
-            doAnswer(caAnswer).when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
-            CountDownLatch appInstallCompletionLatch = new CountDownLatch(1);
-            Answer<Void> appInstallanswer =
-                    unusedInvocation -> {
-                        appInstallCompletionLatch.countDown();
-                        return null;
-                    };
-            doAnswer(appInstallanswer).when(mAppInstallDaoMock).deleteByPackageName(any());
-            CountDownLatch frequencyCapCompletionLatch = new CountDownLatch(1);
-            Answer<Void> frequencyCapAnswer =
-                    unusedInvocation -> {
-                        frequencyCapCompletionLatch.countDown();
-                        return null;
-                    };
-            doAnswer(frequencyCapAnswer)
-                    .when(mFrequencyCapDaoMock)
-                    .deleteHistogramDataBySourceApp(any());
+        CountDownLatch caCompletionLatch = new CountDownLatch(1);
+        Answer<Void> caAnswer =
+                unusedInvocation -> {
+                    caCompletionLatch.countDown();
+                    return null;
+                };
+        doAnswer(caAnswer)
+                .when(mCustomAudienceDaoMock)
+                .deleteCustomAudienceDataByOwner(any(), anyBoolean());
+        CountDownLatch appInstallCompletionLatch = new CountDownLatch(1);
+        Answer<Void> appInstallanswer =
+                unusedInvocation -> {
+                    appInstallCompletionLatch.countDown();
+                    return null;
+                };
+        doAnswer(appInstallanswer).when(mAppInstallDaoMock).deleteByPackageName(any());
+        CountDownLatch frequencyCapCompletionLatch = new CountDownLatch(1);
+        Answer<Void> frequencyCapAnswer =
+                unusedInvocation -> {
+                    frequencyCapCompletionLatch.countDown();
+                    return null;
+                };
+        doAnswer(frequencyCapAnswer)
+                .when(mFrequencyCapDaoMock)
+                .deleteHistogramDataBySourceApp(any());
 
-            // Initialize package receiver meant for FLEDGE
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
-            doReturn(mCustomAudienceDatabaseMock)
-                    .when(spyReceiver)
-                    .getCustomAudienceDatabase(any());
-            doReturn(mSharedStorageDatabaseMock).when(spyReceiver).getSharedStorageDatabase(any());
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for FLEDGE
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
+        doReturn(mCustomAudienceDatabaseMock).when(spyReceiver).getCustomAudienceDatabase(any());
+        doReturn(mSharedStorageDatabaseMock).when(spyReceiver).getSharedStorageDatabase(any());
+        spyReceiver.onReceive(sContext, intent);
 
-            verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+        verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
 
-            // Verify method inside background thread executes
-            assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-            verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+        // Verify method inside background thread executes
+        assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+        verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any(), anyBoolean());
         if (frequencyCapFilteringEnabled) {
-                assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-                verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
-            } else {
+            assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
+        } else {
             verifyZeroInteractions(mFrequencyCapDaoMock);
         }
         if (appInstallFilteringEnabled) {
@@ -649,323 +673,322 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
             verify(mAppInstallDaoMock).deleteByPackageName(any());
         } else {
             verifyZeroInteractions(mAppInstallDaoMock);
-            }
+        }
     }
 
     private void runPackageFullyRemovedForFledgeKillSwitchOn(Intent intent) {
-            // Kill switch is on; service is disabled
-            doReturn(true).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
-            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        // Kill switch is on; service is disabled
+        doReturn(true).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            // Initialize package receiver meant for FLEDGE
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for FLEDGE
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
+        spyReceiver.onReceive(sContext, intent);
 
-            verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+        verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
 
-            // Verify no executions
-            verify(spyReceiver, never()).getCustomAudienceDatabase(any());
-            verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
-            verify(spyReceiver, never()).getSharedStorageDatabase(any());
-            verifyZeroInteractions(
-                    mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
+        // Verify no executions
+        verify(spyReceiver, never()).getCustomAudienceDatabase(any());
+        verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
+        verify(spyReceiver, never()).getSharedStorageDatabase(any());
+        verifyZeroInteractions(
+                mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
     }
 
     private void runPackageFullyRemovedForConsent_onS(Intent intent) throws Exception {
-            // Mock static method AppConsentDao.getInstance() executed on a separate thread
-            doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        // Mock static method AppConsentDao.getInstance() executed on a separate thread
+        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
-            CountDownLatch completionLatch = new CountDownLatch(1);
-            doAnswer(
-                            unusedInvocation -> {
-                                completionLatch.countDown();
-                                return null;
-                            })
-                    .when(mConsentManager)
-                    .clearConsentForUninstalledApp(any(), anyInt());
+        CountDownLatch completionLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            completionLatch.countDown();
+                            return null;
+                        })
+                .when(mConsentManager)
+                .clearConsentForUninstalledApp(any(), anyInt());
 
-            // Initialize package receiver meant for Consent
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for Consent
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
+        spyReceiver.onReceive(sContext, intent);
 
-            verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
+        verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
 
-            // Verify method inside background thread executes
-            assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-            verify(mConsentManager).clearConsentForUninstalledApp(any(), anyInt());
+        // Verify method inside background thread executes
+        assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+        verify(mConsentManager).clearConsentForUninstalledApp(any(), anyInt());
     }
 
     private void validateConsentWhenPackageUidAbsent(Intent intent, boolean isPackageStillInstalled)
             throws IOException, InterruptedException {
-            // Mock static method AppConsentDao.getInstance() executed on a separate thread
-            doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        // Mock static method AppConsentDao.getInstance() executed on a separate thread
+        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
-            // Track whether the clearConsentForUninstalledApp was ever invoked.
-            // Use a CountDownLatch since this invocation happens on a background thread.
-            CountDownLatch completionLatch = new CountDownLatch(1);
-            doAnswer(
-                            unusedInvocation -> {
-                                completionLatch.countDown();
-                                return null;
-                            })
-                    .when(mConsentManager)
-                    .clearConsentForUninstalledApp(anyString());
+        // Track whether the clearConsentForUninstalledApp was ever invoked.
+        // Use a CountDownLatch since this invocation happens on a background thread.
+        CountDownLatch completionLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            completionLatch.countDown();
+                            return null;
+                        })
+                .when(mConsentManager)
+                .clearConsentForUninstalledApp(anyString());
 
-            // Initialize package receiver meant for Consent
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
-            doReturn(isPackageStillInstalled)
-                    .when(spyReceiver)
-                    .isPackageStillInstalled(any(), anyString());
+        // Initialize package receiver meant for Consent
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
+        doReturn(isPackageStillInstalled)
+                .when(spyReceiver)
+                .isPackageStillInstalled(any(), anyString());
 
-            // Invoke the onReceive method to test the behavior
-            spyReceiver.onReceive(sContext, intent);
+        // Invoke the onReceive method to test the behavior
+        spyReceiver.onReceive(sContext, intent);
 
-            // Package UID is expected to be -1 if there is no EXTRA_UID in the Intent's Extra.
-            verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
+        // Package UID is expected to be -1 if there is no EXTRA_UID in the Intent's Extra.
+        verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
 
-            // Verify method inside background thread executes if package is no longer installed
-            // and that it does not execute if the package is still installed.
-            assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS))
-                    .isEqualTo(!isPackageStillInstalled);
+        // Verify method inside background thread executes if package is no longer installed
+        // and that it does not execute if the package is still installed.
+        assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS))
+                .isEqualTo(!isPackageStillInstalled);
     }
 
     private void runPackageAddedForTopics(Intent intent) throws Exception {
         // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
         doReturn(mSpyTopicsWorker).when(TopicsWorker::getInstance);
 
-            // Track whether the TopicsWorker.handleAppInstallation was ever invoked.
-            // Use a CountDownLatch since this invocation happens on a background thread.
-            CountDownLatch completionLatch = new CountDownLatch(1);
-            doAnswer(
-                            unusedInvocation -> {
-                                completionLatch.countDown();
-                                return null;
-                            })
-                    .when(mSpyTopicsWorker)
-                    .handleAppInstallation(Uri.parse(SAMPLE_PACKAGE));
+        // Track whether the TopicsWorker.handleAppInstallation was ever invoked.
+        // Use a CountDownLatch since this invocation happens on a background thread.
+        CountDownLatch completionLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            completionLatch.countDown();
+                            return null;
+                        })
+                .when(mSpyTopicsWorker)
+                .handleAppInstallation(Uri.parse(SAMPLE_PACKAGE));
 
-            // Initialize package receiver meant for Topics and execute
-            createSpyPackageReceiverForTopics().onReceive(sContext, intent);
+        // Initialize package receiver meant for Topics and execute
+        createSpyPackageReceiverForTopics().onReceive(sContext, intent);
 
-            // Verify the execution in background thread has occurred.
-            assertThat(completionLatch.await(/* timeout */ 500, TimeUnit.MILLISECONDS)).isTrue();
+        // Verify the execution in background thread has occurred.
+        assertThat(completionLatch.await(/* timeout */ 500, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     private void runPackageAddedMsmtKillSwitchOff(Intent intent) throws Exception {
-            // Kill Switch is off.
-            doReturn(false).when(mMockFlags).getMeasurementReceiverInstallAttributionKillSwitch();
+        // Kill Switch is off.
+        doReturn(false).when(mMockFlags).getMeasurementReceiverInstallAttributionKillSwitch();
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        // Mock static method MeasurementImpl.getInstance that executes on a separate thread
+        MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
-            // Initialize package receiver meant for Measurement
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for Measurement
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
+        spyReceiver.onReceive(sContext, intent);
 
-            // Verify only measurement added method was executed from measurement methods
-            verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
-            verify(spyReceiver, never()).measurementOnPackageFullyRemoved(any(), any());
-            verify(spyReceiver, times(1)).measurementOnPackageAdded(any(), any());
+        // Verify only measurement added method was executed from measurement methods
+        verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
+        verify(spyReceiver, never()).measurementOnPackageFullyRemoved(any(), any());
+        verify(spyReceiver, times(1)).measurementOnPackageAdded(any(), any());
 
-            // Allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+        // Allow background thread to execute
+        Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
-            // Verify method inside measurement background thread executes
-            verify(mockMeasurementImpl, times(1)).doInstallAttribution(any(), anyLong());
+        // Verify method inside measurement background thread executes
+        verify(mockMeasurementImpl, times(1)).doInstallAttribution(any(), anyLong());
     }
 
     private void runPackageAddedForMsmtKillSwitchOn(Intent intent) throws Exception {
-            // Kill Switch is on.
-            doReturn(true).when(mMockFlags).getMeasurementReceiverInstallAttributionKillSwitch();
+        // Kill Switch is on.
+        doReturn(true).when(mMockFlags).getMeasurementReceiverInstallAttributionKillSwitch();
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        // Mock static method MeasurementImpl.getInstance that executes on a separate thread
+        MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
-            // Initialize package receiver meant for Measurement
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for Measurement
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
+        spyReceiver.onReceive(sContext, intent);
 
-            // Verify only measurement added method was executed from measurement methods
-            verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
-            verify(spyReceiver, never()).measurementOnPackageFullyRemoved(any(), any());
-            verify(spyReceiver, times(1)).measurementOnPackageAdded(any(), any());
+        // Verify only measurement added method was executed from measurement methods
+        verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
+        verify(spyReceiver, never()).measurementOnPackageFullyRemoved(any(), any());
+        verify(spyReceiver, times(1)).measurementOnPackageAdded(any(), any());
 
-            // Allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+        // Allow background thread to execute
+        Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
-            // Verify method inside measurement background thread does not execute
-            verify(mockMeasurementImpl, never()).doInstallAttribution(any(), anyLong());
+        // Verify method inside measurement background thread does not execute
+        verify(mockMeasurementImpl, never()).doInstallAttribution(any(), anyLong());
     }
 
     private void runPackageDataClearedForMsmtKillSwitchOff(Intent intent) throws Exception {
-            // Kill Switch is off.
-            doReturn(false).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
+        // Kill Switch is off.
+        doReturn(false).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        // Mock static method MeasurementImpl.getInstance that executes on a separate thread
+        MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
-            // Initialize package receiver meant for Measurement
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for Measurement
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
+        spyReceiver.onReceive(sContext, intent);
 
-            // Verify only measurement cleared method was executed from measurement methods
-            verify(spyReceiver, times(1)).measurementOnPackageDataCleared(any(), any());
-            verify(spyReceiver, never()).measurementOnPackageFullyRemoved(any(), any());
-            verify(spyReceiver, never()).measurementOnPackageAdded(any(), any());
+        // Verify only measurement cleared method was executed from measurement methods
+        verify(spyReceiver, times(1)).measurementOnPackageDataCleared(any(), any());
+        verify(spyReceiver, never()).measurementOnPackageFullyRemoved(any(), any());
+        verify(spyReceiver, never()).measurementOnPackageAdded(any(), any());
 
-            // Allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+        // Allow background thread to execute
+        Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
-            // Verify method inside measurement background thread executes
-            verify(mockMeasurementImpl, times(1)).deletePackageRecords(any());
+        // Verify method inside measurement background thread executes
+        verify(mockMeasurementImpl, times(1)).deletePackageRecords(any());
     }
 
     private void runPackageDataClearedForMsmtKillSwitchOn(Intent intent) throws Exception {
-            // Kill Switch is on.
-            doReturn(true).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
+        // Kill Switch is on.
+        doReturn(true).when(mMockFlags).getMeasurementReceiverDeletePackagesKillSwitch();
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            // Mock static method MeasurementImpl.getInstance that executes on a separate thread
-            MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-            doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        // Mock static method MeasurementImpl.getInstance that executes on a separate thread
+        MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
 
-            // Initialize package receiver meant for Measurement
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for Measurement
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
+        spyReceiver.onReceive(sContext, intent);
 
-            // Verify only measurement cleared method was executed from measurement methods
-            verify(spyReceiver, times(1)).measurementOnPackageDataCleared(any(), any());
-            verify(spyReceiver, never()).measurementOnPackageFullyRemoved(any(), any());
-            verify(spyReceiver, never()).measurementOnPackageAdded(any(), any());
+        // Verify only measurement cleared method was executed from measurement methods
+        verify(spyReceiver, times(1)).measurementOnPackageDataCleared(any(), any());
+        verify(spyReceiver, never()).measurementOnPackageFullyRemoved(any(), any());
+        verify(spyReceiver, never()).measurementOnPackageAdded(any(), any());
 
-            // Allow background thread to execute
-            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+        // Allow background thread to execute
+        Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
-            // Verify method inside measurement background thread does not execute
-            verify(mockMeasurementImpl, never()).deletePackageRecords(any());
+        // Verify method inside measurement background thread does not execute
+        verify(mockMeasurementImpl, never()).deletePackageRecords(any());
     }
 
     private void runPackageDataClearedForFledgeKillSwitchOff(Intent intent) throws Exception {
-            // Kill switch is off; service is enabled
-            doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
-            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        // Kill switch is off; service is enabled
+        doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            // Mock static database .getInstance() methods executed on a separate thread
-            doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
-            doReturn(mAppInstallDaoMock).when(mSharedStorageDatabaseMock).appInstallDao();
-            doReturn(mFrequencyCapDaoMock).when(mSharedStorageDatabaseMock).frequencyCapDao();
+        // Mock static database .getInstance() methods executed on a separate thread
+        doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
+        doReturn(mAppInstallDaoMock).when(mSharedStorageDatabaseMock).appInstallDao();
+        doReturn(mFrequencyCapDaoMock).when(mSharedStorageDatabaseMock).frequencyCapDao();
 
-            CountDownLatch caCompletionLatch = new CountDownLatch(1);
-            Answer<Void> caAnswer =
-                    unusedInvocation -> {
-                        caCompletionLatch.countDown();
-                        return null;
-                    };
-            doAnswer(caAnswer).when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
-            CountDownLatch appInstallCompletionLatch = new CountDownLatch(1);
-            Answer<Void> appInstallAnswer =
-                    unusedInvocation -> {
-                        appInstallCompletionLatch.countDown();
-                        return null;
-                    };
-            doAnswer(appInstallAnswer).when(mAppInstallDaoMock).deleteByPackageName(any());
-            CountDownLatch frequencyCapCompletionLatch = new CountDownLatch(1);
-            Answer<Void> frequencyCapAnswer =
-                    unusedInvocation -> {
-                        frequencyCapCompletionLatch.countDown();
-                        return null;
-                    };
-            doAnswer(frequencyCapAnswer)
-                    .when(mFrequencyCapDaoMock)
-                    .deleteHistogramDataBySourceApp(any());
+        CountDownLatch caCompletionLatch = new CountDownLatch(1);
+        Answer<Void> caAnswer =
+                unusedInvocation -> {
+                    caCompletionLatch.countDown();
+                    return null;
+                };
+        doAnswer(caAnswer)
+                .when(mCustomAudienceDaoMock)
+                .deleteCustomAudienceDataByOwner(any(), anyBoolean());
+        CountDownLatch appInstallCompletionLatch = new CountDownLatch(1);
+        Answer<Void> appInstallAnswer =
+                unusedInvocation -> {
+                    appInstallCompletionLatch.countDown();
+                    return null;
+                };
+        doAnswer(appInstallAnswer).when(mAppInstallDaoMock).deleteByPackageName(any());
+        CountDownLatch frequencyCapCompletionLatch = new CountDownLatch(1);
+        Answer<Void> frequencyCapAnswer =
+                unusedInvocation -> {
+                    frequencyCapCompletionLatch.countDown();
+                    return null;
+                };
+        doAnswer(frequencyCapAnswer)
+                .when(mFrequencyCapDaoMock)
+                .deleteHistogramDataBySourceApp(any());
 
-            // Initialize package receiver meant for FLEDGE
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
-            doReturn(mCustomAudienceDatabaseMock)
-                    .when(spyReceiver)
-                    .getCustomAudienceDatabase(any());
-            doReturn(mSharedStorageDatabaseMock).when(spyReceiver).getSharedStorageDatabase(any());
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for FLEDGE
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
+        doReturn(mCustomAudienceDatabaseMock).when(spyReceiver).getCustomAudienceDatabase(any());
+        doReturn(mSharedStorageDatabaseMock).when(spyReceiver).getSharedStorageDatabase(any());
+        spyReceiver.onReceive(sContext, intent);
 
-            verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+        verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
 
-            // Verify method inside background thread executes
-            assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-            assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-            assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-            verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
-            verify(mAppInstallDaoMock).deleteByPackageName(any());
-            verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
+        // Verify method inside background thread executes
+        assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(frequencyCapCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+        verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any(), anyBoolean());
+        verify(mAppInstallDaoMock).deleteByPackageName(any());
+        verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(any());
     }
 
     private void runPackageDataClearedForFledgeKillSwitchOn(Intent intent) {
-            // Kill switch is on; service is disabled
-            doReturn(true).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
-            doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        // Kill switch is on; service is disabled
+        doReturn(true).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            // Initialize package receiver meant for FLEDGE
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
-            spyReceiver.onReceive(sContext, intent);
+        // Initialize package receiver meant for FLEDGE
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
+        spyReceiver.onReceive(sContext, intent);
 
-            verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
+        verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
 
-            // Verify no executions
-            verify(spyReceiver, never()).getCustomAudienceDatabase(any());
-            verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
-            verifyZeroInteractions(
-                    mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
+        // Verify no executions
+        verify(spyReceiver, never()).getCustomAudienceDatabase(any());
+        verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
+        verifyZeroInteractions(
+                mSharedStorageDatabaseMock, mAppInstallDaoMock, mFrequencyCapDaoMock);
     }
 
     @Test
     @SpyStatic(PackageManagerCompatUtils.class)
     public void testIsPackageStillInstalled() {
-            final String packageNamePrefix = "com.example.package";
-            final int count = 4;
-            final List<PackageInfo> packages = new ArrayList<>();
-            for (int i = 0; i < count; i++) {
-                PackageInfo packageInfo = new PackageInfo();
-                packageInfo.packageName = packageNamePrefix + i;
-                packages.add(packageInfo);
-            }
+        final String packageNamePrefix = "com.example.package";
+        final int count = 4;
+        final List<PackageInfo> packages = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            PackageInfo packageInfo = new PackageInfo();
+            packageInfo.packageName = packageNamePrefix + i;
+            packages.add(packageInfo);
+        }
 
-            doReturn(packages)
-                    .when(() -> PackageManagerCompatUtils.getInstalledPackages(any(), anyInt()));
+        doReturn(packages)
+                .when(() -> PackageManagerCompatUtils.getInstalledPackages(any(), anyInt()));
 
-            // Initialize package receiver
-            final Context context = ApplicationProvider.getApplicationContext();
-            PackageChangedReceiver receiver = createSpyPackageReceiverForConsent();
-            assertThat(receiver.isPackageStillInstalled(context, packageNamePrefix + 0)).isTrue();
-            assertThat(receiver.isPackageStillInstalled(context, packageNamePrefix + count))
-                    .isFalse();
+        // Initialize package receiver
+        final Context context = ApplicationProvider.getApplicationContext();
+        PackageChangedReceiver receiver = createSpyPackageReceiverForConsent();
+        assertThat(receiver.isPackageStillInstalled(context, packageNamePrefix + 0)).isTrue();
+        assertThat(receiver.isPackageStillInstalled(context, packageNamePrefix + count)).isFalse();
     }
 
     @Test
     @MockStatic(SdkLevel.class)
     public void testReceive_onT_onExtServices() {
         mocker.mockIsAtLeastT(true);
-            Intent intent =
-                    createIntentSentByAdServiceSystemService(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-            PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
-            Context spyContext = Mockito.spy(ApplicationProvider.getApplicationContext());
-            doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
-                    .when(spyContext)
-                    .getPackageName();
-            receiver.onReceive(spyContext, intent);
-            verify(receiver, never()).consentOnPackageFullyRemoved(any(), any(), anyInt());
+        Intent intent =
+                createIntentSentByAdServiceSystemService(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
+        Context spyContext = Mockito.spy(ApplicationProvider.getApplicationContext());
+        doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
+                .when(spyContext)
+                .getPackageName();
+        receiver.onReceive(spyContext, intent);
+        verify(receiver, never()).consentOnPackageFullyRemoved(any(), any(), anyInt());
         verify(receiver, never()).measurementOnPackageFullyRemoved(any(), any());
         verify(receiver, never()).topicsOnPackageFullyRemoved(any());
         verify(receiver, never()).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
@@ -975,14 +998,14 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @MockStatic(SdkLevel.class)
     public void testReceive_onS_onExtServices() {
         mocker.mockIsAtLeastT(false);
-            Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-            PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
-            Context spyContext = Mockito.spy(ApplicationProvider.getApplicationContext());
-            doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
-                    .when(spyContext)
-                    .getPackageName();
-            receiver.onReceive(spyContext, intent);
-            verify(receiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        PackageChangedReceiver receiver = createSpyPackageReceiverForExtServices();
+        Context spyContext = Mockito.spy(ApplicationProvider.getApplicationContext());
+        doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
+                .when(spyContext)
+                .getPackageName();
+        receiver.onReceive(spyContext, intent);
+        verify(receiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
         verify(receiver).measurementOnPackageFullyRemoved(any(), any());
         verify(receiver).topicsOnPackageFullyRemoved(any());
         verify(receiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
@@ -993,19 +1016,57 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     public void testAppConsentDeletion_onR() throws Exception {
         mocker.mockIsAtLeastS(false);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
-            PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
-            Intent intent =
-                    createIntentSentByAdServiceSystemService(
-                            PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-            doReturn(false).when(spyReceiver).isPackageStillInstalled(any(), anyString());
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        doReturn(false).when(spyReceiver).isPackageStillInstalled(any(), anyString());
 
-            // Invoke the onReceive method to test the behavior
-            spyReceiver.onReceive(sContext, intent);
+        // Invoke the onReceive method to test the behavior
+        spyReceiver.onReceive(sContext, intent);
 
-            verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
-            doSleep(BACKGROUND_THREAD_TIMEOUT_MS);
+        verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
+        doSleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
-            // On R App consent clear should not be called as it is not supported
-            verify(mConsentManager, never()).clearConsentForUninstalledApp(any(), anyInt());
+        // On R App consent clear should not be called as it is not supported
+        verify(mConsentManager, never()).clearConsentForUninstalledApp(any(), anyInt());
+    }
+
+    @Test
+    public void testClearConsentNotCalled_WhenPackageUidInvalid_OnTPlus() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
+
+        // Initialize package receiver meant for Consent
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
+        doReturn(false).when(spyReceiver).isPackageStillInstalled(any(), anyString());
+
+        // Invoke the onReceive method to test the behavior
+        spyReceiver.onReceive(sContext, intent);
+
+        verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
+        verify(mConsentManager, never()).clearConsentForUninstalledApp(anyString());
+    }
+
+    @Test
+    public void testPackageAdded_OnS() {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_ADDED);
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+
+        // Mock static method MeasurementImpl.getInstance that executes on a separate thread
+        MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+
+        // Initialize package receiver meant for Measurement
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
+        spyReceiver.onReceive(sContext, intent);
+
+        verify(spyReceiver).measurementOnPackageAdded(any(), any());
     }
 }
