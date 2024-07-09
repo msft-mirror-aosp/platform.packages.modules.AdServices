@@ -35,7 +35,9 @@ import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.FlagsConstants;
 
 import com.google.common.io.BaseEncoding;
 
@@ -96,7 +98,14 @@ public class PASServerAuctionE2ETest extends ServerAuctionE2ETestBase {
                                     AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
                                     /* clearOnStarting= */ true,
                                     /* clearOnFinished= */ false))
-                    .around(new SelectAdsFlagRule(getEncryptionKeyFetchUri()));
+                    .around(new SelectAdsFlagRule());
+
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.newInstance()
+                    .setFlag(
+                            FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
+                            getEncryptionKeyFetchUri());
 
     /** Perform the class-wide required setup. */
     @BeforeClass

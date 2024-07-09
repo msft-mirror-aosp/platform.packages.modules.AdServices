@@ -16,7 +16,6 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
-
 import android.Manifest;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
@@ -193,7 +192,6 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
         // warm up the b&a encryption key fetch URL
         makeWarmUpNetworkCall(getCoordinator());
 
-        // warm up the K-Anon key fetch URL
         makeWarmUpNetworkCall(keyFetchUrlOption.get());
 
         // The first warm up call brings ups the sfe
