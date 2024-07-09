@@ -310,6 +310,18 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
     }
 
+    /* The float to control the probability to set trigger debugging availability signal for fake
+    event reports. */
+    @ConfigFlag float MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS = 0.5F;
+
+    /**
+     * Returns the possibility of trigger debugging availability signal being true for fake event
+     * reports.
+     */
+    default float getMeasurementTriggerDebugSignalProbabilityForFakeReports() {
+        return MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
+    }
+
     /**
      * The suffix that is appended to the aggregation coordinator origin for retrieving the
      * encryption keys.
