@@ -23,6 +23,8 @@ import static com.google.cobalt.ReportDefinition.PrivacyMechanism.DE_IDENTIFICAT
 import static com.google.cobalt.ReportDefinition.PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY;
 import static com.google.cobalt.ReportDefinition.ReportType.FLEETWIDE_OCCURRENCE_COUNTS;
 import static com.google.cobalt.ReportDefinition.ReportType.STRING_COUNTS;
+import static com.google.cobalt.ReportDefinition.ReportingInterval.DAYS_1;
+import static com.google.cobalt.SystemProfileSelectionPolicy.REPORT_ALL;
 
 import android.util.Log;
 
@@ -30,15 +32,21 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
+import com.google.cobalt.MetricDefinition.MetricDimension;
 import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
+import com.google.cobalt.ReportDefinition.ReportingInterval;
+import com.google.cobalt.StringSketchParameters;
+import com.google.cobalt.SystemProfileField;
+import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.cobalt.WindowSize;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.List;
 import java.util.Locale;
 
 /** Validates that Cobalt registry objects are valid and supported by the Cobalt client. */
@@ -86,6 +94,35 @@ public final class RegistryValidator {
             return false;
         }
 
+        if (!validateSystemProfileSelection(report.getSystemProfileSelection())) {
+            logValidationFailure(
+                    "System profile selection policy (%s) failed validation",
+                    report.getSystemProfileSelection());
+            return false;
+        }
+
+        if (!validateSystemProfileFields(report.getSystemProfileFieldList())) {
+            logValidationFailure(
+                    "System profile fields (%s) failed validation",
+                    report.getSystemProfileFieldList());
+            return false;
+        }
+
+        if (!validateExperimentIds(report.getExperimentIdList())) {
+            logValidationFailure(
+                    "Experiment ids (%s) failed validation", report.getExperimentIdList());
+            return false;
+        }
+
+        if (!validatePoissonFields(
+                report.getReportType(),
+                report.getPrivacyMechanism(),
+                report.getNumIndexPoints(),
+                report.getStringSketchParams())) {
+            logValidationFailure("Poisson fields failed validation");
+            return false;
+        }
+
         if (!validateMinAndMaxValues(
                 report.getReportType(),
                 report.getPrivacyMechanism(),
@@ -128,16 +165,36 @@ public final class RegistryValidator {
             return false;
         }
 
+        if (!validateExpeditedSending(report.getExpeditedSending())) {
+            logValidationFailure(
+                    "Expedited sending (%b) failed validation", report.getExpeditedSending());
+            return false;
+        }
+
+        if (!validateReportingInterval(report.getReportingInterval())) {
+            logValidationFailure(
+                    "Reporting interval (%s) failed validation", report.getReportingInterval());
+            return false;
+        }
+
+        if (!validateExemptFromConsent(report.getExemptFromConsent())) {
+            logValidationFailure(
+                    "Exempt from consent (%b) failed validation", report.getExemptFromConsent());
+            return false;
+        }
+
+        if (!validateMaxPrivateIndex(
+                report.getReportType(),
+                report.getPrivacyMechanism(),
+                metric.getMetricDimensionsList(),
+                report.getNumIndexPoints())) {
+            logValidationFailure("Max private index failed validation");
+            return false;
+        }
+
         // TODO(b/343722587): Add remaining validations from the Cobalt config validator. This
         // includes:
-        //   * poisson fields for different privacy mechanisms
-        //   * expedited sending (is unset)
         //   * max release stage (set and report's is less than metric's)
-        //   * reporting interval (must be DAYS_1)
-        //   * exempt from conset (is unset)
-        //   * max private index (fits in int32)
-        //   * system profile selection (is REPORT_ALL)
-        //   * system profile fields (is one of the supported values and experiment ids are empty)
         //   * report specific validations
 
         return true;
@@ -206,6 +263,124 @@ public final class RegistryValidator {
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static boolean validateLocalAggregationPercentileN(int localAggregationPercentileN) {
         return localAggregationPercentileN == 0;
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateExpeditedSending(boolean expeditedSending) {
+        return !expeditedSending;
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateReportingInterval(ReportingInterval reportingInterval) {
+        return reportingInterval.equals(DAYS_1);
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateExemptFromConsent(boolean exemptFromConsent) {
+        return !exemptFromConsent;
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateSystemProfileSelection(
+            SystemProfileSelectionPolicy systemProfileSelection) {
+        return systemProfileSelection.equals(REPORT_ALL);
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateSystemProfileFields(List<SystemProfileField> systemProfileFields) {
+        for (int i = 0; i < systemProfileFields.size(); ++i) {
+            switch (systemProfileFields.get(i)) {
+                case APP_VERSION:
+                case ARCH:
+                case BOARD_NAME:
+                case OS:
+                case SYSTEM_VERSION:
+                    break;
+                default:
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateExperimentIds(List<Long> experimentIds) {
+        return experimentIds.isEmpty();
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validatePoissonFields(
+            ReportType reportType,
+            PrivacyMechanism privacyMechanism,
+            int numIndexPoints,
+            StringSketchParameters stringSketchParams) {
+        if (privacyMechanism.equals(DE_IDENTIFICATION)) {
+            return true;
+        }
+
+        if (!reportType.equals(FLEETWIDE_OCCURRENCE_COUNTS)) {
+            return false;
+        }
+
+        if (numIndexPoints == 0) {
+            return false;
+        }
+
+        if (!stringSketchParams.equals(StringSketchParameters.getDefaultInstance())) {
+            // Note, STRING_COUNTS and UNIQUE_DEVICE_STRING_COUNTS require StringSketchParams to be
+            // checked and this function must be updated to account for report types.
+            return false;
+        }
+
+        return true;
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateMaxPrivateIndex(
+            ReportType reportType,
+            PrivacyMechanism privacyMechanism,
+            List<MetricDimension> metricDimensions,
+            int numIndexPoints) {
+        if (privacyMechanism.equals(DE_IDENTIFICATION)) {
+            return true;
+        }
+
+        if (!reportType.equals(FLEETWIDE_OCCURRENCE_COUNTS)) {
+            return false;
+        }
+
+        // Each event vector and value is mapped to an integer that represents a tuple in the
+        // (event, value) space. This means the number of private indices is num events * num
+        // values. Note, this does not account reports with other values that may need to be
+        // encoded, e.g. histogram buckets.
+        //
+        // See {@link com.android.cobalt.observations.PrivateIndexCalculations#eventVectorToIndex}
+        // and {@link com.android.cobalt.observations.PrivateIndexCalculations#doubleToIndex} for
+        // details about how private index encoding is done.
+        long numPrivateIndices = 1;
+        for (int i = 0; i < metricDimensions.size(); ++i) {
+            if (numPrivateIndices < 0) {
+                //  Overflow occurred.
+                return false;
+            }
+
+            MetricDimension d = metricDimensions.get(i);
+            if (d.getMaxEventCode() != 0) {
+                // Dimensions with a max event code cover the range [0, MAX].
+                numPrivateIndices *= d.getMaxEventCode() + 1;
+            } else {
+                numPrivateIndices *= d.getEventCodesCount();
+            }
+        }
+
+        numPrivateIndices *= numIndexPoints;
+        if (numPrivateIndices < 0) {
+            //  Overflow occurred.
+            return false;
+        }
+
+        return numPrivateIndices < (long) Integer.MAX_VALUE;
     }
 
     private static void logValidationFailure(String format, Object... params) {
