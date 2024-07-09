@@ -1134,6 +1134,7 @@ public class KAnonCallerImpl implements KAnonCaller {
         } catch (JSONException e) {
             throw new KAnonSignJoinException("Error while creating binary http request");
         }
+        sLogger.v("Encrypting the binary http message");
         byte[] dataInBinaryHttpMessage = binaryHttpMessage.serialize();
         return FluentFuture.from(
                         kAnonObliviousHttpEncryptor.encryptBytes(
@@ -1156,9 +1157,11 @@ public class KAnonCallerImpl implements KAnonCaller {
                                                 .build()),
                         mBackgroundExecutorService)
                 .transformAsync(
-                        joinRequest ->
-                                mAdServicesHttpsClient.performRequestGetResponseInBase64String(
-                                        joinRequest),
+                        joinRequest -> {
+                            sLogger.v("Making HTTPS call to join request");
+                            return mAdServicesHttpsClient.performRequestGetResponseInBase64String(
+                                        joinRequest);
+                        },
                         mBackgroundExecutorService)
                 .catchingAsync(
                         Throwable.class,
