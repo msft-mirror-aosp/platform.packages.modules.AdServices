@@ -64,6 +64,8 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest
 
     @Before
     public void setUp() throws Exception {
+        mTestName = getTestName();
+
         UiUtils.resetAdServicesConsentData(sContext);
 
         UiUtils.enableNotificationPermission();
@@ -130,8 +132,6 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest
      */
     @Test
     public void testGaRowAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -158,8 +158,6 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest
      */
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
 
         AdServicesStates adServicesStates =

@@ -65,6 +65,7 @@ public final class ExtGaUxDebugChannelRowTest extends AdExtServicesGaUxDebugChan
 
     @Before
     public void setUp() throws Exception {
+        mTestName = getTestName();
 
         UiUtils.resetAdServicesConsentData(sContext);
 
@@ -106,8 +107,6 @@ public final class ExtGaUxDebugChannelRowTest extends AdExtServicesGaUxDebugChan
     /** Verify that entry point disabled can not trigger consent notification. */
     @Test
     public void testEntryPointDisabled() throws Exception {
-        mTestName = getTestName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -129,8 +128,6 @@ public final class ExtGaUxDebugChannelRowTest extends AdExtServicesGaUxDebugChan
     /** Verify that when request sent from entry point, we won't trigger notification. */
     @Test
     public void testFromEntryPointRequest() throws Exception {
-        mTestName = getTestName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(false)
@@ -153,8 +150,6 @@ public final class ExtGaUxDebugChannelRowTest extends AdExtServicesGaUxDebugChan
     /** Verify that non-adult account can not trigger consent notification. */
     @Test
     public void testNonAdultAccount() throws Exception {
-        mTestName = getTestName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -179,8 +174,6 @@ public final class ExtGaUxDebugChannelRowTest extends AdExtServicesGaUxDebugChan
      */
     @Test
     public void testGaRowAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -204,8 +197,6 @@ public final class ExtGaUxDebugChannelRowTest extends AdExtServicesGaUxDebugChan
      */
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(false)

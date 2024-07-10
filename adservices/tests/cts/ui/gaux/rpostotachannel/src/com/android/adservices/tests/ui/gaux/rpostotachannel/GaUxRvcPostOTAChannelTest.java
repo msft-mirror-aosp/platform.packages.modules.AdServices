@@ -59,6 +59,8 @@ public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannel
 
     @Before
     public void setUp() throws Exception {
+        mTestName = getTestName();
+
         UiUtils.resetAdServicesConsentData(sContext);
 
         UiUtils.enableNotificationPermission();
@@ -102,8 +104,6 @@ public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannel
      */
     @Test
     public void testU18ToGAForRPostOTA_optInMsmt() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -160,8 +160,6 @@ public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannel
      */
     @Test
     public void testU18ToGAForRPostOTA_optOutMsmt() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
 
         AdservicesTestHelper.killAdservicesProcess(sContext);

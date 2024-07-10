@@ -58,7 +58,8 @@ public final class GaUxDebugChannelTest extends AdServicesGaUxDebugChannelCtsRoo
 
     @Before
     public void setUp() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
+        mTestName = getTestName();
+
         UiUtils.setBinderTimeout();
         AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.resetAdServicesConsentData(sContext);
@@ -103,8 +104,6 @@ public final class GaUxDebugChannelTest extends AdServicesGaUxDebugChannelCtsRoo
     /** Verify that the API returns false when API is disabled. */
     @Test
     public void testApiDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.turnOffEnableAdsServicesAPI();
 
         mCommonManager.enableAdServices(
@@ -139,8 +138,6 @@ public final class GaUxDebugChannelTest extends AdServicesGaUxDebugChannelCtsRoo
     /** Verify that entry point disabled can not trigger consent notification. */
     @Test
     public void testEntryPointDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
@@ -166,8 +163,6 @@ public final class GaUxDebugChannelTest extends AdServicesGaUxDebugChannelCtsRoo
     /** Verify that when request sent from entry point, we won't trigger notification. */
     @Test
     public void testFromEntryPointRequest() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 
@@ -194,8 +189,6 @@ public final class GaUxDebugChannelTest extends AdServicesGaUxDebugChannelCtsRoo
     /** Verify that non-adult account can not trigger consent notification. */
     @Test
     public void testNonAdultAccount() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
@@ -224,8 +217,6 @@ public final class GaUxDebugChannelTest extends AdServicesGaUxDebugChannelCtsRoo
      */
     @Test
     public void testGaRowAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
@@ -253,8 +244,6 @@ public final class GaUxDebugChannelTest extends AdServicesGaUxDebugChannelCtsRoo
      */
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
         UiUtils.enableGa();
 
@@ -282,8 +271,6 @@ public final class GaUxDebugChannelTest extends AdServicesGaUxDebugChannelCtsRoo
      */
     @Test
     public void testGaEuAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 
@@ -309,8 +296,6 @@ public final class GaUxDebugChannelTest extends AdServicesGaUxDebugChannelCtsRoo
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
     public void testGaEuAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsEuDevice();
         UiUtils.enableGa();
 

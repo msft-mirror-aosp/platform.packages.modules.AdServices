@@ -60,6 +60,8 @@ public final class RvcUxAlreadyEnrolledChannelTest
 
     @Before
     public void setUp() throws Exception {
+        mTestName = getTestName();
+
         UiUtils.setBinderTimeout();
         AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.resetAdServicesConsentData(sContext);
@@ -101,8 +103,6 @@ public final class RvcUxAlreadyEnrolledChannelTest
     /** Verify that the U18 ROW notification is displayed for RVC_UX. */
     @Test
     public void testU18NotificationDisplayedForRvcUX_row() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -142,8 +142,6 @@ public final class RvcUxAlreadyEnrolledChannelTest
 
     @Test
     public void testU18NotificationDisplayedForRvcUX_eu() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsEuDevice();
 
         AdservicesTestHelper.killAdservicesProcess(sContext);

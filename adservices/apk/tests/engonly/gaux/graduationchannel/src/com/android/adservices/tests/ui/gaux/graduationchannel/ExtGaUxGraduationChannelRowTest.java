@@ -94,6 +94,8 @@ public class ExtGaUxGraduationChannelRowTest extends AdServicesCtsTestCase {
 
     @Before
     public void setUp() throws Exception {
+        mTestName = getTestName();
+
         UiUtils.resetAdServicesConsentData(sContext);
 
         UiUtils.enableNotificationPermission();
@@ -160,8 +162,6 @@ public class ExtGaUxGraduationChannelRowTest extends AdServicesCtsTestCase {
      */
     @Test
     public void testRowU18ToGaAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
         UiUtils.enableU18();
 

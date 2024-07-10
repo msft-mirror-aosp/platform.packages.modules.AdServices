@@ -75,6 +75,8 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
 
     @Before
     public void setUp() throws Exception {
+        mTestName = getTestName();
+
         UiUtils.setBinderTimeout();
         AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.resetAdServicesConsentData(sContext);
@@ -145,7 +147,6 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
     /** Verify that for GA, ROW devices get adservices common states of opt-in consent. */
     @Test
     public void testGetAdservicesCommonStatesOptIn() throws Exception {
-        mTestName = getTestName();
         UiUtils.setAsRowDevice();
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -191,7 +192,6 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
     /** Verify that for GA devices get adservices common states of opt-out consent. */
     @Test
     public void testGetAdservicesCommonStatesOptOut() throws Exception {
-        mTestName = getTestName();
         UiUtils.setFlipFlow(true);
         UiUtils.setAsRowDevice();
         UiUtils.setGetAdservicesCommonStatesServiceEnable(true);
@@ -248,8 +248,6 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
     /** Verify that for GA, ROW devices get adservices common states of opt-in consent. */
     @Test
     public void testGetAdservicesCommonStatesNotEnabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
         UiUtils.setGetAdservicesCommonStatesServiceEnable(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -265,8 +263,6 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
 
     @Test
     public void testGetAdservicesCommonStatesNotAllowed() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
         UiUtils.setGetAdservicesCommonStatesServiceEnable(false);
         UiUtils.setGetAdservicesCommonStatesAllowList(INVALID_PACKAGE_NAME);
