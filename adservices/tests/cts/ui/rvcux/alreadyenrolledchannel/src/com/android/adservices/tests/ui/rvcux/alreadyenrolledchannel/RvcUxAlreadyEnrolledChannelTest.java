@@ -62,15 +62,15 @@ public final class RvcUxAlreadyEnrolledChannelTest
     public void setUp() throws Exception {
         mTestName = getTestName();
 
-        UiUtils.setBinderTimeout();
+        UiUtils.setBinderTimeout(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.enableRvc();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.enableRvc(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -103,7 +103,7 @@ public final class RvcUxAlreadyEnrolledChannelTest
     /** Verify that the U18 ROW notification is displayed for RVC_UX. */
     @Test
     public void testU18NotificationDisplayedForRvcUX_row() throws Exception {
-        UiUtils.setAsRowDevice();
+        UiUtils.setAsRowDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -134,6 +134,7 @@ public final class RvcUxAlreadyEnrolledChannelTest
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 UiConstants.UX.RVC_UX,
                 /* isOptIn= */ false,
                 /* isFlipConsent= */ false,
@@ -142,7 +143,7 @@ public final class RvcUxAlreadyEnrolledChannelTest
 
     @Test
     public void testU18NotificationDisplayedForRvcUX_eu() throws Exception {
-        UiUtils.setAsEuDevice();
+        UiUtils.setAsEuDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -172,6 +173,7 @@ public final class RvcUxAlreadyEnrolledChannelTest
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 UiConstants.UX.RVC_UX,
                 /* isOptIn= */ false,
                 /* isFlipConsent= */ false,

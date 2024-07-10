@@ -66,12 +66,12 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest
     public void setUp() throws Exception {
         mTestName = getTestName();
 
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -92,7 +92,7 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest
                 };
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
@@ -158,7 +158,7 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest
      */
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
-        UiUtils.setAsRowDevice();
+        UiUtils.setAsRowDevice(flags);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
