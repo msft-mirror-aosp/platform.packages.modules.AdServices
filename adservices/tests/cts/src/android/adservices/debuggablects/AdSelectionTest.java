@@ -16,7 +16,6 @@
 
 package android.adservices.debuggablects;
 
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
@@ -31,9 +30,10 @@ import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.clients.adselection.AdSelectionClient;
+import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
-import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
@@ -72,6 +72,20 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
      */
     @Test
     public void testAdSelection_withBiddingAndScoringLogic_happyPath() throws Exception {
+        testAdSelectionHelper(mCustomAudienceClient, mAdSelectionClient);
+    }
+
+    @Test
+    public void testAdSelection_withBiddingAndScoringLogic_happyPath_usingGetMethod()
+            throws Exception {
+        testAdSelectionHelper(
+                mCustomAudienceClientUsingGetMethod, mAdSelectionClientUsingGetMethod);
+    }
+
+    private void testAdSelectionHelper(
+            AdvertisingCustomAudienceClient customAudienceClient,
+            AdSelectionClient adSelectionClient)
+            throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -80,11 +94,11 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
                 makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
-            joinCustomAudience(SHIRTS_CA);
-            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
+            joinCustomAudience(customAudienceClient, SHIRTS_CA);
+            AdSelectionOutcome result = doSelectAds(adSelectionClient, adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
         } finally {
-            leaveCustomAudience(SHIRTS_CA);
+            leaveCustomAudience(customAudienceClient, SHIRTS_CA);
         }
 
         assertThat(dispatcher.getCalledPaths())
@@ -190,49 +204,6 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
         } finally {
             overrideCpcBillingEnabled(false);
             leaveCustomAudience(SHOES_CA);
-        }
-
-        assertThat(dispatcher.getCalledPaths())
-                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
-    }
-
-    /**
-     * Test that custom audience can be successfully fetched from a server and joined to participate
-     * in a successful ad selection (Remarketing CUJ 169).
-     */
-    @Test
-    public void testAdSelection_withFetchCustomAudience_fetchesAndReturnsSuccessfully()
-            throws Exception {
-        ScenarioDispatcher dispatcher =
-                setupDispatcher(
-                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
-                                "scenarios/remarketing-cuj-fetchCA.json"));
-        AdSelectionConfig adSelectionConfig =
-                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
-        String customAudienceName = "hats";
-
-        try {
-            CustomAudience customAudience = makeCustomAudience(customAudienceName).build();
-            flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
-            mCustomAudienceClient
-                    .fetchAndJoinCustomAudience(
-                            new FetchAndJoinCustomAudienceRequest.Builder(
-                                            Uri.parse(
-                                                    dispatcher.getBaseAddressWithPrefix().toString()
-                                                            + Scenarios.FETCH_CA_PATH))
-                                    .setActivationTime(customAudience.getActivationTime())
-                                    .setExpirationTime(customAudience.getExpirationTime())
-                                    .setName(customAudience.getName())
-                                    .setUserBiddingSignals(customAudience.getUserBiddingSignals())
-                                    .build())
-                    .get(5, TimeUnit.SECONDS);
-            Log.d(TAG, "Joined Custom Audience: " + customAudienceName);
-            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
-            assertThat(result.hasOutcome()).isTrue();
-            assertThat(result.getRenderUri()).isNotNull();
-        } finally {
-            flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, false);
-            leaveCustomAudience(customAudienceName);
         }
 
         assertThat(dispatcher.getCalledPaths())

@@ -42,6 +42,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.adservices.customaudience.TrustedBiddingData;
@@ -91,15 +92,19 @@ import java.util.concurrent.TimeoutException;
 public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
     protected static final String TAG = FledgeScenarioTest.class.getSimpleName();
     protected static final int TIMEOUT = 120;
+    protected static final int TIMEOUT_TES_SECONDS = 10;
     protected static final String SHOES_CA = "shoes";
     protected static final String SHIRTS_CA = "shirts";
+    protected static final String HATS_CA = "hats";
     private static final int NUM_ADS_PER_AUDIENCE = 4;
     private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final long AD_ID_FETCHER_TIMEOUT = 1000;
     private static final long AD_ID_FETCHER_TIMEOUT_DEFAULT = 50;
 
     protected AdvertisingCustomAudienceClient mCustomAudienceClient;
+    protected AdvertisingCustomAudienceClient mCustomAudienceClientUsingGetMethod;
     protected AdSelectionClient mAdSelectionClient;
+    protected AdSelectionClient mAdSelectionClientUsingGetMethod;
 
     private AdTechIdentifier mBuyer;
     private AdTechIdentifier mSeller;
@@ -140,8 +145,20 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
                         .setContext(mContext)
                         .setExecutor(executor)
                         .build();
+        mCustomAudienceClientUsingGetMethod =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(mContext)
+                        .setExecutor(executor)
+                        .setUseGetMethodToCreateManagerInstance(true)
+                        .build();
         mAdSelectionClient =
                 new AdSelectionClient.Builder().setContext(mContext).setExecutor(executor).build();
+        mAdSelectionClientUsingGetMethod =
+                new AdSelectionClient.Builder()
+                        .setContext(mContext)
+                        .setExecutor(executor)
+                        .setUseGetMethodToCreateManagerInstance(true)
+                        .build();
     }
 
     @After
@@ -149,6 +166,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
         try {
             leaveCustomAudience(SHOES_CA);
             leaveCustomAudience(SHIRTS_CA);
+            leaveCustomAudience(HATS_CA);
         } catch (Exception e) {
             // No-op catch here, these are only for cleaning up
             Log.w(TAG, "Failed while cleaning up custom audiences", e);
@@ -157,15 +175,27 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
 
     protected AdSelectionOutcome doSelectAds(AdSelectionConfig adSelectionConfig)
             throws ExecutionException, InterruptedException, TimeoutException {
+        return doSelectAds(mAdSelectionClient, adSelectionConfig);
+    }
+
+    protected AdSelectionOutcome doSelectAds(
+            AdSelectionClient adSelectionClient, AdSelectionConfig adSelectionConfig)
+            throws ExecutionException, InterruptedException, TimeoutException {
         AdSelectionOutcome result =
-                mAdSelectionClient.selectAds(adSelectionConfig).get(TIMEOUT, TimeUnit.SECONDS);
+                adSelectionClient.selectAds(adSelectionConfig).get(TIMEOUT, TimeUnit.SECONDS);
         Log.d(TAG, "Ran ad selection.");
         return result;
     }
 
     protected void doReportEvent(long adSelectionId, String eventName)
             throws JSONException, ExecutionException, InterruptedException, TimeoutException {
-        mAdSelectionClient
+        doReportEvent(mAdSelectionClient, adSelectionId, eventName);
+    }
+
+    protected void doReportEvent(
+            AdSelectionClient adSelectionClient, long adSelectionId, String eventName)
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        adSelectionClient
                 .reportEvent(
                         new ReportEventRequest.Builder(
                                         adSelectionId,
@@ -180,7 +210,15 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
 
     protected void doReportImpression(long adSelectionId, AdSelectionConfig adSelectionConfig)
             throws ExecutionException, InterruptedException, TimeoutException {
-        mAdSelectionClient
+        doReportImpression(mAdSelectionClient, adSelectionId, adSelectionConfig);
+    }
+
+    protected void doReportImpression(
+            AdSelectionClient adSelectionClient,
+            long adSelectionId,
+            AdSelectionConfig adSelectionConfig)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        adSelectionClient
                 .reportImpression(new ReportImpressionRequest(adSelectionId, adSelectionConfig))
                 .get(TIMEOUT, TimeUnit.SECONDS);
         Log.d(TAG, "Ran report impression for ad selection id: " + adSelectionId);
@@ -188,32 +226,50 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
 
     protected void joinCustomAudience(String customAudienceName)
             throws ExecutionException, InterruptedException, TimeoutException {
+        joinCustomAudience(mCustomAudienceClient, customAudienceName);
+    }
+
+    protected void joinCustomAudience(
+            AdvertisingCustomAudienceClient client, String customAudienceName)
+            throws ExecutionException, InterruptedException, TimeoutException {
         JoinCustomAudienceRequest joinCustomAudienceRequest =
                 makeJoinCustomAudienceRequest(customAudienceName);
-        mCustomAudienceClient
-                .joinCustomAudience(joinCustomAudienceRequest.getCustomAudience())
-                .get(5, TimeUnit.SECONDS);
+        client.joinCustomAudience(joinCustomAudienceRequest.getCustomAudience())
+                .get(TIMEOUT_TES_SECONDS, TimeUnit.SECONDS);
         Log.d(TAG, "Joined Custom Audience: " + customAudienceName);
     }
 
     protected void joinCustomAudience(CustomAudience customAudience)
             throws ExecutionException, InterruptedException, TimeoutException {
-        mCustomAudienceClient.joinCustomAudience(customAudience).get(5, TimeUnit.SECONDS);
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience)
+                .get(TIMEOUT_TES_SECONDS, TimeUnit.SECONDS);
         Log.d(TAG, "Joined Custom Audience: " + customAudience.getName());
     }
 
     protected void leaveCustomAudience(String customAudienceName)
             throws ExecutionException, InterruptedException, TimeoutException {
+        leaveCustomAudience(mCustomAudienceClient, customAudienceName);
+    }
+
+    protected void leaveCustomAudience(
+            AdvertisingCustomAudienceClient client, String customAudienceName)
+            throws ExecutionException, InterruptedException, TimeoutException {
         CustomAudience customAudience = makeCustomAudience(customAudienceName).build();
-        mCustomAudienceClient
-                .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
-                .get(TIMEOUT, TimeUnit.SECONDS);
+        client.leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
+                .get(TIMEOUT_TES_SECONDS, TimeUnit.SECONDS);
         Log.d(TAG, "Left Custom Audience: " + customAudienceName);
     }
 
     protected void doScheduleCustomAudienceUpdate(ScheduleCustomAudienceUpdateRequest request)
             throws ExecutionException, InterruptedException, TimeoutException {
-        mCustomAudienceClient.scheduleCustomAudienceUpdate(request).get(TIMEOUT, TimeUnit.SECONDS);
+        doScheduleCustomAudienceUpdate(mCustomAudienceClient, request);
+    }
+
+    protected void doScheduleCustomAudienceUpdate(
+            AdvertisingCustomAudienceClient client, ScheduleCustomAudienceUpdateRequest request)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        client.scheduleCustomAudienceUpdate(request).get(TIMEOUT, TimeUnit.SECONDS);
         Log.d(TAG, "Scheduled Custom Audience Update: " + request);
     }
 
@@ -319,5 +375,22 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
                                         "%s/render/%s/%s",
                                         mServerBaseAddress, customAudienceName, adNumber)))
                 .build();
+    }
+
+    protected FetchAndJoinCustomAudienceRequest.Builder makeFetchAndJoinCustomAudienceRequest() {
+        return new FetchAndJoinCustomAudienceRequest.Builder(
+                        Uri.parse(mServerBaseAddress + Scenarios.FETCH_CA_PATH))
+                .setName(HATS_CA);
+    }
+
+    protected void doFetchAndJoinCustomAudience(FetchAndJoinCustomAudienceRequest request)
+            throws Exception {
+        doFetchAndJoinCustomAudience(mCustomAudienceClient, request);
+    }
+
+    protected void doFetchAndJoinCustomAudience(
+            AdvertisingCustomAudienceClient client, FetchAndJoinCustomAudienceRequest request)
+            throws Exception {
+        client.fetchAndJoinCustomAudience(request).get(TIMEOUT_TES_SECONDS, TimeUnit.SECONDS);
     }
 }
