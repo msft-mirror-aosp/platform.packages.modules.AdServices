@@ -91,7 +91,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
@@ -814,13 +814,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS,
                 MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS);
-    }
-
-    @Override
-    public int getMeasurementMaxAttributionPerRateLimitWindow() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
-                MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
     }
 
     @Override
@@ -3256,10 +3249,10 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableSeparateReportTypesForAttributionRateLimit() {
+    public boolean getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit() {
         return getDeviceConfigFlag(
-                KEY_MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT,
-                MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT);
+                KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT,
+                MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT);
     }
 
     @Override
@@ -4161,11 +4154,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG
                         + " = "
                         + getMeasurementAggregateReportDelayConfig());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW
-                        + " = "
-                        + getMeasurementMaxAttributionPerRateLimitWindow());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW
@@ -5444,11 +5432,10 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK
                         + " = "
                         + getMeasurementEnableNavigationReportingOriginCheck());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT
-                        + " = "
-                        + getMeasurementEnableSeparateReportTypesForAttributionRateLimit());
+        writer.println("\t"
+                + KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT
+                + " = "
+                + getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH
