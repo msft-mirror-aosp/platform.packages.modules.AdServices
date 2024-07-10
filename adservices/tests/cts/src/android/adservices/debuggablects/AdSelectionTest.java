@@ -16,6 +16,7 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
@@ -33,7 +34,6 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
-import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
@@ -43,7 +43,6 @@ import android.util.Log;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
-import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -58,7 +57,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
-public class AdSelectionTest extends FledgeScenarioTest {
+public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
 
     /**
      * End-to-end test for ad selection.
@@ -214,8 +213,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
 
         try {
             CustomAudience customAudience = makeCustomAudience(customAudienceName).build();
-            ShellUtils.runShellCommand(
-                    "device_config put adservices fledge_fetch_custom_audience_enabled true");
+            flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
             mCustomAudienceClient
                     .fetchAndJoinCustomAudience(
                             new FetchAndJoinCustomAudienceRequest.Builder(
@@ -233,8 +231,7 @@ public class AdSelectionTest extends FledgeScenarioTest {
             assertThat(result.hasOutcome()).isTrue();
             assertThat(result.getRenderUri()).isNotNull();
         } finally {
-            ShellUtils.runShellCommand(
-                    "device_config put adservices fledge_fetch_custom_audience_enabled false");
+            flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, false);
             leaveCustomAudience(customAudienceName);
         }
 

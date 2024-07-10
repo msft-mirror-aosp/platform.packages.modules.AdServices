@@ -16,6 +16,7 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -25,13 +26,11 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
-import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 
 import org.junit.Assert;
@@ -44,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
-public class AdSelectionMediationTest extends FledgeScenarioTest {
+public final class AdSelectionMediationTest extends FledgeDebuggableScenarioTest {
 
     /** Test sellers can orchestrate waterfall mediation. Remarketing CUJ 069. */
     @Test
@@ -128,7 +127,7 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
                                 "scenarios/remarketing-cuj-mediation.json"));
 
         try {
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            flags.setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, true);
             joinCustomAudience(SHIRTS_CA);
             AdSelectionOutcome adSelectionOutcome1 =
                     doSelectAds(makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix()));
@@ -140,7 +139,7 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
                             .setAdSelectionIds(List.of(adSelectionId))
                             .build();
 
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
+            flags.setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, false);
             Exception e =
                     Assert.assertThrows(
                             ExecutionException.class,
@@ -151,12 +150,12 @@ public class AdSelectionMediationTest extends FledgeScenarioTest {
                     makeAdSelectionFromOutcomesConfig(dispatcher.getBaseAddressWithPrefix())
                             .setAdSelectionIds(List.of(adSelectionId))
                             .build();
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            flags.setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, true);
             AdSelectionOutcome result = doSelectAds(fromOutcomesConfig);
             assertThat(result.hasOutcome()).isTrue();
         } finally {
             leaveCustomAudience(SHIRTS_CA);
-            PhFlagsFixture.overrideFledgeEnrollmentCheck(false);
+            flags.setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, true);
         }
 
         assertThat(dispatcher.getCalledPaths())

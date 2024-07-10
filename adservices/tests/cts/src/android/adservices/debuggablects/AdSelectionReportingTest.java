@@ -28,7 +28,6 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 
@@ -42,7 +41,7 @@ import java.util.concurrent.ExecutionException;
 /** End-to-end test for report impression. */
 @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
-public final class AdSelectionReportingTest extends FledgeScenarioTest {
+public final class AdSelectionReportingTest extends FledgeDebuggableScenarioTest {
 
     @Test
     public void testReportImpression_defaultAdSelection_happyPath() throws Exception {
