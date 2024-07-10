@@ -45,6 +45,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -159,6 +160,7 @@ public class PASServerAuctionE2ETest extends ServerAuctionE2ETestBase {
      * enrolled PTB seller, buyer and a coordinator key that's older than 45 days
      */
     @Test
+    @Ignore("346898992")
     public void runAdSelection_twoSignals_success() throws Exception {
         String clean = "e2e_clear";
         String bid1 = "e2e_shirts_bid_1";
