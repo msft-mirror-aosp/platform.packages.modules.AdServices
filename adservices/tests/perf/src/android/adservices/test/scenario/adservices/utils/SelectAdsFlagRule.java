@@ -113,7 +113,7 @@ public class SelectAdsFlagRule implements TestRule {
 
     private static void disableApiThrottling() {
         ShellUtils.runShellCommand(
-                "device_config put adservices sdk_request_permits_per_second 1000");
+                "device_config put adservices sdk_request_permits_per_second 100000");
     }
 
     private static void disablePhenotypeFlagUpdates() {
