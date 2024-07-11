@@ -43,6 +43,7 @@ android_test {
     test_suites: [
         "cts",
         "mts-adservices",
+        "mcts-adservices",
         "general-tests"
     ],
     test_options: {
