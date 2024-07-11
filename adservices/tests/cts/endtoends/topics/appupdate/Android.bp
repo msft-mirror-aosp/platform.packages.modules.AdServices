@@ -36,7 +36,8 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
+        "mcts-adservices",
     ],
     data: [
         // Sample App will be installed and uninstalled in the test.
