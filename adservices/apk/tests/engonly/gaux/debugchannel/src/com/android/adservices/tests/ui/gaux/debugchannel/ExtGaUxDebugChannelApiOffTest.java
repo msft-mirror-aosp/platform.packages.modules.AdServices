@@ -62,6 +62,8 @@ public final class ExtGaUxDebugChannelApiOffTest extends AdExtServicesGaUxDebugC
 
     @Before
     public void setUp() throws Exception {
+        mTestName = getTestName();
+
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         UiUtils.enableNotificationPermission();
@@ -87,8 +89,6 @@ public final class ExtGaUxDebugChannelApiOffTest extends AdExtServicesGaUxDebugC
     /** Verify that the API returns false when API is disabled. */
     @Test
     public void testApiDisabled() throws Exception {
-        mTestName = getTestName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)

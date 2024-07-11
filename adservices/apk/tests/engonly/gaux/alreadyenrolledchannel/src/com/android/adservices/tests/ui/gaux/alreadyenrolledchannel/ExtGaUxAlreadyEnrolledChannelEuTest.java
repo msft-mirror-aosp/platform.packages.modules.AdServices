@@ -64,6 +64,8 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest
 
     @Before
     public void setUp() throws Exception {
+        mTestName = getTestName();
+
         UiUtils.resetAdServicesConsentData(sContext);
 
         UiUtils.enableNotificationPermission();
@@ -129,8 +131,6 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest
      */
     @Test
     public void testGaEuAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -155,8 +155,6 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
     public void testGaEuAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsEuDevice();
 
         AdServicesStates adServicesStates =

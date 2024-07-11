@@ -60,6 +60,8 @@ public final class GaUxGraduationChannelTest extends AdServicesGaUxGraduationCha
 
     @Before
     public void setUp() throws Exception {
+        mTestName = getTestName();
+
         UiUtils.setBinderTimeout();
         AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.resetAdServicesConsentData(sContext);
@@ -130,8 +132,6 @@ public final class GaUxGraduationChannelTest extends AdServicesGaUxGraduationCha
      */
     @Test
     public void testRowU18ToGaAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
         UiUtils.enableU18();
 
@@ -173,8 +173,6 @@ public final class GaUxGraduationChannelTest extends AdServicesGaUxGraduationCha
      */
     @Test
     public void testRowU18ToBetaAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
         UiUtils.enableU18();
 
