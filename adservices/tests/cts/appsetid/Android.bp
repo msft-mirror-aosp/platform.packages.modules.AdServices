@@ -36,7 +36,8 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
+        "mcts-adservices",
     ],
     javacflags: ["-parameters"],
     sdk_version: "module_current",

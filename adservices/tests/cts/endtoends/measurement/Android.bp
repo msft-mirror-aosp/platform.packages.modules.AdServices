@@ -37,7 +37,8 @@ android_test {
     test_suites: [
         "cts",
         "general-tests",
-        "mts-adservices"
+        "mts-adservices",
+        "mcts-adservices",
     ],
     // To fix Pre-submit warning, suggested by farivar@
     javacflags: ["-parameters"],

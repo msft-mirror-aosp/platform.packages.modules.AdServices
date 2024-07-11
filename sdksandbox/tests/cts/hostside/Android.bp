@@ -30,6 +30,7 @@ java_test_host {
     test_suites: [
         "cts",
         "mts-adservices",
+        "mcts-adservices",
         "general-tests",
     ],
     data: [
