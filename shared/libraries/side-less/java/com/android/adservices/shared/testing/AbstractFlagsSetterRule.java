@@ -562,6 +562,11 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return setDebugFlag(name, Boolean.toString(value));
     }
 
+    /** Sets the value of the given {@link com.android.adservices.service.DebugFlag}. */
+    public final T setDebugFlag(String name, int value) {
+        return setDebugFlag(name, Integer.toString(value));
+    }
+
     private T setOrCacheLogtagSystemProperty(String name, String value) {
         return setOrCacheSystemProperty(SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + name, value);
     }

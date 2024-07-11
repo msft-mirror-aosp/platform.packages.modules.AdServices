@@ -65,14 +65,14 @@ public final class GaUxAlreadyEnrolledChannelTest
     public void setUp() throws Exception {
         mTestName = getTestName();
 
-        UiUtils.setBinderTimeout();
+        UiUtils.setBinderTimeout(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -93,7 +93,7 @@ public final class GaUxAlreadyEnrolledChannelTest
                 };
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
@@ -135,7 +135,7 @@ public final class GaUxAlreadyEnrolledChannelTest
      */
     @Test
     public void testGaRowAdIdEnabled() throws Exception {
-        UiUtils.setAsRowDevice();
+        UiUtils.setAsRowDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -165,7 +165,7 @@ public final class GaUxAlreadyEnrolledChannelTest
      */
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
-        UiUtils.setAsRowDevice();
+        UiUtils.setAsRowDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -195,7 +195,7 @@ public final class GaUxAlreadyEnrolledChannelTest
      */
     @Test
     public void testGaEuAdIdEnabled() throws Exception {
-        UiUtils.setAsEuDevice();
+        UiUtils.setAsEuDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -223,7 +223,7 @@ public final class GaUxAlreadyEnrolledChannelTest
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
     public void testGaEuAdIdDisabled() throws Exception {
-        UiUtils.setAsEuDevice();
+        UiUtils.setAsEuDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
