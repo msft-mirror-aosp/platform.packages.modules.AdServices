@@ -289,9 +289,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS =
             "measurement_attribution_fallback_job_period_ms";
 
-    public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
-            "measurement_max_attribution_per_rate_limit_window";
-
     public static final String KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
             "measurement_max_event_attribution_per_rate_limit_window";
 
@@ -1353,7 +1350,7 @@ public final class FlagsConstants {
             "measurement_enable_navigation_reporting_origin_check";
 
     public static final String
-            KEY_MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT =
+            KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT =
                     "measurement_enable_separate_report_types_for_attribution_rate_limit";
 
     public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE =

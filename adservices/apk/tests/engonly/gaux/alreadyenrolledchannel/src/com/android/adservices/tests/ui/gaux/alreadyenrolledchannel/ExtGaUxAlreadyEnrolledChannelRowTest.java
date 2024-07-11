@@ -15,6 +15,8 @@
  */
 package com.android.adservices.tests.ui.gaux.alreadyenrolledchannel;
 
+import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
@@ -24,10 +26,9 @@ import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants.UX;
 import com.android.adservices.tests.ui.libs.UiUtils;
@@ -36,18 +37,17 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
-@RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class ExtGaUxAlreadyEnrolledChannelRowTest {
+@SetFlagDisabled(KEY_IS_EEA_DEVICE)
+public class ExtGaUxAlreadyEnrolledChannelRowTest
+        extends AdExtServicesGaUxAlreadyEnrolledChannelTestCase {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -64,8 +64,6 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
         UiUtils.resetAdServicesConsentData(sContext);
 
         UiUtils.enableNotificationPermission();
@@ -79,7 +77,7 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest {
 
         // General purpose callback used for expected success calls.
         mCallback =
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
@@ -103,7 +101,7 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest {
                         .setPrivacySandboxUiEnabled(true)
                         .build(),
                 Executors.newCachedThreadPool(),
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         responseFuture.set(result);
@@ -123,8 +121,6 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
     }
 
@@ -134,7 +130,7 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest {
      */
     @Test
     public void testGaRowAdIdEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -162,7 +158,7 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest {
      */
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         UiUtils.setAsRowDevice();
 

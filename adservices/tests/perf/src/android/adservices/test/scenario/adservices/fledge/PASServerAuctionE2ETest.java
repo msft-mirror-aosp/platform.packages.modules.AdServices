@@ -35,7 +35,9 @@ import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.FlagsConstants;
 
 import com.google.common.io.BaseEncoding;
 
@@ -43,6 +45,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -96,7 +99,14 @@ public class PASServerAuctionE2ETest extends ServerAuctionE2ETestBase {
                                     AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
                                     /* clearOnStarting= */ true,
                                     /* clearOnFinished= */ false))
-                    .around(new SelectAdsFlagRule(getEncryptionKeyFetchUri()));
+                    .around(new SelectAdsFlagRule());
+
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.newInstance()
+                    .setFlag(
+                            FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
+                            getEncryptionKeyFetchUri());
 
     /** Perform the class-wide required setup. */
     @BeforeClass
@@ -150,6 +160,7 @@ public class PASServerAuctionE2ETest extends ServerAuctionE2ETestBase {
      * enrolled PTB seller, buyer and a coordinator key that's older than 45 days
      */
     @Test
+    @Ignore("346898992")
     public void runAdSelection_twoSignals_success() throws Exception {
         String clean = "e2e_clear";
         String bid1 = "e2e_shirts_bid_1";

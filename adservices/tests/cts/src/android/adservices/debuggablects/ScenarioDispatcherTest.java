@@ -33,7 +33,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
-public class ScenarioDispatcherTest {
+public final class ScenarioDispatcherTest {
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRule.forHttp();
 
@@ -211,7 +211,7 @@ public class ScenarioDispatcherTest {
     }
 
     @Test
-    public void testScenarioDispatcher_withMissingSlashPrefix_throwsException() throws Exception {
+    public void testScenarioDispatcher_withMissingSlashPrefix_throwsException() {
         ScenarioDispatcherFactory scenarioDispatcherFactory =
                 ScenarioDispatcherFactory.createFromScenarioFile(
                         "scenarios/scenario-test-011.json");

@@ -14,41 +14,36 @@
  * limitations under the License.
  */
 
-package android.adservices.debuggablects;
+package android.adservices.rootcts;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 
-import com.android.adservices.common.AdServicesCtsTestCase;
+import android.adservices.utils.FledgeScenarioTest;
+
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
-import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
-import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 
-@DisableGlobalKillSwitch
-@EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
-@EnableDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE)
 @SetAllLogcatTags
-@SetCompatModeFlags
-@SetFlagDisabled(KEY_ADID_KILL_SWITCH)
-@SetFlagDisabled(KEY_FLEDGE_CPC_BILLING_ENABLED)
-@SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
-@SetFlagDisabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+@DisableGlobalKillSwitch
 @SetFlagDisabled(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH)
-@SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
-@SetFlagEnabled(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
+@SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
+@EnableDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE)
+@EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
 @SetFlagEnabled(KEY_MDD_BACKGROUND_TASK_KILL_SWITCH)
-@SetIntegerFlag(name = KEY_SDK_REQUEST_PERMITS_PER_SECOND, value = 100000)
-abstract class AdServicesDebuggableTestCase extends AdServicesCtsTestCase {}
+@SetFlagDisabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
+@SetFlagDisabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+@SetLongFlag(name = KEY_SDK_REQUEST_PERMITS_PER_SECOND, value = 100000)
+abstract class FledgeRootScenarioTest extends FledgeScenarioTest {}

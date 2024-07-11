@@ -17,7 +17,6 @@
 package android.adservices.test.scenario.adservices.utils;
 
 import android.Manifest;
-import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -32,19 +31,8 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 public class SelectAdsFlagRule implements TestRule {
-    private String mCoordinatorToUse;
-    public static final String PUBLIC_COORDINATOR =
-            "https://publickeyservice.pa.gcp.privacysandboxservices.com/.well-known/protected-auction/v1/public-keys";
-
-    public static final String TEST_COORDINATOR =
-            "https://ba-kv-service-5jyy5ulagq-uc.a.run.app/keys/2";
 
     public SelectAdsFlagRule() {
-        this.mCoordinatorToUse = TEST_COORDINATOR;
-    }
-
-    public SelectAdsFlagRule(String coordinatorToUse) {
-        this.mCoordinatorToUse = coordinatorToUse;
     }
 
     @Rule
@@ -83,12 +71,6 @@ public class SelectAdsFlagRule implements TestRule {
                 "device_config put adservices fledge_auction_server_kill_switch false");
         ShellUtils.runShellCommand(
                 "device_config put adservices fledge_auction_server_enabled true");
-        String coordinatorUri = mCoordinatorToUse;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "fledge_auction_server_auction_key_fetch_uri",
-                coordinatorUri,
-                false);
     }
 
     private static void disableBackoff() {
@@ -113,7 +95,7 @@ public class SelectAdsFlagRule implements TestRule {
 
     private static void disableApiThrottling() {
         ShellUtils.runShellCommand(
-                "device_config put adservices sdk_request_permits_per_second 1000");
+                "device_config put adservices sdk_request_permits_per_second 100000");
     }
 
     private static void disablePhenotypeFlagUpdates() {

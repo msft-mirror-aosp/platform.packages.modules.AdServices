@@ -265,8 +265,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .thenReturn(Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER);
         when(mFlags.getMeasurementMaxTriggersPerDestination())
                 .thenReturn(Flags.MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION);
-        when(mFlags.getMeasurementMaxAttributionPerRateLimitWindow())
-                .thenReturn(Flags.MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
         when(mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution())
                 .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION);
         when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource())

@@ -819,6 +819,18 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
                 : getReportUrl(ReportType.AGGREGATE, url);
     }
 
+    private static String debugReportTypeFrom(JSONObject obj) {
+        JSONArray payload = obj.optJSONArray(TestFormatJsonMapping.PAYLOAD_KEY);
+        if (payload == null || payload.length() == 0) {
+            return "";
+        }
+        try {
+            return payload.getJSONObject(0).optString(DebugReportPayloadKeys.TYPE);
+        } catch (JSONException ignored) {
+            return "";
+        }
+    }
+
     private static String sourceRegistrationTimeFrom(JSONObject obj) {
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         return payload.optJSONObject(AggregateReportPayloadKeys.SHARED_INFO)
@@ -840,6 +852,12 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
                 Comparator.comparing(E2EAbstractTest::reportTimeFrom)
                         .thenComparing(E2EAbstractTest::sourceRegistrationTimeFrom)
                         .thenComparing(obj -> aggregateReportToFrom(outputType, obj)));
+    }
+
+    private static void sortDebugReportObjects(List<JSONObject> debugReportObjects) {
+        debugReportObjects.sort(
+                Comparator.comparing(E2EAbstractTest::reportTimeFrom)
+                        .thenComparing(E2EAbstractTest::debugReportTypeFrom));
     }
 
     private boolean areEqual(ReportObjects expected, ReportObjects actual) throws JSONException {
@@ -1569,6 +1587,8 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
         sortAggregateReportObjects(
                 OutputType.EXPECTED, mExpectedOutput.mDebugAggregateReportObjects);
         sortAggregateReportObjects(OutputType.ACTUAL, mActualOutput.mDebugAggregateReportObjects);
+        sortDebugReportObjects(mExpectedOutput.mDebugReportObjects);
+        sortDebugReportObjects(mActualOutput.mDebugReportObjects);
         Assert.assertTrue(getTestFailureMessage(mExpectedOutput, mActualOutput),
                 areEqual(mExpectedOutput, mActualOutput));
     }

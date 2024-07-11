@@ -15,6 +15,19 @@
  */
 package com.android.adservices.tests.ui.gaux.graduationchannel;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
@@ -24,10 +37,15 @@ import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.AdServicesCtsTestCase;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.DisableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants.UX;
 import com.android.adservices.tests.ui.libs.UiUtils;
@@ -36,18 +54,30 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
-@RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class ExtGaUxGraduationChannelRowTest {
+@DisableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+@SetAllLogcatTags
+@SetCompatModeFlags
+@SetFlagDisabled("eu_notif_flow_change_enabled")
+@SetFlagDisabled(KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE)
+@SetFlagDisabled(KEY_IS_EEA_DEVICE)
+@SetFlagDisabled(KEY_UI_OTA_STRINGS_FEATURE_ENABLED)
+@SetFlagEnabled(KEY_ADSERVICES_ENABLED)
+@SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
+@SetFlagEnabled(KEY_GA_UX_FEATURE_ENABLED)
+@SetFlagEnabled(KEY_IS_EEA_DEVICE_FEATURE_ENABLED)
+@SetFlagEnabled(KEY_U18_UX_ENABLED)
+@SetLongFlag(name = KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS, value = 0)
+@SetLongFlag(name = KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS, value = 86400000)
+@SetLongFlag(name = KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS, value = 0)
+public class ExtGaUxGraduationChannelRowTest extends AdServicesCtsTestCase {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -64,8 +94,6 @@ public class ExtGaUxGraduationChannelRowTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
         UiUtils.resetAdServicesConsentData(sContext);
 
         UiUtils.enableNotificationPermission();
@@ -79,7 +107,7 @@ public class ExtGaUxGraduationChannelRowTest {
 
         // General purpose callback used for expected success calls.
         mCallback =
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
@@ -103,7 +131,7 @@ public class ExtGaUxGraduationChannelRowTest {
                         .setPrivacySandboxUiEnabled(true)
                         .build(),
                 Executors.newCachedThreadPool(),
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         responseFuture.set(result);
@@ -123,8 +151,6 @@ public class ExtGaUxGraduationChannelRowTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
     }
 
@@ -134,7 +160,7 @@ public class ExtGaUxGraduationChannelRowTest {
      */
     @Test
     public void testRowU18ToGaAdIdEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         UiUtils.setAsRowDevice();
         UiUtils.enableU18();

@@ -20,6 +20,7 @@ android_test {
     name: "AdExtServicesGaUxAlreadyEnrolledChannelRowTest",
     srcs: [
         "src/com/android/adservices/tests/ui/gaux/alreadyenrolledchannel/ExtGaUxAlreadyEnrolledChannelRowTest.java",
+        "src/com/android/adservices/tests/ui/gaux/alreadyenrolledchannel/AdExtServicesGaUxAlreadyEnrolledChannelTestCase.java",
     ],
     static_libs: [
         "adservices-assets",
@@ -51,6 +52,7 @@ android_test {
     name: "AdExtServicesGaUxAlreadyEnrolledChannelEuTest",
     srcs: [
         "src/com/android/adservices/tests/ui/gaux/alreadyenrolledchannel/ExtGaUxAlreadyEnrolledChannelEuTest.java",
+        "src/com/android/adservices/tests/ui/gaux/alreadyenrolledchannel/AdExtServicesGaUxAlreadyEnrolledChannelTestCase.java",
     ],
     static_libs: [
         "adservices-assets",

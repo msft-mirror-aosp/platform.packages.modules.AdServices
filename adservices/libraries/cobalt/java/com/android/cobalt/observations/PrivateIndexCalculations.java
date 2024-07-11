@@ -16,7 +16,6 @@
 
 package com.android.cobalt.observations;
 
-
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 

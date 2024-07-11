@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package android.adservices.debuggablects;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
@@ -28,7 +27,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_AD
 import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 
-import com.android.adservices.common.AdServicesCtsTestCase;
+import android.adservices.utils.FledgeScenarioTest;
+
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
@@ -51,4 +51,4 @@ import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 @SetFlagEnabled(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
 @SetFlagEnabled(KEY_MDD_BACKGROUND_TASK_KILL_SWITCH)
 @SetIntegerFlag(name = KEY_SDK_REQUEST_PERMITS_PER_SECOND, value = 100000)
-abstract class AdServicesDebuggableTestCase extends AdServicesCtsTestCase {}
+abstract class FledgeDebuggableScenarioTest extends FledgeScenarioTest {}

@@ -17,6 +17,7 @@
 package com.android.adservices.tests.cts.topics.connection;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 
@@ -31,6 +32,7 @@ import android.adservices.topics.Topic;
 import com.android.adservices.common.AdServicesSupportHelper;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.topics.TopicsTestHelper;
@@ -52,6 +54,7 @@ import java.util.concurrent.Executors;
 @SetIntegerFlag(
         name = KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
         value = TopicsConnectionTest.TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC)
+@SetFlagEnabled(KEY_ENABLE_APPSEARCH_CONSENT_DATA)
 public final class TopicsConnectionTest extends CtsAdServicesTopicsConnectionTestCase {
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;

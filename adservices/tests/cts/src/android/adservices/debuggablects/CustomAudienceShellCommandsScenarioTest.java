@@ -28,7 +28,6 @@ import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
-import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
@@ -51,9 +50,7 @@ import java.util.List;
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @EnableDebugFlag(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
 @RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
-public final class CustomAudienceShellCommandsScenarioTest extends FledgeScenarioTest {
-    private static final String OWNER = sContext.getPackageName();
-
+public final class CustomAudienceShellCommandsScenarioTest extends FledgeDebuggableScenarioTest {
     private final AdServicesShellCommandHelper mShellCommandHelper =
             new AdServicesShellCommandHelper();
 
@@ -71,7 +68,7 @@ public final class CustomAudienceShellCommandsScenarioTest extends FledgeScenari
         CustomAudience customAudienceBefore = getCustomAudience(adTechIdentifier);
         mShellCommandHelper.runCommand(
                 "custom-audience refresh --owner %s --buyer %s --name %s",
-                OWNER, adTechIdentifier, SHOES_CA);
+                mPackageName, adTechIdentifier, SHOES_CA);
         CustomAudience customAudienceAfter = getCustomAudience(adTechIdentifier);
 
         assertThat(customAudienceBefore).isNotEqualTo(customAudienceAfter);
@@ -112,6 +109,6 @@ public final class CustomAudienceShellCommandsScenarioTest extends FledgeScenari
                 new JSONObject(
                         mShellCommandHelper.runCommand(
                                 "custom-audience view --owner %s --buyer %s --name %s",
-                                OWNER, adTechIdentifier, SHOES_CA)));
+                                mPackageName, adTechIdentifier, SHOES_CA)));
     }
 }

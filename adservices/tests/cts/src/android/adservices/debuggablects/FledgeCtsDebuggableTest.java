@@ -459,9 +459,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     private AdSelectionClient mAdSelectionClient;
     private TestAdSelectionClient mTestAdSelectionClient;
-    private AdvertisingCustomAudienceClient mCustomAudienceClient;
     private TestAdvertisingCustomAudienceClient mTestCustomAudienceClient;
-    private DevContext mDevContext;
     private MockWebServer mMockWebServer;
 
     private boolean mHasAccessToDevOverrides;
@@ -474,7 +472,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final Dispatcher DISPATCHER_EMPTY =
             new Dispatcher() {
                 @Override
-                public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+                public MockResponse dispatch(RecordedRequest request) {
                     return new MockResponse().setResponseCode(404);
                 }
             };
@@ -520,7 +518,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
-        mCustomAudienceClient =
+        AdvertisingCustomAudienceClient customAudienceClient =
                 new AdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
@@ -530,13 +528,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
-        mCustomAudienceTestFixture = new CustomAudienceTestFixture(mCustomAudienceClient);
+        mCustomAudienceTestFixture = new CustomAudienceTestFixture(customAudienceClient);
         DevContextFilter devContextFilter = DevContextFilter.create(sContext);
-        mDevContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
-        boolean isDebuggable =
-                devContextFilter.isDebuggable(mDevContext.getCallingAppPackageName());
+        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
+        boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
         boolean isDeveloperMode = devContextFilter.isDeveloperMode();
-        mHasAccessToDevOverrides = mDevContext.getDevOptionsEnabled();
+        mHasAccessToDevOverrides = devContext.getDevOptionsEnabled();
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
@@ -590,12 +587,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 mCustomAudienceTestFixture.createCustomAudience(BUYER_2, bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -620,7 +617,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -670,12 +667,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 mCustomAudienceTestFixture.createCustomAudience(BUYER_2, bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -704,7 +701,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -754,12 +751,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 mCustomAudienceTestFixture.createCustomAudience(BUYER_2, bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -788,7 +785,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -833,12 +830,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         BUYER_2, bidsForBuyer2, AD_COST_2.getAdCost());
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -863,7 +860,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -916,12 +913,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         BUYER_2, bidsForBuyer2, AD_COST_2.getAdCost());
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -946,7 +943,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1095,7 +1092,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 mCustomAudienceTestFixture.createCustomAudience(BUYER_2, bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
@@ -1123,7 +1120,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Adding AdSelection override for the sake of the trusted signals, no result to do
         // assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         config, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -1148,7 +1145,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1745,12 +1742,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 mCustomAudienceTestFixture.createCustomAudience(BUYER_2, bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG,
@@ -1777,7 +1774,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1936,12 +1933,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         adSelectionConfigWithEtldViolations,
@@ -1968,7 +1965,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -2019,12 +2016,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -2049,7 +2046,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -2099,12 +2096,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         String malformedBiddingLogic = " This is an invalid javascript";
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -2129,7 +2126,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -2172,7 +2169,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 mCustomAudienceTestFixture.createCustomAudience(BUYER_2, bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
@@ -2180,7 +2177,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Adding malformed scoring logic AdSelection override, no result to do assertion on.
         // Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, malformedScoringLogic, TRUSTED_SCORING_SIGNALS);
@@ -2205,7 +2202,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -2247,12 +2244,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         baseServerAddress);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -2271,7 +2268,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // We do not provide override for CA 2, that should lead to failure to get biddingLogic
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -2316,12 +2313,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -2346,7 +2343,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -2397,14 +2394,14 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         Instant.now().plusSeconds(caTimeToExpireSeconds));
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
 
         // Join the CA with early expiry first, to avoid waiting too long for another CA join
         mCustomAudienceTestFixture.joinCustomAudience(customAudienceEarlyExpiry);
         mCustomAudienceTestFixture.joinCustomAudience(customAudienceRegularExpiry);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -2429,7 +2426,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -3011,7 +3008,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Allow BUYER_2 to filter on the test package
         SetAppInstallAdvertisersRequest request =
                 new SetAppInstallAdvertisersRequest.Builder()
-                        .setAdvertisers(new HashSet<>(Arrays.asList(BUYER_2)))
+                        .setAdvertisers(new HashSet<>(List.of(BUYER_2)))
                         .build();
         ListenableFuture<Void> appInstallFuture =
                 mAdSelectionClient.setAppInstallAdvertisers(request);
@@ -3040,8 +3037,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                                     new AppInstallFilters.Builder()
                                                             .setPackageNames(
                                                                     new HashSet<>(
-                                                                            Arrays.asList(
-                                                                                    packageName)))
+                                                                            List.of(packageName)))
                                                             .build())
                                             .build())
                             .build());
@@ -3135,7 +3131,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
     public void testFledgeAuctionAppFilteringFlow_overall_AppInstallFailure() throws Exception {
-        /**
+        /*
          * In this test, we give bad input to setAppInstallAdvertisers and ensure that it gives an
          * error, and does not filter based on AdData filters.
          */
@@ -3175,8 +3171,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                                                     new AppInstallFilters.Builder()
                                                             .setPackageNames(
                                                                     new HashSet<>(
-                                                                            Arrays.asList(
-                                                                                    packageName)))
+                                                                            List.of(packageName)))
                                                             .build())
                                             .build())
                             .build());
@@ -3202,12 +3197,12 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mCustomAudienceTestFixture.joinCustomAudience(customAudience1);
         mCustomAudienceTestFixture.joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
@@ -3232,7 +3227,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
-        // exception."
+        // exception.
         mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);

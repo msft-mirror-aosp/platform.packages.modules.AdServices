@@ -15,6 +15,9 @@
  */
 package com.android.adservices.tests.ui.gaux.debugchannel;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
@@ -24,28 +27,28 @@ import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
-@RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class ExtGaUxDebugChannelRowTest {
+@SetFlagDisabled("eu_notif_flow_change_enabled")
+@SetFlagDisabled(KEY_IS_EEA_DEVICE)
+@SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
+public final class ExtGaUxDebugChannelRowTest extends AdExtServicesGaUxDebugChannelTestCase {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -62,8 +65,6 @@ public class ExtGaUxDebugChannelRowTest {
 
     @Before
     public void setUp() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         UiUtils.resetAdServicesConsentData(sContext);
 
@@ -97,8 +98,6 @@ public class ExtGaUxDebugChannelRowTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         mDevice.pressHome();
@@ -107,7 +106,7 @@ public class ExtGaUxDebugChannelRowTest {
     /** Verify that entry point disabled can not trigger consent notification. */
     @Test
     public void testEntryPointDisabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -130,7 +129,7 @@ public class ExtGaUxDebugChannelRowTest {
     /** Verify that when request sent from entry point, we won't trigger notification. */
     @Test
     public void testFromEntryPointRequest() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -154,7 +153,7 @@ public class ExtGaUxDebugChannelRowTest {
     /** Verify that non-adult account can not trigger consent notification. */
     @Test
     public void testNonAdultAccount() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -180,7 +179,7 @@ public class ExtGaUxDebugChannelRowTest {
      */
     @Test
     public void testGaRowAdIdEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
@@ -205,7 +204,7 @@ public class ExtGaUxDebugChannelRowTest {
      */
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        mTestName = getTestName();
 
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
