@@ -679,16 +679,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
     }
 
-    int MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
-
-    /**
-     * Returns maximum attributions per rate limit window. Rate limit unit: (Source Site,
-     * Destination Site, Reporting Site, Window).
-     */
-    default int getMeasurementMaxAttributionPerRateLimitWindow() {
-        return MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
-    }
-
     int MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
 
     /**
@@ -4597,14 +4587,14 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     @FeatureFlag
-    boolean MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT = false;
+    boolean MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT = false;
 
     /**
      * Enables separate debug report types for event and aggregate attribution rate limit
      * violations.
      */
-    default boolean getMeasurementEnableSeparateReportTypesForAttributionRateLimit() {
-        return MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
+    default boolean getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit() {
+        return MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
     }
 
     int MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE = 20;
