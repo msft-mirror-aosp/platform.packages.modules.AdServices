@@ -35,14 +35,11 @@ import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_S
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MDD_COBALT_REGISTRY_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
@@ -448,6 +445,28 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableTriggerDebugSignal() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL",
+                Flags::getMeasurementEnableTriggerDebugSignal);
+    }
+
+    @Test
+    public void testGetMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION",
+                Flags::getMeasurementEnableEventTriggerDebugSignalForCoarseDestination);
+    }
+
+    @Test
+    public void testGetMeasurementTriggerDebugProbabilityForFakeReports() {
+        testFloatFlag(
+                "getMeasurementTriggerDebugSignalProbabilityForFakeReports",
+                MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS,
+                Flags::getMeasurementTriggerDebugSignalProbabilityForFakeReports);
+    }
+
+    @Test
     public void testGetEnableBackCompatInit() {
         testFeatureFlag("DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
     }
@@ -802,38 +821,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions",
                 FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS,
                 Flags::getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions);
-    }
-
-    @Test
-    public void testGetMeasurementEnableEventTriggerDebugSignal() {
-        testFlag(
-                "getMeasurementEnableEventTriggerDebugSignal",
-                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL,
-                Flags::getMeasurementEnableEventTriggerDebugSignal);
-    }
-
-    @Test
-    public void testGetMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
-        testFlag(
-                "getMeasurementEnableEventTriggerDebugSignalForCoarseDestination",
-                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION,
-                Flags::getMeasurementEnableEventTriggerDebugSignalForCoarseDestination);
-    }
-
-    @Test
-    public void testGetMddCobaltRegistryManifestFileUrl() {
-        testFlag(
-                "getMddCobaltRegistryManifestFileUrl",
-                MDD_COBALT_REGISTRY_MANIFEST_FILE_URL,
-                Flags::getMddCobaltRegistryManifestFileUrl);
-    }
-
-    @Test
-    public void testGetMeasurementEnableTriggerDebugSignalForFakeReports() {
-        testFloatFlag(
-                "getMeasurementTriggerDebugSignalProbabilityForFakeReports",
-                MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS,
-                Flags::getMeasurementTriggerDebugSignalProbabilityForFakeReports);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
