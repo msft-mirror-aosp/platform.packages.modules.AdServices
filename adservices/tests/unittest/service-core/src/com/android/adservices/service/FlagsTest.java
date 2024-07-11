@@ -35,6 +35,7 @@ import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_S
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MDD_COBALT_REGISTRY_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
@@ -564,6 +565,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     // TODO(b/325074749) - remove once all flags have been converted
+
     /**
      * @deprecated - flags that are converted should call some method like {@code
      *     testFeatureFlagGuardedByMsmtFeatureFlag} instead.
@@ -816,6 +818,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementEnableEventTriggerDebugSignalForCoarseDestination",
                 MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION,
                 Flags::getMeasurementEnableEventTriggerDebugSignalForCoarseDestination);
+    }
+
+    @Test
+    public void testGetMddCobaltRegistryManifestFileUrl() {
+        testFlag(
+                "getMddCobaltRegistryManifestFileUrl",
+                MDD_COBALT_REGISTRY_MANIFEST_FILE_URL,
+                Flags::getMddCobaltRegistryManifestFileUrl);
     }
 
     @Test
