@@ -63,7 +63,9 @@ public final class ExtGaUxDebugChannelEuTest extends AdExtServicesGaUxDebugChann
 
     @Before
     public void setUp() throws Exception {
-        UiUtils.resetAdServicesConsentData(sContext);
+        mTestName = getTestName();
+
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -73,9 +75,9 @@ public final class ExtGaUxDebugChannelEuTest extends AdExtServicesGaUxDebugChann
 
         // consent debug mode is turned on for this test class as we only care about the
         // first trigger (API call).
-        UiUtils.enableConsentDebugMode();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableConsentDebugMode(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mCallback =
                 new OutcomeReceiver<>() {
@@ -103,8 +105,6 @@ public final class ExtGaUxDebugChannelEuTest extends AdExtServicesGaUxDebugChann
     /** Verify that entry point disabled can not trigger consent notification. */
     @Test
     public void testEntryPointDisabled() throws Exception {
-        mTestName = getTestName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -126,8 +126,6 @@ public final class ExtGaUxDebugChannelEuTest extends AdExtServicesGaUxDebugChann
     /** Verify that when request sent from entry point, we won't trigger notification. */
     @Test
     public void testFromEntryPointRequest() throws Exception {
-        mTestName = getTestName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(false)
@@ -150,8 +148,6 @@ public final class ExtGaUxDebugChannelEuTest extends AdExtServicesGaUxDebugChann
     /** Verify that non-adult account can not trigger consent notification. */
     @Test
     public void testNonAdultAccount() throws Exception {
-        mTestName = getTestName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -175,8 +171,6 @@ public final class ExtGaUxDebugChannelEuTest extends AdExtServicesGaUxDebugChann
      */
     @Test
     public void testGaEuAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -198,8 +192,6 @@ public final class ExtGaUxDebugChannelEuTest extends AdExtServicesGaUxDebugChann
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
     public void testGaEuAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(false)

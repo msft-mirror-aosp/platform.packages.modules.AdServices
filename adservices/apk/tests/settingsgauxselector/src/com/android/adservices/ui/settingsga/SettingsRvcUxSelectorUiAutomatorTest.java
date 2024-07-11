@@ -23,34 +23,34 @@ import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOT
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.SettingsTestUtil;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
 @RequiresSdkRange(atLeast = RVC, atMost = RVC)
+@DisableGlobalKillSwitch
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE)
+@SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
+@SetFlagEnabled(KEY_RVC_UX_ENABLED)
+@SetFlagEnabled(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED)
+@SetFlagEnabled(KEY_GA_UX_FEATURE_ENABLED)
+@SetStringFlag(name = KEY_DEBUG_UX, value = "RVC_UX")
+@SetCompatModeFlags
 public final class SettingsRvcUxSelectorUiAutomatorTest extends AdServicesUiTestCase {
-
     @Rule(order = 11)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
-                    .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
-                    .setFlag(KEY_RVC_UX_ENABLED, true)
-                    .setFlag(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED, true)
-                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
-                    .setFlag(KEY_DEBUG_UX, "RVC_UX")
-                    .setCompatModeFlags();
+    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
 
     @Test
-    public void settingsRemoveMainToggleAndMeasurementEntryTest() throws Exception {
+    public void settingsRemoveMainToggleAndMeasurementEntryTest() {
         SettingsTestUtil.settingsRemoveMainToggleAndMeasurementEntryTestRvcUxUtil(mDevice);
     }
 
@@ -65,12 +65,12 @@ public final class SettingsRvcUxSelectorUiAutomatorTest extends AdServicesUiTest
     }
 
     @Test
-    public void measurementSubtitleTest() throws Exception {
+    public void measurementSubtitleTest() {
         SettingsTestUtil.measurementSubtitleTestUtil(mDevice);
     }
 
     @Test
-    public void measurementToggleDialogTest() throws Exception {
+    public void measurementToggleDialogTest() {
         SettingsTestUtil.measurementToggleDialogTestUtil(mDevice);
     }
 }

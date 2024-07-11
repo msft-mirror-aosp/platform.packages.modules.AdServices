@@ -239,7 +239,7 @@ public class EventReportingJobHandler {
             Uri reportingOrigin = eventReport.getRegistrationOrigin();
             JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
             Boolean triggerDebuggingAvailable = null;
-            if (mFlags.getMeasurementEnableEventTriggerDebugSignal()) {
+            if (mFlags.getMeasurementEnableTriggerDebugSignal()) {
                 Optional<Boolean> hasTriggerDebug =
                         mDatastoreManager.runInTransactionWithResult(
                                 dao -> getTriggerDebugAvailability(eventReport, dao));

@@ -82,6 +82,8 @@ public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestC
 
     @Before
     public void setup() throws UiObjectNotFoundException {
+        mTestName = getTestName();
+
         String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APP_APK_PATH);
         assertThat(installMessage).contains("Success");
 
@@ -105,8 +107,6 @@ public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestC
     // TODO: Remove this blank test along with the other @Ignore. b/268351419
     @Test
     public void placeholderTest() {
-        mTestName = getTestName();
-
         // As this class is the only test class in the test module and need to be @Ignore for the
         // moment, add a blank test to help presubmit to pass.
         assertThat(true).isTrue();
@@ -117,15 +117,12 @@ public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestC
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerOnlyTest() throws InterruptedException {
         // System server is not available on S-, skip this test for S-
-        mTestName = getTestName();
         appConsentTest(0, false);
     }
 
     @Test
     @Ignore("Flaky test. (b/268351419)")
     public void consentPpApiOnlyTest() throws InterruptedException {
-        mTestName = getTestName();
-
         appConsentTest(1, false);
     }
 
@@ -134,8 +131,6 @@ public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestC
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerAndPpApiTest() throws InterruptedException {
         // System server is not available on S-, skip this test for S-
-        mTestName = getTestName();
-
         appConsentTest(2, false);
     }
 
@@ -144,7 +139,6 @@ public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestC
     @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 3)
     @Ignore("Flaky test. (b/268351419)")
     public void consentAppSearchOnlyTest() throws InterruptedException {
-        mTestName = getTestName();
         appConsentTest(Flags.APPSEARCH_ONLY, false);
     }
 
@@ -153,7 +147,6 @@ public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestC
     @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 3)
     @Ignore("Flaky test. (b/268351419)")
     public void consentAppSearchOnlyDialogsOnTest() throws InterruptedException {
-        mTestName = getTestName();
         appConsentTest(Flags.APPSEARCH_ONLY, true);
     }
 
@@ -162,16 +155,12 @@ public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestC
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerOnlyDialogsOnTest() throws InterruptedException {
         // System server is not available on S-, skip this test for S-
-        mTestName = getTestName();
-
         appConsentTest(0, true);
     }
 
     @Test
     @Ignore("Flaky test. (b/268351419)")
     public void consentPpApiOnlyDialogsOnTest() throws InterruptedException {
-        mTestName = getTestName();
-
         appConsentTest(1, true);
     }
 
@@ -180,7 +169,6 @@ public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestC
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerAndPpApiDialogsOnTest() throws InterruptedException {
         // System server is not available on S-, skip this test for S-
-        mTestName = getTestName();
         appConsentTest(2, true);
     }
 

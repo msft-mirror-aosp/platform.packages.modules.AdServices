@@ -55,18 +55,18 @@ public final class U18UxDetentionChannelTest
 
     @Before
     public void setUp() throws Exception {
-        UiUtils.setBinderTimeout();
+        UiUtils.setBinderTimeout(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         mCommonManager = AdServicesCommonManager.get(sContext);
 
-        UiUtils.enableU18();
+        UiUtils.enableU18(flags);
 
         // General purpose callback used for expected success calls.
         mCallback =
@@ -83,7 +83,7 @@ public final class U18UxDetentionChannelTest
                 };
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
@@ -123,8 +123,8 @@ public final class U18UxDetentionChannelTest
 
     @Test
     public void testGaUxU18DetentionChannel() throws Exception {
-        UiUtils.enableGa();
-        UiUtils.setAsRowDevice();
+        UiUtils.enableGa(flags);
+        UiUtils.setAsRowDevice(flags);
 
         AdServicesStates adServicesAdultStates =
                 new AdServicesStates.Builder()

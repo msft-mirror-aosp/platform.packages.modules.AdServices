@@ -95,5 +95,4 @@ android_app {
             "com.android.server.sdksandbox.**",
         ],
     },
-    required: ["com.android.adservices.sdksandbox.xml"],
 }

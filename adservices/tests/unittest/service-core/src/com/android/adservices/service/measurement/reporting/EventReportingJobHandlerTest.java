@@ -1120,7 +1120,7 @@ public class EventReportingJobHandlerTest {
     @Test
     public void testSendReportSuccess_appDestOnly_noTriggerDebugAvailableHeader()
             throws DatastoreException, IOException, JSONException {
-        when(mFlags.getMeasurementEnableEventTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
         setUpTestForTriggerDebugAvailableHeader(
                 List.of(APP_DESTINATION),
                 List.of(),
@@ -1142,7 +1142,7 @@ public class EventReportingJobHandlerTest {
     @Test
     public void testSendReportSuccess_webDestOnlyWithArDebug_hasTriggerDebugHeaderTrue()
             throws DatastoreException, IOException, JSONException {
-        when(mFlags.getMeasurementEnableEventTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
         setUpTestForTriggerDebugAvailableHeader(
                 List.of(),
                 List.of(DEFAULT_WEB_DESTINATION),
@@ -1164,7 +1164,7 @@ public class EventReportingJobHandlerTest {
     @Test
     public void testSendReportSuccess_webDestOnlyWithoutArDebug_hasTriggerDebugHeaderFalse()
             throws DatastoreException, IOException, JSONException {
-        when(mFlags.getMeasurementEnableEventTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
         setUpTestForTriggerDebugAvailableHeader(
                 List.of(),
                 List.of(DEFAULT_WEB_DESTINATION),
@@ -1186,7 +1186,7 @@ public class EventReportingJobHandlerTest {
     @Test
     public void testSendReportSuccess_appAndWebDest_coarseDestFalse_hasTriggerDebugHeaderTrue()
             throws DatastoreException, IOException, JSONException {
-        when(mFlags.getMeasurementEnableEventTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
         setUpTestForTriggerDebugAvailableHeader(
                 List.of(APP_DESTINATION),
                 List.of(DEFAULT_WEB_DESTINATION),
@@ -1208,7 +1208,7 @@ public class EventReportingJobHandlerTest {
     @Test
     public void testSendReportSuccess_appAndWebDest_coarseDestFalse_hasTriggerDebugHeaderFalse()
             throws DatastoreException, IOException, JSONException {
-        when(mFlags.getMeasurementEnableEventTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
         setUpTestForTriggerDebugAvailableHeader(
                 List.of(APP_DESTINATION),
                 List.of(DEFAULT_WEB_DESTINATION),
@@ -1230,7 +1230,7 @@ public class EventReportingJobHandlerTest {
     @Test
     public void testSendReportSuccess_coarseDestFlagDisabled_noTriggerDebugHeader()
             throws DatastoreException, IOException, JSONException {
-        when(mFlags.getMeasurementEnableEventTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
         when(mFlags.getMeasurementEnableEventTriggerDebugSignalForCoarseDestination())
                 .thenReturn(false);
         setUpTestForTriggerDebugAvailableHeader(
@@ -1254,7 +1254,7 @@ public class EventReportingJobHandlerTest {
     @Test
     public void testSendReportSuccess_coarseDestFlagEnabled_hasTriggerDebugHeaderTrue()
             throws DatastoreException, IOException, JSONException {
-        when(mFlags.getMeasurementEnableEventTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
         when(mFlags.getMeasurementEnableEventTriggerDebugSignalForCoarseDestination())
                 .thenReturn(true);
 
@@ -1279,7 +1279,7 @@ public class EventReportingJobHandlerTest {
     @Test
     public void testSendReportSuccess_coarseDestFlagEnabled_hasTriggerDebugHeaderFalse()
             throws DatastoreException, IOException, JSONException {
-        when(mFlags.getMeasurementEnableEventTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
         when(mFlags.getMeasurementEnableEventTriggerDebugSignalForCoarseDestination())
                 .thenReturn(true);
 
@@ -1304,7 +1304,7 @@ public class EventReportingJobHandlerTest {
     @Test
     public void testSendReportSuccess_fakeReport_hasTriggerDebugHeaderTrue()
             throws DatastoreException, IOException, JSONException {
-        when(mFlags.getMeasurementEnableEventTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
         when(mFlags.getMeasurementTriggerDebugSignalProbabilityForFakeReports()).thenReturn(1.0F);
 
         EventReport eventReport =
@@ -1371,7 +1371,7 @@ public class EventReportingJobHandlerTest {
     @Test
     public void testSendReportSuccess_fakeReport_hasTriggerDebugHeaderFalse()
             throws DatastoreException, IOException, JSONException {
-        when(mFlags.getMeasurementEnableEventTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
         when(mFlags.getMeasurementTriggerDebugSignalProbabilityForFakeReports()).thenReturn(0.0F);
 
         EventReport eventReport =
