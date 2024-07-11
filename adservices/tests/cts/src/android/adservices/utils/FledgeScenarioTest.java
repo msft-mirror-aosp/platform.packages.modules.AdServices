@@ -19,10 +19,16 @@ package android.adservices.utils;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
+import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
 
 import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
@@ -36,24 +42,24 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.adservices.customaudience.TrustedBiddingData;
-import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.PhFlagsFixture;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.annotations.EnableAllApis;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -75,67 +81,55 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /** Abstract class for FLEDGE scenario tests using local servers. */
+@EnableAllApis
+@RequiresSdkLevelAtLeastS
+@SetCompatModeFlags
+@SetFlagEnabled(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED)
+@SetIntegerFlag(name = KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, value = 5_000)
+@SetIntegerFlag(name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, value = 10_000)
+@SetIntegerFlag(name = KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, value = 5_000)
+@SetPpapiAppAllowList
 public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-
     protected static final String TAG = FledgeScenarioTest.class.getSimpleName();
     protected static final int TIMEOUT = 120;
+    protected static final int TIMEOUT_TES_SECONDS = 10;
     protected static final String SHOES_CA = "shoes";
     protected static final String SHIRTS_CA = "shirts";
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+    protected static final String HATS_CA = "hats";
     private static final int NUM_ADS_PER_AUDIENCE = 4;
     private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final long AD_ID_FETCHER_TIMEOUT = 1000;
     private static final long AD_ID_FETCHER_TIMEOUT_DEFAULT = 50;
 
     protected AdvertisingCustomAudienceClient mCustomAudienceClient;
+    protected AdvertisingCustomAudienceClient mCustomAudienceClientUsingGetMethod;
     protected AdSelectionClient mAdSelectionClient;
+    protected AdSelectionClient mAdSelectionClientUsingGetMethod;
 
     private AdTechIdentifier mBuyer;
     private AdTechIdentifier mSeller;
     private String mServerBaseAddress;
 
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Rule(order = 1)
     public final SupportedByConditionRule devOptionsEnabled =
             DevContextUtils.createDevOptionsAvailableRule(sContext, TAG);
 
-    @Rule(order = 5)
-    public final AdServicesDeviceSupportedRule deviceSupported =
-            new AdServicesDeviceSupportedRule();
+    @Rule(order = 2)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            CtsWebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 
     @Rule(order = 3)
-    public final SupportedByConditionRule webViewSupportsJSSandbox =
-            CtsWebViewSupportUtil.createJSSandboxAvailableRule(CONTEXT);
-
-    @Rule(order = 6)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
-                    CONTEXT, "adservices_untrusted_test_server.p12", "adservices_test");
+                    sContext, "adservices_untrusted_test_server.p12", "adservices_test");
 
-    protected static void overrideBiddingLogicVersionToV3(boolean useVersion3) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_ad_selection_bidding_logic_js_version %s",
-                useVersion3 ? "3" : "2");
+    protected void overrideBiddingLogicVersionToV3(boolean useVersion3) {
+        flags.setFlag(KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION, useVersion3 ? 3 : 2);
     }
 
     protected static AdSelectionSignals makeAdSelectionSignals() {
         return AdSelectionSignals.fromString(
                 String.format("{\"valid\": true, \"publisher\": \"%s\"}", PACKAGE_NAME));
-    }
-
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                .setCompatModeFlags()
-                .setPpapiAppAllowList(sContext.getPackageName())
-                .setFlag(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, 5_000)
-                .setFlag(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, 5_000)
-                .setFlag(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, 10_000)
-                .setFlag(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED, true);
     }
 
     @Before
@@ -144,15 +138,27 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
 
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
         ExecutorService executor = Executors.newCachedThreadPool();
         mCustomAudienceClient =
                 new AdvertisingCustomAudienceClient.Builder()
-                        .setContext(CONTEXT)
+                        .setContext(mContext)
                         .setExecutor(executor)
                         .build();
+        mCustomAudienceClientUsingGetMethod =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(mContext)
+                        .setExecutor(executor)
+                        .setUseGetMethodToCreateManagerInstance(true)
+                        .build();
         mAdSelectionClient =
-                new AdSelectionClient.Builder().setContext(CONTEXT).setExecutor(executor).build();
+                new AdSelectionClient.Builder().setContext(mContext).setExecutor(executor).build();
+        mAdSelectionClientUsingGetMethod =
+                new AdSelectionClient.Builder()
+                        .setContext(mContext)
+                        .setExecutor(executor)
+                        .setUseGetMethodToCreateManagerInstance(true)
+                        .build();
     }
 
     @After
@@ -160,6 +166,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
         try {
             leaveCustomAudience(SHOES_CA);
             leaveCustomAudience(SHIRTS_CA);
+            leaveCustomAudience(HATS_CA);
         } catch (Exception e) {
             // No-op catch here, these are only for cleaning up
             Log.w(TAG, "Failed while cleaning up custom audiences", e);
@@ -168,15 +175,27 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
 
     protected AdSelectionOutcome doSelectAds(AdSelectionConfig adSelectionConfig)
             throws ExecutionException, InterruptedException, TimeoutException {
+        return doSelectAds(mAdSelectionClient, adSelectionConfig);
+    }
+
+    protected AdSelectionOutcome doSelectAds(
+            AdSelectionClient adSelectionClient, AdSelectionConfig adSelectionConfig)
+            throws ExecutionException, InterruptedException, TimeoutException {
         AdSelectionOutcome result =
-                mAdSelectionClient.selectAds(adSelectionConfig).get(TIMEOUT, TimeUnit.SECONDS);
+                adSelectionClient.selectAds(adSelectionConfig).get(TIMEOUT, TimeUnit.SECONDS);
         Log.d(TAG, "Ran ad selection.");
         return result;
     }
 
     protected void doReportEvent(long adSelectionId, String eventName)
             throws JSONException, ExecutionException, InterruptedException, TimeoutException {
-        mAdSelectionClient
+        doReportEvent(mAdSelectionClient, adSelectionId, eventName);
+    }
+
+    protected void doReportEvent(
+            AdSelectionClient adSelectionClient, long adSelectionId, String eventName)
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        adSelectionClient
                 .reportEvent(
                         new ReportEventRequest.Builder(
                                         adSelectionId,
@@ -191,7 +210,15 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
 
     protected void doReportImpression(long adSelectionId, AdSelectionConfig adSelectionConfig)
             throws ExecutionException, InterruptedException, TimeoutException {
-        mAdSelectionClient
+        doReportImpression(mAdSelectionClient, adSelectionId, adSelectionConfig);
+    }
+
+    protected void doReportImpression(
+            AdSelectionClient adSelectionClient,
+            long adSelectionId,
+            AdSelectionConfig adSelectionConfig)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        adSelectionClient
                 .reportImpression(new ReportImpressionRequest(adSelectionId, adSelectionConfig))
                 .get(TIMEOUT, TimeUnit.SECONDS);
         Log.d(TAG, "Ran report impression for ad selection id: " + adSelectionId);
@@ -199,32 +226,50 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
 
     protected void joinCustomAudience(String customAudienceName)
             throws ExecutionException, InterruptedException, TimeoutException {
+        joinCustomAudience(mCustomAudienceClient, customAudienceName);
+    }
+
+    protected void joinCustomAudience(
+            AdvertisingCustomAudienceClient client, String customAudienceName)
+            throws ExecutionException, InterruptedException, TimeoutException {
         JoinCustomAudienceRequest joinCustomAudienceRequest =
                 makeJoinCustomAudienceRequest(customAudienceName);
-        mCustomAudienceClient
-                .joinCustomAudience(joinCustomAudienceRequest.getCustomAudience())
-                .get(5, TimeUnit.SECONDS);
+        client.joinCustomAudience(joinCustomAudienceRequest.getCustomAudience())
+                .get(TIMEOUT_TES_SECONDS, TimeUnit.SECONDS);
         Log.d(TAG, "Joined Custom Audience: " + customAudienceName);
     }
 
     protected void joinCustomAudience(CustomAudience customAudience)
             throws ExecutionException, InterruptedException, TimeoutException {
-        mCustomAudienceClient.joinCustomAudience(customAudience).get(5, TimeUnit.SECONDS);
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience)
+                .get(TIMEOUT_TES_SECONDS, TimeUnit.SECONDS);
         Log.d(TAG, "Joined Custom Audience: " + customAudience.getName());
     }
 
     protected void leaveCustomAudience(String customAudienceName)
             throws ExecutionException, InterruptedException, TimeoutException {
+        leaveCustomAudience(mCustomAudienceClient, customAudienceName);
+    }
+
+    protected void leaveCustomAudience(
+            AdvertisingCustomAudienceClient client, String customAudienceName)
+            throws ExecutionException, InterruptedException, TimeoutException {
         CustomAudience customAudience = makeCustomAudience(customAudienceName).build();
-        mCustomAudienceClient
-                .leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
-                .get(TIMEOUT, TimeUnit.SECONDS);
+        client.leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
+                .get(TIMEOUT_TES_SECONDS, TimeUnit.SECONDS);
         Log.d(TAG, "Left Custom Audience: " + customAudienceName);
     }
 
     protected void doScheduleCustomAudienceUpdate(ScheduleCustomAudienceUpdateRequest request)
             throws ExecutionException, InterruptedException, TimeoutException {
-        mCustomAudienceClient.scheduleCustomAudienceUpdate(request).get(TIMEOUT, TimeUnit.SECONDS);
+        doScheduleCustomAudienceUpdate(mCustomAudienceClient, request);
+    }
+
+    protected void doScheduleCustomAudienceUpdate(
+            AdvertisingCustomAudienceClient client, ScheduleCustomAudienceUpdateRequest request)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        client.scheduleCustomAudienceUpdate(request).get(TIMEOUT, TimeUnit.SECONDS);
         Log.d(TAG, "Scheduled Custom Audience Update: " + request);
     }
 
@@ -233,41 +278,20 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
     }
 
     protected void overrideCpcBillingEnabled(boolean enabled) {
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices fledge_cpc_billing_enabled %s",
-                        enabled ? "true" : "false"));
-    }
-
-    protected void overrideRegisterAdBeaconEnabled(boolean enabled) {
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices fledge_register_ad_beacon_enabled %s",
-                        enabled ? "true" : "false"));
+        flags.setFlag(KEY_FLEDGE_CPC_BILLING_ENABLED, enabled);
     }
 
     protected void overrideShouldUseUnifiedTable(boolean shouldUse) {
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices"
-                                + " fledge_on_device_auction_should_use_unified_tables %s",
-                        shouldUse ? "true" : "false"));
+        flags.setFlag(KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES, shouldUse);
     }
 
     protected void setDebugReportingEnabledForTesting(boolean enabled) {
-        FledgeScenarioTest.overrideBiddingLogicVersionToV3(enabled);
-        PhFlagsFixture.overrideAdIdFetcherTimeoutMs(
+        overrideBiddingLogicVersionToV3(enabled);
+        flags.setFlag(
+                KEY_AD_ID_FETCHER_TIMEOUT_MS,
                 enabled ? AD_ID_FETCHER_TIMEOUT : AD_ID_FETCHER_TIMEOUT_DEFAULT);
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices fledge_event_level_debug_reporting_enabled"
-                                + " %s",
-                        enabled ? "true" : "false"));
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices"
-                                + " fledge_event_level_debug_report_send_immediately %s",
-                        enabled ? "true" : "false"));
+        flags.setFlag(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED, enabled);
+        flags.setFlag(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY, enabled);
     }
 
     protected AdSelectionConfig makeAdSelectionConfig(URL serverBaseAddressWithPrefix) {
@@ -351,5 +375,22 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
                                         "%s/render/%s/%s",
                                         mServerBaseAddress, customAudienceName, adNumber)))
                 .build();
+    }
+
+    protected FetchAndJoinCustomAudienceRequest.Builder makeFetchAndJoinCustomAudienceRequest() {
+        return new FetchAndJoinCustomAudienceRequest.Builder(
+                        Uri.parse(mServerBaseAddress + Scenarios.FETCH_CA_PATH))
+                .setName(HATS_CA);
+    }
+
+    protected void doFetchAndJoinCustomAudience(FetchAndJoinCustomAudienceRequest request)
+            throws Exception {
+        doFetchAndJoinCustomAudience(mCustomAudienceClient, request);
+    }
+
+    protected void doFetchAndJoinCustomAudience(
+            AdvertisingCustomAudienceClient client, FetchAndJoinCustomAudienceRequest request)
+            throws Exception {
+        client.fetchAndJoinCustomAudience(request).get(TIMEOUT_TES_SECONDS, TimeUnit.SECONDS);
     }
 }

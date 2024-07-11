@@ -454,8 +454,8 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetMsmtEnableSeparateReportTypes() {
         testFeatureFlag(
-                "MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT",
-                Flags::getMeasurementEnableSeparateReportTypesForAttributionRateLimit);
+                "MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT",
+                Flags::getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit);
     }
 
     @Test
