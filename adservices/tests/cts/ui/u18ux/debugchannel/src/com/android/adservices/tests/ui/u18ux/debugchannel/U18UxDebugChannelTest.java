@@ -56,6 +56,8 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Before
     public void setUp() throws Exception {
+        mTestName = getTestName();
+
         UiUtils.setBinderTimeout();
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -97,8 +99,6 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testEntrypointDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.enableU18();
         UiUtils.enableGa();
 
@@ -125,8 +125,6 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testU18AdultBothTrueAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.enableU18();
         UiUtils.enableGa();
 
@@ -153,8 +151,6 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testU18TrueAdultFalseAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.enableU18();
         UiUtils.enableGa();
 
@@ -181,8 +177,6 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testU18AdultBothTrueAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.enableU18();
         UiUtils.enableGa();
 
@@ -209,8 +203,6 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testU18TrueAdultFalseAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.enableU18();
         UiUtils.enableGa();
 
@@ -237,8 +229,6 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testU18AdultBothFalseAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.enableU18();
         UiUtils.enableGa();
 

@@ -63,6 +63,8 @@ public final class GaUxAlreadyEnrolledChannelTest
 
     @Before
     public void setUp() throws Exception {
+        mTestName = getTestName();
+
         UiUtils.setBinderTimeout();
         AdservicesTestHelper.killAdservicesProcess(sContext);
         UiUtils.resetAdServicesConsentData(sContext);
@@ -133,8 +135,6 @@ public final class GaUxAlreadyEnrolledChannelTest
      */
     @Test
     public void testGaRowAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -165,8 +165,6 @@ public final class GaUxAlreadyEnrolledChannelTest
      */
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsRowDevice();
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -197,8 +195,6 @@ public final class GaUxAlreadyEnrolledChannelTest
      */
     @Test
     public void testGaEuAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsEuDevice();
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -227,8 +223,6 @@ public final class GaUxAlreadyEnrolledChannelTest
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
     public void testGaEuAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
         UiUtils.setAsEuDevice();
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
