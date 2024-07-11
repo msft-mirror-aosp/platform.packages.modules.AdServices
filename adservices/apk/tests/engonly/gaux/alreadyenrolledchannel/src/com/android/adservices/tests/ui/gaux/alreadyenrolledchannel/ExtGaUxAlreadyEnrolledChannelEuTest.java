@@ -64,12 +64,14 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest
 
     @Before
     public void setUp() throws Exception {
-        UiUtils.resetAdServicesConsentData(sContext);
+        mTestName = getTestName();
+
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -90,7 +92,7 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest
                 };
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
@@ -129,8 +131,6 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest
      */
     @Test
     public void testGaEuAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -155,9 +155,7 @@ public class ExtGaUxAlreadyEnrolledChannelEuTest
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
     public void testGaEuAdIdDisabled() throws Exception {
-        mTestName = getTestName();
-
-        UiUtils.setAsEuDevice();
+        UiUtils.setAsEuDevice(flags);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
