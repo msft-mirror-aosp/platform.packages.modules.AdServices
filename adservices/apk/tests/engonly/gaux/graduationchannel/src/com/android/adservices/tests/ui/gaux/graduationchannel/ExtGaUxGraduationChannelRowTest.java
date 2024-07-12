@@ -94,12 +94,14 @@ public class ExtGaUxGraduationChannelRowTest extends AdServicesCtsTestCase {
 
     @Before
     public void setUp() throws Exception {
-        UiUtils.resetAdServicesConsentData(sContext);
+        mTestName = getTestName();
+
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -120,7 +122,7 @@ public class ExtGaUxGraduationChannelRowTest extends AdServicesCtsTestCase {
                 };
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
@@ -160,10 +162,8 @@ public class ExtGaUxGraduationChannelRowTest extends AdServicesCtsTestCase {
      */
     @Test
     public void testRowU18ToGaAdIdEnabled() throws Exception {
-        mTestName = getTestName();
-
-        UiUtils.setAsRowDevice();
-        UiUtils.enableU18();
+        UiUtils.setAsRowDevice(flags);
+        UiUtils.enableU18(flags);
 
         AdServicesStates u18States =
                 new AdServicesStates.Builder()
@@ -178,7 +178,7 @@ public class ExtGaUxGraduationChannelRowTest extends AdServicesCtsTestCase {
         AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.U18_UX);
 
-        UiUtils.enableGa();
+        UiUtils.enableGa(flags);
         AdServicesStates adultStates =
                 new AdServicesStates.Builder()
                         .setU18Account(false)
