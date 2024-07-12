@@ -81,6 +81,9 @@ public class CustomAudienceManagerTest {
         // This test is running in background
         PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
         PhFlagsFixture.overrideEnableEnrollmentSeed(true);
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
     }
 
     @After
