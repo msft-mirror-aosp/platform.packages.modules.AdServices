@@ -40,8 +40,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATI
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
@@ -50,6 +48,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQ
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
+import static com.android.adservices.service.Flags.MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
@@ -446,6 +445,28 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableTriggerDebugSignal() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL",
+                Flags::getMeasurementEnableTriggerDebugSignal);
+    }
+
+    @Test
+    public void testGetMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION",
+                Flags::getMeasurementEnableEventTriggerDebugSignalForCoarseDestination);
+    }
+
+    @Test
+    public void testGetMeasurementTriggerDebugProbabilityForFakeReports() {
+        testFloatFlag(
+                "getMeasurementTriggerDebugSignalProbabilityForFakeReports",
+                MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS,
+                Flags::getMeasurementTriggerDebugSignalProbabilityForFakeReports);
+    }
+
+    @Test
     public void testGetEnableBackCompatInit() {
         testFeatureFlag("DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
     }
@@ -453,8 +474,8 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetMsmtEnableSeparateReportTypes() {
         testFeatureFlag(
-                "MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT",
-                Flags::getMeasurementEnableSeparateReportTypesForAttributionRateLimit);
+                "MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT",
+                Flags::getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit);
     }
 
     @Test
@@ -563,6 +584,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     // TODO(b/325074749) - remove once all flags have been converted
+
     /**
      * @deprecated - flags that are converted should call some method like {@code
      *     testFeatureFlagGuardedByMsmtFeatureFlag} instead.
@@ -600,6 +622,11 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetPasExtendedMetricsEnabled() {
         testFeatureFlag("PAS_EXTENDED_METRICS_ENABLED", Flags::getPasExtendedMetricsEnabled);
+    }
+
+    @Test
+    public void testGetPasProductMetricsV1Enabled() {
+        testFeatureFlag("PAS_PRODUCT_METRICS_V1_ENABLED", Flags::getPasProductMetricsV1Enabled);
     }
 
     @Test
@@ -801,22 +828,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions);
     }
 
-    @Test
-    public void testGetMeasurementEnableEventTriggerDebugSignal() {
-        testFlag(
-                "getMeasurementEnableEventTriggerDebugSignal",
-                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL,
-                Flags::getMeasurementEnableEventTriggerDebugSignal);
-    }
-
-    @Test
-    public void testGetMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
-        testFlag(
-                "getMeasurementEnableEventTriggerDebugSignalForCoarseDestination",
-                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION,
-                Flags::getMeasurementEnableEventTriggerDebugSignalForCoarseDestination);
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal helpers - do not add new tests following this point.                              //
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -874,6 +885,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     private void testFlag(
             String getterName, long defaultValue, Flaginator<Flags, Long> flaginator) {
+        expect.withMessage("%s", getterName)
+                .that(flaginator.getFlagValue(mFlags))
+                .isEqualTo(defaultValue);
+    }
+
+    private void testFloatFlag(
+            String getterName, float defaultValue, Flaginator<Flags, Float> flaginator) {
         expect.withMessage("%s", getterName)
                 .that(flaginator.getFlagValue(mFlags))
                 .isEqualTo(defaultValue);
