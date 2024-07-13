@@ -52,6 +52,7 @@ public class AsyncFetchStatus {
     private int mRetryCount;
     private boolean mIsRedirectOnly;
     private boolean mIsPARequest;
+    private int mNumDeletedEntities;
 
     public AsyncFetchStatus() {
         mResponseStatus = ResponseStatus.UNKNOWN;
@@ -147,9 +148,19 @@ public class AsyncFetchStatus {
         mIsPARequest = isPARequest;
     }
 
+    /** Set number of entities deleted. */
+    public void incrementNumDeletedEntities(int numDeletedEntities) {
+        mNumDeletedEntities += numDeletedEntities;
+    }
+
     /** Returns true if request is successful. */
     public boolean isRequestSuccess() {
         return mResponseStatus == ResponseStatus.SUCCESS;
+    }
+
+    /** Returns number of existing entities deleted to accommodate the new registration. */
+    public int getNumDeletedEntities() {
+        return mNumDeletedEntities;
     }
 
     /** Returns true if request can be retried. */
