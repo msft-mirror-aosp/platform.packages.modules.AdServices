@@ -21,94 +21,96 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVIC
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.SettingsTestUtil;
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
+@DisableGlobalKillSwitch
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE)
+@SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
+@SetFlagEnabled(KEY_U18_UX_ENABLED)
+@SetFlagEnabled(KEY_GA_UX_FEATURE_ENABLED)
+@SetStringFlag(name = KEY_DEBUG_UX, value = "GA_UX")
+@SetFlagDisabled(KEY_PAS_UX_ENABLED)
+@SetCompatModeFlags
 public final class SettingsGaUxSelectorUiAutomatorTest extends AdServicesUiTestCase {
-
     @Rule(order = 11)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
-                    .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
-                    .setFlag(KEY_U18_UX_ENABLED, true)
-                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
-                    .setFlag(KEY_DEBUG_UX, "GA_UX")
-                    .setFlag(KEY_PAS_UX_ENABLED, false)
-                    .setCompatModeFlags();
+    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
 
     @Test
-    public void settingsRemoveMainToggleAndMeasurementEntryTest() throws Exception {
+    public void settingsRemoveMainToggleAndMeasurementEntryTest() {
         SettingsTestUtil.settingsRemoveMainToggleAndMeasurementEntryTestUtil(mDevice);
     }
 
     @Test
     @FlakyTest(bugId = 299829948)
     public void measurementDialogTest() throws Exception {
-        SettingsTestUtil.measurementDialogTestUtil(mDevice);
+        SettingsTestUtil.measurementDialogTestUtil(mDevice, flags);
     }
 
     @Test
     public void topicsToggleTest() throws Exception {
-        SettingsTestUtil.topicsToggleTestUtil(mDevice);
+        SettingsTestUtil.topicsToggleTestUtil(mDevice, flags);
     }
 
     @Test
     public void fledgeToggleTest() throws Exception {
-        SettingsTestUtil.fledgeToggleTestUtil(mDevice);
+        SettingsTestUtil.fledgeToggleTestUtil(mDevice, flags);
     }
 
     @Test
     public void measurementToggleTest() throws Exception {
-        SettingsTestUtil.measurementToggleTestUtil(mDevice);
+        SettingsTestUtil.measurementToggleTestUtil(mDevice, flags);
     }
 
     @Test
-    public void topicsSubtitleTest() throws Exception {
-        SettingsTestUtil.topicsSubtitleTestUtil(mDevice);
+    public void topicsSubtitleTest() {
+        SettingsTestUtil.topicsSubtitleTestUtil(mDevice, flags);
     }
 
     @Test
-    public void appsSubtitleTest() throws Exception {
-        SettingsTestUtil.appsSubtitleTestUtil(mDevice);
+    public void appsSubtitleTest() {
+        SettingsTestUtil.appsSubtitleTestUtil(mDevice, flags);
     }
 
     @Test
-    public void measurementSubtitleTest() throws Exception {
-        SettingsTestUtil.measurementSubtitleTestUtil(mDevice);
+    public void measurementSubtitleTest() {
+        SettingsTestUtil.measurementSubtitleTestUtil(mDevice, flags);
     }
 
     @Test
-    public void topicsToggleDialogTest() throws Exception {
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
-        SettingsTestUtil.topicsToggleDialogTestUtil(mDevice);
+    @SetFlagEnabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
+    public void topicsToggleDialogTest() {
+        SettingsTestUtil.topicsToggleDialogTestUtil(mDevice, flags);
     }
 
     @Test
     @FlakyTest(bugId = 299153376)
-    public void appsToggleDialogTest() throws Exception {
-        SettingsTestUtil.appsToggleDialogTestUtil(mDevice);
+    public void appsToggleDialogTest() {
+        SettingsTestUtil.appsToggleDialogTestUtil(mDevice, flags);
     }
 
     @Test
     @FlakyTest(bugId = 301779357)
-    public void measurementToggleDialogTest() throws Exception {
-        SettingsTestUtil.measurementToggleDialogTestUtil(mDevice);
+    public void measurementToggleDialogTest() {
+        SettingsTestUtil.measurementToggleDialogTestUtil(mDevice, flags);
     }
 
     @Test
     public void fledgeViewTextPasEnabledTest() throws Exception {
-        SettingsTestUtil.fledgeViewTextPasEnabledTest(mDevice);
+        SettingsTestUtil.fledgeViewTextPasEnabledTest(mDevice, flags);
     }
 }
