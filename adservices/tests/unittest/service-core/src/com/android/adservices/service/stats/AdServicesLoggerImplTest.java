@@ -601,7 +601,8 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                                 TEST_SOURCE_REGISTRATION,
                                 retryCount,
                                 /* isRedirectOnly= */ false,
-                                /* isPARequest= */ false)
+                                /* isPARequest= */ false,
+                                /* num entities deleted */ 5)
                         .setAdTechDomain(null)
                         .build();
         mAdservicesLogger.logMeasurementRegistrationsResponseSize(stats);
@@ -622,6 +623,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.isPARequest()).isFalse();
         expect.that(loggedStats.isRedirectOnly()).isFalse();
         expect.that(loggedStats.getAdTechDomain()).isNull();
+        expect.that(loggedStats.getNumDeletedEntities()).isEqualTo(5);
         callback.assertCalled();
     }
 

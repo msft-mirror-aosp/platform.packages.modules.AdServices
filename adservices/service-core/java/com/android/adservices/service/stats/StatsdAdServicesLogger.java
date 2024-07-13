@@ -221,7 +221,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getRetryCount(),
                 /* httpResponseCode */ 0,
                 stats.isRedirectOnly(),
-                stats.isPARequest());
+                stats.isPARequest(),
+                stats.getNumDeletedEntities());
     }
 
     @Override

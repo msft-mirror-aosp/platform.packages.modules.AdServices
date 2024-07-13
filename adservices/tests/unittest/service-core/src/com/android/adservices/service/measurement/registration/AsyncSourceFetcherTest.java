@@ -332,7 +332,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                         + sContext.getPackageName(),
                                                 0,
                                                 false,
-                                                false)
+                                                false,
+                                                0)
                                         .setAdTechDomain(null)
                                         .build()));
         verify(mUrlConnection).setRequestMethod("POST");
@@ -5374,7 +5375,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                         + sContext.getPackageName(),
                                                 0,
                                                 false,
-                                                false)
+                                                false,
+                                                0)
                                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                                         .build()));
     }

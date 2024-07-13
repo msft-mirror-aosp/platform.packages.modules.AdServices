@@ -258,7 +258,11 @@ public class AsyncRegistrationQueueRunner {
                         (dao) -> {
                             if (asyncFetchStatus.isRequestSuccess()) {
                                 if (resultSource.isPresent()) {
-                                    storeSource(resultSource.get(), asyncRegistration, dao);
+                                    storeSource(
+                                            resultSource.get(),
+                                            asyncRegistration,
+                                            dao,
+                                            asyncFetchStatus);
                                 }
                                 handleSuccess(
                                         asyncRegistration, asyncFetchStatus, asyncRedirects, dao);
@@ -283,7 +287,10 @@ public class AsyncRegistrationQueueRunner {
     /** Visible only for testing. */
     @VisibleForTesting
     public void storeSource(
-            Source source, AsyncRegistration asyncRegistration, IMeasurementDao dao)
+            Source source,
+            AsyncRegistration asyncRegistration,
+            IMeasurementDao dao,
+            AsyncFetchStatus asyncFetchStatus)
             throws DatastoreException {
         Uri topOrigin =
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE
@@ -296,7 +303,7 @@ public class AsyncRegistrationQueueRunner {
                         : EventSurfaceType.APP;
         // TODO(b/336403550) : Refactor isSourceAllowedToInsert out of this class
         InsertSourcePermission sourceAllowedToInsert =
-                isSourceAllowedToInsert(source, topOrigin, publisherType, dao, mDebugReportApi);
+                isSourceAllowedToInsert(source, topOrigin, publisherType, dao, asyncFetchStatus);
         if (sourceAllowedToInsert.isAllowed()) {
             // If preinstall check is enabled and any app destinations are already installed,
             // mark the source for deletion. Note the source is persisted so that the fake event
@@ -384,7 +391,7 @@ public class AsyncRegistrationQueueRunner {
             Uri topOrigin,
             @EventSurfaceType int publisherType,
             IMeasurementDao dao,
-            DebugReportApi debugReportApi)
+            AsyncFetchStatus asyncFetchStatus)
             throws DatastoreException {
         Flags flags = FlagsFactory.getFlags();
         // Do not persist the navigation source if the same reporting origin has been registered
@@ -408,7 +415,7 @@ public class AsyncRegistrationQueueRunner {
             LoggerFactory.getMeasurementLogger().d(
                     "insertSources: Max limit of %s sources for publisher - %s reached.",
                     flags.getMeasurementMaxSourcesPerPublisher(), publisher);
-            debugReportApi.scheduleSourceStorageLimitDebugReport(
+            mDebugReportApi.scheduleSourceStorageLimitDebugReport(
                     source, String.valueOf(numOfSourcesPerPublisher), dao);
             return InsertSourcePermission.NOT_ALLOWED;
         }
@@ -425,7 +432,7 @@ public class AsyncRegistrationQueueRunner {
                         flags.getMeasurementDestinationRateLimitWindow(),
                         destinationsPerMinuteRateLimit,
                         dao)) {
-            debugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
+            mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
                     source, String.valueOf(destinationsPerMinuteRateLimit), dao);
             return InsertSourcePermission.NOT_ALLOWED;
         }
@@ -448,14 +455,14 @@ public class AsyncRegistrationQueueRunner {
                         flags.getMeasurementDestinationPerDayRateLimitWindowInMs(),
                         destinationsPerDayRateLimit,
                         dao)) {
-            debugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
+            mDebugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
                     source, String.valueOf(destinationsPerDayRateLimit), dao);
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
         if (source.getAppDestinations() != null
                 && isDestinationOutOfBounds(
-                        debugReportApi,
+                        mDebugReportApi,
                         source,
                         publisher.get(),
                         publisherType,
@@ -470,7 +477,7 @@ public class AsyncRegistrationQueueRunner {
 
         if (source.getWebDestinations() != null
                 && isDestinationOutOfBounds(
-                        debugReportApi,
+                        mDebugReportApi,
                         source,
                         publisher.get(),
                         publisherType,
@@ -487,13 +494,13 @@ public class AsyncRegistrationQueueRunner {
             if (!source.validateAndSetNumReportStates(flags)
                     || !source.validateMaxEventStates(flags)
                     || !source.hasValidInformationGain(flags)) {
-                debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
+                mDebugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
                 return InsertSourcePermission.NOT_ALLOWED;
             }
         } catch (ArithmeticException e) {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Calculating the number of report states overflowed.");
-            debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
+            mDebugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
@@ -510,10 +517,11 @@ public class AsyncRegistrationQueueRunner {
                             flags,
                             publisher.get(),
                             EventSurfaceType.APP,
-                            source.getAppDestinations());
+                            source.getAppDestinations(),
+                            asyncFetchStatus);
             if (appDestSourceAllowedToInsert == InsertSourcePermission.NOT_ALLOWED) {
                 // Return early without checking web destinations
-                debugReportApi.scheduleSourceDestinationLimitDebugReport(
+                mDebugReportApi.scheduleSourceDestinationLimitDebugReport(
                         source,
                         String.valueOf(flags.getMeasurementMaxDistinctDestinationsInActiveSource()),
                         dao);
@@ -527,9 +535,10 @@ public class AsyncRegistrationQueueRunner {
                             flags,
                             publisher.get(),
                             EventSurfaceType.WEB,
-                            source.getWebDestinations());
+                            source.getWebDestinations(),
+                            asyncFetchStatus);
             if (webDestSourceAllowedToInsert == InsertSourcePermission.NOT_ALLOWED) {
-                debugReportApi.scheduleSourceDestinationLimitDebugReport(
+                mDebugReportApi.scheduleSourceDestinationLimitDebugReport(
                         source,
                         String.valueOf(flags.getMeasurementMaxDistinctDestinationsInActiveSource()),
                         dao);
@@ -550,7 +559,7 @@ public class AsyncRegistrationQueueRunner {
         if (destinationExceedsGlobalRateLimit) {
             // Source won't be inserted, yet we produce a success to debug report to avoid side
             // channel leakage of cross site data
-            debugReportApi.scheduleSourceSuccessDebugReport(
+            mDebugReportApi.scheduleSourceSuccessDebugReport(
                     source, dao, additionalDebugReportParams);
             return InsertSourcePermission.NOT_ALLOWED;
         }
@@ -565,7 +574,7 @@ public class AsyncRegistrationQueueRunner {
                         flags.getMeasurementMinReportingOriginUpdateWindow());
         if (numOfOriginExcludingRegistrationOrigin
                 >= flags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
-            debugReportApi.scheduleSourceSuccessDebugReport(
+            mDebugReportApi.scheduleSourceSuccessDebugReport(
                     source, dao, additionalDebugReportParams);
             LoggerFactory.getMeasurementLogger()
                     .d(
@@ -585,7 +594,8 @@ public class AsyncRegistrationQueueRunner {
             Flags flags,
             Uri publisher,
             @EventSurfaceType int destinationType,
-            List<Uri> destinations)
+            List<Uri> destinations,
+            AsyncFetchStatus asyncFetchStatus)
             throws DatastoreException {
         if (destinations == null || destinations.isEmpty()) {
             return InsertSourcePermission.ALLOWED;
@@ -662,6 +672,7 @@ public class AsyncRegistrationQueueRunner {
                             destinations,
                             destinationType,
                             source.getEventTime());
+            asyncFetchStatus.incrementNumDeletedEntities(sourceIdsToDelete.size());
         }
         return InsertSourcePermission.ALLOWED_FIFO_SUCCESS;
     }

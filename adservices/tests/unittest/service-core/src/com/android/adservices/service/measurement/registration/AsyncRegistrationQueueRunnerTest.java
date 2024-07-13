@@ -208,6 +208,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private SourceNoiseHandler mSourceNoiseHandler;
     @Mock private PackageManager mPackageManager;
+    @Mock private AsyncFetchStatus mAsyncFetchStatus;
 
     private static EnrollmentData getEnrollment(String enrollmentId) {
         return new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build();
@@ -677,6 +678,57 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         assertEquals(2, redirectCountCaptor.getValue().getRegistrationRedirectCount());
 
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
+    }
+
+    @Test
+    public void runAsyncRegistrationQueueWorker_appSourceFifoDeletion_logsMetrics()
+            throws DatastoreException {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
+        Answer<Optional<Source>> answerAsyncSourceFetcher =
+                invocation -> {
+                    AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    return Optional.of(mMockedSource);
+                };
+        doAnswer(answerAsyncSourceFetcher)
+                .when(mAsyncSourceFetcher)
+                .fetchSource(any(), any(), any());
+
+        when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
+        KeyValueData redirectCount = getKeyValueDataRedirectCount();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
+        doAnswer(
+                        invocation -> {
+                            AsyncFetchStatus asyncFetchStatus = invocation.getArgument(4);
+                            // Increment the value to => 2+2 = 4
+                            asyncFetchStatus.incrementNumDeletedEntities(2);
+                            asyncFetchStatus.incrementNumDeletedEntities(2);
+                            return InsertSourcePermission.ALLOWED_FIFO_SUCCESS;
+                        })
+                .when(asyncRegistrationQueueRunner)
+                .isSourceAllowedToInsert(eq(mMockedSource), any(), anyInt(), any(), any());
+
+        // Execution
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+
+        // Assertions
+        assertEquals(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
+        verify(mAsyncSourceFetcher, times(1))
+                .fetchSource(any(AsyncRegistration.class), any(), any());
+        verify(mMeasurementDao, times(1)).insertSource(any(Source.class));
+
+        verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
+
+        ArgumentCaptor<MeasurementRegistrationResponseStats> statsArgumentCaptor =
+                ArgumentCaptor.forClass(MeasurementRegistrationResponseStats.class);
+        verify(mLogger, times(1))
+                .logMeasurementRegistrationsResponseSize(statsArgumentCaptor.capture());
+        assertEquals(4, statsArgumentCaptor.getValue().getNumDeletedEntities());
     }
 
     @Test
@@ -2794,7 +2846,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         SOURCE_1.getPublisher(),
                         EventSurfaceType.APP,
                         mMeasurementDao,
-                        mDebugReportApi);
+                        mAsyncFetchStatus);
 
         // Assertions
         assertTrue(isSourceAllowedToInsert.isAllowed());
@@ -2833,7 +2885,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
 
         // Assert
@@ -2882,7 +2934,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(1))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
@@ -2960,7 +3012,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(1))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
@@ -3062,7 +3114,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(2))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
@@ -3166,7 +3218,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(2))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
@@ -3250,7 +3302,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(2))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
@@ -3312,7 +3364,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(1))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
@@ -3351,7 +3403,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(1))
                 .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
@@ -3382,7 +3434,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(1)).getNumSourcesPerPublisher(any(), anyInt());
         verify(mMeasurementDao, never())
@@ -3430,7 +3482,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(2))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
@@ -3469,7 +3521,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mMeasurementDao, times(2))
@@ -3508,7 +3560,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
 
         verify(mMeasurementDao, times(2))
@@ -3540,7 +3592,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -3563,7 +3615,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -3742,7 +3794,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 testSource.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -3806,7 +3858,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 testSource.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -3874,7 +3926,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 testSource.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -3957,7 +4009,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 testSource.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -4045,7 +4097,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 testSource.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -4095,7 +4147,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 testSource.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -4144,7 +4196,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 testSource.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -4207,7 +4259,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 testSource.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -4271,7 +4323,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 testSource.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -4333,7 +4385,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 testSource.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -4392,7 +4444,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 testSource.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
     }
 
@@ -4415,7 +4467,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 NAVIGATION_SOURCE.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(1)).countNavigationSourcesPerReportingOrigin(any(), any());
     }
@@ -4477,7 +4529,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         sourceToInsert.getPublisher(),
                         EventSurfaceType.APP,
                         mMeasurementDao,
-                        mDebugReportApi));
+                        mAsyncFetchStatus));
 
         // Verification
         ArgumentCaptor<List<String>> updatedStatus = ArgumentCaptor.forClass(List.class);
@@ -4500,6 +4552,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         deletedFakeEventReportSources.capture(), eq(sourceToInsert.getEventTime()));
         assertThat(deletedFakeEventReportSources.getAllValues())
                 .containsExactlyElementsIn(sourcesToDelete);
+        verify(mAsyncFetchStatus, times(2)).incrementNumDeletedEntities(1);
     }
 
     @Test
@@ -4558,7 +4611,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         sourceToInsert.getPublisher(),
                         EventSurfaceType.APP,
                         mMeasurementDao,
-                        mDebugReportApi));
+                        mAsyncFetchStatus));
 
         // Verification
         ArgumentCaptor<List<String>> updatedStatus = ArgumentCaptor.forClass(List.class);
@@ -4578,6 +4631,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         deletedFakeEventReportSources.capture(), eq(sourceToInsert.getEventTime()));
         assertThat(deletedFakeEventReportSources.getValue())
                 .containsExactlyElementsIn(sourceIdsWithLruDestination);
+        verify(mAsyncFetchStatus, times(1)).incrementNumDeletedEntities(2);
     }
 
     @Test
@@ -4658,7 +4712,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         sourceToInsert.getPublisher(),
                         EventSurfaceType.APP,
                         mMeasurementDao,
-                        mDebugReportApi));
+                        mAsyncFetchStatus));
 
         // Verification
         ArgumentCaptor<List<String>> updatedStatus = ArgumentCaptor.forClass(List.class);
@@ -4685,6 +4739,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .containsExactlyElementsIn(appDestSourceIdsWithLruDestination);
         assertThat(deletedFakeEventReportSources.getAllValues().get(1))
                 .containsExactlyElementsIn(webDestSourceIdsWithLruDestination);
+        verify(mAsyncFetchStatus, times(2)).incrementNumDeletedEntities(2);
     }
 
     @Test
@@ -4765,7 +4820,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         sourceToInsert.getPublisher(),
                         EventSurfaceType.APP,
                         mMeasurementDao,
-                        mDebugReportApi));
+                        mAsyncFetchStatus));
 
         // Verification
         ArgumentCaptor<List<String>> updatedStatus = ArgumentCaptor.forClass(List.class);
@@ -4787,6 +4842,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .containsExactlyElementsIn(appDestSourceIdsWithLruDestination);
         assertThat(deletedFakeEventReportSources.getAllValues().get(1))
                 .containsExactlyElementsIn(webDestSourceIdsWithLruDestination);
+        verify(mAsyncFetchStatus, times(2)).incrementNumDeletedEntities(2);
     }
 
     @Test
@@ -4844,7 +4900,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         sourceToInsert.getPublisher(),
                         EventSurfaceType.WEB,
                         mMeasurementDao,
-                        mDebugReportApi));
+                        mAsyncFetchStatus));
     }
 
     @Test
@@ -4897,7 +4953,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         sourceToInsert.getPublisher(),
                         EventSurfaceType.APP,
                         mMeasurementDao,
-                        mDebugReportApi));
+                        mAsyncFetchStatus));
 
         // Verify
         verify(mMeasurementDao, never()).updateSourceStatus(anyList(), anyInt());
@@ -4905,6 +4961,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .deletePendingAggregateReportsAndAttributionsForSources(anyList());
         verify(mMeasurementDao, never())
                 .deleteFutureFakeEventReportsForSources(anyList(), anyLong());
+        verify(mAsyncFetchStatus, never()).incrementNumDeletedEntities(anyInt());
     }
 
     @Test
@@ -4962,7 +5019,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         sourceToInsert.getPublisher(),
                         EventSurfaceType.APP,
                         mMeasurementDao,
-                        mDebugReportApi));
+                        mAsyncFetchStatus));
 
         // Verify
         verify(mMeasurementDao, never()).updateSourceStatus(anyList(), anyInt());
@@ -4970,6 +5027,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .deletePendingAggregateReportsAndAttributionsForSources(anyList());
         verify(mMeasurementDao, never())
                 .deleteFutureFakeEventReportsForSources(anyList(), anyLong());
+        verify(mAsyncFetchStatus, never()).incrementNumDeletedEntities(anyInt());
     }
 
     @Test
@@ -5056,7 +5114,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         sourceToInsert.getPublisher(),
                         EventSurfaceType.APP,
                         mMeasurementDao,
-                        mDebugReportApi));
+                        mAsyncFetchStatus));
 
         // Verification
         verify(mMeasurementDao, never()).updateSourceStatus(anyCollection(), anyInt());
@@ -5067,6 +5125,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         verify(mDebugReportApi, times(1))
                 .scheduleSourceDestinationLimitDebugReport(
                         eq(sourceToInsert), eq(String.valueOf(fifoLimit)), any());
+        verify(mAsyncFetchStatus, never()).incrementNumDeletedEntities(anyInt());
     }
 
     @Test
@@ -5095,7 +5154,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 SOURCE_1.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, never()).countNavigationSourcesPerReportingOrigin(any(), any());
     }
@@ -5143,7 +5202,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 source.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
 
         // Assertions
@@ -5203,7 +5262,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 source.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(2))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
@@ -5263,7 +5322,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 source.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(2))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
@@ -5321,7 +5380,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 source.getPublisher(),
                                 EventSurfaceType.APP,
                                 mMeasurementDao,
-                                mDebugReportApi)
+                                mAsyncFetchStatus)
                         .isAllowed());
 
         // Assertions
@@ -5439,7 +5498,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
 
         // Execution
-        asyncRegistrationQueueRunner.storeSource(SOURCE_1, validAsyncRegistration, mMeasurementDao);
+        asyncRegistrationQueueRunner.storeSource(
+                SOURCE_1, validAsyncRegistration, mMeasurementDao, mAsyncFetchStatus);
 
         // Assertions
         ArgumentCaptor<Map<String, String>> additionalParamsCaptor =
@@ -5469,7 +5529,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
 
         // Execution
-        asyncRegistrationQueueRunner.storeSource(SOURCE_1, validAsyncRegistration, mMeasurementDao);
+        asyncRegistrationQueueRunner.storeSource(
+                SOURCE_1, validAsyncRegistration, mMeasurementDao, mAsyncFetchStatus);
 
         // Assertions
         ArgumentCaptor<Map<String, String>> additionalParamsCaptor =
@@ -5494,7 +5555,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
 
         // Execution
-        asyncRegistrationQueueRunner.storeSource(SOURCE_1, validAsyncRegistration, mMeasurementDao);
+        asyncRegistrationQueueRunner.storeSource(
+                SOURCE_1, validAsyncRegistration, mMeasurementDao, mAsyncFetchStatus);
 
         // Assertions
         ArgumentCaptor<Map<String, String>> additionalParamsCaptor =
