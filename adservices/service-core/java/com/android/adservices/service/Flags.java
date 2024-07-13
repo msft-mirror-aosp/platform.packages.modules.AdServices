@@ -5506,6 +5506,14 @@ public interface Flags extends ModuleSharedFlags {
         return PAS_EXTENDED_METRICS_ENABLED;
     }
 
+    /** Protected app signals API product metrics v1 flag. */
+    @FeatureFlag boolean PAS_PRODUCT_METRICS_V1_ENABLED = false;
+
+    /** Returns whether to enable PAS API product metrics v1. */
+    default boolean getPasProductMetricsV1Enabled() {
+        return PAS_PRODUCT_METRICS_V1_ENABLED;
+    }
+
     /** Default enablement for applying SPE (Scheduling Policy Engine) to pilot jobs. */
     @FeatureFlag boolean DEFAULT_SPE_ON_PILOT_JOBS_ENABLED = false;
 

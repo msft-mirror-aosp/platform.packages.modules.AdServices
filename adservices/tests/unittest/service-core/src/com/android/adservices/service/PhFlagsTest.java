@@ -493,6 +493,7 @@ import static com.android.adservices.service.Flags.MSMT_REGISTRATION_COBALT_LOGG
 import static com.android.adservices.service.Flags.MSMT_REPORTING_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
 import static com.android.adservices.service.Flags.PAS_EXTENDED_METRICS_ENABLED;
+import static com.android.adservices.service.Flags.PAS_PRODUCT_METRICS_V1_ENABLED;
 import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_CLEANUP_ENABLED;
@@ -988,6 +989,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DIS
 import static com.android.adservices.service.FlagsConstants.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_PRODUCT_METRICS_V1_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
@@ -5475,6 +5477,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_PAS_EXTENDED_METRICS_ENABLED,
                 PAS_EXTENDED_METRICS_ENABLED,
                 Flags::getPasExtendedMetricsEnabled);
+    }
+
+    @Test
+    public void testGetPasProductMetricsV1Enabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PAS_PRODUCT_METRICS_V1_ENABLED,
+                PAS_PRODUCT_METRICS_V1_ENABLED,
+                Flags::getPasProductMetricsV1Enabled);
     }
 
     @Test

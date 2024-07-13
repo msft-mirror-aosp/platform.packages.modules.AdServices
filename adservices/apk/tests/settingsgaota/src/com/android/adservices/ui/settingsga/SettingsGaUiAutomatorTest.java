@@ -18,6 +18,7 @@ package com.android.adservices.ui.settingsga;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
@@ -26,6 +27,7 @@ import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.SettingsTestUtil;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 @DisableGlobalKillSwitch
@@ -35,6 +37,9 @@ import org.junit.Test;
 @SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
 @SetFlagEnabled(KEY_GA_UX_FEATURE_ENABLED)
 public final class SettingsGaUiAutomatorTest extends AdServicesUiTestCase {
+    @Rule(order = 11)
+    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
+
     @Test
     public void settingsRemoveMainToggleAndMeasurementEntryTest() {
         SettingsTestUtil.settingsRemoveMainToggleAndMeasurementEntryTestUtil(mDevice);
@@ -42,51 +47,51 @@ public final class SettingsGaUiAutomatorTest extends AdServicesUiTestCase {
 
     @Test
     public void measurementDialogTest() throws Exception {
-        SettingsTestUtil.measurementDialogTestUtil(mDevice);
+        SettingsTestUtil.measurementDialogTestUtil(mDevice, flags);
     }
 
     @Test
     public void topicsToggleTest() throws Exception {
-        SettingsTestUtil.topicsToggleTestUtil(mDevice);
+        SettingsTestUtil.topicsToggleTestUtil(mDevice, flags);
     }
 
     @Test
     public void fledgeToggleTest() throws Exception {
-        SettingsTestUtil.fledgeToggleTestUtil(mDevice);
+        SettingsTestUtil.fledgeToggleTestUtil(mDevice, flags);
     }
 
     @Test
     public void measurementToggleTest() throws Exception {
-        SettingsTestUtil.measurementToggleTestUtil(mDevice);
+        SettingsTestUtil.measurementToggleTestUtil(mDevice, flags);
     }
 
     @Test
     public void topicsSubtitleTest() {
-        SettingsTestUtil.topicsSubtitleTestUtil(mDevice);
+        SettingsTestUtil.topicsSubtitleTestUtil(mDevice, flags);
     }
 
     @Test
     public void appsSubtitleTest() {
-        SettingsTestUtil.appsSubtitleTestUtil(mDevice);
+        SettingsTestUtil.appsSubtitleTestUtil(mDevice, flags);
     }
 
     @Test
     public void measurementSubtitleTest() {
-        SettingsTestUtil.measurementSubtitleTestUtil(mDevice);
+        SettingsTestUtil.measurementSubtitleTestUtil(mDevice, flags);
     }
 
     @Test
     public void topicsToggleDialogTest() {
-        SettingsTestUtil.topicsToggleDialogTestUtil(mDevice);
+        SettingsTestUtil.topicsToggleDialogTestUtil(mDevice, flags);
     }
 
     @Test
     public void appsToggleDialogTest() {
-        SettingsTestUtil.appsToggleDialogTestUtil(mDevice);
+        SettingsTestUtil.appsToggleDialogTestUtil(mDevice, flags);
     }
 
     @Test
     public void measurementToggleDialogTest() {
-        SettingsTestUtil.measurementToggleDialogTestUtil(mDevice);
+        SettingsTestUtil.measurementToggleDialogTestUtil(mDevice, flags);
     }
 }

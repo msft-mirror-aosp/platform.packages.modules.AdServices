@@ -625,6 +625,11 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetPasProductMetricsV1Enabled() {
+        testFeatureFlag("PAS_PRODUCT_METRICS_V1_ENABLED", Flags::getPasProductMetricsV1Enabled);
+    }
+
+    @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
         testMsmtFeatureFlagBackedByLegacyKillSwitchAndGuardedByMsmtEnabled(
                 "getMeasurementAttributionFallbackJobEnabled()",

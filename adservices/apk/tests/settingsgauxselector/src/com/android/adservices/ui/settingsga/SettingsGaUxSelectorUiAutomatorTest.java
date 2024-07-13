@@ -58,59 +58,59 @@ public final class SettingsGaUxSelectorUiAutomatorTest extends AdServicesUiTestC
     @Test
     @FlakyTest(bugId = 299829948)
     public void measurementDialogTest() throws Exception {
-        SettingsTestUtil.measurementDialogTestUtil(mDevice);
+        SettingsTestUtil.measurementDialogTestUtil(mDevice, flags);
     }
 
     @Test
     public void topicsToggleTest() throws Exception {
-        SettingsTestUtil.topicsToggleTestUtil(mDevice);
+        SettingsTestUtil.topicsToggleTestUtil(mDevice, flags);
     }
 
     @Test
     public void fledgeToggleTest() throws Exception {
-        SettingsTestUtil.fledgeToggleTestUtil(mDevice);
+        SettingsTestUtil.fledgeToggleTestUtil(mDevice, flags);
     }
 
     @Test
     public void measurementToggleTest() throws Exception {
-        SettingsTestUtil.measurementToggleTestUtil(mDevice);
+        SettingsTestUtil.measurementToggleTestUtil(mDevice, flags);
     }
 
     @Test
     public void topicsSubtitleTest() {
-        SettingsTestUtil.topicsSubtitleTestUtil(mDevice);
+        SettingsTestUtil.topicsSubtitleTestUtil(mDevice, flags);
     }
 
     @Test
     public void appsSubtitleTest() {
-        SettingsTestUtil.appsSubtitleTestUtil(mDevice);
+        SettingsTestUtil.appsSubtitleTestUtil(mDevice, flags);
     }
 
     @Test
     public void measurementSubtitleTest() {
-        SettingsTestUtil.measurementSubtitleTestUtil(mDevice);
+        SettingsTestUtil.measurementSubtitleTestUtil(mDevice, flags);
     }
 
     @Test
     @SetFlagEnabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
     public void topicsToggleDialogTest() {
-        SettingsTestUtil.topicsToggleDialogTestUtil(mDevice);
+        SettingsTestUtil.topicsToggleDialogTestUtil(mDevice, flags);
     }
 
     @Test
     @FlakyTest(bugId = 299153376)
     public void appsToggleDialogTest() {
-        SettingsTestUtil.appsToggleDialogTestUtil(mDevice);
+        SettingsTestUtil.appsToggleDialogTestUtil(mDevice, flags);
     }
 
     @Test
     @FlakyTest(bugId = 301779357)
     public void measurementToggleDialogTest() {
-        SettingsTestUtil.measurementToggleDialogTestUtil(mDevice);
+        SettingsTestUtil.measurementToggleDialogTestUtil(mDevice, flags);
     }
 
     @Test
     public void fledgeViewTextPasEnabledTest() throws Exception {
-        SettingsTestUtil.fledgeViewTextPasEnabledTest(mDevice);
+        SettingsTestUtil.fledgeViewTextPasEnabledTest(mDevice, flags);
     }
 }

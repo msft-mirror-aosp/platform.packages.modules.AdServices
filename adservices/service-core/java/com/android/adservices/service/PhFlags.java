@@ -114,6 +114,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_TRIG
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_PRODUCT_METRICS_V1_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
@@ -6751,6 +6752,12 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getPasExtendedMetricsEnabled() {
         return getDeviceConfigFlag(KEY_PAS_EXTENDED_METRICS_ENABLED, PAS_EXTENDED_METRICS_ENABLED);
+    }
+
+    @Override
+    public boolean getPasProductMetricsV1Enabled() {
+        return getDeviceConfigFlag(
+                KEY_PAS_PRODUCT_METRICS_V1_ENABLED, PAS_PRODUCT_METRICS_V1_ENABLED);
     }
 
     @Override

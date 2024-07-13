@@ -1519,6 +1519,10 @@ public final class FlagsConstants {
     /** Key for PAS API extended metrics flag. */
     public static final String KEY_PAS_EXTENDED_METRICS_ENABLED = "pas_extended_metrics_enabled";
 
+    /** Key for PAS API product metrics v1 flag. */
+    public static final String KEY_PAS_PRODUCT_METRICS_V1_ENABLED =
+            "pas_product_metrics_v1_enabled";
+
     /** Key for enabling SPE on pilot background jobs. */
     public static final String KEY_SPE_ON_PILOT_JOBS_ENABLED = "spe_on_pilot_jobs_enabled";
 
