@@ -27,8 +27,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 
@@ -42,10 +42,21 @@ import java.util.concurrent.ExecutionException;
 /** End-to-end test for report impression. */
 @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
-public final class AdSelectionReportingTest extends FledgeScenarioTest {
+public final class AdSelectionReportingTest extends FledgeDebuggableScenarioTest {
 
     @Test
     public void testReportImpression_defaultAdSelection_happyPath() throws Exception {
+        testReportImpression_defaultAdSelection_helper(mAdSelectionClient);
+    }
+
+    @Test
+    public void testReportImpression_defaultAdSelection_happyPath_usingGetMethod()
+            throws Exception {
+        testReportImpression_defaultAdSelection_helper(mAdSelectionClientUsingGetMethod);
+    }
+
+    private void testReportImpression_defaultAdSelection_helper(AdSelectionClient adSelectionClient)
+            throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -56,7 +67,9 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
         try {
             joinCustomAudience(SHOES_CA);
             doReportImpression(
-                    doSelectAds(adSelectionConfig).getAdSelectionId(), adSelectionConfig);
+                    adSelectionClient,
+                    doSelectAds(adSelectionConfig).getAdSelectionId(),
+                    adSelectionConfig);
         } finally {
             leaveCustomAudience(SHOES_CA);
         }
@@ -146,7 +159,19 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
     }
 
     @Test
-    public void testReportImpression_registerBuyerAndSellerBeacons_happyPath() throws Exception {
+    public void testReportEvent_registerBuyerAndSellerBeacons_happyPath() throws Exception {
+        testReportEvent_registerBuyerAndSellerBeacons_happyPath_helper(mAdSelectionClient);
+    }
+
+    @Test
+    public void testReportEvent_registerBuyerAndSellerBeacons_happyPath_usingGetMethod()
+            throws Exception {
+        testReportEvent_registerBuyerAndSellerBeacons_happyPath_helper(
+                mAdSelectionClientUsingGetMethod);
+    }
+
+    public void testReportEvent_registerBuyerAndSellerBeacons_happyPath_helper(
+            AdSelectionClient adSelectionClient) throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -155,9 +180,9 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
 
         try {
             joinCustomAudience(SHOES_CA);
-            long adSelectionId = doSelectAds(config).getAdSelectionId();
-            doReportImpression(adSelectionId, config);
-            doReportEvent(adSelectionId, "click");
+            long adSelectionId = doSelectAds(adSelectionClient, config).getAdSelectionId();
+            doReportImpression(adSelectionClient, adSelectionId, config);
+            doReportEvent(adSelectionClient, adSelectionId, "click");
         } finally {
             leaveCustomAudience(SHOES_CA);
         }
@@ -167,8 +192,7 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
     }
 
     @Test
-    public void testReportImpression_failToRegisterBuyerBeacon_sellerBeaconSucceeds()
-            throws Exception {
+    public void testReportEvent_failToRegisterBuyerBeacon_sellerBeaconSucceeds() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -191,8 +215,7 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
     }
 
     @Test
-    public void testReportImpression_failToRegisterSellerBeacon_buyerBeaconSucceeds()
-            throws Exception {
+    public void testReportEvent_failToRegisterSellerBeacon_buyerBeaconSucceeds() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -215,8 +238,7 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
     }
 
     @Test
-    public void testReportImpression_withMismatchedSellerAdTech_buyerStillCalled()
-            throws Exception {
+    public void testReportEvent_withMismatchedSellerAdTech_buyerStillCalled() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -239,8 +261,7 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
     }
 
     @Test
-    public void testReportImpression_withMismatchedBuyerAdTech_sellerStillCalled()
-            throws Exception {
+    public void testReportEvent_withMismatchedBuyerAdTech_sellerStillCalled() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -263,8 +284,7 @@ public final class AdSelectionReportingTest extends FledgeScenarioTest {
     }
 
     @Test
-    public void testReportImpression_withBuyerBeacon_onlyReportsForViewInteraction()
-            throws Exception {
+    public void testReportEvent_withBuyerBeacon_onlyReportsForViewInteraction() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(

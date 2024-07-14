@@ -59,7 +59,7 @@ import java.util.concurrent.TimeUnit;
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @EnableDebugFlag(KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED)
 @RequiresSdkLevelAtLeastT(reason = "Protected App Signals is enabled for T+")
-public class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggableCtsTest {
+public final class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggableCtsTest {
 
     private static final String STATUS_FINISHED = "FINISHED";
     private static final int PAS_API_TIMEOUT_SEC = 10;
