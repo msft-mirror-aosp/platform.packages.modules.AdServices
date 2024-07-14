@@ -247,6 +247,9 @@
   ],
   "sdksandbox-postsubmit": [
     {
+      "name": "CtsAccelerationTestCases"
+    },
+    {
       "name": "CtsAnimationTestCases"
     },
     {
@@ -302,6 +305,9 @@
     },
     {
       "name": "CtsOsTestCases"
+    },
+    {
+      "name": "CtsProviderTestCases"
     },
     {
       "name": "CtsTextTestCases"

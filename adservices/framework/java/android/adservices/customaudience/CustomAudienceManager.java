@@ -335,6 +335,10 @@ public class CustomAudienceManager {
      * batched and queued together to preserve system resources, thus exact delay time is not
      * guaranteed.
      *
+     * <p>If the provided {@code shouldReplacePendingUpdates} is true, all the currently scheduled
+     * pending updates matching the {@code owner} i.e. calling app and {@code buyer} inferred from
+     * Update Uri will be deleted.
+     *
      * <p>In order to conserve system resources the API will make and update request only if the
      * following constraints are satisfied
      *
@@ -480,6 +484,9 @@ public class CustomAudienceManager {
      *
      * <p>This call fails with {@link LimitExceededException} if the calling package exceeds the
      * allowed rate limits and is throttled.
+     *
+     * <p>This call fails with {@link IllegalStateException} if the provided {@code
+     * shouldReplacePendingUpdates} is false, and there exists a pending update in the queue.
      */
     @FlaggedApi(FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)

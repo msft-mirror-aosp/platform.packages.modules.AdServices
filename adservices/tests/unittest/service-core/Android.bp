@@ -184,6 +184,7 @@ android_test {
     instrumentation_for: "AdServicesApk",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline-adservices-mdd.xml",
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
