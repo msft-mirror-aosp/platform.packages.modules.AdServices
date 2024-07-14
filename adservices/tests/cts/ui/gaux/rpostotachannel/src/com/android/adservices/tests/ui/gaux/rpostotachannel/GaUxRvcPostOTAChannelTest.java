@@ -61,14 +61,14 @@ public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannel
     public void setUp() throws Exception {
         mTestName = getTestName();
 
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.enableRvc();
-        UiUtils.enableRvcNotification();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.enableRvc(flags);
+        UiUtils.enableRvcNotification(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -104,7 +104,7 @@ public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannel
      */
     @Test
     public void testU18ToGAForRPostOTA_optInMsmt() throws Exception {
-        UiUtils.setAsRowDevice();
+        UiUtils.setAsRowDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -123,11 +123,11 @@ public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannel
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.RVC_UX);
 
         // Mock user is ota from Rvc by enabling consent manager ota debug mode
-        UiUtils.setConsentManagerOtaDebugMode();
+        UiUtils.setConsentManagerOtaDebugMode(flags);
         // Enable consent manager debug mode to mock user opt-in msmt API
-        UiUtils.setConsentManagerDebugMode();
+        UiUtils.setConsentManagerDebugMode(flags);
         // Disable RVC UX to mock user is not eligible RVC UX post OTA
-        UiUtils.disableRvc();
+        UiUtils.disableRvc(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
@@ -144,10 +144,11 @@ public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannel
         mDevice.pressHome();
 
         // User should be able to open GA UX after notification
-        UiUtils.resetConsentManagerDebugMode();
+        UiUtils.resetConsentManagerDebugMode(flags);
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 UiConstants.UX.GA_UX,
                 /* isOptIn= */ true,
                 /* isFlipConsent= */ true,
@@ -160,7 +161,7 @@ public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannel
      */
     @Test
     public void testU18ToGAForRPostOTA_optOutMsmt() throws Exception {
-        UiUtils.setAsRowDevice();
+        UiUtils.setAsRowDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -182,6 +183,7 @@ public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannel
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 UiConstants.UX.RVC_UX,
                 /* isOptIn= */ true,
                 /* isFlipConsent= */ true,
@@ -189,9 +191,9 @@ public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannel
         mDevice.pressHome();
 
         // Mock user is ota from Rvc by enabling consent manager ota debug mode
-        UiUtils.setConsentManagerOtaDebugMode();
+        UiUtils.setConsentManagerOtaDebugMode(flags);
         // Disable RVC UX to mock user is not eligible RVC UX post OTA
-        UiUtils.disableRvc();
+        UiUtils.disableRvc(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
@@ -204,6 +206,7 @@ public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannel
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 UiConstants.UX.GA_UX,
                 /* isOptIn= */ true,
                 /* isFlipConsent= */ true,

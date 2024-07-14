@@ -72,9 +72,9 @@ public final class ExtGaUxDebugChannelApiOffTest extends AdExtServicesGaUxDebugC
 
         // consent debug mode is turned on for this test class as we only care about the
         // first trigger (API call).
-        UiUtils.enableConsentDebugMode();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableConsentDebugMode(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice.pressHome();
     }

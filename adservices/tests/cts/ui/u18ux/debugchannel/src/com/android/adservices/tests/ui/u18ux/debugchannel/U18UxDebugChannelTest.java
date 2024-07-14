@@ -58,20 +58,20 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
     public void setUp() throws Exception {
         mTestName = getTestName();
 
-        UiUtils.setBinderTimeout();
+        UiUtils.setBinderTimeout(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         UiUtils.enableNotificationPermission();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         sCommonManager = AdServicesCommonManager.get(sContext);
 
-        UiUtils.enableConsentDebugMode();
+        UiUtils.enableConsentDebugMode(flags);
         mCallback =
                 new OutcomeReceiver<>() {
                     @Override
@@ -99,8 +99,8 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testEntrypointDisabled() throws Exception {
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -125,8 +125,8 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testU18AdultBothTrueAdIdEnabled() throws Exception {
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -151,8 +151,8 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testU18TrueAdultFalseAdIdEnabled() throws Exception {
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -177,8 +177,8 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testU18AdultBothTrueAdIdDisabled() throws Exception {
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -203,8 +203,8 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testU18TrueAdultFalseAdIdDisabled() throws Exception {
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -229,8 +229,8 @@ public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsR
 
     @Test
     public void testU18AdultBothFalseAdIdDisabled() throws Exception {
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 

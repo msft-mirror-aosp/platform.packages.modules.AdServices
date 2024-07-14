@@ -62,14 +62,14 @@ public final class GaUxGraduationChannelTest extends AdServicesGaUxGraduationCha
     public void setUp() throws Exception {
         mTestName = getTestName();
 
-        UiUtils.setBinderTimeout();
+        UiUtils.setBinderTimeout(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -90,7 +90,7 @@ public final class GaUxGraduationChannelTest extends AdServicesGaUxGraduationCha
                 };
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
@@ -132,8 +132,8 @@ public final class GaUxGraduationChannelTest extends AdServicesGaUxGraduationCha
      */
     @Test
     public void testRowU18ToGaAdIdEnabled() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableU18();
+        UiUtils.setAsRowDevice(flags);
+        UiUtils.enableU18(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -150,7 +150,7 @@ public final class GaUxGraduationChannelTest extends AdServicesGaUxGraduationCha
         AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.U18_UX);
 
-        UiUtils.enableGa();
+        UiUtils.enableGa(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
         AdServicesStates adultStates =
                 new AdServicesStates.Builder()
@@ -173,8 +173,8 @@ public final class GaUxGraduationChannelTest extends AdServicesGaUxGraduationCha
      */
     @Test
     public void testRowU18ToBetaAdIdEnabled() throws Exception {
-        UiUtils.setAsRowDevice();
-        UiUtils.enableU18();
+        UiUtils.setAsRowDevice(flags);
+        UiUtils.enableU18(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -191,7 +191,7 @@ public final class GaUxGraduationChannelTest extends AdServicesGaUxGraduationCha
         AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.U18_UX);
 
-        UiUtils.enableBeta();
+        UiUtils.enableBeta(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
         AdServicesStates adultStates =
                 new AdServicesStates.Builder()

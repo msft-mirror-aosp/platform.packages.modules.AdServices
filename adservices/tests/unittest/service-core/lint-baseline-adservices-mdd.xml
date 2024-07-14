@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        new DbHelper(sContext, DATABASE_NAME_FOR_TEST, DbHelper.DATABASE_VERSION_7);"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="69"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        new MeasurementDbHelper("
+        errorLine2="                        ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="79"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        new SharedDbHelper("
+        errorLine2="                        ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="93"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mFileDownloader = MobileDataDownloadFactory.getFileDownloader(mMockFlags, mFileStorage);"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="194"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        Optional&lt;Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);"
+        errorLine2="                                                               ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="605"
+            column="64"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        Optional&lt;Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);"
+        errorLine2="                                                               ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="613"
+            column="64"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getFileDownloader(flags, fileStorage);"
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="776"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setControlExecutor(MobileDataDownloadFactory.getControlExecutor())"
+        errorLine2="                                                              ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="794"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setLoggerOptional(MobileDataDownloadFactory.getMddLogger(flags))"
+        errorLine2="                                                             ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="799"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getEncryptionKeysManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="813"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getMeasurementManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="840"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getTopicsManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="863"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getUiOtaResourcesManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="883"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getCobaltRegistryManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="903"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="950"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                new EncryptionDataDownloadManager(mMockFlags, encryptionKeyDao, mMockClock);"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="952"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper, mMockFlags);"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="971"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                new EnrollmentDataDownloadManager(mContext, mMockFlags);"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="978"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="980"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionCode` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionName` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="HardcodedDebugMode"
+        message="Avoid hardcoding the debug mode; leaving it out allows debug and release builds to automatically assign one"
+        errorLine1="        android:debuggable=&quot;true&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="56"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="QueryAllPackagesPermission"
+        message="A `&lt;queries>` declaration should generally be used instead of QUERY_ALL_PACKAGES; see https://g.co/dev/packagevisibility for details"
+        errorLine1="    &lt;uses-permission android:name=&quot;android.permission.QUERY_ALL_PACKAGES&quot; />"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="33"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="Recycle"
+        message="This `Cursor` should be freed up after use with `#close()`"
+        errorLine1="        Cursor cursor = db.rawQuery(query, null);"
+        errorLine2="                           ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="120"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="Recycle"
+        message="This `Cursor` should be freed up after use with `#close()`"
+        errorLine1="        Cursor cursor = db.rawQuery(query, null);"
+        errorLine2="                           ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="136"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="Recycle"
+        message="This `Cursor` should be freed up after use with `#close()`"
+        errorLine1="        Cursor cursor = db.rawQuery(query, null);"
+        errorLine2="                           ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="142"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    private static final Context sContext = ApplicationProvider.getApplicationContext();"
+        errorLine2="            ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="41"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        message="Should explicitly set `android:icon`, there is no default"
+        errorLine1="    &lt;application"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="54"
+            column="6"/>
+    </issue>
+
+</issues>

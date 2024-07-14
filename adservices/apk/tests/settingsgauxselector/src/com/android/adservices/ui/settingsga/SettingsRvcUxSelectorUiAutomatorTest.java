@@ -56,21 +56,21 @@ public final class SettingsRvcUxSelectorUiAutomatorTest extends AdServicesUiTest
 
     @Test
     public void measurementDialogTest() throws Exception {
-        SettingsTestUtil.measurementDialogTestUtil(mDevice);
+        SettingsTestUtil.measurementDialogTestUtil(mDevice, flags);
     }
 
     @Test
     public void measurementToggleTest() throws Exception {
-        SettingsTestUtil.measurementToggleTestUtil(mDevice);
+        SettingsTestUtil.measurementToggleTestUtil(mDevice, flags);
     }
 
     @Test
     public void measurementSubtitleTest() {
-        SettingsTestUtil.measurementSubtitleTestUtil(mDevice);
+        SettingsTestUtil.measurementSubtitleTestUtil(mDevice, flags);
     }
 
     @Test
     public void measurementToggleDialogTest() {
-        SettingsTestUtil.measurementToggleDialogTestUtil(mDevice);
+        SettingsTestUtil.measurementToggleDialogTestUtil(mDevice, flags);
     }
 }

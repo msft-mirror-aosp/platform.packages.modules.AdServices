@@ -65,7 +65,7 @@ public final class ExtGaUxDebugChannelEuTest extends AdExtServicesGaUxDebugChann
     public void setUp() throws Exception {
         mTestName = getTestName();
 
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -75,9 +75,9 @@ public final class ExtGaUxDebugChannelEuTest extends AdExtServicesGaUxDebugChann
 
         // consent debug mode is turned on for this test class as we only care about the
         // first trigger (API call).
-        UiUtils.enableConsentDebugMode();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableConsentDebugMode(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mCallback =
                 new OutcomeReceiver<>() {
