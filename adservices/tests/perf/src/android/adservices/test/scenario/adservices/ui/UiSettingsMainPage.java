@@ -19,7 +19,6 @@ package android.adservices.test.scenario.adservices.ui;
 import android.content.Context;
 import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
-import android.os.Trace;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -55,9 +54,9 @@ public class UiSettingsMainPage {
 
     @Before
     public void setup() throws Exception {
-        UiUtils.setFlipFlow(false);
-        UiUtils.setAsEuDevice();
-        UiUtils.enableGa();
+        UiUtils.setFlipFlow(flags, false);
+        UiUtils.setAsEuDevice(flags);
+        UiUtils.enableGa(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         // Initialize UiDevice instance
@@ -80,6 +79,7 @@ public class UiSettingsMainPage {
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 sDevice,
+                flags,
                 ux,
                 /* isOptIn= */ true,
                 /* isFlipConsent= */ true,

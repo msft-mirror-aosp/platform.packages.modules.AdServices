@@ -131,9 +131,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
     private static final Map<String, String> sApiConfigPhFlags = Map.ofEntries(
             entry(
-                    "rate_limit_max_attributions",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW),
-            entry(
                     "rate_limit_max_attribution_reporting_origins",
                     FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION),
             entry(
@@ -199,7 +196,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
                     "true"),
             entry(
-                    FlagsConstants.KEY_MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT,
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT,
                     "true"),
             entry(
                     FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
@@ -350,7 +347,10 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     mDatastoreManager.runInTransaction(
                             measurementDao ->
                                     mAsyncRegistrationQueueRunner.storeSource(
-                                            maybeSource.get(), asyncRegistration, measurementDao)));
+                                            maybeSource.get(),
+                                            asyncRegistration,
+                                            measurementDao,
+                                            status)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
         }

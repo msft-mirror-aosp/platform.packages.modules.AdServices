@@ -289,12 +289,15 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /* The default value for whether the trigger debugging availability signal is enabled for event
-    reports. */
-    @FeatureFlag boolean MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL = false;
+    or aggregate reports. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL = false;
 
-    /** Returns whether the trigger debugging availability signal is enabled for event reports. */
-    default boolean getMeasurementEnableEventTriggerDebugSignal() {
-        return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
+    /**
+     * Returns whether the trigger debugging availability signal is enabled for event or aggregate
+     * reports.
+     */
+    default boolean getMeasurementEnableTriggerDebugSignal() {
+        return MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL;
     }
 
     /* The default value for whether the trigger debugging availability signal is enabled for event
@@ -679,16 +682,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
     }
 
-    int MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
-
-    /**
-     * Returns maximum attributions per rate limit window. Rate limit unit: (Source Site,
-     * Destination Site, Reporting Site, Window).
-     */
-    default int getMeasurementMaxAttributionPerRateLimitWindow() {
-        return MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
-    }
-
     int MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
 
     /**
@@ -735,8 +728,7 @@ public interface Flags extends ModuleSharedFlags {
      * Returns the maximum number of reporting origins per source site, reporting site,
      * reporting-origin-update-window counted per source registration.
      */
-    default int
-        getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
+    default int getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
         return MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW;
     }
 
@@ -1646,7 +1638,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
-            "https://publickeyservice.pa.gcp.privacysandboxservices.com/.well-known/protected-auction/v1/public-keys";
+            "https://publickeyservice.pa.gcp.privacysandboxservices.com/"
+                    + ".well-known/protected-auction/v1/public-keys";
 
     /** Returns Uri to fetch auction encryption key for fledge ad selection. */
     default String getFledgeAuctionServerAuctionKeyFetchUri() {
@@ -1889,7 +1882,8 @@ public interface Flags extends ModuleSharedFlags {
 
     String FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST =
             "https://publickeyservice-v150"
-                + ".coordinator-a.bas-gcp.pstest.dev/.well-known/protected-auction/v1/public-keys";
+                    + ".coordinator-a.bas-gcp.pstest.dev/"
+                    + ".well-known/protected-auction/v1/public-keys";
 
     default String getFledgeAuctionServerCoordinatorUrlAllowlist() {
         return FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
@@ -1983,7 +1977,8 @@ public interface Flags extends ModuleSharedFlags {
 
     /** MDD Topics API Classifier Manifest Url. Topics classifier v2-3. Build_id = 1467. */
     String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1467/80c34503413cea9ea44cbe94cd38dabc44ea8d70";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1467"
+                    + "/80c34503413cea9ea44cbe94cd38dabc44ea8d70";
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
@@ -2798,7 +2793,8 @@ public interface Flags extends ModuleSharedFlags {
 
     /** Manifest URL for encryption keys file group registered with MDD. */
     String MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/4543/e9d118728752e6a6bfb5d7d8d1520807591f0717";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/4543"
+                    + "/e9d118728752e6a6bfb5d7d8d1520807591f0717";
 
     /** Returns manifest URL for encryption keys file group registered with MDD. */
     default String getMddEncryptionKeysManifestFileUrl() {
@@ -3397,7 +3393,8 @@ public interface Flags extends ModuleSharedFlags {
 
     /** Ui OTA strings manifest file url, used for MDD download. */
     String UI_OTA_STRINGS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1341/95580b00edbd8cbf62bfa0df9ebd79fba1e5b7ca";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1341"
+                    + "/95580b00edbd8cbf62bfa0df9ebd79fba1e5b7ca";
 
     /** UI OTA strings manifest file url. */
     default String getUiOtaStringsManifestFileUrl() {
@@ -4597,14 +4594,14 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     @FeatureFlag
-    boolean MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT = false;
+    boolean MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT = false;
 
     /**
      * Enables separate debug report types for event and aggregate attribution rate limit
      * violations.
      */
-    default boolean getMeasurementEnableSeparateReportTypesForAttributionRateLimit() {
-        return MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
+    default boolean getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit() {
+        return MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
     }
 
     int MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE = 20;
@@ -4763,6 +4760,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether Cobalt registry out of band update feature is enabled. */
     default boolean getCobaltRegistryOutOfBandUpdateEnabled() {
         return COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
+    }
+
+    /** MDD Cobalt registry manifest url. */
+    String MDD_COBALT_REGISTRY_MANIFEST_FILE_URL = "";
+
+    /** Returns MDD Cobalt registry manifest url. */
+    default String getMddCobaltRegistryManifestFileUrl() {
+        return MDD_COBALT_REGISTRY_MANIFEST_FILE_URL;
     }
 
     /**
@@ -5499,6 +5504,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether the PAS API extended metrics is enabled. */
     default boolean getPasExtendedMetricsEnabled() {
         return PAS_EXTENDED_METRICS_ENABLED;
+    }
+
+    /** Protected app signals API product metrics v1 flag. */
+    @FeatureFlag boolean PAS_PRODUCT_METRICS_V1_ENABLED = false;
+
+    /** Returns whether to enable PAS API product metrics v1. */
+    default boolean getPasProductMetricsV1Enabled() {
+        return PAS_PRODUCT_METRICS_V1_ENABLED;
     }
 
     /** Default enablement for applying SPE (Scheduling Policy Engine) to pilot jobs. */

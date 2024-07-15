@@ -16,8 +16,6 @@
 
 package com.android.adservices.cobalt;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_COBALT_LOGGER_INITIALIZATION_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__EVENT_REPORT_GENERATED_SUCCESS_STATUS;
@@ -31,7 +29,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
@@ -127,10 +124,7 @@ public final class MeasurementCobaltLogger {
             }
         } catch (CobaltInitializationException | IllegalStateException | SecurityException e) {
             LogUtil.e(e, "Cobalt logger initialization failed.");
-            ErrorLogUtil.e(
-                    e,
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_COBALT_LOGGER_INITIALIZATION_FAILURE,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            // TODO(b/324956419): Add CEL.
         }
         return logger;
     }

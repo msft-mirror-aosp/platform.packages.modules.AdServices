@@ -16,9 +16,15 @@
 
 package com.android.adservices.ui.util;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.ui.util.AdServicesUiTestCase.LAUNCH_TIMEOUT;
 import static com.android.adservices.ui.util.ApkTestUtil.getConsentSwitch;
-import static com.android.compatibility.common.util.ShellUtils.runShellCommand;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -32,12 +38,10 @@ import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 
 /** Util class for Settings tests. */
 public final class SettingsTestUtil {
-
-    private static final String ANDROID_WIDGET_SWITCH = "android.widget.Switch";
 
     private static final String TAG = SettingsTestUtil.class.getSimpleName();
     private static final int WINDOW_LAUNCH_TIMEOUT = 2_000;
@@ -86,8 +90,9 @@ public final class SettingsTestUtil {
         assertNotNull(appButton, R.string.settingsUI_measurement_view_title);
     }
 
-    public static void measurementDialogTestUtil(UiDevice device) throws RemoteException {
-        runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
+    public static void measurementDialogTestUtil(UiDevice device, AdServicesFlagsSetterRule flags)
+            throws RemoteException {
+        flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true);
         device.setOrientationNatural();
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // open measurement view
@@ -106,8 +111,9 @@ public final class SettingsTestUtil {
         assertNotNull(resetButton, R.string.settingsUI_measurement_view_reset_title);
     }
 
-    public static void topicsToggleTestUtil(UiDevice device) throws RemoteException {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void topicsToggleTestUtil(UiDevice device, AdServicesFlagsSetterRule flags)
+            throws RemoteException {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // 1) disable Topics API is enabled
@@ -139,8 +145,9 @@ public final class SettingsTestUtil {
         pressBack(device);
     }
 
-    public static void fledgeToggleTestUtil(UiDevice device) throws RemoteException {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void fledgeToggleTestUtil(UiDevice device, AdServicesFlagsSetterRule flags)
+            throws RemoteException {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // 1) disable Fledge API is enabled
@@ -172,8 +179,9 @@ public final class SettingsTestUtil {
         pressBack(device);
     }
 
-    public static void measurementToggleTestUtil(UiDevice device) throws RemoteException {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void measurementToggleTestUtil(UiDevice device, AdServicesFlagsSetterRule flags)
+            throws RemoteException {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // 1) disable Measurement API is enabled
@@ -206,9 +214,9 @@ public final class SettingsTestUtil {
         pressBack(device);
     }
 
-    public static void topicsSubtitleTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void topicsSubtitleTestUtil(UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, false)
+                .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         SettingsTestUtil.checkSubtitleMatchesToggle(
@@ -217,9 +225,9 @@ public final class SettingsTestUtil {
                 R.string.settingsUI_topics_ga_title);
     }
 
-    public static void appsSubtitleTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void appsSubtitleTestUtil(UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, false)
+                .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         SettingsTestUtil.checkSubtitleMatchesToggle(
@@ -228,9 +236,10 @@ public final class SettingsTestUtil {
                 R.string.settingsUI_apps_ga_title);
     }
 
-    public static void measurementSubtitleTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void measurementSubtitleTestUtil(
+            UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, false)
+                .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         SettingsTestUtil.checkSubtitleMatchesToggle(
@@ -239,8 +248,10 @@ public final class SettingsTestUtil {
                 R.string.settingsUI_measurement_view_title);
     }
 
-    public static void topicsToggleDialogTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled true");
+    public static void topicsToggleDialogTestUtil(
+            UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, true);
+
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
 
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_topics_ga_title);
@@ -297,8 +308,8 @@ public final class SettingsTestUtil {
         }
     }
 
-    public static void appsToggleDialogTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled true");
+    public static void appsToggleDialogTestUtil(UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, true);
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
 
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
@@ -355,8 +366,9 @@ public final class SettingsTestUtil {
         }
     }
 
-    public static void measurementToggleDialogTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled true");
+    public static void measurementToggleDialogTestUtil(
+            UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, true);
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
 
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_ga_title);
@@ -425,19 +437,18 @@ public final class SettingsTestUtil {
     /**
      * Tests whether the new PAS Fledge view has updated PAS text.
      *
-     * @param context Android context
      * @param device UiDevice
+     * @param flags AdServicesFlagsSetterRule used for setting the flags
      * @throws RemoteException during screen rotation
      */
-    public static void fledgeViewTextPasEnabledTest(UiDevice device) throws RemoteException {
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices pas_ux_enabled true");
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_notification_debug_mode true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices is_eea_device_feature_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void fledgeViewTextPasEnabledTest(
+            UiDevice device, AdServicesFlagsSetterRule flags) throws RemoteException {
+        flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
+                .setFlag(KEY_PAS_UX_ENABLED, true)
+                .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, true)
+                .setFlag(KEY_IS_EEA_DEVICE, false)
+                .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false)
+                .setDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, true);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // 1) disable Fledge API is enabled

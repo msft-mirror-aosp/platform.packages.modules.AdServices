@@ -113,7 +113,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
-                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), any());
+                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), any(), any());
         } catch (IOException e) {
             Assert.fail();
         }
