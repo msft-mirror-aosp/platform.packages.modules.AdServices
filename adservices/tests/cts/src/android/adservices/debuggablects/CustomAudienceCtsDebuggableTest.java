@@ -82,6 +82,9 @@ public class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableCtsTest
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After

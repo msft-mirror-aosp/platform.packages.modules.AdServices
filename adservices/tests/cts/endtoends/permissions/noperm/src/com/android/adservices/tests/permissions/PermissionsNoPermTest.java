@@ -77,6 +77,9 @@ public class PermissionsNoPermTest {
             overridePpapiAppAllowList();
             CompatAdServicesTestUtils.setFlags();
         }
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After

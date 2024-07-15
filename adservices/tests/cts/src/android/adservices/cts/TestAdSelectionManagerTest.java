@@ -116,6 +116,9 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
         PhFlagsFixture.overrideEnableEnrollmentSeed(true);
+
+        // Kill AdServices process to force new flag reads
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
