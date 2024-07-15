@@ -75,6 +75,9 @@ public class PermissionsValidTest {
             //  .ExtServices.xml are not executing in post-submit (b/276909363)
             setAdditionalFlags();
         }
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
