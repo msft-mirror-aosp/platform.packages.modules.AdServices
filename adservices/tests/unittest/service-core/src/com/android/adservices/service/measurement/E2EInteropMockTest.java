@@ -347,7 +347,10 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     mDatastoreManager.runInTransaction(
                             measurementDao ->
                                     mAsyncRegistrationQueueRunner.storeSource(
-                                            maybeSource.get(), asyncRegistration, measurementDao)));
+                                            maybeSource.get(),
+                                            asyncRegistration,
+                                            measurementDao,
+                                            status)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
         }
