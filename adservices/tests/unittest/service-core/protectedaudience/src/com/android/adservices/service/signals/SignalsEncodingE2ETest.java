@@ -77,6 +77,7 @@ import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEven
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.util.Clock;
@@ -135,6 +136,9 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
     @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImplMock;
+
+    @Mock
+    private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerImplMock;
 
     private FlagsWithEnabledPeriodicEncoding mFlagsWithProtectedSignalsAndEncodingEnabled =
             new FlagsWithEnabledPeriodicEncoding();
@@ -265,7 +269,8 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
-                        mEnrollmentDao);
+                        mEnrollmentDao,
+                        mUpdateSignalsProcessReportedLoggerImplMock);
 
         RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
         mScriptEngine =

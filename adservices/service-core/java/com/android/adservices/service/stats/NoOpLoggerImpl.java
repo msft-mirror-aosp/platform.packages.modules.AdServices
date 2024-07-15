@@ -28,6 +28,7 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 
 /** No-op version of {@link AdServicesLogger}. */
 public class NoOpLoggerImpl implements AdServicesLogger {
@@ -235,4 +236,8 @@ public class NoOpLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats) {}
+
+    @Override
+    public void logUpdateSignalsProcessReportedStats(
+            UpdateSignalsProcessReportedStats reportedStats) {}
 }
