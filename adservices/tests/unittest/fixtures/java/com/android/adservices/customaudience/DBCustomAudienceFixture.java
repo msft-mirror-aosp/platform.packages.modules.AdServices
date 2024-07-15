@@ -124,4 +124,10 @@ public class DBCustomAudienceFixture {
         return getValidBuilderByBuyerWithAdRenderId(buyer, name, CustomAudienceFixture.VALID_OWNER)
                 .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS);
     }
+
+    /** Build valid DB CA with priority */
+    public static DBCustomAudience.Builder getValidBuilderByBuyerWithPriority(
+            AdTechIdentifier buyer, double priority) {
+        return getValidBuilderByBuyerNoFilters(buyer).setPriority(priority);
+    }
 }

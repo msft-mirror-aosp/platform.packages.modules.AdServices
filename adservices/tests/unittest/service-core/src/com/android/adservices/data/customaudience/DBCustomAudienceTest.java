@@ -71,7 +71,8 @@ public class DBCustomAudienceTest {
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
                         false,
-                        /* auctionServerRequestFlags = */ false));
+                        /* auctionServerRequestFlags */ false,
+                        /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -87,7 +88,8 @@ public class DBCustomAudienceTest {
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
                         false,
-                        /* auctionServerRequestFlags = */ false));
+                        /* auctionServerRequestFlags */ false,
+                        /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -119,7 +121,8 @@ public class DBCustomAudienceTest {
                         AdDataConversionStrategyFactory.getAdDataConversionStrategy(
                                 true, true, false),
                         false,
-                        false));
+                        false,
+                        /* sellerConfigurationFlag= */ false));
     }
 
     @Test
@@ -150,7 +153,8 @@ public class DBCustomAudienceTest {
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
                         false,
-                        /* auctionServerRequestFlags = */ false));
+                        /* auctionServerRequestFlags */ false,
+                        /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -169,7 +173,8 @@ public class DBCustomAudienceTest {
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
                         false,
-                        /* auctionServerRequestFlags = */ true));
+                        /* auctionServerRequestFlags */ true,
+                        /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -187,7 +192,45 @@ public class DBCustomAudienceTest {
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
                         false,
-                        /* auctionServerRequestFlags = */ false));
+                        /* auctionServerRequestFlags */ false,
+                        /* sellerConfigurationFlag */ false));
+    }
+
+    @Test
+    public void testFromServiceObject_withPriority_sellerConfigFlagEnabled() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithPriority(
+                                CommonFixture.VALID_BUYER_1, 1.0)
+                        .build(),
+                DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                                .setPriority(1.0)
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags */ false,
+                        /* sellerConfigurationFlag */ true));
+    }
+
+    @Test
+    public void testFromServiceObject_withPriority_sellerConfigFlagDisabled() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build(),
+                DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderForBuyerFilters(
+                                        CommonFixture.VALID_BUYER_1)
+                                .setPriority(1.0)
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags */ false,
+                        /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -202,7 +245,8 @@ public class DBCustomAudienceTest {
                                 DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
                                 false,
-                                /* auctionServerRequestFlags = */ false));
+                                /* auctionServerRequestFlags */ false,
+                                /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -219,7 +263,8 @@ public class DBCustomAudienceTest {
                                 DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
                                 false,
-                                /* auctionServerRequestFlags = */ false));
+                                /* auctionServerRequestFlags */ false,
+                                /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -236,7 +281,8 @@ public class DBCustomAudienceTest {
                                 DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
                                 false,
-                                /* auctionServerRequestFlags = */ false));
+                                /* auctionServerRequestFlags */ false,
+                                /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -253,7 +299,8 @@ public class DBCustomAudienceTest {
                                 null,
                                 AD_DATA_CONVERSION_STRATEGY,
                                 false,
-                                /* auctionServerRequestFlags = */ false));
+                                /* auctionServerRequestFlags */ false,
+                                /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -270,7 +317,8 @@ public class DBCustomAudienceTest {
                                 DEFAULT_EXPIRE_IN,
                                 null,
                                 false,
-                                /* auctionServerRequestFlags = */ false));
+                                /* auctionServerRequestFlags */ false,
+                                /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -290,7 +338,8 @@ public class DBCustomAudienceTest {
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
                         false,
-                        /* auctionServerRequestFlags = */ false));
+                        /* auctionServerRequestFlags */ false,
+                        /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -311,7 +360,8 @@ public class DBCustomAudienceTest {
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
                         false,
-                        /* auctionServerRequestFlags = */ false));
+                        /* auctionServerRequestFlags */ false,
+                        /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -330,7 +380,8 @@ public class DBCustomAudienceTest {
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
                         false,
-                        /* auctionServerRequestFlags = */ false));
+                        /* auctionServerRequestFlags */ false,
+                        /* sellerConfigurationFlag */ false));
     }
 
     @Test
@@ -350,7 +401,8 @@ public class DBCustomAudienceTest {
                         DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
                         false,
-                        /* auctionServerRequestFlags = */ false));
+                        /* auctionServerRequestFlags */ false,
+                        /* sellerConfigurationFlag */ false));
     }
 
     @Test

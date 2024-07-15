@@ -27,7 +27,6 @@ import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -51,8 +50,7 @@ public final class ConsentedDebugShellCommandCtsTest extends CtsAdServicesDevice
     }
 
     @Test
-    @Ignore("BugId=343443759")
-    public void testRun_consentedDebug_happyPath2() {
+    public void testRun_consentedDebug_happyPath() {
         String debugToken = UUID.randomUUID().toString();
         int expiryInHours = 48;
         mAdServicesShellCommandHelper.runCommand(

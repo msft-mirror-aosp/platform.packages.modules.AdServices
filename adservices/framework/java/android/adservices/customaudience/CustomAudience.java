@@ -388,7 +388,7 @@ public final class CustomAudience implements Parcelable {
                 && mBiddingLogicUri.equals(that.mBiddingLogicUri)
                 && mAds.equals(that.mAds)
                 && mAuctionServerRequestFlags == that.mAuctionServerRequestFlags
-                && mPriority == that.mPriority;
+                && Double.compare(mPriority, that.mPriority) == 0;
     }
 
     /**
