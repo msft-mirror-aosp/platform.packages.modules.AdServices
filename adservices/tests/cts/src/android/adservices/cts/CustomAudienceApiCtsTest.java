@@ -108,6 +108,9 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         PhFlagsFixture.overrideEnableEnrollmentSeed(true);
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        // Kill AdServices process to force new flag reads
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
