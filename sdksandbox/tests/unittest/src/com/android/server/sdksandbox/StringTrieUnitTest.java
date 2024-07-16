@@ -19,6 +19,8 @@ package com.android.server.sdksandbox.verifier;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class StringTrieUnitTest {
+public class StringTrieUnitTest extends DeviceSupportedBaseTest {
     private StringTrie<String> mTrie = null;
     private static final String STORED_VAL_A = "Some API rule A";
     private static final String STORED_VAL_B = "Some API rule B";

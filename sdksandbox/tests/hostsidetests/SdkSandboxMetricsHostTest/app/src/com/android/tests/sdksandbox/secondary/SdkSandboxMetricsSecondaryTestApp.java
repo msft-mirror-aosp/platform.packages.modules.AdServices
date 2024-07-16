@@ -41,7 +41,8 @@ public class SdkSandboxMetricsSecondaryTestApp {
     private SdkSandboxManager mSdkSandboxManager;
     private static final String SDK_PACKAGE = "com.android.tests.sdkprovider.crashtest";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
+    @Rule(order = 0)
+    public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     @Before
     public void setup() {
