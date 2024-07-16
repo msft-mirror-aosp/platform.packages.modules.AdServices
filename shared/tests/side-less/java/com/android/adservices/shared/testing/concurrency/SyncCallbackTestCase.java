@@ -16,6 +16,7 @@
 package com.android.adservices.shared.testing.concurrency;
 
 import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
+import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeFalse;
@@ -45,15 +46,15 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
         extends SharedSidelessTestCase {
 
     /** Timeout for sleeping before asserting the callback was called. */
-    protected static final long BEFORE_ASSERT_CALLED_NAP_TIMEOUT = 50;
+    protected static final long BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS = 50;
 
     /**
      * Timeout for blocking the test until the callback is called (when it IS expected to be called)
-     * - must be higher than {@link #BEFORE_ASSERT_CALLED_NAP_TIMEOUT} and should be very high to
+     * - must be higher than {@link #BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS} and should be very high to
      * avoid failures on slower devices.
      */
     protected static final long CALLBACK_DEFAULT_TIMEOUT_MS =
-            BEFORE_ASSERT_CALLED_NAP_TIMEOUT + 5_000;
+            BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS + 5_000;
 
     /**
      * Timeout for tests that don't expect the callback to be called - should be short so they don't
@@ -268,7 +269,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
         // Check state before
         expectIsCalledAndNumberCalls(callback, "before setCalled()", false, 0);
 
-        Thread t = runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> call(callback));
+        Thread t = runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> call(callback));
         callback.assertCalled();
 
         // Check state after
@@ -344,19 +345,19 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
         CB callback = newFrozenCallback(settings);
 
         // 1st call
-        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> call(callback));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> call(callback));
         // Use small timeout as it should block and fail (because it's not called yet)
         assertThrows(
                 SyncCallbackTimeoutException.class,
                 () ->
                         assertCalled(
                                 callback,
-                                BEFORE_ASSERT_CALLED_NAP_TIMEOUT + NOT_CALLED_TIMEOUT_MS));
+                                BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS + NOT_CALLED_TIMEOUT_MS));
 
         expectIsCalledAndNumberCalls(callback, "after 1st setCalled()", false, 1);
 
         // 2nd call
-        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> call(callback));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> call(callback));
         callback.assertCalled();
 
         expectIsCalledAndNumberCalls(callback, "after 2nd setCalled()", true, 2);
@@ -403,8 +404,9 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
         // 2nd call on 1st callback
         runAsync(injectionTimeoutMs, () -> call(callback1));
-        callback1.assertCalled();
-        callback2.assertCalled();
+
+        assertCalled(callback1, DEFAULT_TIMEOUT_MS);
+        assertCalled(callback2, DEFAULT_TIMEOUT_MS);
         expectIsCalledAndNumberCalls(callback1, "after 2nd call on 1st callback", true, 2);
         expectIsCalledAndNumberCalls(callback2, "after 2nd call on 1st callback", true, 2);
 
@@ -454,8 +456,8 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
         // 2nd call on 2nd callback
         runAsync(injectionTimeoutMs, () -> call(callback2));
-        callback1.assertCalled();
-        callback2.assertCalled();
+        assertCalled(callback1, DEFAULT_TIMEOUT_MS);
+        assertCalled(callback2, DEFAULT_TIMEOUT_MS);
         expectIsCalledAndNumberCalls(callback1, "after 2nd call on 2nd callback", true, 2);
         expectIsCalledAndNumberCalls(callback2, "after 2nd call on 2nd callback", true, 2);
 
@@ -483,7 +485,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
         // setCalled() passes...
         // NOTE: not really the main thread, as it's emulated
-        Thread mainThread = runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> call(callback));
+        Thread mainThread = runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> call(callback));
 
         String setCalled = getSetCalledMethodName();
         var thrown = assertThrows(CalledOnMainThreadException.class, () -> callback.assertCalled());
