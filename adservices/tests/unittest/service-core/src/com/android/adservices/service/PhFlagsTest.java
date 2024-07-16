@@ -366,7 +366,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATIO
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
@@ -847,7 +846,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
@@ -5085,14 +5083,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON,
                 DEFAULT_MEASUREMENT_PRIVACY_EPSILON,
                 Flags::getMeasurementPrivacyEpsilon);
-    }
-
-    @Test
-    public void testGetMeasurementEnableEventLevelEpsilonInSource() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE,
-                MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE,
-                Flags::getMeasurementEnableEventLevelEpsilonInSource);
     }
 
     @Test

@@ -105,14 +105,6 @@ public final class MigrationHelpers {
         db.execSQL(String.format("ALTER TABLE %1$s ADD %2$s INTEGER", tableName, columnName));
     }
 
-    /** Add a Double column {@code columnName} to {@code tableName} in the {@code db}. */
-    static void addDoubleColumnIfAbsent(SQLiteDatabase db, String tableName, String columnName) {
-        if (isColumnPresent(db, tableName, columnName)) {
-            return;
-        }
-        db.execSQL(String.format("ALTER TABLE %1$s ADD %2$s DOUBLE", tableName, columnName));
-    }
-
     /** Add a TEXT column {@code columnName} to {@code tableName} in the {@code db}. */
     static void addTextColumnIfAbsent(SQLiteDatabase db, String tableName, String columnName) {
         if (isColumnPresent(db, tableName, columnName)) {

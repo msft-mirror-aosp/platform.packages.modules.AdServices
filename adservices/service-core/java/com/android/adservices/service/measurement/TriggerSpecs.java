@@ -508,8 +508,9 @@ public class TriggerSpecs {
             }
 
             mNumStates = numStates;
-            double epsilon = source.getConditionalEventLevelEpsilon(flags);
-            mFlipProbability = Combinatorics.getFlipProbability(mNumStates, epsilon);
+            mFlipProbability =
+                    Combinatorics.getFlipProbability(
+                            mNumStates, (double) flags.getMeasurementPrivacyEpsilon());
             mInformationGain = Combinatorics.getInformationGain(mNumStates, mFlipProbability);
         }
 

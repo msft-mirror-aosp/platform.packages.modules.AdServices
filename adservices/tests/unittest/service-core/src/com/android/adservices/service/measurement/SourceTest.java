@@ -132,7 +132,6 @@ public class SourceTest {
         String debugAppAdId = "SAMPLE_DEBUG_APP_ADID";
         String debugWebAdId = "SAMPLE_DEBUG_WEB_ADID";
         TriggerSpecs triggerSpecs = SourceFixture.getValidTriggerSpecsValueSum();
-        Double event_level_epsilon = 10d;
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -190,7 +189,6 @@ public class SourceTest {
                         .setMaxEventStates(10L)
                         .setDestinationLimitPriority(100L)
                         .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
-                        .setEventLevelEpsilon(event_level_epsilon)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -248,7 +246,6 @@ public class SourceTest {
                         .setMaxEventStates(10L)
                         .setDestinationLimitPriority(100L)
                         .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
-                        .setEventLevelEpsilon(event_level_epsilon)
                         .build());
     }
 
@@ -563,9 +560,6 @@ public class SourceTest {
                 SourceFixture.getMinimalValidSourceWithAttributionScope()
                         .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.LIFO)
                         .build());
-        assertNotEquals(
-                SourceFixture.getMinimalValidSourceBuilder().setEventLevelEpsilon(10D).build(),
-                SourceFixture.getMinimalValidSourceBuilder().setEventLevelEpsilon(11D).build());
     }
 
     @Test
@@ -591,8 +585,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -615,8 +608,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -643,8 +635,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Invalid web Uri
         assertInvalidSourceArguments(
@@ -668,8 +659,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Empty app destinations list
         assertInvalidSourceArguments(
@@ -693,8 +683,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Empty web destinations list
         assertInvalidSourceArguments(
@@ -718,8 +707,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Too many app destinations
         assertInvalidSourceArguments(
@@ -745,8 +733,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -772,8 +759,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -799,8 +785,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -823,8 +808,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -850,8 +834,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -1363,8 +1346,7 @@ public class SourceTest {
             @Nullable String sharedAggregationKeys,
             @Nullable String sharedFilterDataKeys,
             @Nullable Long installTime,
-            Uri registrationOrigin,
-            @Nullable Double eventLevelEpsilon) {
+            Uri registrationOrigin) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -1390,7 +1372,6 @@ public class SourceTest {
                                 .setInstallTime(installTime)
                                 .setRegistrationOrigin(registrationOrigin)
                                 .setSharedFilterDataKeys(sharedFilterDataKeys)
-                                .setEventLevelEpsilon(eventLevelEpsilon)
                                 .build());
     }
 
@@ -1827,89 +1808,6 @@ public class SourceTest {
     }
 
     @Test
-    public void hasValidInformationGain_fullFlex_enableEventLevelEpsilon_success()
-            throws Exception {
-        when(mFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(true);
-        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
-                .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
-        String triggerSpecsString =
-                "[{\"trigger_data\": [1, 2],"
-                        + "\"event_report_windows\": { "
-                        + "\"start_time\": \"0\", "
-                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(7))
-                        + "\"summary_window_operator\": \"count\", "
-                        + "\"summary_buckets\": [1]}]";
-        TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
-        int maxEventLevelReports = 3;
-        Source testSource =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventLevelEpsilon(10D)
-                        .setTriggerSpecs(
-                                new TriggerSpecs(triggerSpecsArray, maxEventLevelReports, null))
-                        .build();
-        assertTrue(testSource.hasValidInformationGain(mFlags));
-    }
-
-    @Test
-    public void hasValidInformationGain_flexLite_withEventLevelEpsilonAndAttributionScope_success()
-            throws Exception {
-        when(mFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(true);
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
-                .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
-        when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
-                .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
-        long baseTime = System.currentTimeMillis();
-        Source testSource =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventLevelEpsilon(10D)
-                        .setEventTime(baseTime)
-                        .setEventReportWindows(
-                                "{"
-                                        + "\"start_time\": \"0\","
-                                        + String.format(
-                                                "\"end_times\": [%s, %s]}",
-                                                baseTime + TimeUnit.DAYS.toMillis(7),
-                                                baseTime + TimeUnit.DAYS.toMillis(30)))
-                        .setMaxEventLevelReports(2)
-                        .setAttributionScopeLimit(3L)
-                        .setMaxEventStates(10L)
-                        .setAttributionScopes(List.of("1", "2"))
-                        .build();
-        assertTrue(testSource.hasValidInformationGain(mFlags));
-    }
-
-    @Test
-    public void testHasValidInformationGain_flexLite_enableEventLevelEpsilon_success()
-            throws Exception {
-        when(mFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(true);
-        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
-                .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
-                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
-        long baseTime = System.currentTimeMillis();
-        Source testSource =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventLevelEpsilon(10D)
-                        .setEventReportWindows(
-                                "{"
-                                        + "\"start_time\": \"0\","
-                                        + String.format(
-                                                "\"end_times\": [%s, %s]}",
-                                                baseTime + TimeUnit.DAYS.toMillis(7),
-                                                baseTime + TimeUnit.DAYS.toMillis(30)))
-                        .build();
-        assertTrue(testSource.hasValidInformationGain(mFlags));
-    }
-
-    @Test
     public void isFlexEventApiValueValid_eventSource_true() throws JSONException {
         Flags flags = mock(Flags.class);
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
@@ -2240,22 +2138,5 @@ public class SourceTest {
                         .setEventReportWindow(15L)
                         .build();
         assertEquals(15L, sourceOldEventReportWindow.getEffectiveEventReportWindow());
-    }
-
-    @Test
-    public void testGetConditionalEventLevelEpsilon() {
-        when(mFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(false, true);
-        when(mFlags.getMeasurementPrivacyEpsilon())
-                .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
-
-        Source withoutEpsilonConfigured = SourceFixture.getValidSource();
-        Double epsilonRetrieved = withoutEpsilonConfigured.getConditionalEventLevelEpsilon(mFlags);
-        assertEquals(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON, epsilonRetrieved, 0.0);
-
-        Source withEpsilonConfigured =
-                SourceFixture.getValidSourceBuilder().setEventLevelEpsilon(10D).build();
-        Double epsilonRetrievedConfigured =
-                withEpsilonConfigured.getConditionalEventLevelEpsilon(mFlags);
-        assertEquals(10D, epsilonRetrievedConfigured, 0.0);
     }
 }
