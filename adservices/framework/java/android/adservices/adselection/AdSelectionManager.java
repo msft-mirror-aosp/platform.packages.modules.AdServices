@@ -16,8 +16,8 @@
 
 package android.adservices.adselection;
 
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_AD_SELECTION;
+import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -238,6 +238,7 @@ public class AdSelectionManager {
                             .setSeller(request.getSeller())
                             .setCallerPackageName(getCallerPackageName())
                             .setCoordinatorOriginUri(request.getCoordinatorOriginUri())
+                            .setSellerConfiguration(request.getSellerConfiguration())
                             .build(),
                     new CallerMetadata.Builder()
                             .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
