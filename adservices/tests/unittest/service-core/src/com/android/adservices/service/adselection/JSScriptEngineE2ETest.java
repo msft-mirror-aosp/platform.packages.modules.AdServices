@@ -162,7 +162,6 @@ public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
         boolean consoleMessagesInLogEnabled = true;
         IsolateSettings isolateSettings =
                 IsolateSettings.builder()
-                        .setEnforceMaxHeapSizeFeature(Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE)
                         .setMaxHeapSizeBytes(Flags.ISOLATE_MAX_HEAP_SIZE_BYTES)
                         .setIsolateConsoleMessageInLogsEnabled(consoleMessagesInLogEnabled)
                         .build();

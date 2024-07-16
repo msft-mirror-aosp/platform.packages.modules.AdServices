@@ -66,7 +66,7 @@ public abstract class FailableResultSyncCallbackTestCase<
         assertInitialState(mCallback);
         R injectedResult = null;
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         mCallback.assertCalled();
 
         String when = "after injectFailure()";
@@ -84,7 +84,7 @@ public abstract class FailableResultSyncCallbackTestCase<
         F failure = newFailure();
         assertInitialState(mCallback);
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectFailure(failure));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.injectFailure(failure));
 
         F receivedFailure = mCallback.assertFailureReceived();
 

@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service;
 
+import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
@@ -61,6 +62,10 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     // to take android.adservices.common.OutcomeReceiver (instead of
                     // android.os.OutcomeReceiver) and hence don't need to be checked at runtime.
                     FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
+
+                    // TODO(b/347764094): Remove from this allowlist after implementing feature and
+                    //  adding matching DeviceConfig flag
+                    FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API,
 
                     // TODO(b/323397060): Remove from this allowlist after implementing feature and
                     //  adding matching DeviceConfig flag

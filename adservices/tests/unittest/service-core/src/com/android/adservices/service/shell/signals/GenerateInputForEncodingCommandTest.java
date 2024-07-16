@@ -71,7 +71,6 @@ public final class GenerateInputForEncodingCommandTest
     private JSScriptEngine mJSScriptEngine;
     private final IsolateSettings mIsolateSettings =
             IsolateSettings.builder()
-                    .setEnforceMaxHeapSizeFeature(true)
                     .setMaxHeapSizeBytes(50000)
                     .setIsolateConsoleMessageInLogsEnabled(true)
                     .build();

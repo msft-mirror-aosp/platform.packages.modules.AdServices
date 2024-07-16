@@ -32,7 +32,6 @@ import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -47,19 +46,16 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /** Test for get adservices common states. */
-@RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class CommonServicesTest {
+public final class CommonServicesTest extends AdServicesCommonStatesServicesTestCase {
     private AdServicesCommonManager mCommonManager;
 
     private UiDevice mDevice;
@@ -79,18 +75,19 @@ public class CommonServicesTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        UiUtils.setBinderTimeout();
+        mTestName = getTestName();
+
+        UiUtils.setBinderTimeout(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.enablePas();
-        UiUtils.enableU18();
-        UiUtils.setFlipFlow(true);
-        UiUtils.disableOtaStrings();
-        UiUtils.setGetAdservicesCommonStatesServiceEnable(true);
-        UiUtils.setGetAdservicesCommonStatesAllowList(TEST_PACKAGE_NAME);
+        UiUtils.enableGa(flags);
+        UiUtils.enablePas(flags);
+        UiUtils.enableU18(flags);
+        UiUtils.setFlipFlow(flags, true);
+        UiUtils.disableOtaStrings(flags);
+        UiUtils.setGetAdservicesCommonStatesServiceEnable(flags, true);
+        UiUtils.setGetAdservicesCommonStatesAllowList(flags, TEST_PACKAGE_NAME);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -98,7 +95,7 @@ public class CommonServicesTest {
 
         // General purpose callback used for expected success calls.
         mCallback =
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
@@ -111,7 +108,7 @@ public class CommonServicesTest {
                 };
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
@@ -122,7 +119,7 @@ public class CommonServicesTest {
                         .setPrivacySandboxUiEnabled(true)
                         .build(),
                 Executors.newCachedThreadPool(),
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         responseFuture.set(result);
@@ -142,24 +139,22 @@ public class CommonServicesTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
-        UiUtils.disablePas();
+        UiUtils.disablePas(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     /** Verify that for GA, ROW devices get adservices common states of opt-in consent. */
     @Test
-    public void testGetAdservicesCommonStatesOptin() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-        UiUtils.setAsRowDevice();
+    public void testGetAdservicesCommonStatesOptIn() throws Exception {
+        UiUtils.setAsRowDevice(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         // Set consents to true.
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 /* ux type */ UX.GA_UX,
                 /* consent opt-in */ true,
                 /* flip consent */ false,
@@ -175,7 +170,7 @@ public class CommonServicesTest {
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
-        // Trigger Pas renotify notification.
+        // Trigger Pas re-notify notification.
         NotificationPages.verifyNotification(
                 sContext,
                 mDevice,
@@ -198,16 +193,16 @@ public class CommonServicesTest {
     /** Verify that for GA devices get adservices common states of opt-out consent. */
     @Test
     public void testGetAdservicesCommonStatesOptOut() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-        UiUtils.setFlipFlow(true);
-        UiUtils.setAsRowDevice();
-        UiUtils.setGetAdservicesCommonStatesServiceEnable(true);
+        UiUtils.setFlipFlow(flags, true);
+        UiUtils.setAsRowDevice(flags);
+        UiUtils.setGetAdservicesCommonStatesServiceEnable(flags, true);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         // Set consents to true.
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 /* ux type */ UX.GA_UX,
                 /* consent opt-in */ true,
                 /* flip consent */ false,
@@ -255,10 +250,8 @@ public class CommonServicesTest {
     /** Verify that for GA, ROW devices get adservices common states of opt-in consent. */
     @Test
     public void testGetAdservicesCommonStatesNotEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.setAsRowDevice();
-        UiUtils.setGetAdservicesCommonStatesServiceEnable(false);
+        UiUtils.setAsRowDevice(flags);
+        UiUtils.setGetAdservicesCommonStatesServiceEnable(flags, false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         ListenableFuture<AdServicesCommonStatesResponse> adServicesCommonStatesResponse =
@@ -272,27 +265,20 @@ public class CommonServicesTest {
 
     @Test
     public void testGetAdservicesCommonStatesNotAllowed() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.setAsRowDevice();
-        UiUtils.setGetAdservicesCommonStatesServiceEnable(false);
-        UiUtils.setGetAdservicesCommonStatesAllowList(INVALID_PACKAGE_NAME);
+        UiUtils.setAsRowDevice(flags);
+        UiUtils.setGetAdservicesCommonStatesServiceEnable(flags, false);
+        UiUtils.setGetAdservicesCommonStatesAllowList(flags, INVALID_PACKAGE_NAME);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         ListenableFuture<AdServicesCommonStatesResponse> adServicesCommonStatesResponse =
                 getAdservicesCommonStates();
 
-        try {
-            AdServicesCommonStatesResponse commonStatesResponse =
-                    adServicesCommonStatesResponse.get();
-            assertThat(false).isTrue();
-        } catch (Exception e) {
-            assertThat("class " + e.getMessage())
-                    .isEqualTo(
-                            e.getCause().getClass()
-                                    + ": "
-                                    + SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
-        }
+        Exception e = Assert.assertThrows(Exception.class, adServicesCommonStatesResponse::get);
+        assertThat("class " + e.getMessage())
+                .isEqualTo(
+                        e.getCause().getClass()
+                                + ": "
+                                + SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
     }
 
     private ListenableFuture<AdServicesCommonStatesResponse> getAdservicesCommonStates() {
@@ -300,8 +286,7 @@ public class CommonServicesTest {
                 completer -> {
                     mCommonManager.getAdservicesCommonStates(
                             CALLBACK_EXECUTOR,
-                            new AdServicesOutcomeReceiver<
-                                    AdServicesCommonStatesResponse, Exception>() {
+                            new AdServicesOutcomeReceiver<>() {
                                 @Override
                                 public void onResult(AdServicesCommonStatesResponse result) {
                                     completer.set(result);
@@ -319,7 +304,7 @@ public class CommonServicesTest {
     }
 
     @Test
-    public void testAdservicesCommonStatesCoverages() throws Exception {
+    public void testAdservicesCommonStatesCoverages() {
         AdServicesCommonStates states =
                 new AdServicesCommonStates.Builder()
                         .setMeasurementState(ConsentStatus.GIVEN)
@@ -347,7 +332,7 @@ public class CommonServicesTest {
     }
 
     @Test
-    public void testAdservicesCommonStatesResponseCoverages() throws Exception {
+    public void testAdservicesCommonStatesResponseCoverages() {
         AdServicesCommonStates states =
                 new AdServicesCommonStates.Builder()
                         .setMeasurementState(ConsentStatus.GIVEN)

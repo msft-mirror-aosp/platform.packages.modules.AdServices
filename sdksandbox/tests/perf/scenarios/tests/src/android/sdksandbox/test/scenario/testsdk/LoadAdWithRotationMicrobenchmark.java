@@ -18,7 +18,6 @@ package android.sdksandbox.test.scenario.testsdk;
 import android.platform.test.microbenchmark.Microbenchmark;
 import android.platform.test.rule.DropCachesRule;
 import android.platform.test.rule.KillAppsRule;
-import android.platform.test.rule.NaturalOrientationRule;
 
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
@@ -26,9 +25,8 @@ import org.junit.runner.RunWith;
 
 @RunWith(Microbenchmark.class)
 public class LoadAdWithRotationMicrobenchmark extends LoadAdWithRotation {
-    @Rule
+
+    @Rule(order = 0)
     public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(sPackageName))
-                    .around(new DropCachesRule())
-                    .around(new NaturalOrientationRule());
+            RuleChain.outerRule(new KillAppsRule(sPackageName)).around(new DropCachesRule());
 }

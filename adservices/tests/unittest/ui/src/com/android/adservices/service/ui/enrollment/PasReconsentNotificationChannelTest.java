@@ -17,6 +17,7 @@
 package com.android.adservices.service.ui.enrollment;
 
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.consent.AdServicesApiConsent.GIVEN;
 import static com.android.adservices.service.consent.AdServicesApiConsent.REVOKED;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -31,6 +32,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
@@ -49,6 +53,7 @@ import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 
+@RequiresApi(Build.VERSION_CODES.S)
 public class PasReconsentNotificationChannelTest {
     private PasReconsentNotificationChannel mPasReconsentNotificationChannel;
 
@@ -79,6 +84,7 @@ public class PasReconsentNotificationChannelTest {
                                 ConsentNotificationJobService.schedule(
                                         any(Context.class), anyBoolean(), anyBoolean()));
         doReturn(true).when(mUxStatesManager).getFlag(KEY_PAS_UX_ENABLED);
+        doReturn(false).when(mConsentManager).isOtaAdultUserFromRvc();
 
         mPasReconsentNotificationChannel = new PasReconsentNotificationChannel();
     }
@@ -149,6 +155,46 @@ public class PasReconsentNotificationChannelTest {
     @Test
     public void isEligibleTest_consentGiven_pas() {
         doReturn(false).when(mConsentManager).wasPasNotificationDisplayed();
+        doReturn(GIVEN).when(mConsentManager).getConsent(any());
+        doNothing().when(mConsentManager).recordPasNotificationDisplayed(true);
+
+        assertThat(
+                        mPasReconsentNotificationChannel.isEligible(
+                                mPrivacySandboxUxCollection.GA_UX,
+                                mConsentManager,
+                                mUxStatesManager))
+                .isTrue();
+
+        mPasReconsentNotificationChannel.enroll(mMockContext, mConsentManager);
+
+        verify(mConsentManager, never()).recordPasNotificationDisplayed(true);
+    }
+
+    @Test
+    public void isEligibleTest_adultRvcUser_ConsentRevoked_pas() {
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED);
+        doReturn(false).when(mConsentManager).wasPasNotificationDisplayed();
+        doReturn(true).when(mConsentManager).isOtaAdultUserFromRvc();
+        doReturn(REVOKED).when(mConsentManager).getConsent(any());
+        doNothing().when(mConsentManager).recordPasNotificationDisplayed(true);
+
+        assertThat(
+                        mPasReconsentNotificationChannel.isEligible(
+                                mPrivacySandboxUxCollection.GA_UX,
+                                mConsentManager,
+                                mUxStatesManager))
+                .isTrue();
+
+        mPasReconsentNotificationChannel.enroll(mMockContext, mConsentManager);
+
+        verify(mConsentManager).recordPasNotificationDisplayed(true);
+    }
+
+    @Test
+    public void isEligibleTest_adultRvcUser_ConsentGiven_pas() {
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED);
+        doReturn(false).when(mConsentManager).wasPasNotificationDisplayed();
+        doReturn(true).when(mConsentManager).isOtaAdultUserFromRvc();
         doReturn(GIVEN).when(mConsentManager).getConsent(any());
         doNothing().when(mConsentManager).recordPasNotificationDisplayed(true);
 

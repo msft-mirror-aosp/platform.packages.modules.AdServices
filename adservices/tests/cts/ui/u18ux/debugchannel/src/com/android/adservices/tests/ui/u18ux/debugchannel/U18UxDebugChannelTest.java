@@ -25,7 +25,6 @@ import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -33,23 +32,18 @@ import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
-
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /** CTS test for U18 users */
-@RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class U18UxDebugChannelTest {
-
+public final class U18UxDebugChannelTest extends AdServicesU18UxDebugChannelCtsRootTestCase {
     private static AdServicesCommonManager sCommonManager;
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private UiDevice mDevice;
@@ -62,22 +56,22 @@ public class U18UxDebugChannelTest {
 
     @Before
     public void setUp() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        UiUtils.setBinderTimeout();
+        mTestName = getTestName();
+
+        UiUtils.setBinderTimeout(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         UiUtils.enableNotificationPermission();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         sCommonManager = AdServicesCommonManager.get(sContext);
 
-        UiUtils.enableConsentDebugMode();
+        UiUtils.enableConsentDebugMode(flags);
         mCallback =
                 new OutcomeReceiver<>() {
                     @Override
@@ -96,8 +90,6 @@ public class U18UxDebugChannelTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         mDevice.pressHome();
@@ -107,10 +99,8 @@ public class U18UxDebugChannelTest {
 
     @Test
     public void testEntrypointDisabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -135,10 +125,8 @@ public class U18UxDebugChannelTest {
 
     @Test
     public void testU18AdultBothTrueAdIdEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -163,10 +151,8 @@ public class U18UxDebugChannelTest {
 
     @Test
     public void testU18TrueAdultFalseAdIdEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -191,10 +177,8 @@ public class U18UxDebugChannelTest {
 
     @Test
     public void testU18AdultBothTrueAdIdDisabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -219,10 +203,8 @@ public class U18UxDebugChannelTest {
 
     @Test
     public void testU18TrueAdultFalseAdIdDisabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -247,10 +229,8 @@ public class U18UxDebugChannelTest {
 
     @Test
     public void testU18AdultBothFalseAdIdDisabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.enableU18();
-        UiUtils.enableGa();
+        UiUtils.enableU18(flags);
+        UiUtils.enableGa(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 

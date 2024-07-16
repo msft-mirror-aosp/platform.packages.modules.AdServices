@@ -15,6 +15,8 @@
  */
 package com.android.adservices.tests.appsetid;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.adservices.appsetid.AppSetId;
 import android.adservices.appsetid.AppSetIdProviderService;
 import android.adservices.appsetid.GetAppSetIdResult;
@@ -24,25 +26,19 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
 
-import androidx.test.runner.AndroidJUnit4;
-
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
-@RunWith(AndroidJUnit4.class)
-public class AppSetIdProviderTest {
+public final class AppSetIdProviderTest extends CtsAppSetIdEndToEndTestCase {
 
     private static final String DEFAULT_APP_SET_ID = "00000000-0000-0000-0000-000000000000";
     private static final int DEFAULT_SCOPE = 1;
 
     private static final class AppSetIdProviderServiceProxy extends AppSetIdProviderService {
-
         @Override
-        public AppSetId onGetAppSetId(int clientUid, String clientPackageName) throws IOException {
+        public AppSetId onGetAppSetId(int clientUid, String clientPackageName) {
             return new AppSetId(DEFAULT_APP_SET_ID, DEFAULT_SCOPE);
         }
     }
@@ -54,14 +50,14 @@ public class AppSetIdProviderTest {
         Intent intent = new Intent();
         intent.setAction(AppSetIdProviderService.SERVICE_INTERFACE);
         IBinder remoteObject = proxy.onBind(intent);
-        Assert.assertNotNull(remoteObject);
+        assertThat(remoteObject).isNotNull();
 
         IAppSetIdProviderService service = IAppSetIdProviderService.Stub.asInterface(remoteObject);
-        Assert.assertNotNull(service);
+        assertThat(service).isNotNull();
 
         CompletableFuture<AppSetId> future = new CompletableFuture<>();
         OutcomeReceiver<AppSetId, Exception> callback =
-                new OutcomeReceiver<AppSetId, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(AppSetId appSetId) {
                         future.complete(appSetId);
@@ -88,7 +84,7 @@ public class AppSetIdProviderTest {
                     }
                 });
         AppSetId resultAppSetId = future.get();
-        Assert.assertEquals(DEFAULT_APP_SET_ID, resultAppSetId.getId());
-        Assert.assertEquals(DEFAULT_SCOPE, resultAppSetId.getScope());
+        expect.that(resultAppSetId.getId()).isEqualTo(DEFAULT_APP_SET_ID);
+        expect.that(resultAppSetId.getScope()).isEqualTo(DEFAULT_SCOPE);
     }
 }

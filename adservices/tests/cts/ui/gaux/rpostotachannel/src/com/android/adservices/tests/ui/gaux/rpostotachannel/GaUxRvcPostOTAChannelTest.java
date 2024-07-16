@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.tests.ui.gaux.graduationchannel;
+package com.android.adservices.tests.ui.gaux.rpostotachannel;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -24,7 +24,6 @@ import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -35,18 +34,15 @@ import com.android.adservices.tests.ui.libs.UiUtils;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
-@RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class GaUxRvcPostOTAChannelTest {
+public final class GaUxRvcPostOTAChannelTest extends AdServicesRvcPostOTAChannelTestCase {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -63,16 +59,16 @@ public class GaUxRvcPostOTAChannelTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+        mTestName = getTestName();
 
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.enableRvc();
-        UiUtils.enableRvcNotification();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.enableRvc(flags);
+        UiUtils.enableRvcNotification(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -80,7 +76,7 @@ public class GaUxRvcPostOTAChannelTest {
 
         // General purpose callback used for expected success calls.
         mCallback =
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
@@ -97,8 +93,6 @@ public class GaUxRvcPostOTAChannelTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -106,13 +100,11 @@ public class GaUxRvcPostOTAChannelTest {
 
     /**
      * Verify that the R Post OTA notification is displayed after 1st U18 notification if msmt is
-     * opt in.
+     * opted in.
      */
     @Test
     public void testU18ToGAForRPostOTA_optInMsmt() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.setAsRowDevice();
+        UiUtils.setAsRowDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -131,11 +123,11 @@ public class GaUxRvcPostOTAChannelTest {
                 sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.RVC_UX);
 
         // Mock user is ota from Rvc by enabling consent manager ota debug mode
-        UiUtils.setConsentManagerOtaDebugMode();
+        UiUtils.setConsentManagerOtaDebugMode(flags);
         // Enable consent manager debug mode to mock user opt-in msmt API
-        UiUtils.setConsentManagerDebugMode();
+        UiUtils.setConsentManagerDebugMode(flags);
         // Disable RVC UX to mock user is not eligible RVC UX post OTA
-        UiUtils.disableRvc();
+        UiUtils.disableRvc(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
@@ -152,10 +144,11 @@ public class GaUxRvcPostOTAChannelTest {
         mDevice.pressHome();
 
         // User should be able to open GA UX after notification
-        UiUtils.resetConsentManagerDebugMode();
+        UiUtils.resetConsentManagerDebugMode(flags);
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 UiConstants.UX.GA_UX,
                 /* isOptIn= */ true,
                 /* isFlipConsent= */ true,
@@ -164,13 +157,11 @@ public class GaUxRvcPostOTAChannelTest {
 
     /**
      * Verify that the R Post OTA notification is not displayed after 1st U18 notification if msmt
-     * is opt out.
+     * is opted out.
      */
     @Test
     public void testU18ToGAForRPostOTA_optOutMsmt() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.setAsRowDevice();
+        UiUtils.setAsRowDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -192,6 +183,7 @@ public class GaUxRvcPostOTAChannelTest {
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 UiConstants.UX.RVC_UX,
                 /* isOptIn= */ true,
                 /* isFlipConsent= */ true,
@@ -199,9 +191,9 @@ public class GaUxRvcPostOTAChannelTest {
         mDevice.pressHome();
 
         // Mock user is ota from Rvc by enabling consent manager ota debug mode
-        UiUtils.setConsentManagerOtaDebugMode();
+        UiUtils.setConsentManagerOtaDebugMode(flags);
         // Disable RVC UX to mock user is not eligible RVC UX post OTA
-        UiUtils.disableRvc();
+        UiUtils.disableRvc(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         mCommonManager.enableAdServices(adultStates, Executors.newCachedThreadPool(), mCallback);
@@ -214,6 +206,7 @@ public class GaUxRvcPostOTAChannelTest {
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 UiConstants.UX.GA_UX,
                 /* isOptIn= */ true,
                 /* isFlipConsent= */ true,

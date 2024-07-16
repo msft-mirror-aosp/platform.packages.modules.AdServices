@@ -22,6 +22,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.verifier.SerialDexLoader.DexLoadResult;
 import com.android.server.sdksandbox.verifier.SerialDexLoader.VerificationHandler;
 
@@ -35,7 +36,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class SerialDexLoaderUnitTest {
+public class SerialDexLoaderUnitTest extends DeviceSupportedBaseTest {
     private static final String TAG = "SdkSandboxVerifierTest";
     private static final File APK_PATH_FILE = new File("apk_path");
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());

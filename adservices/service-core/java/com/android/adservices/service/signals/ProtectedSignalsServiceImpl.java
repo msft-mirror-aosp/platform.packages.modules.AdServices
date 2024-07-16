@@ -51,7 +51,9 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
+import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FledgeConsentFilter;
 import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -132,11 +134,11 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                 CallingAppUidSupplierBinderImpl.create(),
                 new ProtectedSignalsServiceFilter(
                         context,
-                        ConsentManager.getInstance(),
+                        new FledgeConsentFilter(
+                                ConsentManager.getInstance(), AdServicesLoggerImpl.getInstance()),
                         FlagsFactory.getFlags(),
                         AppImportanceFilter.create(
                                 context,
-                                AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getForegroundStatuslLevelForValidation()),
@@ -144,7 +146,9 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
-                        Throttler.getInstance(FlagsFactory.getFlags())),
+                        new FledgeApiThrottleFilter(
+                                Throttler.getInstance(FlagsFactory.getFlags()),
+                                AdServicesLoggerImpl.getInstance())),
                 EnrollmentDao.getInstance());
     }
 

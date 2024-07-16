@@ -26,7 +26,6 @@ import android.os.Parcel;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -38,18 +37,16 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
-@RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class GaUxAlreadyEnrolledChannelTest {
+public final class GaUxAlreadyEnrolledChannelTest
+        extends AdServicesGaUxAlreadyEnrolledChannelTestCase {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -66,15 +63,16 @@ public class GaUxAlreadyEnrolledChannelTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        UiUtils.setBinderTimeout();
+        mTestName = getTestName();
+
+        UiUtils.setBinderTimeout(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -82,7 +80,7 @@ public class GaUxAlreadyEnrolledChannelTest {
 
         // General purpose callback used for expected success calls.
         mCallback =
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
@@ -95,7 +93,7 @@ public class GaUxAlreadyEnrolledChannelTest {
                 };
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
@@ -106,7 +104,7 @@ public class GaUxAlreadyEnrolledChannelTest {
                         .setPrivacySandboxUiEnabled(true)
                         .build(),
                 Executors.newCachedThreadPool(),
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         responseFuture.set(result);
@@ -126,8 +124,6 @@ public class GaUxAlreadyEnrolledChannelTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -139,9 +135,7 @@ public class GaUxAlreadyEnrolledChannelTest {
      */
     @Test
     public void testGaRowAdIdEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.setAsRowDevice();
+        UiUtils.setAsRowDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -171,9 +165,7 @@ public class GaUxAlreadyEnrolledChannelTest {
      */
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.setAsRowDevice();
+        UiUtils.setAsRowDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -203,9 +195,7 @@ public class GaUxAlreadyEnrolledChannelTest {
      */
     @Test
     public void testGaEuAdIdEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.setAsEuDevice();
+        UiUtils.setAsEuDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -233,9 +223,7 @@ public class GaUxAlreadyEnrolledChannelTest {
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
     public void testGaEuAdIdDisabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.setAsEuDevice();
+        UiUtils.setAsEuDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -261,7 +249,7 @@ public class GaUxAlreadyEnrolledChannelTest {
     }
 
     @Test
-    public void testAdServicesStatesCoverages() throws Exception {
+    public void testAdServicesStatesCoverages() {
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(false)
@@ -290,7 +278,7 @@ public class GaUxAlreadyEnrolledChannelTest {
     }
 
     @Test
-    public void testEnableAdservicesResponseCoverages() throws Exception {
+    public void testEnableAdservicesResponseCoverages() {
         EnableAdServicesResponse response =
                 new EnableAdServicesResponse.Builder()
                         .setApiEnabled(true)
