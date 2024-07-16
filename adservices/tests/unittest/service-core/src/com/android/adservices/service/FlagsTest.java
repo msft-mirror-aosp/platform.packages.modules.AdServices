@@ -577,6 +577,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getCobaltRegistryOutOfBandUpdateEnabled);
     }
 
+    @Test
+    public void testGetRNotificationDefaultConsentFixEnabled() {
+        testFeatureFlag(
+                "DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED",
+                Flags::getRNotificationDefaultConsentFixEnabled);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //

@@ -5678,6 +5678,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
     }
 
+    /** Default value for the enablement the R notification default consent fix. */
+    @FeatureFlag boolean DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED = false;
+
+    /** Returns the default value for the enablement the R notification default consent fix */
+    default boolean getRNotificationDefaultConsentFixEnabled() {
+        return DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
+    }
+
     /** Enrollment Manifest File URL, used to provide proto file for MDD download. */
     String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
 
