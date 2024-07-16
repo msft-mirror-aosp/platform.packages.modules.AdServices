@@ -125,6 +125,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNL
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
@@ -6962,6 +6963,13 @@ public final class PhFlags implements Flags {
     public boolean getEnrollmentProtoFileEnabled() {
         return getDeviceConfigFlag(
                 KEY_ENROLLMENT_PROTO_FILE_ENABLED, DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED);
+    }
+
+    @Override
+    public boolean getRNotificationDefaultConsentFixEnabled() {
+        return getDeviceConfigFlag(
+                KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED,
+                DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers
