@@ -59,6 +59,7 @@ public class CustomAudienceImpl {
     @NonNull private final Clock mClock;
     @NonNull private final Flags mFlags;
     private final boolean mAuctionServerRequestFlagsEnabled;
+    private final boolean mSellerConfigurationFlagEnabled;
 
     @VisibleForTesting
     public CustomAudienceImpl(
@@ -80,6 +81,9 @@ public class CustomAudienceImpl {
         mFlags = flags;
         mAuctionServerRequestFlagsEnabled =
                 BinderFlagReader.readFlag(flags::getFledgeAuctionServerRequestFlagsEnabled);
+        mSellerConfigurationFlagEnabled =
+                BinderFlagReader.readFlag(
+                        flags::getFledgeGetAdSelectionDataSellerConfigurationEnabled);
     }
 
     /**
@@ -144,6 +148,9 @@ public class CustomAudienceImpl {
 
         Duration customAudienceDefaultExpireIn =
                 Duration.ofMillis(mFlags.getFledgeCustomAudienceDefaultExpireInMs());
+
+        // TODO (b/352602308) Add priority to fetchAndJoinCustomAudience() and
+        // scheduleCustomAudienceUpdate()
         DBCustomAudience dbCustomAudience =
                 DBCustomAudience.fromServiceObject(
                         customAudience,
@@ -152,7 +159,8 @@ public class CustomAudienceImpl {
                         customAudienceDefaultExpireIn,
                         dataConversionStrategy,
                         isDebuggableCustomAudience,
-                        mAuctionServerRequestFlagsEnabled);
+                        mAuctionServerRequestFlagsEnabled,
+                        mSellerConfigurationFlagEnabled);
 
         sLogger.v("Inserting CA in the DB: %s", dbCustomAudience);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
