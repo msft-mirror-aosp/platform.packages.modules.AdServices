@@ -37,6 +37,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.ISdkSandboxService;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import org.junit.After;
@@ -48,8 +49,7 @@ import org.mockito.quality.Strictness;
 
 import java.io.FileDescriptor;
 
-public class SdkSandboxShellCommandUnitTest {
-
+public class SdkSandboxShellCommandUnitTest extends DeviceSupportedBaseTest {
     private static final String DEBUGGABLE_PACKAGE = "android.app.debuggable";
     private static final String NON_DEBUGGABLE_PACKAGE = "android.app.nondebuggable";
     private static final int UID = 10214;
