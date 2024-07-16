@@ -50,7 +50,6 @@ import android.app.sdksandbox.testutils.DeviceConfigUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallback;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -80,6 +79,7 @@ import com.android.ctssdkprovider.IActivityActionExecutor;
 import com.android.ctssdkprovider.IActivityStarter;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.server.sdksandbox.SandboxKillerBeforeTest;
 
 import com.google.common.truth.Expect;
 
@@ -123,9 +123,6 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
             "orientation: " + Configuration.ORIENTATION_LANDSCAPE;
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
 
-    @Rule(order = 0)
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
     @Rule(order = 1)
     public final ActivityScenarioRule<TestActivity> activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
@@ -133,7 +130,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     @Rule(order = 2)
     public final Expect expect = Expect.create();
 
-    @Rule
+    @Rule(order = 3)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     private ActivityScenario<TestActivity> mScenario;
