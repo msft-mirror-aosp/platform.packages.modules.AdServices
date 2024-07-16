@@ -55,15 +55,17 @@ public class ProtectedSignalsFixture {
     }
 
     /**
-     * @return a Protected signal instance where the package name starts with the given {@code
-     *     seed}, the creation time is the fixed {@code NOW} value and the signal value is the given
-     *     value.
+     * Creates a {@link ProtectedSignal} with a {@code com.fake.package} package and a {@code
+     * CommonFixture.FIXED_NOW} creation time.
+     *
+     * @param value The value for the signal.
+     * @return The signal.
      */
-    public static ProtectedSignal generateHexProtectedSignal(String seed, byte[] value) {
+    public static ProtectedSignal generateHexProtectedSignal(String value) {
         return ProtectedSignal.builder()
                 .setCreationTime(NOW)
                 .setHexEncodedValue(getHexString(value))
-                .setPackageName(generatePackageName(seed))
+                .setPackageName(generatePackageName(value))
                 .build();
     }
 

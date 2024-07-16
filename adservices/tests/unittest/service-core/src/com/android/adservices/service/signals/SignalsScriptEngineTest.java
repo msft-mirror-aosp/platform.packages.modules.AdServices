@@ -201,18 +201,16 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
         rawSignalsMap.put(
                 getHexString(new byte[] {0x00}),
                 List.of(
-                        ProtectedSignalsFixture.generateHexProtectedSignal(
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
                                 "", new byte[] {(byte) 0xA0})));
 
         rawSignalsMap.put(
                 getHexString(new byte[] {0x01}),
                 List.of(
-                        ProtectedSignalsFixture.generateHexProtectedSignal(
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
                                 "", new byte[] {(byte) 0xA1}),
-                        ProtectedSignalsFixture.generateHexProtectedSignal(
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
                                 "", new byte[] {(byte) 0xA2})));
-
-        ProtectedSignalsArgument protectedSignalsArgument = new ProtectedSignalsArgumentFastImpl();
 
         // Assumes keys and values are 1 byte long
         // Generates an array with the following structure
@@ -239,6 +237,8 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
                         + "  \n"
                         + "  return { 'status': 0, 'results': result.subarray(0, size)};\n"
                         + "}\n";
+
+        ProtectedSignalsArgument protectedSignalsArgument = new ProtectedSignalsArgumentFastImpl();
         ListenableFuture<byte[]> jsOutcome =
                 mSignalsScriptEngine.encodeSignals(
                         encodeSignalsJS,
