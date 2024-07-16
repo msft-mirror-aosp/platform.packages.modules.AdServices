@@ -42,7 +42,7 @@ public class SdkSandboxTestSharedApp2  {
 
     private SdkSandboxManager mSdkSandboxManager;
 
-    @Rule
+    @Rule(order = 0)
     public final ActivityScenarioRule<SdkSandboxEmptyActivity> mRule =
             new ActivityScenarioRule<>(SdkSandboxEmptyActivity.class);
 

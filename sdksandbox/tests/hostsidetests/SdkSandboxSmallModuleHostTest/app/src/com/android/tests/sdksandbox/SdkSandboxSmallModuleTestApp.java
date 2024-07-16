@@ -63,14 +63,17 @@ public class SdkSandboxSmallModuleTestApp {
         AdServicesCommon.ACTION_AD_SERVICES_COMMON_SERVICE,
     };
 
-    @Rule public final Expect mExpect = Expect.create();
+    @Rule(order = 0)
+    public final Expect mExpect = Expect.create();
+
+    /** This rule is defined to start an activity in the foreground to call the sandbox APIs */
+    @Rule(order = 1)
+    public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
     private static final String SDK_NAME = "com.android.emptysdkprovider";
     private SdkSandboxManager mSdkSandboxManager;
 
-    /** This rule is defined to start an activity in the foreground to call the sandbox APIs */
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     @Before
     public void setup() {

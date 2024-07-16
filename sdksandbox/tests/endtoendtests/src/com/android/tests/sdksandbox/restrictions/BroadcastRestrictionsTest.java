@@ -28,7 +28,6 @@ import android.app.sdksandbox.testutils.ConfigListener;
 import android.app.sdksandbox.testutils.DeviceConfigUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.ProtoUtil;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -43,6 +42,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.modules.utils.build.SdkLevel;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.tests.sdkprovider.restrictions.IRestrictionsSdkApi;
 
 import org.junit.After;
@@ -57,7 +57,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RunWith(JUnit4.class)
-public class BroadcastRestrictionsTest {
+public class BroadcastRestrictionsTest extends DeviceSupportedBaseTest {
     private SdkSandboxManager mSdkSandboxManager;
     private static final String PROPERTY_ENFORCE_RESTRICTIONS = "sdksandbox_enforce_restrictions";
 
@@ -98,9 +98,6 @@ public class BroadcastRestrictionsTest {
     private DeviceConfigUtils mDeviceConfigUtils;
 
     @Rule(order = 0)
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
-    @Rule(order = 1)
     public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
 
     @Before

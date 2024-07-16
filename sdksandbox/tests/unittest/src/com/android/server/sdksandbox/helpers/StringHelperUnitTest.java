@@ -23,7 +23,8 @@ import org.junit.Test;
 
 public class StringHelperUnitTest {
 
-    @Rule public final Expect mExpect = Expect.create();
+    @Rule(order = 0)
+    public final Expect mExpect = Expect.create();
 
     @Test
     public void testWildcardPatternMatch() {

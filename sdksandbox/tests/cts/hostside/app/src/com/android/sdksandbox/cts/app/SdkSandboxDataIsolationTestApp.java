@@ -64,7 +64,8 @@ public class SdkSandboxDataIsolationTestApp {
     private SdkSandboxManager mSdkSandboxManager;
     private IDataIsolationTestSdkApi mSdk;
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+    @Rule(order = 0)
+    public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
 
     @Before
     public void setup() {

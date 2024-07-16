@@ -47,6 +47,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -62,7 +63,7 @@ import java.util.Collection;
 
 /** Tests for the result code logging logic in {@link SdkSandboxController}. */
 @RunWith(Parameterized.class)
-public class SdkSandboxControllerResultCodeLoggingUnitTest {
+public class SdkSandboxControllerResultCodeLoggingUnitTest extends DeviceSupportedBaseTest {
     @SdkSandboxManager.LoadSdkErrorCode
     @Parameterized.Parameter(0)
     public int mLoadSdkErrorCode;

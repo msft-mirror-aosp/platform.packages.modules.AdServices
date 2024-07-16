@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tests.sdksandbox.endtoend;
+package com.android.server.sdksandbox;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallback;
@@ -22,13 +22,16 @@ import android.content.Context;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Ensure to kill sandbox before tests to avoid race conditions. */
 @RunWith(JUnit4.class)
-public abstract class SandboxKillerBeforeTest {
+public abstract class SandboxKillerBeforeTest extends
+        com.android.server.sdksandbox.DeviceSupportedBaseTest {
     private SdkSandboxManager mSdkSandboxManager;
 
     @Before

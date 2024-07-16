@@ -21,12 +21,14 @@ import static com.google.common.truth.Truth.assertThat;
 import android.os.Bundle;
 import android.os.Parcel;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class LoadSdkExceptionUnitTest {
+public class LoadSdkExceptionUnitTest extends DeviceSupportedBaseTest {
     @Test
     public void testLoadSdkExceptionWriteToParcel() {
         Bundle bundle = new Bundle();

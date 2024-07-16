@@ -23,13 +23,15 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.os.Parcel;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests {@link SandboxLatencyInfo} APIs. */
 @RunWith(JUnit4.class)
-public class SandboxLatencyInfoUnitTest {
+public class SandboxLatencyInfoUnitTest extends DeviceSupportedBaseTest {
 
     private static final long TIME_APP_CALLED_SYSTEM_SERVER = 1;
     private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP = 2;

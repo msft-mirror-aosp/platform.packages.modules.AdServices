@@ -23,6 +23,8 @@ import android.os.FileUtils;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +37,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
-public class FileUtilUnitTest {
+public class FileUtilUnitTest extends DeviceSupportedBaseTest {
 
     private String mTestDir;
 

@@ -39,7 +39,6 @@ import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -59,13 +58,13 @@ import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.pm.PackageManagerLocal;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -77,7 +76,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /** Unit tests for {@link SdkSandboxManagerService} StatsD metrics collection. */
-public class SdkSandboxStatsdMetricsUnitTest {
+public class SdkSandboxStatsdMetricsUnitTest extends DeviceSupportedBaseTest {
     private static final String SDK_NAME = "com.android.codeprovider";
     private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME = "com.android.testinterface";
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
@@ -139,9 +138,6 @@ public class SdkSandboxStatsdMetricsUnitTest {
 
     private static FakeSdkSandboxProvider sProvider;
     private DeviceConfigUtil mDeviceConfigUtil;
-
-    @Rule(order = 0)
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
     @Before
     public void setup() {

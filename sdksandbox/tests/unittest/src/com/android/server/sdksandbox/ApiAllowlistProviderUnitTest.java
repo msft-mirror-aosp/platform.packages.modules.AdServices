@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.android.sdksandbox.protobuf.InvalidProtocolBufferException;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.proto.Verifier.AllowedApisList;
 
 import org.junit.Test;
@@ -28,7 +29,7 @@ import org.junit.Test;
 import java.io.FileNotFoundException;
 import java.util.Map;
 
-public class ApiAllowlistProviderUnitTest {
+public class ApiAllowlistProviderUnitTest extends DeviceSupportedBaseTest {
 
     @Test
     public void loadPlatformApiAllowlist_succeeds() throws Exception {

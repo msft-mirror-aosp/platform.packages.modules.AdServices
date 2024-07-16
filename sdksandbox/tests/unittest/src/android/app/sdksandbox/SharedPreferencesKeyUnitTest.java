@@ -20,13 +20,15 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.os.Parcel;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests {@link SharedPreferencesKey} APIs. */
 @RunWith(JUnit4.class)
-public class SharedPreferencesKeyUnitTest {
+public class SharedPreferencesKeyUnitTest extends DeviceSupportedBaseTest {
 
     @Test
     public void testSharedPreferencesKey_DescribeContents() throws Exception {

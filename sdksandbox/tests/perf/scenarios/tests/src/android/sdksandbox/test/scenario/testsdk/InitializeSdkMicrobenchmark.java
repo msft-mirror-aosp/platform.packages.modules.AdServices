@@ -26,7 +26,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(Microbenchmark.class)
 public class InitializeSdkMicrobenchmark extends InitializeSdk {
-    @Rule
+    @Rule(order = 0)
     public RuleChain rules =
             RuleChain.outerRule(new KillAppsRule(sPackageName)).around(new DropCachesRule());
 }

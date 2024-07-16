@@ -28,7 +28,6 @@ import android.app.sdksandbox.testutils.ConfigListener;
 import android.app.sdksandbox.testutils.DeviceConfigUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.ProtoUtil;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -42,6 +41,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.modules.utils.build.SdkLevel;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.tests.sdkprovider.restrictions.IRestrictionsSdkApi;
 
 import org.junit.After;
@@ -56,7 +56,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RunWith(JUnit4.class)
-public class ContentProviderRestrictionsTest {
+public class ContentProviderRestrictionsTest extends DeviceSupportedBaseTest {
     private SdkSandboxManager mSdkSandboxManager;
 
     // Keep the value consistent with SdkSandboxmanagerService.ENFORCE_RESTRICTIONS
@@ -88,9 +88,6 @@ public class ContentProviderRestrictionsTest {
                             "downloads/my_downloads"));
 
     @Rule(order = 0)
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
-    @Rule(order = 1)
     public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
 
     private String mEnforceRestrictions;

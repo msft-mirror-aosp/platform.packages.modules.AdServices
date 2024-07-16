@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.sdksandbox.test.scenario.testsdk;
 
-import android.platform.test.microbenchmark.Microbenchmark;
-import android.platform.test.rule.DropCachesRule;
-import android.platform.test.rule.KillAppsRule;
+package com.android.cobalt.logging;
 
-import org.junit.Rule;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
+/** The API for providing operation logging to Cobalt. */
+public interface CobaltOperationLogger {
 
-@RunWith(Microbenchmark.class)
-public class LoadAdWithRotationMicrobenchmark extends LoadAdWithRotation {
-
-    @Rule(order = 0)
-    public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(sPackageName)).around(new DropCachesRule());
+    /**
+     * Log that a Cobalt logging event exceeds the string buffer max.
+     *
+     * @param metricId the Cobalt metric id of the event that is being logged
+     * @param reportId the Cobalt report id of the event that is being logged
+     */
+    void logStringBufferMaxExceeded(int metricId, int reportId);
 }

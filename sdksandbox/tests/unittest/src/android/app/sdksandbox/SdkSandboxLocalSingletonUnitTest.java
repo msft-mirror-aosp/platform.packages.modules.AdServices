@@ -23,6 +23,8 @@ import static org.junit.Assert.assertThrows;
 import android.os.IBinder;
 import android.os.RemoteException;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +33,7 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 @RunWith(JUnit4.class)
-public class SdkSandboxLocalSingletonUnitTest {
+public class SdkSandboxLocalSingletonUnitTest extends DeviceSupportedBaseTest {
     private IBinder mBinder;
 
     @Before

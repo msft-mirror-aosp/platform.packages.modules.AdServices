@@ -31,7 +31,6 @@ import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
 import android.app.sdksandbox.testutils.FakeSdkSandboxActivityRegistryInjector;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.app.sdksandbox.testutils.StubSdkToServiceLink;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -49,6 +48,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import com.google.common.truth.Expect;
 
@@ -82,7 +82,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(JUnit4.class)
-public class SdkSandboxTest {
+public class SdkSandboxTest extends DeviceSupportedBaseTest {
 
     private SdkSandboxServiceImpl mService;
     private ApplicationInfo mApplicationInfo;
@@ -149,10 +149,8 @@ public class SdkSandboxTest {
         }
     }
 
-    @Rule
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
-    @Rule public final Expect mExpect = Expect.create();
+    @Rule(order = 0)
+    public final Expect mExpect = Expect.create();
 
     @BeforeClass
     public static void setupClass() {

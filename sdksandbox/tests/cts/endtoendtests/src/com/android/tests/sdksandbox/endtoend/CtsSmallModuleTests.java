@@ -30,6 +30,8 @@ import android.os.Bundle;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.sdksandbox.SandboxKillerBeforeTest;
+
 import com.google.common.truth.Expect;
 
 import org.junit.Before;
@@ -44,11 +46,12 @@ import java.util.List;
 public class CtsSmallModuleTests extends SandboxKillerBeforeTest {
     private static final String SDK_NAME = "com.android.emptysdkprovider";
 
-    @Rule
+    @Rule(order = 0)
     public final ActivityScenarioRule<TestActivity> mActivityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
 
-    @Rule public final Expect mExpect = Expect.create();
+    @Rule(order = 1)
+    public final Expect mExpect = Expect.create();
 
     private SdkSandboxManager mSdkSandboxManager;
     private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();

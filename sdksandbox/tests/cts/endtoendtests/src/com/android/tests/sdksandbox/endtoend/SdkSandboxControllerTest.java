@@ -24,7 +24,6 @@ import static org.junit.Assume.assumeTrue;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -40,6 +39,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.flags.Flags;
+import com.android.server.sdksandbox.SandboxKillerBeforeTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -51,14 +51,10 @@ import org.junit.runners.JUnit4;
 /** End-to-end tests of {@link SdkSandboxController} APIs. */
 @RunWith(JUnit4.class)
 public class SdkSandboxControllerTest extends SandboxKillerBeforeTest {
-
     @Rule(order = 0)
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
-    @Rule(order = 1)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
-    @Rule(order = 2)
+    @Rule(order = 1)
     public final ActivityScenarioRule<TestActivity> activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
 

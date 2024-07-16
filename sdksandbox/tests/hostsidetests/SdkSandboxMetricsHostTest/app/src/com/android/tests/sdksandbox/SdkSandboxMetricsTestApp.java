@@ -63,7 +63,8 @@ public class SdkSandboxMetricsTestApp {
     private static final String SDK_PACKAGE_NAME = "com.android.tests.sdkprovider.crashtest";
     private static final int SDK_VERSION_CODE = 1;
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
+    @Rule(order = 0)
+    public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     private DropBoxManager mDropboxManager;
     private final Context mContext = InstrumentationRegistry.getInstrumentation().getContext();

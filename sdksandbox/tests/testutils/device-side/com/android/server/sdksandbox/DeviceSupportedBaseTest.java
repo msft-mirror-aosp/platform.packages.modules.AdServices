@@ -13,20 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.sdksandbox.test.scenario.testsdk;
 
-import android.platform.test.microbenchmark.Microbenchmark;
-import android.platform.test.rule.DropCachesRule;
-import android.platform.test.rule.KillAppsRule;
+package com.android.server.sdksandbox;
+
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 
 import org.junit.Rule;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
 
-@RunWith(Microbenchmark.class)
-public class LoadAdWithRotationMicrobenchmark extends LoadAdWithRotation {
-
-    @Rule(order = 0)
-    public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(sPackageName)).around(new DropCachesRule());
+public abstract class DeviceSupportedBaseTest {
+    @Rule
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 }

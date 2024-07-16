@@ -34,7 +34,7 @@ abstract class OnResultSyncCallbackTestCase<
                 .contains("(no result yet)");
         R injectedResult = newResult();
 
-        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.onResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.onResult(injectedResult));
         R receivedResult = mCallback.assertResultReceived();
 
         expect.withMessage("%s.assertResultReceived()", mCallback)

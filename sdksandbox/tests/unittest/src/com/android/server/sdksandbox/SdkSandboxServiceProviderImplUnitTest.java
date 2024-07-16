@@ -36,6 +36,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.am.ActivityManagerLocal;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -44,7 +45,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 
 /** Unit tests for {@link SdkSandboxServiceProviderImpl}. */
-public class SdkSandboxServiceProviderImplUnitTest {
+public class SdkSandboxServiceProviderImplUnitTest extends DeviceSupportedBaseTest {
 
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
 

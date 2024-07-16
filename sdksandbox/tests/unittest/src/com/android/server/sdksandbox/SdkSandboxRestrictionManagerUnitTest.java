@@ -28,6 +28,7 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.helpers.PackageManagerHelper;
 
 import org.junit.After;
@@ -39,7 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Unit tests for {@link SdkSandboxRestrictionManager}. */
-public class SdkSandboxRestrictionManagerUnitTest {
+public class SdkSandboxRestrictionManagerUnitTest extends DeviceSupportedBaseTest {
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
     private static final int DEFAULT_TARGET_SDK_VERSION = Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
     private SdkSandboxRestrictionManager mSdkSandboxRestrictionManager;

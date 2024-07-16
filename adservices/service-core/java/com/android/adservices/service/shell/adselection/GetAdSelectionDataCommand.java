@@ -34,6 +34,7 @@ import com.android.adservices.service.adselection.PayloadOptimizationContext;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ClientType;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.GetBidsRequest;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAppSignalsBuyerInput;
 import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandArgParserHelper;
 import com.android.adservices.service.shell.ShellCommandResult;
@@ -109,25 +110,25 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
             buyerInput = getBuyerInputForBuyer(buyer);
         } catch (InvalidProtocolBufferException e) {
             err.printf(ERROR_PROTOBUF_FORMAT);
-            Log.d(TAG, ERROR_PROTOBUF_FORMAT);
+            Log.v(TAG, ERROR_PROTOBUF_FORMAT);
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR,
                     COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA);
         } catch (IllegalStateException e) {
             err.printf(String.format(ERROR_UNKNOWN_BUYER_FORMAT, buyer));
-            Log.d(TAG, String.format(ERROR_UNKNOWN_BUYER_FORMAT, buyer));
+            Log.v(TAG, String.format(ERROR_UNKNOWN_BUYER_FORMAT, buyer.toString()));
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR,
                     COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             err.printf(ERROR_TIMEOUT_DB);
-            Log.d(TAG, ERROR_TIMEOUT_DB);
+            Log.v(TAG, ERROR_TIMEOUT_DB);
             return toShellCommandResult(
                     RESULT_TIMEOUT_ERROR, COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA);
         }
 
         GetBidsRequest.GetBidsRawRequest request = getBidsRawRequestForBuyer(buyerInput);
-        Log.d(TAG, "Loaded GetBidsRawRequest: " + request.toString());
+        Log.v(TAG, "Loaded GetBidsRawRequest: " + request.toString());
         try {
             out.printf(
                     new JSONObject()
@@ -136,7 +137,7 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                                     Base64.encodeToString(request.toByteArray(), Base64.DEFAULT))
                             .toString());
         } catch (JSONException e) {
-            Log.d(TAG, String.format(ERROR_JSON_FORMAT, e.getMessage()));
+            Log.v(TAG, ERROR_JSON_FORMAT, e);
             err.printf(String.format(ERROR_JSON_FORMAT, e.getMessage()));
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR,
@@ -149,8 +150,12 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
     private GetBidsRequest.GetBidsRawRequest getBidsRawRequestForBuyer(BuyerInput buyerInput) {
         return GetBidsRequest.GetBidsRawRequest.newBuilder()
                 .setIsChaff(false)
-                .setBuyerInput(buyerInput)
+                .setBuyerInput(buyerInput.toBuilder().clearProtectedAppSignals().build())
                 .setAuctionSignals(new JSONObject().toString())
+                .setProtectedAppSignalsBuyerInput(
+                        ProtectedAppSignalsBuyerInput.newBuilder()
+                                .setProtectedAppSignals(buyerInput.getProtectedAppSignals())
+                                .build())
                 .setBuyerSignals(new JSONObject().toString())
                 .setEnableDebugReporting(true)
                 .setClientType(ClientType.ANDROID)
@@ -170,8 +175,11 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                         .get(DB_TIMEOUT_SEC, TimeUnit.SECONDS);
 
         if (!buyerInputs.containsKey(buyer)) {
+            Log.v(TAG, "get-ad-selection-data cmd: Could not find buyer in BuyerInput list.");
             throw new IllegalStateException(
                     String.format(ERROR_UNKNOWN_BUYER_FORMAT, buyer.toString()));
+        } else {
+            Log.v(TAG, "get-ad-selection-data cmd: Found BuyerInput for given buyer.");
         }
         AuctionServerDataCompressor.CompressedData compressedData = buyerInputs.get(buyer);
 

@@ -18,13 +18,15 @@ package android.app.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link SdkSandboxSystemServiceRegistry}. */
 @RunWith(JUnit4.class)
-public class SdkSandboxSystemServiceRegistryUnitTests {
+public class SdkSandboxSystemServiceRegistryUnitTests extends DeviceSupportedBaseTest {
 
     @Test
     public void testGetInstanceIsSingeltone() throws Exception {

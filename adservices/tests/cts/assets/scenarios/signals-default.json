@@ -17,6 +17,14 @@
         "body": "ProtectedSignalsSecond.json"
       },
       "verify_called": true
+    },
+    {
+      "request": {
+        "path": "/signalsLeave"
+      },
+      "response": {
+        "body": "ProtectedSignalsLeave.json"
+      }
     }
   ]
 }

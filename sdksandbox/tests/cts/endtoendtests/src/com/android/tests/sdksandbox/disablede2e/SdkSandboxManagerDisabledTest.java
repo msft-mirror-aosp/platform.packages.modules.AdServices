@@ -38,7 +38,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class SdkSandboxManagerDisabledTest {
 
-    @Rule
+    @Rule(order = 0)
     public final ActivityScenarioRule<TestActivity> mRule =
             new ActivityScenarioRule<>(TestActivity.class);
 

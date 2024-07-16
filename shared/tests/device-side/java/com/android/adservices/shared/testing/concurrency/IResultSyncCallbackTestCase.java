@@ -73,7 +73,7 @@ public abstract class IResultSyncCallbackTestCase<
         assertInitialState(mCallback);
         R injectedResult = newResult();
 
-        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         R receivedResult = mCallback.assertResultReceived();
 
         expect.withMessage("%s.assertResultReceived()", mCallback)
@@ -99,7 +99,7 @@ public abstract class IResultSyncCallbackTestCase<
         assertInitialState(mCallback);
         R injectedResult = null;
 
-        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         R receivedResult = mCallback.assertResultReceived();
 
         expect.withMessage("%s.assertResultReceived()", mCallback).that(receivedResult).isNull();
@@ -115,7 +115,7 @@ public abstract class IResultSyncCallbackTestCase<
         assertInitialState(mCallback);
         R injectedResult = newResult();
 
-        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         mCallback.assertCalled();
 
         assertGetResultMethods(mCallback, "after injectResult()", injectedResult);
@@ -126,7 +126,7 @@ public abstract class IResultSyncCallbackTestCase<
         assertInitialState(mCallback);
         R injectedResult = null;
 
-        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         mCallback.assertCalled();
 
         assertGetResultMethods(mCallback, "after injectResult()", injectedResult);

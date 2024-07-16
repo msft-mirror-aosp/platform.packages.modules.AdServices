@@ -178,6 +178,42 @@ public class CustomAudienceTestFixture {
                 .build();
     }
 
+    /** Create a custom audience with a list of ads with a generated ad render id. */
+    public CustomAudience createCustomAudienceWithAdRenderId(
+            String name,
+            final AdTechIdentifier buyer,
+            List<Double> bids,
+            Instant activationTime,
+            Instant expirationTime) {
+        // Generate ads for with bids provided
+        List<AdData> ads = new ArrayList<>();
+
+        // Create ads with the buyer name and bid number as the ad URI
+        // Add the bid value to the metadata
+        for (int i = 0; i < bids.size(); i++) {
+            ads.add(
+                    new AdData.Builder()
+                            .setRenderUri(
+                                    CommonFixture.getUri(buyer, AD_URI_PREFIX + "/ad" + (i + 1)))
+                            .setMetadata("{\"result\":" + bids.get(i) + "}")
+                            .setAdRenderId(String.format("%s", i))
+                            .build());
+        }
+
+        return new CustomAudience.Builder()
+                .setBuyer(buyer)
+                .setName(name)
+                .setActivationTime(activationTime)
+                .setExpirationTime(expirationTime)
+                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(
+                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
+                .setBiddingLogicUri(CommonFixture.getUri(buyer, BUYER_BIDDING_LOGIC_URI_PATH))
+                .setAds(ads)
+                .build();
+    }
+
     /** Create a custom audience with given domains. */
     public CustomAudience createCustomAudienceWithSubdomains(
             final AdTechIdentifier buyer, List<Double> bids) {
