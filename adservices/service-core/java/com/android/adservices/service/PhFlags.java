@@ -4297,16 +4297,12 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED
                         + " = "
                         + getMeasurementReportingJobServiceEnabled());
+
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON
                         + " = "
                         + getMeasurementPrivacyEpsilon());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE
-                        + " = "
-                        + getMeasurementEnableEventLevelEpsilonInSource());
 
         writer.println(
                 "\t"
@@ -6400,13 +6396,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON,
                 DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
-    }
-
-    @Override
-    public boolean getMeasurementEnableEventLevelEpsilonInSource() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE,
-                MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE);
     }
 
     @Override

@@ -222,8 +222,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 /* httpResponseCode */ 0,
                 stats.isRedirectOnly(),
                 stats.isPARequest(),
-                stats.getNumDeletedEntities(),
-                stats.isEventLevelEpsilonEnabled());
+                stats.getNumDeletedEntities());
     }
 
     @Override

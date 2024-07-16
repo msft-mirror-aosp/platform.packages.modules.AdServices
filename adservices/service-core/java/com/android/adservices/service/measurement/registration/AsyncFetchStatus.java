@@ -53,7 +53,6 @@ public class AsyncFetchStatus {
     private boolean mIsRedirectOnly;
     private boolean mIsPARequest;
     private int mNumDeletedEntities;
-    private boolean mIsEventLevelEpsilonConfigured;
 
     public AsyncFetchStatus() {
         mResponseStatus = ResponseStatus.UNKNOWN;
@@ -62,7 +61,6 @@ public class AsyncFetchStatus {
         mResponseSize = 0L;
         mRegistrationDelay = 0L;
         mIsPARequest = false;
-        mIsEventLevelEpsilonConfigured = false;
     }
 
     /** Get the status of a communication with an Ad Tech server. */
@@ -153,16 +151,6 @@ public class AsyncFetchStatus {
     /** Set number of entities deleted. */
     public void incrementNumDeletedEntities(int numDeletedEntities) {
         mNumDeletedEntities += numDeletedEntities;
-    }
-
-    /** Returns {@code true} if Sources can have epsilon configured. */
-    public boolean isEventLevelEpsilonConfigured() {
-        return mIsEventLevelEpsilonConfigured;
-    }
-
-    /** Sets event level epsilon configure status. */
-    public void setIsEventLevelEpsilonConfigured(boolean isEventLevelEpsilonConfigured) {
-        mIsEventLevelEpsilonConfigured = isEventLevelEpsilonConfigured;
     }
 
     /** Returns true if request is successful. */

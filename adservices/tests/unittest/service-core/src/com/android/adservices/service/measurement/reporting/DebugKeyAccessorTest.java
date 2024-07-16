@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
 import static com.android.adservices.service.measurement.SourceFixture.ValidSourceParams;
 import static com.android.adservices.service.measurement.SourceFixture.getMinimalValidSourceBuilder;
 import static com.android.adservices.service.measurement.TriggerFixture.ValidTriggerParams;
@@ -54,6 +53,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+
 /** Unit tests for {@link DebugKeyAccessor} */
 @RunWith(MockitoJUnitRunner.class)
 public class DebugKeyAccessorTest {
@@ -90,8 +90,6 @@ public class DebugKeyAccessorTest {
         when(mFlags.getMeasurementPlatformDebugAdIdMatchingLimit())
                 .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
         when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
-        when(mFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(false);
-        when(mFlags.getMeasurementPrivacyEpsilon()).thenReturn(DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
     }
 
     @Test
