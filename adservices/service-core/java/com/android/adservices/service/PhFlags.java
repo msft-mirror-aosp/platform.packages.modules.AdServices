@@ -77,6 +77,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ASYN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -87,6 +91,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
@@ -3058,6 +3063,41 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public float getMeasurementAttributionScopeMaxInfoGainNavigation() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION,
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+    }
+
+    @Override
+    public float getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION,
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION);
+    }
+
+    @Override
+    public float getMeasurementAttributionScopeMaxInfoGainEvent() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT,
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
+    }
+
+    @Override
+    public float getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT,
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT);
+    }
+
+    @Override
+    public boolean getMeasurementEnableFakeReportTriggerTime() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME,
+                MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME);
+    }
+
+    @Override
     public long getMeasurementMaxReportStatesPerSourceRegistration() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION,
@@ -5458,6 +5498,31 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE
                         + " = "
                         + getMeasurementMaxAttributionScopesPerSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION
+                        + " = "
+                        + getMeasurementAttributionScopeMaxInfoGainNavigation());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION
+                        + " = "
+                        + getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT
+                        + " = "
+                        + getMeasurementAttributionScopeMaxInfoGainEvent());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT
+                        + " = "
+                        + getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME
+                        + " = "
+                        + getMeasurementEnableFakeReportTriggerTime());
         writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
         writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
         writer.println("\t" + KEY_ADEXT_WRITE_TIMEOUT_MS + " = " + getAdExtWriteTimeoutMs());

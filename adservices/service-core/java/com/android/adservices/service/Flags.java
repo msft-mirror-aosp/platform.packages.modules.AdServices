@@ -830,6 +830,47 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
     }
 
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION = 11.55F;
+
+    /** Returns max information gain for navigation sources with attribution scopes. */
+    default float getMeasurementAttributionScopeMaxInfoGainNavigation() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+    }
+
+    @ConfigFlag
+    float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION = 11.55F;
+
+    /**
+     * Returns max information gain for navigation sources with dual destination and attribution
+     * scopes.
+     */
+    default float getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
+    }
+
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT = 6.5F;
+
+    /** Returns max information gain for event sources with attribution scopes. */
+    default float getMeasurementAttributionScopeMaxInfoGainEvent() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
+    }
+
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT = 6.5F;
+
+    /**
+     * Returns max information gain for event sources with dual destination and attribution scopes.
+     */
+    default float getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME = false;
+
+    /** Returns true if fake report trigger time is enabled. */
+    default boolean getMeasurementEnableFakeReportTriggerTime() {
+        return MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
+    }
+
     long MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION = (1L << 32) - 1L;
 
     /** Returns max repot states per source registration */
