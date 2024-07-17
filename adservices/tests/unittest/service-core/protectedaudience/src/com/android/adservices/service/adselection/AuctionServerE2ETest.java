@@ -1421,6 +1421,121 @@ public class AuctionServerE2ETest {
 
     @Test
     public void
+            testGetAdSelectionData_withoutEncrypt_validRequest_WithSellerConfigurationPerBuyerLimitsGreedyEnabled()
+                    throws Exception {
+        Flags flags =
+                new AuctionServerE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public int getFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
+                        return CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl.VERSION;
+                    }
+
+                    @Override
+                    public int getFledgeAuctionServerPayloadFormatVersion() {
+                        return AuctionServerPayloadFormatterExcessiveMaxSize.VERSION;
+                    }
+
+                    @Override
+                    // Disable filtering as it takes too much time
+                    public boolean getFledgeFrequencyCapFilteringEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeAppInstallFilteringEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
+                        return false;
+                    }
+                };
+
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, flags);
+
+        doReturn(flags).when(FlagsFactory::getFlags);
+
+        AdSelectionService adSelectionService =
+                createAdSelectionService(
+                        flags,
+                        adFilteringFeatureFactory); // create the service again with new flags
+
+        List<AdTechIdentifier> buyersList = ImmutableList.of(BUYER_1, BUYER_2);
+
+        // Init with 100 CAs, which by compressing everything is larger than 4Kb
+        createAndPersistBulkDBCustomAudiences(buyersList, 100);
+
+        byte[] encodedSignals = new byte[] {2, 3, 5, 7, 11, 13, 17, 19};
+        createAndPersistEncodedSignals(BUYER_1, encodedSignals);
+        createAndPersistEncodedSignals(BUYER_2, encodedSignals);
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
+
+        int maxPayloadSizeBytes = 4 * 1024; // 4KB
+
+        SellerConfiguration sellerConfiguration =
+                new SellerConfiguration.Builder()
+                        .setPerBuyerConfigurations(
+                                Set.of(PER_BUYER_CONFIGURATION_1, PER_BUYER_CONFIGURATION_2))
+                        .setMaximumPayloadSizeBytes(maxPayloadSizeBytes)
+                        .build();
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setSellerConfiguration(sellerConfiguration)
+                        .build();
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(adSelectionService, input);
+
+        assertTrue(callback.mIsSuccess);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAssetFileDescriptor());
+
+        int totalNumCAsInBuyerInput = 0;
+
+        byte[] encryptedBytes = getAdSelectionData(callback.mGetAdSelectionDataResponse);
+        // Since encryption is mocked to do nothing then just passing encrypted byte[]
+        Map<AdTechIdentifier, BuyerInput> buyerInputMap =
+                getBuyerInputMapFromDecryptedBytes(encryptedBytes);
+        for (AdTechIdentifier buyer : buyersList) {
+            BuyerInput buyerInput = buyerInputMap.get(buyer);
+
+            // no signals should be added since each buyer target size is less than 1.5 KB
+            ProtectedAppSignals protectedAppSignals = buyerInput.getProtectedAppSignals();
+            Assert.assertTrue(protectedAppSignals.getAppInstallSignals().isEmpty());
+
+            totalNumCAsInBuyerInput += buyerInput.getCustomAudiencesList().size();
+        }
+
+        assertThat(totalNumCAsInBuyerInput).isGreaterThan(20);
+
+        // Make sure payload size is smaller than max, even ith persisting 100 CAs
+        assertThat(encryptedBytes.length)
+                .isAtMost(sellerConfiguration.getMaximumPayloadSizeBytes());
+
+        // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics are not called
+        verify(mAdServicesLoggerMock, never()).logGetAdSelectionDataBuyerInputGeneratedStats(any());
+
+        // Verify GetAdSelectionDataApiCalledStats metrics are not called
+        verify(mAdServicesLoggerMock, never()).logGetAdSelectionDataApiCalledStats(any());
+    }
+
+    @Test
+    public void
             testGetAdSelectionData_validRequest_successPayloadMetricsEnabled_withSourceCoordinator()
                     throws Exception {
         ArgumentCaptor<GetAdSelectionDataApiCalledStats> argumentCaptorApiCalledStats =

@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_3;
+import static android.adservices.adselection.SellerConfigurationFixture.PER_BUYER_CONFIGURATION_1;
 import static android.adservices.adselection.SellerConfigurationFixture.SELLER_CONFIGURATION;
 
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
@@ -32,7 +33,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
@@ -69,6 +69,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -227,11 +228,12 @@ public class BuyerInputGeneratorTest {
     }
 
     @Test
-    public void testBuyerInputGenerator_returnsBuyerInputs_onlyBuyersInPayloadOptimizationContext()
-            throws ExecutionException,
-                    InterruptedException,
-                    TimeoutException,
-                    InvalidProtocolBufferException {
+    public void
+            testBuyerInputGenerator_returnsBuyerInputs_onlyBuyersInPayloadOptimizationContext_SellerMaxImpl()
+                    throws ExecutionException,
+                            InterruptedException,
+                            TimeoutException,
+                            InvalidProtocolBufferException {
         // Set AdFiltering to return all custom audiences in the input argument.
         when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
                 .thenAnswer(i -> i.getArguments()[0]);
@@ -247,17 +249,25 @@ public class BuyerInputGeneratorTest {
         Map<String, DBCustomAudience> namesAndCustomAudiences =
                 createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
 
+        PayloadOptimizationContext payloadOptimizationContext =
+                PayloadOptimizationContext.builder()
+                        .setMaxBuyerInputSizeBytes(
+                                SELLER_CONFIGURATION.getMaximumPayloadSizeBytes())
+                        .setPerBuyerConfigurations(SELLER_CONFIGURATION.getPerBuyerConfigurations())
+                        .setOptimizationsEnabled(true)
+                        .build();
+
         CompressedBuyerInputCreatorHelper helper =
                 new CompressedBuyerInputCreatorHelper(
                         mAuctionServerPayloadMetricsStrategyDisabled, false, false);
         when(mCompressedBuyerInputCreatorFactoryMock.createCompressedBuyerInputCreator(
-                        SELLER_CONFIGURATION.getMaximumPayloadSizeBytes(), mStatsBuilderMock))
+                        payloadOptimizationContext, mStatsBuilderMock))
                 .thenReturn(
                         new CompressedBuyerInputCreatorSellerPayloadMaxImpl(
                                 helper,
                                 mDataCompressor,
                                 5,
-                                SELLER_CONFIGURATION.getMaximumPayloadSizeBytes(),
+                                payloadOptimizationContext.getMaxBuyerInputSizeBytes(),
                                 PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES,
                                 Clock.systemUTC(),
                                 mStatsBuilderMock));
@@ -267,14 +277,6 @@ public class BuyerInputGeneratorTest {
                         new BuyerInputDataFetcherBuyerAllowListImpl(
                                 mCustomAudienceDao, mEncodedPayloadDao));
 
-        PayloadOptimizationContext payloadOptimizationContext =
-                PayloadOptimizationContext.builder()
-                        .setMaxBuyerInputSizeBytes(
-                                SELLER_CONFIGURATION.getMaximumPayloadSizeBytes())
-                        .setPerBuyerConfigurations(SELLER_CONFIGURATION.getPerBuyerConfigurations())
-                        .setOptimizationsEnabled(true)
-                        .build();
-
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
                         .createCompressedBuyerInputs(payloadOptimizationContext, mStatsBuilderMock)
@@ -283,6 +285,83 @@ public class BuyerInputGeneratorTest {
         Assert.assertEquals(Set.of(BUYER_1, BUYER_2), buyerAndBuyerInputs.keySet());
         // BUYER 3 is not in the buyer allowlist of seller configurations, so it should not be
         // included in the payload
+        assertFalse(buyerAndBuyerInputs.containsKey(BUYER_3));
+
+        for (AdTechIdentifier buyer : buyerAndBuyerInputs.keySet()) {
+            BuyerInput buyerInput =
+                    BuyerInput.parseFrom(
+                            mDataCompressor.decompress(buyerAndBuyerInputs.get(buyer)).getData());
+            for (BuyerInput.CustomAudience buyerInputsCA : buyerInput.getCustomAudiencesList()) {
+                String buyerInputsCAName = buyerInputsCA.getName();
+                assertTrue(namesAndCustomAudiences.containsKey(buyerInputsCAName));
+                DBCustomAudience deviceCA = namesAndCustomAudiences.get(buyerInputsCAName);
+                Assert.assertEquals(deviceCA.getName(), buyerInputsCAName);
+                Assert.assertEquals(deviceCA.getBuyer(), buyer);
+                assertEqual(buyerInputsCA, deviceCA, true);
+            }
+        }
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
+    }
+
+    @Test
+    public void
+            testBuyerInputGenerator_returnsBuyerInputs_onlyBuyersInPayloadOptimizationContext_PerBuyerLimitsGreedyImpl()
+                    throws ExecutionException,
+                            InterruptedException,
+                            TimeoutException,
+                            InvalidProtocolBufferException {
+        // Set AdFiltering to return all custom audiences in the input argument.
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+
+        Map<String, AdTechIdentifier> nameAndBuyersMap =
+                Map.of(
+                        "Shoes CA of Buyer 1", BUYER_1,
+                        "Shirts CA of Buyer 1", BUYER_1,
+                        "Shoes CA Of Buyer 2", BUYER_2,
+                        "Shirts CA of Buyer 3", BUYER_3);
+        Map<String, DBCustomAudience> namesAndCustomAudiences =
+                createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
+
+        PayloadOptimizationContext payloadOptimizationContext =
+                PayloadOptimizationContext.builder()
+                        .setMaxBuyerInputSizeBytes(
+                                SELLER_CONFIGURATION.getMaximumPayloadSizeBytes())
+                        .setPerBuyerConfigurations(ImmutableSet.of(PER_BUYER_CONFIGURATION_1))
+                        .setOptimizationsEnabled(true)
+                        .build();
+
+        CompressedBuyerInputCreatorHelper helper =
+                new CompressedBuyerInputCreatorHelper(
+                        mAuctionServerPayloadMetricsStrategyDisabled,
+                        /* pasExtendedMetricsEnabled= */ false,
+                        /* enableOmitAds= */ false);
+        when(mCompressedBuyerInputCreatorFactoryMock.createCompressedBuyerInputCreator(
+                        payloadOptimizationContext, mStatsBuilderMock))
+                .thenReturn(
+                        new CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl(
+                                helper,
+                                mDataCompressor,
+                                payloadOptimizationContext,
+                                PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES));
+
+        when(mCompressedBuyerInputCreatorFactoryMock.getBuyerInputDataFetcher())
+                .thenReturn(
+                        new BuyerInputDataFetcherBuyerAllowListImpl(
+                                mCustomAudienceDao, mEncodedPayloadDao));
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
+                mBuyerInputGenerator
+                        .createCompressedBuyerInputs(payloadOptimizationContext, mStatsBuilderMock)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.MILLISECONDS);
+
+        assertThat(buyerAndBuyerInputs.keySet()).containsExactly(BUYER_1);
+        // BUYER 2 and BUYER 3 is not in the buyer allowlist of seller configurations, so it should
+        // not be included in the payload
+        assertFalse(buyerAndBuyerInputs.containsKey(BUYER_2));
         assertFalse(buyerAndBuyerInputs.containsKey(BUYER_3));
 
         for (AdTechIdentifier buyer : buyerAndBuyerInputs.keySet()) {
@@ -1066,7 +1145,7 @@ public class BuyerInputGeneratorTest {
                 new CompressedBuyerInputCreatorHelper(
                         serverPayloadMetricsStrategy, pasExtendedMetricsEnabled, omitAdsEnabled);
         when(mCompressedBuyerInputCreatorFactoryMock.createCompressedBuyerInputCreator(
-                        anyInt(), any()))
+                        any(), any()))
                 .thenReturn(
                         new CompressedBuyerInputCreatorNoOptimizations(
                                 helper,
