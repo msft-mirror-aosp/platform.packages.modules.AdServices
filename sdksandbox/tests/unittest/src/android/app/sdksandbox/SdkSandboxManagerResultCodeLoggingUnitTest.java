@@ -37,6 +37,8 @@ import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,7 +51,7 @@ import java.util.Collection;
 
 /** Tests for the result code logging logic in {@link SdkSandboxManager}. */
 @RunWith(Parameterized.class)
-public class SdkSandboxManagerResultCodeLoggingUnitTest {
+public class SdkSandboxManagerResultCodeLoggingUnitTest extends DeviceSupportedBaseTest {
     @SdkSandboxManager.LoadSdkErrorCode
     @Parameterized.Parameter(0)
     public int mLoadSdkErrorCode;
