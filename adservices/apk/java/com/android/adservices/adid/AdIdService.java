@@ -28,8 +28,6 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.util.Clock;
 
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
 import java.util.Objects;
 
 /** AdId Service */
@@ -74,10 +72,5 @@ public class AdIdService extends Service {
         }
 
         return Objects.requireNonNull(mAdIdService);
-    }
-
-    @Override
-    public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
-        super.dump(fd, writer, args);
     }
 }

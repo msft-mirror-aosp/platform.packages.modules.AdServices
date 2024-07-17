@@ -18,7 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
 
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -401,7 +401,7 @@ public class TrustedBiddingDataFetcherTest {
                                                         .toString())
                                         .setResponseHeaders(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(Integer.toString(DATA_VERSION_1))))
                                         .build()));
 
@@ -424,10 +424,7 @@ public class TrustedBiddingDataFetcherTest {
                 result.get(PATH_1).getBody().toString());
         assertEquals(
                 Integer.toString(DATA_VERSION_1),
-                result.get(PATH_1)
-                        .getHeaders()
-                        .getJSONArray(DATA_VERSION_HEADER_BIDDING_KEY)
-                        .get(0));
+                result.get(PATH_1).getHeaders().getJSONArray(DATA_VERSION_HEADER_KEY).get(0));
     }
 
     @Test
@@ -444,7 +441,7 @@ public class TrustedBiddingDataFetcherTest {
                                                         .toString())
                                         .setResponseHeaders(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(Integer.toString(DATA_VERSION_1))))
                                         .build()));
 

@@ -28,7 +28,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.BIDDING_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.MISSING_TRUSTED_BIDDING_SIGNALS;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_JAVASCRIPT;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.STOP_ELAPSED_TIMESTAMP;
@@ -568,7 +568,7 @@ public class AdBidGeneratorImplTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(DATA_VERSION_1))))
                                 .build());
 
@@ -686,7 +686,7 @@ public class AdBidGeneratorImplTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(DATA_VERSION_1))))
                                 .build());
 
@@ -802,7 +802,7 @@ public class AdBidGeneratorImplTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(DATA_VERSION_1, DATA_VERSION_2))))
                                 .build());
 
@@ -1124,7 +1124,7 @@ public class AdBidGeneratorImplTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(DATA_VERSION_1))))
                                 .build());
 

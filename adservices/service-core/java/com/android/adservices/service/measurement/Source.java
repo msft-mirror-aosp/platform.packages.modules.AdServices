@@ -121,6 +121,7 @@ public class Source {
     @Nullable private Long mMaxEventStates;
     private long mDestinationLimitPriority;
     @Nullable private DestinationLimitAlgorithm mDestinationLimitAlgorithm;
+    @Nullable private Double mEventLevelEpsilon;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -329,13 +330,20 @@ public class Source {
             long attributionScopeLimit =
                     getAttributionScopeLimit() == null ? 1L : getAttributionScopeLimit();
             long maxEventStates = getMaxEventStates() == null ? 1L : getMaxEventStates();
+            double epsilon = getConditionalEventLevelEpsilon(flags);
             return Combinatorics.getMaxInformationGainWithAttributionScope(
-                    numTriggerStates,
-                    attributionScopeLimit,
-                    maxEventStates,
-                    flags.getMeasurementPrivacyEpsilon());
+                    numTriggerStates, attributionScopeLimit, maxEventStates, epsilon);
         }
         return Combinatorics.getInformationGain(numTriggerStates, flipProbability);
+    }
+
+    /** Retrieves the default epsilon or epsilon defined from Source. */
+    public double getConditionalEventLevelEpsilon(Flags flags) {
+        if (flags.getMeasurementEnableEventLevelEpsilonInSource()
+                && getEventLevelEpsilon() != null) {
+            return getEventLevelEpsilon();
+        }
+        return flags.getMeasurementPrivacyEpsilon();
     }
 
     private boolean isFlexLiteApiValueValid(Flags flags) {
@@ -352,7 +360,7 @@ public class Source {
             setFlipProbability(mTriggerSpecs.getFlipProbability(this, flags));
             return;
         }
-        double epsilon = (double) flags.getMeasurementPrivacyEpsilon();
+        double epsilon = getConditionalEventLevelEpsilon(flags);
         setFlipProbability(Combinatorics.getFlipProbability(getNumStates(flags), epsilon));
     }
 
@@ -642,7 +650,8 @@ public class Source {
                 && Objects.equals(mAttributionScopeLimit, source.mAttributionScopeLimit)
                 && Objects.equals(mMaxEventStates, source.mMaxEventStates)
                 && mDestinationLimitPriority == source.mDestinationLimitPriority
-                && Objects.equals(mDestinationLimitAlgorithm, source.mDestinationLimitAlgorithm);
+                && Objects.equals(mDestinationLimitAlgorithm, source.mDestinationLimitAlgorithm)
+                && Objects.equals(mEventLevelEpsilon, source.mEventLevelEpsilon);
     }
 
     @Override
@@ -697,7 +706,8 @@ public class Source {
                 mAttributionScopeLimit,
                 mMaxEventStates,
                 mDestinationLimitPriority,
-                mDestinationLimitAlgorithm);
+                mDestinationLimitAlgorithm,
+                mEventLevelEpsilon);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -946,6 +956,12 @@ public class Source {
     @Nullable
     public String getSharedFilterDataKeys() {
         return mSharedFilterDataKeys;
+    }
+
+    /** Returns the epsilon value set by source. */
+    @Nullable
+    public Double getEventLevelEpsilon() {
+        return mEventLevelEpsilon;
     }
 
     /**
@@ -1448,6 +1464,7 @@ public class Source {
             builder.setMaxEventStates(copyFrom.mMaxEventStates);
             builder.setDestinationLimitPriority(copyFrom.mDestinationLimitPriority);
             builder.setDestinationLimitAlgorithm(copyFrom.mDestinationLimitAlgorithm);
+            builder.setEventLevelEpsilon(copyFrom.mEventLevelEpsilon);
             return builder;
         }
 
@@ -1664,6 +1681,12 @@ public class Source {
         /** See {@link Source#getSharedFilterDataKeys()}. */
         public Builder setSharedFilterDataKeys(@Nullable String sharedFilterDataKeys) {
             mBuilding.mSharedFilterDataKeys = sharedFilterDataKeys;
+            return this;
+        }
+
+        /** See {@link Source#getEventLevelEpsilon()} ()}. */
+        public Builder setEventLevelEpsilon(@Nullable Double eventLevelEpsilon) {
+            mBuilding.mEventLevelEpsilon = eventLevelEpsilon;
             return this;
         }
 

@@ -44,7 +44,11 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
 
     private static final String PGK_NAME = "testPackageName";
     private static final int UID = 42;
-    private static final String DEFAULT_APP_SET_ID = "00000000-0000-0000-0000-000000000000";
+    private static final String DEFAULT_APP_SET_ID = "10000000-0000-0000-0000-000000000000";
+    private static final String DEFAULT_ZERO_APP_SET_ID = "00000000-0000-0000-0000-000000000000";
+    private static final String SUCCESS_RESPONSE = "success";
+    private static final String UNAUTHORIZED_RESPONSE = "unauthorized";
+    private static final String FAILURE_RESPONSE = "failure";
 
     @Test
     public void testGetSingleton() throws Exception {
@@ -54,7 +58,7 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
     @Test
     public void testGetAppSetIdOnResult() throws Exception {
         CompletableFuture<GetAppSetIdResult> future = new CompletableFuture<>();
-        AppSetIdWorker worker = newAppSetIdWorker(/* forSuccess= */ true);
+        AppSetIdWorker worker = newAppSetIdWorker(SUCCESS_RESPONSE);
 
         worker.getAppSetId(
                 PGK_NAME,
@@ -87,7 +91,7 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
     @Test
     public void testGetAppSetIdOnError() throws Exception {
         CompletableFuture<Integer> future = new CompletableFuture<>();
-        AppSetIdWorker worker = newAppSetIdWorker(/* forSuccess= */ false);
+        AppSetIdWorker worker = newAppSetIdWorker(FAILURE_RESPONSE);
 
         worker.getAppSetId(
                 PGK_NAME,
@@ -113,7 +117,40 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
                 .isEqualTo(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
     }
 
-    private AppSetIdWorker newAppSetIdWorker(boolean forSuccess) {
+    @Test
+    public void testGetAppSetIdOnUnauthorizedError() throws Exception {
+        CompletableFuture<GetAppSetIdResult> future = new CompletableFuture<>();
+        AppSetIdWorker worker = newAppSetIdWorker(UNAUTHORIZED_RESPONSE);
+
+        worker.getAppSetId(
+                PGK_NAME,
+                UID,
+                new IGetAppSetIdCallback.Stub() {
+                    @Override
+                    public void onResult(GetAppSetIdResult resultParcel) {
+                        Log.d(mTag, "onResult(): " + resultParcel);
+                        future.complete(resultParcel);
+                    }
+
+                    @Override
+                    public void onError(int resultCode) {
+                        Log.d(mTag, "onError(): " + resultCode);
+                        // should never be called.
+                        fail("onError() called: " + resultCode);
+                    }
+                });
+        GetAppSetIdResult result = future.get();
+
+        assertWithMessage("result of getAppSetId() unauthorized").that(result).isNotNull();
+        expect.withMessage("result.getAppSetId() unauthorized")
+                .that(result.getAppSetId())
+                .isEqualTo(DEFAULT_ZERO_APP_SET_ID);
+        expect.withMessage("result.getAppSetIdScope() unauthorized")
+                .that(result.getAppSetIdScope())
+                .isEqualTo(SCOPE_APP);
+    }
+
+    private AppSetIdWorker newAppSetIdWorker(String response) {
         IAppSetIdProviderService service =
                 new IAppSetIdProviderService.Stub() {
                     @Override
@@ -122,7 +159,7 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
                             String packageName,
                             IGetAppSetIdProviderCallback resultCallback)
                             throws RemoteException {
-                        if (forSuccess) {
+                        if (response.equals(SUCCESS_RESPONSE)) {
                             GetAppSetIdResult appSetIdInternal =
                                     new GetAppSetIdResult.Builder()
                                             .setStatusCode(STATUS_SUCCESS)
@@ -131,6 +168,8 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
                                             .setAppSetIdScope(SCOPE_APP)
                                             .build();
                             resultCallback.onResult(appSetIdInternal);
+                        } else if (response.equals(UNAUTHORIZED_RESPONSE)) {
+                            resultCallback.onError("Unauthorized caller: com.google.test");
                         } else {
                             resultCallback.onError("testOnError");
                         }

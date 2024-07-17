@@ -18,7 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
 
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
@@ -63,7 +63,7 @@ public class BuyerContextualSignalsDataVersionFetcherImplTest {
                             .setHeaders(
                                     new JSONObject(
                                             ImmutableMap.of(
-                                                    DATA_VERSION_HEADER_BIDDING_KEY,
+                                                    DATA_VERSION_HEADER_KEY,
                                                     List.of(DATA_VERSION_1))))
                             .build());
 

@@ -18,7 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_SCORING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.adselection.DataVersionFetcher.getSellerDataVersion;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.getResultCodeFromException;
 
@@ -451,7 +451,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     private ListenableFuture<AdServicesHttpClientResponse> fetchTrustedScoringData(Uri uri) {
         if (mDataVersionHeaderEnabled) {
             return mAdServicesHttpsClient.fetchPayload(
-                    uri, ImmutableSet.of(DATA_VERSION_HEADER_SCORING_KEY), mDevContext);
+                    uri, ImmutableSet.of(DATA_VERSION_HEADER_KEY), mDevContext);
         } else {
             return mAdServicesHttpsClient.fetchPayload(uri, mDevContext);
         }

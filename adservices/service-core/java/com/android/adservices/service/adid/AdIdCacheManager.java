@@ -57,6 +57,8 @@ public final class AdIdCacheManager {
     @VisibleForTesting static final String SHARED_PREFS_IAPC = "adservices_PPAPI_IAPC";
     private static final String SHARE_PREFS_CACHED_AD_ID_KEY = "cached_ad_id";
     private static final String SHARE_PREFS_CACHED_LAT_KEY = "cached_lat";
+
+    private static final String UNAUTHORIZED = "Unauthorized caller";
     // A default AdId to indicate the AdId is not set in the cache.
     private static final AdId UNSET_AD_ID =
             new AdId(/* adId */ "", /* limitAdTrackingEnabled */ false);
@@ -177,8 +179,14 @@ public final class AdIdCacheManager {
                         @Override
                         public void onError(String errorMessage) {
                             try {
-                                callback.onError(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
-
+                                if (errorMessage.startsWith(UNAUTHORIZED)) {
+                                    setCallbackOnResult(
+                                            callback,
+                                            new AdId(AdId.ZERO_OUT, true),
+                                            /* shouldUnbindFromProvider= */ false);
+                                } else {
+                                    callback.onError(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
+                                }
                                 LogUtil.e("Get AdId Error Message from Provider: %s", errorMessage);
                                 ErrorLogUtil.e(
                                         new RuntimeException(errorMessage),

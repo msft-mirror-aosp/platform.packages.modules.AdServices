@@ -26,6 +26,7 @@ import android.util.Log;
 
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
@@ -42,7 +43,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @RequiresAndroidServiceAvailable(intentAction = ACTION_ADID_PROVIDER_SERVICE)
-public final class AdIdManagerTest extends CtsAdIdEndToEndTestCase {
+public final class AdIdManagerTest extends AdServicesCtsTestCase
+        implements CtsAdIdEndToEndTestFlags {
 
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
 

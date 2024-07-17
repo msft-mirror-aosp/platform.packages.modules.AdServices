@@ -27,7 +27,7 @@ import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.M
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.QUERY_PARAM_RENDER_URIS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORES_COUNT_LESS_THAN_EXPECTED;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORING_TIMED_OUT;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_SCORING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_JAVASCRIPT;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.GET_AD_SCORES_END_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.GET_AD_SCORES_LATENCY_MS;
@@ -273,7 +273,7 @@ public class AdsScoreGeneratorImplTest {
                                 .equals(request.getPath()))
                             return new MockResponse()
                                     .setBody(mTrustedScoringSignals.toString())
-                                    .addHeader(DATA_VERSION_HEADER_SCORING_KEY, DATA_VERSION_1);
+                                    .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_1);
                         return new MockResponse().setResponseCode(404);
                     }
                 };

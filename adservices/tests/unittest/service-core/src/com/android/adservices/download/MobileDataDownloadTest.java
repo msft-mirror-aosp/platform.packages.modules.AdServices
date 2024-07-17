@@ -16,6 +16,9 @@
 
 package com.android.adservices.download;
 
+import static android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED;
+import static android.net.NetworkCapabilities.TRANSPORT_WIFI;
+
 import static com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus.SUCCESS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
@@ -28,7 +31,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.content.Context;
 import android.database.DatabaseUtils;
-import android.net.wifi.WifiManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
@@ -174,7 +178,6 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private FileDownloader mFileDownloader;
     private SharedDbHelper mDbHelper;
     private MobileDataDownload mMdd;
-    private WifiManager mWifiManager;
 
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
@@ -183,10 +186,9 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
     @Before
     public void setUp() throws Exception {
-        mWifiManager = mContext.getSystemService(WifiManager.class);
         // The MDD integration tests require wifi connection. If the running device is not
         // connected to the Wifi, tests should be skipped.
-        Assume.assumeTrue("Device must have wifi connection", mWifiManager.isWifiEnabled());
+        Assume.assumeTrue("Device must have wifi connection", isWifiConnected());
 
         mockMddFlags();
 
@@ -1034,6 +1036,19 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         doReturn(Flags.ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS)
                 .when(mMockFlags)
                 .getEncryptionKeyNetworkReadTimeoutMs();
+    }
+
+    /** Checks if the device is currently connected to an active WIFI network. */
+    // TODO(b/353723360): Move to a helper class under shared/ folder.
+    private boolean isWifiConnected() {
+        ConnectivityManager connectivityManager =
+                mContext.getSystemService(ConnectivityManager.class);
+        NetworkCapabilities networkCapabilities =
+                connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
+
+        return networkCapabilities != null
+                && networkCapabilities.hasTransport(TRANSPORT_WIFI)
+                && networkCapabilities.hasCapability(NET_CAPABILITY_VALIDATED);
     }
 
     private static void overridingMddLoggingLevel(String loggingLevel) {

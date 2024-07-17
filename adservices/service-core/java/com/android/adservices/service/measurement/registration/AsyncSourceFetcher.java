@@ -920,6 +920,22 @@ public class AsyncSourceFetcher {
                 builder.setDropSourceIfInstalled(
                         json.getBoolean(SourceHeaderContract.DROP_SOURCE_IF_INSTALLED));
             }
+            if (mFlags.getMeasurementEnableEventLevelEpsilonInSource()) {
+                if (!json.isNull(SourceHeaderContract.EVENT_LEVEL_EPSILON)) {
+                    Object eventLevelEpsilon = json.get(SourceHeaderContract.EVENT_LEVEL_EPSILON);
+                    Optional<Double> validEventLevelEpsilon =
+                            validateAndGetEventLevelEpsilon(eventLevelEpsilon);
+                    if (validEventLevelEpsilon.isEmpty()) {
+                        asyncFetchStatus.setEntityStatus(
+                                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+                        return Optional.empty();
+                    }
+                    asyncFetchStatus.setIsEventLevelEpsilonConfigured(true);
+                    builder.setEventLevelEpsilon(validEventLevelEpsilon.get());
+                } else {
+                    builder.setEventLevelEpsilon((double) mFlags.getMeasurementPrivacyEpsilon());
+                }
+            }
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
@@ -1061,6 +1077,18 @@ public class AsyncSourceFetcher {
                 SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE);
     }
 
+    private Optional<Double> validateAndGetEventLevelEpsilon(Object eventLevelEpsilonObj) {
+        if (!(eventLevelEpsilonObj instanceof Number)) {
+            return Optional.empty();
+        }
+        Double validEventLevelEpsilon = (Double) ((Number) eventLevelEpsilonObj).doubleValue();
+        if (validEventLevelEpsilon < 0
+                || validEventLevelEpsilon > mFlags.getMeasurementPrivacyEpsilon()) {
+            return Optional.empty();
+        }
+        return Optional.of(validEventLevelEpsilon);
+    }
+
     private boolean areValidAggregationKeys(JSONObject aggregationKeys) {
         if (aggregationKeys.length()
                 > mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration()) {
@@ -1150,6 +1178,7 @@ public class AsyncSourceFetcher {
         String MAX_EVENT_STATES = "max_event_states";
         String DESTINATION_LIMIT_PRIORITY = "destination_limit_priority";
         String DESTINATION_LIMIT_ALGORITHM = "destination_limit_algorithm";
+        String EVENT_LEVEL_EPSILON = "event_level_epsilon";
     }
 
     private interface SourceRequestContract {

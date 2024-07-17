@@ -126,10 +126,17 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
     private static final long START_TIME = 1674000000000L;
     private static final String TEST_DIR_NAME = "msmt_interop_tests";
     private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final String UNUSED = "";
     private static final List<AsyncFetchStatus.EntityStatus> sParsingErrors = List.of(
             AsyncFetchStatus.EntityStatus.PARSING_ERROR,
             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
     private static final Map<String, String> sApiConfigPhFlags = Map.ofEntries(
+            entry(
+                    "rate_limit_max_attributions",
+                    UNUSED),
+            entry(
+                    "aggregation_coordinator_origins",
+                    UNUSED),
             entry(
                     "rate_limit_max_attribution_reporting_origins",
                     FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION),

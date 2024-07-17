@@ -1039,7 +1039,8 @@ public final class FetcherUtilTest {
                                                 0,
                                                 false,
                                                 false,
-                                                0)
+                                                0,
+                                                false)
                                         .setAdTechDomain(null)
                                         .build()));
     }
@@ -1085,7 +1086,8 @@ public final class FetcherUtilTest {
                                                 0,
                                                 false,
                                                 false,
-                                                0)
+                                                0,
+                                                false)
                                         .setAdTechDomain(REGISTRATION_URI.toString())
                                         .build()));
     }
@@ -1134,7 +1136,8 @@ public final class FetcherUtilTest {
                                                 0,
                                                 false,
                                                 false,
-                                                0)
+                                                0,
+                                                false)
                                         .setAdTechDomain(null)
                                         .build()));
     }

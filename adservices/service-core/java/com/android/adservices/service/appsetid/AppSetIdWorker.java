@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.appsetid;
 
+import static android.adservices.appsetid.AppSetId.SCOPE_APP;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PROVIDER_SERVICE_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -54,6 +55,7 @@ import javax.annotation.concurrent.ThreadSafe;
 public final class AppSetIdWorker {
 
     private static final String APPSETID_DEFAULT = "00000000-0000-0000-0000-000000000000";
+    private static final String UNAUTHORIZED = "Unauthorized caller";
 
     private static final AppSetIdWorker sInstance =
             new AppSetIdWorker(ApplicationContextSingleton.get());
@@ -102,7 +104,7 @@ public final class AppSetIdWorker {
                             .setStatusCode(STATUS_SUCCESS)
                             .setErrorMessage("")
                             .setAppSetId(APPSETID_DEFAULT)
-                            .setAppSetIdScope(0)
+                            .setAppSetIdScope(SCOPE_APP)
                             .build();
             try {
                 callback.onResult(result);
@@ -160,7 +162,18 @@ public final class AppSetIdWorker {
                                 LogUtil.e(
                                         "Get AppSetId Error Message from Provider: %s",
                                         errorMessage);
-                                callback.onError(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
+                                if (errorMessage.startsWith(UNAUTHORIZED)) {
+                                    GetAppSetIdResult result =
+                                            new GetAppSetIdResult.Builder()
+                                                    .setStatusCode(STATUS_SUCCESS)
+                                                    .setErrorMessage(errorMessage)
+                                                    .setAppSetId(APPSETID_DEFAULT)
+                                                    .setAppSetIdScope(SCOPE_APP)
+                                                    .build();
+                                    callback.onResult(result);
+                                } else {
+                                    callback.onError(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
+                                }
                             } catch (RemoteException e) {
                                 LogUtil.e(
                                         e,

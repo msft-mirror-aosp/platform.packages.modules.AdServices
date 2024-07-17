@@ -237,7 +237,7 @@ public class ImpressionReporter {
                                 Trace.beginSection(Tracing.VALIDATE_REQUEST);
                                 sLogger.v("Starting filtering and validation.");
                                 mAdSelectionServiceFilter.filterRequest(
-                                        null,
+                                        adSelectionConfig.getSeller(),
                                         requestParams.getCallerPackageName(),
                                         mFlags
                                                 .getEnforceForegroundStatusForFledgeReportImpression(),
