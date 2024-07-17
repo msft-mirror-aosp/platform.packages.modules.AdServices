@@ -297,7 +297,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 0,
                                 false,
                                 false,
-                                0)
+                                0,
+                                false)
                         .setAdTechDomain(null)
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -351,7 +352,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 0,
                                 false,
                                 false,
-                                0)
+                                0,
+                                false)
                         .setAdTechDomain(null)
                         .build();
         String wrappedFilters =
@@ -4994,7 +4996,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 0,
                                 false,
                                 false,
-                                0)
+                                0,
+                                false)
                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
