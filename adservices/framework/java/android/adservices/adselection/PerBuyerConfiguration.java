@@ -16,7 +16,11 @@
 
 package android.adservices.adselection;
 
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
+
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
+import android.annotation.IntRange;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 import android.os.Parcel;
@@ -27,11 +31,11 @@ import java.util.concurrent.Executor;
 
 /**
  * Contains a per buyer configuration which will be used as part of a {@link SellerConfiguration} in
- * a {@link GetAdSelectionDataRequest}. This object will be created by the calling SDK as part of
- * creating the seller configuration.
+ * a {@link GetAdSelectionDataRequest}.
  *
- * @hide
+ * <p>This object will be created by the calling SDK as part of creating the seller configuration.
  */
+@FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
 public final class PerBuyerConfiguration implements Parcelable {
     @NonNull private final AdTechIdentifier mBuyer;
     private final int mTargetInputSizeBytes;
@@ -42,12 +46,13 @@ public final class PerBuyerConfiguration implements Parcelable {
     }
 
     private PerBuyerConfiguration(@NonNull AdTechIdentifier buyer, int targetInputSizeBytes) {
-        Objects.requireNonNull(buyer);
+        Objects.requireNonNull(buyer, "Buyer must be set.");
 
         mBuyer = buyer;
         mTargetInputSizeBytes = targetInputSizeBytes;
     }
 
+    @NonNull
     public static final Creator<PerBuyerConfiguration> CREATOR =
             new Creator<PerBuyerConfiguration>() {
                 @Override
@@ -82,9 +87,12 @@ public final class PerBuyerConfiguration implements Parcelable {
     /**
      * The service will make a best effort attempt to include this amount of bytes into the response
      * of {@link AdSelectionManager#getAdSelectionData(GetAdSelectionDataRequest, Executor,
-     * OutcomeReceiver)} for this buyer. If this is zero this buyer will share remaining space after
-     * other buyers' target sizes are respected.
+     * OutcomeReceiver)} for this buyer.
+     *
+     * <p>If this is zero this buyer will share remaining space after other buyers' target sizes are
+     * respected.
      */
+    @IntRange(from = 0, to = Integer.MAX_VALUE)
     public int getTargetInputSizeBytes() {
         return mTargetInputSizeBytes;
     }
@@ -121,12 +129,15 @@ public final class PerBuyerConfiguration implements Parcelable {
         }
 
         /**
-         * Sets the target input size in bytes for this configuration. If this is not explicitly
-         * set, this buyer will share remaining space after other buyers' target sizes are
-         * respected. See {@link #getTargetInputSizeBytes()} for more details.
+         * Sets the target input size in bytes for this configuration.
+         *
+         * <p>If this is not explicitly set, this buyer will share remaining space after other
+         * buyers' target sizes are respected. See {@link #getTargetInputSizeBytes()} for more
+         * details.
          */
         @NonNull
-        public Builder setTargetInputSizeBytes(int targetInputSizeB) {
+        public Builder setTargetInputSizeBytes(
+                @IntRange(from = 0, to = Integer.MAX_VALUE) int targetInputSizeB) {
             mTargetInputSizeBytes = targetInputSizeB;
             return this;
         }

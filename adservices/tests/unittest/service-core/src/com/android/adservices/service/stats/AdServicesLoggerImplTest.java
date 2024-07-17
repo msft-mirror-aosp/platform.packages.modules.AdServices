@@ -39,7 +39,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__SURFACE_TYPE__APP_REGISTRATION_SURFACE_TYPE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__RESPONSE_CODE__SUCCESS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__UPLOAD_METHOD__FALLBACK_REPORT_UPLOAD_METHOD;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
@@ -153,6 +156,8 @@ import java.util.List;
 @SpyStatic(AppNameApiErrorLogger.class)
 @SpyStatic(MeasurementCobaltLogger.class)
 public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTestCase {
+    private static final String TEST_SOURCE_REGISTRATION = "android-app://com.registrant";
+    private static final String TEST_ENROLLMENT_ID = "EnrollmentId";
 
     @Mock private StatsdAdServicesLogger mStatsdLoggerMock;
     @Mock private Flags mMockFlags;
@@ -453,22 +458,46 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testLogMeasurementReportReports() {
+    public void testLogMeasurementReports() throws Exception {
+        int testUploadMethod =
+                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__UPLOAD_METHOD__FALLBACK_REPORT_UPLOAD_METHOD;
+        int testReportType = AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
+        int testFailureType =
+                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE;
+        int testResultCode = AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__RESPONSE_CODE__SUCCESS;
         MeasurementReportsStats stats =
                 new MeasurementReportsStats.Builder()
                         .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
-                        .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
-                        .setResultCode(STATUS_SUCCESS)
+                        .setType(testReportType)
+                        .setUploadMethod(testUploadMethod)
+                        .setFailureType(testFailureType)
+                        .setResultCode(testResultCode)
+                        .setSourceRegistrant(TEST_SOURCE_REGISTRATION)
                         .build();
-        mAdservicesLogger.logMeasurementReports(stats);
+        mockMsmtReportingCobaltLogger();
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback)
+                .when(mMeasurementCobaltLogger)
+                .logReportingStatusWithAppName(
+                        TEST_SOURCE_REGISTRATION,
+                        testReportType,
+                        testUploadMethod,
+                        testResultCode,
+                        testFailureType);
         ArgumentCaptor<MeasurementReportsStats> argumentCaptor =
                 ArgumentCaptor.forClass(MeasurementReportsStats.class);
+
+        mAdservicesLogger.logMeasurementReports(stats);
+
         verify(mStatsdLoggerMock).logMeasurementReports(argumentCaptor.capture());
         MeasurementReportsStats loggedStats = argumentCaptor.getValue();
         expect.that(loggedStats.getCode()).isEqualTo(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED);
-        expect.that(loggedStats.getType())
-                .isEqualTo(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT);
-        expect.that(loggedStats.getResultCode()).isEqualTo(STATUS_SUCCESS);
+        expect.that(loggedStats.getType()).isEqualTo(testReportType);
+        expect.that(loggedStats.getUploadMethod()).isEqualTo(testUploadMethod);
+        expect.that(loggedStats.getResultCode()).isEqualTo(testResultCode);
+        expect.that(loggedStats.getFailureType()).isEqualTo(testFailureType);
+        expect.that(loggedStats.getSourceRegistrant()).isEqualTo(TEST_SOURCE_REGISTRATION);
+        callback.assertCalled();
     }
 
     @Test
@@ -534,7 +563,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
 
     @Test
     public void testLogMsmtRegistrationResponseSize() throws InterruptedException {
-        String sourceRegistrant = "com.android.test";
         boolean isEeaDevice = false;
         int metricsCode = AD_SERVICES_MEASUREMENT_REGISTRATIONS;
         int retryCount = 0;
@@ -548,12 +576,12 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         int failureType =
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE;
         mocker.mockGetFlags(mMockFlags);
-        mockMsmtCobaltLogger(isEeaDevice);
+        mockMsmtRegistrationCobaltLogger(isEeaDevice);
         AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
         doAnswer(callback)
                 .when(mMeasurementCobaltLogger)
                 .logRegistrationStatus(
-                        sourceRegistrant,
+                        TEST_SOURCE_REGISTRATION,
                         surfaceType,
                         registrationType,
                         interactionType,
@@ -570,10 +598,12 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                                 registrationStatus,
                                 failureType,
                                 registrationDelay,
-                                sourceRegistrant,
+                                TEST_SOURCE_REGISTRATION,
                                 retryCount,
                                 /* isRedirectOnly= */ false,
-                                /* isPARequest= */ false)
+                                /* isPARequest= */ false,
+                                /* num entities deleted */ 5,
+                                /* isEventLevelEpsilonEnabled= */ false)
                         .setAdTechDomain(null)
                         .build();
         mAdservicesLogger.logMeasurementRegistrationsResponseSize(stats);
@@ -589,29 +619,29 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getRegistrationDelay()).isEqualTo(registrationDelay);
         expect.that(loggedStats.getRegistrationType()).isEqualTo(registrationType);
         expect.that(loggedStats.getInteractionType()).isEqualTo(interactionType);
-        expect.that(loggedStats.getSourceRegistrant()).isEqualTo(sourceRegistrant);
+        expect.that(loggedStats.getSourceRegistrant()).isEqualTo(TEST_SOURCE_REGISTRATION);
         expect.that(loggedStats.getRetryCount()).isEqualTo(retryCount);
         expect.that(loggedStats.isPARequest()).isFalse();
         expect.that(loggedStats.isRedirectOnly()).isFalse();
         expect.that(loggedStats.getAdTechDomain()).isNull();
+        expect.that(loggedStats.getNumDeletedEntities()).isEqualTo(5);
+        expect.that(loggedStats.isEventLevelEpsilonEnabled()).isFalse();
         callback.assertCalled();
     }
 
     @Test
     public void testLogMsmtDebugKeyMatchStats() {
-        String sourceRegistrant = "android-app://com.registrant";
-        String enrollmentId = "EnrollmentId";
         long hashedValue = 5000L;
         long hashLimit = 10000L;
         MsmtDebugKeysMatchStats stats =
                 MsmtDebugKeysMatchStats.builder()
-                        .setAdTechEnrollmentId(enrollmentId)
+                        .setAdTechEnrollmentId(TEST_ENROLLMENT_ID)
                         .setMatched(true)
                         .setAttributionType(
                                 AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
                         .setDebugJoinKeyHashedValue(hashedValue)
                         .setDebugJoinKeyHashLimit(hashLimit)
-                        .setSourceRegistrant(sourceRegistrant)
+                        .setSourceRegistrant(TEST_SOURCE_REGISTRATION)
                         .build();
         mAdservicesLogger.logMeasurementDebugKeysMatch(stats);
         ArgumentCaptor<MsmtDebugKeysMatchStats> argumentCaptor =
@@ -622,19 +652,17 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
 
     @Test
     public void testLogMsmtAdIdMatchForDebugKeysStats() {
-        String sourceRegistrant = "android-app://com.registrant";
-        String enrollmentId = "enrollmentId";
         long uniqueAdIds = 2L;
         long uniqueAdIdLimit = 5L;
         MsmtAdIdMatchForDebugKeysStats stats =
                 MsmtAdIdMatchForDebugKeysStats.builder()
-                        .setAdTechEnrollmentId(enrollmentId)
+                        .setAdTechEnrollmentId(TEST_ENROLLMENT_ID)
                         .setMatched(true)
                         .setAttributionType(
                                 AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
                         .setNumUniqueAdIds(uniqueAdIds)
                         .setNumUniqueAdIdsLimit(uniqueAdIdLimit)
-                        .setSourceRegistrant(sourceRegistrant)
+                        .setSourceRegistrant(TEST_SOURCE_REGISTRATION)
                         .build();
         mAdservicesLogger.logMeasurementAdIdMatchForDebugKeysStats(stats);
         ArgumentCaptor<MsmtAdIdMatchForDebugKeysStats> argumentCaptor =
@@ -645,35 +673,51 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testLogMeasurementAttributionStats() {
+    public void testLogMeasurementAttributionStats() throws Exception {
+        int testSourceType = AttributionStatus.SourceType.VIEW.getValue();
+        int testSurfaceType = AttributionStatus.AttributionSurface.APP_WEB.getValue();
+        int testStatusCode = AttributionStatus.AttributionResult.SUCCESS.getValue();
+        int testFailureType = AttributionStatus.FailureType.UNKNOWN.getValue();
+        long testAttributionDelay = 100L;
+        mockMsmtAttributionCobaltLogger();
         MeasurementAttributionStats stats =
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
-                        .setSourceType(AttributionStatus.SourceType.VIEW.getValue())
-                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.getValue())
-                        .setResult(AttributionStatus.AttributionResult.SUCCESS.getValue())
-                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.getValue())
+                        .setSourceType(testSourceType)
+                        .setSourceRegistrant(TEST_SOURCE_REGISTRATION)
+                        .setSurfaceType(testSurfaceType)
+                        .setResult(testStatusCode)
+                        .setFailureType(testFailureType)
                         .setSourceDerived(false)
                         .setInstallAttribution(true)
-                        .setAttributionDelay(100L)
+                        .setAttributionDelay(testAttributionDelay)
                         .build();
-        mAdservicesLogger.logMeasurementAttributionStats(stats);
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback)
+                .when(mMeasurementCobaltLogger)
+                .logAttributionStatusWithAppName(
+                        TEST_SOURCE_REGISTRATION,
+                        testSurfaceType,
+                        testSourceType,
+                        testStatusCode,
+                        testFailureType);
         ArgumentCaptor<MeasurementAttributionStats> argumentCaptor =
                 ArgumentCaptor.forClass(MeasurementAttributionStats.class);
+
+        mAdservicesLogger.logMeasurementAttributionStats(stats);
+
         verify(mStatsdLoggerMock).logMeasurementAttributionStats(argumentCaptor.capture());
         MeasurementAttributionStats loggedStats = argumentCaptor.getValue();
         expect.that(loggedStats.getCode()).isEqualTo(AD_SERVICES_MEASUREMENT_ATTRIBUTION);
-        expect.that(loggedStats.getSourceType())
-                .isEqualTo(AttributionStatus.SourceType.VIEW.getValue());
-        expect.that(loggedStats.getSurfaceType())
-                .isEqualTo(AttributionStatus.AttributionSurface.APP_WEB.getValue());
-        expect.that(loggedStats.getResult())
-                .isEqualTo(AttributionStatus.AttributionResult.SUCCESS.getValue());
-        expect.that(loggedStats.getFailureType())
-                .isEqualTo(AttributionStatus.FailureType.UNKNOWN.getValue());
+        expect.that(loggedStats.getSourceRegistrant()).isEqualTo(TEST_SOURCE_REGISTRATION);
+        expect.that(loggedStats.getSourceType()).isEqualTo(testSourceType);
+        expect.that(loggedStats.getSurfaceType()).isEqualTo(testSurfaceType);
+        expect.that(loggedStats.getResult()).isEqualTo(testStatusCode);
+        expect.that(loggedStats.getFailureType()).isEqualTo(testFailureType);
         expect.that(loggedStats.isSourceDerived()).isFalse();
         expect.that(loggedStats.isInstallAttribution()).isTrue();
-        expect.that(loggedStats.getAttributionDelay()).isEqualTo(100L);
+        expect.that(loggedStats.getAttributionDelay()).isEqualTo(testAttributionDelay);
+        callback.assertCalled();
     }
 
     @Test
@@ -800,7 +844,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         boolean systemClickVerificationEnabled = true;
         long inputEventDelayMs = 200L;
         long validDelayWindowMs = 1000L;
-        String sourceRegistrant = "test_source_registrant";
         boolean clickDeduplicationEnabled = true;
         boolean clickDeduplicationEnforced = true;
         long maxSourcesPerClick = 1;
@@ -814,7 +857,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setSystemClickVerificationEnabled(systemClickVerificationEnabled)
                         .setInputEventDelayMillis(inputEventDelayMs)
                         .setValidDelayWindowMillis(validDelayWindowMs)
-                        .setSourceRegistrant(sourceRegistrant)
+                        .setSourceRegistrant(TEST_SOURCE_REGISTRATION)
                         .setClickDeduplicationEnabled(clickDeduplicationEnabled)
                         .setClickDeduplicationEnforced(clickDeduplicationEnforced)
                         .setMaxSourcesPerClick(maxSourcesPerClick)
@@ -829,7 +872,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
 
     @Test
     public void testLogEncryptionKeyFetchedStats() {
-        String enrollmentId = "enrollmentId";
         String encryptionKeyUrl = "https://www.adtech1.com/.well-known/encryption-keys";
 
         AdServicesEncryptionKeyFetchedStats stats =
@@ -837,7 +879,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setFetchJobType(ENCRYPTION_KEY_DAILY_FETCH_JOB)
                         .setFetchStatus(IO_EXCEPTION)
                         .setIsFirstTimeFetch(false)
-                        .setAdtechEnrollmentId(enrollmentId)
+                        .setAdtechEnrollmentId(TEST_ENROLLMENT_ID)
                         .setEncryptionKeyUrl(encryptionKeyUrl)
                         .build();
         mAdservicesLogger.logEncryptionKeyFetchedStats(stats);
@@ -1166,10 +1208,22 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         doReturn(mMockAppNameApiErrorLogger).when(() -> AppNameApiErrorLogger.getInstance());
     }
 
-    private void mockMsmtCobaltLogger(boolean isEeaDevice) {
+    private void mockMsmtRegistrationCobaltLogger(boolean isEeaDevice) {
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.getMsmtRegistrationCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.isEeaDevice()).thenReturn(isEeaDevice);
+        doReturn(mMeasurementCobaltLogger).when(() -> MeasurementCobaltLogger.getInstance());
+    }
+
+    private void mockMsmtAttributionCobaltLogger() {
+        when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
+        when(mMockFlags.getMsmtAttributionCobaltLoggingEnabled()).thenReturn(true);
+        doReturn(mMeasurementCobaltLogger).when(() -> MeasurementCobaltLogger.getInstance());
+    }
+
+    private void mockMsmtReportingCobaltLogger() {
+        when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
+        when(mMockFlags.getMsmtReportingCobaltLoggingEnabled()).thenReturn(true);
         doReturn(mMeasurementCobaltLogger).when(() -> MeasurementCobaltLogger.getInstance());
     }
 }

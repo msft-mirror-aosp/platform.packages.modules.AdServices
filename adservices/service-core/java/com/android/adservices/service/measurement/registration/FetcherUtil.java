@@ -397,7 +397,9 @@ public class FetcherUtil {
                                 getSourceRegistrantToLog(asyncRegistration),
                                 asyncFetchStatus.getRetryCount(),
                                 asyncFetchStatus.isRedirectOnly(),
-                                asyncFetchStatus.isPARequest())
+                                asyncFetchStatus.isPARequest(),
+                                asyncFetchStatus.getNumDeletedEntities(),
+                                asyncFetchStatus.isEventLevelEpsilonConfigured())
                         .setAdTechDomain(adTechDomain)
                         .build());
     }

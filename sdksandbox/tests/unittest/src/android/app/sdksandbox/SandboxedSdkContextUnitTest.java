@@ -34,6 +34,7 @@ import androidx.annotation.NonNull;
 import androidx.test.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -47,11 +48,9 @@ import org.mockito.quality.Strictness;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-/**
- * Tests {@link SandboxedSdkContext} APIs.
- */
+/** Tests {@link SandboxedSdkContext} APIs. */
 @RunWith(JUnit4.class)
-public class SandboxedSdkContextUnitTest {
+public class SandboxedSdkContextUnitTest extends DeviceSupportedBaseTest {
 
     private SandboxedSdkContext mSandboxedSdkContext;
     private static final String CLIENT_PACKAGE_NAME = "com.android.client";

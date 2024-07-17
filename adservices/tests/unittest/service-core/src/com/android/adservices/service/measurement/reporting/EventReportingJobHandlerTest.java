@@ -53,6 +53,8 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
+import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -75,6 +77,8 @@ import org.mockito.quality.Strictness;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Unit test for {@link EventReportingJobHandler} */
 @RunWith(MockitoJUnitRunner.class)
@@ -93,6 +97,8 @@ public class EventReportingJobHandlerTest {
     private static final String SOURCE_REGISTRANT = "android-app://com.registrant";
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final String SOURCE_ID = "source-id";
+    private static final String TRIGGER_ID = "trigger-id";
+    private static final String EVENT_REPORT_ID = "eventReportId";
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     DatastoreManager mDatastoreManager;
 
@@ -196,7 +202,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -212,7 +218,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -242,7 +248,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload)
                 .when(mSpyDebugEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -256,7 +262,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventDebugReportDelivered(any());
         verify(mSpyDebugEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -265,6 +271,7 @@ public class EventReportingJobHandlerTest {
     public void testSendReportSuccess_reinstallAttributionEnabled_persistsAppReportHistory()
             throws DatastoreException, IOException, JSONException {
         when(mFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
+        Long reportTime = 10L;
         EventReport eventReport =
                 new EventReport.Builder()
                         .setId("eventReportId")
@@ -275,13 +282,14 @@ public class EventReportingJobHandlerTest {
                         .setSourceDebugKey(SOURCE_DEBUG_KEY)
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setReportTime(reportTime)
                         .setSourceId(SOURCE_ID)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setAttributionDestinations(
                                 List.of(
                                         DEFAULT_WEB_DESTINATION,
                                         ALT_WEB_DESTINATION,
                                         APP_DESTINATION))
-                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
         JSONObject eventReportPayload =
                 new EventReportPayload.Builder()
@@ -293,8 +301,8 @@ public class EventReportingJobHandlerTest {
 
         Pair<List<Uri>, List<Uri>> destinations =
                 new Pair<>(
-                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
-                        List.of(APP_DESTINATION));
+                        List.of(APP_DESTINATION),
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)
@@ -307,7 +315,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -323,13 +331,13 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
 
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
         verify(mMeasurementDao, times(1))
                 .insertOrUpdateAppReportHistory(
-                        eq(APP_DESTINATION), eq(REPORTING_ORIGIN), anyLong());
+                        eq(APP_DESTINATION), eq(REPORTING_ORIGIN), eq(reportTime));
     }
 
     @Test
@@ -347,12 +355,12 @@ public class EventReportingJobHandlerTest {
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .setRegistrationOrigin(REPORTING_ORIGIN)
                         .setSourceId(SOURCE_ID)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setAttributionDestinations(
                                 List.of(
                                         DEFAULT_WEB_DESTINATION,
                                         ALT_WEB_DESTINATION,
                                         APP_DESTINATION))
-                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
         JSONObject eventReportPayload =
                 new EventReportPayload.Builder()
@@ -364,8 +372,8 @@ public class EventReportingJobHandlerTest {
 
         Pair<List<Uri>, List<Uri>> destinations =
                 new Pair<>(
-                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
-                        List.of(APP_DESTINATION));
+                        List.of(APP_DESTINATION),
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)
@@ -378,7 +386,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -394,7 +402,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
 
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -416,12 +424,12 @@ public class EventReportingJobHandlerTest {
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .setRegistrationOrigin(REPORTING_ORIGIN)
                         .setSourceId(SOURCE_ID)
+                        .setEnrollmentId(ENROLLMENT_ID)
                         .setAttributionDestinations(
                                 List.of(
                                         DEFAULT_WEB_DESTINATION,
                                         ALT_WEB_DESTINATION,
                                         APP_DESTINATION))
-                        .setEnrollmentId(ENROLLMENT_ID)
                         .build();
         JSONObject eventReportPayload =
                 new EventReportPayload.Builder()
@@ -433,8 +441,8 @@ public class EventReportingJobHandlerTest {
 
         Pair<List<Uri>, List<Uri>> destinations =
                 new Pair<>(
-                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION),
-                        List.of(APP_DESTINATION));
+                        List.of(APP_DESTINATION),
+                        List.of(DEFAULT_WEB_DESTINATION, ALT_WEB_DESTINATION));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId(SOURCE_ID)
@@ -448,7 +456,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -464,7 +472,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
 
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -494,7 +502,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -510,7 +518,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -538,7 +546,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -554,7 +562,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -583,7 +591,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -598,7 +606,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -625,7 +633,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doReturn(HttpURLConnection.HTTP_BAD_REQUEST)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -637,7 +645,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -664,7 +672,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         doThrow(new IOException())
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -676,7 +684,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(1))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -698,7 +706,7 @@ public class EventReportingJobHandlerTest {
         doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doThrow(new JSONException("cause message"))
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -730,7 +738,7 @@ public class EventReportingJobHandlerTest {
         doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doThrow(new JSONException("cause message"))
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -767,7 +775,7 @@ public class EventReportingJobHandlerTest {
         doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doThrow(new JSONException("cause message"))
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -806,7 +814,7 @@ public class EventReportingJobHandlerTest {
         doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
         doThrow(new RuntimeException("unknown exception"))
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -836,7 +844,7 @@ public class EventReportingJobHandlerTest {
         doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doThrow(new RuntimeException("unknown exception"))
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -869,7 +877,7 @@ public class EventReportingJobHandlerTest {
         doReturn(eventReport).when(mMeasurementDao).getEventReport(eventReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doThrow(new RuntimeException("unknown exception"))
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
@@ -901,7 +909,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(0))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         verify(mTransaction, times(1)).begin();
         verify(mTransaction, times(1)).end();
     }
@@ -948,7 +956,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport2.getId())).thenReturn(eventReport2);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload1)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(eventReport1);
@@ -960,7 +968,7 @@ public class EventReportingJobHandlerTest {
 
         verify(mMeasurementDao, times(2)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(2))
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         verify(mTransaction, times(5)).begin();
         verify(mTransaction, times(5)).end();
     }
@@ -1007,7 +1015,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport2.getId())).thenReturn(eventReport2);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload1)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(eventReport1);
@@ -1026,7 +1034,7 @@ public class EventReportingJobHandlerTest {
         // 0 reports processed, since the thread exits early.
         verify(mMeasurementDao, times(0)).markEventReportStatus(any(), anyInt());
         verify(mSpyEventReportingJobHandler, times(0))
-                .makeHttpPostRequest(Mockito.eq(REPORTING_ORIGIN), Mockito.any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
     }
 
     @Test
@@ -1054,7 +1062,7 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport1.getId())).thenReturn(eventReport1);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyEventReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any());
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
         doReturn(eventReportPayload1)
                 .when(mSpyEventReportingJobHandler)
                 .createReportJsonPayload(eventReport1);
@@ -1107,5 +1115,394 @@ public class EventReportingJobHandlerTest {
         verify(mMeasurementDao)
                 .incrementAndGetReportingRetryCount(
                         eventReport1.getId(), KeyValueData.DataType.EVENT_REPORT_RETRY_COUNT);
+    }
+
+    @Test
+    public void testSendReportSuccess_appDestOnly_noTriggerDebugAvailableHeader()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
+        setUpTestForTriggerDebugAvailableHeader(
+                List.of(APP_DESTINATION),
+                List.of(),
+                /* hasAdIdPermission= */ true,
+                /* hasArDebugPermission= */ false,
+                /* coarseDestination= */ false);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(EVENT_REPORT_ID, new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
+    }
+
+    @Test
+    public void testSendReportSuccess_webDestOnlyWithArDebug_hasTriggerDebugHeaderTrue()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
+        setUpTestForTriggerDebugAvailableHeader(
+                List.of(),
+                List.of(DEFAULT_WEB_DESTINATION),
+                /* hasAdIdPermission= */ false,
+                /* hasArDebugPermission= */ true,
+                /* coarseDestination= */ false);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(EVENT_REPORT_ID, new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.TRUE));
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
+    }
+
+    @Test
+    public void testSendReportSuccess_webDestOnlyWithoutArDebug_hasTriggerDebugHeaderFalse()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
+        setUpTestForTriggerDebugAvailableHeader(
+                List.of(),
+                List.of(DEFAULT_WEB_DESTINATION),
+                /* hasAdIdPermission= */ false,
+                /* hasArDebugPermission= */ false,
+                /* coarseDestination= */ false);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(EVENT_REPORT_ID, new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.FALSE));
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
+    }
+
+    @Test
+    public void testSendReportSuccess_appAndWebDest_coarseDestFalse_hasTriggerDebugHeaderTrue()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
+        setUpTestForTriggerDebugAvailableHeader(
+                List.of(APP_DESTINATION),
+                List.of(DEFAULT_WEB_DESTINATION),
+                /* hasAdIdPermission= */ false,
+                /* hasArDebugPermission= */ true,
+                /* coarseDestination= */ false);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(EVENT_REPORT_ID, new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.TRUE));
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
+    }
+
+    @Test
+    public void testSendReportSuccess_appAndWebDest_coarseDestFalse_hasTriggerDebugHeaderFalse()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
+        setUpTestForTriggerDebugAvailableHeader(
+                List.of(APP_DESTINATION),
+                List.of(DEFAULT_WEB_DESTINATION),
+                /* hasAdIdPermission= */ false,
+                /* hasArDebugPermission= */ false,
+                /* coarseDestination= */ false);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(EVENT_REPORT_ID, new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.FALSE));
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
+    }
+
+    @Test
+    public void testSendReportSuccess_coarseDestFlagDisabled_noTriggerDebugHeader()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableEventTriggerDebugSignalForCoarseDestination())
+                .thenReturn(false);
+        setUpTestForTriggerDebugAvailableHeader(
+                List.of(APP_DESTINATION),
+                List.of(DEFAULT_WEB_DESTINATION),
+                /* hasAdIdPermission= */ true,
+                /* hasArDebugPermission= */ true,
+                /* coarseDestination= */ true);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(EVENT_REPORT_ID, new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
+    }
+
+    @Test
+    public void testSendReportSuccess_coarseDestFlagEnabled_hasTriggerDebugHeaderTrue()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableEventTriggerDebugSignalForCoarseDestination())
+                .thenReturn(true);
+
+        setUpTestForTriggerDebugAvailableHeader(
+                List.of(APP_DESTINATION),
+                List.of(DEFAULT_WEB_DESTINATION),
+                /* hasAdIdPermission= */ true,
+                /* hasArDebugPermission= */ false,
+                /* coarseDestination= */ true);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(EVENT_REPORT_ID, new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.TRUE));
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
+    }
+
+    @Test
+    public void testSendReportSuccess_coarseDestFlagEnabled_hasTriggerDebugHeaderFalse()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementEnableEventTriggerDebugSignalForCoarseDestination())
+                .thenReturn(true);
+
+        setUpTestForTriggerDebugAvailableHeader(
+                List.of(APP_DESTINATION),
+                List.of(DEFAULT_WEB_DESTINATION),
+                /* hasAdIdPermission= */ false,
+                /* hasArDebugPermission= */ false,
+                /* coarseDestination= */ true);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(EVENT_REPORT_ID, new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.FALSE));
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
+    }
+
+    @Test
+    public void testSendReportSuccess_fakeReport_hasTriggerDebugHeaderTrue()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementTriggerDebugSignalProbabilityForFakeReports()).thenReturn(1.0F);
+
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId(EVENT_REPORT_ID)
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setReportTime(10L)
+                        .setSourceId(SOURCE_ID)
+                        // Set triggerId to null to test fake reports.
+                        .setTriggerId(null)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setAttributionDestinations(List.of(DEFAULT_WEB_DESTINATION))
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
+                        .build()
+                        .toJson();
+
+        Pair<List<Uri>, List<Uri>> destinations =
+                new Pair<>(List.of(), List.of(DEFAULT_WEB_DESTINATION));
+        Source.Builder sourceBuilder =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(SOURCE_ID)
+                        .setRegistrationOrigin(REPORTING_ORIGIN);
+        sourceBuilder.setWebDestinations(List.of(DEFAULT_WEB_DESTINATION));
+        Source source = sourceBuilder.build();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        when(mMeasurementDao.getSourceDestinations(eventReport.getSourceId()))
+                .thenReturn(destinations);
+        when(mMeasurementDao.getSource(eventReport.getSourceId())).thenReturn(source);
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.TRUE));
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(EVENT_REPORT_ID, new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.TRUE));
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
+    }
+
+    @Test
+    public void testSendReportSuccess_fakeReport_hasTriggerDebugHeaderFalse()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableTriggerDebugSignal()).thenReturn(true);
+        when(mFlags.getMeasurementTriggerDebugSignalProbabilityForFakeReports()).thenReturn(0.0F);
+
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId(EVENT_REPORT_ID)
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setReportTime(10L)
+                        .setSourceId(SOURCE_ID)
+                        // Set triggerId to null to test fake reports.
+                        .setTriggerId(null)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setAttributionDestinations(List.of(DEFAULT_WEB_DESTINATION))
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
+                        .build()
+                        .toJson();
+
+        Pair<List<Uri>, List<Uri>> destinations =
+                new Pair<>(List.of(), List.of(DEFAULT_WEB_DESTINATION));
+        Source.Builder sourceBuilder =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(SOURCE_ID)
+                        .setRegistrationOrigin(REPORTING_ORIGIN);
+        sourceBuilder.setWebDestinations(List.of(DEFAULT_WEB_DESTINATION));
+        Source source = sourceBuilder.build();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        when(mMeasurementDao.getSourceDestinations(eventReport.getSourceId()))
+                .thenReturn(destinations);
+        when(mMeasurementDao.getSource(eventReport.getSourceId())).thenReturn(source);
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.FALSE));
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+
+        assertEquals(
+                AdServicesStatusUtils.STATUS_SUCCESS,
+                mSpyEventReportingJobHandler.performReport(EVENT_REPORT_ID, new ReportingStatus()));
+
+        verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
+        verify(mSpyEventReportingJobHandler, times(1))
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(Boolean.FALSE));
+        verify(mTransaction, times(3)).begin();
+        verify(mTransaction, times(3)).end();
+    }
+
+    private void setUpTestForTriggerDebugAvailableHeader(
+            List<Uri> appDestinations,
+            List<Uri> webDestinations,
+            boolean hasAdIdPermission,
+            boolean hasArDebugPermission,
+            boolean coarseDestination)
+            throws DatastoreException, IOException, JSONException {
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId(EVENT_REPORT_ID)
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setReportTime(10L)
+                        .setSourceId(SOURCE_ID)
+                        .setTriggerId(TRIGGER_ID)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setAttributionDestinations(
+                                Stream.concat(appDestinations.stream(), webDestinations.stream())
+                                        .collect(Collectors.toList()))
+                        .build();
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
+                        .build()
+                        .toJson();
+
+        Pair<List<Uri>, List<Uri>> destinations = new Pair<>(appDestinations, webDestinations);
+        Source.Builder sourceBuilder =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(SOURCE_ID)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setCoarseEventReportDestinations(coarseDestination);
+        if (!appDestinations.isEmpty()) {
+            sourceBuilder.setAppDestinations(appDestinations);
+        }
+        if (!webDestinations.isEmpty()) {
+            sourceBuilder.setWebDestinations(webDestinations);
+        }
+        Source source = sourceBuilder.build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId(TRIGGER_ID)
+                        .setAdIdPermission(hasAdIdPermission)
+                        .setArDebugPermission(hasArDebugPermission)
+                        .build();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        when(mMeasurementDao.getSourceDestinations(eventReport.getSourceId()))
+                .thenReturn(destinations);
+        when(mMeasurementDao.getSource(eventReport.getSourceId())).thenReturn(source);
+        when(mMeasurementDao.getTrigger(eventReport.getTriggerId())).thenReturn(trigger);
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), any());
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
     }
 }

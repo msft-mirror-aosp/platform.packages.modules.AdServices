@@ -122,6 +122,10 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_COBALT_LOGGING_ENABLED = "topics_cobalt_logging_enabled";
     public static final String KEY_MSMT_REGISTRATION_COBALT_LOGGING_ENABLED =
             "msmt_registration_cobalt_logging_enabled";
+    public static final String KEY_MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED =
+            "msmt_attribution_cobalt_logging_enabled";
+    public static final String KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED =
+            "msmt_reporting_cobalt_logging_enabled";
     public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED =
             "app_name_api_error_cobalt_logging_enabled";
     public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE =
@@ -133,6 +137,8 @@ public final class FlagsConstants {
     public static final String KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS =
             "cobalt_upload_service_unbind_delay_ms";
     public static final String KEY_COBALT_LOGGING_ENABLED = "cobalt_logging_enabled";
+    public static final String KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED =
+            "cobalt_registry_out_of_band_update_enabled";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -283,9 +289,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS =
             "measurement_attribution_fallback_job_period_ms";
 
-    public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
-            "measurement_max_attribution_per_rate_limit_window";
-
     public static final String KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
             "measurement_max_event_attribution_per_rate_limit_window";
 
@@ -319,6 +322,15 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW =
             "measurement_destination_rate_limit_window";
 
+    public static final String KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT =
+            "measurement_destination_per_day_rate_limit";
+
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW =
+            "measurement_enable_destination_per_day_rate_limit_window";
+
+    public static final String KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS =
+            "measurement_destination_per_day_rate_limit_window_in_ms";
+
     public static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
             "measurement_enable_coarse_event_report_destinations";
 
@@ -330,9 +342,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING =
             "measurement_enable_source_deactivation_after_filtering";
-
-    public static final String KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT =
-            "measurement_enable_scoped_attribution_rate_limit";
 
     public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_debug_reporting_fallback_job_period_ms";
@@ -369,6 +378,14 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED =
             "measurement_event_reporting_job_persisted";
+
+    public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL =
+            "measurement_enable_trigger_debug_signal";
+    public static final String
+            KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION =
+                    "measurement_enable_event_trigger_debug_signal_for_coarse_destination";
+    public static final String KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS =
+            "measurement_trigger_debug_signal_probability_for_fake_reports";
 
     public static final String
             KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
@@ -500,6 +517,12 @@ public final class FlagsConstants {
             "measurement_reporting_job_service_batch_window_millis";
     public static final String KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS =
             "measurement_reporting_job_service_min_execution_window_millis";
+    public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY =
+            "measurement_enable_source_destination_limit_priority";
+    public static final String KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM =
+            "measurement_default_destination_limit_algorithm";
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD =
+            "measurement_enable_destination_limit_algorithm_field";
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -784,6 +807,17 @@ public final class FlagsConstants {
     public static final String
             KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED =
                     "fledge_auction_server_get_ad_selection_data_payload_metrics_enabled";
+
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED =
+            "fledge_get_ad_selection_data_seller_configuration_enabled";
+
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION =
+            "fledge_get_ad_selection_data_buyer_input_creator_version";
+
+    public static final String
+            KEY_FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS =
+                    "fledge_get_ad_selection_data_max_num_entire_payload_compressions";
+
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
@@ -830,6 +864,8 @@ public final class FlagsConstants {
             "downloader_max_download_threads";
     public static final String KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "mdd_topics_classifier_manifest_file_url";
+    public static final String KEY_MDD_COBALT_REGISTRY_MANIFEST_FILE_URL =
+            "mdd_cobalt_registry_manifest_file_url";
 
     // Killswitch keys
     public static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
@@ -1176,6 +1212,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST =
             "measurement_debug_key_ad_id_matching_enrollment_blocklist";
 
+    public static final String KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA =
+            "measurement_enable_v1_source_trigger_data";
+
     public static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
             "measurement_flexible_event_reporting_api_enabled";
 
@@ -1243,9 +1282,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
             "measurement_event_reports_ctc_early_reporting_windows";
-
-    public static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY =
-            "measurement_enable_configurable_aggregate_report_delay";
 
     public static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             "measurement_aggregate_report_delay_config";
@@ -1316,7 +1352,7 @@ public final class FlagsConstants {
             "measurement_enable_navigation_reporting_origin_check";
 
     public static final String
-            KEY_MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT =
+            KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT =
                     "measurement_enable_separate_report_types_for_attribution_rate_limit";
 
     public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE =
@@ -1327,6 +1363,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON =
             "measurement_event_api_default_epsilon";
+
+    public static final String KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE =
+            "measurement_enable_event_level_epsilon_in_source";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
@@ -1482,6 +1521,10 @@ public final class FlagsConstants {
 
     /** Key for PAS API extended metrics flag. */
     public static final String KEY_PAS_EXTENDED_METRICS_ENABLED = "pas_extended_metrics_enabled";
+
+    /** Key for PAS API product metrics v1 flag. */
+    public static final String KEY_PAS_PRODUCT_METRICS_V1_ENABLED =
+            "pas_product_metrics_v1_enabled";
 
     /** Key for enabling SPE on pilot background jobs. */
     public static final String KEY_SPE_ON_PILOT_JOBS_ENABLED = "spe_on_pilot_jobs_enabled";

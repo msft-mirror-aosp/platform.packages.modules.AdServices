@@ -18,33 +18,65 @@ package com.android.cobalt.registry;
 
 import static com.google.cobalt.MetricDefinition.MetricType.OCCURRENCE;
 import static com.google.cobalt.MetricDefinition.MetricType.STRING;
+import static com.google.cobalt.ReportDefinition.LocalAggregationProcedure.LOCAL_AGGREGATION_PROCEDURE_UNSET;
+import static com.google.cobalt.ReportDefinition.LocalAggregationProcedure.SUM_PROCEDURE;
 import static com.google.cobalt.ReportDefinition.PrivacyMechanism.DE_IDENTIFICATION;
 import static com.google.cobalt.ReportDefinition.PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY;
 import static com.google.cobalt.ReportDefinition.ReportType.FLEETWIDE_OCCURRENCE_COUNTS;
 import static com.google.cobalt.ReportDefinition.ReportType.STRING_COUNTS;
+import static com.google.cobalt.ReportDefinition.ReportingInterval.DAYS_1;
+import static com.google.cobalt.ReportDefinition.ReportingInterval.HOURS_1;
+import static com.google.cobalt.ReportDefinition.ReportingInterval.REPORTING_INTERVAL_UNSET;
+import static com.google.cobalt.SystemProfileField.APP_VERSION;
+import static com.google.cobalt.SystemProfileField.CHANNEL;
+import static com.google.cobalt.SystemProfileSelectionPolicy.REPORT_ALL;
+import static com.google.cobalt.SystemProfileSelectionPolicy.SELECT_FIRST;
+import static com.google.cobalt.WindowSize.WINDOW_1_DAY;
+import static com.google.cobalt.WindowSize.WINDOW_28_DAYS;
+import static com.google.cobalt.WindowSize.WINDOW_30_DAYS;
+import static com.google.cobalt.WindowSize.WINDOW_7_DAYS;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+
+import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
+import com.google.cobalt.MetricDefinition.MetricDimension;
+import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.ReportDefinition;
+import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
+import com.google.cobalt.ReportDefinition.ReportingInterval;
+import com.google.cobalt.StringSketchParameters;
+import com.google.cobalt.SystemProfileField;
+import com.google.cobalt.SystemProfileSelectionPolicy;
+import com.google.cobalt.WindowSize;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.List;
+import java.util.function.BiPredicate;
+
 @RunWith(JUnit4.class)
-public final class RegistryValidatorTest {
+public final class RegistryValidatorTest extends AdServicesUnitTestCase {
+
     @Test
     public void testValidateReportType_occurrenceMetric_onlySupportsFleetwideOccurrenceCounts() {
         for (ReportType reportType : ReportType.values()) {
             switch (reportType) {
                 case FLEETWIDE_OCCURRENCE_COUNTS:
-                    assertThat(RegistryValidator.validateReportType(OCCURRENCE, reportType))
+                    expect.withMessage(
+                                    "RegistryValidator.validateReportType(OCCURRENCE, reportType)")
+                            .that(RegistryValidator.validateReportType(OCCURRENCE, reportType))
                             .isTrue();
                     break;
                 default:
-                    assertThat(RegistryValidator.validateReportType(OCCURRENCE, reportType))
+                    expect.withMessage(
+                                    "RegistryValidator.validateReportType(OCCURRENCE, reportType)")
+                            .that(RegistryValidator.validateReportType(OCCURRENCE, reportType))
                             .isFalse();
                     break;
             }
@@ -56,10 +88,14 @@ public final class RegistryValidatorTest {
         for (ReportType reportType : ReportType.values()) {
             switch (reportType) {
                 case STRING_COUNTS:
-                    assertThat(RegistryValidator.validateReportType(STRING, reportType)).isTrue();
+                    expect.withMessage("RegistryValidator.validateReportType(STRING, reportType)")
+                            .that(RegistryValidator.validateReportType(STRING, reportType))
+                            .isTrue();
                     break;
                 default:
-                    assertThat(RegistryValidator.validateReportType(STRING, reportType)).isFalse();
+                    expect.withMessage("RegistryValidator.validateReportType(STRING, reportType)")
+                            .that(RegistryValidator.validateReportType(STRING, reportType))
+                            .isFalse();
                     break;
             }
         }
@@ -71,13 +107,19 @@ public final class RegistryValidatorTest {
             switch (privacyMechanism) {
                 case DE_IDENTIFICATION:
                 case SHUFFLED_DIFFERENTIAL_PRIVACY:
-                    assertThat(
+                    expect.withMessage(
+                                    "RegistryValidator.validatePrivacyMechanism("
+                                            + "FLEETWIDE_OCCURRENCE_COUNTS,privacyMechanism))")
+                            .that(
                                     RegistryValidator.validatePrivacyMechanism(
                                             FLEETWIDE_OCCURRENCE_COUNTS, privacyMechanism))
                             .isTrue();
                     break;
                 default:
-                    assertThat(
+                    expect.withMessage(
+                                    "RegistryValidator.validatePrivacyMechanism("
+                                            + "FLEETWIDE_OCCURRENCE_COUNTS,privacyMechanism))")
+                            .that(
                                     RegistryValidator.validatePrivacyMechanism(
                                             FLEETWIDE_OCCURRENCE_COUNTS, privacyMechanism))
                             .isFalse();
@@ -91,13 +133,19 @@ public final class RegistryValidatorTest {
         for (PrivacyMechanism privacyMechanism : PrivacyMechanism.values()) {
             switch (privacyMechanism) {
                 case DE_IDENTIFICATION:
-                    assertThat(
+                    expect.withMessage(
+                                    "RegistryValidator.validatePrivacyMechanism(STRING_COUNTS,"
+                                            + " privacyMechanism))")
+                            .that(
                                     RegistryValidator.validatePrivacyMechanism(
                                             STRING_COUNTS, privacyMechanism))
                             .isTrue();
                     break;
                 default:
-                    assertThat(
+                    expect.withMessage(
+                                    "RegistryValidator.validatePrivacyMechanism(STRING_COUNTS,"
+                                            + " privacyMechanism))")
+                            .that(
                                     RegistryValidator.validatePrivacyMechanism(
                                             STRING_COUNTS, privacyMechanism))
                             .isFalse();
@@ -107,35 +155,774 @@ public final class RegistryValidatorTest {
     }
 
     @Test
+    public void testValidateIntegerBuckets_defaultInstancePasses() {
+        assertThat(RegistryValidator.validateIntegerBuckets(IntegerBuckets.getDefaultInstance()))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateIntegerBuckets_nonDefaultInstanceFails() {
+        assertThat(
+                        RegistryValidator.validateIntegerBuckets(
+                                IntegerBuckets.newBuilder().setSparseOutput(true).build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidateSystemProfileSelection_reportAllRequired() {
+        for (SystemProfileSelectionPolicy systemProfileSelection :
+                SystemProfileSelectionPolicy.values()) {
+            switch (systemProfileSelection) {
+                case REPORT_ALL:
+                    expect.withMessage("validateSystemProfileSelection(REPORT_ALL)")
+                            .that(
+                                    RegistryValidator.validateSystemProfileSelection(
+                                            systemProfileSelection))
+                            .isTrue();
+                    break;
+                default:
+                    expect.withMessage("validateSystemProfileSelection(%s)", systemProfileSelection)
+                            .that(
+                                    RegistryValidator.validateSystemProfileSelection(
+                                            systemProfileSelection))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testValidateSystemProfileFields_emptySupported() {
+        assertThat(RegistryValidator.validateSystemProfileFields(List.of())).isTrue();
+    }
+
+    @Test
+    public void testValidateSystemProfileFields_supportedFields() {
+        for (SystemProfileField systemProfileField : SystemProfileField.values()) {
+            switch (systemProfileField) {
+                case APP_VERSION:
+                case ARCH:
+                case BOARD_NAME:
+                case OS:
+                case SYSTEM_VERSION:
+                    expect.withMessage("validateSystemProfileFields(%s)", systemProfileField)
+                            .that(
+                                    RegistryValidator.validateSystemProfileFields(
+                                            List.of(systemProfileField)))
+                            .isTrue();
+                    break;
+                default:
+                    expect.withMessage("validateSystemProfileFields(%s)", systemProfileField)
+                            .that(
+                                    RegistryValidator.validateSystemProfileFields(
+                                            List.of(systemProfileField)))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testValidateExperimentIds_requiredEmpty() {
+        expect.withMessage("validateExperimentIds([])")
+                .that(RegistryValidator.validateExperimentIds(List.of()))
+                .isTrue();
+        expect.withMessage("validateExperimentIds([1])")
+                .that(RegistryValidator.validateExperimentIds(List.of(1L)))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidatePoissonFields_supported() {
+        assertThat(
+                        RegistryValidator.validatePoissonFields(
+                                FLEETWIDE_OCCURRENCE_COUNTS,
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                /* numIndexPoints= */ 1,
+                                StringSketchParameters.getDefaultInstance()))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidatePoissonFields_numIndexPointsZeroFails() {
+        assertThat(
+                        RegistryValidator.validatePoissonFields(
+                                FLEETWIDE_OCCURRENCE_COUNTS,
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                /* numIndexPoints= */ 0,
+                                StringSketchParameters.getDefaultInstance()))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidatePoissonFields_stringSketchParamsSetFails() {
+        assertThat(
+                        RegistryValidator.validatePoissonFields(
+                                FLEETWIDE_OCCURRENCE_COUNTS,
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                /* numIndexPoints= */ 1,
+                                StringSketchParameters.newBuilder().setNumHashes(1).build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidatePoissonFields_deIdentifiedReportPasses() {
+        assertThat(
+                        RegistryValidator.validatePoissonFields(
+                                FLEETWIDE_OCCURRENCE_COUNTS,
+                                DE_IDENTIFICATION,
+                                /* numIndexPoints= */ 1,
+                                StringSketchParameters.getDefaultInstance()))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidatePoissonFields_nonFleetwideOccurrenceCountsFails() {
+        assertThat(
+                        RegistryValidator.validatePoissonFields(
+                                STRING_COUNTS,
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                /* numIndexPoints= */ 1,
+                                StringSketchParameters.getDefaultInstance()))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidateMinAndMaxValues_notPrivateFleetwideOccurrenceCounts() {
+        for (ReportType reportType : ReportType.values()) {
+            for (PrivacyMechanism privacyMechanism : PrivacyMechanism.values()) {
+                if (reportType.equals(FLEETWIDE_OCCURRENCE_COUNTS)
+                        && privacyMechanism.equals(SHUFFLED_DIFFERENTIAL_PRIVACY)) {
+                    continue;
+                }
+                expect.that(
+                                RegistryValidator.validateMinAndMaxValues(
+                                        reportType,
+                                        privacyMechanism,
+                                        /* minValue= */ 0,
+                                        /* maxValue= */ 0))
+                        .isTrue();
+                expect.that(
+                                RegistryValidator.validateMinAndMaxValues(
+                                        reportType,
+                                        privacyMechanism,
+                                        /* minValue= */ 1,
+                                        /* maxValue= */ 0))
+                        .isFalse();
+                expect.that(
+                                RegistryValidator.validateMinAndMaxValues(
+                                        reportType,
+                                        privacyMechanism,
+                                        /* minValue= */ 0,
+                                        /* maxValue= */ 1))
+                        .isFalse();
+            }
+        }
+    }
+
+    @Test
+    public void testValidateMinAndMaxValues_privateFleetwideOccurrenceCounts() {
+        BiPredicate<Long, Long> validateMinAndMaxValues =
+                (minValue, maxValue) ->
+                        RegistryValidator.validateMinAndMaxValues(
+                                FLEETWIDE_OCCURRENCE_COUNTS,
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                minValue,
+                                maxValue);
+
+        // Both positive and maxValue >= minValue
+        expect.withMessage("validateMinAndMaxValues(1,1)")
+                .that(validateMinAndMaxValues.test(/* minValue= */ 1L, /* maxValue= */ 1L))
+                .isTrue();
+        expect.withMessage("validateMinAndMaxValues(1,2)")
+                .that(validateMinAndMaxValues.test(/* minValue= */ 1L, /* maxValue= */ 2L))
+                .isTrue();
+
+        // minValue <= 0
+        expect.withMessage("validateMinAndMaxValues(0,1)")
+                .that(validateMinAndMaxValues.test(/* minValue= */ 0L, /* maxValue= */ 1L))
+                .isFalse();
+        expect.withMessage("validateMinAndMaxValues(-1,1)")
+                .that(validateMinAndMaxValues.test(/* minValue= */ -1L, /* maxValue= */ 1L))
+                .isFalse();
+
+        // maxValue <= 0
+        expect.withMessage("validateMinAndMaxValues(1,0)")
+                .that(validateMinAndMaxValues.test(/* minValue= */ 1L, /* maxValue= */ 0L))
+                .isFalse();
+        expect.withMessage("validateMinAndMaxValues(1,-1)")
+                .that(validateMinAndMaxValues.test(/* minValue= */ 1L, /* maxValue= */ -1L))
+                .isFalse();
+
+        // maxValue < minValue
+        expect.withMessage("validateMinAndMaxValues(2,1)")
+                .that(validateMinAndMaxValues.test(/* minValue= */ 2L, /* maxValue= */ 1L))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidateMaxCount_nonZeroFails() {
+        assertThat(RegistryValidator.validateMaxCount(1)).isFalse();
+    }
+
+    @Test
+    public void testValidateMaxCount_zeroPasses() {
+        assertThat(RegistryValidator.validateMaxCount(0)).isTrue();
+    }
+
+    @Test
+    public void testLocalAggregationPeriod_windowUnsetSupported() {
+        for (WindowSize windowSize : WindowSize.values()) {
+            switch (windowSize) {
+                case UNSET:
+                    expect.that(RegistryValidator.validateLocalAggregationPeriod(windowSize))
+                            .isTrue();
+                    break;
+                default:
+                    expect.that(RegistryValidator.validateLocalAggregationPeriod(windowSize))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testLocalAggregationProcedure_noneSuppoorted() {
+        for (LocalAggregationProcedure localAggregationProcedure :
+                LocalAggregationProcedure.values()) {
+            switch (localAggregationProcedure) {
+                case LOCAL_AGGREGATION_PROCEDURE_UNSET:
+                    expect.that(
+                                    RegistryValidator.validateLocalAggregationProcedure(
+                                            localAggregationProcedure))
+                            .isTrue();
+                    break;
+                default:
+                    expect.that(
+                                    RegistryValidator.validateLocalAggregationProcedure(
+                                            localAggregationProcedure))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testLocalAggregationProcedurePercentileN_zeroSuppoorted() {
+        expect.that(RegistryValidator.validateLocalAggregationPercentileN(0)).isTrue();
+        for (int i = 9; i < 100; i += 10) {
+            expect.that(RegistryValidator.validateLocalAggregationPercentileN(i)).isFalse();
+        }
+    }
+
+    @Test
+    public void testExpeditedSending_falseSupported() {
+        expect.withMessage("validateExpeditedSending(false)")
+                .that(RegistryValidator.validateExpeditedSending(false))
+                .isTrue();
+        expect.withMessage("validateExpeditedSending(true)")
+                .that(RegistryValidator.validateExpeditedSending(true))
+                .isFalse();
+    }
+
+    @Test
+    public void testExemptFromConsent_falseSupported() {
+        expect.withMessage("validateExemptFromConsent(false)")
+                .that(RegistryValidator.validateExemptFromConsent(false))
+                .isTrue();
+        expect.withMessage("validateExemptFromConsent(true)")
+                .that(RegistryValidator.validateExemptFromConsent(true))
+                .isFalse();
+    }
+
+    @Test
+    public void testReportingInterval_days1Supported() {
+        for (ReportingInterval reportingInterval : ReportingInterval.values()) {
+            switch (reportingInterval) {
+                case DAYS_1:
+                    expect.withMessage("validateReportingInterval(DAYS_1)")
+                            .that(RegistryValidator.validateReportingInterval(reportingInterval))
+                            .isTrue();
+                    break;
+                default:
+                    expect.withMessage("validateReportingInterval(%s)", reportingInterval)
+                            .that(RegistryValidator.validateReportingInterval(reportingInterval))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testMaxPrivateIndex_mustBeLessThanMaxInt32() {
+        // Dimension with 1000 possible events.
+        List<MetricDimension> metricDimensions = List.of(getMetricDimension(999));
+
+        for (ReportType reportType : ReportType.values()) {
+            switch (reportType) {
+                case REPORT_TYPE_UNSET:
+                    break;
+                case FLEETWIDE_OCCURRENCE_COUNTS:
+                    // Max index points isn't checked for de-identified reports.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            DE_IDENTIFICATION,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ 10))
+                            .isTrue();
+                    // Max index points isn't checked for de-identified reports.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            DE_IDENTIFICATION,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ Integer.MAX_VALUE / 10))
+                            .isTrue();
+                    // Passes because 1000 * 10 < Integer.MAX_VALUE
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ 10))
+                            .isTrue();
+                    // Fails because 1000 * Integer.MAX_VALUE / 10 > Integer.MAX_VALUE
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ Integer.MAX_VALUE / 10))
+                            .isFalse();
+                    break;
+                default:
+                    // Max index points isn't checked for de-identified reports.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            DE_IDENTIFICATION,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ 10))
+                            .isTrue();
+                    // Max index points isn't checked for de-identified reports.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            DE_IDENTIFICATION,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ Integer.MAX_VALUE / 10))
+                            .isTrue();
+                    // Max index points not valid for reports other than private
+                    // FLEETWIDE_OCCURRENCE_COUNTS.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ 10))
+                            .isFalse();
+                    // Max index points not valid for reports other than private
+                    // FLEETWIDE_OCCURRENCE_COUNTS.
+                    expect.that(
+                                    RegistryValidator.validateMaxPrivateIndex(
+                                            reportType,
+                                            SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                            metricDimensions,
+                                            /* numIndexPoints= */ Integer.MAX_VALUE / 10))
+                            .isFalse();
+                    break;
+            }
+        }
+    }
+
+    @Test
     public void testIsValidReportTypeAndPrivacyMechanism_privateFleetwideOccurrenceCounts() {
-        MetricDefinition metric = MetricDefinition.newBuilder().setMetricType(OCCURRENCE).build();
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
-                ReportDefinition.newBuilder()
-                        .setReportType(FLEETWIDE_OCCURRENCE_COUNTS)
-                        .setPrivacyMechanism(SHUFFLED_DIFFERENTIAL_PRIVACY)
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setNumIndexPoints(1)
+                        .setMinValue(1L)
+                        .setMaxValue(2L)
                         .build();
         assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
     }
 
     @Test
     public void tetIsValidReportTypeAndPrivacyMechanism_deIdFleetwideOccurrenceCounts() {
-        MetricDefinition metric = MetricDefinition.newBuilder().setMetricType(OCCURRENCE).build();
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
-                ReportDefinition.newBuilder()
-                        .setReportType(FLEETWIDE_OCCURRENCE_COUNTS)
-                        .setPrivacyMechanism(DE_IDENTIFICATION)
-                        .build();
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
         assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
     }
 
     @Test
     public void testIsValidReportTypeAndPrivacyMechanism_deIdStringCounts() {
-        MetricDefinition metric = MetricDefinition.newBuilder().setMetricType(STRING).build();
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+    }
+
+    @Test
+    public void
+            testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_unsetIntegerBuckets() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
-                ReportDefinition.newBuilder()
-                        .setReportType(STRING_COUNTS)
-                        .setPrivacyMechanism(DE_IDENTIFICATION)
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
+        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isTrue();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setIntBuckets(
+                                                IntegerBuckets.newBuilder()
+                                                        .setSparseOutput(true)
+                                                        .build())
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_stringCounts_defaultIntegerBuckets() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
+        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isTrue();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setIntBuckets(
+                                                IntegerBuckets.newBuilder()
+                                                        .setSparseOutput(true)
+                                                        .build())
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_supportedSystemProfileSelection() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report =
+                getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setSystemProfileSelection(REPORT_ALL)
                         .build();
         assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_unsupportedSystemProfileSelection() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report =
+                getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setSystemProfileSelection(SELECT_FIRST)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_supportedSystemProfileField() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report =
+                getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .addSystemProfileField(APP_VERSION)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_unsupportedSystemProfileField() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report =
+                getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .addSystemProfileField(CHANNEL)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_experimentIdsSetFails() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report =
+                getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .addExperimentId(1L)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void
+            testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_validPoissonFields() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setNumIndexPoints(1)
+                        .setMinValue(1)
+                        .setMaxValue(2)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+    }
+
+    @Test
+    public void
+            testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_zeroNumIndexPointsFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setNumIndexPoints(0)
+                        .setMinValue(1)
+                        .setMaxValue(2)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void
+            testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_stringSketchSetFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setNumIndexPoints(1)
+                        .setMinValue(1)
+                        .setMaxValue(2)
+                        .setStringSketchParams(StringSketchParameters.newBuilder().setNumHashes(1))
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_minAndMax() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
+
+        // De-identified reports must have minValue == maxValue == 0
+        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isTrue();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
+                .isFalse();
+
+        report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setNumIndexPoints(1)
+                        .build();
+
+        // Private reports must have 0 < minValue <= maxValue
+        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
+                .isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_stringCounts_minAndMax() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
+
+        // Reports must have minValue == maxValue == 0
+        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isTrue();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_fleetwideOccurrenceCounts_maxCount() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
+
+        // De-identified reports must have minValue == maxValue == 0
+        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isTrue();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric, report.toBuilder().setMaxCount(2).build()))
+                .isFalse();
+
+        report = getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY);
+
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setMinValue(1)
+                                        .setMaxValue(2)
+                                        .setMaxCount(1)
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_stringCounts_maxCount() {
+        MetricDefinition metric = getMetricDefinition(STRING);
+        ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
+
+        // Reports must have minValue == maxValue == 0
+        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isTrue();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_setlocalAggregationPeriodFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
+
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder().setLocalAggregationPeriod(WINDOW_1_DAY).build()))
+                .isFalse();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setLocalAggregationPeriod(WINDOW_7_DAYS)
+                                        .build()))
+                .isFalse();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setLocalAggregationPeriod(WINDOW_28_DAYS)
+                                        .build()))
+                .isFalse();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setLocalAggregationPeriod(WINDOW_30_DAYS)
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_anyLocalAggregationProcedureFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setLocalAggregationProcedure(SUM_PROCEDURE)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_nonZeroLocalAggregationPercentileFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setLocalAggregationProcedurePercentileN(1)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_expeditedSendingFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setExpeditedSending(true)
+                        .build();
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_1dayReportingIntervalSupported() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
+
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric,
+                                report.toBuilder()
+                                        .setReportingInterval(REPORTING_INTERVAL_UNSET)
+                                        .build()))
+                .isFalse();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric, report.toBuilder().setReportingInterval(HOURS_1).build()))
+                .isFalse();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric, report.toBuilder().setReportingInterval(DAYS_1).build()))
+                .isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_exemptFromConsentFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE);
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
+
+        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isTrue();
+        expect.that(
+                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                                metric, report.toBuilder().setExemptFromConsent(true).build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_maxPrivateIndexTooLargeFails() {
+        // Metric with a dimension with 1000 possible events.
+        MetricDefinition metric =
+                getMetricDefinition(OCCURRENCE).toBuilder()
+                        .addMetricDimensions(getMetricDimension(999))
+                        .build();
+
+        // Report with 1/10th of Integer.MAX_VALUE the number of index points.
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setNumIndexPoints(Integer.MAX_VALUE / 10)
+                        .build();
+
+        // Fails because 1000 * Integer.MAX_VALUE / 10 > Integer.MAX_VALUE
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
+    private static MetricDefinition getMetricDefinition(MetricType metricType) {
+        return MetricDefinition.newBuilder().setMetricType(metricType).build();
+    }
+
+    private static ReportDefinition getReportDefinition(
+            ReportType reportType, PrivacyMechanism privacyMechanism) {
+        return ReportDefinition.newBuilder()
+                .setReportType(reportType)
+                .setPrivacyMechanism(privacyMechanism)
+                .setReportingInterval(DAYS_1)
+                .setSystemProfileSelection(REPORT_ALL)
+                .build();
+    }
+
+    private static MetricDimension getMetricDimension(int maxEventCode) {
+        return MetricDimension.newBuilder().setMaxEventCode(maxEventCode).build();
     }
 }

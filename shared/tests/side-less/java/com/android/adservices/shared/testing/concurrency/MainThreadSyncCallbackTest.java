@@ -33,9 +33,13 @@ public final class MainThreadSyncCallbackTest extends SyncCallbackTestCase<Abstr
 
     @Override
     protected String callCallback(AbstractSyncCallback callback) {
-        String methodName = "callCallback()";
-        callback.internalSetCalled(methodName);
-        return methodName;
+        return callback.internalSetCalled("internalSetCalled()");
+    }
+
+    @Override
+    protected void assertCalled(AbstractSyncCallback callback, long timeoutMs)
+            throws InterruptedException {
+        callback.internalAssertCalled(timeoutMs);
     }
 
     private static final class MainThreadSyncCallback extends AbstractSyncCallback {

@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
@@ -98,6 +99,7 @@ public class Source {
     @Nullable private Long mInstallTime;
     @Nullable private String mParentId;
     @Nullable private String mDebugJoinKey;
+    @Nullable private Set<UnsignedLong> mTriggerData;
     @Nullable private List<AttributedTrigger> mAttributedTriggers;
     @Nullable private TriggerSpecs mTriggerSpecs;
     @Nullable private String mTriggerSpecsString;
@@ -117,6 +119,9 @@ public class Source {
     @Nullable private List<String> mAttributionScopes;
     @Nullable private Long mAttributionScopeLimit;
     @Nullable private Long mMaxEventStates;
+    private long mDestinationLimitPriority;
+    @Nullable private DestinationLimitAlgorithm mDestinationLimitAlgorithm;
+    @Nullable private Double mEventLevelEpsilon;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -263,14 +268,17 @@ public class Source {
     }
 
     /**
-     * Verifies whether the source contains a valid maximum event states value and assigns the
-     * default value if it's not specified in certain instances.
+     * Verifies whether the source contains a valid maximum event states value.
      *
      * @param flags flag values
      */
-    public boolean validateAndSetMaxEventStates(Flags flags) {
+    public boolean validateMaxEventStates(Flags flags) {
         if (!flags.getMeasurementEnableAttributionScope() || getAttributionScopeLimit() == null) {
             return true;
+        }
+        if (getMaxEventStates() == null) {
+            throw new IllegalStateException(
+                    "maxEventStates should be set if attributionScopeLimit is set.");
         }
         Long numStates =
                 mTriggerSpecs == null
@@ -279,10 +287,6 @@ public class Source {
         if (numStates == null || numStates == 0L) {
             throw new IllegalStateException(
                     "Num states should be validated before validating max event states");
-        }
-        if (mMaxEventStates == null) {
-            // Fallback to default max event states.
-            setMaxEventStates(DEFAULT_MAX_EVENT_STATES);
         }
         if (getSourceType() == SourceType.EVENT && numStates > getMaxEventStates()) {
             return false;
@@ -321,18 +325,25 @@ public class Source {
      * @param flipProbability the flip probability, used only if attribution scope is not enabled.
      * @param numTriggerStates num of trigger states.
      */
-    public double getInformationGain(Flags flags, long numTriggerStates, double flipProbability) {
+    double getInformationGain(Flags flags, long numTriggerStates, double flipProbability) {
         if (flags.getMeasurementEnableAttributionScope()) {
             long attributionScopeLimit =
                     getAttributionScopeLimit() == null ? 1L : getAttributionScopeLimit();
             long maxEventStates = getMaxEventStates() == null ? 1L : getMaxEventStates();
+            double epsilon = getConditionalEventLevelEpsilon(flags);
             return Combinatorics.getMaxInformationGainWithAttributionScope(
-                    numTriggerStates,
-                    attributionScopeLimit,
-                    maxEventStates,
-                    flags.getMeasurementPrivacyEpsilon());
+                    numTriggerStates, attributionScopeLimit, maxEventStates, epsilon);
         }
         return Combinatorics.getInformationGain(numTriggerStates, flipProbability);
+    }
+
+    /** Retrieves the default epsilon or epsilon defined from Source. */
+    public double getConditionalEventLevelEpsilon(Flags flags) {
+        if (flags.getMeasurementEnableEventLevelEpsilonInSource()
+                && getEventLevelEpsilon() != null) {
+            return getEventLevelEpsilon();
+        }
+        return flags.getMeasurementPrivacyEpsilon();
     }
 
     private boolean isFlexLiteApiValueValid(Flags flags) {
@@ -349,7 +360,7 @@ public class Source {
             setFlipProbability(mTriggerSpecs.getFlipProbability(this, flags));
             return;
         }
-        double epsilon = (double) flags.getMeasurementPrivacyEpsilon();
+        double epsilon = getConditionalEventLevelEpsilon(flags);
         setFlipProbability(Combinatorics.getFlipProbability(getNumStates(flags), epsilon));
     }
 
@@ -394,6 +405,11 @@ public class Source {
         int TRUTHFULLY = 1;
         int NEVER = 2;
         int FALSELY = 3;
+    }
+
+    public enum DestinationLimitAlgorithm {
+        LIFO,
+        FIFO
     }
 
     /** The choice of the summary operator with the reporting window */
@@ -508,9 +524,20 @@ public class Source {
         if (getTriggerSpecs() != null) {
             return getTriggerSpecs().getTriggerDataCardinality();
         }
+        if (getTriggerData() != null) {
+            return getTriggerData().size();
+        }
         return mSourceType == SourceType.EVENT
                 ? PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY
                 : PrivacyParams.getNavigationTriggerDataCardinality();
+    }
+
+    /**
+     * @return the list of trigger data
+     */
+    @Nullable
+    public Set<UnsignedLong> getTriggerData() {
+        return mTriggerData;
     }
 
     /**
@@ -608,6 +635,7 @@ public class Source {
                 && Objects.equals(mDebugAdId, source.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
                 && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations
+                && Objects.equals(mTriggerData, source.mTriggerData)
                 && Objects.equals(mAttributedTriggers, source.mAttributedTriggers)
                 && Objects.equals(mTriggerSpecs, source.mTriggerSpecs)
                 && Objects.equals(mTriggerSpecsString, source.mTriggerSpecsString)
@@ -620,7 +648,10 @@ public class Source {
                 && mDropSourceIfInstalled == source.mDropSourceIfInstalled
                 && Objects.equals(mAttributionScopes, source.mAttributionScopes)
                 && Objects.equals(mAttributionScopeLimit, source.mAttributionScopeLimit)
-                && Objects.equals(mMaxEventStates, source.mMaxEventStates);
+                && Objects.equals(mMaxEventStates, source.mMaxEventStates)
+                && mDestinationLimitPriority == source.mDestinationLimitPriority
+                && Objects.equals(mDestinationLimitAlgorithm, source.mDestinationLimitAlgorithm)
+                && Objects.equals(mEventLevelEpsilon, source.mEventLevelEpsilon);
     }
 
     @Override
@@ -660,6 +691,7 @@ public class Source {
                 mDebugAdId,
                 mRegistrationOrigin,
                 mDebugJoinKey,
+                mTriggerData,
                 mAttributedTriggers,
                 mTriggerSpecs,
                 mTriggerSpecsString,
@@ -672,7 +704,10 @@ public class Source {
                 mDropSourceIfInstalled,
                 mAttributionScopes,
                 mAttributionScopeLimit,
-                mMaxEventStates);
+                mMaxEventStates,
+                mDestinationLimitPriority,
+                mDestinationLimitAlgorithm,
+                mEventLevelEpsilon);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -921,6 +956,12 @@ public class Source {
     @Nullable
     public String getSharedFilterDataKeys() {
         return mSharedFilterDataKeys;
+    }
+
+    /** Returns the epsilon value set by source. */
+    @Nullable
+    public Double getEventLevelEpsilon() {
+        return mEventLevelEpsilon;
     }
 
     /**
@@ -1338,6 +1379,25 @@ public class Source {
         return mMaxEventStates;
     }
 
+    /**
+     * Priority of app and web destinations on this source. An incoming or existing source is
+     * rejected, if the long-term destination limit is exceeded, based on this value - higher values
+     * are retained.
+     */
+    public long getDestinationLimitPriority() {
+        return mDestinationLimitPriority;
+    }
+
+    /**
+     * Algorithm to use for long term destination limiting. FIFO - remove the lowest priority
+     * source, LIFO - reject the incoming source. It does not need to be persisted in the database
+     * as we need it only at the time of registration.
+     */
+    @Nullable
+    public DestinationLimitAlgorithm getDestinationLimitAlgorithm() {
+        return mDestinationLimitAlgorithm;
+    }
+
     /** Builder for {@link Source}. */
     public static final class Builder {
         private final Source mBuilding;
@@ -1402,6 +1462,9 @@ public class Source {
             builder.setAttributionScopes(copyFrom.mAttributionScopes);
             builder.setAttributionScopeLimit(copyFrom.mAttributionScopeLimit);
             builder.setMaxEventStates(copyFrom.mMaxEventStates);
+            builder.setDestinationLimitPriority(copyFrom.mDestinationLimitPriority);
+            builder.setDestinationLimitAlgorithm(copyFrom.mDestinationLimitAlgorithm);
+            builder.setEventLevelEpsilon(copyFrom.mEventLevelEpsilon);
             return builder;
         }
 
@@ -1621,6 +1684,12 @@ public class Source {
             return this;
         }
 
+        /** See {@link Source#getEventLevelEpsilon()} ()}. */
+        public Builder setEventLevelEpsilon(@Nullable Double eventLevelEpsilon) {
+            mBuilding.mEventLevelEpsilon = eventLevelEpsilon;
+            return this;
+        }
+
         /** See {@link Source#getAggregateSource()} */
         @NonNull
         public Builder setAggregateSource(@Nullable String aggregateSource) {
@@ -1697,6 +1766,13 @@ public class Source {
         @NonNull
         public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
+        /** See {@link Source#getTriggerData()} */
+        @NonNull
+        public Builder setTriggerData(@NonNull Set<UnsignedLong> triggerData) {
+            mBuilding.mTriggerData = triggerData;
             return this;
         }
 
@@ -1781,6 +1857,21 @@ public class Source {
         @NonNull
         public Builder setMaxEventStates(@Nullable Long maxEventStates) {
             mBuilding.mMaxEventStates = maxEventStates;
+            return this;
+        }
+
+        /** See {@link Source#getDestinationLimitPriority()}. */
+        @NonNull
+        public Builder setDestinationLimitPriority(long destinationLimitPriority) {
+            mBuilding.mDestinationLimitPriority = destinationLimitPriority;
+            return this;
+        }
+
+        /** See {@link Source#getDestinationLimitAlgorithm()}. */
+        @NonNull
+        public Builder setDestinationLimitAlgorithm(
+                @Nullable DestinationLimitAlgorithm destinationLimitAlgorithm) {
+            mBuilding.mDestinationLimitAlgorithm = destinationLimitAlgorithm;
             return this;
         }
 

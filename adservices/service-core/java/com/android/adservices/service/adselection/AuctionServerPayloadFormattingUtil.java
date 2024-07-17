@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterV0.DATA_SIZE_PADDING_LENGTH_BYTE;
-
 import com.android.adservices.LoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -35,6 +33,7 @@ public class AuctionServerPayloadFormattingUtil {
     static final int META_INFO_LENGTH_BYTE =
             (PAYLOAD_FORMAT_VERSION_LENGTH_BITS + COMPRESSION_ALGORITHM_VERSION_LENGTH_BITS)
                     / ONE_BYTE_IN_BITS;
+    public static final int DATA_SIZE_PADDING_LENGTH_BYTE = 4;
 
     /** Creates meta info byte from given version integers. */
     static byte getMetaInfoByte(int compressionVersion, int formatterVersion) {

@@ -16,6 +16,9 @@
 
 package com.android.adservices.download;
 
+import static android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED;
+import static android.net.NetworkCapabilities.TRANSPORT_WIFI;
+
 import static com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus.SUCCESS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
@@ -28,7 +31,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.content.Context;
 import android.database.DatabaseUtils;
-import android.net.wifi.WifiManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
@@ -129,6 +133,10 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/4543"
                     + "/e9d118728752e6a6bfb5d7d8d1520807591f0717";
 
+    private static final String MDD_COBALT_REGISTRY_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/cobalt-rubidium-registry/5132"
+                    + "/741e4b9f7ce77b1fce124a63aa4a439061ea140a";
+
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/3548"
@@ -148,7 +156,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
     /** Old PTB URL with a small number of enrollment records. */
     private static final String PTB_OLD_ENROLLMENT_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/3156/9d9d99be0c6dc71fc329f5c02a0fac48d3b06e73";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/3156"
+                    + "/9d9d99be0c6dc71fc329f5c02a0fac48d3b06e73";
 
     private static final int PTB_ENROLLMENT_ENTRIES = 6;
 
@@ -164,11 +173,11 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     public static final String ENROLLMENT_FILE_GROUP_NAME = "adtech_enrollment_data";
     public static final String ENROLLMENT_PROTO_FILE_GROUP_NAME = "adtech_enrollment_proto_data";
     public static final String UI_OTA_STRINGS_FILE_GROUP_NAME = "ui-ota-strings";
+    public static final String COBALT_REGISTRY_FILE_GROUP_NAME = "rubidium-registry";
     private SynchronousFileStorage mFileStorage;
     private FileDownloader mFileDownloader;
     private SharedDbHelper mDbHelper;
     private MobileDataDownload mMdd;
-    private WifiManager mWifiManager;
 
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
@@ -177,10 +186,9 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
     @Before
     public void setUp() throws Exception {
-        mWifiManager = mContext.getSystemService(WifiManager.class);
         // The MDD integration tests require wifi connection. If the running device is not
         // connected to the Wifi, tests should be skipped.
-        Assume.assumeTrue("Device must have wifi connection", mWifiManager.isWifiEnabled());
+        Assume.assumeTrue("Device must have wifi connection", isWifiConnected());
 
         mockMddFlags();
 
@@ -340,6 +348,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testEnrollmentDataDownload_Production()
             throws ExecutionException, InterruptedException, TimeoutException {
+        when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(true);
         createMddForEnrollment(PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL, /* getProto= */ false);
 
         ClientFileGroup clientFileGroup =
@@ -360,6 +369,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testEnrollmentDataDownload_OEM()
             throws ExecutionException, InterruptedException, TimeoutException {
+        when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(true);
         createMddForEnrollment(OEM_ENROLLMENT_MANIFEST_FILE_URL, /* getProto= */ false);
 
         ClientFileGroup clientFileGroup =
@@ -379,6 +389,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testEnrollmentDataDownload_PTB()
             throws ExecutionException, InterruptedException, TimeoutException {
+        when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(true);
         when(mMockFlags.getEnrollmentMddRecordDeletionEnabled()).thenReturn(true);
         createMddForEnrollment(PTB_ENROLLMENT_MANIFEST_FILE_URL, /* getProto= */ false);
 
@@ -409,6 +420,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     /** This method verifies that the file group does not exist when an empty url is provided. */
     @Test
     public void testEnrollmentProtoDataDownload_emptyUrl() throws Exception {
+        when(mMockFlags.getEncryptionKeyNewEnrollmentFetchKillSwitch()).thenReturn(true);
         createMddForEnrollment("", /* getProto= */ true);
 
         ClientFileGroup clientFileGroup =
@@ -660,6 +672,55 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 3150);
     }
 
+    /**
+     * Tests Cobalt registry file group download successfully when Cobalt registry out-of-band
+     * update feature is enabled.
+     */
+    @Test
+    public void testCobaltRegistryManifestFileGroupPopulator_featureEnabled() throws Exception {
+        when(mMockFlags.getCobaltRegistryOutOfBandUpdateEnabled()).thenReturn(true);
+        when(mMockFlags.getMddCobaltRegistryManifestFileUrl())
+                .thenReturn(MDD_COBALT_REGISTRY_MANIFEST_FILE_URL);
+
+        createMddForCobaltRegistry();
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(COBALT_REGISTRY_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        // Verify Cobalt registry file group.
+        assertThat(clientFileGroup.getGroupName()).isEqualTo(COBALT_REGISTRY_FILE_GROUP_NAME);
+        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        assertThat(clientFileGroup.getFileCount()).isEqualTo(1);
+        assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
+        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 5132);
+    }
+
+    /**
+     * Tests no Cobalt registry file group downloaded when Cobalt registry out-of-band update
+     * feature is disabled.
+     */
+    @Test
+    public void testCobaltRegistryManifestFileGroupPopulator_featureDisabled() throws Exception {
+        when(mMockFlags.getCobaltRegistryOutOfBandUpdateEnabled()).thenReturn(false);
+        when(mMockFlags.getMddCobaltRegistryManifestFileUrl())
+                .thenReturn(MDD_COBALT_REGISTRY_MANIFEST_FILE_URL);
+
+        createMddForCobaltRegistry();
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(COBALT_REGISTRY_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
+    }
+
     // A helper function to create a DataFilegroup.
     private static DataFileGroup createDataFileGroup(
             String groupName,
@@ -707,7 +768,6 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
      * @param fileGroupPopulators a list of FileGroupPopulator that will be added to the MDD
      * @return a MobileDataDownload instance.
      */
-    @NonNull
     private static MobileDataDownload getMddForTesting(
             @NonNull Context context,
             @NonNull Flags flags,
@@ -747,7 +807,6 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     }
 
     // Returns MobileDataDownload using passed in encryption keys manifest url.
-    @NonNull
     private void createMddForEncryptionKeys(String encryptionManifestFileUrl)
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(encryptionManifestFileUrl).when(mMockFlags).getMddEncryptionKeysManifestFileUrl();
@@ -771,7 +830,6 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     }
 
     // Returns MobileDataDownload using passed in enrollment manifest url.
-    @NonNull
     private void createMddForEnrollment(String enrollmentManifestFileUrl, boolean getProto)
             throws ExecutionException, InterruptedException, TimeoutException {
         if (getProto) {
@@ -799,7 +857,6 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     }
 
     // Returns MobileDataDownload using passed in topics manifest url.
-    @NonNull
     private void createMddForTopics(String topicsManifestFileUrl)
             throws ExecutionException, InterruptedException, TimeoutException {
         doReturn(topicsManifestFileUrl).when(mMockFlags).getMddTopicsClassifierManifestFileUrl();
@@ -822,11 +879,30 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     }
 
     // Returns MobileDataDownload using passed in UI OTA manifest url.
-    @NonNull
     private void createMddForUiOTA()
             throws ExecutionException, InterruptedException, TimeoutException {
         FileGroupPopulator fileGroupPopulator =
                 MobileDataDownloadFactory.getUiOtaResourcesManifestPopulator(
+                        mMockFlags, mFileStorage, mFileDownloader);
+
+        mMdd =
+                getMddForTesting(
+                        mContext,
+                        mMockFlags,
+                        // List of FileGroupPopulator that contains UI OTA String FileGroupPopulator
+                        // only.
+                        ImmutableList.of(fileGroupPopulator));
+
+        // Calling handleTask directly to trigger the MDD's background download on wifi. This should
+        // be done in tests only.
+        mMdd.handleTask(TaskScheduler.WIFI_CHARGING_PERIODIC_TASK)
+                .get(MAX_HANDLE_TASK_WAIT_TIME_SECS, SECONDS);
+    }
+
+    // Returns MobileDataDownload using passed in Cobalt registry manifest url.
+    private void createMddForCobaltRegistry() throws Exception {
+        FileGroupPopulator fileGroupPopulator =
+                MobileDataDownloadFactory.getCobaltRegistryManifestPopulator(
                         mMockFlags, mFileStorage, mFileDownloader);
 
         mMdd =
@@ -960,6 +1036,19 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         doReturn(Flags.ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS)
                 .when(mMockFlags)
                 .getEncryptionKeyNetworkReadTimeoutMs();
+    }
+
+    /** Checks if the device is currently connected to an active WIFI network. */
+    // TODO(b/353723360): Move to a helper class under shared/ folder.
+    private boolean isWifiConnected() {
+        ConnectivityManager connectivityManager =
+                mContext.getSystemService(ConnectivityManager.class);
+        NetworkCapabilities networkCapabilities =
+                connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
+
+        return networkCapabilities != null
+                && networkCapabilities.hasTransport(TRANSPORT_WIFI)
+                && networkCapabilities.hasCapability(NET_CAPABILITY_VALIDATED);
     }
 
     private static void overridingMddLoggingLevel(String loggingLevel) {

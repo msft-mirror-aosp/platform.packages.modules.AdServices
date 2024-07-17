@@ -16,6 +16,7 @@
 package com.android.adservices.shared.testing.concurrency;
 
 import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
+import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeFalse;
@@ -25,12 +26,12 @@ import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.android.adservices.shared.meta_testing.FakeLogger;
-import com.android.adservices.shared.meta_testing.LogEntry;
+import com.android.adservices.shared.testing.DynamicLogger;
+import com.android.adservices.shared.testing.LogEntry;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.testing.SharedSidelessTestCase;
-import com.android.adservices.shared.testing.StandardStreamsLogger;
 
 import com.google.common.collect.ImmutableList;
 
@@ -44,8 +45,22 @@ import java.util.concurrent.TimeUnit;
 public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableToString>
         extends SharedSidelessTestCase {
 
-    protected static final long INJECTION_TIMEOUT_MS = 200;
-    protected static final long CALLBACK_TIMEOUT_MS = INJECTION_TIMEOUT_MS + 400;
+    /** Timeout for sleeping before asserting the callback was called. */
+    protected static final long BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS = 50;
+
+    /**
+     * Timeout for blocking the test until the callback is called (when it IS expected to be called)
+     * - must be higher than {@link #BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS} and should be very high to
+     * avoid failures on slower devices.
+     */
+    protected static final long CALLBACK_DEFAULT_TIMEOUT_MS =
+            BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS + 5_000;
+
+    /**
+     * Timeout for tests that don't expect the callback to be called - should be short so they don't
+     * block the tests for too long.
+     */
+    protected static final long NOT_CALLED_TIMEOUT_MS = 50;
 
     protected final FakeLogger mFakeLogger = new FakeLogger();
 
@@ -54,7 +69,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     private final SyncCallbackSettings.Builder mDefaultSettingsBuilder =
             mFakeLoggerSettingsBuilder
                     .setFailIfCalledOnMainThread(supportsFailIfCalledOnMainThread())
-                    .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS);
+                    .setMaxTimeoutMs(CALLBACK_DEFAULT_TIMEOUT_MS);
 
     // Used to set the name of the method returned by call() - cannot AtomicRefecence because
     // call() might be called it might be called AFTER assertCalled()
@@ -67,7 +82,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     // TODO(b/342448771): ideally should remove it, but the class hierarchy is messed up (as some
     // classes are defined on side-less but the test on device-side)
     protected SyncCallbackTestCase() {
-        this(StandardStreamsLogger.getInstance());
+        this(DynamicLogger.getInstance());
     }
 
     protected SyncCallbackTestCase(RealLogger realLogger) {
@@ -118,42 +133,50 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     }
 
     // NOTE: currently it just need one method, so we're always returning poll()
+
     /** Gets the name of the method returned by {@link #call(SyncCallback)}. */
     private String getSetCalledMethodName() throws InterruptedException {
-        String methodName = mSetCalledMethodQueue.poll(CALLBACK_TIMEOUT_MS, MILLISECONDS);
+        String methodName = mSetCalledMethodQueue.poll(CALLBACK_DEFAULT_TIMEOUT_MS, MILLISECONDS);
         if (methodName == null) {
             // Shouldn't happen...
             throw new IllegalStateException(
                     "Could not infer name of setCalled() method after "
-                            + CALLBACK_TIMEOUT_MS
+                            + CALLBACK_DEFAULT_TIMEOUT_MS
                             + " ms");
         }
         return methodName;
     }
 
     /**
-     * {@code testHasExpectedConstructors} expects that the callback class has 2 constructors; if it
-     * uses a factory approach instead, it should override this method to return {@code true}.
+     * {@code SyncCallback}s are expected to have 2 constructors (1 that doesn't take any parameter
+     * and 1 that takes a {@link SyncCallbackSettings}), so this methods return {@code true} by
+     * default, but should be overridden to return {@code false} if that's not the case (for
+     * example, if the {@code SyncCallback} uses a factory method or if it needs extra parameters
+     * like a {@code Context}.
      */
-    protected boolean usesFactoryApproach() {
-        return false;
+    protected boolean providesExpectedConstructors() {
+        return true;
     }
 
     /**
      * Abstraction to "call" the callback.
      *
-     * <p>By default it will call {@code setCalled()}, but should be overridden by subclasses that
-     * support results.
+     * <p><b>Note:</b> must just call the callback right away, not in a background thread.
      *
-     * @return name of the method called
+     * @return representation of the method called (like "setCalled()" or "inject(foo)").
      */
-    protected String callCallback(CB callback) {
-        if (callback instanceof ResultlessSyncCallback) {
-            ((ResultlessSyncCallback) callback).setCalled();
-            return "setCalled()";
-        }
-        throw new UnsupportedOperationException(getClass() + " must override call(callback)");
-    }
+    protected abstract String callCallback(CB callback);
+
+    /**
+     * Abstraction to assert the callback before the giving {@code timeoutMs}.
+     *
+     * <p><b>Note:</b> in theory this method could be added to {@link SyncCallback} itself, but in
+     * reality it's just used in the test cases that check "negative scenarios" (i.e., when the
+     * callback is not supposed to be thrown) so they don't block for too long - adding it to the
+     * interface could confuse the "real" clients (as they can also set the timeout in the
+     * constructor).
+     */
+    protected abstract void assertCalled(CB callback, long timeoutMs) throws InterruptedException;
 
     /**
      * Checks whether the callback supports being constructor with a {@link SyncCallbackSettings
@@ -179,7 +202,8 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
     @Test
     public final void testHasExpectedConstructors() throws Exception {
-        assumeFalse("callback uses factory approach", usesFactoryApproach());
+        assumeTrue(
+                "callback doesn't provide expected constructors", providesExpectedConstructors());
 
         CB callback = newFrozenCallback(mDefaultSettings);
         @SuppressWarnings("unchecked")
@@ -245,7 +269,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
         // Check state before
         expectIsCalledAndNumberCalls(callback, "before setCalled()", false, 0);
 
-        Thread t = runAsync(INJECTION_TIMEOUT_MS, () -> call(callback));
+        Thread t = runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> call(callback));
         callback.assertCalled();
 
         // Check state after
@@ -271,11 +295,13 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
         var log = new LogChecker(callback);
 
         var thrown =
-                assertThrows(SyncCallbackTimeoutException.class, () -> callback.assertCalled());
+                assertThrows(
+                        SyncCallbackTimeoutException.class,
+                        () -> assertCalled(callback, NOT_CALLED_TIMEOUT_MS));
 
         expect.withMessage("e.getTimeout()")
                 .that(thrown.getTimeout())
-                .isEqualTo(mDefaultSettings.getMaxTimeoutMs());
+                .isEqualTo(NOT_CALLED_TIMEOUT_MS);
         expect.withMessage("e.getUnit()()").that(thrown.getUnit()).isEqualTo(TimeUnit.MILLISECONDS);
 
         expectIsCalledAndNumberCalls(callback, "after setCalled()", false, 0);
@@ -302,7 +328,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
                         });
         thread.interrupt();
 
-        Throwable thrown = actualFailureQueue.poll(CALLBACK_TIMEOUT_MS, MILLISECONDS);
+        Throwable thrown = actualFailureQueue.poll(CALLBACK_DEFAULT_TIMEOUT_MS, MILLISECONDS);
         expect.withMessage("thrown exception")
                 .that(thrown)
                 .isInstanceOf(InterruptedException.class);
@@ -319,13 +345,19 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
         CB callback = newFrozenCallback(settings);
 
         // 1st call
-        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback));
-        assertThrows(SyncCallbackTimeoutException.class, () -> callback.assertCalled());
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> call(callback));
+        // Use small timeout as it should block and fail (because it's not called yet)
+        assertThrows(
+                SyncCallbackTimeoutException.class,
+                () ->
+                        assertCalled(
+                                callback,
+                                BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS + NOT_CALLED_TIMEOUT_MS));
 
         expectIsCalledAndNumberCalls(callback, "after 1st setCalled()", false, 1);
 
         // 2nd call
-        runAsync(INJECTION_TIMEOUT_MS, () -> call(callback));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> call(callback));
         callback.assertCalled();
 
         expectIsCalledAndNumberCalls(callback, "after 2nd setCalled()", true, 2);
@@ -372,8 +404,9 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
         // 2nd call on 1st callback
         runAsync(injectionTimeoutMs, () -> call(callback1));
-        callback1.assertCalled();
-        callback2.assertCalled();
+
+        assertCalled(callback1, DEFAULT_TIMEOUT_MS);
+        assertCalled(callback2, DEFAULT_TIMEOUT_MS);
         expectIsCalledAndNumberCalls(callback1, "after 2nd call on 1st callback", true, 2);
         expectIsCalledAndNumberCalls(callback2, "after 2nd call on 1st callback", true, 2);
 
@@ -423,8 +456,8 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
         // 2nd call on 2nd callback
         runAsync(injectionTimeoutMs, () -> call(callback2));
-        callback1.assertCalled();
-        callback2.assertCalled();
+        assertCalled(callback1, DEFAULT_TIMEOUT_MS);
+        assertCalled(callback2, DEFAULT_TIMEOUT_MS);
         expectIsCalledAndNumberCalls(callback1, "after 2nd call on 2nd callback", true, 2);
         expectIsCalledAndNumberCalls(callback2, "after 2nd call on 2nd callback", true, 2);
 
@@ -443,7 +476,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
         assumeCanFailIfCalledOnMainThread();
         SyncCallbackSettings settings =
                 new SyncCallbackSettings.Builder(mFakeLogger, () -> Boolean.TRUE)
-                        .setMaxTimeoutMs(CALLBACK_TIMEOUT_MS)
+                        .setMaxTimeoutMs(CALLBACK_DEFAULT_TIMEOUT_MS)
                         .setFailIfCalledOnMainThread(true)
                         .build();
 
@@ -452,7 +485,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
         // setCalled() passes...
         // NOTE: not really the main thread, as it's emulated
-        Thread mainThread = runAsync(INJECTION_TIMEOUT_MS, () -> call(callback));
+        Thread mainThread = runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> call(callback));
 
         String setCalled = getSetCalledMethodName();
         var thrown = assertThrows(CalledOnMainThreadException.class, () -> callback.assertCalled());
@@ -465,9 +498,9 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
         expectLoggedCalls(
                 log.d(setCalled + " called on " + mainThread.getName()),
-                        log.v(setCalled + " returning"),
+                log.v(setCalled + " returning"),
                 log.d("assertCalled() called on " + currentThread().getName()),
-                        log.e("assertCalled() failed: " + thrown));
+                log.e("assertCalled() failed: " + thrown));
     }
 
     /** Helper method to assert the value of {@code isCalled()}. */

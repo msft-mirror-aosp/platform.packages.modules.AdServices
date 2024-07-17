@@ -268,6 +268,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTriggers.get(0).getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTriggers.get(0),
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,
@@ -320,6 +322,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTriggers.get(0).getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTriggers.get(0),
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,
@@ -364,6 +368,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTrigger.getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTrigger,
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,
@@ -407,6 +413,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTriggers.get(0).getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTriggers.get(0),
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,
@@ -445,6 +453,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTriggers.get(0).getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTriggers.get(0),
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,
@@ -484,6 +494,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTriggers.get(0).getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTriggers.get(0),
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,
@@ -521,6 +533,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTriggers.get(0).getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTriggers.get(0),
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,
@@ -561,6 +575,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTriggers.get(0).getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTriggers.get(0),
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,
@@ -602,6 +618,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTriggers.get(0).getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTriggers.get(0),
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,
@@ -647,6 +665,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTriggers.get(0).getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTriggers.get(0),
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,
@@ -704,6 +724,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTriggers.get(0).getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTriggers.get(0),
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,
@@ -807,6 +829,8 @@ public final class EventReportTest {
                         .populateFromSourceAndTrigger(
                                 source,
                                 trigger,
+                                eventTriggers.get(0).getTriggerData().mod(
+                                        source.getTriggerDataCardinality()),
                                 eventTriggers.get(0),
                                 sDebugKeyPair,
                                 mEventReportWindowCalcDelegate,

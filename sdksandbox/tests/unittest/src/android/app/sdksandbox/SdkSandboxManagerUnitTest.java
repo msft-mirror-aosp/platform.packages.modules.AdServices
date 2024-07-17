@@ -50,6 +50,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -64,7 +65,7 @@ import java.util.List;
 
 /** Tests {@link SdkSandboxManager} APIs. */
 @RunWith(JUnit4.class)
-public class SdkSandboxManagerUnitTest {
+public class SdkSandboxManagerUnitTest extends DeviceSupportedBaseTest {
 
     private SdkSandboxManager mSdkSandboxManager;
     private ISdkSandboxManager mBinder;

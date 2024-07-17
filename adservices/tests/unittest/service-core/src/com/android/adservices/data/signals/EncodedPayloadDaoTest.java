@@ -18,6 +18,7 @@ package com.android.adservices.data.signals;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -117,6 +118,38 @@ public class EncodedPayloadDaoTest {
                 encodedPayloadList.stream().map(a -> a.getBuyer()).collect(Collectors.toSet());
         assertTrue(buyers.contains(BUYER_1));
         assertTrue(buyers.contains(BUYER_2));
+
+        Set<AdTechIdentifier> allBuyers =
+                new HashSet<>(mEncodedPayloadDao.getAllBuyersWithEncodedPayloads());
+        assertTrue(allBuyers.contains(BUYER_1));
+        assertTrue(allBuyers.contains(BUYER_2));
+    }
+
+    @Test
+    public void testGetAllEncodedPayloadsForBuyers() {
+        assertNull(
+                "Initial state should have been empty",
+                mEncodedPayloadDao.getEncodedPayload(BUYER_1));
+
+        DBEncodedPayload payload = DBEncodedPayloadFixture.anEncodedPayload();
+        mEncodedPayloadDao.persistEncodedPayload(payload);
+        mEncodedPayloadDao.persistEncodedPayload(
+                DBEncodedPayloadFixture.anEncodedPayloadBuilder().setBuyer(BUYER_2).build());
+
+        assertNotNull(
+                "Buyer 1 should be persisted.", mEncodedPayloadDao.getEncodedPayload(BUYER_1));
+
+        assertNotNull(
+                "Buyer 2 should be persisted.", mEncodedPayloadDao.getEncodedPayload(BUYER_2));
+
+        List<DBEncodedPayload> encodedPayloadList =
+                mEncodedPayloadDao.getAllEncodedPayloadsForBuyers(List.of(BUYER_1));
+        assertEquals(1, encodedPayloadList.size());
+
+        Set<AdTechIdentifier> buyers =
+                encodedPayloadList.stream().map(a -> a.getBuyer()).collect(Collectors.toSet());
+        assertTrue(buyers.contains(BUYER_1));
+        assertFalse(buyers.contains(BUYER_2));
 
         Set<AdTechIdentifier> allBuyers =
                 new HashSet<>(mEncodedPayloadDao.getAllBuyersWithEncodedPayloads());

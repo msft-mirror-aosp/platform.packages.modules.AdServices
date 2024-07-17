@@ -296,6 +296,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 "",
                                 0,
                                 false,
+                                false,
+                                0,
                                 false)
                         .setAdTechDomain(null)
                         .build();
@@ -349,6 +351,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 "",
                                 0,
                                 false,
+                                false,
+                                0,
                                 false)
                         .setAdTechDomain(null)
                         .build();
@@ -4991,6 +4995,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 "",
                                 0,
                                 false,
+                                false,
+                                0,
                                 false)
                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                         .build();
@@ -6774,33 +6780,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
         assertThat(fetch.isPresent()).isTrue();
         assertThat(fetch.get().getAttributionScopes()).containsExactly("5", "6");
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
-    public void fetchTrigger_attributionScopeTooLong_fails() throws Exception {
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of("{\"attribution_scopes\": [\"long_attribution_scope\"]}")));
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
-
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
-        // Assertion
-        assertThat(asyncFetchStatus.getResponseStatus())
-                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
-        assertThat(fetch.isPresent()).isFalse();
-        assertThat(asyncFetchStatus.getEntityStatus())
-                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
         verify(mUrlConnection).setRequestMethod("POST");
     }
 

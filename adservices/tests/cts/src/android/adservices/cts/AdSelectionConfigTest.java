@@ -16,9 +16,7 @@
 
 package android.adservices.cts;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -26,18 +24,18 @@ import android.adservices.adselection.SignedContextualAds;
 import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.CommonFixture;
 import android.net.Uri;
 import android.os.Parcel;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
 
-public class AdSelectionConfigTest {
+@RequiresSdkLevelAtLeastS
+public final class AdSelectionConfigTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testBuildValidAdSelectionConfigSuccess() {
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap =
@@ -55,21 +53,20 @@ public class AdSelectionConfigTest {
                                 AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI)
                         .build();
 
-        assertEquals(config.getSeller(), AdSelectionConfigFixture.SELLER);
-        assertEquals(config.getDecisionLogicUri(), AdSelectionConfigFixture.DECISION_LOGIC_URI);
-        assertEquals(
-                config.getCustomAudienceBuyers(), AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS);
-        assertEquals(config.getAdSelectionSignals(), AdSelectionConfigFixture.AD_SELECTION_SIGNALS);
-        assertEquals(config.getSellerSignals(), AdSelectionConfigFixture.SELLER_SIGNALS);
-        assertEquals(config.getPerBuyerSignals(), AdSelectionConfigFixture.PER_BUYER_SIGNALS);
-        assertEquals(config.getPerBuyerSignedContextualAds(), contextualAdsMap);
-        assertEquals(
-                config.getTrustedScoringSignalsUri(),
-                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
+        expect.that(config.getSeller()).isEqualTo(AdSelectionConfigFixture.SELLER);
+        expect.that(config.getDecisionLogicUri())
+                .isEqualTo(AdSelectionConfigFixture.DECISION_LOGIC_URI);
+        expect.that(config.getCustomAudienceBuyers())
+                .isEqualTo(AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS);
+        expect.that(config.getAdSelectionSignals())
+                .isEqualTo(AdSelectionConfigFixture.AD_SELECTION_SIGNALS);
+        expect.that(config.getSellerSignals()).isEqualTo(AdSelectionConfigFixture.SELLER_SIGNALS);
+        expect.that(config.getPerBuyerSignals())
+                .isEqualTo(AdSelectionConfigFixture.PER_BUYER_SIGNALS);
+        expect.that(config.getPerBuyerSignedContextualAds()).isEqualTo(contextualAdsMap);
+        expect.that(config.getTrustedScoringSignalsUri())
+                .isEqualTo(AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
     }
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testParcelValidAdDataSuccess() {
@@ -82,17 +79,17 @@ public class AdSelectionConfigTest {
         p.setDataPosition(0);
         AdSelectionConfig fromParcel = AdSelectionConfig.CREATOR.createFromParcel(p);
 
-        assertEquals(config.getSeller(), fromParcel.getSeller());
-        assertEquals(config.getDecisionLogicUri(), fromParcel.getDecisionLogicUri());
-        assertEquals(config.getCustomAudienceBuyers(), fromParcel.getCustomAudienceBuyers());
-        assertEquals(config.getAdSelectionSignals(), fromParcel.getAdSelectionSignals());
-        assertEquals(config.getSellerSignals(), fromParcel.getSellerSignals());
-        assertEquals(config.getPerBuyerSignals(), fromParcel.getPerBuyerSignals());
-        assertEquals(
-                config.getPerBuyerSignedContextualAds(),
-                fromParcel.getPerBuyerSignedContextualAds());
-        assertEquals(
-                config.getTrustedScoringSignalsUri(), fromParcel.getTrustedScoringSignalsUri());
+        expect.that(config.getSeller()).isEqualTo(fromParcel.getSeller());
+        expect.that(config.getDecisionLogicUri()).isEqualTo(fromParcel.getDecisionLogicUri());
+        expect.that(config.getCustomAudienceBuyers())
+                .isEqualTo(fromParcel.getCustomAudienceBuyers());
+        expect.that(config.getAdSelectionSignals()).isEqualTo(fromParcel.getAdSelectionSignals());
+        expect.that(config.getSellerSignals()).isEqualTo(fromParcel.getSellerSignals());
+        expect.that(config.getPerBuyerSignals()).isEqualTo(fromParcel.getPerBuyerSignals());
+        expect.that(config.getPerBuyerSignedContextualAds())
+                .isEqualTo(fromParcel.getPerBuyerSignedContextualAds());
+        expect.that(config.getTrustedScoringSignalsUri())
+                .isEqualTo(fromParcel.getTrustedScoringSignalsUri());
     }
 
     @Test
@@ -106,32 +103,32 @@ public class AdSelectionConfigTest {
                                 AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI)
                         .build();
 
-        assertEquals(config.getSeller(), AdSelectionConfigFixture.SELLER);
-        assertEquals(config.getDecisionLogicUri(), AdSelectionConfigFixture.DECISION_LOGIC_URI);
-        assertEquals(
-                config.getCustomAudienceBuyers(), AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS);
-        assertEquals(
-                config.getTrustedScoringSignalsUri(),
-                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
+        expect.that(config.getSeller()).isEqualTo(AdSelectionConfigFixture.SELLER);
+        expect.that(config.getDecisionLogicUri())
+                .isEqualTo(AdSelectionConfigFixture.DECISION_LOGIC_URI);
+        expect.that(config.getCustomAudienceBuyers())
+                .isEqualTo(AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS);
+        expect.that(config.getTrustedScoringSignalsUri())
+                .isEqualTo(AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
 
         // Populated by default with empty signals, map, and list
-        assertEquals(config.getAdSelectionSignals(), AdSelectionConfigFixture.EMPTY_SIGNALS);
-        assertEquals(config.getSellerSignals(), AdSelectionConfigFixture.EMPTY_SIGNALS);
-        assertTrue(config.getPerBuyerSignals().isEmpty());
-        assertTrue(config.getPerBuyerSignedContextualAds().isEmpty());
+        expect.that(config.getAdSelectionSignals())
+                .isEqualTo(AdSelectionConfigFixture.EMPTY_SIGNALS);
+        expect.that(config.getSellerSignals()).isEqualTo(AdSelectionConfigFixture.EMPTY_SIGNALS);
+        expect.that(config.getPerBuyerSignals()).isEmpty();
+        expect.that(config.getPerBuyerSignedContextualAds()).isEmpty();
     }
 
     @Test
     public void testBuildAdSelectionConfigUnsetSellerFailure() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new AdSelectionConfig.Builder()
-                            .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
-                            .setCustomAudienceBuyers(
-                                    AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
-                            .build();
-                });
+                () ->
+                        new AdSelectionConfig.Builder()
+                                .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
+                                .setCustomAudienceBuyers(
+                                        AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
+                                .build());
     }
 
     @Test
@@ -150,51 +147,49 @@ public class AdSelectionConfigTest {
 
         AdSelectionConfig cloneConfig = config.cloneToBuilder().build();
 
-        assertEquals(AdSelectionConfigFixture.SELLER, cloneConfig.getSeller());
-        assertEquals(
-                AdSelectionConfigFixture.DECISION_LOGIC_URI, cloneConfig.getDecisionLogicUri());
-        assertEquals(
-                AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS,
-                cloneConfig.getCustomAudienceBuyers());
-        assertEquals(
-                AdSelectionConfigFixture.AD_SELECTION_SIGNALS, cloneConfig.getAdSelectionSignals());
-        assertEquals(AdSelectionConfigFixture.SELLER_SIGNALS, cloneConfig.getSellerSignals());
-        assertEquals(AdSelectionConfigFixture.PER_BUYER_SIGNALS, cloneConfig.getPerBuyerSignals());
-        assertEquals(
-                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI,
-                cloneConfig.getTrustedScoringSignalsUri());
+        expect.that(cloneConfig.getSeller()).isEqualTo(AdSelectionConfigFixture.SELLER);
+        expect.that(cloneConfig.getDecisionLogicUri())
+                .isEqualTo(AdSelectionConfigFixture.DECISION_LOGIC_URI);
+        expect.that(cloneConfig.getCustomAudienceBuyers())
+                .isEqualTo(AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS);
+        expect.that(cloneConfig.getAdSelectionSignals())
+                .isEqualTo(AdSelectionConfigFixture.AD_SELECTION_SIGNALS);
+        expect.that(cloneConfig.getSellerSignals())
+                .isEqualTo(AdSelectionConfigFixture.SELLER_SIGNALS);
+        expect.that(cloneConfig.getPerBuyerSignals())
+                .isEqualTo(AdSelectionConfigFixture.PER_BUYER_SIGNALS);
+        expect.that(cloneConfig.getTrustedScoringSignalsUri())
+                .isEqualTo(AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
     }
 
     @Test
     public void testBuildAdSelectionConfigUnsetDecisionLogicUriFailure() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new AdSelectionConfig.Builder()
-                            .setSeller(AdSelectionConfigFixture.SELLER)
-                            .setCustomAudienceBuyers(
-                                    AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
-                            .build();
-                });
+                () ->
+                        new AdSelectionConfig.Builder()
+                                .setSeller(AdSelectionConfigFixture.SELLER)
+                                .setCustomAudienceBuyers(
+                                        AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
+                                .build());
     }
 
     @Test
     public void testBuildAdSelectionConfigUnsetBuyersFailure() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new AdSelectionConfig.Builder()
-                            .setSeller(AdSelectionConfigFixture.SELLER)
-                            .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
-                            .build();
-                });
+                () ->
+                        new AdSelectionConfig.Builder()
+                                .setSeller(AdSelectionConfigFixture.SELLER)
+                                .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
+                                .build());
     }
 
     @Test
     public void testAdSelectionConfigDescribeContents() {
         AdSelectionConfig obj = AdSelectionConfigFixture.anAdSelectionConfig();
 
-        assertEquals(obj.describeContents(), 0);
+        expect.that(obj.describeContents()).isEqualTo(0);
     }
 
     @Test
@@ -202,7 +197,8 @@ public class AdSelectionConfigTest {
         AdSelectionConfig obj1 = AdSelectionConfigFixture.anAdSelectionConfig();
         AdSelectionConfig obj2 = AdSelectionConfigFixture.anAdSelectionConfig();
 
-        CommonFixture.assertHaveSameHashCode(obj1, obj2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(obj1, obj2);
     }
 
     @Test
@@ -214,19 +210,22 @@ public class AdSelectionConfigTest {
                 AdSelectionConfigFixture.anAdSelectionConfig(
                         Uri.parse("https://different.uri.com"));
 
-        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreNotEqual(obj1, obj2);
+        et.expectObjectsAreNotEqual(obj2, obj3);
+        et.expectObjectsAreNotEqual(obj1, obj3);
     }
 
     @Test
     public void testEmptyConfigHasProperValuesSuccess() {
         AdSelectionConfig config = AdSelectionConfig.EMPTY;
 
-        assertEquals(config.getSeller(), AdTechIdentifier.fromString(""));
-        assertEquals(config.getDecisionLogicUri(), Uri.EMPTY);
-        assertEquals(0, config.getCustomAudienceBuyers().size());
-        assertEquals(config.getAdSelectionSignals(), AdSelectionSignals.EMPTY);
-        assertEquals(config.getSellerSignals(), AdSelectionSignals.EMPTY);
-        assertEquals(0, config.getPerBuyerSignals().size());
-        assertEquals(config.getTrustedScoringSignalsUri(), Uri.EMPTY);
+        expect.that(config.getSeller()).isEqualTo(AdTechIdentifier.fromString(""));
+        expect.that(config.getDecisionLogicUri()).isEqualTo(Uri.EMPTY);
+        expect.that(config.getCustomAudienceBuyers()).hasSize(0);
+        expect.that(config.getAdSelectionSignals()).isEqualTo(AdSelectionSignals.EMPTY);
+        expect.that(config.getSellerSignals()).isEqualTo(AdSelectionSignals.EMPTY);
+        expect.that(config.getPerBuyerSignals()).hasSize(0);
+        expect.that(config.getTrustedScoringSignalsUri()).isEqualTo(Uri.EMPTY);
     }
 }

@@ -24,6 +24,12 @@
   // destinations. Formatted as a base-10 string.
   "destination_rate_limit_window_in_minutes": "1",
 
+  // Positive integer that controls the maximum number of distinct destinations
+  // covered by pending sources for a given (source site, reporting site) per
+  // day.
+  // Formatted as a base-10 string.
+  "max_destinations_per_reporting_site_per_day": "100",
+
   // Positive integer that controls the rate-limiting time window in days for
   // attribution. Formatted as a base-10 string.
   "rate_limit_time_window_in_days": "30",
@@ -85,6 +91,14 @@
   // Non-negative integer that controls the span in minutes to deliver an
   // aggregatable report. Formatted as a base-10 string.
   "aggregatable_report_delay_span": "50",
+
+  // Positive integer that controls the max aggregatable debug budget per
+  // context site per day.
+  "max_aggregatable_debug_budget_per_context_site": "1048576",
+
+  // Positive integer that controls the max number of aggregatable debug
+  // reports per source.
+  "max_aggregatable_debug_reports_per_source": "5",
 
   // Non-empty list that controls which origins are allowed as aggregation
   // coordinators. The first value is used as the default if a trigger omits

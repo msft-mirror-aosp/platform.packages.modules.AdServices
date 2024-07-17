@@ -25,22 +25,17 @@ import android.adservices.common.AppInstallFiltersFixture;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link AppInstallFilters}. */
-@SmallTest
-public class AppInstallFiltersTest {
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
+@RequiresSdkLevelAtLeastS
+public final class AppInstallFiltersTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testBuildValidAppInstallFilters_success() {
-        final AppInstallFilters originalFilters =
+        AppInstallFilters originalFilters =
                 new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET).build();
 
         assertThat(originalFilters.getPackageNames())
@@ -49,13 +44,13 @@ public class AppInstallFiltersTest {
 
     @Test
     public void testParcelAppInstallFilters_success() {
-        final AppInstallFilters originalFilters =
+        AppInstallFilters originalFilters =
                 new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET).build();
 
         Parcel targetParcel = Parcel.obtain();
         originalFilters.writeToParcel(targetParcel, 0);
         targetParcel.setDataPosition(0);
-        final AppInstallFilters filtersFromParcel =
+        AppInstallFilters filtersFromParcel =
                 AppInstallFilters.CREATOR.createFromParcel(targetParcel);
 
         assertThat(filtersFromParcel.getPackageNames())
@@ -64,57 +59,24 @@ public class AppInstallFiltersTest {
 
     @Test
     public void testEqualsIdentical_success() {
-        final AppInstallFilters originalFilters =
+        AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
-        final AppInstallFilters identicalFilters =
+        AppInstallFilters identicalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
+        AppInstallFilters differentFilters = new AppInstallFilters.Builder().build();
 
-        assertThat(originalFilters.equals(identicalFilters)).isTrue();
-    }
-
-    @Test
-    public void testEqualsDifferent_success() {
-        final AppInstallFilters originalFilters =
-                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
-        final AppInstallFilters differentFilters = new AppInstallFilters.Builder().build();
-
-        assertThat(originalFilters.equals(differentFilters)).isFalse();
-    }
-
-    @Test
-    public void testEqualsNull_success() {
-        final AppInstallFilters originalFilters =
-                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
-        final AppInstallFilters nullFilters = null;
-
-        assertThat(originalFilters.equals(nullFilters)).isFalse();
-    }
-
-    @Test
-    public void testHashCodeIdentical_success() {
-        final AppInstallFilters originalFilters =
-                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
-        final AppInstallFilters identicalFilters =
-                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
-
-        assertThat(originalFilters.hashCode()).isEqualTo(identicalFilters.hashCode());
-    }
-
-    @Test
-    public void testHashCodeDifferent_success() {
-        final AppInstallFilters originalFilters =
-                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
-        final AppInstallFilters differentFilters = new AppInstallFilters.Builder().build();
-
-        assertThat(originalFilters.hashCode()).isNotEqualTo(differentFilters.hashCode());
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(originalFilters, identicalFilters);
+        et.expectObjectsAreNotEqual(originalFilters, differentFilters);
+        et.expectObjectsAreNotEqual(originalFilters, null);
     }
 
     @Test
     public void testToString() {
-        final AppInstallFilters originalFilters =
+        AppInstallFilters originalFilters =
                 new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET).build();
 
-        final String expectedString =
+        String expectedString =
                 String.format("AppInstallFilters{mPackageNames=%s}", CommonFixture.PACKAGE_SET);
         assertThat(originalFilters.toString()).isEqualTo(expectedString);
     }
@@ -128,7 +90,7 @@ public class AppInstallFiltersTest {
 
     @Test
     public void testBuildNoSetters_success() {
-        final AppInstallFilters originalFilters = new AppInstallFilters.Builder().build();
+        AppInstallFilters originalFilters = new AppInstallFilters.Builder().build();
 
         assertThat(originalFilters.getPackageNames()).isEmpty();
     }
@@ -137,14 +99,14 @@ public class AppInstallFiltersTest {
     public void testCreatorNewArray_success() {
         AppInstallFilters[] filtersArray = AppInstallFilters.CREATOR.newArray(2);
 
-        assertThat(filtersArray.length).isEqualTo(2);
+        assertThat(filtersArray).hasLength(2);
         assertThat(filtersArray[0]).isNull();
         assertThat(filtersArray[1]).isNull();
     }
 
     @Test
     public void testAppInstallFiltersDescribeContents_success() {
-        final AppInstallFilters originalFilters =
+        AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
 
         assertThat(originalFilters.describeContents()).isEqualTo(0);

@@ -19,12 +19,15 @@ package com.android.adservices.service.shell;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.shell.IShellCommandCallback;
 import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -48,9 +51,13 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
+import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.AuctionServerDataCompressorFactory;
 import com.android.adservices.service.adselection.AuctionServerPayloadMetricsStrategyDisabled;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFactory;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorHelper;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorNoOptimizations;
 import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
@@ -59,9 +66,10 @@ import com.android.adservices.service.shell.customaudience.CustomAudienceListCom
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.ShellCommandStats;
-import com.android.adservices.shared.testing.common.BlockingCallableWrapper;
 import com.android.adservices.shared.testing.concurrency.OnResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 
 import com.google.common.collect.ImmutableList;
 
@@ -70,8 +78,10 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.io.PrintWriter;
+import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase {
 
@@ -79,8 +89,12 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     private static final boolean CONSENTED_DEBUG_CLI_ENABLED = true;
     private static final boolean SIGNALS_CLI_ENABLED = true;
     private static final long MAX_COMMAND_DURATION_MILLIS = 3000L;
+    private static final com.android.adservices.service.shell.ShellCommandResult SUCCESSFUL_CMD =
+            com.android.adservices.service.shell.ShellCommandResult.create(
+                    ShellCommandStats.RESULT_SUCCESS, ShellCommandStats.COMMAND_ECHO);
 
     @Mock private AdServicesLogger mAdServicesLogger;
+    @Mock private CompressedBuyerInputCreatorFactory mMockCompressedBuyerInputCreatorFactory;
 
     private final Flags mFlags = FakeFlagsFactory.getFlagsForTest();
     private ShellCommandServiceImpl mShellCommandService;
@@ -121,23 +135,34 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         new EnrollmentDao(mContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
                         mFlags,
                         CustomAudienceLoggerFactory.getNoOpInstance());
+        AuctionServerDataCompressor auctionServerDataCompressor =
+                AuctionServerDataCompressorFactory.getDataCompressor(
+                        mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+
+        CompressedBuyerInputCreatorHelper helper =
+                new CompressedBuyerInputCreatorHelper(
+                        new AuctionServerPayloadMetricsStrategyDisabled(),
+                        /* pasExtendedMetricsEnabled= */ false,
+                        /* omitAdsEnabled= */ false);
+        when(mMockCompressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
+                        anyInt(), any()))
+                .thenReturn(
+                        new CompressedBuyerInputCreatorNoOptimizations(
+                                helper,
+                                auctionServerDataCompressor,
+                                Clock.systemUTC(),
+                                GetAdSelectionDataApiCalledStats.builder()));
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
-                        customAudienceDao,
-                        encodedPayloadDao,
                         new FrequencyCapAdFiltererNoOpImpl(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         mFlags.getFledgeCustomAudienceActiveTimeWindowInMs(),
                         mFlags.getFledgeAuctionServerEnableAdFilterInGetAdSelectionData(),
                         mFlags.getProtectedSignalsPeriodicEncodingEnabled(),
-                        AuctionServerDataCompressorFactory.getDataCompressor(
-                                mFlags.getFledgeAuctionServerCompressionAlgorithmVersion()),
-                        mFlags.getFledgeAuctionServerOmitAdsEnabled(),
-                        new AuctionServerPayloadMetricsStrategyDisabled(),
-                        mFlags,
                         new AdFilteringFeatureFactory(appInstallDao, frequencyCapDao, mFlags)
-                                .getAppInstallAdFilterer());
+                                .getAppInstallAdFilterer(),
+                        mMockCompressedBuyerInputCreatorFactory);
         ShellCommandFactorySupplier adServicesShellCommandHandlerFactory =
                 new TestShellCommandFactorySupplier(
                         CUSTOM_AUDIENCE_CLI_ENABLED,
@@ -147,7 +172,8 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         customAudienceDao,
                         consentedDebugConfigurationDao,
                         protectedSignalsDao,
-                        buyerInputGenerator);
+                        buyerInputGenerator,
+                        auctionServerDataCompressor);
         mShellCommandService =
                 new ShellCommandServiceImpl(
                         adServicesShellCommandHandlerFactory,
@@ -226,24 +252,14 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
         String commandName = "cmd";
         int commandResponse = 10;
 
-        BlockingCallableWrapper<com.android.adservices.service.shell.ShellCommandResult>
-                waitingCommand =
-                        BlockingCallableWrapper.createBlockableInstance(
-                                () ->
-                                        com.android.adservices.service.shell.ShellCommandResult
-                                                .create(
-                                                        ShellCommandStats.RESULT_SUCCESS,
-                                                        ShellCommandStats.COMMAND_ECHO));
+        SimpleSyncCallback commandFinishedCallback = new SimpleSyncCallback();
         ShellCommand shellCommand =
                 new ShellCommand() {
                     @Override
                     public com.android.adservices.service.shell.ShellCommandResult run(
                             PrintWriter out, PrintWriter err, String[] args) {
-                        try {
-                            return waitingCommand.call();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
+                        commandFinishedCallback.setCalled();
+                        return SUCCESSFUL_CMD;
                     }
 
                     @Override
@@ -277,7 +293,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
         expect.that(mSyncIShellCommandCallback.getResult()).isNull();
 
         // Letting the command complete
-        waitingCommand.startWork();
+        commandFinishedCallback.assertCalled();
         ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
 
         expect.that(response.getResultCode()).isEqualTo(AbstractShellCommand.RESULT_OK);
@@ -286,25 +302,28 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     @Test
     public void testRunShellCommand_commandTimesOut() throws InterruptedException {
         String commandPrefix = "prefix";
+        AtomicReference<Thread> commandThreadRef = new AtomicReference<>();
+        SimpleSyncCallback commandFinishedCallback = new SimpleSyncCallback();
 
-        BlockingCallableWrapper<com.android.adservices.service.shell.ShellCommandResult>
-                blockedCommand =
-                        BlockingCallableWrapper.createBlockableInstance(
-                                () ->
-                                        com.android.adservices.service.shell.ShellCommandResult
-                                                .create(
-                                                        ShellCommandStats.RESULT_SUCCESS,
-                                                        ShellCommandStats.COMMAND_ECHO));
         ShellCommand shellCommand =
                 new ShellCommand() {
                     @Override
                     public com.android.adservices.service.shell.ShellCommandResult run(
                             PrintWriter out, PrintWriter err, String[] args) {
+                        Thread currentThread = Thread.currentThread();
+                        commandThreadRef.set(currentThread);
                         try {
-                            return blockedCommand.call();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
+                            Log.d(
+                                    mTag,
+                                    "Sleeping "
+                                            + currentThread.getName()
+                                            + " forever (or until interrupted...)");
+                            Thread.sleep(Long.MAX_VALUE);
+                        } catch (InterruptedException e) {
+                            Log.d(mTag, "Little Suzie woke up: " + currentThread.getName());
+                            commandFinishedCallback.setCalled();
                         }
+                        return SUCCESSFUL_CMD;
                     }
 
                     @Override
@@ -336,13 +355,16 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
         // If we are here the command is running in a different thread and is still blocked
         expect.that(mSyncIShellCommandCallback.getResult()).isNull();
 
-        // Waiting for the timeout to trigger
-        Thread.sleep(1500L);
-
         ShellCommandResult response = mSyncIShellCommandCallback.assertResultReceived();
 
         expect.that(response.getResultCode())
                 .isEqualTo(ShellCommandServiceImpl.RESULT_SHELL_COMMAND_EXECUTION_TIMED_OUT);
+
+        // Test itself is done, but we need to finish the thread that is blocking "forever"
+        Thread commandThread = commandThreadRef.get();
+        expect.withMessage("Command thread").that(commandThread).isNotNull();
+        commandThread.interrupt();
+        commandFinishedCallback.assertCalled();
     }
 
     @Test
