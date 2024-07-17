@@ -112,6 +112,9 @@ public class DBCustomAudience {
     @CustomAudience.AuctionServerRequestFlag
     private final int mAuctionServerRequestFlags;
 
+    @ColumnInfo(name = "priority", defaultValue = "0.0")
+    private final double mPriority;
+
     public DBCustomAudience(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
@@ -125,7 +128,8 @@ public class DBCustomAudience {
             @NonNull Uri biddingLogicUri,
             @Nullable List<DBAdData> ads,
             boolean debuggable,
-            @CustomAudience.AuctionServerRequestFlag int auctionServerRequestFlags) {
+            @CustomAudience.AuctionServerRequestFlag int auctionServerRequestFlags,
+            double priority) {
         Preconditions.checkStringNotEmpty(owner, "Owner must be provided");
         Objects.requireNonNull(buyer, "Buyer must be provided.");
         Preconditions.checkStringNotEmpty(name, "Name must be provided");
@@ -149,6 +153,7 @@ public class DBCustomAudience {
         mAds = ads;
         mDebuggable = debuggable;
         mAuctionServerRequestFlags = auctionServerRequestFlags;
+        mPriority = priority;
     }
 
     /**
@@ -162,6 +167,7 @@ public class DBCustomAudience {
      * @param adDataConversionStrategy Strategy to convert ads from DB
      * @param debuggable If the CA was created in a debuggable context
      * @param auctionServerRequestFlagsEnabled If auction server request flags are enabled.
+     * @param sellerConfigurationFlagEnabled If the seller configuration flag is enabled.
      * @return storage model
      */
     @NonNull
@@ -172,7 +178,8 @@ public class DBCustomAudience {
             @NonNull Duration defaultExpireIn,
             @NonNull AdDataConversionStrategy adDataConversionStrategy,
             boolean debuggable,
-            boolean auctionServerRequestFlagsEnabled) {
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationFlagEnabled) {
         Objects.requireNonNull(parcelable);
         Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(currentTime);
@@ -225,6 +232,7 @@ public class DBCustomAudience {
                         auctionServerRequestFlagsEnabled
                                 ? parcelable.getAuctionServerRequestFlags()
                                 : FLAG_AUCTION_SERVER_REQUEST_DEFAULT)
+                .setPriority(sellerConfigurationFlagEnabled ? parcelable.getPriority() : 0.0)
                 .build();
     }
 
@@ -371,6 +379,11 @@ public class DBCustomAudience {
         return mAuctionServerRequestFlags;
     }
 
+    /** Returns the priority value for the CA */
+    public double getPriority() {
+        return mPriority;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -387,7 +400,8 @@ public class DBCustomAudience {
                 && Objects.equals(mTrustedBiddingData, that.mTrustedBiddingData)
                 && mBiddingLogicUri.equals(that.mBiddingLogicUri)
                 && Objects.equals(mAds, that.mAds)
-                && mAuctionServerRequestFlags == that.mAuctionServerRequestFlags;
+                && mAuctionServerRequestFlags == that.mAuctionServerRequestFlags
+                && Double.compare(mPriority, that.mPriority) == 0;
     }
 
     @Override
@@ -405,7 +419,8 @@ public class DBCustomAudience {
                 mBiddingLogicUri,
                 mAds,
                 mDebuggable,
-                mAuctionServerRequestFlags);
+                mAuctionServerRequestFlags,
+                mPriority);
     }
 
     /**
@@ -427,7 +442,8 @@ public class DBCustomAudience {
                 .setBiddingLogicUri(this.mBiddingLogicUri)
                 .setAds(this.mAds)
                 .setDebuggable(this.mDebuggable)
-                .setAuctionServerRequestFlags(this.mAuctionServerRequestFlags);
+                .setAuctionServerRequestFlags(this.mAuctionServerRequestFlags)
+                .setPriority(this.mPriority);
     }
 
     @Override
@@ -461,6 +477,8 @@ public class DBCustomAudience {
                 + mDebuggable
                 + ", mAuctionServerRequestFlags="
                 + mAuctionServerRequestFlags
+                + ", mPriority="
+                + mPriority
                 + '}';
     }
 
@@ -479,6 +497,7 @@ public class DBCustomAudience {
         private List<DBAdData> mAds;
         private boolean mDebuggable;
         @CustomAudience.AuctionServerRequestFlag private int mAuctionServerRequestFlags;
+        private double mPriority;
 
         public Builder() {}
 
@@ -499,6 +518,7 @@ public class DBCustomAudience {
             mAds = customAudience.getAds();
             mDebuggable = customAudience.isDebuggable();
             mAuctionServerRequestFlags = customAudience.getAuctionServerRequestFlags();
+            mPriority = customAudience.getPriority();
         }
 
         /** See {@link #getOwner()} for detail. */
@@ -582,6 +602,12 @@ public class DBCustomAudience {
             return this;
         }
 
+        /** See {@link #getPriority()} for detail. */
+        public Builder setPriority(double priority) {
+            mPriority = priority;
+            return this;
+        }
+
         /**
          * Build the {@link DBCustomAudience}.
          *
@@ -601,7 +627,8 @@ public class DBCustomAudience {
                     mBiddingLogicUri,
                     mAds,
                     mDebuggable,
-                    mAuctionServerRequestFlags);
+                    mAuctionServerRequestFlags,
+                    mPriority);
         }
     }
 

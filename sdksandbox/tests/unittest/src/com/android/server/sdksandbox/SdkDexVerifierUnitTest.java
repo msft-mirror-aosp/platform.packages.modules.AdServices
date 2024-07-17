@@ -23,6 +23,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.OutcomeReceiver;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.proto.Verifier.AllowedApi;
 
 import org.junit.Test;
@@ -30,7 +31,7 @@ import org.junit.Test;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class SdkDexVerifierUnitTest {
+public class SdkDexVerifierUnitTest extends DeviceSupportedBaseTest {
 
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 

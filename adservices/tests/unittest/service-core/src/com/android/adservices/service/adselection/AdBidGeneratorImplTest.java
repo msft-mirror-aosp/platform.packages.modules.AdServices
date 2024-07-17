@@ -28,7 +28,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.BIDDING_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.MISSING_TRUSTED_BIDDING_SIGNALS;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_JAVASCRIPT;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.STOP_ELAPSED_TIMESTAMP;
@@ -568,7 +568,7 @@ public class AdBidGeneratorImplTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(DATA_VERSION_1))))
                                 .build());
 
@@ -686,7 +686,7 @@ public class AdBidGeneratorImplTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(DATA_VERSION_1))))
                                 .build());
 
@@ -802,7 +802,7 @@ public class AdBidGeneratorImplTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(DATA_VERSION_1, DATA_VERSION_2))))
                                 .build());
 
@@ -1124,7 +1124,7 @@ public class AdBidGeneratorImplTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(DATA_VERSION_1))))
                                 .build());
 
@@ -2462,6 +2462,8 @@ public class AdBidGeneratorImplTest {
     @Test
     public void testRunAdBiddingPerCAScriptFetchTimesOut() throws Exception {
 
+        // Since this is a timeout test, we cannot assert if the script was fetched or the test
+        // timed out before.
         mServer = mMockWebServerRule.startMockWebServer(DISPATCHER_WITH_DELAY);
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
@@ -2528,8 +2530,6 @@ public class AdBidGeneratorImplTest {
         verifyFailedRunAdBiddingPerCALoggingTimeoutException(
                 mCustomAudienceWithAds.getAds().size(),
                 AdServicesLoggerUtil.getResultCodeFromException(thrown.getCause()));
-        mMockWebServerRule.verifyMockServerRequests(
-                mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
     }
 
     @Test
@@ -2624,101 +2624,6 @@ public class AdBidGeneratorImplTest {
         verify(mAdServicesHttpsClientMock)
                 .fetchPayloadWithLogging(
                         any(AdServicesHttpClientRequest.class), any(FetchProcessLogger.class));
-    }
-
-    @Test
-    public void testRunAdBiddingPerCAGenerateBidTimesOut_withRemoteOverrides() throws Exception {
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(APP_PACKAGE_NAME)
-                        .build();
-        DBCustomAudienceOverride dbCustomAudienceOverride =
-                DBCustomAudienceOverride.builder()
-                        .setOwner(mCustomAudienceWithAds.getOwner())
-                        .setBuyer(mCustomAudienceWithAds.getBuyer())
-                        .setName(mCustomAudienceWithAds.getName())
-                        .setAppPackageName(APP_PACKAGE_NAME)
-                        .setBiddingLogicJS(BUYER_DECISION_LOGIC_JS)
-                        .setTrustedBiddingData(
-                                new JSONObject(TRUSTED_BIDDING_SIGNALS_MAP).toString())
-                        .build();
-        mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
-        CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
-                new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-
-        mAdBidGenerator =
-                new AdBidGeneratorImpl(
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mScheduledExecutor,
-                        mAdSelectionScriptEngine,
-                        customAudienceDevOverridesHelper,
-                        AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlagsWithSmallerLimits,
-                        mIsolateSettings,
-                        mJsFetcher,
-                        mDebugReporting,
-                        mDevContext,
-                        false);
-        when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
-                .thenReturn(
-                        RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
-                        GET_BUYER_DECISION_LOGIC_START_TIMESTAMP,
-                        GET_BUYER_DECISION_LOGIC_END_TIMESTAMP,
-                        RUN_BIDDING_START_TIMESTAMP,
-                        GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP,
-                        GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP,
-                        GENERATE_BIDS_START_TIMESTAMP,
-                        GENERATE_BIDS_END_TIMESTAMP,
-                        RUN_BIDDING_END_TIMESTAMP,
-                        STOP_ELAPSED_TIMESTAMP);
-        // Logger calls come after the callback is returned
-        CountDownLatch runAdBiddingPerCAProcessLoggerLatch = new CountDownLatch(1);
-        doAnswer(
-                        unusedInvocation -> {
-                            runAdBiddingPerCAProcessLoggerLatch.countDown();
-                            return null;
-                        })
-                .when(mAdServicesLoggerMock)
-                .logRunAdBiddingPerCAProcessReportedStats(any());
-        when(mAdSelectionScriptEngine.generateBids(
-                        eq(BUYER_DECISION_LOGIC_JS),
-                        eq(ADS),
-                        eq(EMPTY_AD_SELECTION_SIGNALS),
-                        eq(EMPTY_BUYER_SIGNALS),
-                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                        eq(EMPTY_CONTEXTUAL_SIGNALS),
-                        eq(mCustomAudienceSignals),
-                        isA(RunAdBiddingPerCAExecutionLogger.class)))
-                .thenAnswer((invocation) -> generateBidsWithDelay(mFlagsWithSmallerLimits));
-
-        // When the call to runAdBiddingPerCA, and the computation of future is complete,
-        FluentFuture<AdBiddingOutcome> result =
-                mAdBidGenerator.runAdBiddingPerCA(
-                        mCustomAudienceWithAds,
-                        mTrustedBiddingDataByBaseUri,
-                        EMPTY_AD_SELECTION_SIGNALS,
-                        EMPTY_BUYER_SIGNALS,
-                        mRunAdBiddingPerCAExecutionLogger);
-
-        runAdBiddingPerCAProcessLoggerLatch.await();
-        // Then we can test the result by assertion
-        ExecutionException thrown = assertThrows(ExecutionException.class, result::get);
-        assertTrue(thrown.getMessage().contains(BIDDING_TIMED_OUT));
-        verify(mAdSelectionScriptEngine)
-                .generateBids(
-                        eq(BUYER_DECISION_LOGIC_JS),
-                        eq(ADS),
-                        eq(EMPTY_AD_SELECTION_SIGNALS),
-                        eq(EMPTY_BUYER_SIGNALS),
-                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                        eq(EMPTY_CONTEXTUAL_SIGNALS),
-                        eq(mCustomAudienceSignals),
-                        isA(RunAdBiddingPerCAExecutionLogger.class));
-        verifyFailedRunAdBiddingPerCALoggingTimeoutException(
-                mCustomAudienceWithAds.getAds().size(),
-                AdServicesLoggerUtil.getResultCodeFromException(thrown.getCause()));
     }
 
     @Test

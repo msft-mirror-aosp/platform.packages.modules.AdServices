@@ -163,6 +163,8 @@ public class CustomAudienceDaoTest {
     private static final String NAME_3 = "name3";
     private static final String NAME_4 = "name4";
 
+    private static final double PRIORITY_1 = 1.0;
+
     private static final Uri BIDDING_LOGIC_URI_1 = Uri.parse("https://www.example.com/e1");
     private static final Uri BIDDING_LOGIC_URI_2 = Uri.parse("https://www.example.com/e2");
     private static final DBTrustedBiddingData TRUSTED_BIDDING_DATA_2 =
@@ -214,6 +216,22 @@ public class CustomAudienceDaoTest {
                     .setAds(List.of(ADS_1))
                     .setTrustedBiddingData(
                             DBTrustedBiddingDataFixture.getValidBuilderByBuyer(BUYER_1).build())
+                    .build();
+
+    private static final DBCustomAudience CUSTOM_AUDIENCE_WITH_PRIORITY =
+            new DBCustomAudience.Builder()
+                    .setOwner(OWNER_1)
+                    .setBuyer(BUYER_1)
+                    .setName(NAME_1)
+                    .setActivationTime(ACTIVATION_TIME_MINUS_ONE_HOUR)
+                    .setCreationTime(CREATION_TIME_MINUS_THREE_DAYS)
+                    .setExpirationTime(EXPIRATION_TIME_1)
+                    .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_1)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
+                    .setAds(List.of(ADS_1))
+                    .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
+                    .setPriority(PRIORITY_1)
                     .build();
 
     private static final DBCustomAudienceBackgroundFetchData CUSTOM_AUDIENCE_BGF_DATA_1_1 =
@@ -811,6 +829,23 @@ public class CustomAudienceDaoTest {
 
         assertFalse(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_1, BUYER_1, NAME_1));
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_2, BUYER_2, NAME_2));
+    }
+
+    @Test
+    public void testPersistCustomAudienceWithPriority() {
+        // Assert table is empty
+        assertNull(mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
+
+        mCustomAudienceDao.persistCustomAudience(CUSTOM_AUDIENCE_WITH_PRIORITY);
+
+        DBCustomAudience customAudience =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1);
+
+        assertNotNull(customAudience);
+        assertEquals(
+                CUSTOM_AUDIENCE_WITH_PRIORITY.getPriority(),
+                customAudience.getPriority(),
+                0.001); // Need delta since priority is float
     }
 
     @Test
