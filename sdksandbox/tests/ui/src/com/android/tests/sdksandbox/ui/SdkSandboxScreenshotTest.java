@@ -56,7 +56,7 @@ public class SdkSandboxScreenshotTest {
     private IUiProviderApi mUiProvider;
     private UiAutomation mUiAutomation;
 
-    @Rule
+    @Rule(order = 0)
     public SdkSandboxUiTestRule mUiTestRule =
             new SdkSandboxUiTestRule(
                     InstrumentationRegistry.getInstrumentation().getContext(),

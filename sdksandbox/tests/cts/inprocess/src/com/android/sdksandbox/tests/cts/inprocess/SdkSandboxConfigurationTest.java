@@ -26,7 +26,6 @@ import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -47,9 +46,9 @@ import android.webkit.WebView;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.AdServicesCommon;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -62,13 +61,9 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Tests to check some basic properties of the Sdk Sandbox processes.
- */
+/** Tests to check some basic properties of the Sdk Sandbox processes. */
 @RunWith(JUnit4.class)
-public class SdkSandboxConfigurationTest {
-    @Rule(order = 0)
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+public class SdkSandboxConfigurationTest extends DeviceSupportedBaseTest {
 
     private static final String TEST_PKG = "com.android.sdksandbox.tests.cts.inprocesstests";
     private static final String CURRENT_USER_ID =

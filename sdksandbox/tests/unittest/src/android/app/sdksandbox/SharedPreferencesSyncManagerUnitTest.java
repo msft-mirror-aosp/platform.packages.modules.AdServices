@@ -31,6 +31,7 @@ import android.preference.PreferenceManager;
 import androidx.test.InstrumentationRegistry;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -49,7 +50,7 @@ import java.util.concurrent.TimeoutException;
 
 /** Tests {@link SharedPreferencesSyncManager} APIs. */
 @RunWith(JUnit4.class)
-public class SharedPreferencesSyncManagerUnitTest {
+public class SharedPreferencesSyncManagerUnitTest extends DeviceSupportedBaseTest {
 
     private static final String KEY_TO_UPDATE = "hello1";
     private static final SharedPreferencesKey KEY_WITH_TYPE_TO_UPDATE =
