@@ -25,7 +25,7 @@
       "response": {
         "body": "ScoringSignals.json",
         "header": {
-          "x-fledge-scoring-signals-format-version": 300
+          "Data-Version": 300
         }
       },
       "verify_called": true
@@ -37,7 +37,7 @@
       "response": {
         "body": "BiddingSignals.json",
         "header": {
-          "x-fledge-bidding-signals-format-version": 1
+          "Data-Version": 1
         }
       },
       "verify_called": true
