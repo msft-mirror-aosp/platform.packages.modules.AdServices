@@ -34,6 +34,7 @@ import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.CallerMetadata;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.RequiresApi;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
@@ -59,6 +60,7 @@ import java.util.concurrent.Executors;
 
 /** Unit tests for {@link AdSelectionManager} */
 @RequiresSdkLevelAtLeastS
+@RequiresApi(Build.VERSION_CODES.S)
 public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
     // AdId constants
     private static final String AD_ID = "35a4ac90-e4dc-4fe7-bbc6-95e804aa7dbc";
@@ -246,6 +248,43 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
 
         expect.that(outcomeReceiver.getResult()).isNotNull();
         expect.that(mockServiceGetAdSelectionData.wasCoordinatorSet()).isTrue();
+        expect.that(mockServiceGetAdSelectionData.getSellerConfiguration()).isNull();
+    }
+
+    @Test
+    public void testAdSelectionManagerGetAdSelectionSellerConfigurationWasPassed()
+            throws Exception {
+        // Initialize manager with mocks
+        MockAdIdManager mockAdIdManager = new MockAdIdManager(mContext);
+        MockServiceGetAdSelectionData mockServiceGetAdSelectionData =
+                new MockServiceGetAdSelectionData();
+
+        byte[] expectedByteArray = getRandomByteArray(TYPICAL_PAYLOAD_SIZE_BYTES);
+        int expectedAdSelectionId = 1;
+        mockServiceGetAdSelectionData.setResult(
+                getAdSelectionDataResponseWithByteArray(expectedAdSelectionId, expectedByteArray));
+
+        AdSelectionManager adSelectionManager =
+                AdSelectionManager.get(mContext, mockAdIdManager, mockServiceGetAdSelectionData);
+
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdSelectionConfigFixture.SELLER)
+                        .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
+                        .build();
+
+        MockOutcomeReceiverGetAdSelectionData<GetAdSelectionDataOutcome, Exception>
+                outcomeReceiver = new MockOutcomeReceiverGetAdSelectionData<>();
+
+        adSelectionManager.getAdSelectionData(request, CALLBACK_EXECUTOR, outcomeReceiver);
+
+        // Need time to sleep to allow time for outcome receiver to get setup
+        doSleep(SLEEP_TIME_MS);
+
+        expect.that(outcomeReceiver.getResult()).isNotNull();
+        expect.that(mockServiceGetAdSelectionData.wasCoordinatorSet()).isFalse();
+        expect.that(mockServiceGetAdSelectionData.getSellerConfiguration())
+                .isEqualTo(SellerConfigurationFixture.SELLER_CONFIGURATION);
     }
 
     @Test
@@ -538,6 +577,7 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
 
         private GetAdSelectionDataResponse mGetAdSelectionDataResponse;
         private boolean mWasCoordinatorSet;
+        private SellerConfiguration mSellerConfiguration;
 
         @Override
         public void getAdSelectionData(
@@ -549,6 +589,7 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
                     getAdSelectionDataInput.getCoordinatorOriginUri() != null
                             && !Strings.isNullOrEmpty(
                                     getAdSelectionDataInput.getCoordinatorOriginUri().toString());
+            mSellerConfiguration = getAdSelectionDataInput.getSellerConfiguration();
             getAdSelectionDataCallback.onSuccess(mGetAdSelectionDataResponse);
         }
 
@@ -558,6 +599,10 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
 
         public boolean wasCoordinatorSet() {
             return mWasCoordinatorSet;
+        }
+
+        public SellerConfiguration getSellerConfiguration() {
+            return mSellerConfiguration;
         }
     }
 
