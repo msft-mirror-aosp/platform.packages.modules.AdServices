@@ -463,6 +463,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getCobaltOperationalLoggingEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT_OPERATIONAL_LOGGING_ENABLED,
+                COBALT_OPERATIONAL_LOGGING_ENABLED);
+    }
+
+    @Override
     public long getMaintenanceJobPeriodMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig) and then
         // hard-coded value.

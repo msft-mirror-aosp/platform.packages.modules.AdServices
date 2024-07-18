@@ -39,6 +39,7 @@ import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.Flags.COBALT_ADSERVICES_API_KEY_HEX;
 import static com.android.adservices.service.Flags.COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_LOGGING_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.COBALT_OPERATIONAL_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
 import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
@@ -567,6 +568,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_THRES
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_ADSERVICES_API_KEY_HEX;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_COBALT_OPERATIONAL_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
@@ -1322,11 +1324,19 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testgetMddCobaltRegistryManifestFileUrl() {
+    public void testGetMddCobaltRegistryManifestFileUrl() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_MDD_COBALT_REGISTRY_MANIFEST_FILE_URL,
                 MDD_COBALT_REGISTRY_MANIFEST_FILE_URL,
                 Flags::getMddCobaltRegistryManifestFileUrl);
+    }
+
+    @Test
+    public void testGetCobaltOperationalLoggingEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_COBALT_OPERATIONAL_LOGGING_ENABLED,
+                COBALT_OPERATIONAL_LOGGING_ENABLED,
+                Flags::getCobaltOperationalLoggingEnabled);
     }
 
     @Test

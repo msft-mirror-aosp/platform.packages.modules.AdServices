@@ -4811,6 +4811,14 @@ public interface Flags extends ModuleSharedFlags {
         return MDD_COBALT_REGISTRY_MANIFEST_FILE_URL;
     }
 
+    /** Default value of whether Cobalt operational logging feature is enabled. */
+    @FeatureFlag boolean COBALT_OPERATIONAL_LOGGING_ENABLED = false;
+
+    /** Returns whether Cobalt operational logging is enabled. */
+    default boolean getCobaltOperationalLoggingEnabled() {
+        return COBALT_OPERATIONAL_LOGGING_ENABLED;
+    }
+
     /**
      * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
      * logged_topic column to ReturnedTopic table.

@@ -575,6 +575,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetCobaltOperationalLoggingEnabled() {
+        testFeatureFlag(
+                "COBALT_OPERATIONAL_LOGGING_ENABLED", Flags::getCobaltOperationalLoggingEnabled);
+    }
+
+    @Test
     public void testGetCobaltRegistryOutOfBandUpdateEnabled() {
         testFeatureFlag(
                 "COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED",
