@@ -2829,12 +2829,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnforceIsolateMaxHeapSize() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE, ENFORCE_ISOLATE_MAX_HEAP_SIZE);
-    }
-
-    @Override
     public long getIsolateMaxHeapSizeBytes() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, ISOLATE_MAX_HEAP_SIZE_BYTES);
@@ -4930,12 +4924,6 @@ public final class PhFlags implements Flags {
                                 .KEY_FLEDGE_AUCTION_SERVER_FORCE_SEARCH_WHEN_OWNER_IS_ABSENT_ENABLED
                         + " = "
                         + getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE
-                        + " = "
-                        + getEnforceIsolateMaxHeapSize());
-
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES

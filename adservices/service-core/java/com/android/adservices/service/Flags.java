@@ -3339,7 +3339,6 @@ public interface Flags extends ModuleSharedFlags {
         return WEB_CONTEXT_CLIENT_ALLOW_LIST;
     }
 
-    boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
     long MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 250 * 1024; // 250 kB
@@ -3360,14 +3359,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns true when the new trigger registration header size limitation are applied. */
     default boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
         return MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
-    }
-
-    /**
-     * Returns true if we enforce to check that JavaScriptIsolate supports limiting the max heap
-     * size
-     */
-    default boolean getEnforceIsolateMaxHeapSize() {
-        return ENFORCE_ISOLATE_MAX_HEAP_SIZE;
     }
 
     /** Returns size in bytes we bound the heap memory for JavaScript isolate */
