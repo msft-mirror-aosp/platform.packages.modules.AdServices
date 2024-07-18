@@ -4863,6 +4863,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
     }
 
+    /** Flag for enabling measurement event level epsilon in source */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE = false;
+
+    /** Returns true if measurement event level epsilon in source is enabled */
+    default boolean getMeasurementEnableEventLevelEpsilonInSource() {
+        return MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE;
+    }
+
     @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY = false;
 
     default boolean getMeasurementEnableSourceDestinationLimitPriority() {

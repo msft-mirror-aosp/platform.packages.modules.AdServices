@@ -754,6 +754,11 @@ class MeasurementDao implements IMeasurementDao {
             values.put(SourceContract.MAX_EVENT_STATES, source.getMaxEventStates());
         }
 
+        if (flags.getMeasurementEnableEventLevelEpsilonInSource()
+                && source.getEventLevelEpsilon() != null) {
+            values.put(SourceContract.EVENT_LEVEL_EPSILON, source.getEventLevelEpsilon());
+        }
+
         long rowId =
                 mSQLTransaction
                         .getDatabase()
