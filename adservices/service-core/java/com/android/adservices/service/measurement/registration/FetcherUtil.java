@@ -398,7 +398,8 @@ public class FetcherUtil {
                                 asyncFetchStatus.getRetryCount(),
                                 asyncFetchStatus.isRedirectOnly(),
                                 asyncFetchStatus.isPARequest(),
-                                asyncFetchStatus.getNumDeletedEntities())
+                                asyncFetchStatus.getNumDeletedEntities(),
+                                asyncFetchStatus.isEventLevelEpsilonConfigured())
                         .setAdTechDomain(adTechDomain)
                         .build());
     }

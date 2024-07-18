@@ -158,6 +158,9 @@ public class ContentValueFixtures {
 
         // Added in V39
         public static final String TRIGGER_DATA = "24,1";
+
+        // Added in V40
+        public static final Double EVENT_LEVEL_EPSILON = 14D;
     }
 
     public static class SourceDestinationValues {
@@ -846,6 +849,15 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.SourceContract.TRIGGER_DATA,
                 SourceValues.TRIGGER_DATA);
+        return values;
+    }
+
+    /** Returns content values for source version 40 */
+    public static ContentValues generateSourceContentValuesV40() {
+        ContentValues values = generateSourceContentValuesV39();
+        values.put(
+                MeasurementTables.SourceContract.EVENT_LEVEL_EPSILON,
+                SourceValues.EVENT_LEVEL_EPSILON);
         return values;
     }
 

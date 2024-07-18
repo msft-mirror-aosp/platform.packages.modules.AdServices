@@ -19,17 +19,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST;
 
-import com.android.adservices.common.AdServicesCtsTestCase;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.SetDoubleFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetStringFlag;
 
-abstract class CtsAdIdEndToEndTestCase extends AdServicesCtsTestCase {
-
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                .setFlag(KEY_ADID_KILL_SWITCH, false)
-                .setFlag(KEY_ADID_REQUEST_PERMITS_PER_SECOND, 25.0)
-                .setFlag(KEY_AD_ID_API_APP_BLOCK_LIST, "")
-                .setCompatModeFlags();
-    }
-}
+@SetFlagDisabled(KEY_ADID_KILL_SWITCH)
+@SetDoubleFlag(name = KEY_ADID_REQUEST_PERMITS_PER_SECOND, value = 25.0)
+@SetStringFlag(name = KEY_AD_ID_API_APP_BLOCK_LIST, value = "")
+@SetCompatModeFlags
+interface CtsAdIdEndToEndTestFlags {}
