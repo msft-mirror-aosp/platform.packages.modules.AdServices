@@ -1235,6 +1235,23 @@ public final class FlagsConstants {
             KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION =
                     "measurement_flex_api_max_information_gain_dual_destination_navigation";
 
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION =
+            "measurement_attribution_scope_max_info_gain_navigation";
+
+    public static final String
+            KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION =
+                    "measurement_attribution_scope_max_info_gain_dual_destination_navigation";
+
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT =
+            "measurement_attribution_scope_max_info_gain_event";
+
+    public static final String
+            KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT =
+                    "measurement_attribution_scope_max_info_gain_dual_destination_event";
+
+    public static final String KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME =
+            "measurement_enable_fake_report_trigger_time";
+
     public static final String KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION =
             "measurement_max_report_states_per_source_registration";
 
