@@ -112,6 +112,9 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
         // By default, do not use SPE.
         when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(false);
+
+        // By default, do not set requiresBatteryNotLow to true in EpochJobService.
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(false);
     }
 
     @After
@@ -203,6 +206,34 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testOnStartJob_rescheduleEpochJobEnabled() throws InterruptedException {
+        when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
+        when(mMockFlags.getTopicsEpochJobPeriodMs())
+                .thenReturn(TEST_FLAGS.getTopicsEpochJobPeriodMs());
+        when(mMockFlags.getTopicsEpochJobFlexMs()).thenReturn(TEST_FLAGS.getTopicsEpochJobFlexMs());
+
+        // The first invocation of scheduleIfNeeded() schedules the job
+        // with requires charging setting.
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+        JobInfo pendingJobInfo1 = mJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
+        assertThat(pendingJobInfo1).isNotNull();
+        assertThat(pendingJobInfo1.isRequireCharging()).isTrue();
+
+        // Then disable requires charging setting and verify the job is rescheduled in onStartJob.
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+
+        testOnStartJob_killSwitchOff();
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
+        JobInfo pendingJobInfo2 = mJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
+        assertThat(pendingJobInfo2).isNotNull();
+        assertThat(pendingJobInfo2.isRequireCharging()).isFalse();
+        assertThat(pendingJobInfo2.isRequireBatteryNotLow()).isTrue();
+    }
+
+    @Test
     public void testOnStopJob_withoutLogging() {
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
@@ -231,12 +262,24 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testScheduleIfNeeded_RequiresBatteryNotLow_Success() {
+        when(mMockFlags.getGlobalKillSwitch()).thenReturn(false);
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+
+        // The first invocation of scheduleIfNeeded() schedules the job.
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule= */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+    }
+
+    @Test
     public void testScheduleIfNeeded_ScheduledWithSameParameters() {
         doReturn(false).when(mMockFlags).getGlobalKillSwitch();
         doReturn(TEST_FLAGS.getTopicsEpochJobPeriodMs())
                 .when(mMockFlags)
                 .getTopicsEpochJobPeriodMs();
         doReturn(TEST_FLAGS.getTopicsEpochJobFlexMs()).when(mMockFlags).getTopicsEpochJobFlexMs();
+        doReturn(false).when(mMockFlags).getTopicsEpochJobBatteryNotLowInsteadOfCharging();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
@@ -293,6 +336,29 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testScheduleIfNeeded_RequiresBatteryNotLow_ForceRun() {
+        when(mMockFlags.getGlobalKillSwitch()).thenReturn(false);
+        when(mMockFlags.getTopicsEpochJobPeriodMs())
+                .thenReturn(TEST_FLAGS.getTopicsEpochJobPeriodMs());
+        when(mMockFlags.getTopicsEpochJobFlexMs()).thenReturn(TEST_FLAGS.getTopicsEpochJobFlexMs());
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+
+        // The first invocation of scheduleIfNeeded() schedules the job.
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+        assertThat(mJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
+
+        // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
+
+        // The third invocation of scheduleIfNeeded() is forced and re-schedules the job.
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ true))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+    }
+
+    @Test
     @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED)
     public void testScheduleIfNeeded_scheduledWithKillSwitchOn() {
         // Kill switch is on.
@@ -309,12 +375,41 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
         ArgumentCaptor<JobInfo> argumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
         long epoch_period = 10_000L;
         long flex_period = 1_000L;
+        boolean topics_epoch_job_battery_not_low_instead_of_charging = false;
 
-        EpochJobService.schedule(mContext, mMockJobScheduler, epoch_period, flex_period);
+        EpochJobService.schedule(
+                mContext,
+                mMockJobScheduler,
+                epoch_period,
+                flex_period,
+                topics_epoch_job_battery_not_low_instead_of_charging);
 
         verify(mMockJobScheduler).schedule(argumentCaptor.capture());
         assertThat(argumentCaptor.getValue()).isNotNull();
         assertThat(argumentCaptor.getValue().isPersisted()).isTrue();
+    }
+
+    @Test
+    public void testSchedule_disableTopicsJobSchedulerRequiresCharging() {
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+        ArgumentCaptor<JobInfo> argumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
+
+        long epoch_period = 10_000L;
+        long flex_period = 1_000L;
+        boolean topics_epoch_job_battery_not_low_instead_of_charging = true;
+
+        EpochJobService.schedule(
+                mContext,
+                mMockJobScheduler,
+                epoch_period,
+                flex_period,
+                topics_epoch_job_battery_not_low_instead_of_charging);
+
+        // Verify the JobScheduler has scheduled a new background job with new JobInfo.
+        verify(mMockJobScheduler).schedule(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue()).isNotNull();
+        assertThat(argumentCaptor.getValue().isRequireCharging()).isFalse();
+        assertThat(argumentCaptor.getValue().isRequireBatteryNotLow()).isTrue();
     }
 
     private void testOnStartJob_killSwitchOff() throws InterruptedException {
