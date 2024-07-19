@@ -25,7 +25,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.CallableSyncCallback;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -117,8 +117,7 @@ public final class JobLockHolderTest extends AdServicesUnitTestCase {
 
     @Test
     public void testTryLockAndUnlock_differentThreads() throws Exception {
-        FailableResultSyncCallback<Boolean, Exception> callback =
-                new FailableResultSyncCallback<>();
+        CallableSyncCallback<Boolean> callback = new CallableSyncCallback<>();
         JobLockHolder holder = getFreshInstance(EVENT_REPORTING);
 
         boolean firstCall = holder.tryLock();
@@ -126,22 +125,7 @@ public final class JobLockHolderTest extends AdServicesUnitTestCase {
 
         Thread bgThread =
                 getConcurrencyHelper()
-                        .startNewThread(
-                                () -> {
-                                    try {
-                                        callback.injectResult(holder.tryLock());
-                                    } catch (Exception e) {
-                                        callback.injectFailure(e);
-                                    }
-                                });
-
-        // TODO(b/354033073): should just call callback.assertResultReceived(), which in turn
-        // should throw the failure (if any)
-        callback.assertCalled();
-        Exception failure = callback.getFailure();
-        if (failure != null) {
-            throw failure;
-        }
+                        .startNewThread(() -> callback.injectCallable(() -> holder.tryLock()));
 
         boolean secondCall = callback.assertResultReceived();
         assertWithMessage("call to %s.tryLock() on another thread (%s)", holder, bgThread)
