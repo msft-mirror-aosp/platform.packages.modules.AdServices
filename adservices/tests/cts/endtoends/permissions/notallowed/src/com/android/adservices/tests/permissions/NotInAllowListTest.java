@@ -61,6 +61,9 @@ public class NotInAllowListTest {
             CompatAdServicesTestUtils.setFlags();
         }
         overrideSignatureAllowListToEmpty();
+
+        // Kill AdServices process
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
