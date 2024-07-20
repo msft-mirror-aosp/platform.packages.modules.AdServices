@@ -23,9 +23,15 @@ import static com.android.adservices.service.measurement.util.JobLockHolder.Type
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.EVENT_REPORTING;
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.VERBOSE_DEBUG_REPORTING;
 
+import android.annotation.Nullable;
+
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.LoggerFactory.Logger;
+
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -56,10 +62,16 @@ public final class JobLockHolder {
     private final Type mType;
 
     /* Holds the lock that will be given per instance */
-    private final ReentrantLock mLock = new ReentrantLock();
+    private final ReentrantLock mLock;
 
     private JobLockHolder(Type type) {
+        this(type, new ReentrantLock());
+    }
+
+    @VisibleForTesting
+    JobLockHolder(Type type, ReentrantLock lock) {
         mType = type;
+        mLock = lock;
     }
 
     /**
@@ -73,12 +85,70 @@ public final class JobLockHolder {
     }
 
     /**
+     * Runs the given runnable after acquiring the lock.
+     *
+     * @param tag name of the caller (used for logging purposes)
+     * @param runnable what to run
+     */
+    public void runWithLock(String tag, Runnable runnable) {
+        Objects.requireNonNull(tag, "tag cannot be null");
+        Objects.requireNonNull(runnable, "runnable cannot be null");
+
+        Logger logger = LoggerFactory.getMeasurementLogger();
+        logger.v("%s.runWithLock(%s) started", tag, mType);
+
+        if (tryLock()) {
+            try {
+                runnable.run();
+            } finally {
+                unlock();
+            }
+            return;
+        }
+
+        logger.e("%s.runWithLock(%s) failed to acquire lock", tag, mType);
+    }
+
+    /**
+     * Calls the given runnable after acquiring the lock.
+     *
+     * @param tag name of the caller (used for logging purposes)
+     * @param callable what to call
+     * @param failureResult what to return if log could not be acquired
+     * @return result of callable, or {@code failureResult} if the lock could not be acquired.
+     */
+    public <T> T callWithLock(
+            String tag, UncheckedCallable<T> callable, @Nullable T failureResult) {
+        Objects.requireNonNull(tag, "tag cannot be null");
+        Objects.requireNonNull(callable, "callable cannot be null");
+
+        Logger logger = LoggerFactory.getMeasurementLogger();
+        logger.v("%s.callWithLock(%s) started", tag, mType);
+
+        if (tryLock()) {
+            try {
+                return callable.call();
+            } finally {
+                unlock();
+            }
+        }
+
+        logger.e(
+                "%s.callWithLock(%s) failed to acquire lock; returning %s",
+                tag, mType, failureResult);
+        return failureResult;
+    }
+
+    /**
      * Tries to acquire the lock. Returns true if the lock was acquired successfully or false if it
      * has already been acquired by another thread. If lock was acquired, at the end of processing,
      * a call to {@link JobLockHolder#unlock()} will need to be made.
      *
      * @return a boolean determining if the lock was successfully acquired or not.
+     * @deprecated use {@link #runWithLock(String, Type, Runnable)} or {@link #callWithLock(String,
+     *     Type, UncheckedCallable, Object)} instead.
      */
+    @Deprecated
     public boolean tryLock() {
         return mLock.tryLock();
     }
@@ -89,7 +159,11 @@ public final class JobLockHolder {
      *
      * <p><b>Note: </b>the lock won't be unlocked until {@code unlock()} is called the same number
      * of times that {@code tryLock()} is called and returns {@code true}.
+     *
+     * @deprecated use {@link #runWithLock(String, Type, Runnable)} or {@link #callWithLock(String,
+     *     Type, UncheckedCallable, Object)} instead.
      */
+    @Deprecated
     public void unlock() {
         mLock.unlock();
     }
@@ -108,5 +182,15 @@ public final class JobLockHolder {
                 + ", mLock="
                 + mLock
                 + "]";
+    }
+
+    /**
+     * Same as {@link java.util.concurrent.Callable}, but it doesn't throw a checked exception.
+     *
+     * @param <T> type of returned object
+     */
+    public interface UncheckedCallable<T> {
+        /** See {@link java.util.concurrent.Callable#call()} */
+        T call();
     }
 }

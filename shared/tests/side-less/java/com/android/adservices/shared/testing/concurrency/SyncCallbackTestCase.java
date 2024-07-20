@@ -67,7 +67,7 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
 
     private final SyncCallbackSettings.Builder mFakeLoggerSettingsBuilder =
             new SyncCallbackSettings.Builder(mFakeLogger);
-    private final SyncCallbackSettings.Builder mDefaultSettingsBuilder =
+    protected final SyncCallbackSettings.Builder mDefaultSettingsBuilder =
             mFakeLoggerSettingsBuilder
                     .setFailIfCalledOnMainThread(supportsFailIfCalledOnMainThread())
                     .setMaxTimeoutMs(CALLBACK_DEFAULT_TIMEOUT_MS);
