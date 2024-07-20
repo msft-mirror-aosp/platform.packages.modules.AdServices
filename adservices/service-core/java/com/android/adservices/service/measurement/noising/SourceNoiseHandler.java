@@ -91,8 +91,9 @@ public class SourceNoiseHandler {
         if (triggerSpecs == null) {
             // There will at least be one (app or web) destination available
             ImpressionNoiseParams noiseParams = getImpressionNoiseParams(source);
-            fakeReports = mImpressionNoiseUtil
-                    .selectRandomStateAndGenerateReportConfigs(noiseParams, rand)
+            fakeReports =
+                    mImpressionNoiseUtil
+                            .selectRandomStateAndGenerateReportConfigs(noiseParams, rand)
                             .stream()
                             .map(
                                     reportConfig -> {
@@ -101,7 +102,7 @@ public class SourceNoiseHandler {
                                                 mEventReportWindowCalcDelegate
                                                         .getReportingTimeForNoising(
                                                                 source, reportConfig[1]);
-                                        if (mFlags.getMeasurementEnableAttributionScope()) {
+                                        if (mFlags.getMeasurementEnableFakeReportTriggerTime()) {
                                             Pair<Long, Long> reportingAndTriggerTime =
                                                     mEventReportWindowCalcDelegate
                                                             .getReportingAndTriggerTimeForNoising(
@@ -115,7 +116,7 @@ public class SourceNoiseHandler {
                                                 triggerTime,
                                                 resolveFakeReportDestinations(
                                                         source, reportConfig[2]),
-                                                /* triggerSummaryBucket = */ null);
+                                                /* triggerSummaryBucket= */ null);
                                     })
                             .collect(Collectors.toList());
         } else {
@@ -164,7 +165,7 @@ public class SourceNoiseHandler {
                                         reportConfig[0],
                                         source);
 
-                if (mFlags.getMeasurementEnableAttributionScope()) {
+                if (mFlags.getMeasurementEnableFakeReportTriggerTime()) {
                     Pair<Long, Long> reportingAndTriggerTime =
                             mEventReportWindowCalcDelegate
                                     .getReportingAndTriggerTimeForNoisingFlexEventApi(

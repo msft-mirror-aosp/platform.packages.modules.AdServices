@@ -23,6 +23,8 @@ import static com.android.adservices.service.measurement.util.JobLockHolder.Type
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.EVENT_REPORTING;
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.VERBOSE_DEBUG_REPORTING;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -32,7 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * these functions should be able to process at a time. This is to prevent conflicts and ensure that
  * the system runs smoothly.
  */
-public class JobLockHolder {
+public final class JobLockHolder {
     public enum Type {
         AGGREGATE_REPORTING,
         ASYNC_REGISTRATION_PROCESSING,
@@ -44,18 +46,20 @@ public class JobLockHolder {
 
     private static final Map<Type, JobLockHolder> INSTANCES =
             Map.of(
-                    AGGREGATE_REPORTING, new JobLockHolder(),
-                    ASYNC_REGISTRATION_PROCESSING, new JobLockHolder(),
-                    ATTRIBUTION_PROCESSING, new JobLockHolder(),
-                    DEBUG_REPORTING, new JobLockHolder(),
-                    EVENT_REPORTING, new JobLockHolder(),
-                    VERBOSE_DEBUG_REPORTING, new JobLockHolder());
+                    AGGREGATE_REPORTING, new JobLockHolder(AGGREGATE_REPORTING),
+                    ASYNC_REGISTRATION_PROCESSING, new JobLockHolder(ASYNC_REGISTRATION_PROCESSING),
+                    ATTRIBUTION_PROCESSING, new JobLockHolder(ATTRIBUTION_PROCESSING),
+                    DEBUG_REPORTING, new JobLockHolder(DEBUG_REPORTING),
+                    EVENT_REPORTING, new JobLockHolder(EVENT_REPORTING),
+                    VERBOSE_DEBUG_REPORTING, new JobLockHolder(VERBOSE_DEBUG_REPORTING));
+
+    private final Type mType;
 
     /* Holds the lock that will be given per instance */
-    private final ReentrantLock mLock;
+    private final ReentrantLock mLock = new ReentrantLock();
 
-    private JobLockHolder() {
-        mLock = new ReentrantLock();
+    private JobLockHolder(Type type) {
+        mType = type;
     }
 
     /**
@@ -82,8 +86,27 @@ public class JobLockHolder {
     /**
      * Releases the lock that was previously acquired. It must be called after the lock has been
      * successfully acquired.
+     *
+     * <p><b>Note: </b>the lock won't be unlocked until {@code unlock()} is called the same number
+     * of times that {@code tryLock()} is called and returns {@code true}.
      */
     public void unlock() {
         mLock.unlock();
+    }
+
+    @VisibleForTesting
+    boolean isLocked() {
+        return mLock.isLocked();
+    }
+
+    @Override
+    public String toString() {
+        return "JobLockHolder[mType="
+                + mType
+                + ", isLocked()="
+                + isLocked()
+                + ", mLock="
+                + mLock
+                + "]";
     }
 }

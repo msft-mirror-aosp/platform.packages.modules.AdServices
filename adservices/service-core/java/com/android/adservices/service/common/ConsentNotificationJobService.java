@@ -227,7 +227,10 @@ public class ConsentNotificationJobService extends JobService {
                 "ConsentNotificationJobService states. isAdIdEnabled: %s, isEeaDevice: %s,"
                         + " isEeaNotification: %s.",
                 mConsentManager.isAdIdEnabled(), mUxStatesManager.isEeaDevice(), isEeaNotification);
-        if (mConsentManager.getUx() == RVC_UX) {
+        if (mConsentManager.getUx() == RVC_UX
+                || (FlagsFactory.getFlags().getRNotificationDefaultConsentFixEnabled()
+                        && Build.VERSION.SDK_INT == Build.VERSION_CODES.R)) {
+            // On R, only Measurement default consent is needed.
             mConsentManager.recordMeasurementDefaultConsent(!isEeaNotification);
         } else {
             mConsentManager.recordDefaultConsent(!isEeaNotification);

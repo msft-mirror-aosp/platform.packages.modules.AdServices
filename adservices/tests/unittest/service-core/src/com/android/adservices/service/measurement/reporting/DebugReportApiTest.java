@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.measurement.reporting;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -4142,6 +4144,48 @@ public final class DebugReportApiTest {
                 TEST_HEADER_CONTENT,
                 mMeasurementDao);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
+    }
+
+    @Test
+    public void scheduleSourceAttributionScopeDebugReport_maxEventStatesLimit_success()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleAttributionScopeDebugReport(
+                source,
+                Source.AttributionScopeValidationResult.INVALID_MAX_EVENT_STATES_LIMIT,
+                mMeasurementDao);
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        assertThat(captor.getValue().getType()).isEqualTo(Type.SOURCE_MAX_EVENT_STATES_LIMIT);
+    }
+
+    @Test
+    public void scheduleSourceAttributionScopeDebugReport_infoGainLimit_success() throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleAttributionScopeDebugReport(
+                source,
+                Source.AttributionScopeValidationResult.INVALID_INFORMATION_GAIN_LIMIT,
+                mMeasurementDao);
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        assertThat(captor.getValue().getType())
+                .isEqualTo(Type.SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT);
     }
 
     private static void assertSourceDebugReportParameters(

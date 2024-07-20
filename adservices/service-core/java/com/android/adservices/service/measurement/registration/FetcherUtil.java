@@ -238,8 +238,9 @@ public class FetcherUtil {
             Flags flags,
             boolean canIncludeLookbackWindow,
             boolean shouldCheckFilterSize) throws JSONException {
-        if (filterSet.length()
-                > FlagsFactory.getFlags().getMeasurementMaxFilterMapsPerFilterSet()) {
+        if (shouldCheckFilterSize
+                && filterSet.length()
+                        > FlagsFactory.getFlags().getMeasurementMaxFilterMapsPerFilterSet()) {
             return false;
         }
         for (int i = 0; i < filterSet.length(); i++) {
@@ -308,11 +309,15 @@ public class FetcherUtil {
             Flags flags,
             boolean canIncludeLookbackWindow,
             boolean shouldCheckFilterSize) throws JSONException {
-        if (filtersObj == null
-                || filtersObj.length()
+        if (filtersObj == null) {
+            return false;
+        }
+        if (shouldCheckFilterSize
+                && filtersObj.length()
                         > FlagsFactory.getFlags().getMeasurementMaxAttributionFilters()) {
             return false;
         }
+
         Iterator<String> keys = filtersObj.keys();
         while (keys.hasNext()) {
             String key = keys.next();

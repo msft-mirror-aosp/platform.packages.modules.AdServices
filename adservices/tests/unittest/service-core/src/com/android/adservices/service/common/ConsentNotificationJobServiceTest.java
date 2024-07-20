@@ -40,6 +40,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -59,11 +60,14 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -434,6 +438,54 @@ public class ConsentNotificationJobServiceTest {
         mockJobFinished();
 
         verify(mAdservicesSyncUtil, times(1)).execute(any(Context.class), any(Boolean.class));
+    }
+
+    @Test
+    public void testRecordDefaultConsent_OnRVC_RecordMsmtDefaultConsentIsCalled() throws Exception {
+        when(mConsentManager.getUx()).thenReturn(PrivacySandboxUxCollection.RVC_UX);
+        mockRecordDefaultConsent();
+        verify(mConsentManager).recordMeasurementDefaultConsent(anyBoolean());
+        verify(mConsentManager, never()).recordDefaultConsent(anyBoolean());
+    }
+
+    @Test
+    public void testRecordDefaultConsent_OnNotRVC_RecordDefaultConsentIsCalled() throws Exception {
+        when(mConsentManager.getUx()).thenReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX);
+        mockRecordDefaultConsent();
+        verify(mConsentManager, never()).recordMeasurementDefaultConsent(anyBoolean());
+        verify(mConsentManager).recordDefaultConsent(anyBoolean());
+    }
+
+    @Test
+    public void testRecordDefaultConsent_NotRVC_onRFixEnabled_RecordMsmtDefaultConsentIsCalled()
+            throws Exception {
+        Assume.assumeFalse(SdkLevel.isAtLeastS());
+        when(mFlags.getRNotificationDefaultConsentFixEnabled()).thenReturn(true);
+        when(mConsentManager.getUx()).thenReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX);
+        mockRecordDefaultConsent();
+        verify(mConsentManager).recordMeasurementDefaultConsent(anyBoolean());
+        verify(mConsentManager, never()).recordDefaultConsent(anyBoolean());
+    }
+
+    @Test
+    public void testRecordDefaultConsent_OnNotRVC_onS_FixEnabled_RecordDefaultConsentIsCalled()
+            throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+        when(mFlags.getRNotificationDefaultConsentFixEnabled()).thenReturn(true);
+        mockRecordDefaultConsent();
+        verify(mConsentManager, never()).recordMeasurementDefaultConsent(anyBoolean());
+        verify(mConsentManager).recordDefaultConsent(anyBoolean());
+    }
+
+    private void mockRecordDefaultConsent() throws Exception {
+        mockServiceCompatUtilDisableJob(false);
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+        when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
+        when(mPersistableBundle.getBoolean(eq(ADID_ENABLE_STATUS), anyBoolean())).thenReturn(true);
+        when(mPersistableBundle.getBoolean(eq(RE_CONSENT_STATUS), anyBoolean())).thenReturn(false);
+        mConsentNotificationJobService.setConsentManager(mConsentManager);
+        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        mockJobFinished();
     }
 
     private void testOnStartJobAsyncUtilExecute() throws InterruptedException {

@@ -5163,6 +5163,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void isSourceAllowedToInsert_maxEventStatesTooSmall_fail() throws DatastoreException {
         // setup
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
 
@@ -5181,8 +5185,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(APP_TOP_ORIGIN)
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
-                        .setWebDestinations(
-                                List.of(WebUtil.validUri("https://web-destination1.test")))
                         .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
                         .setRegistrant(Uri.parse("android-app://com.example"))
                         .setEventTime(new Random().nextLong())
@@ -5193,7 +5195,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setDebugKey(new UnsignedLong(47823478789L))
                         .setAttributionScopeLimit(3L)
                         // num trigger states = 5
-                        .setMaxEventStates(3L)
+                        .setMaxEventStates(2L)
                         .build();
         assertFalse(
                 asyncRegistrationQueueRunner
@@ -5206,21 +5208,30 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .isAllowed());
 
         // Assertions
-        verify(mMeasurementDao, times(2))
+        verify(mMeasurementDao, times(1))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(2))
+        verify(mMeasurementDao, times(1))
                 .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
-        verify(mMeasurementDao, times(2))
+        verify(mMeasurementDao, times(1))
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong());
+        verify(mDebugReportApi)
+                .scheduleAttributionScopeDebugReport(
+                        any(),
+                        eq(Source.AttributionScopeValidationResult.INVALID_MAX_EVENT_STATES_LIMIT),
+                        any());
     }
 
     @Test
     public void isSourceAllowedToInsert_maxEventStatesValid_pass() throws DatastoreException {
         // setup
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
 
@@ -5239,8 +5250,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(APP_TOP_ORIGIN)
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
-                        .setWebDestinations(
-                                List.of(WebUtil.validUri("https://web-destination1.test")))
                         .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
                         .setRegistrant(Uri.parse("android-app://com.example"))
                         .setEventTime(new Random().nextLong())
@@ -5264,13 +5273,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 mMeasurementDao,
                                 mAsyncFetchStatus)
                         .isAllowed());
-        verify(mMeasurementDao, times(2))
+        verify(mMeasurementDao, times(1))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(2))
+        verify(mMeasurementDao, times(1))
                 .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
-        verify(mMeasurementDao, times(2))
+        verify(mMeasurementDao, times(1))
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong());
     }
@@ -5280,6 +5289,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException {
         // setup
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
 
@@ -5298,8 +5311,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setEventId(new UnsignedLong(1L))
                         .setPublisher(APP_TOP_ORIGIN)
                         .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
-                        .setWebDestinations(
-                                List.of(WebUtil.validUri("https://web-destination1.test")))
                         .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
                         .setRegistrant(Uri.parse("android-app://com.example"))
                         .setEventTime(8000000000L)
@@ -5324,15 +5335,20 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 mMeasurementDao,
                                 mAsyncFetchStatus)
                         .isAllowed());
-        verify(mMeasurementDao, times(2))
+        verify(mMeasurementDao, times(1))
                 .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(2))
+        verify(mMeasurementDao, times(1))
                 .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong());
-        verify(mMeasurementDao, times(2))
+        verify(mMeasurementDao, times(1))
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong());
+        verify(mDebugReportApi)
+                .scheduleAttributionScopeDebugReport(
+                        any(),
+                        eq(Source.AttributionScopeValidationResult.INVALID_INFORMATION_GAIN_LIMIT),
+                        any());
     }
 
     @Test
@@ -5340,6 +5356,80 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException {
         // setup
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(8000000000L)
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        // This should cause info gain to be above threshold.
+                        .setAttributionScopeLimit(100L)
+                        // num trigger states = 5
+                        .setMaxEventStates(6L)
+                        .build();
+        assertFalse(
+                asyncRegistrationQueueRunner
+                        .isSourceAllowedToInsert(
+                                source,
+                                source.getPublisher(),
+                                EventSurfaceType.APP,
+                                mMeasurementDao,
+                                mAsyncFetchStatus)
+                        .isAllowed());
+
+        // Assertions
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+        verify(mDebugReportApi)
+                .scheduleAttributionScopeDebugReport(
+                        any(),
+                        eq(Source.AttributionScopeValidationResult.INVALID_INFORMATION_GAIN_LIMIT),
+                        any());
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_navigationDualDestinationInfoGainTooHigh_fail()
+            throws DatastoreException {
+        // setup
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
+                .thenReturn(14.5f);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation())
+                .thenReturn(14.5f);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent())
+                .thenReturn(
+                        Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
 
@@ -5368,12 +5458,84 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setDebugKey(new UnsignedLong(47823478789L))
+                        // num trigger states = 20825
                         // This should cause info gain to be above threshold.
-                        .setAttributionScopeLimit(100L)
-                        // num trigger states = 5
-                        .setMaxEventStates(6L)
+                        .setAttributionScopeLimit(4L)
+                        .setMaxEventStates(1000L)
                         .build();
         assertFalse(
+                asyncRegistrationQueueRunner
+                        .isSourceAllowedToInsert(
+                                source,
+                                source.getPublisher(),
+                                EventSurfaceType.APP,
+                                mMeasurementDao,
+                                mAsyncFetchStatus)
+                        .isAllowed());
+
+        // Assertions
+        verify(mMeasurementDao, times(2))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(2))
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong());
+        verify(mMeasurementDao, times(2))
+                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+        verify(mDebugReportApi)
+                .scheduleAttributionScopeDebugReport(
+                        any(),
+                        eq(Source.AttributionScopeValidationResult.INVALID_INFORMATION_GAIN_LIMIT),
+                        any());
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_navigationDualDestinationValidInfoGain_pass()
+            throws DatastoreException {
+        // setup
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
+                .thenReturn(14.5f);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation())
+                .thenReturn(14.5f);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent())
+                .thenReturn(
+                        Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT);
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(8000000000L)
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        // Total number of states is 20855 and attribution information gain:
+                        // 14.3481.
+                        .setAttributionScopeLimit(4L)
+                        .setMaxEventStates(10L)
+                        .build();
+        assertTrue(
                 asyncRegistrationQueueRunner
                         .isSourceAllowedToInsert(
                                 source,
@@ -5397,11 +5559,32 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
     @Test
     public void runAsyncRegistrationQueueWorker_attributionScopeEnabled_updateSources()
-            throws DatastoreException, PackageManager.NameNotFoundException {
+            throws DatastoreException {
         // Setup
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAttributionScopeLimit(3L)
+                        // num trigger states = 5
+                        .setMaxEventStates(10L)
+                        .build();
 
         AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
         Map<String, List<String>> redirectHeaders =
@@ -5416,7 +5599,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
                     asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
-                    return Optional.of(mMockedSource);
+                    return Optional.of(source);
                 };
         doAnswer(answerAsyncSourceFetcher)
                 .when(mAsyncSourceFetcher)
@@ -5454,13 +5637,29 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         List.of(
                                 WebUtil.validUri("https://example.test/sF1").toString(),
                                 WebUtil.validUri("https://example.test/sF2").toString()));
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(new Random().nextLong())
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAttributionScopeLimit(3L)
+                        // num trigger states = 5
+                        .setMaxEventStates(10L)
+                        .build();
         Answer<?> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
                     asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
-                    return Optional.of(mMockedSource);
+                    return Optional.of(source);
                 };
         doAnswer(answerAsyncSourceFetcher)
                 .when(mAsyncSourceFetcher)

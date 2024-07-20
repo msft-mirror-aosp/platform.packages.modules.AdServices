@@ -19,62 +19,46 @@ package com.android.adservices.ui.settings.viewmodels;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 
 /** Tests for {@link TopicsViewModel}. */
-public class TopicsViewModelTest {
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(ConsentManager.class)
+public final class TopicsViewModelTest extends AdServicesExtendedMockitoTestCase {
 
     private TopicsViewModel mTopicsViewModel;
     private BlockedTopicsViewModel mBlockedTopicsViewModel;
     @Mock private ConsentManager mConsentManager;
     @Mock private Flags mMockFlags;
-    private MockitoSession mStaticMockSession = null;
 
     /** Setup needed before every test in this class. */
     @Before
     public void setup() throws IOException {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mMockFlags);
         mTopicsViewModel =
                 new TopicsViewModel(
                         ApplicationProvider.getApplicationContext(), mConsentManager, true);
         mBlockedTopicsViewModel =
                 new BlockedTopicsViewModel(
                         ApplicationProvider.getApplicationContext(), mConsentManager);
-    }
-
-    /** Teardown needed before every test in this class. */
-    @After
-    public void teardown() throws IOException {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     /** Test if getTopics returns no topics if {@link ConsentManager} returns no topics. */
@@ -113,7 +97,7 @@ public class TopicsViewModelTest {
         Topic topic1 = Topic.create(1, 1, 1);
         mTopicsViewModel.revokeTopicConsent(topic1);
 
-        verify(mConsentManager, times(1)).revokeConsentForTopic(topic1);
+        verify(mConsentManager).revokeConsentForTopic(topic1);
     }
 
     /** Test if restoreTopicConsent blocks a topic with a call to {@link ConsentManager}. */
@@ -122,6 +106,6 @@ public class TopicsViewModelTest {
         Topic topic1 = Topic.create(1, 1, 1);
         mBlockedTopicsViewModel.restoreTopicConsent(topic1);
 
-        verify(mConsentManager, times(1)).restoreConsentForTopic(topic1);
+        verify(mConsentManager).restoreConsentForTopic(topic1);
     }
 }

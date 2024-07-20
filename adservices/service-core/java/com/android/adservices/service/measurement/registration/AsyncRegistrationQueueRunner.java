@@ -393,28 +393,27 @@ public class AsyncRegistrationQueueRunner {
             IMeasurementDao dao,
             AsyncFetchStatus asyncFetchStatus)
             throws DatastoreException {
-        Flags flags = FlagsFactory.getFlags();
         // Do not persist the navigation source if the same reporting origin has been registered
         // for the registration.
-        if (isNavigationOriginAlreadyRegisteredForRegistration(source, dao, flags)) {
+        if (isNavigationOriginAlreadyRegisteredForRegistration(source, dao, mFlags)) {
             return InsertSourcePermission.NOT_ALLOWED;
         }
         long windowStartTime =
-                source.getEventTime() - flags.getMeasurementRateLimitWindowMilliseconds();
+                source.getEventTime() - mFlags.getMeasurementRateLimitWindowMilliseconds();
         Optional<Uri> publisher = getTopLevelPublisher(topOrigin, publisherType);
         if (publisher.isEmpty()) {
             LoggerFactory.getMeasurementLogger()
                     .d("insertSources: getTopLevelPublisher failed, topOrigin: %s", topOrigin);
             return InsertSourcePermission.NOT_ALLOWED;
         }
-
         long numOfSourcesPerPublisher =
                 dao.getNumSourcesPerPublisher(
                         BaseUriExtractor.getBaseUri(topOrigin), publisherType);
-        if (numOfSourcesPerPublisher >= flags.getMeasurementMaxSourcesPerPublisher()) {
-            LoggerFactory.getMeasurementLogger().d(
-                    "insertSources: Max limit of %s sources for publisher - %s reached.",
-                    flags.getMeasurementMaxSourcesPerPublisher(), publisher);
+        if (numOfSourcesPerPublisher >= mFlags.getMeasurementMaxSourcesPerPublisher()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "insertSources: Max limit of %s sources for publisher - %s reached.",
+                            mFlags.getMeasurementMaxSourcesPerPublisher(), publisher);
             mDebugReportApi.scheduleSourceStorageLimitDebugReport(
                     source, String.valueOf(numOfSourcesPerPublisher), dao);
             return InsertSourcePermission.NOT_ALLOWED;
@@ -423,13 +422,13 @@ public class AsyncRegistrationQueueRunner {
         // Blocks ad-techs to register multiple sources with various destinations in a short window
         // (per minute)
         int destinationsPerMinuteRateLimit =
-                flags.getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow();
-        if (flags.getMeasurementEnableDestinationRateLimit()
+                mFlags.getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow();
+        if (mFlags.getMeasurementEnableDestinationRateLimit()
                 && sourceExceedsTimeBasedDestinationLimits(
                         source,
                         publisher.get(),
                         publisherType,
-                        flags.getMeasurementDestinationRateLimitWindow(),
+                        mFlags.getMeasurementDestinationRateLimitWindow(),
                         destinationsPerMinuteRateLimit,
                         dao)) {
             mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
@@ -446,13 +445,13 @@ public class AsyncRegistrationQueueRunner {
 
         // Blocks ad-techs to reconstruct browser history by registering multiple sources with
         // various destinations in a medium window (per day). The larger window is 30 days.
-        int destinationsPerDayRateLimit = flags.getMeasurementDestinationPerDayRateLimit();
-        if (flags.getMeasurementEnableDestinationPerDayRateLimitWindow()
+        int destinationsPerDayRateLimit = mFlags.getMeasurementDestinationPerDayRateLimit();
+        if (mFlags.getMeasurementEnableDestinationPerDayRateLimitWindow()
                 && sourceExceedsTimeBasedDestinationLimits(
                         source,
                         publisher.get(),
                         publisherType,
-                        flags.getMeasurementDestinationPerDayRateLimitWindowInMs(),
+                        mFlags.getMeasurementDestinationPerDayRateLimitWindowInMs(),
                         destinationsPerDayRateLimit,
                         dao)) {
             mDebugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
@@ -491,11 +490,19 @@ public class AsyncRegistrationQueueRunner {
         }
 
         try {
-            if (!source.validateAndSetNumReportStates(flags)
-                    || !source.validateMaxEventStates(flags)
-                    || !source.hasValidInformationGain(flags)) {
+            if (!source.validateAndSetNumReportStates(mFlags)
+                    || !source.hasValidInformationGain(mFlags)) {
                 mDebugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
                 return InsertSourcePermission.NOT_ALLOWED;
+            }
+            if (mFlags.getMeasurementEnableAttributionScope()) {
+                Source.AttributionScopeValidationResult attributionScopeValidationResult =
+                        source.validateAttributionScopeValues(mFlags);
+                if (!attributionScopeValidationResult.isValid()) {
+                    mDebugReportApi.scheduleAttributionScopeDebugReport(
+                            source, attributionScopeValidationResult, dao);
+                    return InsertSourcePermission.NOT_ALLOWED;
+                }
             }
         } catch (ArithmeticException e) {
             LoggerFactory.getMeasurementLogger()
@@ -507,14 +514,14 @@ public class AsyncRegistrationQueueRunner {
         Map<String, String> additionalDebugReportParams = null;
         InsertSourcePermission result = InsertSourcePermission.ALLOWED;
         // Should be deprecated once destination priority is fully launched
-        if (extractSourceDestinationLimitingAlgo(flags, source)
+        if (extractSourceDestinationLimitingAlgo(mFlags, source)
                 == Source.DestinationLimitAlgorithm.FIFO) {
             InsertSourcePermission appDestSourceAllowedToInsert =
                     deleteLowPriorityDestinationSourcesToAccommodateNewSource(
                             source,
                             publisherType,
                             dao,
-                            flags,
+                            mFlags,
                             publisher.get(),
                             EventSurfaceType.APP,
                             source.getAppDestinations(),
@@ -523,7 +530,8 @@ public class AsyncRegistrationQueueRunner {
                 // Return early without checking web destinations
                 mDebugReportApi.scheduleSourceDestinationLimitDebugReport(
                         source,
-                        String.valueOf(flags.getMeasurementMaxDistinctDestinationsInActiveSource()),
+                        String.valueOf(
+                                mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()),
                         dao);
                 return InsertSourcePermission.NOT_ALLOWED;
             }
@@ -532,7 +540,7 @@ public class AsyncRegistrationQueueRunner {
                             source,
                             publisherType,
                             dao,
-                            flags,
+                            mFlags,
                             publisher.get(),
                             EventSurfaceType.WEB,
                             source.getWebDestinations(),
@@ -540,7 +548,8 @@ public class AsyncRegistrationQueueRunner {
             if (webDestSourceAllowedToInsert == InsertSourcePermission.NOT_ALLOWED) {
                 mDebugReportApi.scheduleSourceDestinationLimitDebugReport(
                         source,
-                        String.valueOf(flags.getMeasurementMaxDistinctDestinationsInActiveSource()),
+                        String.valueOf(
+                                mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()),
                         dao);
                 return InsertSourcePermission.NOT_ALLOWED;
             }
@@ -571,9 +580,9 @@ public class AsyncRegistrationQueueRunner {
                         publisherType,
                         source.getEnrollmentId(),
                         source.getEventTime(),
-                        flags.getMeasurementMinReportingOriginUpdateWindow());
+                        mFlags.getMeasurementMinReportingOriginUpdateWindow());
         if (numOfOriginExcludingRegistrationOrigin
-                >= flags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
+                >= mFlags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
             mDebugReportApi.scheduleSourceSuccessDebugReport(
                     source, dao, additionalDebugReportParams);
             LoggerFactory.getMeasurementLogger()
