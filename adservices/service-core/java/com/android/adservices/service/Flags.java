@@ -4811,6 +4811,14 @@ public interface Flags extends ModuleSharedFlags {
         return MDD_COBALT_REGISTRY_MANIFEST_FILE_URL;
     }
 
+    /** Default value of whether Cobalt operational logging feature is enabled. */
+    @FeatureFlag boolean COBALT_OPERATIONAL_LOGGING_ENABLED = false;
+
+    /** Returns whether Cobalt operational logging is enabled. */
+    default boolean getCobaltOperationalLoggingEnabled() {
+        return COBALT_OPERATIONAL_LOGGING_ENABLED;
+    }
+
     /**
      * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
      * logged_topic column to ReturnedTopic table.
@@ -5717,6 +5725,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the default value of the enablement of adservices business logic migration. */
     default boolean getAdServicesConsentBusinessLogicMigrationEnabled() {
         return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+    }
+
+    /** Default value for the enablement the R notification default consent fix. */
+    @FeatureFlag boolean DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED = false;
+
+    /** Returns the default value for the enablement the R notification default consent fix */
+    default boolean getRNotificationDefaultConsentFixEnabled() {
+        return DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
     }
 
     /** Enrollment Manifest File URL, used to provide proto file for MDD download. */

@@ -139,6 +139,8 @@ public final class FlagsConstants {
     public static final String KEY_COBALT_LOGGING_ENABLED = "cobalt_logging_enabled";
     public static final String KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED =
             "cobalt_registry_out_of_band_update_enabled";
+    public static final String KEY_COBALT_OPERATIONAL_LOGGING_ENABLED =
+            "cobalt_operational_logging_enabled";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -1606,4 +1608,8 @@ public final class FlagsConstants {
     /** Key for enabling adservices apis v2. */
     public static final String KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED =
             "adservices_consent_business_logic_migration_enabled";
+
+    /** Key for enabling R notification default consent fix. */
+    public static final String KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED =
+            "r_notification_default_consent_fix_enabled";
 }
