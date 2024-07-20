@@ -28,7 +28,6 @@ import android.Manifest;
 import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.app.sdksandbox.testutils.ProtoUtil;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -50,6 +49,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.server.pm.PackageManagerLocal;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
@@ -69,7 +69,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class SdkSandboxRestrictionsUnitTest {
+public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
     private static final String INTENT_ACTION = "action.test";
     private static final String PACKAGE_NAME = "packageName.test";
     private static final ComponentName COMPONENT =
@@ -96,9 +96,6 @@ public class SdkSandboxRestrictionsUnitTest {
     private DeviceConfigUtil mDeviceConfigUtil;
 
     @Rule(order = 0)
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
-    @Rule(order = 1)
     public final CheckFlagsRule checkFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     @Before

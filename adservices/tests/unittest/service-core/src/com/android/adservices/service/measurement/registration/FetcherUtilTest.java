@@ -660,7 +660,7 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("}]");
         JSONArray filters = new JSONArray(json.toString());
-        assertFalse(
+        assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
                         mFlags,
@@ -695,7 +695,7 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("}");
         JSONObject filters = new JSONObject(json.toString());
-        assertFalse(
+        assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
                         mFlags,
@@ -772,7 +772,8 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void testAreValidAttributionFilters_filterSet_tooManyFilterMaps() throws JSONException {
+    public void testAreValidAttributionFilters_tooManyFilterMapsPerFilterSet()
+            throws JSONException {
         StringBuilder json = new StringBuilder("[");
         json.append(
                 IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET + 1)
@@ -794,7 +795,7 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void testAreValidAttributionFilters_filterSet_removeFilterMapNumberConstraints()
+    public void testAreValidAttributionFilters_tooManyFilterMapsPerFilterSet_removeConstraints()
             throws JSONException {
         StringBuilder json = new StringBuilder("[");
         json.append(
@@ -808,7 +809,7 @@ public final class FetcherUtilTest {
                         .collect(Collectors.joining(",")));
         json.append("]");
         JSONArray filters = new JSONArray(json.toString());
-        assertFalse(
+        assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
                         mFlags,
@@ -1039,7 +1040,8 @@ public final class FetcherUtilTest {
                                                 0,
                                                 false,
                                                 false,
-                                                0)
+                                                0,
+                                                false)
                                         .setAdTechDomain(null)
                                         .build()));
     }
@@ -1085,7 +1087,8 @@ public final class FetcherUtilTest {
                                                 0,
                                                 false,
                                                 false,
-                                                0)
+                                                0,
+                                                false)
                                         .setAdTechDomain(REGISTRATION_URI.toString())
                                         .build()));
     }
@@ -1134,7 +1137,8 @@ public final class FetcherUtilTest {
                                                 0,
                                                 false,
                                                 false,
-                                                0)
+                                                0,
+                                                false)
                                         .setAdTechDomain(null)
                                         .build()));
     }

@@ -26,7 +26,6 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -115,6 +114,12 @@ public final class CustomAudienceFixture {
             @CustomAudience.AuctionServerRequestFlag int auctionServerRequestFlags) {
         return getValidBuilderForBuyer(buyer)
                 .setAuctionServerRequestFlags(auctionServerRequestFlags);
+    }
+
+    /** Build valid CA with priority */
+    public static CustomAudience.Builder getValidBuilderByBuyerWithPriority(
+            AdTechIdentifier buyer, double priority) {
+        return getValidBuilderForBuyer(buyer).setPriority(priority);
     }
 
     public static CustomAudience.Builder getValidBuilderWithSubdomainsForBuyer(
