@@ -18,14 +18,24 @@ package com.android.adservices.shared.testing.concurrency;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.android.adservices.shared.testing.AndroidLogger;
+
 import java.util.Objects;
 
 public final class DeviceSideConcurrencyHelper {
+
+    private static final ConcurrencyHelper sConcurrencyHelper =
+            new ConcurrencyHelper(AndroidLogger.getInstance());
 
     /** Runs the given runnable in the main thread. */
     public static void runOnMainThread(Runnable r) {
         Objects.requireNonNull(r);
         new Handler(Looper.getMainLooper()).post(r);
+    }
+
+    /** Gets the device-side {@link ConcurrencyHelper}. */
+    public static ConcurrencyHelper getConcurrencyHelper() {
+        return sConcurrencyHelper;
     }
 
     private DeviceSideConcurrencyHelper() {
