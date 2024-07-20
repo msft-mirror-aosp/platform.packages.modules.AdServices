@@ -37,6 +37,7 @@ public class MeasurementRegistrationResponseStats {
     private final boolean mIsRedirectOnly;
     private final boolean mIsPARequest;
     private final int mNumDeletedEntities;
+    private final boolean mIsEventLevelEpsilonEnabled;
 
     private MeasurementRegistrationResponseStats(Builder builder) {
         mCode = builder.mCode;
@@ -53,6 +54,7 @@ public class MeasurementRegistrationResponseStats {
         mIsRedirectOnly = builder.mIsRedirectOnly;
         mIsPARequest = builder.mIsPARequest;
         mNumDeletedEntities = builder.mNumDeletedEntities;
+        mIsEventLevelEpsilonEnabled = builder.mIsEventLevelEpsilonEnabled;
     }
 
     @Override
@@ -73,7 +75,8 @@ public class MeasurementRegistrationResponseStats {
                 && mRetryCount == that.mRetryCount
                 && mIsRedirectOnly == that.mIsRedirectOnly
                 && mIsPARequest == that.mIsPARequest
-                && mNumDeletedEntities == that.mNumDeletedEntities;
+                && mNumDeletedEntities == that.mNumDeletedEntities
+                && mIsEventLevelEpsilonEnabled == that.mIsEventLevelEpsilonEnabled;
     }
 
     @Override
@@ -92,7 +95,8 @@ public class MeasurementRegistrationResponseStats {
                 mRetryCount,
                 mIsRedirectOnly,
                 mIsPARequest,
-                mNumDeletedEntities);
+                mNumDeletedEntities,
+                mIsEventLevelEpsilonEnabled);
     }
 
     @Override
@@ -126,6 +130,8 @@ public class MeasurementRegistrationResponseStats {
                 + mIsPARequest
                 + ", mNumDeletedEntities="
                 + mNumDeletedEntities
+                + ", mIsEventLevelEpsilonEnabled="
+                + mIsEventLevelEpsilonEnabled
                 + '}';
     }
 
@@ -186,6 +192,10 @@ public class MeasurementRegistrationResponseStats {
         return mNumDeletedEntities;
     }
 
+    public boolean isEventLevelEpsilonEnabled() {
+        return mIsEventLevelEpsilonEnabled;
+    }
+
     /** Builder for {@link MeasurementRegistrationResponseStats}. */
     public static final class Builder {
         private final int mCode;
@@ -202,6 +212,7 @@ public class MeasurementRegistrationResponseStats {
         private final boolean mIsRedirectOnly;
         private final boolean mIsPARequest;
         private final int mNumDeletedEntities;
+        private final boolean mIsEventLevelEpsilonEnabled;
 
         public Builder(
                 int code,
@@ -216,7 +227,8 @@ public class MeasurementRegistrationResponseStats {
                 int retryCount,
                 boolean isRedirectOnly,
                 boolean isPARequest,
-                int numDeletedEntities) {
+                int numDeletedEntities,
+                boolean isEventLevelEpsilonEnabled) {
             mCode = code;
             mRegistrationType = registrationType;
             mResponseSize = responseSize;
@@ -230,6 +242,7 @@ public class MeasurementRegistrationResponseStats {
             mIsRedirectOnly = isRedirectOnly;
             mIsPARequest = isPARequest;
             mNumDeletedEntities = numDeletedEntities;
+            mIsEventLevelEpsilonEnabled = isEventLevelEpsilonEnabled;
         }
 
         /** See {@link MeasurementRegistrationResponseStats#getAdTechDomain()} . */

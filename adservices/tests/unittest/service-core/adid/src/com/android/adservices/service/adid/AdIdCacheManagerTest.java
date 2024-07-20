@@ -66,6 +66,10 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
     private static final String AD_ID_UPDATE = "20000000-0000-0000-0000-000000000000";
     private static final int DUMMY_CALLER_UID = 0;
 
+    private static final String SUCCESS_RESPONSE = "success";
+    private static final String UNAUTHORIZED_RESPONSE = "unauthorized";
+    private static final String FAILURE_RESPONSE = "failure";
+
     private IAdIdProviderService mAdIdProviderService;
     private AdIdCacheManager mAdIdCacheManager;
 
@@ -91,7 +95,7 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
         // Enable the AdId cache.
         doReturn(true).when(mMockFlags).getAdIdCacheEnabled();
 
-        mAdIdProviderService = createAdIdProviderService(/* isSuccess= */ true);
+        mAdIdProviderService = createAdIdProviderService(SUCCESS_RESPONSE);
         doReturn(mAdIdProviderService).when(mAdIdCacheManager).getService();
 
         // First getAdId() call should get AdId from the provider.
@@ -147,7 +151,7 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
         // Disable the AdId cache.
         doReturn(false).when(mMockFlags).getAdIdCacheEnabled();
 
-        mAdIdProviderService = createAdIdProviderService(/* isSuccess= */ true);
+        mAdIdProviderService = createAdIdProviderService(SUCCESS_RESPONSE);
         doReturn(mAdIdProviderService).when(mAdIdCacheManager).getService();
 
         // First getAdId() call should get AdId from the provider.
@@ -175,7 +179,7 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
         doReturn(true).when(mMockFlags).getAdIdCacheEnabled();
         doNothingOnErrorLogUtilError();
 
-        mAdIdProviderService = createAdIdProviderService(/* isSuccess= */ false);
+        mAdIdProviderService = createAdIdProviderService(FAILURE_RESPONSE);
         doReturn(mAdIdProviderService).when(mAdIdCacheManager).getService();
 
         CompletableFuture<Integer> future = new CompletableFuture<>();
@@ -185,6 +189,30 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
 
         int result = future.get();
         assertThat(result).isEqualTo(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
+        verifyErrorLogUtilErrorWithAnyException(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_AD_ID_PROVIDER_NOT_AVAILABLE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
+    }
+
+    @Test
+    @SpyStatic(ErrorLogUtil.class)
+    public void testGetAdIdOnUnauthorizedError() throws Exception {
+        // Enable the AdId cache.
+        doReturn(false).when(mMockFlags).getAdIdCacheEnabled();
+        doNothingOnErrorLogUtilError();
+
+        mAdIdProviderService = createAdIdProviderService(UNAUTHORIZED_RESPONSE);
+        doReturn(mAdIdProviderService).when(mAdIdCacheManager).getService();
+
+        CompletableFuture<GetAdIdResult> future = new CompletableFuture<>();
+        IGetAdIdCallback callback = createUnauthorizedFailureGetAdIdCallBack(future);
+
+        mAdIdCacheManager.getAdId(PACKAGE_NAME, DUMMY_CALLER_UID, callback);
+
+        GetAdIdResult result = future.get();
+        AdId actualAdId = new AdId(result.getAdId(), result.isLatEnabled());
+        AdId expectedAdId = new AdId(AdId.ZERO_OUT, /* limitAdTrackingEnabled= */ true);
+        assertWithMessage("Get AdId Unauthorized failed").that(actualAdId).isEqualTo(expectedAdId);
         verifyErrorLogUtilErrorWithAnyException(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_AD_ID_PROVIDER_NOT_AVAILABLE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
@@ -272,14 +300,29 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
         };
     }
 
-    private IAdIdProviderService createAdIdProviderService(boolean isSuccess) {
+    private IGetAdIdCallback createUnauthorizedFailureGetAdIdCallBack(
+            CompletableFuture<GetAdIdResult> future) {
+        return new IGetAdIdCallback.Stub() {
+            @Override
+            public void onResult(GetAdIdResult resultParcel) {
+                future.complete(resultParcel);
+            }
+
+            @Override
+            public void onError(int resultCode) {
+                throw new UnsupportedOperationException("Should never be called!");
+            }
+        };
+    }
+
+    private IAdIdProviderService createAdIdProviderService(String response) {
         return new IAdIdProviderService.Stub() {
             @Override
             public void getAdIdProvider(
                     int appUid, String packageName, IGetAdIdProviderCallback resultCallback)
                     throws RemoteException {
 
-                if (isSuccess) {
+                if (response.equals(SUCCESS_RESPONSE)) {
                     GetAdIdResult adIdInternal =
                             new GetAdIdResult.Builder()
                                     .setStatusCode(STATUS_SUCCESS)
@@ -292,6 +335,8 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
                     mAdIdCacheManager.setAdIdInStorage(
                             new AdId(AD_ID, /* limitAdTrackingEnabled= */ false));
                     resultCallback.onResult(adIdInternal);
+                } else if (response.equals(UNAUTHORIZED_RESPONSE)) {
+                    resultCallback.onError("Unauthorized caller: com.google.test");
                 } else {
                     resultCallback.onError("testOnError");
                 }

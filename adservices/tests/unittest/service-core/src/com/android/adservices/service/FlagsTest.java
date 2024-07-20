@@ -36,6 +36,10 @@ import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
+import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
+import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
@@ -507,6 +511,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableEventLevelEpsilonInSource() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE",
+                Flags::getMeasurementEnableEventLevelEpsilonInSource);
+    }
+
+    @Test
     public void testGetMeasurementEnableV1SourceTriggerData() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA",
@@ -564,10 +575,23 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetCobaltOperationalLoggingEnabled() {
+        testFeatureFlag(
+                "COBALT_OPERATIONAL_LOGGING_ENABLED", Flags::getCobaltOperationalLoggingEnabled);
+    }
+
+    @Test
     public void testGetCobaltRegistryOutOfBandUpdateEnabled() {
         testFeatureFlag(
                 "COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED",
                 Flags::getCobaltRegistryOutOfBandUpdateEnabled);
+    }
+
+    @Test
+    public void testGetRNotificationDefaultConsentFixEnabled() {
+        testFeatureFlag(
+                "DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED",
+                Flags::getRNotificationDefaultConsentFixEnabled);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -810,6 +834,45 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementReportingJobServiceMinExecutionWindowMillis",
                 MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS,
                 Flags::getMeasurementReportingJobServiceMinExecutionWindowMillis);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionScopeMaxInfoGainNavigation() {
+        testFloatFlag(
+                "getMeasurementAttributionScopeMaxInfoGainNavigation",
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION,
+                Flags::getMeasurementAttributionScopeMaxInfoGainNavigation);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation() {
+        testFloatFlag(
+                "getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation",
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION,
+                Flags::getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionScopeMaxInfoGainEvent() {
+        testFloatFlag(
+                "getMeasurementAttributionScopeMaxInfoGainEvent",
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT,
+                Flags::getMeasurementAttributionScopeMaxInfoGainEvent);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionScopeMaxInfoGainDualDestinationEvent() {
+        testFloatFlag(
+                "getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent",
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT,
+                Flags::getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent);
+    }
+
+    @Test
+    public void testGetMeasurementEnableFakeReportTriggerTime() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME",
+                Flags::getMeasurementEnableFakeReportTriggerTime);
     }
 
     @Test

@@ -105,7 +105,8 @@ public final class SourceFixture {
                 .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES)
                 .setDestinationLimitPriority(ValidSourceParams.DESTINATION_LIMIT_PRIORITY)
                 .setDestinationLimitAlgorithm(ValidSourceParams.DESTINATION_LIMIT_ALGORITHM)
-                .setAttributedTriggers(new ArrayList<>());
+                .setAttributedTriggers(new ArrayList<>())
+                .setEventLevelEpsilon(ValidSourceParams.EVENT_LEVEL_EPSILON);
     }
 
     public static class ValidSourceParams {
@@ -146,6 +147,7 @@ public final class SourceFixture {
         public static final long DESTINATION_LIMIT_PRIORITY = 841849879274L;
         public static final Source.DestinationLimitAlgorithm DESTINATION_LIMIT_ALGORITHM =
                 Source.DestinationLimitAlgorithm.FIFO;
+        public static final Double EVENT_LEVEL_EPSILON = 12D;
 
         public static final String buildAggregateSource() {
             try {
