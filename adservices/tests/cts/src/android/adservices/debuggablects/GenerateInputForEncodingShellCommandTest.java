@@ -37,8 +37,6 @@ import android.net.Uri;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.WebViewSupportUtil;
-import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -72,10 +70,6 @@ public final class GenerateInputForEncodingShellCommandTest extends ForegroundDe
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
                     sContext, "adservices_untrusted_test_server.p12", "adservices_test");
-
-    @Rule(order = 7)
-    public final SupportedByConditionRule webViewSupportsJSSandbox =
-            WebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 
     @Before
     public void setUp() throws Exception {

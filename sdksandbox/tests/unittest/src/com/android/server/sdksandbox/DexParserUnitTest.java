@@ -26,6 +26,7 @@ import android.content.pm.PackageManager;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.verifier.SerialDexLoader.DexLoadResult;
 
 import org.junit.Before;
@@ -36,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 /** Unit tests for {@link DexParser}. */
-public class DexParserUnitTest {
+public class DexParserUnitTest extends DeviceSupportedBaseTest {
     private static final String TEST_PACKAGENAME = "com.android.codeproviderresources_1";
     private static final String BUFFERED_READER_READ_LINE_METHOD_STRING =
             "Ljava/io/BufferedReader;readLine;Ljava/lang/String;";
