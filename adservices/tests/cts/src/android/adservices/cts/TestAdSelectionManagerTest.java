@@ -18,7 +18,6 @@ package android.adservices.cts;
 
 import static com.android.adservices.AdServicesCommon.BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
-import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -74,7 +73,6 @@ import java.util.concurrent.TimeUnit;
 @SetCompatModeFlags
 @RequiresSdkLevelAtLeastS
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
-@SetFlagDisabled(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE)
 @SetFlagDisabled(KEY_ISOLATE_MAX_HEAP_SIZE_BYTES)
 @SetPpapiAppAllowList
 // TODO (b/330324133): Short-term solution to allow test to extend binder timeout to

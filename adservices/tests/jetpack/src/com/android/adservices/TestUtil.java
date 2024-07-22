@@ -219,18 +219,6 @@ public class TestUtil {
         }
     }
 
-    public void enforceFledgeJsIsolateMaxHeapSize(boolean enforce) {
-        if (enforce) {
-            runShellCommand(
-                    "device_config put adservices fledge_js_isolate_enforce_max_heap_size"
-                            + " true");
-        } else {
-            runShellCommand(
-                    "device_config put adservices fledge_js_isolate_enforce_max_heap_size"
-                            + " false");
-        }
-    }
-
     @SuppressWarnings("deprecation")
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
     public String getAdServicesPackageName() {

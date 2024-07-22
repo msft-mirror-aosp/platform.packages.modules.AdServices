@@ -764,11 +764,6 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
 
         class FlagsWithLowEventCounts extends FlagsOverridingAdFiltering implements Flags {
             @Override
-            public boolean getEnforceIsolateMaxHeapSize() {
-                return false;
-            }
-
-            @Override
             public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
             }
@@ -883,11 +878,6 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
 
         final class FlagsWithLowPerBuyerEventCounts extends FlagsOverridingAdFiltering
                 implements Flags {
-            @Override
-            public boolean getEnforceIsolateMaxHeapSize() {
-                return false;
-            }
-
             @Override
             public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;

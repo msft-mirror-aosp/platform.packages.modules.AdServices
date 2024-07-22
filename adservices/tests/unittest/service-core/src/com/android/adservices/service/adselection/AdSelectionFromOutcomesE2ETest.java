@@ -1076,11 +1076,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     private static class TestFlags implements Flags {
         @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
-        }
-
-        @Override
         public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
             return true;
         }

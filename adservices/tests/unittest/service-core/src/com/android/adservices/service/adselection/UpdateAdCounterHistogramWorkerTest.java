@@ -453,11 +453,6 @@ public class UpdateAdCounterHistogramWorkerTest {
         }
 
         @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
-        }
-
-        @Override
         public boolean getFledgeFrequencyCapFilteringEnabled() {
             return mShouldEnableAdFilteringFeature;
         }

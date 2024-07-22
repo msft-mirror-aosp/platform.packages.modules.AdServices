@@ -653,11 +653,6 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
         }
 
         @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return true;
-        }
-
-        @Override
         public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
             return true;
         }

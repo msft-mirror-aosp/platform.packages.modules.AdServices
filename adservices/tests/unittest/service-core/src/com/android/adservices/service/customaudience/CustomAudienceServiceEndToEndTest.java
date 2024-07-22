@@ -3544,11 +3544,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         }
 
         @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
-        }
-
-        @Override
         public boolean getDisableFledgeEnrollmentCheck() {
             return true;
         }

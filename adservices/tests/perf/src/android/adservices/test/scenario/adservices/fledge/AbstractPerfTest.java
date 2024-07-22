@@ -33,7 +33,6 @@ import android.net.Uri;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
-import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -186,12 +185,6 @@ public class AbstractPerfTest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-        // TODO(b/245585645) Mark true for the heap size enforcement after installing M105 library
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "fledge_js_isolate_enforce_max_heap_size",
-                "false",
-                true);
     }
 
     public static Uri getUri(String name, String path) {

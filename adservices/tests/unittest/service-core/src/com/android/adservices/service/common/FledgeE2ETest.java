@@ -5626,11 +5626,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         }
 
         @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
-        }
-
-        @Override
         public boolean getGaUxFeatureEnabled() {
             return mIsGaUxEnabled;
         }

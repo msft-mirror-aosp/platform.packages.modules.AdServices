@@ -5924,11 +5924,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     }
 
                     @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
-                    }
-
-                    @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return true;
                     }
@@ -6111,11 +6106,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     }
 
                     @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
-                    }
-
-                    @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return true;
                     }
@@ -6253,11 +6243,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     }
 
                     @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
-                    }
-
-                    @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return true;
                     }
@@ -6387,11 +6372,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     @Override
                     public long getAdSelectionBiddingTimeoutPerBuyerMs() {
                         return lenientPerBuyerTimeOutLimit;
-                    }
-
-                    @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
                     }
 
                     @Override
@@ -6532,11 +6512,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     }
 
                     @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
-                    }
-
-                    @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return true;
                     }
@@ -6663,11 +6638,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     @Override
                     public long getAdSelectionScoringTimeoutMs() {
                         return 1500;
-                    }
-
-                    @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
                     }
 
                     @Override
@@ -7490,11 +7460,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
         class FlagsWithThrottling extends AdSelectionE2ETestFlags implements Flags {
             @Override
-            public boolean getEnforceIsolateMaxHeapSize() {
-                return false;
-            }
-
-            @Override
             public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
                 return true;
             }
@@ -8150,11 +8115,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         AdSelectionE2ETestFlags(long biddingLogicVersion, boolean enableDebugReporting) {
             mBiddingLogicVersion = biddingLogicVersion;
             mDebugReportingEnabled = enableDebugReporting;
-        }
-
-        @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
         }
 
         @Override

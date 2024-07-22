@@ -850,8 +850,6 @@ public final class FlagsConstants {
             "adid_enforce_foreground_status";
 
     // Fledge JS isolate setting keys
-    public static final String KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE =
-            "fledge_js_isolate_enforce_max_heap_size";
     public static final String KEY_ISOLATE_MAX_HEAP_SIZE_BYTES =
             "fledge_js_isolate_max_heap_size_bytes";
     // AppSetId invoking app status key.
