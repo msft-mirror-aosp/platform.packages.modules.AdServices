@@ -79,6 +79,23 @@ public interface IMeasurementDao {
     List<String> getSourceAttributionScopes(@NonNull String sourceId) throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}'s attribution scopes for a given source registration,
+     * reporting origin and destination.
+     *
+     * @param registrationId ID of the registration.
+     * @param registrationOrigin source registration origin.
+     * @param destination String for the destination.
+     * @param destinationType DestinationType App/Web.
+     * @return a list of attribution scopes.
+     */
+    Set<String> getNavigationAttributionScopesForRegistration(
+            @NonNull String registrationId,
+            @NonNull String registrationOrigin,
+            @EventSurfaceType int destinationType,
+            @NonNull String destination)
+            throws DatastoreException;
+
+    /**
      * Updates existing sources based on the following criteria for attribution scope:
      *
      * <ol>
