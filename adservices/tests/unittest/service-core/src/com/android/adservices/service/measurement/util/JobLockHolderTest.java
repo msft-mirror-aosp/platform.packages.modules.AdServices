@@ -78,8 +78,6 @@ public final class JobLockHolderTest extends AdServicesExtendedMockitoTestCase {
         }
     }
 
-    // TODO(b/354007915): once the deprecated methods are removed, use a mHolder below
-
     @Test
     public void testRunWithLock_null() {
         assertThrows(
