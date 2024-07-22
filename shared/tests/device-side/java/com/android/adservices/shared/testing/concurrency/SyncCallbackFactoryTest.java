@@ -20,6 +20,9 @@ import static com.android.adservices.shared.testing.concurrency.SyncCallbackSett
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import android.os.Handler;
+import android.platform.test.annotations.DisabledOnRavenwood;
+
 import com.android.adservices.shared.SharedUnitTestCase;
 
 import org.junit.Test;
@@ -50,6 +53,9 @@ public final class SyncCallbackFactoryTest extends SharedUnitTestCase {
         expect.withMessage("builder2").that(builder2).isNotSameInstanceAs(builder1);
     }
 
+    // TODO(b/335935200): Handler constructor fails with : Cannot read field "mQueue" because
+    // "looper" is null
+    @DisabledOnRavenwood(blockedBy = Handler.class)
     @Test
     public void testIsMainThread_mainThread() throws Exception {
         var settings = SyncCallbackFactory.newDefaultSettings();

@@ -213,6 +213,7 @@ java_library {
         "androidx.test.core",
         "framework-annotations-lib", // @VisibleForTesting
         "junit",
+        "ravenwood-junit",
         "truth",
     ],
     visibility: [
