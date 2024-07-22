@@ -16,26 +16,46 @@
 
 package com.android.adservices.service.measurement.util;
 
-import static com.android.adservices.service.measurement.util.JobLockHolder.Type.EVENT_REPORTING;
 import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.getConcurrencyHelper;
 import static com.android.adservices.shared.util.Preconditions.checkState;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import android.util.Log;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.shared.testing.concurrency.CallableSyncCallback;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
-public final class JobLockHolderTest extends AdServicesUnitTestCase {
+@MockStatic(LoggerFactory.class)
+public final class JobLockHolderTest extends AdServicesExtendedMockitoTestCase {
+
+    private static final JobLockHolder.Type sLockType = JobLockHolder.Type.EVENT_REPORTING;
+
+    @Mock private Runnable mMockRunnable;
+    @Mock private ReentrantLock mMockLock;
+
+    // TODO(b/333416758): use AdServicesLoggingUsageRule instead
+    @Mock private LoggerFactory.Logger mLogger;
 
     // NOTE: only checking before the test, as a failure on @After would hide the real test failure.
     @Before
@@ -56,6 +76,11 @@ public final class JobLockHolderTest extends AdServicesUnitTestCase {
                 "%d holders already locked before test: %s",
                 lockedHolders.size(),
                 lockedHolders);
+    }
+
+    @Before
+    public void setDefaultExpectations() {
+        doReturn(mLogger).when(() -> LoggerFactory.getMeasurementLogger());
     }
 
     @Test
@@ -79,7 +104,7 @@ public final class JobLockHolderTest extends AdServicesUnitTestCase {
 
     @Test
     public void testTryLockAndUnlock_sameThread() {
-        JobLockHolder holder = getFreshInstance(EVENT_REPORTING);
+        JobLockHolder holder = getFreshInstance(sLockType);
         boolean firstCall = holder.tryLock();
         assertWithMessage("1st call to %s.tryLock()", holder).that(firstCall).isTrue();
         assertWithMessage("%s.isLocked() after successful tryLock()", holder)
@@ -118,7 +143,7 @@ public final class JobLockHolderTest extends AdServicesUnitTestCase {
     @Test
     public void testTryLockAndUnlock_differentThreads() throws Exception {
         CallableSyncCallback<Boolean> callback = new CallableSyncCallback<>();
-        JobLockHolder holder = getFreshInstance(EVENT_REPORTING);
+        JobLockHolder holder = getFreshInstance(sLockType);
 
         boolean firstCall = holder.tryLock();
         assertWithMessage("1st call to %s.tryLock()", holder).that(firstCall).isTrue();
@@ -136,18 +161,139 @@ public final class JobLockHolderTest extends AdServicesUnitTestCase {
         assertWithMessage("%s.isLocked() after unlock()", holder).that(holder.isLocked()).isFalse();
     }
 
+    // TODO(b/354007915): once the deprecated methods are removed, use a mHolder below
+
+    @Test
+    public void testRunWithLock_null() {
+        JobLockHolder holder = new JobLockHolder(sLockType, mMockLock);
+
+        assertThrows(
+                NullPointerException.class, () -> holder.runWithLock(/* tag= */ null, () -> {}));
+        assertThrows(
+                NullPointerException.class, () -> holder.runWithLock(mTag, /* runnable= */ null));
+    }
+
+    @Test
+    public void testRunWithLock_success() {
+        mockAcquireLock(true);
+        JobLockHolder holder = new JobLockHolder(sLockType, mMockLock);
+
+        holder.runWithLock(mTag, mMockRunnable);
+
+        verify(mMockRunnable).run();
+        verify(mMockLock).unlock();
+        verifyErrorNeverLogged();
+    }
+
+    @Test
+    public void testRunWithLock_runableThrows() {
+        mockAcquireLock(true);
+        JobLockHolder holder = new JobLockHolder(sLockType, mMockLock);
+
+        RuntimeException exception = new RuntimeException("D'OH!");
+        doThrow(exception).when(mMockRunnable).run();
+
+        RuntimeException thrown =
+                assertThrows(RuntimeException.class, () -> holder.runWithLock(mTag, mMockRunnable));
+
+        expect.withMessage("thrown exception").that(thrown).isSameInstanceAs(exception);
+        verify(mMockLock).unlock();
+        verifyErrorNeverLogged();
+    }
+
+    @Test
+    public void testRunWithLock_failedToAcquireLock() {
+        mockAcquireLock(false);
+        JobLockHolder holder = new JobLockHolder(sLockType, mMockLock);
+
+        holder.runWithLock(mTag, mMockRunnable);
+
+        verify(mMockRunnable, never()).run();
+        verify(mMockLock, never()).unlock();
+        verify(mLogger).e("%s.runWithLock(%s) failed to acquire lock", mTag, sLockType);
+    }
+
+    @Test
+    public void testCallWithLock_null() {
+        JobLockHolder holder = new JobLockHolder(sLockType, mMockLock);
+
+        assertThrows(
+                NullPointerException.class,
+                () -> holder.callWithLock(/* tag= */ null, () -> this, /* failureResult= */ null));
+        assertThrows(
+                NullPointerException.class,
+                () -> holder.callWithLock(mTag, /* callable= */ null, /* failureResult= */ null));
+    }
+
+    @Test
+    public void testCallWithLock_success() {
+        mockAcquireLock(true);
+        JobLockHolder holder = new JobLockHolder(sLockType, mMockLock);
+
+        String result = holder.callWithLock(mTag, () -> "Saul Goodman!", /* failureResult= */ null);
+
+        expect.withMessage("result").that(result).isEqualTo("Saul Goodman!");
+        verify(mMockLock).unlock();
+        verifyErrorNeverLogged();
+    }
+
+    @Test
+    public void testCallWithLock_callableThrows() {
+        mockAcquireLock(true);
+        JobLockHolder holder = new JobLockHolder(sLockType, mMockLock);
+        RuntimeException exception = new RuntimeException("D'OH!");
+
+        RuntimeException thrown =
+                assertThrows(
+                        RuntimeException.class,
+                        () ->
+                                holder.callWithLock(
+                                        mTag,
+                                        () -> {
+                                            throw exception;
+                                        },
+                                        /* failureResult= */ null));
+
+        expect.withMessage("thrown exception").that(thrown).isSameInstanceAs(exception);
+
+        verify(mMockLock).unlock();
+        verifyErrorNeverLogged();
+    }
+
+    @Test
+    public void testCallWithLock_failedToAcquireLock() {
+        mockAcquireLock(false);
+        JobLockHolder holder = new JobLockHolder(sLockType, mMockLock);
+        String failureResult = "D'OH!";
+
+        String result =
+                holder.callWithLock(
+                        mTag,
+                        () -> {
+                            throw new UnsupportedOperationException("should not have been called");
+                        },
+                        failureResult);
+
+        expect.withMessage("result").that(result).isEqualTo(failureResult);
+        verify(mMockLock, never()).unlock();
+        verify(mLogger)
+                .e(
+                        "%s.callWithLock(%s) failed to acquire lock; returning %s",
+                        mTag, sLockType, failureResult);
+    }
+
     @Test
     public void testToString() throws Exception {
         String threadName = Thread.currentThread().getName();
 
-        JobLockHolder holder = getFreshInstance(EVENT_REPORTING);
+        JobLockHolder holder = getFreshInstance(sLockType);
         String toStringInitially = holder.toString();
         expect.withMessage("initial toString()")
                 .that(toStringInitially)
                 .startsWith("JobLockHolder");
         expect.withMessage("initial toString()")
                 .that(toStringInitially)
-                .contains("mType=" + EVENT_REPORTING);
+                .contains("mType=" + sLockType);
         expect.withMessage("initial toString()")
                 .that(toStringInitially)
                 .contains("isLocked()=false");
@@ -173,6 +319,17 @@ public final class JobLockHolderTest extends AdServicesUnitTestCase {
         expect.withMessage("initial toString()")
                 .that(toStringAfterUnlock)
                 .doesNotContain(threadName);
+    }
+
+    private void mockAcquireLock(boolean result) {
+        when(mMockLock.tryLock()).thenReturn(result);
+    }
+
+    // TODO(b/333416758): use AdServicesLoggingUsageRule instead
+    @SuppressWarnings("FormatStringAnnotation")
+    private void verifyErrorNeverLogged() {
+        verify(mLogger, never()).e(any(Throwable.class), any(String.class), any(Object[].class));
+        verify(mLogger, never()).e(any(String.class), any(Object[].class));
     }
 
     /** Gets an instance that should be unlocked (or fail if it isn't) */
