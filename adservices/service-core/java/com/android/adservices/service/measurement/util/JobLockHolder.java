@@ -97,11 +97,11 @@ public final class JobLockHolder {
         Logger logger = LoggerFactory.getMeasurementLogger();
         logger.v("%s.runWithLock(%s) started", tag, mType);
 
-        if (tryLock()) {
+        if (mLock.tryLock()) {
             try {
                 runnable.run();
             } finally {
-                unlock();
+                mLock.unlock();
             }
             return;
         }
@@ -125,11 +125,11 @@ public final class JobLockHolder {
         Logger logger = LoggerFactory.getMeasurementLogger();
         logger.v("%s.callWithLock(%s) started", tag, mType);
 
-        if (tryLock()) {
+        if (mLock.tryLock()) {
             try {
                 return callable.call();
             } finally {
-                unlock();
+                mLock.unlock();
             }
         }
 
@@ -139,49 +139,9 @@ public final class JobLockHolder {
         return failureResult;
     }
 
-    /**
-     * Tries to acquire the lock. Returns true if the lock was acquired successfully or false if it
-     * has already been acquired by another thread. If lock was acquired, at the end of processing,
-     * a call to {@link JobLockHolder#unlock()} will need to be made.
-     *
-     * @return a boolean determining if the lock was successfully acquired or not.
-     * @deprecated use {@link #runWithLock(String, Type, Runnable)} or {@link #callWithLock(String,
-     *     Type, UncheckedCallable, Object)} instead.
-     */
-    @Deprecated
-    public boolean tryLock() {
-        return mLock.tryLock();
-    }
-
-    /**
-     * Releases the lock that was previously acquired. It must be called after the lock has been
-     * successfully acquired.
-     *
-     * <p><b>Note: </b>the lock won't be unlocked until {@code unlock()} is called the same number
-     * of times that {@code tryLock()} is called and returns {@code true}.
-     *
-     * @deprecated use {@link #runWithLock(String, Type, Runnable)} or {@link #callWithLock(String,
-     *     Type, UncheckedCallable, Object)} instead.
-     */
-    @Deprecated
-    public void unlock() {
-        mLock.unlock();
-    }
-
-    @VisibleForTesting
-    boolean isLocked() {
-        return mLock.isLocked();
-    }
-
     @Override
     public String toString() {
-        return "JobLockHolder[mType="
-                + mType
-                + ", isLocked()="
-                + isLocked()
-                + ", mLock="
-                + mLock
-                + "]";
+        return "JobLockHolder[mType=" + mType + ", mLock=" + mLock + "]";
     }
 
     /**
