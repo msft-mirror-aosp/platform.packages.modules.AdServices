@@ -18,22 +18,16 @@ package com.android.adservices.shared.storage;
 
 import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
-import static com.android.adservices.shared.util.LogUtil.DEBUG;
-import static com.android.adservices.shared.util.LogUtil.VERBOSE;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
-import android.os.Build;
 import android.util.Pair;
 
-
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
-import com.android.adservices.shared.util.LogUtil;
 import com.android.modules.utils.build.SdkLevel;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.truth.IterableSubject;
 import com.google.common.truth.StringSubject;
@@ -49,8 +43,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@SpyStatic(Build.class)
-@SpyStatic(SdkLevel.class)
 public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCase {
     private static final String VALID_DIR = sContext.getFilesDir().getAbsolutePath();
     private static final String FILENAME = "BooleanFileDatastoreTest.xml";
@@ -131,9 +123,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
     public void testConstructor_parentPathDirectoryIsNotAFile() throws Exception {
         File file = new File(VALID_DIR, "file.IAm");
         String path = file.getAbsolutePath();
-        if (DEBUG) {
-            LogUtil.d("path: %s", path);
-        }
+        mLog.d("path: %s", path);
         assertWithMessage("Could not create file %s", path).that(file.createNewFile()).isTrue();
 
         try {
@@ -144,7 +134,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
                                     path, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY));
         } finally {
             if (!file.delete()) {
-                LogUtil.e("Could not delete file %s at the end", path);
+                mLog.e("Could not delete file %s at the end", path);
             }
         }
     }
@@ -423,26 +413,26 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
     }
 
     @Test
+    @MockStatic(SdkLevel.class)
     public void testDump_R() throws Exception {
         dumpTest(/* isAtleastS= */ false);
     }
 
     @Test
+    @MockStatic(SdkLevel.class)
     public void testDump_sPlus() throws Exception {
         dumpTest(/* isAtleastS= */ true);
     }
 
     private void dumpTest(boolean isAtleastS) throws Exception {
-        mockIsAtLeastS(isAtleastS);
+        mocker.mockIsAtLeastS(isAtleastS);
 
         String keyUnlikelyToBeOnDump = "I can't believe it's dumper!";
         mDatastore.put(keyUnlikelyToBeOnDump, true);
 
         String prefix = "_";
         String dump = dump(pw -> mDatastore.dump(pw, prefix));
-        if (DEBUG) {
-            LogUtil.d("Contents of dump: \n%s", dump);
-        }
+        mLog.d("Contents of dump: \n%s", dump);
 
         assertCommonDumpContents(dump, prefix);
 
@@ -507,12 +497,5 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         expect.withMessage("contents of dump() (TEST_VERSION_KEY)")
                 .that(dump)
                 .contains(TEST_VERSION_KEY);
-    }
-
-    private static void mockIsAtLeastS(boolean isIt) {
-        if (VERBOSE) {
-            LogUtil.v("mockIsAtLeastS(%b)", isIt);
-        }
-        doReturn(isIt).when(SdkLevel::isAtLeastS);
     }
 }
