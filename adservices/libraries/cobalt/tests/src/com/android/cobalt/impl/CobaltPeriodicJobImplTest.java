@@ -57,13 +57,11 @@ import com.google.cobalt.Observation;
 import com.google.cobalt.ObservationBatch;
 import com.google.cobalt.ObservationMetadata;
 import com.google.cobalt.ObservationToEncrypt;
-import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig;
-import com.google.cobalt.ReportParticipationObservation;
 import com.google.cobalt.StringHistogramObservation;
 import com.google.cobalt.SystemProfile;
 import com.google.cobalt.SystemProfileField;
@@ -769,22 +767,15 @@ public class CobaltPeriodicJobImplTest {
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setPrivateIndex(
-                                                                PrivateIndexObservation.newBuilder()
-                                                                        .setIndex(0))
-                                                        .setRandomId(RANDOM_BYTES)
-                                                        .build())
+                                                ObservationFactory.createPrivateIndexObservation(
+                                                        /* privateIndex= */ 0, RANDOM_BYTES))
                                         .setContributionId(RANDOM_BYTES)
                                         .build(),
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setReportParticipation(
-                                                                ReportParticipationObservation
-                                                                        .getDefaultInstance())
-                                                        .setRandomId(RANDOM_BYTES)
-                                                        .build())
+                                                ObservationFactory
+                                                        .createReportParticipationObservation(
+                                                                RANDOM_BYTES))
                                         .build()));
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
@@ -1368,30 +1359,22 @@ public class CobaltPeriodicJobImplTest {
                                 // Real observation.
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setPrivateIndex(
-                                                                PrivateIndexObservation.newBuilder()
-                                                                        .setIndex(10))
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory.createPrivateIndexObservation(
+                                                        /* privateIndex= */ 10, RANDOM_BYTES))
                                         .setContributionId(RANDOM_BYTES)
                                         .build(),
                                 // Fabricated observation.
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setPrivateIndex(
-                                                                PrivateIndexObservation.newBuilder()
-                                                                        .setIndex(9))
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory.createPrivateIndexObservation(
+                                                        /* privateIndex= */ 9, RANDOM_BYTES))
                                         .build(),
                                 // Report participation observation.
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setReportParticipation(
-                                                                ReportParticipationObservation
-                                                                        .getDefaultInstance())
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory
+                                                        .createReportParticipationObservation(
+                                                                RANDOM_BYTES))
                                         .build()),
                         baseMetadata.toBuilder()
                                 .setMetricId(stringMetric.getId())
