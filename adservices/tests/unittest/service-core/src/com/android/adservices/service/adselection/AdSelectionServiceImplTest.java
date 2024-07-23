@@ -11474,11 +11474,6 @@ public class AdSelectionServiceImplTest {
         }
 
         @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
-        }
-
-        @Override
         public float getSdkRequestPermitsPerSecond() {
             // Unlimited rate for unit tests to avoid flake in tests due to rate limiting
             return -1;
