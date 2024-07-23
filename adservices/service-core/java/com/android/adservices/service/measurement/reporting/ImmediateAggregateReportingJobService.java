@@ -101,33 +101,30 @@ public final class ImmediateAggregateReportingJobService extends JobService {
 
     @VisibleForTesting
     void processPendingReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(AGGREGATE_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                long maxAggregateReportUploadRetryWindowMs =
-                        FlagsFactory.getFlags()
-                                .getMeasurementMaxAggregateReportUploadRetryWindowMs();
-                DatastoreManager datastoreManager =
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-                new AggregateReportingJobHandler(
-                                datastoreManager,
-                                new AggregateEncryptionKeyManager(
-                                        datastoreManager, getApplicationContext()),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.AGGREGATE,
-                                ReportingStatus.UploadMethod.REGULAR,
-                                getApplicationContext())
-                        .performScheduledPendingReportsInWindow(
-                                System.currentTimeMillis() - maxAggregateReportUploadRetryWindowMs,
-                                System.currentTimeMillis());
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger()
-                .d(this.getClass().getSimpleName() + " did not acquire the lock");
+        JobLockHolder.getInstance(AGGREGATE_REPORTING)
+                .runWithLock(
+                        this.getClass().getSimpleName(),
+                        () -> {
+                            long maxAggregateReportUploadRetryWindowMs =
+                                    FlagsFactory.getFlags()
+                                            .getMeasurementMaxAggregateReportUploadRetryWindowMs();
+                            DatastoreManager datastoreManager =
+                                    DatastoreManagerFactory.getDatastoreManager(
+                                            getApplicationContext());
+                            new AggregateReportingJobHandler(
+                                            datastoreManager,
+                                            new AggregateEncryptionKeyManager(
+                                                    datastoreManager, getApplicationContext()),
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.ReportType.AGGREGATE,
+                                            ReportingStatus.UploadMethod.REGULAR,
+                                            getApplicationContext())
+                                    .performScheduledPendingReportsInWindow(
+                                            System.currentTimeMillis()
+                                                    - maxAggregateReportUploadRetryWindowMs,
+                                            System.currentTimeMillis());
+                        });
     }
 
     @Override

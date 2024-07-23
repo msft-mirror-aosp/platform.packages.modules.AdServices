@@ -19,10 +19,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
-import android.adservices.common.EnableAdServicesResponse;
 import android.content.Context;
 import android.os.OutcomeReceiver;
-import android.os.Parcel;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -246,62 +244,5 @@ public final class GaUxAlreadyEnrolledChannelTest
 
         AdservicesWorkflows.verifyNotification(
                 sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
-    }
-
-    @Test
-    public void testAdServicesStatesCoverages() {
-        AdServicesStates adServicesStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(false)
-                        .setAdultAccount(true)
-                        .setU18Account(false)
-                        .setPrivacySandboxUiRequest(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        Parcel parcel = Parcel.obtain();
-        try {
-            adServicesStates.writeToParcel(parcel, 0);
-            parcel.setDataPosition(0);
-
-            AdServicesStates createdParams = AdServicesStates.CREATOR.createFromParcel(parcel);
-            assertThat(createdParams.describeContents()).isEqualTo(0);
-            assertThat(createdParams).isNotSameInstanceAs(adServicesStates);
-            assertThat(createdParams.isAdIdEnabled()).isFalse();
-            assertThat(createdParams.isAdultAccount()).isTrue();
-            assertThat(createdParams.isU18Account()).isFalse();
-            assertThat(createdParams.isPrivacySandboxUiEnabled()).isTrue();
-            assertThat(createdParams.isPrivacySandboxUiRequest()).isTrue();
-        } finally {
-            parcel.recycle();
-        }
-    }
-
-    @Test
-    public void testEnableAdservicesResponseCoverages() {
-        EnableAdServicesResponse response =
-                new EnableAdServicesResponse.Builder()
-                        .setApiEnabled(true)
-                        .setErrorMessage("No Error")
-                        .setStatusCode(200)
-                        .setSuccess(true)
-                        .build();
-
-        Parcel parcel = Parcel.obtain();
-
-        try {
-            response.writeToParcel(parcel, 0);
-            parcel.setDataPosition(0);
-
-            EnableAdServicesResponse createdParams =
-                    EnableAdServicesResponse.CREATOR.createFromParcel(parcel);
-            assertThat(createdParams.describeContents()).isEqualTo(0);
-            assertThat(createdParams).isNotSameInstanceAs(response);
-            assertThat(createdParams.isApiEnabled()).isTrue();
-            assertThat(createdParams.isSuccess()).isTrue();
-            assertThat(createdParams.toString()).isEqualTo(response.toString());
-        } finally {
-            parcel.recycle();
-        }
     }
 }

@@ -192,25 +192,21 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
 
     @VisibleForTesting
     void sendReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                DatastoreManager datastoreManager =
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-                new DebugReportingJobHandler(
-                                datastoreManager,
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.UploadMethod.FALLBACK,
-                                getApplicationContext())
-                        .performScheduledPendingReports();
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger()
-                .d("VerboseDebugReportingFallbackJobService did not acquire the lock");
+        JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING)
+                .runWithLock(
+                        "VerboseDebugReportingFallbackJobService",
+                        () -> {
+                            DatastoreManager datastoreManager =
+                                    DatastoreManagerFactory.getDatastoreManager(
+                                            getApplicationContext());
+                            new DebugReportingJobHandler(
+                                            datastoreManager,
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.UploadMethod.FALLBACK,
+                                            getApplicationContext())
+                                    .performScheduledPendingReports();
+                        });
     }
 
     @VisibleForTesting

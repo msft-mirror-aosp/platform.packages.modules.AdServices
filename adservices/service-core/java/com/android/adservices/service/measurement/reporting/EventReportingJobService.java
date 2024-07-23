@@ -96,28 +96,26 @@ public final class EventReportingJobService extends JobService {
 
     @VisibleForTesting
     void processPendingReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(EVENT_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                long maxEventReportUploadRetryWindowMs =
-                        FlagsFactory.getFlags().getMeasurementMaxEventReportUploadRetryWindowMs();
-                new EventReportingJobHandler(
-                                DatastoreManagerFactory.getDatastoreManager(
-                                        getApplicationContext()),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.EVENT,
-                                ReportingStatus.UploadMethod.REGULAR,
-                                getApplicationContext())
-                        .performScheduledPendingReportsInWindow(
-                                System.currentTimeMillis() - maxEventReportUploadRetryWindowMs,
-                                System.currentTimeMillis());
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger().d("EventReportingJobService did not acquire the lock");
+        JobLockHolder.getInstance(EVENT_REPORTING)
+                .runWithLock(
+                        "EventReportingJobService",
+                        () -> {
+                            long maxEventReportUploadRetryWindowMs =
+                                    FlagsFactory.getFlags()
+                                            .getMeasurementMaxEventReportUploadRetryWindowMs();
+                            new EventReportingJobHandler(
+                                            DatastoreManagerFactory.getDatastoreManager(
+                                                    getApplicationContext()),
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.ReportType.EVENT,
+                                            ReportingStatus.UploadMethod.REGULAR,
+                                            getApplicationContext())
+                                    .performScheduledPendingReportsInWindow(
+                                            System.currentTimeMillis()
+                                                    - maxEventReportUploadRetryWindowMs,
+                                            System.currentTimeMillis());
+                        });
     }
 
     @Override

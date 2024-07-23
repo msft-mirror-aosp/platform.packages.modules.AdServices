@@ -20,6 +20,8 @@ import com.android.cobalt.data.EventVector;
 
 import com.google.cobalt.IntegerObservation;
 import com.google.cobalt.Observation;
+import com.google.cobalt.PrivateIndexObservation;
+import com.google.cobalt.ReportParticipationObservation;
 import com.google.protobuf.ByteString;
 
 public final class ObservationFactory {
@@ -56,6 +58,23 @@ public final class ObservationFactory {
                                         IntegerObservation.Value.newBuilder()
                                                 .addAllEventCodes(eventVector2.eventCodes())
                                                 .setValue(countValue2)))
+                .build();
+    }
+
+    /** Create a PrivateIndexObservation for the privateIndex. */
+    public static Observation createPrivateIndexObservation(
+            long privateIndex, ByteString randomId) {
+        return Observation.newBuilder()
+                .setRandomId(randomId)
+                .setPrivateIndex(PrivateIndexObservation.newBuilder().setIndex(privateIndex))
+                .build();
+    }
+
+    /** Create a ReportParticipationObservation. */
+    public static Observation createReportParticipationObservation(ByteString randomId) {
+        return Observation.newBuilder()
+                .setRandomId(randomId)
+                .setReportParticipation(ReportParticipationObservation.getDefaultInstance())
                 .build();
     }
 }
