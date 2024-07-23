@@ -18,6 +18,7 @@ package com.android.cobalt.testing.observations;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.cobalt.data.EventVector;
 
 import com.google.cobalt.IntegerObservation;
@@ -26,7 +27,7 @@ import com.google.protobuf.ByteString;
 
 import org.junit.Test;
 
-public final class ObservationFactoryTest {
+public final class ObservationFactoryTest extends AdServicesUnitTestCase {
     private static final EventVector EVENT_VECTOR_1 = EventVector.create(1, 5);
     private static final EventVector EVENT_VECTOR_2 = EventVector.create(2, 6);
     private static final ByteString RANDOM_BYTES =
@@ -37,9 +38,12 @@ public final class ObservationFactoryTest {
         Observation observation =
                 ObservationFactory.createIntegerObservation(
                         EVENT_VECTOR_1, /* countValue= */ 5, RANDOM_BYTES);
-        assertThat(observation.getRandomId()).isEqualTo(RANDOM_BYTES);
+        expect.withMessage("observation.getRandomId()")
+                .that(observation.getRandomId())
+                .isEqualTo(RANDOM_BYTES);
         assertThat(observation.hasInteger()).isTrue();
-        assertThat(observation.getInteger().getValuesList())
+        expect.withMessage("observation.getInteger().getValuesList()")
+                .that(observation.getInteger().getValuesList())
                 .containsExactly(
                         IntegerObservation.Value.newBuilder()
                                 .addAllEventCodes(EVENT_VECTOR_1.eventCodes())
@@ -56,9 +60,12 @@ public final class ObservationFactoryTest {
                         EVENT_VECTOR_2,
                         /* countValue2= */ 7,
                         RANDOM_BYTES);
-        assertThat(observation.getRandomId()).isEqualTo(RANDOM_BYTES);
+        expect.withMessage("observation.getRandomId()")
+                .that(observation.getRandomId())
+                .isEqualTo(RANDOM_BYTES);
         assertThat(observation.hasInteger()).isTrue();
-        assertThat(observation.getInteger().getValuesList())
+        expect.withMessage("observation.getInteger().getValuesList()")
+                .that(observation.getInteger().getValuesList())
                 .containsExactly(
                         IntegerObservation.Value.newBuilder()
                                 .addAllEventCodes(EVENT_VECTOR_1.eventCodes())
@@ -68,5 +75,31 @@ public final class ObservationFactoryTest {
                                 .addAllEventCodes(EVENT_VECTOR_2.eventCodes())
                                 .setValue(7)
                                 .build());
+    }
+
+    @Test
+    public void testCreatePrivateIndexObservation() throws Exception {
+        Observation observation =
+                ObservationFactory.createPrivateIndexObservation(
+                        /* privateIndex= */ 5, RANDOM_BYTES);
+        expect.withMessage("observation.getRandomId()")
+                .that(observation.getRandomId())
+                .isEqualTo(RANDOM_BYTES);
+        assertThat(observation.hasPrivateIndex()).isTrue();
+        expect.withMessage("observation.getPrivateIndex().getIndex()")
+                .that(observation.getPrivateIndex().getIndex())
+                .isEqualTo(5);
+    }
+
+    @Test
+    public void testCreateReportParticipationObservation() throws Exception {
+        Observation observation =
+                ObservationFactory.createReportParticipationObservation(RANDOM_BYTES);
+        expect.withMessage("observation.getRandomId()")
+                .that(observation.getRandomId())
+                .isEqualTo(RANDOM_BYTES);
+        expect.withMessage("observation.hasReportParticipation()")
+                .that(observation.hasReportParticipation())
+                .isTrue();
     }
 }

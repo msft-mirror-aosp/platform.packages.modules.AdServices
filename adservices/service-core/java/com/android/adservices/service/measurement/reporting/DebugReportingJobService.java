@@ -160,37 +160,34 @@ public final class DebugReportingJobService extends JobService {
 
     @VisibleForTesting
     void sendReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(DEBUG_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                DatastoreManager datastoreManager =
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-                new EventReportingJobHandler(
-                                datastoreManager,
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.DEBUG_EVENT,
-                                ReportingStatus.UploadMethod.REGULAR,
-                                getApplicationContext())
-                        .setIsDebugInstance(true)
-                        .performScheduledPendingReportsInWindow(0, 0);
-                new AggregateReportingJobHandler(
-                                datastoreManager,
-                                new AggregateEncryptionKeyManager(
-                                        datastoreManager, getApplicationContext()),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.DEBUG_AGGREGATE,
-                                ReportingStatus.UploadMethod.REGULAR,
-                                getApplicationContext())
-                        .setIsDebugInstance(true)
-                        .performScheduledPendingReportsInWindow(0, 0);
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger().d("DebugReportingJobService did not acquire the lock");
+        JobLockHolder.getInstance(DEBUG_REPORTING)
+                .runWithLock(
+                        "DebugReportingJobService",
+                        () -> {
+                            DatastoreManager datastoreManager =
+                                    DatastoreManagerFactory.getDatastoreManager(
+                                            getApplicationContext());
+                            new EventReportingJobHandler(
+                                            datastoreManager,
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.ReportType.DEBUG_EVENT,
+                                            ReportingStatus.UploadMethod.REGULAR,
+                                            getApplicationContext())
+                                    .setIsDebugInstance(true)
+                                    .performScheduledPendingReportsInWindow(0, 0);
+                            new AggregateReportingJobHandler(
+                                            datastoreManager,
+                                            new AggregateEncryptionKeyManager(
+                                                    datastoreManager, getApplicationContext()),
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.ReportType.DEBUG_AGGREGATE,
+                                            ReportingStatus.UploadMethod.REGULAR,
+                                            getApplicationContext())
+                                    .setIsDebugInstance(true)
+                                    .performScheduledPendingReportsInWindow(0, 0);
+                        });
     }
 
     @VisibleForTesting
