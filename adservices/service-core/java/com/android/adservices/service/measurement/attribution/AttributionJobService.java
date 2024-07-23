@@ -52,7 +52,7 @@ import java.util.concurrent.Future;
  * Service for scheduling attribution jobs. The actual job execution logic is part of {@link
  * AttributionJobHandler}.
  */
-public class AttributionJobService extends JobService {
+public final class AttributionJobService extends JobService {
     private static final int MEASUREMENT_ATTRIBUTION_JOB_ID =
             MEASUREMENT_ATTRIBUTION_JOB.getJobId();
     private static final ListeningExecutorService sBackgroundExecutor =
@@ -134,17 +134,13 @@ public class AttributionJobService extends JobService {
 
     @VisibleForTesting
     ProcessingResult acquireLockAndProcessPendingAttributions() {
-        final JobLockHolder lock = JobLockHolder.getInstance(ATTRIBUTION_PROCESSING);
-        if (lock.tryLock()) {
-            try {
-                return processPendingAttributions();
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger().d("AttributionJobService did not acquire the lock");
-        // Another thread is already processing attribution. Returning success to not reschedule.
-        return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
+        return JobLockHolder.getInstance(ATTRIBUTION_PROCESSING)
+                .callWithLock(
+                        "AttributionJobService",
+                        () -> processPendingAttributions(),
+                        // Another thread is already processing attribution.
+                        // Returning success to not reschedule.
+                        ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED);
     }
 
     @VisibleForTesting
