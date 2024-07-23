@@ -83,6 +83,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 "fenced.json",
                 "filter_data_validation.json",
                 "header_presence.json",
+                "lookback_window_precision.json",
                 "max_trigger_state_cardinality.json",
                 "null_aggregatable_report.json",
                 "os_debug_reports.json",
@@ -219,7 +220,10 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     "true"),
             entry(
                     FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM,
-                    "1"));
+                    "1"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER,
+                    "true"));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
