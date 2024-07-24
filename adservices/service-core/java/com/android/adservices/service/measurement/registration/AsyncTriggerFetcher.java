@@ -522,7 +522,7 @@ public class AsyncTriggerFetcher {
             }
         }
 
-        asyncRedirects.configure(headers, mFlags, asyncRegistration);
+        asyncRedirects.configure(headers, asyncRegistration);
 
         if (!isTriggerHeaderPresent(headers)) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);

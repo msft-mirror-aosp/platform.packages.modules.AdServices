@@ -27,10 +27,12 @@ import java.util.List;
 public class UriConfig {
     private final boolean mShouldEnroll;
     private final List<int[]> mFakeReportConfigs;
+    private final List<Long> mNullAggregatableReportsDays;
 
     public UriConfig(JSONObject configObj) throws JSONException {
         mShouldEnroll = configObj.optBoolean(E2EAbstractTest.TestFormatJsonMapping.ENROLL, true);
         mFakeReportConfigs = E2EAbstractTest.getFakeReportConfigs(configObj);
+        mNullAggregatableReportsDays = E2EAbstractTest.getNullAggregatableReportsDays(configObj);
     }
 
     /** Should the URL be enrolled before the request. */
@@ -41,5 +43,10 @@ public class UriConfig {
     /** Returns noised report configs. */
     public List<int[]> getFakeReportConfigs() {
         return mFakeReportConfigs;
+    }
+
+    /** Returns null aggregatable reports days. */
+    public List<Long> getNullAggregatableReportsDays() {
+        return mNullAggregatableReportsDays;
     }
 }

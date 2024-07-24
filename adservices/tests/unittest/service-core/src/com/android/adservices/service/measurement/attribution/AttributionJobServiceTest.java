@@ -192,6 +192,8 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
 
                     assertTrue(result);
 
+                    mSpyService.getFutureForTesting().get();
+
                     ExtendedMockito.verify(
                             () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)),
                             timeout(WAIT_IN_MILLIS).atLeast(1));
@@ -258,11 +260,15 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
                             .when(mSpyService)
                             .acquireLockAndProcessPendingAttributions();
 
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
                     // Execute
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
-
                     // Validate, reschedule job with jobFinished
                     assertTrue(result);
+                    callback.assertJobFinished();
+                    mSpyService.getFutureForTesting().get();
+
                     // recordJobFinished
                     verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
                             .recordJobFinished(
@@ -275,6 +281,16 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
                             () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
                             never());
                     verify(mSpyService, never()).scheduleImmediately(any());
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)),
+                            times(1));
+                    ExtendedMockito.verify(
+                            () ->
+                                    ImmediateAggregateReportingJobService.scheduleIfNeeded(
+                                            any(), eq(false)),
+                            never());
+                    ExtendedMockito.verify(
+                            () -> ReportingJobService.scheduleIfNeeded(any(), eq(false)), never());
                 });
     }
 
@@ -305,6 +321,7 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
                     // Execute
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
 
+                    mSpyService.getFutureForTesting().get();
                     // Validate, do not reschedule with jobFinished, but reschedule manually
                     assertTrue(result);
 
@@ -313,7 +330,9 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
                                     eq(MEASUREMENT_ATTRIBUTION_JOB_ID),
                                     /* isSuccessful= */ eq(true),
                                     /* shouldRetry= */ eq(false));
-                    verify(mSpyService, never()).jobFinished(any(), anyBoolean());
+                    // verify jobFinished is not called with wantsReschedule == true, which only
+                    // happens in failure cases.
+                    verify(mSpyService, never()).jobFinished(any(), eq(true));
                     ExtendedMockito.verify(
                             () -> AttributionJobService.scheduleIfNeeded(any(), eq(true)),
                             timeout(WAIT_IN_MILLIS).times(1));
@@ -351,6 +370,8 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
                     // Execute
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
 
+                    mSpyService.getFutureForTesting().get();
+
                     // Validate, do not reschedule with jobFinished, but reschedule immediately
                     assertTrue(result);
                     verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
@@ -358,7 +379,9 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
                                     eq(MEASUREMENT_ATTRIBUTION_JOB_ID),
                                     /* isSuccessful= */ eq(true),
                                     /* shouldRetry= */ eq(true));
-                    verify(mSpyService, never()).jobFinished(any(), anyBoolean());
+                    // verify jobFinished is not called with wantsReschedule == true, which only
+                    // happens in failure cases.
+                    verify(mSpyService, never()).jobFinished(any(), eq(true));
                     ExtendedMockito.verify(
                             () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
                             never());

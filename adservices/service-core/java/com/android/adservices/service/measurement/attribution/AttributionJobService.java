@@ -122,12 +122,14 @@ public final class AttributionJobService extends JobService {
                             DebugReportingJobService.scheduleIfNeeded(
                                     getApplicationContext(), /* forceSchedule */ false);
 
-                            // TODO(b/342687685): fold this service into ReportingJobService
-                            ImmediateAggregateReportingJobService.scheduleIfNeeded(
-                                    getApplicationContext(), /* forceSchedule */ false);
+                            if (isSuccessful) {
+                                // TODO(b/342687685): fold this service into ReportingJobService
+                                ImmediateAggregateReportingJobService.scheduleIfNeeded(
+                                        getApplicationContext(), /* forceSchedule */ false);
 
-                            ReportingJobService.scheduleIfNeeded(
-                                    getApplicationContext(), /* forceSchedule */ false);
+                                ReportingJobService.scheduleIfNeeded(
+                                        getApplicationContext(), /* forceSchedule */ false);
+                            }
                         });
         return true;
     }

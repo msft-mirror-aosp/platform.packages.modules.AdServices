@@ -21,6 +21,8 @@ import static android.view.MotionEvent.obtain;
 
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.measurement.reporting.AggregateReportSender.AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
@@ -208,6 +210,7 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
         String RANDOMIZED_RESPONSE_KEY = "randomized_response";
         String RANDOMIZED_RESPONSE_TRIGGER_DATA_KEY = "trigger_data";
         String RANDOMIZED_RESPONSE_REPORT_WINDOW_INDEX_KEY = "report_window_index";
+        String NULL_AGGREGATABLE_REPORTS_DAYS_KEY = "null_aggregatable_reports_days";
         String INPUT_EVENT_KEY = "source_type";
         String SOURCE_VIEW_TYPE = "event";
         String INTEROP_INPUT_EVENT_KEY = "Attribution-Reporting-Eligible";
@@ -427,6 +430,23 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
         }
 
         return fakeReportConfigs;
+    }
+
+    /** Get null aggregatable reports days for the trigger. */
+    public static List<Long> getNullAggregatableReportsDays(JSONObject obj) throws JSONException {
+        if (obj.isNull(TestFormatJsonMapping.NULL_AGGREGATABLE_REPORTS_DAYS_KEY)) {
+            return null;
+        }
+
+        List<Long> nullAggregatableReportsDays = new ArrayList<>();
+        JSONArray nullAggregatableReportsDaysArray =
+                obj.getJSONArray(TestFormatJsonMapping.NULL_AGGREGATABLE_REPORTS_DAYS_KEY);
+
+        for (int i = 0; i < nullAggregatableReportsDaysArray.length(); i++) {
+            nullAggregatableReportsDays.add(nullAggregatableReportsDaysArray.getLong(i));
+        }
+
+        return nullAggregatableReportsDays;
     }
 
     /** Get configuration object for the registration */
@@ -1270,6 +1290,22 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
                 phFlagsMap.put(
                         KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
                         apiConfigObj.optString(key));
+            } else if (key.equals("aggregation_coordinator_origins")) {
+                List<String> origins = new ArrayList<>();
+                try {
+                    JSONArray originsArray = apiConfigObj.getJSONArray(key);
+                    for (int i = 0; i < originsArray.length(); i++) {
+                        origins.add(originsArray.getString(i));
+                    }
+                } catch (JSONException e) {
+                    Log.i(LOG_TAG, "Exception parsing aggregation_coordinator_origins. " + e);
+                }
+                phFlagsMap.put(
+                        KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                        origins.get(0));
+                phFlagsMap.put(
+                        KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
+                        String.join(",", origins));
             } else {
                 phFlagsMap.put(apiConfigPhFlags.get(key), apiConfigObj.optString(key));
             }

@@ -18,6 +18,7 @@ package com.android.cobalt.registry;
 
 import static com.google.cobalt.MetricDefinition.MetricType.OCCURRENCE;
 import static com.google.cobalt.MetricDefinition.MetricType.STRING;
+import static com.google.cobalt.ReleaseStage.RELEASE_STAGE_NOT_SET;
 import static com.google.cobalt.ReportDefinition.LocalAggregationProcedure.LOCAL_AGGREGATION_PROCEDURE_UNSET;
 import static com.google.cobalt.ReportDefinition.PrivacyMechanism.DE_IDENTIFICATION;
 import static com.google.cobalt.ReportDefinition.PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY;
@@ -34,6 +35,7 @@ import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricDimension;
 import com.google.cobalt.MetricDefinition.MetricType;
+import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
@@ -192,9 +194,17 @@ public final class RegistryValidator {
             return false;
         }
 
+        if (!validateMaxReleaseStages(
+                metric.getMetaData().getMaxReleaseStage(), report.getMaxReleaseStage())) {
+            logValidationFailure(
+                    "Metric max release stage (%s) and report max release stage (%s) failed"
+                            + " validation",
+                    metric.getMetaData().getMaxReleaseStage(), report.getMaxReleaseStage());
+            return false;
+        }
+
         // TODO(b/343722587): Add remaining validations from the Cobalt config validator. This
         // includes:
-        //   * max release stage (set and report's is less than metric's)
         //   * report specific validations
 
         return true;
@@ -381,6 +391,16 @@ public final class RegistryValidator {
         }
 
         return numPrivateIndices < (long) Integer.MAX_VALUE;
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateMaxReleaseStages(
+            ReleaseStage metricMaxReleaseStage, ReleaseStage reportMaxReleaseStage) {
+        if (reportMaxReleaseStage.equals(RELEASE_STAGE_NOT_SET)) {
+            return true;
+        }
+
+        return reportMaxReleaseStage.getNumber() <= metricMaxReleaseStage.getNumber();
     }
 
     private static void logValidationFailure(String format, Object... params) {

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_ENCRYPTION_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR;
@@ -390,7 +391,8 @@ public class AggregateReportingJobHandler {
                         ? null
                         : String.valueOf(
                                 TimeUnit.MILLISECONDS.toSeconds(
-                                        aggregateReport.getSourceRegistrationTime()));
+                                        roundDownToDay(
+                                                aggregateReport.getSourceRegistrationTime())));
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
                 .setAttributionDestination(aggregateReport.getAttributionDestination().toString())

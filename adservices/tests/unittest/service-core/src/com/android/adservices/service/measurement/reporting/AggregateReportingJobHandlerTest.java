@@ -1390,6 +1390,40 @@ public class AggregateReportingJobHandlerTest {
     }
 
     @Test
+    public void testCreateReportJsonPayload_roundSourceRegistrationTime() throws JSONException {
+        long unroundedSourceRegistrationTime = 1674000000001L;
+        String debugCleartextPayload =
+                "{\"operation\":\"histogram\","
+                        + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
+                        + "\"value\":1664}]}";
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId("aggregateReportId")
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_URI)
+                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceRegistrationTime(unroundedSourceRegistrationTime)
+                        .setDebugCleartextPayload(debugCleartextPayload)
+                        .build();
+
+        JSONObject reportJson =
+                mSpyAggregateReportingJobHandler.createReportJsonPayload(
+                        aggregateReport, REPORTING_URI, AggregateCryptoFixture.getKey());
+
+        JSONObject sharedInfo =
+                new JSONObject(
+                        reportJson.getString(AggregateReportBody.PayloadBodyKeys.SHARED_INFO));
+
+        assertEquals(
+                "1674000000",
+                sharedInfo.getString(AggregateReportBody.SharedInfoKeys.SOURCE_REGISTRATION_TIME));
+    }
+
+    @Test
     public void testSendReportSuccess_webDestination_hasTriggerDebugHeaderTrue()
             throws DatastoreException, IOException, JSONException {
         setUpTestForTriggerDebugAvailableHeader(

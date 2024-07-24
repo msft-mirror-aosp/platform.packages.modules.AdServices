@@ -381,7 +381,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_MAX_AGGREG
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_PREINSTALL_CHECK;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_UNACCOUNTED_EXCEPTION;
@@ -867,7 +866,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_PREINSTALL_CHECK;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_CRYPTO_EXCEPTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REPORTING_JOBS_THROW_JSON_EXCEPTION;
@@ -4903,15 +4901,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK,
                 Flags::getMsmtEnableApiStatusAllowListCheck);
     }
-
-    @Test
-    public void testGetMeasurementEnableRedirectToWellKnownPath() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH,
-                MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH,
-                Flags::getMeasurementEnableRedirectToWellKnownPath);
-    }
-
     @Test
     public void testGetMeasurementEnableMaxAggregateReportsPerSource() {
         mFlagsTestHelper.testConfigFlag(

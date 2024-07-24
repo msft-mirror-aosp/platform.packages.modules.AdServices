@@ -16,13 +16,21 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static org.mockito.ArgumentMatchers.anyFloat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.spy;
 
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.actions.UriConfig;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.stats.AdServicesLogger;
+
+import org.mockito.Mockito;
+
+import java.util.List;
 
 /**
  * A wrapper class to expose a constructor for AttributionJobHandler in testing.
@@ -38,18 +46,33 @@ public class AttributionJobHandlerWrapper {
             SourceNoiseHandler sourceNoiseHandler,
             AdServicesLogger logger) {
         this.mAttributionJobHandler =
-                new AttributionJobHandler(
+                spy(new AttributionJobHandler(
                         datastoreManager,
                         flags,
                         debugReportApi,
                         eventReportWindowCalcDelegate,
                         sourceNoiseHandler,
                         logger,
-                        new XnaSourceCreator(flags));
+                        new XnaSourceCreator(flags)));
     }
 
+    /** Perform attribution. */
     public boolean performPendingAttributions() {
         return AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED
                 == mAttributionJobHandler.performPendingAttributions();
+    }
+
+    /** Prepare noising related to aggregate reports. */
+    public void prepareAggregateReportNoising(UriConfig uriConfig) {
+        List<Long> nullAggregatableReportsDays = uriConfig.getNullAggregatableReportsDays();
+        if (nullAggregatableReportsDays == null) {
+            return;
+        }
+        if (nullAggregatableReportsDays.contains(0L)) {
+            Mockito.doReturn(-1.0D).when(mAttributionJobHandler).getRandom();
+        }
+        Mockito.doReturn(nullAggregatableReportsDays)
+                .when(mAttributionJobHandler)
+                        .getNullAggregatableReportsDays(anyLong(), anyFloat());
     }
 }

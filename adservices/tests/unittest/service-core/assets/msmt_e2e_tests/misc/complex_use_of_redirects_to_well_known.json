@@ -1,8 +1,5 @@
 {
   "description": "7 (5 registering & 2 non-registering) redirects each for source & triggers. Redirection to .well-known path is enabled intermediately, making all subsequent Location-type registrations redirect to the .well-known path, even without the header. All 5 sources and triggers match. Event report task within the expiry window sends the data corresponding to the 5 sources.",
-  "phflags_override": {
-    "measurement_enable_redirect_to_well_known_path": "true"
-  },
   "input": {
     "sources": [{
       "registration_request": {
