@@ -306,23 +306,19 @@ class AttributionJobHandler {
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.RATE_LIMIT_EXCEEDED);
+                        generateNullAggregateReportForNonAttributedTrigger(
+                                measurementDao, trigger, attributionStatus);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
 
                     TriggeringStatus aggregateTriggeringStatus =
                             maybeGenerateAggregateReport(
-                                    source,
-                                    trigger,
-                                    measurementDao,
-                                    attributionStatus);
+                                    source, trigger, measurementDao, attributionStatus);
 
                     TriggeringStatus eventTriggeringStatus =
                             maybeGenerateEventReport(
-                                    source,
-                                    trigger,
-                                    measurementDao,
-                                    attributionStatus);
+                                    source, trigger, measurementDao, attributionStatus);
 
                     if (aggregateTriggeringStatus == TriggeringStatus.DROPPED) {
                         generateNullAggregateReportForNonAttributedTrigger(
@@ -1645,7 +1641,7 @@ class AttributionJobHandler {
         } else {
             LoggerFactory.getMeasurementLogger()
                     .d(
-                            "isEnrollmentWithinPrivacyBounds:"
+                            "isReportingOriginWithinPrivacyBounds:"
                                     + " getPublisherAndDestinationTopPrivateDomains failed. %s %s",
                             source.getPublisher(), trigger.getAttributionDestination());
             return true;
