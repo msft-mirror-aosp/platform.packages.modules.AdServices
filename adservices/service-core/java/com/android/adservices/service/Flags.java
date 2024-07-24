@@ -830,6 +830,47 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
     }
 
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION = 11.55F;
+
+    /** Returns max information gain for navigation sources with attribution scopes. */
+    default float getMeasurementAttributionScopeMaxInfoGainNavigation() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+    }
+
+    @ConfigFlag
+    float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION = 11.55F;
+
+    /**
+     * Returns max information gain for navigation sources with dual destination and attribution
+     * scopes.
+     */
+    default float getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
+    }
+
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT = 6.5F;
+
+    /** Returns max information gain for event sources with attribution scopes. */
+    default float getMeasurementAttributionScopeMaxInfoGainEvent() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
+    }
+
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT = 6.5F;
+
+    /**
+     * Returns max information gain for event sources with dual destination and attribution scopes.
+     */
+    default float getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME = false;
+
+    /** Returns true if fake report trigger time is enabled. */
+    default boolean getMeasurementEnableFakeReportTriggerTime() {
+        return MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
+    }
+
     long MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION = (1L << 32) - 1L;
 
     /** Returns max repot states per source registration */
@@ -4863,6 +4904,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
     }
 
+    /** Flag for enabling measurement event level epsilon in source */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE = false;
+
+    /** Returns true if measurement event level epsilon in source is enabled */
+    default boolean getMeasurementEnableEventLevelEpsilonInSource() {
+        return MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE;
+    }
+
     @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY = false;
 
     default boolean getMeasurementEnableSourceDestinationLimitPriority() {
@@ -5668,6 +5717,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the default value of the enablement of adservices business logic migration. */
     default boolean getAdServicesConsentBusinessLogicMigrationEnabled() {
         return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+    }
+
+    /** Default value for the enablement the R notification default consent fix. */
+    @FeatureFlag boolean DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED = false;
+
+    /** Returns the default value for the enablement the R notification default consent fix */
+    default boolean getRNotificationDefaultConsentFixEnabled() {
+        return DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
     }
 
     /** Enrollment Manifest File URL, used to provide proto file for MDD download. */
