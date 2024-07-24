@@ -1352,10 +1352,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK =
             "measurement_enable_api_status_allow_list_check";
-
-    public static final String KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH =
-            "measurement_enable_redirect_to_well_known_path";
-
     public static final String KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE =
             "measurement_enable_attribution_scope";
 

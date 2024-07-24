@@ -787,7 +787,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate only 'location' type header
@@ -823,7 +822,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -870,7 +868,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate behavior config header, but no redirects.
@@ -901,7 +898,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate behavior config header, but no Location type redirect.
@@ -942,7 +938,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -975,7 +970,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(

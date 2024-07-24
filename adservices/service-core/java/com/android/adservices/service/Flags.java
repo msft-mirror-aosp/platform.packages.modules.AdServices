@@ -4848,16 +4848,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
     }
 
-    /**
-     * Flag to control whether redirect registration urls should be modified to prefix the path
-     * string with .well-known
-     */
-    boolean MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH = false;
-
-    default boolean getMeasurementEnableRedirectToWellKnownPath() {
-        return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
-    }
-
     @ConfigFlag
     long MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS = TimeUnit.DAYS.toSeconds(90);
 
