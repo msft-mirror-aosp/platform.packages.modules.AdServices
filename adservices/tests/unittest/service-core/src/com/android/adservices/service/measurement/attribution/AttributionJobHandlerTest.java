@@ -1462,7 +1462,7 @@ public class AttributionJobHandlerTest {
                                                                 .setValue(1644)
                                                                 .build()))
                                         .build())
-                        .setSourceRegistrationTime(roundDownToDay(SOURCE_TIME))
+                        .setSourceRegistrationTime(SOURCE_TIME)
                         .setIsFakeReport(false)
                         .build();
 
@@ -2713,7 +2713,7 @@ public class AttributionJobHandlerTest {
                                                                 .setValue(1644)
                                                                 .build()))
                                         .build())
-                        .setSourceRegistrationTime(roundDownToDay(SOURCE_TIME))
+                        .setSourceRegistrationTime(SOURCE_TIME)
                         .build();
 
         when(mMeasurementDao.getPendingTriggerIds())
@@ -2883,7 +2883,7 @@ public class AttributionJobHandlerTest {
                                                                 .setValue(1644)
                                                                 .build()))
                                         .build())
-                        .setSourceRegistrationTime(roundDownToDay(SOURCE_TIME))
+                        .setSourceRegistrationTime(SOURCE_TIME)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2956,7 +2956,7 @@ public class AttributionJobHandlerTest {
                                                                 .setValue(1644)
                                                                 .build()))
                                         .build())
-                        .setSourceRegistrationTime(roundDownToDay(SOURCE_TIME))
+                        .setSourceRegistrationTime(SOURCE_TIME)
                         .build();
 
         when(mMeasurementDao.getPendingTriggerIds())
@@ -8397,7 +8397,7 @@ public class AttributionJobHandlerTest {
                 .setSourceDebugKey(source.getDebugKey())
                 .setTriggerId(trigger.getId())
                 .setRegistrationOrigin(REGISTRATION_URI)
-                .setSourceRegistrationTime(roundDownToDay(source.getEventTime()))
+                .setSourceRegistrationTime(source.getEventTime())
                 .setAggregateAttributionData(
                         new AggregateAttributionData.Builder()
                                 .setContributions(

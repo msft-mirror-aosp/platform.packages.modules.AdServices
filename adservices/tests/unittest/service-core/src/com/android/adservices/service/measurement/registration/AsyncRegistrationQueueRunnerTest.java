@@ -329,7 +329,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -383,7 +383,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -435,7 +435,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -486,7 +486,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -564,7 +564,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -634,7 +634,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -747,7 +747,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -812,8 +812,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         doAnswer(answerAsyncSourceFetcher)
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
-
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
                         new Source.FakeReport(
@@ -867,8 +865,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         doAnswer(answerAsyncSourceFetcher)
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
-
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
                         new Source.FakeReport(
@@ -954,8 +950,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         doAnswer(answerAsyncSourceFetcher)
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
-
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
                         new Source.FakeReport(
@@ -1019,14 +1013,11 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.empty();
                 };
 
         doAnswer(answerEmptySource).when(mAsyncSourceFetcher).fetchSource(any(), any(), any());
-
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
-
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
                         new Source.FakeReport(
@@ -1099,8 +1090,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         doAnswer(answerAsyncSourceFetcher)
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
-
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
                         new Source.FakeReport(
@@ -1166,7 +1155,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(
                             SourceFixture.getValidSourceBuilder()
                                     .setDropSourceIfInstalled(true)
@@ -1230,7 +1219,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(
                             SourceFixture.getValidSourceBuilder()
                                     .setDropSourceIfInstalled(true)
@@ -1293,7 +1282,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(
                             SourceFixture.getValidSourceBuilder()
                                     .setDropSourceIfInstalled(false)
@@ -1357,7 +1346,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(
                             SourceFixture.getValidSourceBuilder()
                                     .setDropSourceIfInstalled(false)
@@ -1407,7 +1396,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -1473,7 +1462,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -1530,7 +1519,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -1594,7 +1583,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -1662,7 +1651,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -1897,7 +1886,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -2076,7 +2065,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.empty();
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -5598,7 +5587,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(source);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -5658,7 +5647,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirects asyncRedirects = invocation.getArgument(2);
-                    asyncRedirects.configure(redirectHeaders, mFlags, validAsyncRegistration);
+                    asyncRedirects.configure(redirectHeaders, validAsyncRegistration);
                     return Optional.of(source);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -5805,7 +5794,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
             asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
             AsyncRedirects asyncRedirects = invocation.getArgument(2);
-            asyncRedirects.configure(redirectHeaders, mFlags, asyncRegistration);
+            asyncRedirects.configure(redirectHeaders, asyncRegistration);
             return Optional.of(mMockedSource);
         };
     }

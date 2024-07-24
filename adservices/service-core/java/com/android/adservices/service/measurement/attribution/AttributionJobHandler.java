@@ -592,15 +592,14 @@ class AttributionJobHandler {
 
     @Nullable
     private Long getSourceRegistrationTime(Source source, Trigger trigger) {
-        Long sourceRegistrationTime = roundDownToDay(source.getEventTime());
         if (mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()
                 && Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
                         trigger.getAggregatableSourceRegistrationTimeConfig())) {
             // A null source registration time implies source registration time should be excluded
             // from the report.
-            sourceRegistrationTime = null;
+            return null;
         }
-        return sourceRegistrationTime;
+        return source.getEventTime();
     }
 
     private void generateNullAggregateReportForNonAttributedTrigger(
@@ -657,7 +656,9 @@ class AttributionJobHandler {
             throws DatastoreException, JSONException {
         long maxSourceExpiry = getRoundedMaxSourceExpiry();
         Long roundedAttributedSourceTime =
-                aggregateReport == null ? null : aggregateReport.getSourceRegistrationTime();
+                aggregateReport == null
+                        ? null
+                        : roundDownToDay(aggregateReport.getSourceRegistrationTime());
         float nullRate = mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime();
         for (long daysInMillis = 0L;
                 daysInMillis <= maxSourceExpiry;
