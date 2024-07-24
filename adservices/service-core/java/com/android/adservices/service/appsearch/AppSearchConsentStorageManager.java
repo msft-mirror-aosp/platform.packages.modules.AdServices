@@ -27,7 +27,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
@@ -300,7 +300,7 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
      */
     public boolean migrateConsentDataIfNeeded(
             @NonNull SharedPreferences sharedPreferences,
-            @NonNull BooleanFileDatastore datastore,
+            @NonNull AtomicFileDatastore datastore,
             @Nullable AdServicesStorageManager adServicesManager,
             @NonNull AppConsentDao appConsentDao)
             throws IOException {
@@ -688,7 +688,7 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
     @SuppressWarnings("NewApi")
     boolean shouldInitConsentDataFromAppSearch(
             SharedPreferences sharedPreferences,
-            BooleanFileDatastore datastore,
+            AtomicFileDatastore datastore,
             AdServicesStorageManager adServicesManager,
             boolean isU18AppSearchMigrationEnabled) {
         if (!SdkLevel.isAtLeastT() || !FlagsFactory.getFlags().getEnableAppsearchConsentData()) {

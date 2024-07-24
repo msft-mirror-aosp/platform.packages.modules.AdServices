@@ -40,7 +40,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -61,8 +61,8 @@ public class AppConsentDaoTest {
     private AppConsentDao mAppConsentDao;
 
     @Spy
-    private BooleanFileDatastore mDatastoreSpy =
-            new BooleanFileDatastore(mContext, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
+    private AtomicFileDatastore mDatastoreSpy =
+            new AtomicFileDatastore(mContext, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
 
     private MockitoSession mMockitoSession;
 

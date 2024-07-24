@@ -21,7 +21,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.ui.data.UxStatesDao;
@@ -45,7 +45,7 @@ public class AppConsentStorageManager implements IConsentStorage {
     public static final int NO_MANUAL_INTERACTIONS_RECORDED = -1;
     public static final int UNKNOWN = 0;
     public static final int MANUAL_INTERACTIONS_RECORDED = 1;
-    private final BooleanFileDatastore mDatastore;
+    private final AtomicFileDatastore mDatastore;
     private final AppConsentDao mAppConsentDao;
     private final UxStatesDao mUxStatesDao;
 
@@ -57,7 +57,7 @@ public class AppConsentStorageManager implements IConsentStorage {
      * @param uxStatesDao stores ux related data
      */
     public AppConsentStorageManager(
-            BooleanFileDatastore datastore, AppConsentDao appConsentDao, UxStatesDao uxStatesDao) {
+            AtomicFileDatastore datastore, AppConsentDao appConsentDao, UxStatesDao uxStatesDao) {
         this.mDatastore = datastore;
         this.mAppConsentDao = appConsentDao;
         this.mUxStatesDao = uxStatesDao;
