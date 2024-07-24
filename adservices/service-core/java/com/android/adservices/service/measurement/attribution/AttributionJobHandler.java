@@ -655,7 +655,7 @@ class AttributionJobHandler {
     @VisibleForTesting
     public List<Long> getNullAggregatableReportsDays(long maxSourceExpiry, float nullRate) {
         List<Long> nullAggregatableReportsDays = new ArrayList<>();
-        long totalDays = maxSourceExpiry / TimeUnit.DAYS.toMillis(1);
+        long totalDays = TimeUnit.MILLISECONDS.toDays(maxSourceExpiry);
         for (long dayCount = 0L; dayCount <= totalDays; dayCount += 1L) {
             if (Math.random() < nullRate) {
                 nullAggregatableReportsDays.add(dayCount);
@@ -678,7 +678,7 @@ class AttributionJobHandler {
                         ? null
                         : roundDownToDay(aggregateReport.getSourceRegistrationTime());
         for (Long dayCount : nullAggregatableReportsDays) {
-            long fakeSourceTime = trigger.getTriggerTime() - dayCount * TimeUnit.DAYS.toMillis(1);
+            long fakeSourceTime = trigger.getTriggerTime() - TimeUnit.DAYS.toMillis(dayCount);
             if (Objects.equals(roundDownToDay(fakeSourceTime), roundedAttributedSourceTime)) {
                 continue;
             }
