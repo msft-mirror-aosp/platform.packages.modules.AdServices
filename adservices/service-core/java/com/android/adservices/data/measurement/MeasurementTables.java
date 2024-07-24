@@ -148,6 +148,7 @@ public final class MeasurementTables {
         String MAX_EVENT_STATES = "max_event_states";
         String REINSTALL_REATTRIBUTION_WINDOW = "reinstall_reattribution_window";
         String DESTINATION_LIMIT_PRIORITY = "destination_limit_priority";
+        String EVENT_LEVEL_EPSILON = "event_level_epsilon";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -559,7 +560,9 @@ public final class MeasurementTables {
                     + SourceContract.DESTINATION_LIMIT_PRIORITY
                     + " INTEGER, "
                     + SourceContract.TRIGGER_DATA
-                    + " TEXT "
+                    + " TEXT, "
+                    + SourceContract.EVENT_LEVEL_EPSILON
+                    + " DOUBLE "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_DESTINATION_LATEST =
