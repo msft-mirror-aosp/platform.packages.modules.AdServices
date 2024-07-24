@@ -33,6 +33,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 /**
  * Holds the lock to be used by the background jobs. The locks will be used by multiple jobs,
@@ -110,15 +111,14 @@ public final class JobLockHolder {
     }
 
     /**
-     * Calls the given runnable after acquiring the lock.
+     * Calls the given "callable" after acquiring the lock.
      *
      * @param tag name of the caller (used for logging purposes)
-     * @param callable what to call
-     * @param failureResult what to return if log could not be acquired
+     * @param callable what to call (i.e, the value returned by {@code get()}.
+     * @param lockFailureResult what to return if the lock could not be acquired
      * @return result of callable, or {@code failureResult} if the lock could not be acquired.
      */
-    public <T> T callWithLock(
-            String tag, UncheckedCallable<T> callable, @Nullable T failureResult) {
+    public <T> T callWithLock(String tag, Supplier<T> callable, @Nullable T lockFailureResult) {
         Objects.requireNonNull(tag, "tag cannot be null");
         Objects.requireNonNull(callable, "callable cannot be null");
 
@@ -127,7 +127,7 @@ public final class JobLockHolder {
 
         if (mLock.tryLock()) {
             try {
-                return callable.call();
+                return callable.get();
             } finally {
                 mLock.unlock();
             }
@@ -135,22 +135,12 @@ public final class JobLockHolder {
 
         logger.e(
                 "%s.callWithLock(%s) failed to acquire lock; returning %s",
-                tag, mType, failureResult);
-        return failureResult;
+                tag, mType, lockFailureResult);
+        return lockFailureResult;
     }
 
     @Override
     public String toString() {
         return "JobLockHolder[mType=" + mType + ", mLock=" + mLock + "]";
-    }
-
-    /**
-     * Same as {@link java.util.concurrent.Callable}, but it doesn't throw a checked exception.
-     *
-     * @param <T> type of returned object
-     */
-    public interface UncheckedCallable<T> {
-        /** See {@link java.util.concurrent.Callable#call()} */
-        T call();
     }
 }
