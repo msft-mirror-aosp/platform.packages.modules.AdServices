@@ -336,15 +336,15 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
                 isU18AppSearchMigrationEnabled && wasU18NotificationDisplayed();
 
         if (wasNotificationDisplayed) {
-            datastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
+            datastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
             adServicesManager.recordNotificationDisplayed(true);
         }
         if (wasGaUxNotificationDisplayed) {
-            datastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+            datastore.putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
             adServicesManager.recordGaUxNotificationDisplayed(true);
         }
         if (wasU18NotificationDisplayed) {
-            datastore.put(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
+            datastore.putBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
             adServicesManager.setU18NotificationDisplayed(true);
         }
         if (!wasGaUxNotificationDisplayed
@@ -377,9 +377,9 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         PrivacySandboxFeatureType currentFeatureType = getCurrentPrivacySandboxFeature();
         for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
             if (featureType.name().equals(currentFeatureType.name())) {
-                datastore.put(featureType.name(), true);
+                datastore.putBoolean(featureType.name(), true);
             } else {
-                datastore.put(featureType.name(), false);
+                datastore.putBoolean(featureType.name(), false);
             }
         }
 
@@ -723,11 +723,11 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         // displayed. This avoids showing the notification to the user again after OTA to T.
         boolean wasU18NotificationRecordedInPpapiOrSystemServer =
                 isU18AppSearchMigrationEnabled
-                        && (datastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED)
+                        && (datastore.getBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED)
                                 || adServicesManager.wasU18NotificationDisplayed());
         boolean wasNotificationDisplayedInAdServices =
-                datastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
-                        || datastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
+                datastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
+                        || datastore.getBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
                         || adServicesManager.wasNotificationDisplayed()
                         || adServicesManager.wasGaUxNotificationDisplayed()
                         || wasU18NotificationRecordedInPpapiOrSystemServer;

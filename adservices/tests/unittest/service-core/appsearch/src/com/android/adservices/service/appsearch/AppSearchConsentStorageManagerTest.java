@@ -381,7 +381,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesExtendedMockit
         when(mSharedPrefs.getBoolean(any(), eq(true))).thenReturn(true);
         when(mAdServicesStorageManager.wasNotificationDisplayed()).thenReturn(false);
         when(mAdServicesStorageManager.wasGaUxNotificationDisplayed()).thenReturn(false);
-        when(mDatastore.get(any())).thenReturn(true);
+        when(mDatastore.getBoolean(any())).thenReturn(true);
 
         boolean result =
                 mAppSearchConsentStorageManager.shouldInitConsentDataFromAppSearch(
@@ -396,7 +396,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesExtendedMockit
         when(mSharedPrefs.getBoolean(any(), eq(true))).thenReturn(true);
         when(mAdServicesStorageManager.wasNotificationDisplayed()).thenReturn(false);
         when(mAdServicesStorageManager.wasGaUxNotificationDisplayed()).thenReturn(false);
-        when(mDatastore.get(any())).thenReturn(false);
+        when(mDatastore.getBoolean(any())).thenReturn(false);
         when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(false);
 
@@ -457,9 +457,10 @@ public class AppSearchConsentStorageManagerTest extends AdServicesExtendedMockit
                 mAppSearchConsentStorageManager.migrateConsentDataIfNeeded(
                         mSharedPrefs, mDatastore, mAdServicesStorageManager, mAppConsentDao);
         expect.that(result).isTrue();
-        verify(mDatastore).put(eq(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED), eq(true));
+        verify(mDatastore)
+                .putBoolean(eq(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED), eq(true));
         verify(mAdServicesStorageManager).setU18NotificationDisplayed(true);
-        verify(mDatastore, atLeast(5)).put(any(), anyBoolean());
+        verify(mDatastore, atLeast(5)).putBoolean(any(), anyBoolean());
         verify(mEditor)
                 .putBoolean(eq(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED), eq(true));
         verify(mEditor).commit();
@@ -489,7 +490,8 @@ public class AppSearchConsentStorageManagerTest extends AdServicesExtendedMockit
                         mSharedPrefs, mDatastore, mAdServicesStorageManager, mAppConsentDao);
         expect.that(result).isTrue();
 
-        verify(mDatastore).put(eq(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE), eq(true));
+        verify(mDatastore)
+                .putBoolean(eq(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE), eq(true));
         verify(mAdServicesStorageManager).recordGaUxNotificationDisplayed(true);
         verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME1), eq(false));
         verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME2), eq(false));
@@ -498,8 +500,10 @@ public class AppSearchConsentStorageManagerTest extends AdServicesExtendedMockit
         verify(mAdServicesStorageManager).setConsentForApp(eq(PACKAGE_NAME2), eq(false));
         verify(mAdServicesStorageManager).setConsentForApp(eq(PACKAGE_NAME3), eq(true));
         verify(mDatastore)
-                .put(eq(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name()), eq(true));
-        verify(mDatastore, atLeast(4)).put(any(), eq(false));
+                .putBoolean(
+                        eq(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name()),
+                        eq(true));
+        verify(mDatastore, atLeast(4)).putBoolean(any(), eq(false));
         verify(mEditor)
                 .putBoolean(eq(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED), eq(true));
         verify(mEditor).commit();
@@ -549,7 +553,7 @@ public class AppSearchConsentStorageManagerTest extends AdServicesExtendedMockit
         when(mAdServicesStorageManager.wasNotificationDisplayed()).thenReturn(false);
         when(mAdServicesStorageManager.wasGaUxNotificationDisplayed()).thenReturn(false);
         when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
-        when(mDatastore.get(any())).thenReturn(false);
+        when(mDatastore.getBoolean(any())).thenReturn(false);
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(true);
         when(mSharedPrefs.edit()).thenReturn(mEditor);
     }

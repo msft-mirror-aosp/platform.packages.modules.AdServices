@@ -100,7 +100,7 @@ public class ConsentManagerTest {
 
         // Assert that the DataStore is created and initialized with NOTIFICATION_DISPLAYED_ONCE
         // is false.
-        assertThat(datastore.get(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
+        assertThat(datastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
     }
 
     @Test

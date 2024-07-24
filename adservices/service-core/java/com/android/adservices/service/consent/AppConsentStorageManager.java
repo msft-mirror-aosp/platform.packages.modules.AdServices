@@ -133,7 +133,8 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public AdServicesApiConsent getConsent(AdServicesApiType apiType) {
         return AdServicesApiConsent.getConsent(
-                Objects.requireNonNullElse(mDatastore.get(apiType.toPpApiDatastoreKey()), false));
+                Objects.requireNonNullElse(
+                        mDatastore.getBoolean(apiType.toPpApiDatastoreKey()), false));
     }
 
     /**
@@ -148,7 +149,7 @@ public class AppConsentStorageManager implements IConsentStorage {
     public PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() {
         // test
         for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
-            if (Boolean.TRUE.equals(mDatastore.get(featureType.name()))) {
+            if (Boolean.TRUE.equals(mDatastore.getBoolean(featureType.name()))) {
                 return featureType;
             }
         }
@@ -160,7 +161,7 @@ public class AppConsentStorageManager implements IConsentStorage {
     public void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType featureType)
             throws IOException {
         for (PrivacySandboxFeatureType currentFeatureType : PrivacySandboxFeatureType.values()) {
-            mDatastore.put(currentFeatureType.name(), currentFeatureType == featureType);
+            mDatastore.putBoolean(currentFeatureType.name(), currentFeatureType == featureType);
         }
     }
 
@@ -190,7 +191,7 @@ public class AppConsentStorageManager implements IConsentStorage {
     public int getUserManualInteractionWithConsent() throws IOException {
         // test
         Boolean manualInteractionWithConsent =
-                mDatastore.get(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                mDatastore.getBoolean(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
         if (manualInteractionWithConsent == null) {
             return UNKNOWN;
         } else if (Boolean.TRUE.equals(manualInteractionWithConsent)) {
@@ -215,25 +216,27 @@ public class AppConsentStorageManager implements IConsentStorage {
     /** Returns whether the isAdIdEnabled bit is true. */
     @Override
     public boolean isAdIdEnabled() {
-        return Objects.requireNonNullElse(mDatastore.get(ConsentConstants.IS_AD_ID_ENABLED), false);
+        return Objects.requireNonNullElse(
+                mDatastore.getBoolean(ConsentConstants.IS_AD_ID_ENABLED), false);
     }
 
     /** Set the AdIdEnabled bit to storage. */
     @Override
     public void setAdIdEnabled(boolean isAdIdEnabled) throws IOException {
-        mDatastore.put(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled);
+        mDatastore.putBoolean(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled);
     }
 
     /** Returns whether the isAdultAccount bit is true. */
     @Override
     public boolean isAdultAccount() {
-        return Objects.requireNonNullElse(mDatastore.get(ConsentConstants.IS_ADULT_ACCOUNT), false);
+        return Objects.requireNonNullElse(
+                mDatastore.getBoolean(ConsentConstants.IS_ADULT_ACCOUNT), false);
     }
 
     /** Set the AdultAccount bit to storage. */
     @Override
     public void setAdultAccount(boolean isAdultAccount) throws IOException {
-        mDatastore.put(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount);
+        mDatastore.putBoolean(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount);
     }
 
     /**
@@ -262,25 +265,26 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public boolean isEntryPointEnabled() {
         return Objects.requireNonNullElse(
-                mDatastore.get(ConsentConstants.IS_ENTRY_POINT_ENABLED), false);
+                mDatastore.getBoolean(ConsentConstants.IS_ENTRY_POINT_ENABLED), false);
     }
 
     /** Set the EntryPointEnabled bit to storage . */
     @Override
     public void setEntryPointEnabled(boolean isEntryPointEnabled) throws IOException {
-        mDatastore.put(ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
+        mDatastore.putBoolean(ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
     }
 
     /** Returns whether the isU18Account bit is true. */
     @Override
     public boolean isU18Account() {
-        return Objects.requireNonNullElse(mDatastore.get(ConsentConstants.IS_U18_ACCOUNT), false);
+        return Objects.requireNonNullElse(
+                mDatastore.getBoolean(ConsentConstants.IS_U18_ACCOUNT), false);
     }
 
     /** Set the U18Account bit to storage. */
     @Override
     public void setU18Account(boolean isU18Account) throws IOException {
-        mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account);
+        mDatastore.putBoolean(ConsentConstants.IS_U18_ACCOUNT, isU18Account);
     }
 
     /**
@@ -289,7 +293,7 @@ public class AppConsentStorageManager implements IConsentStorage {
      */
     @Override
     public void recordGaUxNotificationDisplayed(boolean wasGaUxDisplayed) throws IOException {
-        mDatastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, wasGaUxDisplayed);
+        mDatastore.putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, wasGaUxDisplayed);
     }
 
     /**
@@ -299,7 +303,8 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public void recordNotificationDisplayed(boolean wasNotificationDisplayed) throws IOException {
         // test
-        mDatastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, wasNotificationDisplayed);
+        mDatastore.putBoolean(
+                ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, wasNotificationDisplayed);
     }
 
     /** Saves information to the storage that user interacted with consent manually. */
@@ -307,13 +312,15 @@ public class AppConsentStorageManager implements IConsentStorage {
     public void recordUserManualInteractionWithConsent(int interaction) throws IOException {
         switch (interaction) {
             case NO_MANUAL_INTERACTIONS_RECORDED:
-                mDatastore.put(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
+                mDatastore.putBoolean(
+                        ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
                 break;
             case UNKNOWN:
                 mDatastore.remove(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
                 break;
             case MANUAL_INTERACTIONS_RECORDED:
-                mDatastore.put(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
+                mDatastore.putBoolean(
+                        ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -330,7 +337,7 @@ public class AppConsentStorageManager implements IConsentStorage {
      */
     @Override
     public void setConsent(AdServicesApiType apiType, boolean isGiven) throws IOException {
-        mDatastore.put(apiType.toPpApiDatastoreKey(), isGiven);
+        mDatastore.putBoolean(apiType.toPpApiDatastoreKey(), isGiven);
     }
 
     /**
@@ -388,7 +395,7 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed)
             throws IOException {
-        mDatastore.put(
+        mDatastore.putBoolean(
                 ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, wasU18NotificationDisplayed);
     }
 
@@ -400,7 +407,7 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public boolean wasGaUxNotificationDisplayed() {
         return Objects.requireNonNullElse(
-                mDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE), false);
+                mDatastore.getBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE), false);
     }
 
     /**
@@ -411,14 +418,14 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public boolean wasNotificationDisplayed() {
         return Objects.requireNonNullElse(
-                mDatastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE), false);
+                mDatastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE), false);
     }
 
     /** Returns whether the wasU18NotificationDisplayed bit is true. */
     @Override
     public boolean wasU18NotificationDisplayed() {
         return Objects.requireNonNullElse(
-                mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED), false);
+                mDatastore.getBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED), false);
     }
 
     @Override
@@ -428,13 +435,13 @@ public class AppConsentStorageManager implements IConsentStorage {
 
     @Override
     public void recordPasNotificationDisplayed(boolean wasPasDisplayed) throws IOException {
-        mDatastore.put(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, wasPasDisplayed);
+        mDatastore.putBoolean(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, wasPasDisplayed);
     }
 
     /** Set the measurement data reset activity happens based on consent_source_of_truth. */
     @Override
     public void setMeasurementDataReset(boolean isMeasurementDataReset) throws IOException {
-        mDatastore.put(ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset);
+        mDatastore.putBoolean(ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset);
     }
 
     /**
@@ -443,70 +450,72 @@ public class AppConsentStorageManager implements IConsentStorage {
     @Override
     public boolean isMeasurementDataReset() throws IOException {
         return Objects.requireNonNullElse(
-                mDatastore.get(ConsentConstants.IS_MEASUREMENT_DATA_RESET), false);
+                mDatastore.getBoolean(ConsentConstants.IS_MEASUREMENT_DATA_RESET), false);
     }
 
     @Override
     public Boolean getDefaultConsent() throws IOException {
-        return Objects.requireNonNullElse(mDatastore.get(ConsentConstants.DEFAULT_CONSENT), false);
+        return Objects.requireNonNullElse(
+                mDatastore.getBoolean(ConsentConstants.DEFAULT_CONSENT), false);
     }
 
     @Override
     public Boolean getTopicsDefaultConsent() {
         return Objects.requireNonNullElse(
-                mDatastore.get(ConsentConstants.TOPICS_DEFAULT_CONSENT), false);
+                mDatastore.getBoolean(ConsentConstants.TOPICS_DEFAULT_CONSENT), false);
     }
 
     @Override
     public Boolean getFledgeDefaultConsent() {
         return Objects.requireNonNullElse(
-                mDatastore.get(ConsentConstants.FLEDGE_DEFAULT_CONSENT), false);
+                mDatastore.getBoolean(ConsentConstants.FLEDGE_DEFAULT_CONSENT), false);
     }
 
     @Override
     public Boolean getMeasurementDefaultConsent() {
         return Objects.requireNonNullElse(
-                mDatastore.get(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT), false);
+                mDatastore.getBoolean(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT), false);
     }
 
     @Override
     public Boolean getDefaultAdIdState() {
         return Objects.requireNonNullElse(
-                mDatastore.get(ConsentConstants.DEFAULT_AD_ID_STATE), false);
+                mDatastore.getBoolean(ConsentConstants.DEFAULT_AD_ID_STATE), false);
     }
 
     @Override
     public void recordDefaultConsent(boolean defaultConsent) throws IOException {
-        mDatastore.put(ConsentConstants.DEFAULT_CONSENT, defaultConsent);
+        mDatastore.putBoolean(ConsentConstants.DEFAULT_CONSENT, defaultConsent);
     }
 
     @Override
     public void recordTopicsDefaultConsent(boolean defaultConsent) throws IOException {
-        mDatastore.put(ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent);
+        mDatastore.putBoolean(ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent);
     }
 
     @Override
     public void recordFledgeDefaultConsent(boolean defaultConsent) throws IOException {
-        mDatastore.put(ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent);
+        mDatastore.putBoolean(ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent);
     }
 
     @Override
     public void recordMeasurementDefaultConsent(boolean defaultConsent) throws IOException {
-        mDatastore.put(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent);
+        mDatastore.putBoolean(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent);
     }
 
     @Override
     public void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException {
-        mDatastore.put(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState);
+        mDatastore.putBoolean(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState);
     }
 
     @Override
     public Boolean isPaDataReset() {
-        return Objects.requireNonNullElse(mDatastore.get(ConsentConstants.IS_PA_DATA_RESET), false);
+        return Objects.requireNonNullElse(
+                mDatastore.getBoolean(ConsentConstants.IS_PA_DATA_RESET), false);
     }
 
     @Override
     public void setPaDataReset(boolean isPaDataReset) throws IOException {
-        mDatastore.put(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset);
+        mDatastore.putBoolean(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset);
     }
 }
