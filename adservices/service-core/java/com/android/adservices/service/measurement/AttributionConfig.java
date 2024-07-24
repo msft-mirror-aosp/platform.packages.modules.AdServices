@@ -27,14 +27,13 @@ import static com.android.adservices.service.measurement.AttributionConfig.Attri
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_NOT_FILTERS;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.SOURCE_PRIORITY_RANGE;
 import static com.android.adservices.service.measurement.AttributionConfig.AttributionConfigContract.START;
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.MathUtils;
 
@@ -55,7 +54,7 @@ public class AttributionConfig {
     @Nullable private final Long mSourceExpiryOverride;
     @Nullable private final Long mPriority;
     @Nullable private final Long mExpiry;
-    @Nullable private final List<FilterMap> mFilterData;
+    @Nullable private final FilterMap mFilterData;
     @Nullable private final Long mPostInstallExclusivityWindow;
 
     private AttributionConfig(@NonNull AttributionConfig.Builder builder) {
@@ -164,7 +163,7 @@ public class AttributionConfig {
      * "conversion_subdomain": ["electronics.megastore"], "product": ["1234", "234"] }
      */
     @Nullable
-    public List<FilterMap> getFilterData() {
+    public FilterMap getFilterData() {
         return mFilterData;
     }
 
@@ -181,7 +180,7 @@ public class AttributionConfig {
      * @return serialized JSON object
      */
     @Nullable
-    public JSONObject serializeAsJson() {
+    public JSONObject serializeAsJson(Flags flags) {
         try {
             JSONObject attributionConfig = new JSONObject();
             attributionConfig.put(SOURCE_NETWORK, mSourceAdtech);
@@ -193,13 +192,14 @@ public class AttributionConfig {
                 attributionConfig.put(SOURCE_PRIORITY_RANGE, sourcePriorityRange);
             }
 
+            Filter filter = new Filter(flags);
             if (mSourceFilters != null) {
-                attributionConfig.put(SOURCE_FILTERS, Filter.serializeFilterSet(mSourceFilters));
+                attributionConfig.put(SOURCE_FILTERS, filter.serializeFilterSet(mSourceFilters));
             }
 
             if (mSourceNotFilters != null) {
                 attributionConfig.put(
-                        SOURCE_NOT_FILTERS, Filter.serializeFilterSet(mSourceNotFilters));
+                        SOURCE_NOT_FILTERS, filter.serializeFilterSet(mSourceNotFilters));
             }
 
             if (mSourceExpiryOverride != null) {
@@ -215,7 +215,7 @@ public class AttributionConfig {
             }
 
             if (mFilterData != null) {
-                attributionConfig.put(FILTER_DATA, Filter.serializeFilterSet(mFilterData));
+                attributionConfig.put(FILTER_DATA, mFilterData.serializeAsJson(flags));
             }
 
             if (mPostInstallExclusivityWindow != null) {
@@ -225,7 +225,7 @@ public class AttributionConfig {
 
             return attributionConfig;
         } catch (JSONException e) {
-            LogUtil.d(e, "Serializing attribution config failed");
+            LoggerFactory.getMeasurementLogger().d(e, "Serializing attribution config failed");
             return null;
         }
     }
@@ -239,7 +239,7 @@ public class AttributionConfig {
         private Long mSourceExpiryOverride;
         private Long mPriority;
         private Long mExpiry;
-        private List<FilterMap> mFilterData;
+        private FilterMap mFilterData;
         private Long mPostInstallExclusivityWindow;
 
         public Builder() {}
@@ -249,7 +249,8 @@ public class AttributionConfig {
          *
          * @throws JSONException if JSON parsing fails
          */
-        public Builder(@NonNull JSONObject attributionConfigsJson) throws JSONException {
+        public Builder(@NonNull JSONObject attributionConfigsJson, Flags flags)
+                throws JSONException {
             if (attributionConfigsJson == null) {
                 throw new JSONException(
                         "AttributionConfig.Builder: Empty or null attributionConfigsJson");
@@ -260,7 +261,7 @@ public class AttributionConfig {
             }
 
             mSourceAdtech = attributionConfigsJson.getString(SOURCE_NETWORK);
-
+            Filter filter = new Filter(flags);
             if (!attributionConfigsJson.isNull(SOURCE_PRIORITY_RANGE)) {
                 JSONObject sourcePriorityRangeJson =
                         attributionConfigsJson.getJSONObject(SOURCE_PRIORITY_RANGE);
@@ -272,20 +273,20 @@ public class AttributionConfig {
             if (!attributionConfigsJson.isNull(SOURCE_FILTERS)) {
                 JSONArray filterSet =
                         Filter.maybeWrapFilters(attributionConfigsJson, SOURCE_FILTERS);
-                mSourceFilters = Filter.deserializeFilterSet(filterSet);
+                mSourceFilters = filter.deserializeFilterSet(filterSet);
             }
             if (!attributionConfigsJson.isNull(SOURCE_NOT_FILTERS)) {
                 JSONArray filterSet =
                         Filter.maybeWrapFilters(attributionConfigsJson, SOURCE_NOT_FILTERS);
-                mSourceNotFilters = Filter.deserializeFilterSet(filterSet);
+                mSourceNotFilters = filter.deserializeFilterSet(filterSet);
             }
             if (!attributionConfigsJson.isNull(SOURCE_EXPIRY_OVERRIDE)) {
                 long override = attributionConfigsJson.getLong(SOURCE_EXPIRY_OVERRIDE);
                 mSourceExpiryOverride =
                         MathUtils.extractValidNumberInRange(
                                 override,
-                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                flags.getMeasurementMinReportingRegisterSourceExpirationInSeconds(),
+                                flags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds());
             }
             if (!attributionConfigsJson.isNull(PRIORITY)) {
                 mPriority = attributionConfigsJson.getLong(PRIORITY);
@@ -295,12 +296,16 @@ public class AttributionConfig {
                 mExpiry =
                         MathUtils.extractValidNumberInRange(
                                 expiry,
-                                MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                                flags.getMeasurementMinReportingRegisterSourceExpirationInSeconds(),
+                                flags
+                                        .getMeasurementMaxReportingRegisterSourceExpirationInSeconds());
             }
             if (!attributionConfigsJson.isNull(FILTER_DATA)) {
-                JSONArray filterSet = Filter.maybeWrapFilters(attributionConfigsJson, FILTER_DATA);
-                mFilterData = Filter.deserializeFilterSet(filterSet);
+                mFilterData =
+                        new FilterMap.Builder()
+                                .buildFilterData(
+                                        attributionConfigsJson.optJSONObject(FILTER_DATA), flags)
+                                .build();
             }
             if (!attributionConfigsJson.isNull(POST_INSTALL_EXCLUSIVITY_WINDOW)) {
                 mPostInstallExclusivityWindow =
@@ -360,7 +365,7 @@ public class AttributionConfig {
 
         /** See {@link AttributionConfig#getFilterData()} */
         @NonNull
-        public Builder setFilterData(@Nullable List<FilterMap> filterData) {
+        public Builder setFilterData(@Nullable FilterMap filterData) {
             mFilterData = filterData;
             return this;
         }

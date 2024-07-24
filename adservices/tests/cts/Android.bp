@@ -22,25 +22,25 @@ android_test {
     libs: [
         "android.test.runner",
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices-lib",
         "auto_value_annotations",
     ],
     srcs: ["src/**/*.java",],
     // Tag this module as a cts test artifact
     exclude_srcs: [
       "src/android/adservices/debuggablects/*.java",
-      "src/android/adservices/server/*.java",
+      "src/android/adservices/rootcts/*.java",
     ],
     test_suites: [
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
     plugins: [
         "auto_value_plugin",
         "auto_annotation_plugin"
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
     static_libs: [
         "androidx.test.rules",
         "androidx.test.ext.junit",
@@ -58,26 +58,170 @@ android_test {
     compile_multilib: "both",
 }
 
+
+android_test {
+    name: "CtsAdServicesRootTestCases",
+    defaults: ["cts_defaults"],
+    libs: [
+        "android.test.runner",
+        "android.test.base",
+        "framework-adservices-lib",
+        "auto_value_annotations",
+    ],
+    srcs: [
+        "src/android/adservices/rootcts/*.java",
+        "src/android/adservices/utils/*.java",
+    ],
+    // Tag this module as a cts test artifact
+    exclude_srcs: [
+      "src/android/adservices/debuggablects/*.java",
+      "src/android/adservices/cts/*.java",
+    ],
+    test_suites: [
+        "cts_root",
+        "mts-adservices",
+        "general-tests",
+        "mcts-adservices",
+    ],
+    plugins: [
+        "auto_value_plugin",
+        "auto_annotation_plugin"
+    ],
+    static_libs: [
+        "androidx.test.rules",
+        "androidx.test.ext.junit",
+        "androidx.test.ext.truth",
+        "compatibility-device-util-axt",
+        "ctstestrunner-axt",
+        "cts-wm-util",
+        "adservices-clients",
+        "adservices-test-fixtures",
+        "adservices-test-utility",
+        "testng",
+    ],
+    sdk_version: "module_current",
+    min_sdk_version: "Tiramisu",
+    compile_multilib: "both",
+    manifest: "AndroidManifestRoot.xml",
+    test_config: "AndroidTest.Root.xml",
+}
+
+android_test {
+    name: "CtsAdExtServicesDeviceTestCases",
+    defaults: ["cts_defaults"],
+    libs: [
+        "android.ext.adservices",
+        "android.test.runner",
+        "android.test.base",
+        "framework-adservices-lib",
+        "auto_value_annotations",
+    ],
+    srcs: ["src/**/*.java",],
+    // Tag this module as a cts test artifact
+    exclude_srcs: [
+      "src/android/adservices/debuggablects/*.java",
+      "src/android/adservices/rootcts/*.java",
+    ],
+    test_suites: [
+        "cts",
+        "mts-extservices",
+        "general-tests",
+        "mcts-extservices",
+    ],
+    plugins: [
+        "auto_value_plugin",
+        "auto_annotation_plugin"
+    ],
+    static_libs: [
+        "androidx.test.rules",
+        "androidx.test.ext.junit",
+        "androidx.test.ext.truth",
+        "compatibility-device-util-axt",
+        "ctstestrunner-axt",
+        "cts-wm-util",
+        "adservices-clients",
+        "adservices-test-fixtures",
+        "adservices-test-utility",
+        "testng",
+    ],
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    max_sdk_version: "32",
+    test_config: "AndroidTest.ExtServices.xml",
+    manifest: "AndroidManifestExtServices.xml",
+    compile_multilib: "both",
+}
+
 android_test {
     name: "CtsAdServicesDebuggableDeviceTestCases",
     defaults: ["cts_defaults"],
     libs: [
         "android.test.runner",
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices-lib",
     ],
     srcs: ["src/**/*.java"],
     // Tag this module as a cts test artifact
     exclude_srcs: [
       "src/android/adservices/cts/*.java",
-      "src/android/adservices/server/*.java",
+      "src/android/adservices/rootcts/*.java",
+    ],
+    plugins: [
+        "auto_value_plugin",
+        "auto_annotation_plugin"
     ],
     test_suites: [
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
+    static_libs: [
+        "androidx.room_room-runtime",
+        "androidx.room_room-testing",
+        "androidx.test.rules",
+        "androidx.test.ext.junit",
+        "androidx.test.ext.truth",
+        "compatibility-device-util-axt",
+        "ctstestrunner-axt",
+        "cts-wm-util",
+        "adservices-clients",
+        "adservices-test-fixtures",
+        "adservices-test-utility",
+        "mockwebserver",
+        "testng",
+        "auto_value_annotations",
+    ],
+    sdk_version: "module_current",
+    min_sdk_version: "Tiramisu",
+    manifest: "AndroidManifestDebuggable.xml",
+    test_config: "AndroidTestDebuggable.xml",
+}
+
+android_test {
+    name: "CtsAdExtServicesDebuggableDeviceTestCases",
+    defaults: ["cts_defaults"],
+    libs: [
+        "android.test.runner",
+        "android.test.base",
+        "framework-adservices-lib",
+    ],
+    srcs: ["src/**/*.java"],
+    // Tag this module as a cts test artifact
+    exclude_srcs: [
+      "src/android/adservices/cts/*.java",
+      "src/android/adservices/rootcts/*.java",
+    ],
+    test_suites: [
+        "cts",
+        "mts-extservices",
+        "general-tests",
+        "mcts-extservices",
+    ],
+    plugins: [
+        "auto_value_plugin",
+        "auto_annotation_plugin"
+    ],
     static_libs: [
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
@@ -91,52 +235,12 @@ android_test {
         "adservices-test-fixtures",
         "adservices-test-utility",
         "testng",
-    ],
-    sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
-    manifest: "AndroidManifestDebuggable.xml",
-    test_config: "AndroidTestDebuggable.xml",
-}
-
-android_test {
-    name: "CtsAdServicesCUJTestCases",
-    defaults: ["cts_defaults"],
-    libs: [
-        "android.test.runner",
-        "android.test.base",
-        "framework-adservices.impl",
         "auto_value_annotations",
     ],
-    srcs: [
-      "src/android/adservices/server/*.java",
-    ],
-    // Tag this module as a cts test artifact
-    exclude_srcs: [
-      "src/android/adservices/cts/*.java",
-      "src/android/adservices/debuggablects/*.java",
-    ],
-    test_suites: [
-        "mts-adservices",
-        "general-tests",
-    ],
-    plugins: [
-        "auto_value_plugin",
-        "auto_annotation_plugin"
-    ],
-    test_mainline_modules: ["com.google.android.adservices.apex"],
-    static_libs: [
-        "androidx.test.rules",
-        "androidx.test.ext.junit",
-        "androidx.test.ext.truth",
-        "compatibility-device-util-axt",
-        "ctstestrunner-axt",
-        "cts-wm-util",
-        "adservices-clients",
-        "adservices-test-fixtures",
-        "testng",
-    ],
     sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
-    compile_multilib: "both",
+    min_sdk_version: "30",
+    max_sdk_version: "32",
+    test_config: "AndroidTestDebuggable.ExtServices.xml",
+    manifest: "AndroidManifestDebuggableExtServices.xml",
 }
 

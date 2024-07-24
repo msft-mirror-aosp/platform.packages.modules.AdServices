@@ -15,9 +15,18 @@
  */
 package com.android.adservices.service.topics;
 
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_ENROLLMENT_BLOCKLISTED;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_ENROLLMENT_INVALID_ID;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
+import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -30,6 +39,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RATE_LIMIT_CALLBACK_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REQUEST_EMPTY_SDK_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -64,10 +74,12 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentStatus;
+import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.shared.util.Clock;
 
 import java.util.concurrent.Executor;
 
@@ -121,10 +133,8 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         if (isThrottled(topicsParam, callback)) return;
 
         final long startServiceTime = mClock.elapsedRealtime();
-        // TODO(b/236380919): Verify that the passed App PackageName belongs to the caller uid
         final String packageName = topicsParam.getAppPackageName();
         final String sdkName = topicsParam.getSdkName();
-        final String sdkPackageName = topicsParam.getSdkPackageName();
 
         // We need to save the Calling Uid before offloading to the background executor. Otherwise,
         // the Binder.getCallingUid will return the PPAPI process Uid. This also needs to be final
@@ -132,38 +142,49 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         final int callingUid = Binder.getCallingUidOrThrow();
 
         // Check the permission in the same thread since we're looking for caller's permissions.
-        // Note: The permission check uses sdk package name since PackageManager checks if the
-        // permission is declared in the manifest of that package name.
+        // Note: The permission check uses sdk sandbox calling package name since PackageManager
+        // checks if the permission is declared in the manifest of that package name.
         boolean hasTopicsPermission =
-                PermissionHelper.hasTopicsPermission(
-                        mContext, ProcessCompatUtils.isSdkSandboxUid(callingUid), sdkPackageName);
+                PermissionHelper.hasTopicsPermission(mContext, packageName, callingUid);
 
         sBackgroundExecutor.execute(
                 () -> {
-                    int resultCode = STATUS_SUCCESS;
-
+                    ApiCallStats.Result result = null;
                     try {
-                        resultCode =
+                        if (mFlags.getTopicsDisableDirectAppCalls()) {
+                            // Check if the request is valid.
+                            if (!validateRequest(topicsParam, callback)) {
+                                // Return early if the request is invalid.
+                                sLogger.e("Invalid request %s", topicsParam);
+                                result =
+                                        ApiCallStats.failureResult(
+                                                STATUS_INVALID_ARGUMENT, FAILURE_REASON_UNSET);
+                                return;
+                            }
+                        }
+
+                        result =
                                 canCallerInvokeTopicsService(
                                         hasTopicsPermission, topicsParam, callingUid, callback);
-                        if (resultCode != STATUS_SUCCESS) {
+                        if (!result.isSuccess()) {
                             return;
                         }
 
-                        // Record usage before returning the results.
+                        callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
+
                         if (topicsParam.shouldRecordObservation()) {
                             mTopicsWorker.recordUsage(
                                     topicsParam.getAppPackageName(), topicsParam.getSdkName());
                         }
-
-                        callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
                     } catch (RemoteException e) {
                         sLogger.e(e, "Unable to send result to the callback");
                         ErrorLogUtil.e(
                                 e,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
                                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
-                        resultCode = STATUS_INTERNAL_ERROR;
+                        result =
+                                ApiCallStats.failureResult(
+                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET);
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
                         long serviceLatency = mClock.elapsedRealtime() - startServiceTime;
@@ -183,10 +204,28 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                         .setAppPackageName(packageName)
                                         .setSdkPackageName(sdkName)
                                         .setLatencyMillisecond(apiLatency)
-                                        .setResultCode(resultCode)
+                                        .setResult(result)
                                         .build());
                     }
                 });
+    }
+
+    // Checks if GetTopicsParam is a valid request.
+    private static boolean validateRequest(
+            GetTopicsParam topicsParam, IGetTopicsCallback callback) {
+        // Return false if sdkName is empty or null.
+        if (TextUtils.isEmpty(topicsParam.getSdkName())) {
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REQUEST_EMPTY_SDK_NAME,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+            invokeCallbackWithStatus(
+                    callback,
+                    STATUS_INVALID_ARGUMENT,
+                    "Direct app calls are not supported for Topics API. Sdk name should not "
+                            + "be null or empty");
+            return false;
+        }
+        return true;
     }
 
     // Throttle the Topics API.
@@ -248,9 +287,9 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
      * @param sufficientPermission boolean which tells whether caller has sufficient permissions.
      * @param topicsParam {@link GetTopicsParam} to get information about the request.
      * @param callback {@link IGetTopicsCallback} to invoke when caller is not allowed.
-     * @return API response status code.
+     * @return ApiCallStats.Result containing API response status code and failure reason.
      */
-    private int canCallerInvokeTopicsService(
+    private ApiCallStats.Result canCallerInvokeTopicsService(
             boolean sufficientPermission,
             GetTopicsParam topicsParam,
             int callingUid,
@@ -259,17 +298,20 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         try {
             enforceForeground(callingUid, topicsParam.getSdkName());
         } catch (WrongCallingApplicationStateException backgroundCaller) {
+            sLogger.v("STATUS_BACKGROUND_CALLER: Failed foreground check");
             invokeCallbackWithStatus(
                     callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
-            return STATUS_BACKGROUND_CALLER;
+            return ApiCallStats.failureResult(STATUS_BACKGROUND_CALLER, FAILURE_REASON_UNSET);
         }
 
         if (!sufficientPermission) {
+            sLogger.v("STATUS_PERMISSION_NOT_REQUESTED: Caller did not declare permission");
             invokeCallbackWithStatus(
                     callback,
                     STATUS_PERMISSION_NOT_REQUESTED,
                     "Unauthorized caller. Permission not requested.");
-            return STATUS_PERMISSION_NOT_REQUESTED;
+            return ApiCallStats.failureResult(
+                    STATUS_PERMISSION_NOT_REQUESTED, FAILURE_REASON_UNSET);
         }
 
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
@@ -279,60 +321,89 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                 mContext,
                 mFlags.getPpapiAppSignatureAllowList(),
                 topicsParam.getAppPackageName())) {
+            sLogger.v("STATUS_CALLER_NOT_ALLOWED: Caller signature not allowlisted");
             invokeCallbackWithStatus(
                     callback,
                     STATUS_CALLER_NOT_ALLOWED,
                     "Unauthorized caller. Signatures for calling package not allowed.");
-            return STATUS_CALLER_NOT_ALLOWED;
+            return ApiCallStats.failureResult(
+                    STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
         }
 
         // Check whether calling package belongs to the callingUid
-        int resultCode =
+        ApiCallStats.Result result =
                 enforceCallingPackageBelongsToUid(topicsParam.getAppPackageName(), callingUid);
-        if (resultCode != STATUS_SUCCESS) {
-            invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
-            return resultCode;
+        if (result.getResultCode() != STATUS_SUCCESS) {
+            sLogger.v("STATUS_UNAUTHORIZED: Caller UID mismatch");
+            invokeCallbackWithStatus(callback, result.getResultCode(), "Caller is not authorized.");
+            return ApiCallStats.failureResult(result.getResultCode(), result.getFailureReason());
         }
 
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.TOPICS);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent = mConsentManager.getConsent(AdServicesApiType.TOPICS);
 
         if (!userConsent.isGiven()) {
+            sLogger.v("STATUS_USER_CONSENT_REVOKED: User consent revoked");
             invokeCallbackWithStatus(
                     callback, STATUS_USER_CONSENT_REVOKED, "User consent revoked.");
-            return STATUS_USER_CONSENT_REVOKED;
+            return ApiCallStats.failureResult(STATUS_USER_CONSENT_REVOKED, FAILURE_REASON_UNSET);
         }
 
         // The app developer declares which SDKs they would like to allow Topics
         // access to use the enrollment ID. Get the enrollment ID for this SDK and
         // check that against the app's manifest.
         if (!mFlags.isDisableTopicsEnrollmentCheck() && !topicsParam.getSdkName().isEmpty()) {
+            String errorString = "STATUS_SUCCESS";
             EnrollmentData enrollmentData =
                     mEnrollmentDao.getEnrollmentDataFromSdkName(topicsParam.getSdkName());
-            boolean permitted =
-                    (enrollmentData != null && enrollmentData.getEnrollmentId() != null)
-                            && AppManifestConfigHelper.isAllowedTopicsAccess(
-                                    mContext,
-                                    ProcessCompatUtils.isSdkSandboxUid(callingUid),
-                                    topicsParam.getAppPackageName(),
-                                    enrollmentData.getEnrollmentId())
-                            && !mFlags.isEnrollmentBlocklisted(enrollmentData.getEnrollmentId());
+            boolean permitted = true;
+            int failureReason = FAILURE_REASON_UNSET;
+
+            if (enrollmentData == null) {
+                errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment not found";
+                permitted = false;
+                failureReason = FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND;
+            } else if (enrollmentData.getEnrollmentId() == null) {
+                errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment ID invalid";
+                permitted = false;
+                failureReason = FAILURE_REASON_ENROLLMENT_INVALID_ID;
+            } else {
+                if (!AppManifestConfigHelper.isAllowedTopicsAccess(
+                        ProcessCompatUtils.isSdkSandboxUid(callingUid),
+                        topicsParam.getAppPackageName(),
+                        enrollmentData.getEnrollmentId())) {
+                    errorString = "STATUS_CALLER_NOT_ALLOWED: App manifest config failed";
+                    permitted = false;
+                    failureReason = FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
+                } else if (mFlags.isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+                    errorString = "STATUS_CALLER_NOT_ALLOWED: Enrollment blocklisted";
+                    permitted = false;
+                    failureReason = FAILURE_REASON_ENROLLMENT_BLOCKLISTED;
+                }
+            }
+
+            sLogger.v("Checked Topics enrollment: %s", errorString);
 
             if (!permitted) {
                 invokeCallbackWithStatus(
                         callback, STATUS_CALLER_NOT_ALLOWED, "Caller is not authorized.");
-                return STATUS_CALLER_NOT_ALLOWED;
+                EnrollmentUtil enrollmentUtil = EnrollmentUtil.getInstance(mContext);
+                Integer buildId = enrollmentUtil.getBuildId();
+                Integer dataFileGroupStatus = enrollmentUtil.getFileGroupStatus();
+                enrollmentUtil.logEnrollmentFailedStats(
+                        mAdServicesLogger,
+                        buildId,
+                        dataFileGroupStatus,
+                        mEnrollmentDao.getEnrollmentRecordCountForLogging(),
+                        topicsParam.getSdkName(),
+                        EnrollmentStatus.ErrorCause.UNKNOWN_ERROR_CAUSE.getValue());
+                return ApiCallStats.failureResult(STATUS_CALLER_NOT_ALLOWED, failureReason);
             }
         }
 
-        return STATUS_SUCCESS;
+        return ApiCallStats.successResult();
     }
 
-    private void invokeCallbackWithStatus(
+    private static void invokeCallbackWithStatus(
             IGetTopicsCallback callback,
             @AdServicesStatusUtils.StatusCode int statusCode,
             String message) {
@@ -349,7 +420,8 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     }
 
     // Enforce that the callingPackage has the callingUid.
-    private int enforceCallingPackageBelongsToUid(String callingPackage, int callingUid) {
+    private ApiCallStats.Result enforceCallingPackageBelongsToUid(
+            String callingPackage, int callingUid) {
         int appCallingUid = SdkRuntimeUtil.getCallingAppUid(callingUid);
         int packageUid;
         try {
@@ -360,13 +432,16 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
-            return STATUS_UNAUTHORIZED;
+            return ApiCallStats.failureResult(
+                    STATUS_UNAUTHORIZED, FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND);
         }
         if (packageUid != appCallingUid) {
             sLogger.e(callingPackage + " does not belong to uid " + callingUid);
-            return STATUS_UNAUTHORIZED;
+            return ApiCallStats.failureResult(
+                    STATUS_UNAUTHORIZED,
+                    FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID);
         }
-        return STATUS_SUCCESS;
+        return ApiCallStats.successResult();
     }
 
     /** Init the Topics Service. */

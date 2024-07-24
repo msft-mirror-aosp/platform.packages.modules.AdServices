@@ -34,10 +34,16 @@ java_library {
     srcs: [
         ":adservices-fixtures-sources",
     ],
+    plugins: [
+        "auto_value_plugin",
+        "auto_annotation_plugin",
+    ],
     libs: [
         "framework-adservices.impl",
         "framework-configinfrastructure",
         "adservices-service-core",
+        "auto_value_annotations",
+        "framework-annotations-lib",
     ],
     static_libs: [
         "adservices-service-core",
@@ -47,7 +53,7 @@ java_library {
         "mockito-target-extended-minus-junit4",
         "mockwebserver",
         "truth",
-        "adservices-measurement-web-util-lib",
+        "adservices-test-utility",
     ],
     apex_available: ["com.android.adservices"],
 }

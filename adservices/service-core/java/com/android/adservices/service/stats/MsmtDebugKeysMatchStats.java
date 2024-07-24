@@ -37,6 +37,11 @@ public abstract class MsmtDebugKeysMatchStats {
     /** @return Hash limit used to hash the debug join key value. */
     public abstract long getDebugJoinKeyHashLimit();
 
+    /**
+     * @return source registrant.
+     */
+    public abstract String getSourceRegistrant();
+
     /** @return generic builder. */
     public static MsmtDebugKeysMatchStats.Builder builder() {
         return new AutoValue_MsmtDebugKeysMatchStats.Builder();
@@ -59,6 +64,9 @@ public abstract class MsmtDebugKeysMatchStats {
 
         /** Set limit of debug join key hashed value is calculated. */
         public abstract MsmtDebugKeysMatchStats.Builder setDebugJoinKeyHashLimit(long value);
+
+        /** Set source registrant. */
+        public abstract MsmtDebugKeysMatchStats.Builder setSourceRegistrant(String value);
 
         /** build for {@link MsmtDebugKeysMatchStats}. */
         public abstract MsmtDebugKeysMatchStats build();

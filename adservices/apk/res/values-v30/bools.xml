@@ -14,5 +14,5 @@
      limitations under the License.
 -->
 <resources>
-    <bool name="atLeastS">false</bool>
+    <bool name="isAdExtBootCompletedReceiverEnabled">true</bool>
 </resources>

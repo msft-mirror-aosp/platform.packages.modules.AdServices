@@ -22,6 +22,7 @@ import android.adservices.common.AdSelectionSignals;
 
 import com.google.common.collect.ImmutableList;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -53,6 +54,17 @@ public abstract class JSScriptArgument {
         // Creating the JSONObject just to parse value and cause a JSONException if invalid.
         new JSONObject(value);
         return new JSScriptJsonArgument(name, value);
+    }
+
+    /**
+     * @return a JS array object with the given {@code name} and value obtained parsing the given
+     *     {@code value}.
+     * @throws JSONException if {@code value} doesn't represent a valid JSON array object
+     */
+    public static JSScriptJsonArrayArgument jsonArrayArg(String name, String value)
+            throws JSONException {
+        new JSONArray(value);
+        return new JSScriptJsonArrayArgument(name, value);
     }
 
     /**
@@ -108,6 +120,20 @@ public abstract class JSScriptArgument {
         return new JSScriptArrayArgument<>(
                 name,
                 items.stream().map(str -> stringArg("ignored", str)).collect(Collectors.toList()));
+    }
+
+    /**
+     * @return a JS array argument with the given {@code name} initialized with the values specified
+     *     with {@code items}
+     */
+    public static <T extends Number>
+            JSScriptArrayArgument<JSScriptNumericArgument<T>> numericArrayArg(
+                    String name, List<T> items) {
+        return new JSScriptArrayArgument<>(
+                name,
+                items.stream()
+                        .map(num -> new JSScriptNumericArgument<>("ignored", num))
+                        .collect(Collectors.toList()));
     }
 
     /**

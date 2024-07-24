@@ -16,19 +16,34 @@
 
 package android.adservices.common;
 
+import android.adservices.common.AdServicesStates;
+import android.adservices.common.CallerMetadata;
+import android.adservices.common.GetAdServicesCommonStatesParams;
 import android.adservices.common.IAdServicesCommonCallback;
+import android.adservices.common.IAdServicesCommonStatesCallback;
+import android.adservices.common.IEnableAdServicesCallback;
+import android.adservices.common.IUpdateAdIdCallback;
+import android.adservices.common.UpdateAdIdRequest;
 import android.net.Uri;
+
 /**
  * Common AdServices service.
  * {@hide}
  */
 interface IAdServicesCommonService {
-    /**
-     * Get AdServices status service.
-     */
+
     void isAdServicesEnabled(in IAdServicesCommonCallback callback);
 
     void setAdServicesEnabled(
             in boolean adServicesEntryPointEnabled,
             in boolean adIdEnabled);
+
+    void enableAdServices(in AdServicesStates adServicesStates, in IEnableAdServicesCallback callback);
+
+    void updateAdIdCache(in UpdateAdIdRequest adIdUpdateRequest, in IUpdateAdIdCallback callback);
+
+    void getAdServicesCommonStates(
+        in GetAdServicesCommonStatesParams params,
+        in CallerMetadata callerMetadata,
+        in IAdServicesCommonStatesCallback callback);
 }

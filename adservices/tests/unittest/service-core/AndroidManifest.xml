@@ -24,6 +24,7 @@
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS" />
 
     <!-- Needed to resolve Intent to ComponentName for measurement verifiedDestination -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
@@ -51,6 +52,35 @@
                      "com.android.adservices.service.customaudience.BackgroundFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+
+        <!-- FLEDGE Schedule Custom Audience Update Job -->
+        <service android:name=
+                     "com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- FLEDGE Background Key Fetch Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+        <!-- FLEDGE Ad selection debug report sender Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.DebugReportSenderJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+        <!-- FLEDGE Protected Signals periodic encoding job -->
+        <service android:name=
+                     "com.android.adservices.service.signals.PeriodicEncodingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- FLEDGE KAnon sign join background job -->
+        <service android:name=
+                     "com.android.adservices.service.kanon.KAnonSignJoinBackgroundJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Topics Epoch/Maintenance Service Job. Must be defined here in order to schedule them in
         job scheduler. -->
         <service android:name=
@@ -65,9 +95,18 @@
         <service android:name="com.android.adservices.service.measurement.reporting.DebugReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+        <!-- Measurement verbose debug report upload job. -->
+        <service android:name="com.android.adservices.service.measurement.reporting.VerboseDebugReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
         <!-- MDD Service Job. Must be defined here in order to schedule them in Tests. -->
         <service android:name=
             "com.android.adservices.download.MddJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+        <!-- Cobalt Logging Job -->
+        <service
+            android:name="com.android.adservices.cobalt.CobaltJobService"
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
         <uses-library android:name="android.ext.adservices" android:required="false" />

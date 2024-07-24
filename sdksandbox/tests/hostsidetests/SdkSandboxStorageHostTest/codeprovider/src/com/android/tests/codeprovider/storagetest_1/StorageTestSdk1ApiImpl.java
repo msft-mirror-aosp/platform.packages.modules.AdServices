@@ -18,6 +18,7 @@ package com.android.tests.codeprovider.storagetest_1;
 
 import android.content.Context;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,18 +67,26 @@ public class StorageTestSdk1ApiImpl extends IStorageTestSdk1Api.Stub {
     }
 
     @Override
-    public void createFilesInSharedStorage(int sizeInBytes, boolean inCacheDir) {
+    public void createFilesInStorage(int sizeInBytes) {
+        if (getSharedStoragePath().equals(mContext.getDataDir().toString())) {
+            throw new IllegalStateException("Per-SDK storage not accessible");
+        }
         try {
-            final byte[] buffer = new byte[sizeInBytes];
-            final String path = inCacheDir ? getSharedStorageCachePath() : getSharedStoragePath();
-
-            Files.createDirectory(Paths.get(path, "attribution"));
-            final Path filepath = Paths.get(path, "attribution", "file");
-            Files.createFile(filepath);
-            Files.write(filepath, buffer);
+            createFilesinStorage(sizeInBytes, getSharedStoragePath());
+            createFilesinStorage(sizeInBytes, getSharedStorageCachePath());
+            createFilesinStorage(sizeInBytes, mContext.getDataDir().toString());
+            createFilesinStorage(sizeInBytes, mContext.getDataDir().toString() + "/cache");
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    private void createFilesinStorage(int sizeInBytes, String path) throws IOException {
+        final byte[] buffer = new byte[sizeInBytes];
+        Files.createDirectory(Paths.get(path, "attribution"));
+        final Path filepath = Paths.get(path, "attribution", "file");
+        Files.createFile(filepath);
+        Files.write(filepath, buffer);
     }
 
     private String getSharedStoragePath() {

@@ -28,10 +28,10 @@ android_test_helper_app {
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth",
-        "framework-adservices.impl",
     ],
     libs: [
         "android.test.base",
+        "framework-adservices-lib",
     ],
     platform_apis: true,
     min_sdk_version: "33",

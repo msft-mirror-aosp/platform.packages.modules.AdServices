@@ -32,6 +32,7 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
@@ -92,12 +93,41 @@ public class ReportImpressionScriptEngine {
             REPORT_WIN_FUNC_NAME + JSScriptEngine.ENTRY_POINT_FUNC_NAME;
 
     public static final String REGISTER_BEACON_JS =
-            "const interaction_reporting_uris = [];\n"
+            "function isString(s) {\n"
+                    + "    return typeof s === 'string' || s instanceof String;\n"
+                    + "}\n"
                     + "\n"
-                    + "function registerAdBeacon(interaction_key, interaction_reporting_uri) {\n"
-                    + "    interaction_reporting_uris.push({interaction_key,"
-                    + " interaction_reporting_uri});\n"
-                    + "}";
+                    + "function isDict(dict) {\n"
+                    + "return dict !== null && typeof dict === 'object' && !Array.isArray(dict);\n"
+                    + "}"
+                    + "\n"
+                    + "const interaction_reporting_uris = [];\n"
+                    + "\n"
+                    + " function registerAdBeacon(beacons) {\n"
+                    + "     if(interaction_reporting_uris.length) {\n"
+                    + "         throw new TypeError(\"registerAdBeacon may be called at most "
+                    + "once\");\n"
+                    + "     }\n"
+                    + "\n"
+                    + "     // Validating that beacons is a dictionary\n"
+                    + "     if (!isDict(beacons)) {\n"
+                    + "         throw new TypeError(\"registerAdBeacon requires 1 object "
+                    + "parameter\");\n"
+                    + "     }\n"
+                    + "\n"
+                    + "     for (const key in beacons) {\n"
+                    + "         // Validating that both key and value are strings\n"
+                    + "         if(!(isString(key) && isString(beacons[key]))) {\n"
+                    + "             throw new TypeError(\"registerAdBeacon object attributes must"
+                    + " be strings\");\n"
+                    + "         }\n"
+                    + "         interaction_reporting_uris.push({"
+                    + INTERACTION_KEY_ARG_NAME
+                    + ":key, "
+                    + INTERACTION_REPORTING_URI_ARG_NAME
+                    + ":beacons[key]});\n"
+                    + "     }\n"
+                    + " }\n";
 
     public static final String ADD_INTERACTION_REPORTING_URIS_TO_RESULT_JS =
             "if(results.hasOwnProperty('results')) {\n"
@@ -129,16 +159,19 @@ public class ReportImpressionScriptEngine {
     private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
     private final Supplier<Long> mMaxHeapSizeBytesSupplier;
     private final RegisterAdBeaconScriptEngineHelper mRegisterAdBeaconScriptEngineHelper;
+    private final RetryStrategy mRetryStrategy;
 
     public ReportImpressionScriptEngine(
             Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
-            RegisterAdBeaconScriptEngineHelper registerAdBeaconScriptEngineHelper) {
-        mJsEngine = JSScriptEngine.getInstance(context);
+            RegisterAdBeaconScriptEngineHelper registerAdBeaconScriptEngineHelper,
+            RetryStrategy retryStrategy) {
+        mJsEngine = JSScriptEngine.getInstance(context, sLogger);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRegisterAdBeaconScriptEngineHelper = registerAdBeaconScriptEngineHelper;
+        mRetryStrategy = retryStrategy;
     }
 
     /**
@@ -273,7 +306,7 @@ public class ReportImpressionScriptEngine {
                         ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                                 mMaxHeapSizeBytesSupplier.get())
                         : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-        return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings);
+        return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings, mRetryStrategy);
     }
 
     @NonNull

@@ -21,8 +21,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -57,15 +57,18 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -77,6 +80,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
@@ -103,23 +107,23 @@ public class OutcomeSelectionRunnerTest {
     private static final double BID_1 = 10.0;
     private static final double BID_2 = 20.0;
     private static final double BID_3 = 30.0;
-    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_WITH_BID_1 =
-            AdSelectionIdWithBidAndRenderUri.builder()
+    private static final AdSelectionResultBidAndUri AD_SELECTION_WITH_BID_1 =
+            AdSelectionResultBidAndUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setBid(BID_1)
-                    .setRenderUri(RENDER_URI_1)
+                    .setWinningAdBid(BID_1)
+                    .setWinningAdRenderUri(RENDER_URI_1)
                     .build();
-    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_WITH_BID_2 =
-            AdSelectionIdWithBidAndRenderUri.builder()
+    private static final AdSelectionResultBidAndUri AD_SELECTION_WITH_BID_2 =
+            AdSelectionResultBidAndUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_2)
-                    .setBid(BID_2)
-                    .setRenderUri(RENDER_URI_2)
+                    .setWinningAdBid(BID_2)
+                    .setWinningAdRenderUri(RENDER_URI_2)
                     .build();
-    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_WITH_BID_3 =
-            AdSelectionIdWithBidAndRenderUri.builder()
+    private static final AdSelectionResultBidAndUri AD_SELECTION_WITH_BID_3 =
+            AdSelectionResultBidAndUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_3)
-                    .setBid(BID_3)
-                    .setRenderUri(RENDER_URI_3)
+                    .setWinningAdBid(BID_3)
+                    .setWinningAdRenderUri(RENDER_URI_3)
                     .build();
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
@@ -135,13 +139,14 @@ public class OutcomeSelectionRunnerTest {
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setup() {
         mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        //                        .spyStatic(JSScriptEngine.class)
-                        // mAdServicesLoggerMock is not referenced in many tests
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
@@ -164,7 +169,9 @@ public class OutcomeSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mContext,
                         mFlags,
-                        mAdSelectionServiceFilter);
+                        mAdSelectionServiceFilter,
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         doNothing()
                 .when(mAdSelectionServiceFilter)
@@ -175,7 +182,8 @@ public class OutcomeSelectionRunnerTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @After
@@ -187,17 +195,17 @@ public class OutcomeSelectionRunnerTest {
 
     @Test
     public void testRunOutcomeSelectionInvalidAdSelectionConfigFromOutcomes() {
-        List<AdSelectionIdWithBidAndRenderUri> AdSelectionIdWithBidAndRenderUris =
+        List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris =
                 List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
-        persistAdSelectionEntry(AdSelectionIdWithBidAndRenderUris.get(0), MY_APP_PACKAGE_NAME);
+        persistAdSelectionEntry(adSelectionIdWithBidAndRenderUris.get(0), MY_APP_PACKAGE_NAME);
         // Not persisting index 1
         // Persisting index 2 with a different package name
         persistAdSelectionEntry(
-                AdSelectionIdWithBidAndRenderUris.get(2), ANOTHER_CALLER_PACKAGE_NAME);
+                adSelectionIdWithBidAndRenderUris.get(2), ANOTHER_CALLER_PACKAGE_NAME);
 
         List<Long> adOutcomesConfigParam =
-                AdSelectionIdWithBidAndRenderUris.stream()
-                        .map(AdSelectionIdWithBidAndRenderUri::getAdSelectionId)
+                adSelectionIdWithBidAndRenderUris.stream()
+                        .map(AdSelectionResultBidAndUri::getAdSelectionId)
                         .collect(Collectors.toList());
 
         AdSelectionFromOutcomesConfig config =
@@ -214,6 +222,7 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
@@ -229,17 +238,18 @@ public class OutcomeSelectionRunnerTest {
                         true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
 
-        List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris =
+        List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris =
                 List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
-        for (AdSelectionIdWithBidAndRenderUri idWithBid : adSelectionIdWithBidAndRenderUris) {
+        for (AdSelectionResultBidAndUri idWithBid : adSelectionIdWithBidAndRenderUris) {
             persistAdSelectionEntry(idWithBid, MY_APP_PACKAGE_NAME);
         }
 
         List<Long> adOutcomesConfigParam =
                 adSelectionIdWithBidAndRenderUris.stream()
-                        .map(AdSelectionIdWithBidAndRenderUri::getAdSelectionId)
+                        .map(AdSelectionResultBidAndUri::getAdSelectionId)
                         .collect(Collectors.toList());
 
         AdSelectionFromOutcomesConfig config =
@@ -259,9 +269,11 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
+
 
     @Test
     public void testRunOutcomeSelectionOrchestrationTimeoutFailure() {
@@ -283,15 +295,15 @@ public class OutcomeSelectionRunnerTest {
                     }
                 };
 
-        List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris =
+        List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris =
                 List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
-        for (AdSelectionIdWithBidAndRenderUri idWithBid : adSelectionIdWithBidAndRenderUris) {
+        for (AdSelectionResultBidAndUri idWithBid : adSelectionIdWithBidAndRenderUris) {
             persistAdSelectionEntry(idWithBid, MY_APP_PACKAGE_NAME);
         }
 
         List<Long> adOutcomesConfigParam =
                 adSelectionIdWithBidAndRenderUris.stream()
-                        .map(AdSelectionIdWithBidAndRenderUri::getAdSelectionId)
+                        .map(AdSelectionResultBidAndUri::getAdSelectionId)
                         .collect(Collectors.toList());
 
         AdSelectionFromOutcomesConfig config =
@@ -314,7 +326,9 @@ public class OutcomeSelectionRunnerTest {
                         mAdServicesLoggerMock,
                         mContext,
                         mFlags,
-                        mAdSelectionServiceFilter);
+                        mAdSelectionServiceFilter,
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelectionFromOutcomes(
@@ -327,12 +341,13 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_TIMEOUT),
                         anyInt());
     }
 
     private void persistAdSelectionEntry(
-            AdSelectionIdWithBidAndRenderUri idWithBidAndRenderUri, String callerPackageName) {
+            AdSelectionResultBidAndUri idWithBidAndRenderUri, String callerPackageName) {
         final Uri biddingLogicUri1 = Uri.parse("https://www.domain.com/logic/1");
         final Instant activationTime = Instant.now();
         final String contextualSignals = "contextual_signals";
@@ -343,10 +358,10 @@ public class OutcomeSelectionRunnerTest {
                 new DBAdSelection.Builder()
                         .setAdSelectionId(idWithBidAndRenderUri.getAdSelectionId())
                         .setCustomAudienceSignals(customAudienceSignals)
-                        .setContextualSignals(contextualSignals)
+                        .setBuyerContextualSignals(contextualSignals)
                         .setBiddingLogicUri(biddingLogicUri1)
-                        .setWinningAdRenderUri(idWithBidAndRenderUri.getRenderUri())
-                        .setWinningAdBid(idWithBidAndRenderUri.getBid())
+                        .setWinningAdRenderUri(idWithBidAndRenderUri.getWinningAdRenderUri())
+                        .setWinningAdBid(idWithBidAndRenderUri.getWinningAdBid())
                         .setCreationTimestamp(activationTime)
                         .setCallerPackageName(callerPackageName)
                         .build();
@@ -415,16 +430,15 @@ public class OutcomeSelectionRunnerTest {
         }
     }
 
-    static class GenericListMatcher
-            implements ArgumentMatcher<List<AdSelectionIdWithBidAndRenderUri>> {
-        private final List<AdSelectionIdWithBidAndRenderUri> mTruth;
+    static class GenericListMatcher implements ArgumentMatcher<List<AdSelectionResultBidAndUri>> {
+        private final List<AdSelectionResultBidAndUri> mTruth;
 
-        GenericListMatcher(List<AdSelectionIdWithBidAndRenderUri> truth) {
+        GenericListMatcher(List<AdSelectionResultBidAndUri> truth) {
             this.mTruth = truth;
         }
 
         @Override
-        public boolean matches(List<AdSelectionIdWithBidAndRenderUri> argument) {
+        public boolean matches(List<AdSelectionResultBidAndUri> argument) {
             return mTruth.size() == argument.size()
                     && new HashSet<>(mTruth).equals(new HashSet<>(argument));
         }

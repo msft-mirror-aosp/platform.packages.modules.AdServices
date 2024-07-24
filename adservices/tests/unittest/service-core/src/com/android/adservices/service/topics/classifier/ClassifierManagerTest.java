@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.Flags.ClassifierType;
@@ -35,11 +36,13 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -62,6 +65,9 @@ public class ClassifierManagerTest {
     @Mock private PrecomputedClassifier mPrecomputedClassifier;
 
     private ClassifierManager mClassifierManager;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() throws IOException {
@@ -379,6 +385,79 @@ public class ClassifierManagerTest {
         // Verify mPrecomputedClassifier is called once.
         verify(mPrecomputedClassifier, times(1))
                 .getTopTopics(eq(appTopics), eq(numberOfTopTopics), eq(numberOfRandomTopics));
+        // Verify mOnDeviceClassifier is not called.
+        verifyZeroInteractions(mOnDeviceClassifier);
+    }
+
+    @Test
+    public void testGetTopicsTaxonomy_onDeviceClassifier() {
+        // Set classifier type to on-device classifier.
+        setClassifierTypeFlag(ON_DEVICE_CLASSIFIER);
+
+        List<Integer> onDeviceTaxonomy = ImmutableList.of(1, 2, 3);
+        when(mOnDeviceClassifier.getLabels()).thenReturn(onDeviceTaxonomy);
+
+        List<Integer> topicsTaxonomy = mClassifierManager.getTopicsTaxonomy();
+
+        // Verify the topics returned are from on-device classifier.
+        assertThat(topicsTaxonomy).containsExactlyElementsIn(onDeviceTaxonomy);
+        // Verify mPrecomputedClassifier is not called.
+        verifyZeroInteractions(mPrecomputedClassifier);
+        // Verify mOnDeviceClassifier to be called once.
+        verify(mOnDeviceClassifier, times(1)).getLabels();
+    }
+
+    @Test
+    public void testGetTopicsTaxonomy_precomputedClassifier() {
+        // Set classifier type to pre-computed classifier.
+        setClassifierTypeFlag(PRECOMPUTED_CLASSIFIER);
+
+        List<Integer> precomputedTaxonomy = ImmutableList.of(1, 2, 3);
+        when(mPrecomputedClassifier.getLabels()).thenReturn(precomputedTaxonomy);
+
+        List<Integer> topicsTaxonomy = mClassifierManager.getTopicsTaxonomy();
+
+        // Verify the topics returned are from on-device classifier.
+        assertThat(topicsTaxonomy).containsExactlyElementsIn(precomputedTaxonomy);
+        // Verify mOnDeviceClassifier is not called.
+        verifyZeroInteractions(mOnDeviceClassifier);
+        // Verify mPrecomputedClassifier to be called once.
+        verify(mPrecomputedClassifier, times(1)).getLabels();
+    }
+
+    @Test
+    public void testGetTopicsTaxonomy_defaultBehaviour() {
+        // Set classifier type to PRECOMPUTED_THEN_ON_DEVICE classifier.
+        setClassifierTypeFlag(PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER);
+
+        mClassifierManager.getTopicsTaxonomy();
+
+        // Verify PrecomputedClassifier to be called once by default.
+        verify(mPrecomputedClassifier, times(1)).getLabels();
+    }
+
+    @Test
+    public void testGetTopicsTaxonomy_invalidFlagValue() {
+        // Set classifier type to PRECOMPUTED_THEN_ON_DEVICE classifier.
+        setClassifierTypeFlag(11);
+
+        mClassifierManager.getTopicsTaxonomy();
+
+        // Verify PrecomputedClassifier to be called once by default.
+        verify(mPrecomputedClassifier, times(1)).getLabels();
+    }
+
+    @Test
+    public void
+            testGetTopicsTaxonomy_onDeviceClassifierKillSwitch_fallbackToPrecomputedClassifier() {
+        // Set classifier type to ON_DEVICE_CLASSIFIER, then turn on kill switch.
+        setClassifierTypeFlag(ON_DEVICE_CLASSIFIER);
+        when(mMockFlags.getTopicsOnDeviceClassifierKillSwitch()).thenReturn(true);
+
+        mClassifierManager.getTopicsTaxonomy();
+
+        // Verify mPrecomputedClassifier is called once.
+        verify(mPrecomputedClassifier, times(1)).getLabels();
         // Verify mOnDeviceClassifier is not called.
         verifyZeroInteractions(mOnDeviceClassifier);
     }

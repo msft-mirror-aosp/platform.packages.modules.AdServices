@@ -22,6 +22,10 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
 
+    <!-- For this test suite to get picked up in mainline presubmit -->
+    <option name="config-descriptor:metadata" key="mainline-param"
+            value="com.google.android.adservices.apex" />
+
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name" value="CtsAppSetIdEndToEndTest.apk"/>
@@ -34,6 +38,12 @@
         <!-- Defaulting the API rate limit -->
         <option name="run-command"
                 value="device_config put adservices appsetid_request_permits_per_second 5.0" />
+
+        <!-- Enable API access without ad_services_config -->
+        <option name="run-command"
+                value="device_config put adservices app_config_returns_enabled_by_detault true" />
+        <option name="teardown-command"
+                value="device_config put adservices app_config_returns_enabled_by_detault false" />
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />

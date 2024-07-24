@@ -19,6 +19,8 @@ package com.android.adservices.service.customaudience;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_COUNTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_RENDER_ID_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.METADATA_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.RENDER_URI_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_DATA_KEY;
@@ -164,6 +166,44 @@ public class CustomAudienceUpdatableDataFixture {
 
         return jsonResponse.toString();
     }
+    /**
+     * Converts the input user bidding signals, trusted bidding data, list of ads, and
+     * auctionServerRequestFlags to a valid JSON object and returns it as a serialized string.
+     */
+    public static String toJsonResponseString(
+            String userBiddingSignals,
+            DBTrustedBiddingData trustedBiddingData,
+            List<DBAdData> ads,
+            List<String> auctionServerFlags)
+            throws JSONException {
+        return toJsonResponseString(
+                userBiddingSignals, trustedBiddingData, ads, auctionServerFlags, false);
+    }
+
+    /**
+     * Converts the input user bidding signals, trusted bidding data, list of ads, and
+     * auctionServerRequestFlags to a valid JSON object and returns it as a serialized string.
+     *
+     * <p>Optionally adds harmless junk to the response by adding unexpected fields.
+     */
+    public static String toJsonResponseString(
+            String userBiddingSignals,
+            DBTrustedBiddingData trustedBiddingData,
+            List<DBAdData> ads,
+            List<String> auctionServerFlags,
+            boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        JSONObject jsonResponse = new JSONObject();
+
+        jsonResponse = addToJsonObject(jsonResponse, userBiddingSignals, shouldAddHarmlessJunk);
+        jsonResponse = addToJsonObject(jsonResponse, trustedBiddingData, shouldAddHarmlessJunk);
+        jsonResponse = addToJsonObject(jsonResponse, ads, shouldAddHarmlessJunk);
+        jsonResponse =
+                addAuctionServerRequestFlagsToJsonObject(
+                        jsonResponse, auctionServerFlags, shouldAddHarmlessJunk);
+
+        return jsonResponse.toString();
+    }
 
     /**
      * Converts a string representation of a JSON object into a JSONObject with a keyed field for
@@ -265,12 +305,37 @@ public class CustomAudienceUpdatableDataFixture {
                 if (ad.getAdFilters() != null) {
                     adJson.put(AD_FILTERS_KEY, ad.getAdFilters().toJson());
                 }
+                if (ad.getAdRenderId() != null) {
+                    adJson.put(AD_RENDER_ID_KEY, ad.getAdRenderId());
+                }
                 adsJson.put(adJson);
             }
 
             jsonResponse.put(ADS_KEY, adsJson);
         }
 
+        return jsonResponse;
+    }
+
+    /**
+     * Converts a list of {@link String} containing auction server request flags into a JSONObject
+     * keyed on {@link CustomAudienceUpdatableDataReader#AUCTION_SERVER_REQUEST_FLAGS_KEY}.
+     *
+     * <p>Optionally adds harmless junk to the object by adding unexpected fields.
+     */
+    public static JSONObject addAuctionServerRequestFlagsToJsonObject(
+            JSONObject jsonResponse,
+            List<String> auctionServerRequestFlags,
+            boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        if (jsonResponse == null) {
+            jsonResponse = new JSONObject();
+        }
+        JSONArray array = new JSONArray(auctionServerRequestFlags);
+        if (shouldAddHarmlessJunk) {
+            JsonFixture.addHarmlessJunkValues(array);
+        }
+        jsonResponse.put(AUCTION_SERVER_REQUEST_FLAGS_KEY, array);
         return jsonResponse;
     }
 

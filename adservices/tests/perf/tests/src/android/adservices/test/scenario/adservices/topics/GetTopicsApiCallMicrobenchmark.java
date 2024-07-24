@@ -17,8 +17,6 @@
 package android.adservices.test.scenario.adservices.topics;
 
 import android.platform.test.microbenchmark.Microbenchmark;
-import android.platform.test.microbenchmark.Microbenchmark.NoMetricAfter;
-import android.platform.test.microbenchmark.Microbenchmark.NoMetricBefore;
 import android.platform.test.rule.DropCachesRule;
 import android.platform.test.rule.KillAppsRule;
 
@@ -39,14 +37,4 @@ public class GetTopicsApiCallMicrobenchmark extends GetTopicsApiCall {
                                     AdservicesTestHelper.getAdServicesPackageName(
                                             ApplicationProvider.getApplicationContext())))
                     .around(new DropCachesRule());
-
-    @NoMetricBefore
-    public void setup() {
-        super.setup();
-    }
-
-    @NoMetricAfter
-    public void teardown() {
-        super.teardown();
-    }
 }

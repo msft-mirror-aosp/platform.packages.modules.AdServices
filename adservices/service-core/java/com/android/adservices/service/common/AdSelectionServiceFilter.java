@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
+
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -26,10 +28,10 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /** Utility class to filter FLEDGE requests. */
 // TODO(b/269798827): Enable for R.
@@ -42,7 +44,7 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull Supplier<Throttler> throttlerSupplier) {
+            @NonNull Throttler throttler) {
         super(
                 context,
                 consentManager,
@@ -50,7 +52,7 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
                 appImportanceFilter,
                 fledgeAuthorizationFilter,
                 fledgeAllowListsFilter,
-                throttlerSupplier);
+                throttler);
     }
 
     /**
@@ -74,7 +76,8 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             boolean enforceConsent,
             int callerUid,
             int apiName,
-            @NonNull Throttler.ApiKey apiKey) {
+            @NonNull Throttler.ApiKey apiKey,
+            DevContext devContext) {
         try {
             Objects.requireNonNull(callerPackageName);
             Objects.requireNonNull(apiKey);
@@ -85,9 +88,10 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
                 assertForegroundCaller(callerUid, apiName);
             }
             if (!Objects.isNull(adTech)) {
-                assertFledgeEnrollment(adTech, callerPackageName, apiName);
+                assertFledgeEnrollment(
+                        adTech, callerPackageName, apiName, devContext, API_AD_SELECTION);
             }
-            assertAppInAllowList(callerPackageName, apiName);
+            assertAppInAllowList(callerPackageName, apiName, API_AD_SELECTION);
             if (enforceConsent) {
                 assertCallerHasUserConsent();
             }

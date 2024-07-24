@@ -19,6 +19,9 @@ package com.android.adservices.service.measurement.reporting;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+import android.util.Pair;
+
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 
@@ -50,5 +53,31 @@ public class ReportUtil {
             return new JSONArray(
                     sortedDestinations.stream().map(Uri::toString).collect(Collectors.toList()));
         }
+    }
+
+    /**
+     * Prepares a list of {@code UnsignedLong}s for report JSON.
+     *
+     * @param unsignedLongs a list of {@code UnsignedLong}s
+     * @return a JSONArray
+     */
+    @Nullable
+    public static JSONArray serializeUnsignedLongs(@NonNull List<UnsignedLong> unsignedLongs) {
+        return new JSONArray(
+                unsignedLongs.stream().map(UnsignedLong::toString).collect(Collectors.toList()));
+    }
+
+    /**
+     * Prepare summary bucket for report JSON
+     *
+     * @param summaryBucket the summary bucket
+     * @return the encoded summary bucket in format [start, end]
+     */
+    @Nullable
+    public static JSONArray serializeSummaryBucket(@NonNull Pair<Long, Long> summaryBucket) {
+        JSONArray result = new JSONArray();
+        result.put(summaryBucket.first);
+        result.put(summaryBucket.second);
+        return result;
     }
 }

@@ -22,11 +22,11 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
-import android.os.Build;
 import android.provider.Settings;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.common.SdkRuntimeUtil;
+import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -76,32 +76,45 @@ public class DevContextFilter {
      *     transaction.
      */
     public DevContext createDevContext() throws IllegalStateException {
-        int callingAppUid = SdkRuntimeUtil.getCallingAppUid(Binder.getCallingUidOrThrow());
-        return createDevContext(callingAppUid);
+        return createDevContextFromCallingUid(Binder.getCallingUidOrThrow());
+    }
+
+    /**
+     * Creates a {@link DevContext} for a given Binder calling UID.
+     *
+     * @param callingUid The Binder calling UID.
+     * @return A dev context specifying if the developer options are enabled for this API call or a
+     *     context with developer options disabled if there is any error retrieving info for the
+     *     calling application.
+     */
+    public DevContext createDevContextFromCallingUid(int callingUid) {
+        return createDevContext(SdkRuntimeUtil.getCallingAppUid(callingUid));
     }
 
     /**
      * Creates a {@link DevContext} for a given app UID.
      *
-     * @param callingUid The UID of the caller APP.
+     * @param callingAppUid The UID of the caller APP.
      * @return A dev context specifying if the developer options are enabled for this API call or a
      *     context with developer options disabled if there is any error retrieving info for the
      *     calling application.
      */
     @VisibleForTesting
-    public DevContext createDevContext(int callingUid) {
+    public DevContext createDevContext(int callingAppUid) {
         if (!isDeveloperMode()) {
+            LogUtil.v("Developer mode is disabled, creating dev context as disabled");
             return DevContext.createForDevOptionsDisabled();
         }
 
         try {
-            String callingAppPackage = mAppPackageNameRetriever.getAppPackageNameForUid(callingUid);
-            LogUtil.v("Creating Dev Context for calling app with package " + callingAppPackage);
+            String callingAppPackage =
+                    mAppPackageNameRetriever.getAppPackageNameForUid(callingAppUid);
             if (!isDebuggable(callingAppPackage)) {
-                LogUtil.v("Non debuggable, ignoring");
+                LogUtil.v("Not debuggable, creating dev context as disabled");
                 return DevContext.createForDevOptionsDisabled();
             }
 
+            LogUtil.v("Creating Dev Context for calling app with package " + callingAppPackage);
             return DevContext.builder()
                     .setDevOptionsEnabled(true)
                     .setCallingAppPackageName(callingAppPackage)
@@ -110,7 +123,7 @@ public class DevContextFilter {
             LogUtil.w(
                     "Unable to retrieve the package name for UID %d. Creating a DevContext with "
                             + "developer options disabled.",
-                    callingUid);
+                    callingAppUid);
             return DevContext.createForDevOptionsDisabled();
         }
     }
@@ -134,7 +147,7 @@ public class DevContextFilter {
 
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.w(
-                    "Unable to retrieve application info for app with ID %d and resolved package "
+                    "Unable to retrieve application info for app with ID %s and resolved package "
                             + "name '%s', considering not debuggable for safety.",
                     callingAppPackage, callingAppPackage);
             return false;
@@ -144,7 +157,7 @@ public class DevContextFilter {
     /** Returns true if developer options are enabled. */
     @VisibleForTesting
     public boolean isDeveloperMode() {
-        return Build.isDebuggable()
+        return BuildCompatUtils.isDebuggable()
                 || Settings.Global.getInt(
                                 mContentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0)
                         != 0;

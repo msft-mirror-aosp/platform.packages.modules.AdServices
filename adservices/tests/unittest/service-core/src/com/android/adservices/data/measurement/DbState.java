@@ -16,17 +16,22 @@
 
 package com.android.adservices.data.measurement;
 
+import static java.util.function.Predicate.not;
+
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.registration.AsyncRedirect;
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -35,10 +40,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Class for providing test data for measurement tests.
@@ -55,6 +63,8 @@ public class DbState {
     List<AggregateEncryptionKey> mAggregateEncryptionKeyList;
     List<AggregateReport> mAggregateReportList;
     List<DebugReport> mDebugReportList;
+    List<AsyncRegistration> mAsyncRegistrationList;
+    List<KeyValueData> mKeyValueDataList;
 
     public DbState() {
         mSourceList = new ArrayList<>();
@@ -65,6 +75,8 @@ public class DbState {
         mAggregateEncryptionKeyList = new ArrayList<>();
         mAggregateReportList = new ArrayList<>();
         mDebugReportList = new ArrayList<>();
+        mAsyncRegistrationList = new ArrayList<>();
+        mKeyValueDataList = new ArrayList<>();
     }
 
     public DbState(JSONObject testInput) throws JSONException {
@@ -147,6 +159,26 @@ public class DbState {
                 JSONObject rJSON = debugReports.getJSONObject(i);
                 DebugReport debugReport = getDebugReportFrom(rJSON);
                 mDebugReportList.add(debugReport);
+            }
+        }
+
+        if (testInput.has("async_registrations")) {
+            // AsyncRegistrations
+            JSONArray asyncRegistrations = testInput.getJSONArray("async_registrations");
+            for (int i = 0; i < asyncRegistrations.length(); i++) {
+                JSONObject aJSON = asyncRegistrations.getJSONObject(i);
+                AsyncRegistration asyncRegistration = getAsyncRegistrationFrom(aJSON);
+                mAsyncRegistrationList.add(asyncRegistration);
+            }
+        }
+
+        if (testInput.has("key_values")) {
+            // KeyValues
+            JSONArray keyValues = testInput.getJSONArray("key_values");
+            for (int i = 0; i < keyValues.length(); i++) {
+                JSONObject aJSON = keyValues.getJSONObject(i);
+                KeyValueData keyValueData = getKeyValueDataFrom(aJSON);
+                mKeyValueDataList.add(keyValueData);
             }
         }
     }
@@ -242,6 +274,45 @@ public class DbState {
                     SqliteObjectMapper.constructDebugReportFromCursor(debugReportCursor));
         }
         debugReportCursor.close();
+
+        // Read AsyncRegistration table
+        Cursor asyncRegistrationCursor =
+                readerDB.query(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+        while (asyncRegistrationCursor.moveToNext()) {
+            mAsyncRegistrationList.add(
+                    SqliteObjectMapper.constructAsyncRegistration(asyncRegistrationCursor));
+        }
+        asyncRegistrationCursor.close();
+
+        // Read KeyValueData table
+        Cursor keyValueDataCursor =
+                readerDB.query(
+                        MeasurementTables.KeyValueDataContract.TABLE,
+                        new String[] {
+                            MeasurementTables.KeyValueDataContract.KEY,
+                            MeasurementTables.KeyValueDataContract.VALUE,
+                            MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.KeyValueDataContract.KEY);
+        while (keyValueDataCursor.moveToNext()) {
+            KeyValueData.Builder builder = new KeyValueData.Builder();
+            builder.setKey(keyValueDataCursor.getString(0));
+            builder.setValue(keyValueDataCursor.getString(1));
+            builder.setDataType(KeyValueData.DataType.valueOf(keyValueDataCursor.getString(2)));
+            mKeyValueDataList.add(builder.build());
+        }
+        keyValueDataCursor.close();
     }
 
     public void sortAll() {
@@ -261,7 +332,8 @@ public class DbState {
                         .thenComparing(EventReport::getTriggerTime));
 
         mAttrRateLimitList.sort(
-                Comparator.comparing(Attribution::getTriggerId));
+                Comparator.comparing(Attribution::getScope)
+                        .thenComparing(Attribution::getTriggerId));
 
         mAggregateEncryptionKeyList.sort(
                 Comparator.comparing(AggregateEncryptionKey::getKeyId));
@@ -271,6 +343,10 @@ public class DbState {
                         .thenComparing(AggregateReport::getSourceRegistrationTime));
 
         mDebugReportList.sort(Comparator.comparing(DebugReport::getId));
+
+        mAsyncRegistrationList.sort(Comparator.comparing(AsyncRegistration::getRequestTime));
+
+        mKeyValueDataList.sort(Comparator.comparing(KeyValueData::getKey));
     }
 
     public List<AggregateEncryptionKey> getAggregateEncryptionKeyList() {
@@ -278,33 +354,55 @@ public class DbState {
     }
 
     private Source getSourceFrom(JSONObject sJSON) throws JSONException {
-        return new Source.Builder()
-                .setId(sJSON.getString("id"))
-                .setEventId(new UnsignedLong(sJSON.getString("eventId")))
-                .setSourceType(
-                        Source.SourceType.valueOf(
-                                sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
-                .setPublisher(Uri.parse(sJSON.getString("publisher")))
-                .setPublisherType(sJSON.optInt("publisherType"))
-                .setAggregateSource(sJSON.optString("aggregationKeys", null))
-                .setAggregateContributions(sJSON.optInt("aggregateContributions"))
-                .setEnrollmentId(sJSON.getString("enrollmentId"))
-                .setEventTime(sJSON.getLong("eventTime"))
-                .setExpiryTime(sJSON.getLong("expiryTime"))
-                .setEventReportWindow(sJSON.getLong("eventReportWindow"))
-                .setAggregatableReportWindow(sJSON.optLong("aggregatableReportWindow"))
-                .setPriority(sJSON.getLong("priority"))
-                .setStatus(sJSON.getInt("status"))
-                .setRegistrant(Uri.parse(sJSON.getString("registrant")))
-                .setInstallAttributionWindow(
-                        sJSON.optLong("installAttributionWindow", TimeUnit.DAYS.toMillis(30)))
-                .setInstallCooldownWindow(sJSON.optLong("installCooldownWindow", 0))
-                .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
-                .setAttributionMode(
-                        sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
-                .setFilterData(sJSON.optString("filterData", null))
-                .setRegistrationOrigin(getRegistrationOrigin(sJSON))
-                .build();
+        Source.Builder builder =
+                new Source.Builder()
+                        .setId(sJSON.getString("id"))
+                        .setEventId(new UnsignedLong(sJSON.getString("eventId")))
+                        .setSourceType(
+                                Source.SourceType.valueOf(
+                                        sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
+                        .setPublisher(Uri.parse(sJSON.getString("publisher")))
+                        .setPublisherType(sJSON.optInt("publisherType"))
+                        .setAggregateSource(sJSON.optString("aggregationKeys", null))
+                        .setAggregateContributions(sJSON.optInt("aggregateContributions"))
+                        .setEnrollmentId(sJSON.getString("enrollmentId"))
+                        .setEventTime(sJSON.getLong("eventTime"))
+                        .setExpiryTime(sJSON.getLong("expiryTime"))
+                        .setEventReportWindow(sJSON.getLong("eventReportWindow"))
+                        .setAggregatableReportWindow(sJSON.optLong("aggregatableReportWindow"))
+                        .setPriority(sJSON.getLong("priority"))
+                        .setStatus(sJSON.getInt("status"))
+                        .setRegistrant(Uri.parse(sJSON.getString("registrant")))
+                        .setInstallAttributionWindow(
+                                sJSON.optLong(
+                                        "installAttributionWindow", TimeUnit.DAYS.toMillis(30)))
+                        .setInstallCooldownWindow(sJSON.optLong("installCooldownWindow", 0))
+                        .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
+                        .setAttributionMode(
+                                sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
+                        .setFilterDataString(sJSON.optString("filterData", null))
+                        .setRegistrationOrigin(getRegistrationOrigin(sJSON))
+                        .setTriggerSpecsString(sJSON.optString("triggerSpecs", null))
+                        .setEventAttributionStatus(sJSON.optString("eventAttributionStatus", null));
+
+        if (sJSON.opt("aggregateReportDedupKeys") != null) {
+            builder.setAggregateReportDedupKeys(
+                    commaSeparatedUnsignedStringsToList(
+                            sJSON.getString("aggregateReportDedupKeys")));
+        }
+
+        return builder.build();
+    }
+
+    private static List<UnsignedLong> commaSeparatedUnsignedStringsToList(String values) {
+        if (values == null) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(values.split(","))
+                .map(String::trim)
+                .filter(not(String::isEmpty))
+                .map(UnsignedLong::new)
+                .collect(Collectors.toList());
     }
 
     private SourceDestination getSourceDestinationFrom(JSONObject sdJSON) throws JSONException {
@@ -330,6 +428,9 @@ public class DbState {
                 .setFilters(tJSON.optString("filters", null))
                 .setNotFilters(tJSON.optString("not_filters", null))
                 .setRegistrationOrigin(getRegistrationOrigin(tJSON))
+                .setAggregatableSourceRegistrationTimeConfig(
+                        Trigger.SourceRegistrationTimeConfig.valueOf(
+                                tJSON.getString("aggregatableSourceRegistrationTimeConfig")))
                 .build();
     }
 
@@ -360,6 +461,7 @@ public class DbState {
             throws JSONException {
         return new Attribution.Builder()
                 .setId(attrJSON.getString("id"))
+                .setScope(attrJSON.optInt("scope", 0))
                 .setSourceSite(attrJSON.getString("sourceSite"))
                 .setSourceOrigin(attrJSON.getString("sourceOrigin"))
                 .setDestinationSite(attrJSON.getString("destinationSite"))
@@ -379,6 +481,8 @@ public class DbState {
                 .setKeyId(keyJSON.getString("keyId"))
                 .setPublicKey(keyJSON.getString("publicKey"))
                 .setExpiry(keyJSON.getLong("expiry"))
+                .setAggregationCoordinatorOrigin(
+                        WebUtil.validUri(keyJSON.getString("aggregation_coordinator_origin")))
                 .build();
     }
 
@@ -391,6 +495,10 @@ public class DbState {
                         cursor.getString(
                                 cursor.getColumnIndex(
                                         MeasurementTables.AttributionContract.SOURCE_SITE)))
+                .setScope(
+                        cursor.getInt(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.SCOPE)))
                 .setSourceOrigin(
                         cursor.getString(
                                 cursor.getColumnIndex(
@@ -445,27 +553,76 @@ public class DbState {
 
     private AggregateReport getAggregateReportFrom(JSONObject rJSON)
             throws JSONException {
-        return new AggregateReport.Builder()
-                .setId(rJSON.getString("id"))
-                .setPublisher(Uri.parse(rJSON.getString("publisher")))
-                .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
-                .setSourceRegistrationTime(rJSON.getLong("sourceRegistrationTime"))
-                .setScheduledReportTime(rJSON.getLong("scheduledReportTime"))
-                .setEnrollmentId(rJSON.getString("enrollmentId"))
-                .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
-                .setStatus(rJSON.getInt("status"))
-                .setApiVersion(rJSON.optString("apiVersion", null))
-                .setSourceId(rJSON.optString("sourceId", null))
-                .setTriggerId(rJSON.optString("triggerId", null))
-                .setRegistrationOrigin(getRegistrationOrigin(rJSON))
-                .build();
+        AggregateReport.Builder builder =
+                new AggregateReport.Builder()
+                        .setId(rJSON.getString("id"))
+                        .setPublisher(Uri.parse(rJSON.getString("publisher")))
+                        .setAttributionDestination(
+                                Uri.parse(rJSON.getString("attributionDestination")))
+                        .setSourceRegistrationTime(rJSON.getLong("sourceRegistrationTime"))
+                        .setScheduledReportTime(rJSON.getLong("scheduledReportTime"))
+                        .setEnrollmentId(rJSON.getString("enrollmentId"))
+                        .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
+                        .setStatus(rJSON.getInt("status"))
+                        .setApiVersion(rJSON.optString("apiVersion", null))
+                        .setSourceId(rJSON.optString("sourceId", null))
+                        .setTriggerId(rJSON.optString("triggerId", null))
+                        .setRegistrationOrigin(getRegistrationOrigin(rJSON))
+                        .setAggregationCoordinatorOrigin(
+                                Uri.parse(
+                                        rJSON.optString(
+                                                "aggregation_coordinator_origin",
+                                                "https://test.test")))
+                        .setIsFakeReport(rJSON.optBoolean("isFakeReport", false));
+
+        if (rJSON.opt("dedupKey") != null) {
+            builder.setDedupKey(new UnsignedLong(rJSON.getString("dedupKey")));
+        }
+
+        return builder.build();
     }
 
     private DebugReport getDebugReportFrom(JSONObject rJSON) throws JSONException {
-        return new DebugReport.Builder()
-                .setId(rJSON.getString("id"))
-                .setType(rJSON.getString("type"))
-                .setBody(rJSON.getString("body"))
+        DebugReport.Builder builder =
+                new DebugReport.Builder()
+                        .setId(rJSON.getString("id"))
+                        .setType(rJSON.getString("type"))
+                        .setBody(rJSON.getString("body"));
+        if (rJSON.has("registrant")) {
+            builder.setRegistrant(Uri.parse(rJSON.getString("registrant")));
+        }
+        return builder.build();
+    }
+
+    private AsyncRegistration getAsyncRegistrationFrom(JSONObject aJSON) throws JSONException {
+        return new AsyncRegistration.Builder()
+                .setRegistrationId(aJSON.getString("registrationId"))
+                .setRegistrationUri(Uri.parse(aJSON.getString("registrationUri")))
+                .setTopOrigin(Uri.parse(aJSON.getString("topOrigin")))
+                .setRegistrant(Uri.parse(aJSON.getString("registrant")))
+                .setOsDestination(Uri.parse(aJSON.getString("osDestination")))
+                .setRequestTime(aJSON.getLong("requestTime"))
+                .setAdIdPermission(aJSON.getBoolean("adIdPermission"))
+                .setId(aJSON.getString("id"))
+                .setType(
+                        AsyncRegistration.RegistrationType.values()[
+                                aJSON.getInt("registrationType")])
+                .setPlatformAdId(aJSON.getString("platformAdId"))
+                .setDebugKeyAllowed(aJSON.getBoolean("debugKeyAllowed"))
+                .setRetryCount(aJSON.getInt("retryCount"))
+                .setVerifiedDestination(Uri.parse(aJSON.getString("verifiedDestination")))
+                .setWebDestination(Uri.parse(aJSON.getString("webDestination")))
+                .setSourceType(Source.SourceType.values()[aJSON.getInt("sourceType")])
+                .setRedirectBehavior(
+                        AsyncRedirect.RedirectBehavior.valueOf(aJSON.getString("redirectBehavior")))
+                .build();
+    }
+
+    private KeyValueData getKeyValueDataFrom(JSONObject kJSON) throws JSONException {
+        return new KeyValueData.Builder()
+                .setKey(kJSON.getString("key"))
+                .setDataType(KeyValueData.DataType.valueOf(kJSON.getString("dataType")))
+                .setValue(kJSON.getString("value"))
                 .build();
     }
 

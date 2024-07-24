@@ -86,12 +86,21 @@ public abstract class DBCustomAudienceBackgroundFetchData {
     @ColumnInfo(name = "num_timeout_failures")
     public abstract long getNumTimeoutFailures();
 
+    /**
+     * @return if the custom audience is considered debuggable (i.e. was created by an app where
+     *     android:debuggable="true" while developer options are enabled.
+     */
+    @AutoValue.CopyAnnotations
+    @ColumnInfo(name = "is_debuggable", defaultValue = "false")
+    public abstract boolean getIsDebuggable();
+
     /** @return an AutoValue builder for a {@link DBCustomAudienceBackgroundFetchData} object */
     @NonNull
     public static DBCustomAudienceBackgroundFetchData.Builder builder() {
         return new AutoValue_DBCustomAudienceBackgroundFetchData.Builder()
                 .setNumValidationFailures(0)
-                .setNumTimeoutFailures(0);
+                .setNumTimeoutFailures(0)
+                .setIsDebuggable(false);
     }
 
     /**
@@ -107,7 +116,8 @@ public abstract class DBCustomAudienceBackgroundFetchData {
             @NonNull Uri dailyUpdateUri,
             @NonNull Instant eligibleUpdateTime,
             long numValidationFailures,
-            long numTimeoutFailures) {
+            long numTimeoutFailures,
+            boolean debuggable) {
         return builder()
                 .setOwner(owner)
                 .setBuyer(buyer)
@@ -116,6 +126,7 @@ public abstract class DBCustomAudienceBackgroundFetchData {
                 .setEligibleUpdateTime(eligibleUpdateTime)
                 .setNumValidationFailures(numValidationFailures)
                 .setNumTimeoutFailures(numTimeoutFailures)
+                .setIsDebuggable(debuggable)
                 .build();
     }
 
@@ -163,7 +174,8 @@ public abstract class DBCustomAudienceBackgroundFetchData {
                         .setDailyUpdateUri(getDailyUpdateUri())
                         .setEligibleUpdateTime(getEligibleUpdateTime())
                         .setNumValidationFailures(getNumValidationFailures())
-                        .setNumTimeoutFailures(getNumTimeoutFailures());
+                        .setNumTimeoutFailures(getNumTimeoutFailures())
+                        .setIsDebuggable(getIsDebuggable());
 
         if (updatableData.getContainsSuccessfulUpdate()) {
             fetchDataBuilder.setEligibleUpdateTime(
@@ -244,6 +256,10 @@ public abstract class DBCustomAudienceBackgroundFetchData {
          */
         @NonNull
         public abstract Builder setNumTimeoutFailures(long value);
+
+        /** Sets if the custom audience was created in a debuggable context. */
+        @NonNull
+        public abstract Builder setIsDebuggable(boolean value);
 
         /**
          * Builds the {@link DBCustomAudienceBackgroundFetchData} object and returns it.

@@ -21,19 +21,18 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeSdkSandboxProcessDeathCallback;
 import android.os.Bundle;
+import android.util.Log;
 
 public class SdkSandboxTestActivity extends Activity {
 
+    private static final String TAG = "SdkSandboxLifecycleTestActivity";
     private static final String SDK_NAME = "com.android.testcode";
     private static final String SDK_NAME_2 = "com.android.testcode2";
 
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        if (icicle != null) {
-            // Only load SDKs when Activity created, not restored.
-            return;
-        }
+        Log.d(TAG, "Loading SDKs");
 
         SdkSandboxManager sdkSandboxManager =
                 getApplicationContext().getSystemService(SdkSandboxManager.class);
@@ -42,6 +41,13 @@ public class SdkSandboxTestActivity extends Activity {
         // Add a callback so that this app does not die when the sandbox dies.
         sdkSandboxManager.addSdkSandboxProcessDeathCallback(
                 Runnable::run, new FakeSdkSandboxProcessDeathCallback());
+
+        if (!sdkSandboxManager.getSandboxedSdks().isEmpty()) {
+            // Only load SDKs if they haven't already been loaded (e.g. if the activity is being
+            // recreated).
+            Log.d(TAG, "Skipping loading SDKs since already loaded");
+            return;
+        }
 
         Bundle params = new Bundle();
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();

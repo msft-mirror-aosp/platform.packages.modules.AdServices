@@ -21,7 +21,10 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.common.AdTechIdentifier;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.junit.Ignore;
+import org.junit.Rule;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -34,9 +37,13 @@ public class SetAppInstallAdvertisersRequestTest {
                             AdTechIdentifier.fromString("example1.com"),
                             AdTechIdentifier.fromString("example2.com")));
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Ignore
     public void testBuildsSetAppInstallAdvertisersRequest() {
-        SetAppInstallAdvertisersRequest request = new SetAppInstallAdvertisersRequest(ADVERTISERS);
+        SetAppInstallAdvertisersRequest request =
+                new SetAppInstallAdvertisersRequest.Builder().setAdvertisers(ADVERTISERS).build();
 
         assertThat(request.getAdvertisers()).isEqualTo(ADVERTISERS);
     }

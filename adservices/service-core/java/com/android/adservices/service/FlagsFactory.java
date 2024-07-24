@@ -27,43 +27,91 @@ public class FlagsFactory {
     /** Ad Services Flags backed by hard coded constants. This should be used in unit tests only */
     public static Flags getFlagsForTest() {
         // Use the Flags that has constant values.
-        return new Flags() {
-            // Using tolerant timeouts for tests to avoid flakiness.
-            // Tests that need to validate timeout behaviours will override these values too.
-            @Override
-            public long getAdSelectionBiddingTimeoutPerCaMs() {
-                return 10000;
-            }
+        return new TestFlags();
+    }
 
-            @Override
-            public long getAdSelectionScoringTimeoutMs() {
-                return 10000;
-            }
+    public static class TestFlags implements Flags {
+        // Using tolerant timeouts for tests to avoid flakiness.
+        // Tests that need to validate timeout behaviours will override these values too.
+        @Override
+        public long getAdSelectionBiddingTimeoutPerCaMs() {
+            return 10000;
+        }
 
-            @Override
-            public long getAdSelectionOverallTimeoutMs() {
-                return 600000;
-            }
+        @Override
+        public long getAdSelectionScoringTimeoutMs() {
+            return 10000;
+        }
 
-            @Override
-            public boolean getEnforceIsolateMaxHeapSize() {
-                return false;
-            }
+        @Override
+        public long getAdSelectionOverallTimeoutMs() {
+            return 600000;
+        }
 
-            @Override
-            public boolean getDisableFledgeEnrollmentCheck() {
-                return true;
-            }
+        @Override
+        public boolean getEnforceIsolateMaxHeapSize() {
+            return false;
+        }
 
-            @Override
-            public boolean getFledgeRegisterAdBeaconEnabled() {
-                return true;
-            }
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return true;
+        }
 
-            @Override
-            public boolean getFledgeAdSelectionFilteringEnabled() {
-                return true;
-            }
-        };
+        @Override
+        public boolean getFledgeRegisterAdBeaconEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeFetchCustomAudienceEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+            return true;
+        }
+
+        @Override
+        public int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
+            // Lets the delay be set in past for easier testing
+            return -100;
+        }
+
+        @Override
+        public boolean getEnableLoggedTopic() {
+            return true;
+        }
+
+        @Override
+        public boolean getEnableDatabaseSchemaVersion8() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeEventLevelDebugReportingEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeBeaconReportingMetricsEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAppPackageNameLoggingEnabled() {
+            return true;
+        }
     }
 }

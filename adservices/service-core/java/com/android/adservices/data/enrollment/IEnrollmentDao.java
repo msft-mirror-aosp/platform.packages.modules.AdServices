@@ -18,13 +18,18 @@ package com.android.adservices.data.enrollment;
 
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.service.enrollment.EnrollmentData;
 
+import java.util.List;
 import java.util.Set;
 
 /** Interface for enrollment related data access operations. */
 public interface IEnrollmentDao {
+
+    /** Returns all enrollment data in enrollment table. */
+    List<EnrollmentData> getAllEnrollmentData();
 
     /**
      * Returns the {@link EnrollmentData}.
@@ -63,12 +68,73 @@ public interface IEnrollmentDao {
     Set<AdTechIdentifier> getAllFledgeEnrolledAdTechs();
 
     /**
+     * Extracts and returns the {@link AdTechIdentifier} and matching {@link EnrollmentData} from a
+     * given {@link Uri}.
+     *
+     * <p>Upon enrollment, the server will validate that ad techs' RBR URLs do not share the same
+     * domain. If this does happen, only return the first match in the database.
+     *
+     * @param originalUri the {@link Uri} to extract from
+     * @return a matching {@link Pair} of {@link AdTechIdentifier} and {@link EnrollmentData}, or
+     *     {@code null} if no matches were found
+     */
+    Pair<AdTechIdentifier, EnrollmentData> getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+            Uri originalUri);
+
+    /**
+     * Returns the {@link EnrollmentData} that matches the given {@link AdTechIdentifier}.
+     *
+     * <p>Upon enrollment, the server will validate that ad techs' urls do not share the same
+     * domain. If this does happen, only return the first match in the database.
+     *
+     * @param adTechIdentifier the {@link AdTechIdentifier} to search against
+     * @return a matching {@link EnrollmentData} or {@code null} if no matches were found
+     */
+    EnrollmentData getEnrollmentDataForPASByAdTechIdentifier(AdTechIdentifier adTechIdentifier);
+
+    /**
+     * Returns a set of {@link AdTechIdentifier} objects for all ad techs enrolled with PAS.
+     *
+     * @return a set of all enrolled ad techs' {@link AdTechIdentifier} if they enrolled in PAS;
+     *     empty if none found
+     */
+    Set<AdTechIdentifier> getAllPASEnrolledAdTechs();
+
+    /**
+     * Extracts and returns the {@link AdTechIdentifier} and matching {@link EnrollmentData} from a
+     * given {@link Uri}.
+     *
+     * <p>Upon enrollment, the server will validate that ad techs' url do not share the same domain.
+     * If this does happen, only return the first match in the database.
+     *
+     * @param originalUri the {@link Uri} to extract from
+     * @return a matching {@link Pair} of {@link AdTechIdentifier} and {@link EnrollmentData}, or
+     *     {@code null} if no matches were found
+     */
+    Pair<AdTechIdentifier, EnrollmentData> getEnrollmentDataForPASByMatchingAdTechIdentifier(
+            Uri originalUri);
+
+    /**
      * Returns the {@link EnrollmentData} given AdTech SDK Name.
      *
      * @param sdkName List of SDKs belonging to the same enrollment.
      * @return the EnrollmentData; Null in case of SQL failure
      */
     EnrollmentData getEnrollmentDataFromSdkName(String sdkName);
+
+    /**
+     * Returns the number of enrollment records in the DB table.
+     *
+     * @return count of records in the enrollment table
+     */
+    Long getEnrollmentRecordsCount();
+
+    /**
+     * Returns the number of enrollment records in the DB table for logging purposes.
+     *
+     * @return count of records in the enrollment table
+     */
+    int getEnrollmentRecordCountForLogging();
 
     /**
      * Inserts {@link EnrollmentData} into DB table.
@@ -92,4 +158,13 @@ public interface IEnrollmentDao {
      * @return true if the operation was successful, false, otherwise.
      */
     boolean deleteAll();
+
+    /**
+     * Overwrites all {@link EnrollmentData} in DB table. Delete records that aren't included list.
+     * Updates/inserts those included.
+     *
+     * @param newEnrollments List of {@link EnrollmentData} to overwrite table with.
+     * @return true if the operation was successful, false, otherwise.
+     */
+    boolean overwriteData(List<EnrollmentData> newEnrollments);
 }

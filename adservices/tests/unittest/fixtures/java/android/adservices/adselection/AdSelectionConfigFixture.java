@@ -29,7 +29,6 @@ import java.util.Map;
 
 /** This is a static class meant to help with tests that involve creating an AdSelectionConfig. */
 public class AdSelectionConfigFixture {
-
     public static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
     public static final AdTechIdentifier SELLER_1 = AdTechIdentifier.fromString("test2.com");
 
@@ -126,8 +125,9 @@ public class AdSelectionConfigFixture {
      *     for the unit tests, this version of Ad Selection builder includes contextual Ads as well
      * @hide
      */
-    public static AdSelectionConfig.Builder anAdSelectionConfigWithContextualAdsBuilder() {
+    public static AdSelectionConfig.Builder anAdSelectionConfigWithSignedContextualAdsBuilder() {
         return anAdSelectionConfigBuilder()
-                .setBuyerContextualAds(ContextualAdsFixture.getBuyerContextualAdsMap());
+                .setPerBuyerSignedContextualAds(
+                        SignedContextualAdsFixture.getBuyerSignedContextualAdsMap());
     }
 }

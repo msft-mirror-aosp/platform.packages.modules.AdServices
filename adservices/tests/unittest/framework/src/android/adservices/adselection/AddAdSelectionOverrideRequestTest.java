@@ -21,8 +21,11 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 
@@ -37,13 +40,16 @@ public class AddAdSelectionOverrideRequestTest {
                             + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
     private static final DecisionLogic DECISION_LOGIC = new DecisionLogic(DECISION_LOGIC_JS);
-    private static final BuyersDecisionLogic BUYERS_DECISION_LOGIC =
-            new BuyersDecisionLogic(
+    private static final PerBuyerDecisionLogic BUYERS_DECISION_LOGIC =
+            new PerBuyerDecisionLogic(
                     ImmutableMap.of(
                             CommonFixture.VALID_BUYER_1,
                             DECISION_LOGIC,
                             CommonFixture.VALID_BUYER_2,
                             DECISION_LOGIC));
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildsAddAdSelectionOverrideRequest() throws Exception {
@@ -57,6 +63,6 @@ public class AddAdSelectionOverrideRequestTest {
         assertThat(request.getDecisionLogicJs()).isEqualTo(DECISION_LOGIC_JS);
         assertThat(request.getAdSelectionConfig()).isEqualTo(AD_SELECTION_CONFIG);
         assertThat(request.getTrustedScoringSignals()).isEqualTo(TRUSTED_SCORING_SIGNALS);
-        assertThat(request.getBuyersDecisionLogic()).isEqualTo(BUYERS_DECISION_LOGIC);
+        assertThat(request.getPerBuyerDecisionLogic()).isEqualTo(BUYERS_DECISION_LOGIC);
     }
 }

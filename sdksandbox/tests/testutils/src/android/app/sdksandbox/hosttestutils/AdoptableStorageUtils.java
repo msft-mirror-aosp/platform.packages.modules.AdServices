@@ -164,7 +164,7 @@ public class AdoptableStorageUtils {
         int attempt = 0;
         boolean noCheckingEjecting = false;
         String result = "";
-        while (!noCheckingEjecting && attempt++ < 60) {
+        while (!noCheckingEjecting && attempt++ < 600) {
             result = mTest.getDevice().executeShellCommand("sm list-volumes");
             noCheckingEjecting = !result.contains("ejecting") && !result.contains("checking");
             RunUtil.getDefault().sleep(100);

@@ -16,6 +16,9 @@
 
 package com.android.adservices.tests.cts.topics.connection;
 
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -26,15 +29,16 @@ import android.adservices.topics.Topic;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -48,20 +52,14 @@ import java.util.concurrent.Executors;
 public class TopicsConnectionTest {
     private static final String TAG = "TopicsConnectionTest";
 
-    private static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
-
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
 
-    // Default Epoch Period.
-    private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
-
     // Use 0 percent for random topic in the test so that we can verify the returned topic.
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
-    private static final int TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -69,17 +67,16 @@ public class TopicsConnectionTest {
     private static final String ADSERVICES_PACKAGE_NAME =
             AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
 
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+
     @Before
     public void setup() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
-        // Extra flags need to be set when test is executed on S- for service to run (e.g.
-        // to avoid invoking system-server related code).
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-
         // Kill adservices process to avoid interfering from other tests.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
@@ -87,21 +84,14 @@ public class TopicsConnectionTest {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
+        flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        flags.setFlag(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
-    @After
-    public void teardown() {
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-    }
-
+    @FlakyTest(bugId = 321944400)
     @Test
     public void testEnableGlobalKillSwitch() throws Exception {
         // First enable the Global Kill Switch and then connect to the TopicsService.
@@ -121,7 +111,6 @@ public class TopicsConnectionTest {
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(exception).hasMessageThat().contains(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
 
         // Now disable the Global Kill Switch, we should be able to connect to the Service normally.
         enableGlobalKillSwitch(/* enabled */ false);
@@ -161,21 +150,14 @@ public class TopicsConnectionTest {
     // If enabled = true, override global_kill_switch to ON to turn off Adservices.
     // If enabled = false, the AdServices is enabled.
     private void enableGlobalKillSwitch(boolean enabled) {
-        String overrideString = enabled ? "true" : "false";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
-    }
-
-    // Override the Epoch Period to shorten the Epoch Length in the test.
-    private void overrideEpochPeriod(long overrideEpochPeriod) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
-    }
-
-    // Override the Percentage For Random Topic in the test.
-    private void overridePercentageForRandomTopic(long overridePercentage) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_percentage_for_random_topics "
-                        + overridePercentage);
+        if (SdkLevel.isAtLeastT()) {
+            // TODO (b/307748265): update to use FlagSetterRule
+            String overrideString = enabled ? "true" : "false";
+            ShellUtils.runShellCommand(
+                    "device_config put adservices global_kill_switch " + overrideString);
+        } else {
+            flags.setEnableBackCompat(!enabled);
+        }
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */

@@ -37,8 +37,39 @@ android_test {
         "cts",
         "general-tests",
         "mts-adservices",
+        "mcts-adservices",
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
+}
+
+android_test {
+    name: "CtsAdExtServicesTopicsConnectionTests",
+    srcs: [
+        "src/**/*.java",
+    ],
+    static_libs: [
+        "androidx.concurrent_concurrent-futures",
+        "compatibility-device-util-axt",
+        "truth",
+        "adservices-clients",
+        "adservices-test-utility",
+    ],
+    libs: [
+        "android.ext.adservices",
+        "android.test.base",
+        "framework-adservices",
+        "framework-sdksandbox.impl",
+    ],
+    test_suites: [
+        "cts",
+        "general-tests",
+        "mts-extservices",
+        "mcts-extservices",
+    ],
+    sdk_version: "module_current",
+    min_sdk_version: "31",
+    max_sdk_version: "32",
+    test_config: "AndroidTest.ExtServices.xml",
+    manifest: "AndroidManifestExtServices.xml",
 }

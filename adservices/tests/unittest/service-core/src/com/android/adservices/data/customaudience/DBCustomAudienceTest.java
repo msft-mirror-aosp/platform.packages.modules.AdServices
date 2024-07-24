@@ -16,14 +16,18 @@
 
 package com.android.adservices.data.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
@@ -32,6 +36,9 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableDataFixture;
 
+import com.google.common.collect.ImmutableSet;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -45,6 +52,12 @@ public class DBCustomAudienceTest {
     private static final Duration DEFAULT_EXPIRE_IN =
             Duration.ofMillis(FLAGS.getFledgeCustomAudienceDefaultExpireInMs());
 
+    private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Test
     public void testFromServiceObject_success() {
         assertEquals(
@@ -56,7 +69,9 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
-                        FLAGS));
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -70,7 +85,108 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
-                        FLAGS));
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags = */ false));
+    }
+
+    @Test
+    public void testFromServiceObject_successNoRenderId() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
+                        .setAds(
+                                List.of(
+                                        DBAdDataFixture.getValidDbAdDataBuilder()
+                                                .setAdFilters(null)
+                                                .setAdCounterKeys(ImmutableSet.of())
+                                                .setAdRenderId(null)
+                                                .build()))
+                        .build(),
+                DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                                .setAds(
+                                        List.of(
+                                                AdDataFixture.getValidAdDataBuilderByBuyer(
+                                                                CommonFixture.VALID_BUYER_1, 0)
+                                                        .setAdFilters(null)
+                                                        .setAdCounterKeys(ImmutableSet.of())
+                                                        .setAdRenderId("render-id")
+                                                        .build()))
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN,
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, false),
+                        false,
+                        false));
+    }
+
+    @Test
+    public void testFromServiceObject_successWIthRenderId() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setAds(
+                                List.of(
+                                        DBAdDataFixture.getValidDbAdDataBuilder()
+                                                .setAdFilters(null)
+                                                .setAdCounterKeys(ImmutableSet.of())
+                                                .setAdRenderId("render-id")
+                                                .build()))
+                        .build(),
+                DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                                .setAds(
+                                        List.of(
+                                                AdDataFixture.getValidAdDataBuilderByBuyer(
+                                                                CommonFixture.VALID_BUYER_1, 0)
+                                                        .setAdFilters(null)
+                                                        .setAdCounterKeys(ImmutableSet.of())
+                                                        .setAdRenderId("render-id")
+                                                        .build()))
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags = */ false));
+    }
+
+    @Test
+    public void testFromServiceObject_successWithServerAuctionFlagsEnabled() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(
+                                CommonFixture.VALID_BUYER_1)
+                        .build(),
+                DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderByBuyerWithAuctionServerRequestFlags(
+                                        CommonFixture.VALID_BUYER_1,
+                                        FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags = */ true));
+    }
+
+    @Test
+    public void testFromServiceObject_withServerAuctionFlags_serverAuctionFlagsDisabled_success() {
+        assertEquals(
+                DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
+                        .build(),
+                DBCustomAudience.fromServiceObject(
+                        CustomAudienceFixture.getValidBuilderByBuyerWithAuctionServerRequestFlags(
+                                        CommonFixture.VALID_BUYER_1,
+                                        FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                                .build(),
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        DEFAULT_EXPIRE_IN,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -83,7 +199,9 @@ public class DBCustomAudienceTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 DEFAULT_EXPIRE_IN,
-                                FLAGS));
+                                AD_DATA_CONVERSION_STRATEGY,
+                                false,
+                                /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -98,7 +216,9 @@ public class DBCustomAudienceTest {
                                 null,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 DEFAULT_EXPIRE_IN,
-                                FLAGS));
+                                AD_DATA_CONVERSION_STRATEGY,
+                                false,
+                                /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -113,7 +233,9 @@ public class DBCustomAudienceTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 null,
                                 DEFAULT_EXPIRE_IN,
-                                FLAGS));
+                                AD_DATA_CONVERSION_STRATEGY,
+                                false,
+                                /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -128,11 +250,13 @@ public class DBCustomAudienceTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 null,
-                                FLAGS));
+                                AD_DATA_CONVERSION_STRATEGY,
+                                false,
+                                /* auctionServerRequestFlags = */ false));
     }
 
     @Test
-    public void testFromServiceObject_nullFlags() {
+    public void testFromServiceObject_nullConversionStrategy() {
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -143,7 +267,9 @@ public class DBCustomAudienceTest {
                                 CustomAudienceFixture.VALID_OWNER,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 DEFAULT_EXPIRE_IN,
-                                null));
+                                null,
+                                false,
+                                /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -161,7 +287,9 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
-                        FLAGS));
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -180,7 +308,9 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
-                        FLAGS));
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -197,7 +327,9 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
-                        FLAGS));
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -215,7 +347,9 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN,
-                        FLAGS));
+                        AD_DATA_CONVERSION_STRATEGY,
+                        false,
+                        /* auctionServerRequestFlags = */ false));
     }
 
     @Test
@@ -240,6 +374,35 @@ public class DBCustomAudienceTest {
                         .setAds(
                                 DBAdDataFixture.getValidDbAdDataListByBuyer(
                                         CommonFixture.VALID_BUYER_1))
+                        .build();
+
+        Instant attemptedUpdateTime = originalUpdateTime.plusSeconds(10);
+        CustomAudienceUpdatableData updatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse()
+                        .setAttemptedUpdateTime(attemptedUpdateTime)
+                        .build();
+
+        DBCustomAudience updatedCustomAudience =
+                originalCustomAudience.copyWithUpdatableData(updatableData);
+
+        assertEquals(originalCustomAudience, updatedCustomAudience);
+    }
+
+    @Test
+    public void testCopyWithDebuggableWorksSuccessfully() {
+        Instant originalUpdateTime = CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
+        DBCustomAudience originalCustomAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setTrustedBiddingData(
+                                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
+                                                CommonFixture.VALID_BUYER_1)
+                                        .build())
+                        .setAds(
+                                DBAdDataFixture.getValidDbAdDataListByBuyer(
+                                        CommonFixture.VALID_BUYER_1))
+                        .setDebuggable(true)
                         .build();
 
         Instant attemptedUpdateTime = originalUpdateTime.plusSeconds(10);

@@ -65,6 +65,7 @@ public class MddFlags implements Flags {
 
     // PeriodTaskFlags
     @Override
+    @SuppressWarnings("InlinedApi")
     public long maintenanceGcmTaskPeriod() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -74,6 +75,7 @@ public class MddFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public long chargingGcmTaskPeriod() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -83,6 +85,7 @@ public class MddFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public long cellularChargingGcmTaskPeriod() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -92,6 +95,7 @@ public class MddFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public long wifiChargingGcmTaskPeriod() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -102,6 +106,7 @@ public class MddFlags implements Flags {
 
     // MddSampleIntervals
     @Override
+    @SuppressWarnings("InlinedApi")
     public int mddDefaultSampleInterval() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -111,6 +116,7 @@ public class MddFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public int mddDownloadEventsSampleInterval() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -120,6 +126,7 @@ public class MddFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public int groupStatsLoggingSampleInterval() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -129,6 +136,7 @@ public class MddFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public int apiLoggingSampleInterval() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -138,6 +146,7 @@ public class MddFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public int storageStatsLoggingSampleInterval() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -147,6 +156,7 @@ public class MddFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public int networkStatsLoggingSampleInterval() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -156,6 +166,7 @@ public class MddFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public int mobstoreFileServiceStatsSampleInterval() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -165,6 +176,7 @@ public class MddFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("InlinedApi")
     public int mddAndroidSharingSampleInterval() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(

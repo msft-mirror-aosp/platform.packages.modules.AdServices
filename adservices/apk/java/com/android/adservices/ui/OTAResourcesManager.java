@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.loader.ResourcesLoader;
@@ -58,7 +59,7 @@ import java.util.concurrent.ExecutionException;
 @RequiresApi(Build.VERSION_CODES.S)
 public class OTAResourcesManager {
     // this value needs to be updated if bundled resources are updated
-    private static final long BUNDLED_RESOURCES_VERSION = 0;
+    private static final long BUNDLED_RESOURCES_VERSION = 2092;
     private static final long NO_OTA_RESOURCES_VERSION = -1;
     private static final String FILE_GROUP_NAME = "ui-ota-strings";
     private static final String DOWNLOADED_OTA_FILE_ID = "resources.arsc";
@@ -99,11 +100,10 @@ public class OTAResourcesManager {
         if (!resourcesFile.hasFileUri()) {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_OTA_FILE_ERROR,
-                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    OTAResourcesManager.class.getSimpleName(),
-                    new Object() {}.getClass().getEnclosingMethod().getName());
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
             return;
         }
+        @SuppressLint("NewAdServicesFile")
         File f = new File(context.getDataDir() + Uri.parse(resourcesFile.getFileUri()).getPath());
         LogUtil.d("got this file:" + resourcesFile.getFileUri());
         // Clear previous ResourceProvider and add new one created from arsc file

@@ -46,7 +46,7 @@ public abstract class HpkeAlgorithmSpec {
      */
     public static HpkeAlgorithmSpec fromKeyConfig(ObliviousHttpKeyConfig obliviousHttpKeyConfig)
             throws UnsupportedHpkeAlgorithmException {
-        KemAlgorithmSpec kem = KemAlgorithmSpec.get(obliviousHttpKeyConfig.kemid());
+        KemAlgorithmSpec kem = KemAlgorithmSpec.get(obliviousHttpKeyConfig.kemId());
         KdfAlgorithmSpec kdf = KdfAlgorithmSpec.get(obliviousHttpKeyConfig.kdfId());
         AeadAlgorithmSpec aead = AeadAlgorithmSpec.get(obliviousHttpKeyConfig.aeadId());
         return create(kem, kdf, aead);

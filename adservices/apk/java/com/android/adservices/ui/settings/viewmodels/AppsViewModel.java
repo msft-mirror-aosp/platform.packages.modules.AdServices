@@ -31,9 +31,9 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.widget.MainSwitchBar;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -66,7 +66,7 @@ public class AppsViewModel extends AndroidViewModel {
     public AppsViewModel(@NonNull Application application) {
         super(application);
 
-        mConsentManager = ConsentManager.getInstance(application);
+        mConsentManager = ConsentManager.getInstance();
         mApps = new MutableLiveData<>(getAppsFromConsentManager());
         mBlockedApps = new MutableLiveData<>(getBlockedAppsFromConsentManager());
         mAppsConsent =
@@ -198,7 +198,7 @@ public class AppsViewModel extends AndroidViewModel {
         }
         mAppsConsent.postValue(getAppsConsentFromConsentManager());
         if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-            ConsentManager.getInstance(getApplication())
+            ConsentManager.getInstance()
                     .recordUserManualInteractionWithConsent(
                             ConsentManager.MANUAL_INTERACTIONS_RECORDED);
         }

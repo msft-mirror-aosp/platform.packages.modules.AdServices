@@ -15,49 +15,55 @@
  */
 package android.adservices.adid;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
 /** Unit tests for {@link GetAdIdResult} */
 @SmallTest
-public final class GetAdIdResultTest {
+public final class GetAdIdResultTest extends AdServicesUnitTestCase {
+    private static final String TEST_AD_ID = "TEST_AD_ID";
+    private static final boolean TEST_LIMIT_AD_TRACKING_ENABLED = true;
+
     @Test
-    public void testWriteToParcel() throws Exception {
+    public void testWriteToParcel() {
         GetAdIdResult response =
-                new GetAdIdResult.Builder().setAdId("UNITTEST_ADID").setLatEnabled(true).build();
+                new GetAdIdResult.Builder()
+                        .setAdId(TEST_AD_ID)
+                        .setLatEnabled(TEST_LIMIT_AD_TRACKING_ENABLED)
+                        .build();
         Parcel p = Parcel.obtain();
-        response.writeToParcel(p, 0);
-        p.setDataPosition(0);
 
-        GetAdIdResult fromParcel = GetAdIdResult.CREATOR.createFromParcel(p);
-        assertEquals(GetAdIdResult.CREATOR.newArray(1).length, 1);
+        try {
+            response.writeToParcel(p, 0);
+            p.setDataPosition(0);
 
-        assertEquals(fromParcel.getAdId(), "UNITTEST_ADID");
-        assertEquals(fromParcel.isLatEnabled(), true);
+            GetAdIdResult fromParcel = GetAdIdResult.CREATOR.createFromParcel(p);
+            expect.that(fromParcel.getAdId()).isEqualTo(TEST_AD_ID);
+            expect.that(fromParcel.isLatEnabled()).isEqualTo(TEST_LIMIT_AD_TRACKING_ENABLED);
 
-        assertEquals(fromParcel.equals(response), true);
-        assertEquals(fromParcel.equals(fromParcel), true);
-        assertEquals(fromParcel.equals("UNITTEST_ADID"), false);
+            expect.that(fromParcel).isEqualTo(response);
+            expect.that(fromParcel.hashCode()).isEqualTo(response.hashCode());
 
-        assertEquals(fromParcel.hashCode(), response.hashCode());
+        } finally {
+            p.recycle();
+        }
 
-        assertEquals(response.getErrorMessage(), null);
+        expect.that(response.getErrorMessage()).isNull();
+        expect.that(response.describeContents()).isEqualTo(0);
+        expect.that(response.toString()).contains("GetAdIdResult{");
 
-        assertEquals(response.describeContents(), 0);
-
-        assertThat(response.toString()).isNotNull();
+        expect.that(GetAdIdResult.CREATOR.newArray(1).length).isEqualTo(1);
     }
 
     @Test
-    public void testWriteToParcel_nullableThrows() throws Exception {
+    public void testWriteToParcel_nullableThrows() {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {

@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.adselection.AdOutcomeSelectorImpl.OUTCOME_SELECTION_TIMED_OUT;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_FROM_OUTCOMES_USE_CASE;
@@ -36,9 +36,11 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -93,6 +95,11 @@ public class AdOutcomeSelectorImplTest {
     private Dispatcher mDefaultDispatcher;
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
 
+    private DevContext mDevContext = DevContext.createForDevOptionsDisabled();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
@@ -140,19 +147,20 @@ public class AdOutcomeSelectorImplTest {
                         mWebClient,
                         new AdSelectionDevOverridesHelper(
                                 DevContext.createForDevOptionsDisabled(), mAdSelectionEntryDao),
-                        mFlags);
+                        mFlags,
+                        mDevContext);
     }
 
     @Test
     public void testAdOutcomeSelectorReturnsOutcomeSuccess() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
-        List<AdSelectionIdWithBidAndRenderUri> adverts =
+        List<AdSelectionResultBidAndUri> adverts =
                 Collections.singletonList(
-                        AdSelectionIdWithBidAndRenderUri.builder()
+                        AdSelectionResultBidAndUri.builder()
                                 .setAdSelectionId(AD_SELECTION_ID)
-                                .setBid(AD_BID)
-                                .setRenderUri(AD_RENDER_URI)
+                                .setWinningAdBid(AD_BID)
+                                .setWinningAdRenderUri(AD_RENDER_URI)
                                 .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
         Uri uri = mMockWebServerRule.uriForPath(SELECTION_LOGIC_JS_PATH);
@@ -184,12 +192,12 @@ public class AdOutcomeSelectorImplTest {
     public void testAdOutcomeSelectorReturnsNullSuccess() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
-        List<AdSelectionIdWithBidAndRenderUri> adverts =
+        List<AdSelectionResultBidAndUri> adverts =
                 Collections.singletonList(
-                        AdSelectionIdWithBidAndRenderUri.builder()
+                        AdSelectionResultBidAndUri.builder()
                                 .setAdSelectionId(AD_SELECTION_ID)
-                                .setBid(AD_BID)
-                                .setRenderUri(AD_RENDER_URI)
+                                .setWinningAdBid(AD_BID)
+                                .setWinningAdRenderUri(AD_RENDER_URI)
                                 .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
         Uri uri = mMockWebServerRule.uriForPath(SELECTION_LOGIC_JS_PATH);
@@ -221,12 +229,12 @@ public class AdOutcomeSelectorImplTest {
     public void testAdOutcomeSelectorJsonException() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
-        List<AdSelectionIdWithBidAndRenderUri> adverts =
+        List<AdSelectionResultBidAndUri> adverts =
                 Collections.singletonList(
-                        AdSelectionIdWithBidAndRenderUri.builder()
+                        AdSelectionResultBidAndUri.builder()
                                 .setAdSelectionId(AD_SELECTION_ID)
-                                .setBid(AD_BID)
-                                .setRenderUri(AD_RENDER_URI)
+                                .setWinningAdBid(AD_BID)
+                                .setWinningAdRenderUri(AD_RENDER_URI)
                                 .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
         Uri uri = mMockWebServerRule.uriForPath(SELECTION_LOGIC_JS_PATH);
@@ -281,14 +289,15 @@ public class AdOutcomeSelectorImplTest {
                         mWebClient,
                         new AdSelectionDevOverridesHelper(
                                 DevContext.createForDevOptionsDisabled(), mAdSelectionEntryDao),
-                        flagsWithSmallerLimits);
+                        flagsWithSmallerLimits,
+                        mDevContext);
 
-        List<AdSelectionIdWithBidAndRenderUri> adverts =
+        List<AdSelectionResultBidAndUri> adverts =
                 Collections.singletonList(
-                        AdSelectionIdWithBidAndRenderUri.builder()
+                        AdSelectionResultBidAndUri.builder()
                                 .setAdSelectionId(AD_SELECTION_ID)
-                                .setBid(AD_BID)
-                                .setRenderUri(AD_RENDER_URI)
+                                .setWinningAdBid(AD_BID)
+                                .setWinningAdRenderUri(AD_RENDER_URI)
                                 .build());
         AdSelectionSignals signals = AdSelectionSignals.EMPTY;
         Uri uri = mMockWebServerRule.uriForPath(SELECTION_LOGIC_JS_PATH);
@@ -345,7 +354,8 @@ public class AdOutcomeSelectorImplTest {
                         mWebClient,
                         new AdSelectionDevOverridesHelper(
                                 DevContext.createForDevOptionsDisabled(), mAdSelectionEntryDao),
-                        prebuiltFlagEnabled);
+                        prebuiltFlagEnabled,
+                        mDevContext);
 
         String paramKey = "bidFloor";
         String paramValue = "bid_floor";
@@ -362,12 +372,12 @@ public class AdOutcomeSelectorImplTest {
         AdSelectionSignals selectionSignals =
                 AdSelectionSignals.fromString(String.format("{%s: %s}", paramValue, AD_BID + 1));
 
-        List<AdSelectionIdWithBidAndRenderUri> adverts =
+        List<AdSelectionResultBidAndUri> adverts =
                 Collections.singletonList(
-                        AdSelectionIdWithBidAndRenderUri.builder()
+                        AdSelectionResultBidAndUri.builder()
                                 .setAdSelectionId(AD_SELECTION_ID)
-                                .setBid(AD_BID)
-                                .setRenderUri(AD_RENDER_URI)
+                                .setWinningAdBid(AD_BID)
+                                .setWinningAdRenderUri(AD_RENDER_URI)
                                 .build());
 
         AdSelectionFromOutcomesConfig config =

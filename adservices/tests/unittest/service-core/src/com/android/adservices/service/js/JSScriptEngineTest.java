@@ -21,9 +21,11 @@ import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.android.adservices.service.js.JSScriptEngine.JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG;
+import static com.android.adservices.service.js.JSScriptEngine.JS_SCRIPT_ENGINE_SANDBOX_DEAD_MSG;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
@@ -33,22 +35,29 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
-import android.util.Log;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptIsolate;
 import androidx.javascriptengine.JavaScriptSandbox;
+import androidx.javascriptengine.MemoryLimitExceededException;
+import androidx.javascriptengine.SandboxDeadException;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.service.common.NoOpRetryStrategyImpl;
+import com.android.adservices.service.common.RetryStrategy;
+import com.android.adservices.service.common.RetryStrategyImpl;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
@@ -67,7 +76,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.mockito.Mock;
@@ -108,25 +117,32 @@ public class JSScriptEngineTest {
     public static final String WASM_MODULE = "simple_test_functions.wasm";
 
     private static final String TAG = JSScriptEngineTest.class.getSimpleName();
+
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Profiler sMockProfiler = mock(Profiler.class);
     private static final StopWatch sSandboxInitWatch = mock(StopWatch.class);
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static JSScriptEngine sJSScriptEngine;
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
     private final IsolateSettings mDefaultIsolateSettings =
             IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+    private final RetryStrategy mNoOpRetryStrategy = new NoOpRetryStrategyImpl();
     @Mock JSScriptEngine.JavaScriptSandboxProvider mMockSandboxProvider;
     @Mock private StopWatch mIsolateCreateWatch;
     @Mock private StopWatch mJavaExecutionWatch;
     @Mock private JavaScriptSandbox mMockedSandbox;
     @Mock private JavaScriptIsolate mMockedIsolate;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @BeforeClass
     public static void initJavaScriptSandbox() {
         when(sMockProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
                 .thenReturn(sSandboxInitWatch);
         if (JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
-            sJSScriptEngine = JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler);
+            sJSScriptEngine =
+                    JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler, sLogger);
         }
     }
 
@@ -161,10 +177,53 @@ public class JSScriptEngineTest {
 
             ThrowingRunnable getFutureInstance =
                     () ->
-                            new JSScriptEngine.JavaScriptSandboxProvider(sMockProfiler)
-                                    .getFutureInstance(sContext);
+                            new JSScriptEngine.JavaScriptSandboxProvider(sMockProfiler, sLogger)
+                                    .getFutureInstance(sContext)
+                                    .get();
 
-            assertThrows(JSSandboxIsNotAvailableException.class, getFutureInstance);
+            Exception futureException = assertThrows(ExecutionException.class, getFutureInstance);
+            assertThat(futureException)
+                    .hasCauseThat()
+                    .isInstanceOf(JSSandboxIsNotAvailableException.class);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void testEngineFailsIfJSSandboxNotAvailableInWebViewVersion() {
+        MockitoSession staticMockSessionLocal = null;
+
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(WebView.class)
+                            .strictness(Strictness.LENIENT)
+                            .initMocks(this)
+                            .startMocking();
+            ExtendedMockito.doReturn(null).when(WebView::getCurrentWebViewPackage);
+
+            ThrowingRunnable getFutureInstance =
+                    () ->
+                            callJSEngine(
+                                    JSScriptEngine.createNewInstanceForTesting(
+                                            sContext,
+                                            new JSScriptEngine.JavaScriptSandboxProvider(
+                                                    sMockProfiler, sLogger),
+                                            sMockProfiler,
+                                            sLogger),
+                                    "function test() { return \"hello world\"; }",
+                                    ImmutableList.of(),
+                                    "test",
+                                    mDefaultIsolateSettings,
+                                    mNoOpRetryStrategy);
+
+            Exception futureException = assertThrows(ExecutionException.class, getFutureInstance);
+            assertThat(futureException)
+                    .hasCauseThat()
+                    .isInstanceOf(JSSandboxIsNotAvailableException.class);
         } finally {
             if (staticMockSessionLocal != null) {
                 staticMockSessionLocal.finishMocking();
@@ -179,7 +238,8 @@ public class JSScriptEngineTest {
                                 "function test() { return \"hello world\"; }",
                                 ImmutableList.of(),
                                 "test",
-                                mDefaultIsolateSettings))
+                                mDefaultIsolateSettings,
+                                mNoOpRetryStrategy))
                 .isEqualTo("\"hello world\"");
 
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
@@ -196,7 +256,8 @@ public class JSScriptEngineTest {
                                 "function helloWorld() { return \"hello world\"; };",
                                 ImmutableList.of(),
                                 "helloWorld",
-                                mDefaultIsolateSettings))
+                                mDefaultIsolateSettings,
+                                mNoOpRetryStrategy))
                 .isEqualTo("\"hello world\"");
     }
 
@@ -207,7 +268,8 @@ public class JSScriptEngineTest {
                                 "function hello(name) { return \"hello \" + name; };",
                                 ImmutableList.of(stringArg("name", "Stefano")),
                                 "hello",
-                                mDefaultIsolateSettings))
+                                mDefaultIsolateSettings,
+                                mNoOpRetryStrategy))
                 .isEqualTo("\"hello Stefano\"");
     }
 
@@ -219,7 +281,8 @@ public class JSScriptEngineTest {
                                         + " };",
                                 ImmutableList.of(stringArg("name", "Stefano")),
                                 "helloPerson",
-                                mDefaultIsolateSettings))
+                                mDefaultIsolateSettings,
+                                mNoOpRetryStrategy))
                 .isEqualTo("\"hello Stefano\"");
     }
 
@@ -232,7 +295,8 @@ public class JSScriptEngineTest {
                                 ImmutableList.of(
                                         recordArg("jsonArg", stringArg("name", "Stefano"))),
                                 "helloPerson",
-                                mDefaultIsolateSettings))
+                                mDefaultIsolateSettings,
+                                mNoOpRetryStrategy))
                 .isEqualTo("\"hello Stefano\"");
     }
 
@@ -250,7 +314,8 @@ public class JSScriptEngineTest {
                                                         "personOuter",
                                                         stringArg("name", "Stefano"))),
                                         "helloPerson",
-                                        mDefaultIsolateSettings));
+                                        mDefaultIsolateSettings,
+                                        mNoOpRetryStrategy));
 
         assertThat(e.getCause()).isInstanceOf(JSExecutionException.class);
     }
@@ -268,7 +333,8 @@ public class JSScriptEngineTest {
                                         "function test() { return \"hello world\"; }",
                                         ImmutableList.of(),
                                         "undefinedFunction",
-                                        mDefaultIsolateSettings));
+                                        mDefaultIsolateSettings,
+                                        mNoOpRetryStrategy));
 
         assertThat(e.getCause()).isInstanceOf(JSExecutionException.class);
     }
@@ -286,7 +352,8 @@ public class JSScriptEngineTest {
                         arguments,
                         "helloPerson",
                         resultsLatch,
-                        mDefaultIsolateSettings);
+                        mDefaultIsolateSettings,
+                        mNoOpRetryStrategy);
 
         // The previous call reset the status, we can redefine the function and use the same
         // argument
@@ -297,7 +364,8 @@ public class JSScriptEngineTest {
                         arguments,
                         "helloPerson",
                         resultsLatch,
-                        mDefaultIsolateSettings);
+                        mDefaultIsolateSettings,
+                        mNoOpRetryStrategy);
 
         resultsLatch.await();
 
@@ -326,7 +394,8 @@ public class JSScriptEngineTest {
                                                 + "}",
                                         ImmutableList.of(arrayArg("array", tooBigForBinder)),
                                         "test",
-                                        mDefaultIsolateSettings));
+                                        mDefaultIsolateSettings,
+                                        mNoOpRetryStrategy));
         assertThat(outerException.getCause()).isInstanceOf(JSExecutionException.class);
     }
 
@@ -337,7 +406,8 @@ public class JSScriptEngineTest {
                                 "function test() { return \"hello world\"; }",
                                 ImmutableList.of(),
                                 "test",
-                                mDefaultIsolateSettings))
+                                mDefaultIsolateSettings,
+                                mNoOpRetryStrategy))
                 .isEqualTo("\"hello world\"");
 
         sJSScriptEngine.shutdown().get(3, TimeUnit.SECONDS);
@@ -350,7 +420,8 @@ public class JSScriptEngineTest {
                                 "function test() { return \"hello world\"; }",
                                 ImmutableList.of(),
                                 "test",
-                                mDefaultIsolateSettings))
+                                mDefaultIsolateSettings,
+                                mNoOpRetryStrategy))
                 .isEqualTo("\"hello world\"");
 
         // Engine is re-initialized
@@ -359,26 +430,21 @@ public class JSScriptEngineTest {
     }
 
     @Test
-    public void testConnectionIsResetIfJSProcessIsTerminated() {
+    public void testConnectionIsResetIfJSProcessIsTerminatedWithIllegalStateException() {
         when(mMockedSandbox.createIsolate())
                 .thenThrow(
                         new IllegalStateException(
                                 "simulating a failure caused by JavaScriptSandbox being"
-                                        + " disconnected"));
+                                        + " disconnected due to ISE"));
 
         ExecutionException executionException =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                callJSEngine(
-                                        JSScriptEngine.createNewInstanceForTesting(
-                                                ApplicationProvider.getApplicationContext(),
-                                                mMockSandboxProvider,
-                                                sMockProfiler),
-                                        "function test() { return \"hello world\"; }",
-                                        ImmutableList.of(),
-                                        "test",
-                                        mDefaultIsolateSettings));
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        mDefaultIsolateSettings);
 
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
@@ -386,6 +452,133 @@ public class JSScriptEngineTest {
                 .hasMessageThat()
                 .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG);
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
+        verify(mMockSandboxProvider, never()).destroyIfCurrentInstance(mMockedSandbox);
+    }
+
+    @Test
+    public void testConnectionIsResetIfCreateIsolateThrowsRuntimeException() {
+        when(mMockedSandbox.createIsolate())
+                .thenThrow(
+                        new RuntimeException(
+                                "simulating a failure caused by JavaScriptSandbox being"
+                                        + " disconnected"));
+
+        ExecutionException executionException =
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        mDefaultIsolateSettings);
+
+        assertThat(executionException.getCause())
+                .isInstanceOf(JSScriptEngineConnectionException.class);
+        assertThat(executionException)
+                .hasMessageThat()
+                .contains(JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG);
+        verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
+    }
+
+    @Test
+    public void testConnectionIsResetIfEvaluateFailsWithSandboxDeadException() {
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        when(mMockedIsolate.evaluateJavaScriptAsync(Mockito.anyString()))
+                .thenReturn(Futures.immediateFailedFuture(new SandboxDeadException()));
+        when(mMockSandboxProvider.destroyIfCurrentInstance(mMockedSandbox))
+                .thenReturn(Futures.immediateVoidFuture());
+
+        ExecutionException executionException =
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        mDefaultIsolateSettings);
+
+        assertThat(executionException.getCause())
+                .isInstanceOf(JSScriptEngineConnectionException.class);
+        assertThat(executionException.getCause().getCause())
+                .isInstanceOf(SandboxDeadException.class);
+        assertThat(executionException).hasMessageThat().contains(JS_SCRIPT_ENGINE_SANDBOX_DEAD_MSG);
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
+    }
+
+    @Test
+    public void testEvaluationIsRetriedIfEvaluateFailsWithSandboxDeadException() throws Exception {
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        when(mMockedIsolate.evaluateJavaScriptAsync(Mockito.anyString()))
+                .thenReturn(Futures.immediateFailedFuture(new SandboxDeadException()))
+                .thenReturn(Futures.immediateFuture("{\"status\":200}"));
+        when(mMockSandboxProvider.destroyIfCurrentInstance(mMockedSandbox))
+                .thenReturn(Futures.immediateVoidFuture());
+        RetryStrategy retryStrategy = new RetryStrategyImpl(1, mExecutorService);
+        assertEquals(
+                callJSEngine(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        "function test() { return \"hello world\"; }",
+                        ImmutableList.of(),
+                        "test",
+                        mDefaultIsolateSettings,
+                        retryStrategy),
+                "{\"status\":200}");
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
+    }
+
+    @Test
+    public void testConnectionIsResetIfEvaluateFailsWithMemoryLimitExceedException() {
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        String expectedExceptionMessage = "Simulating Memory limit exceed exception from isolate";
+        when(mMockedIsolate.evaluateJavaScriptAsync(Mockito.anyString()))
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new MemoryLimitExceededException(expectedExceptionMessage)));
+        when(mMockSandboxProvider.destroyIfCurrentInstance(mMockedSandbox))
+                .thenReturn(Futures.immediateVoidFuture());
+
+        ExecutionException executionException =
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        mDefaultIsolateSettings);
+
+        assertThat(executionException.getCause()).isInstanceOf(JSExecutionException.class);
+        assertThat(executionException.getCause().getCause())
+                .isInstanceOf(MemoryLimitExceededException.class);
+        assertThat(executionException).hasMessageThat().contains(expectedExceptionMessage);
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
+    }
+
+    @Test
+    public void testConnectionIsNotResetIfEvaluateFailsWithAnyOtherException() {
+        when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
+        when(mMockedIsolate.evaluateJavaScriptAsync(Mockito.anyString()))
+                .thenReturn(
+                        Futures.immediateFailedFuture(
+                                new IllegalStateException("this is not SDE")));
+        when(mMockSandboxProvider.destroyIfCurrentInstance(mMockedSandbox))
+                .thenReturn(Futures.immediateVoidFuture());
+
+        ExecutionException executionException =
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        mDefaultIsolateSettings);
+
+        assertThat(executionException.getCause()).isInstanceOf(JSExecutionException.class);
+        verify(mMockSandboxProvider, never()).destroyIfCurrentInstance(mMockedSandbox);
     }
 
     @Test
@@ -401,18 +594,13 @@ public class JSScriptEngineTest {
                 IsolateSettings.forMaxHeapSizeEnforcementEnabled(1000);
 
         ExecutionException executionException =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                callJSEngine(
-                                        JSScriptEngine.createNewInstanceForTesting(
-                                                ApplicationProvider.getApplicationContext(),
-                                                mMockSandboxProvider,
-                                                sMockProfiler),
-                                        "function test() { return \"hello world\"; }",
-                                        ImmutableList.of(),
-                                        "test",
-                                        enforcedHeapIsolateSettings));
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        enforcedHeapIsolateSettings);
 
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
@@ -432,18 +620,14 @@ public class JSScriptEngineTest {
                 IsolateSettings.forMaxHeapSizeEnforcementEnabled(1000);
 
         ExecutionException executionException =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                callJSEngine(
-                                        JSScriptEngine.createNewInstanceForTesting(
-                                                ApplicationProvider.getApplicationContext(),
-                                                mMockSandboxProvider,
-                                                sMockProfiler),
-                                        "function test() { return \"hello world\"; }",
-                                        ImmutableList.of(),
-                                        "test",
-                                        enforcedHeapIsolateSettings));
+                callJSEngineAndAssertExecutionException(
+                        JSScriptEngine.createNewInstanceForTesting(
+                                ApplicationProvider.getApplicationContext(),
+                                mMockSandboxProvider,
+                                sMockProfiler,
+                                sLogger),
+                        enforcedHeapIsolateSettings);
+
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
         assertThat(executionException)
@@ -468,7 +652,8 @@ public class JSScriptEngineTest {
                                 "function test() { return \"hello world\"; }",
                                 ImmutableList.of(),
                                 "test",
-                                lenientHeapIsolateSettings))
+                                lenientHeapIsolateSettings,
+                                mNoOpRetryStrategy))
                 .isEqualTo("\"hello world\"");
     }
 
@@ -488,11 +673,13 @@ public class JSScriptEngineTest {
                                 JSScriptEngine.createNewInstanceForTesting(
                                         ApplicationProvider.getApplicationContext(),
                                         mMockSandboxProvider,
-                                        sMockProfiler),
+                                        sMockProfiler,
+                                        sLogger),
                                 "function test() { return \"hello world\"; }",
                                 ImmutableList.of(),
                                 "test",
-                                enforcedHeapIsolateSettings))
+                                enforcedHeapIsolateSettings,
+                                mNoOpRetryStrategy))
                 .isEqualTo("\"hello world\"");
 
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
@@ -517,11 +704,13 @@ public class JSScriptEngineTest {
                                 JSScriptEngine.createNewInstanceForTesting(
                                         ApplicationProvider.getApplicationContext(),
                                         mMockSandboxProvider,
-                                        sMockProfiler),
+                                        sMockProfiler,
+                                        sLogger),
                                 "function test() { return \"hello world\"; }",
                                 ImmutableList.of(),
                                 "test",
-                                enforcedHeapIsolateSettings))
+                                enforcedHeapIsolateSettings,
+                                mNoOpRetryStrategy))
                 .isEqualTo("\"hello world\"");
 
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
@@ -552,11 +741,13 @@ public class JSScriptEngineTest {
                 JSScriptEngine.createNewInstanceForTesting(
                         ApplicationProvider.getApplicationContext(),
                         mMockSandboxProvider,
-                        sMockProfiler),
+                        sMockProfiler,
+                        sLogger),
                 "function test() { return \"hello world\"; }",
                 ImmutableList.of(),
                 "test",
-                mDefaultIsolateSettings);
+                mDefaultIsolateSettings,
+                mNoOpRetryStrategy);
 
         isolateIsClosedLatch.await(1, TimeUnit.SECONDS);
         // Using Mockito.verify made the test unstable (mockito call registration was in a
@@ -589,11 +780,13 @@ public class JSScriptEngineTest {
                                 JSScriptEngine.createNewInstanceForTesting(
                                         ApplicationProvider.getApplicationContext(),
                                         mMockSandboxProvider,
-                                        sMockProfiler),
+                                        sMockProfiler,
+                                        sLogger),
                                 "function test() { return \"hello world\"; }",
                                 ImmutableList.of(),
                                 "test",
-                                mDefaultIsolateSettings));
+                                mDefaultIsolateSettings,
+                                mNoOpRetryStrategy));
 
         isolateIsClosedLatch.await(1, TimeUnit.SECONDS);
         // Using Mockito.verify made the test unstable (mockito call registration was in a
@@ -601,104 +794,84 @@ public class JSScriptEngineTest {
         assertTrue(isolateHasBeenClosed.get());
     }
 
-    // TODO(240857630) Solve flakiness in this test
-    @Ignore
     @Test
     public void testIsolateIsClosedWhenEvaluationIsCancelled() throws Exception {
         when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
 
         CountDownLatch jsEvaluationStartedLatch = new CountDownLatch(1);
-        CountDownLatch completeJsEvaluationLatch = new CountDownLatch(1);
+        CountDownLatch stallJsEvaluationLatch = new CountDownLatch(1);
         ListeningExecutorService callbackExecutor =
                 MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
-                .thenReturn(
-                        callbackExecutor.submit(
-                                () -> {
-                                    jsEvaluationStartedLatch.countDown();
-                                    LogUtil.i("Waiting before reporting JS completion");
-                                    try {
-                                        completeJsEvaluationLatch.await();
-                                    } catch (InterruptedException ignored) {
-                                        Thread.currentThread().interrupt();
-                                    }
-                                    LogUtil.i("Reporting JS completion");
-                                    return "hello world";
-                                }));
-        AtomicBoolean isolateHasBeenClosed = new AtomicBoolean(false);
-        CountDownLatch isolateIsClosedLatch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
-                            isolateHasBeenClosed.set(true);
-                            isolateIsClosedLatch.countDown();
-                            return null;
+                            jsEvaluationStartedLatch.countDown();
+                            sLogger.i("JS execution started");
+                            return callbackExecutor.submit(
+                                    () -> {
+                                        try {
+                                            stallJsEvaluationLatch.await();
+                                        } catch (InterruptedException ignored) {
+                                            Thread.currentThread().interrupt();
+                                        }
+                                        sLogger.i("JS execution completed,");
+                                        return "hello world";
+                                    });
                         })
                 .when(mMockedIsolate)
-                .close();
+                .evaluateJavaScriptAsync(anyString());
 
         JSScriptEngine engine =
                 JSScriptEngine.createNewInstanceForTesting(
-                        ApplicationProvider.getApplicationContext(),
-                        mMockSandboxProvider,
-                        sMockProfiler);
+                        sContext, mMockSandboxProvider, sMockProfiler, sLogger);
         ListenableFuture<String> jsExecutionFuture =
                 engine.evaluate(
                         "function test() { return \"hello world\"; }",
                         ImmutableList.of(),
                         "test",
-                        mDefaultIsolateSettings);
+                        mDefaultIsolateSettings,
+                        mNoOpRetryStrategy);
 
-        // cancelling only after the processing started and the sandbox has been created
+        // Cancelling only after the processing started and the sandbox has been created
         jsEvaluationStartedLatch.await(1, TimeUnit.SECONDS);
-        LogUtil.i("Cancelling JS future");
-        jsExecutionFuture.cancel(true);
-        LogUtil.i("Waiting for isolate to close");
-        isolateIsClosedLatch.await(1, TimeUnit.SECONDS);
-        LogUtil.i("Checking");
-        // Using Mockito.verify made the test unstable (mockito call registration was in a
-        // race condition with the verify call)
-        assertTrue(isolateHasBeenClosed.get());
+        // Explicitly verifying that isolate was created as latch could have just counted down
+        verify(mMockedSandbox).createIsolate();
+        assertTrue(
+                "Execution for the future should have been still ongoing when cancelled",
+                jsExecutionFuture.cancel(true));
+        verify(mMockedIsolate, timeout(2000).atLeast(1)).close();
     }
 
     @Test
     public void testIsolateIsClosedWhenEvaluationTimesOut() throws Exception {
         when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
-        CountDownLatch completeJsEvaluationLatch = new CountDownLatch(1);
         CountDownLatch jsEvaluationStartedLatch = new CountDownLatch(1);
+        CountDownLatch stallJsEvaluationLatch = new CountDownLatch(1);
         ListeningExecutorService callbackExecutor =
                 MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
-                .thenReturn(
-                        callbackExecutor.submit(
-                                () -> {
-                                    jsEvaluationStartedLatch.countDown();
-                                    LogUtil.i("Waiting before reporting JS completion");
-                                    try {
-                                        completeJsEvaluationLatch.await();
-                                    } catch (InterruptedException ignored) {
-                                        Thread.currentThread().interrupt();
-                                    }
-                                    LogUtil.i("Reporting JS completion");
-                                    return "hello world";
-                                }));
-
-        AtomicBoolean isolateHasBeenClosed = new AtomicBoolean(false);
-        CountDownLatch isolateIsClosedLatch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
-                            isolateHasBeenClosed.set(true);
-                            LogUtil.i("Mock isolate has been closed");
-                            isolateIsClosedLatch.countDown();
-                            return null;
+                            jsEvaluationStartedLatch.countDown();
+                            sLogger.i("JS execution started");
+                            return callbackExecutor.submit(
+                                    () -> {
+                                        try {
+                                            stallJsEvaluationLatch.await();
+                                        } catch (InterruptedException ignored) {
+                                            Thread.currentThread().interrupt();
+                                        }
+                                        sLogger.i("JS execution completed");
+                                        return "hello world";
+                                    });
                         })
                 .when(mMockedIsolate)
-                .close();
+                .evaluateJavaScriptAsync(anyString());
 
         JSScriptEngine engine =
                 JSScriptEngine.createNewInstanceForTesting(
                         ApplicationProvider.getApplicationContext(),
                         mMockSandboxProvider,
-                        sMockProfiler);
+                        sMockProfiler,
+                        sLogger);
         ExecutionException timeoutException =
                 assertThrows(
                         ExecutionException.class,
@@ -709,19 +882,19 @@ public class JSScriptEngineTest {
                                                                 + " }",
                                                         ImmutableList.of(),
                                                         "test",
-                                                        mDefaultIsolateSettings))
+                                                        mDefaultIsolateSettings,
+                                                        mNoOpRetryStrategy))
                                         .withTimeout(
                                                 500,
                                                 TimeUnit.MILLISECONDS,
                                                 new ScheduledThreadPoolExecutor(1))
                                         .get());
 
-        // cancelling only after the processing started and the sandbox has been created
         jsEvaluationStartedLatch.await(1, TimeUnit.SECONDS);
-        isolateIsClosedLatch.await(1, TimeUnit.SECONDS);
-        // Using Mockito.verify made the test unstable (mockito call registration was in a
-        // race condition with the verify call)
-        assertTrue(isolateHasBeenClosed.get());
+        // Explicitly verifying that isolate was created as latch could have just counted down
+        verify(mMockedSandbox).createIsolate();
+        // Verifying close was invoked
+        verify(mMockedIsolate, timeout(2000).atLeast(1)).close();
         assertThat(timeoutException.getCause()).isInstanceOf(TimeoutException.class);
     }
     // CHECKSTYLE:ON IndentationCheck
@@ -736,7 +909,8 @@ public class JSScriptEngineTest {
                 JSScriptEngine.createNewInstanceForTesting(
                         ApplicationProvider.getApplicationContext(),
                         mMockSandboxProvider,
-                        sMockProfiler);
+                        sMockProfiler,
+                        sLogger);
 
         assertThrows(
                 ExecutionException.class,
@@ -746,8 +920,9 @@ public class JSScriptEngineTest {
                                 "function test() { return \"hello world\";" + " }",
                                 ImmutableList.of(),
                                 "test",
-                                mDefaultIsolateSettings));
-        verify(mMockSandboxProvider).destroyCurrentInstance();
+                                mDefaultIsolateSettings,
+                                mNoOpRetryStrategy));
+        verify(mMockSandboxProvider).destroyIfCurrentInstance(mMockedSandbox);
     }
 
     @Test
@@ -770,7 +945,8 @@ public class JSScriptEngineTest {
                         readBinaryAsset(WASM_MODULE),
                         ImmutableList.of(numericArg("input", 3)),
                         "callWasm",
-                        mDefaultIsolateSettings);
+                        mDefaultIsolateSettings,
+                        mNoOpRetryStrategy);
 
         assertThat(result).isEqualTo("6");
     }
@@ -798,18 +974,35 @@ public class JSScriptEngineTest {
                                         readBinaryAsset(WASM_MODULE),
                                         ImmutableList.of(numericArg("input", 3)),
                                         "callWasm",
-                                        mDefaultIsolateSettings));
+                                        mDefaultIsolateSettings,
+                                        mNoOpRetryStrategy));
 
         assertThat(outer.getCause()).isInstanceOf(IllegalStateException.class);
+    }
+
+    private ExecutionException callJSEngineAndAssertExecutionException(
+            JSScriptEngine engine, IsolateSettings isolateSettings) {
+        return assertThrows(
+                ExecutionException.class,
+                () ->
+                        callJSEngine(
+                                engine,
+                                "function test() { return \"hello world\"; }",
+                                ImmutableList.of(),
+                                "test",
+                                isolateSettings,
+                                mNoOpRetryStrategy));
     }
 
     private String callJSEngine(
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
             @NonNull String functionName,
-            @NonNull IsolateSettings isolateSettings)
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy)
             throws Exception {
-        return callJSEngine(sJSScriptEngine, jsScript, args, functionName, isolateSettings);
+        return callJSEngine(
+                sJSScriptEngine, jsScript, args, functionName, isolateSettings, retryStrategy);
     }
 
     private String callJSEngine(
@@ -817,10 +1010,17 @@ public class JSScriptEngineTest {
             @NonNull byte[] wasmBytes,
             @NonNull List<JSScriptArgument> args,
             @NonNull String functionName,
-            @NonNull IsolateSettings isolateSettings)
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy)
             throws Exception {
         return callJSEngine(
-                sJSScriptEngine, jsScript, wasmBytes, args, functionName, isolateSettings);
+                sJSScriptEngine,
+                jsScript,
+                wasmBytes,
+                args,
+                functionName,
+                isolateSettings,
+                retryStrategy);
     }
 
     private String callJSEngine(
@@ -828,12 +1028,19 @@ public class JSScriptEngineTest {
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
             @NonNull String functionName,
-            @NonNull IsolateSettings isolateSettings)
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy)
             throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
         ListenableFuture<String> futureResult =
                 callJSEngineAsync(
-                        jsScriptEngine, jsScript, args, functionName, resultLatch, isolateSettings);
+                        jsScriptEngine,
+                        jsScript,
+                        args,
+                        functionName,
+                        resultLatch,
+                        isolateSettings,
+                        retryStrategy);
         resultLatch.await();
         return futureResult.get();
     }
@@ -844,7 +1051,8 @@ public class JSScriptEngineTest {
             @NonNull byte[] wasmBytes,
             @NonNull List<JSScriptArgument> args,
             @NonNull String functionName,
-            @NonNull IsolateSettings isolateSettings)
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy)
             throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
         ListenableFuture<String> futureResult =
@@ -855,7 +1063,8 @@ public class JSScriptEngineTest {
                         args,
                         functionName,
                         resultLatch,
-                        isolateSettings);
+                        isolateSettings,
+                        retryStrategy);
         resultLatch.await();
         return futureResult.get();
     }
@@ -865,9 +1074,16 @@ public class JSScriptEngineTest {
             @NonNull List<JSScriptArgument> args,
             @NonNull String functionName,
             @NonNull CountDownLatch resultLatch,
-            @NonNull IsolateSettings isolateSettings) {
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy) {
         return callJSEngineAsync(
-                sJSScriptEngine, jsScript, args, functionName, resultLatch, isolateSettings);
+                sJSScriptEngine,
+                jsScript,
+                args,
+                functionName,
+                resultLatch,
+                isolateSettings,
+                retryStrategy);
     }
 
     private ListenableFuture<String> callJSEngineAsync(
@@ -876,12 +1092,13 @@ public class JSScriptEngineTest {
             @NonNull List<JSScriptArgument> args,
             @NonNull String functionName,
             @NonNull CountDownLatch resultLatch,
-            @NonNull IsolateSettings isolateSettings) {
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy) {
         Objects.requireNonNull(engine);
         Objects.requireNonNull(resultLatch);
-        Log.i(TAG, "Calling WebVew");
+        sLogger.v("Calling WebVew");
         ListenableFuture<String> result =
-                engine.evaluate(jsScript, args, functionName, isolateSettings);
+                engine.evaluate(jsScript, args, functionName, isolateSettings, retryStrategy);
         result.addListener(resultLatch::countDown, mExecutorService);
         return result;
     }
@@ -893,12 +1110,14 @@ public class JSScriptEngineTest {
             @NonNull List<JSScriptArgument> args,
             @NonNull String functionName,
             @NonNull CountDownLatch resultLatch,
-            @NonNull IsolateSettings isolateSettings) {
+            @NonNull IsolateSettings isolateSettings,
+            @NonNull RetryStrategy retryStrategy) {
         Objects.requireNonNull(engine);
         Objects.requireNonNull(resultLatch);
-        Log.i(TAG, "Calling WebVew");
+        sLogger.v("Calling WebVew");
         ListenableFuture<String> result =
-                engine.evaluate(jsScript, wasmBytes, args, functionName, isolateSettings);
+                engine.evaluate(
+                        jsScript, wasmBytes, args, functionName, isolateSettings, retryStrategy);
         result.addListener(resultLatch::countDown, mExecutorService);
         return result;
     }

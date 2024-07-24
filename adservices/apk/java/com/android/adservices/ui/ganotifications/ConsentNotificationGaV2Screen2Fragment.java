@@ -45,13 +45,13 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 
 /** Fragment for the topics view of the AdServices Settings App. */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
-    public static final String IS_EU_DEVICE_ARGUMENT_KEY = "isEUDevice";
     public static final String IS_TOPICS_INFO_VIEW_EXPANDED_KEY = "is_topics_info_view_expanded";
     private boolean mIsEUDevice;
     private boolean mIsInfoViewExpanded = false;
@@ -82,9 +82,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        mIsEUDevice =
-                requireActivity().getIntent().getBooleanExtra(
-                        IS_EU_DEVICE_ARGUMENT_KEY, true);
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
         return inflater.inflate(R.layout.consent_notification_screen_2_ga_v2_eu, container, false);
     }
 
@@ -112,10 +110,10 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                             LANDING_PAGE_OPT_OUT_CLICKED, getContext());
 
                     // opt-out confirmation activity
-                    ConsentManager.getInstance(requireContext())
+                    ConsentManager.getInstance()
                             .disable(requireContext(), AdServicesApiType.TOPICS);
                     if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                        ConsentManager.getInstance(requireContext())
+                        ConsentManager.getInstance()
                                 .recordUserManualInteractionWithConsent(
                                         ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }
@@ -220,10 +218,9 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                         LANDING_PAGE_OPT_IN_CLICKED, getContext());
 
                 // opt-in to topics
-                ConsentManager.getInstance(requireContext())
-                        .enable(requireContext(), AdServicesApiType.TOPICS);
+                ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.TOPICS);
                 if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                    ConsentManager.getInstance(requireContext())
+                    ConsentManager.getInstance()
                             .recordUserManualInteractionWithConsent(
                                     ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                 }

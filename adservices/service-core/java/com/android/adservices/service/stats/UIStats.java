@@ -27,7 +27,8 @@ public class UIStats {
     private int mAction;
     private int mDefaultConsent;
     private int mDefaultAdIdState;
-    private int mPrivacySandboxFeatureType;
+    private int mUx;
+    private int mEnrollmentChannel;
 
     public UIStats() {}
 
@@ -42,7 +43,8 @@ public class UIStats {
                 && mAction == uiStats.getAction()
                 && mDefaultConsent == uiStats.getDefaultConsent()
                 && mDefaultAdIdState == uiStats.getDefaultAdIdState()
-                && mPrivacySandboxFeatureType == uiStats.getPrivacySandboxFeatureType();
+                && mUx == uiStats.getUx()
+                && mEnrollmentChannel == uiStats.getEnrollmentChannel();
     }
 
     @Override
@@ -53,7 +55,8 @@ public class UIStats {
                 mAction,
                 mDefaultConsent,
                 mDefaultAdIdState,
-                mPrivacySandboxFeatureType);
+                mUx,
+                mEnrollmentChannel);
     }
 
     @NonNull
@@ -82,8 +85,13 @@ public class UIStats {
     }
 
     @NonNull
-    public int getPrivacySandboxFeatureType() {
-        return mPrivacySandboxFeatureType;
+    public int getUx() {
+        return mUx;
+    }
+
+    @NonNull
+    public int getEnrollmentChannel() {
+        return mEnrollmentChannel;
     }
 
     public void setRegion(int region) {
@@ -102,6 +110,14 @@ public class UIStats {
         mDefaultAdIdState = defaultAdIdState;
     }
 
+    public void setUx(int ux) {
+        mUx = ux;
+    }
+
+    public int setEnrollmentChannel() {
+        return mEnrollmentChannel;
+    }
+
     @Override
     public String toString() {
         return "UIStats{"
@@ -115,8 +131,10 @@ public class UIStats {
                 + mDefaultConsent
                 + ", mDefaultAdIdState="
                 + mDefaultAdIdState
-                + ", mPrivacySandboxFeatureType"
-                + mPrivacySandboxFeatureType
+                + ", mUx="
+                + mUx
+                + ", mEnrollmentChannel="
+                + mEnrollmentChannel
                 + '}';
     }
 
@@ -128,42 +146,48 @@ public class UIStats {
             mBuilding = new UIStats();
         }
 
-        /** See {@link UIStats#getCode()} . */
+        /** See {@link UIStats#getCode()}. */
         public @NonNull UIStats.Builder setCode(int code) {
             mBuilding.mCode = code;
             return this;
         }
 
-        /** See {@link UIStats#getRegion()} . */
+        /** See {@link UIStats#getRegion()}. */
         public @NonNull UIStats.Builder setRegion(int region) {
             mBuilding.mRegion = region;
             return this;
         }
 
-        /** See {@link UIStats#getAction()} . */
+        /** See {@link UIStats#getAction()}. */
         public @NonNull UIStats.Builder setAction(int action) {
             mBuilding.mAction = action;
             return this;
         }
 
-        /** See {@link UIStats#getAction()} . */
+        /** See {@link UIStats#getDefaultConsent()}. */
         public @NonNull UIStats.Builder setDefaultConsent(int defaultConsent) {
             mBuilding.mDefaultConsent = defaultConsent;
             return this;
         }
 
-        /** See {@link UIStats#getAction()} . */
+        /** See {@link UIStats#getDefaultAdIdState()}. */
         public @NonNull UIStats.Builder setDefaultAdIdState(int defaultAdIdState) {
             mBuilding.mDefaultAdIdState = defaultAdIdState;
             return this;
         }
 
-        /** See {@link UIStats#getAction()} . */
-        public @NonNull UIStats.Builder setPrivacySandboxFeatureType(
-                int privacySandboxFeatureType) {
-            mBuilding.mPrivacySandboxFeatureType = privacySandboxFeatureType;
+        /** See {@link UIStats#getUx()}. */
+        public @NonNull UIStats.Builder setUx(int ux) {
+            mBuilding.mUx = ux;
             return this;
         }
+
+        /** See {@link UIStats#getEnrollmentChannel()}. */
+        public @NonNull UIStats.Builder setEnrollmentChannel(int enrollmentChannel) {
+            mBuilding.mEnrollmentChannel = enrollmentChannel;
+            return this;
+        }
+
         /** Build the {@link UIStats}. */
         public @NonNull UIStats build() {
             return mBuilding;

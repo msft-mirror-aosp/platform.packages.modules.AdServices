@@ -48,13 +48,13 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /** Fragment for the topics view of the AdServices Settings App. */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationFragment extends Fragment {
-    public static final String IS_EU_DEVICE_ARGUMENT_KEY = "isEUDevice";
     public static final String IS_INFO_VIEW_EXPANDED_KEY = "is_info_view_expanded";
 
     private boolean mIsEUDevice;
@@ -71,8 +71,6 @@ public class ConsentNotificationFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED, getContext());
-        mIsEUDevice =
-                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
         setupListeners(savedInstanceState);
     }
 
@@ -88,10 +86,9 @@ public class ConsentNotificationFragment extends Fragment {
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
-        boolean isEUDevice =
-                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
         View rootView;
-        if (isEUDevice) {
+        if (mIsEUDevice) {
             rootView =
                     inflater.inflate(R.layout.consent_notification_fragment_eu, container, false);
         } else {
@@ -120,9 +117,9 @@ public class ConsentNotificationFragment extends Fragment {
                                 LANDING_PAGE_OPT_OUT_CLICKED, getContext());
 
                         // opt-out confirmation activity
-                        ConsentManager.getInstance(requireContext()).disable(requireContext());
+                        ConsentManager.getInstance().disable(requireContext());
                         if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                            ConsentManager.getInstance(requireContext())
+                            ConsentManager.getInstance()
                                     .recordUserManualInteractionWithConsent(
                                             ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                         }
@@ -250,9 +247,9 @@ public class ConsentNotificationFragment extends Fragment {
                     ConsentNotificationActivity.handleAction(
                             LANDING_PAGE_OPT_IN_CLICKED, getContext());
 
-                    ConsentManager.getInstance(requireContext()).enable(requireContext());
+                    ConsentManager.getInstance().enable(requireContext());
                     if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-                        ConsentManager.getInstance(requireContext())
+                        ConsentManager.getInstance()
                                 .recordUserManualInteractionWithConsent(
                                         ConsentManager.MANUAL_INTERACTIONS_RECORDED);
                     }

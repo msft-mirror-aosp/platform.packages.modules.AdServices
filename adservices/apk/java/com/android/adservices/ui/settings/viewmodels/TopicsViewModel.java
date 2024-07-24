@@ -31,9 +31,9 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.widget.MainSwitchBar;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -64,7 +64,7 @@ public class TopicsViewModel extends AndroidViewModel {
 
     public TopicsViewModel(@NonNull Application application) {
         super(application);
-        mConsentManager = ConsentManager.getInstance(application);
+        mConsentManager = ConsentManager.getInstance();
         mTopics = new MutableLiveData<>(getTopicsFromConsentManager());
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
         mTopicsConsent =
@@ -199,7 +199,7 @@ public class TopicsViewModel extends AndroidViewModel {
         }
         mTopicsConsent.postValue(getTopicsConsentFromConsentManager());
         if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
-            ConsentManager.getInstance(getApplication())
+            ConsentManager.getInstance()
                     .recordUserManualInteractionWithConsent(
                             ConsentManager.MANUAL_INTERACTIONS_RECORDED);
         }

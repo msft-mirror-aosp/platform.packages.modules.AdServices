@@ -16,26 +16,37 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.OMIT_ADS_VALUE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 
 import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.http.MockWebServerRule;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
+import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
@@ -43,8 +54,12 @@ import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetc
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
+import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
@@ -77,11 +92,16 @@ public class BackgroundFetchRunnerTest {
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private PackageManager mPackageManagerMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private CustomAudienceLoggerFactory mCustomAudienceLoggerFactoryMock;
+    @Mock private UpdateCustomAudienceExecutionLogger mUpdateCustomAudienceExecutionLoggerMock;
 
     private BackgroundFetchRunner mBackgroundFetchRunnerSpy;
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     private Uri mFetchUri;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -94,6 +114,9 @@ public class BackgroundFetchRunnerTest {
                         .initMocks(this)
                         .startMocking();
 
+        when(mCustomAudienceLoggerFactoryMock.getUpdateCustomAudienceExecutionLogger())
+                .thenReturn(mUpdateCustomAudienceExecutionLoggerMock);
+
         mBackgroundFetchRunnerSpy =
                 ExtendedMockito.spy(
                         new BackgroundFetchRunner(
@@ -101,7 +124,8 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
-                                mFlags));
+                                mFlags,
+                                mCustomAudienceLoggerFactoryMock));
 
         mFetchUri = mMockWebServerRule.uriForPath(mFetchPath);
     }
@@ -171,7 +195,8 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
-                                mFlags));
+                                mFlags,
+                                mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -180,7 +205,8 @@ public class BackgroundFetchRunnerTest {
                                 null,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
-                                mFlags));
+                                mFlags,
+                                mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -189,7 +215,8 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 null,
                                 mEnrollmentDaoMock,
-                                mFlags));
+                                mFlags,
+                                mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -198,7 +225,8 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 null,
-                                mFlags));
+                                mFlags,
+                                mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -207,6 +235,17 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
+                                null,
+                                mCustomAudienceLoggerFactoryMock));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new BackgroundFetchRunner(
+                                mCustomAudienceDaoMock,
+                                mAppInstallDaoMock,
+                                mPackageManagerMock,
+                                mEnrollmentDaoMock,
+                                mFlags,
                                 null));
     }
 
@@ -219,7 +258,7 @@ public class BackgroundFetchRunnerTest {
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptySuccessfulResponse().build();
         doReturn(FluentFuture.from(immediateFuture(updatableData)))
                 .when(mBackgroundFetchRunnerSpy)
-                .fetchAndValidateCustomAudienceUpdatableData(any(), any(), any());
+                .fetchAndValidateCustomAudienceUpdatableData(any(), any(), any(), anyBoolean());
 
         Instant originalEligibleUpdateTime = CommonFixture.FIXED_NOW.minusMillis(60L * 1000L);
         Instant expectedEligibleUpdateTime =
@@ -230,11 +269,13 @@ public class BackgroundFetchRunnerTest {
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
                                 CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
+                        .setIsDebuggable(false)
                         .build();
         DBCustomAudienceBackgroundFetchData expectedFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
                                 CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(expectedEligibleUpdateTime)
+                        .setIsDebuggable(false)
                         .build();
 
         mBackgroundFetchRunnerSpy
@@ -252,21 +293,24 @@ public class BackgroundFetchRunnerTest {
             throws ExecutionException, InterruptedException {
         CustomAudienceUpdatableData updatableData =
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse().build();
+
         doReturn(FluentFuture.from(immediateFuture(updatableData)))
                 .when(mBackgroundFetchRunnerSpy)
-                .fetchAndValidateCustomAudienceUpdatableData(any(), any(), any());
+                .fetchAndValidateCustomAudienceUpdatableData(any(), any(), any(), anyBoolean());
 
         Instant originalEligibleUpdateTime = CommonFixture.FIXED_NOW.minusMillis(60L * 1000L);
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
                                 CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
+                        .setIsDebuggable(false)
                         .build();
         DBCustomAudienceBackgroundFetchData expectedFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
                                 CommonFixture.VALID_BUYER_1)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
                         .setNumValidationFailures(1)
+                        .setIsDebuggable(false)
                         .build();
 
         mBackgroundFetchRunnerSpy
@@ -294,7 +338,10 @@ public class BackgroundFetchRunnerTest {
         CustomAudienceUpdatableData updatableData =
                 mBackgroundFetchRunnerSpy
                         .fetchAndValidateCustomAudienceUpdatableData(
-                                CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri)
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                mFetchUri,
+                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -319,7 +366,10 @@ public class BackgroundFetchRunnerTest {
         CustomAudienceUpdatableData updatableData =
                 mBackgroundFetchRunnerSpy
                         .fetchAndValidateCustomAudienceUpdatableData(
-                                CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri)
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                mFetchUri,
+                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -329,6 +379,109 @@ public class BackgroundFetchRunnerTest {
         assertEquals(mFetchPath, fetchRequest.getPath());
     }
 
+    @Test
+    public void
+            testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithAuctionServerRequestFlagsEnabled()
+                    throws Exception {
+        class FlagsWithAuctionServerRequestEnabled extends FlagsFactory.TestFlags {
+            @Override
+            public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+                return true;
+            }
+        }
+
+        BackgroundFetchRunner runner =
+                new BackgroundFetchRunner(
+                        mCustomAudienceDaoMock,
+                        mAppInstallDaoMock,
+                        mPackageManagerMock,
+                        mEnrollmentDaoMock,
+                        new FlagsWithAuctionServerRequestEnabled(),
+                        mCustomAudienceLoggerFactoryMock);
+
+        String jsonResponseString =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
+                                        CommonFixture.VALID_BUYER_1)
+                                .build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1),
+                        ImmutableList.of(OMIT_ADS_VALUE));
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setBody(jsonResponseString)));
+        CustomAudienceUpdatableData expectedUpdatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderFullSuccessfulResponse()
+                        .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                        .build();
+
+        CustomAudienceUpdatableData updatableData =
+                runner.fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                mFetchUri,
+                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                        .get();
+
+        assertEquals(expectedUpdatableData, updatableData);
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        RecordedRequest fetchRequest = mockWebServer.takeRequest();
+        assertEquals(mFetchPath, fetchRequest.getPath());
+    }
+
+    @Test
+    public void
+            testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithAuctionServerRequestFlagsDisabled()
+                    throws Exception {
+        class FlagsWithAuctionServerRequestDisabled extends FlagsFactory.TestFlags {
+            @Override
+            public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+                return false;
+            }
+        }
+
+        BackgroundFetchRunner runner =
+                new BackgroundFetchRunner(
+                        mCustomAudienceDaoMock,
+                        mAppInstallDaoMock,
+                        mPackageManagerMock,
+                        mEnrollmentDaoMock,
+                        new FlagsWithAuctionServerRequestDisabled(),
+                        mCustomAudienceLoggerFactoryMock);
+
+        String jsonResponseString =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
+                                        CommonFixture.VALID_BUYER_1)
+                                .build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1),
+                        ImmutableList.of(OMIT_ADS_VALUE));
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setBody(jsonResponseString)));
+        CustomAudienceUpdatableData expectedUpdatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderFullSuccessfulResponse().build();
+
+        CustomAudienceUpdatableData updatableData =
+                runner.fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                mFetchUri,
+                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                        .get();
+
+        assertEquals(expectedUpdatableData, updatableData);
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        RecordedRequest fetchRequest = mockWebServer.takeRequest();
+        assertEquals(mFetchPath, fetchRequest.getPath());
+    }
+
+    @FlakyTest(bugId = 322167446)
     @Test
     public void testFetchAndValidateCustomAudienceUpdatableDataNetworkTimeout() throws Exception {
         class FlagsWithSmallLimits implements Flags {
@@ -349,7 +502,8 @@ public class BackgroundFetchRunnerTest {
                         mAppInstallDaoMock,
                         mPackageManagerMock,
                         mEnrollmentDaoMock,
-                        new FlagsWithSmallLimits());
+                        new FlagsWithSmallLimits(),
+                        mCustomAudienceLoggerFactoryMock);
 
         CountDownLatch responseLatch = new CountDownLatch(1);
         MockWebServer mockWebServer =
@@ -381,7 +535,10 @@ public class BackgroundFetchRunnerTest {
         CustomAudienceUpdatableData updatableData =
                 runnerWithSmallLimits
                         .fetchAndValidateCustomAudienceUpdatableData(
-                                CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri)
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                mFetchUri,
+                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
                         .get();
 
         assertTrue(responseLatch.await(150, TimeUnit.MILLISECONDS));
@@ -412,7 +569,8 @@ public class BackgroundFetchRunnerTest {
                         .fetchAndValidateCustomAudienceUpdatableData(
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
-                                invalidFetchUri)
+                                invalidFetchUri,
+                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -435,7 +593,8 @@ public class BackgroundFetchRunnerTest {
                         mAppInstallDaoMock,
                         mPackageManagerMock,
                         mEnrollmentDaoMock,
-                        new FlagsWithSmallLimits());
+                        new FlagsWithSmallLimits(),
+                        mCustomAudienceLoggerFactoryMock);
 
         MockWebServer mockWebServer =
                 mMockWebServerRule.startMockWebServer(
@@ -453,7 +612,38 @@ public class BackgroundFetchRunnerTest {
         CustomAudienceUpdatableData updatableData =
                 runnerWithSmallLimits
                         .fetchAndValidateCustomAudienceUpdatableData(
-                                CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri)
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                mFetchUri,
+                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                        .get();
+
+        assertEquals(expectedUpdatableData, updatableData);
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        RecordedRequest fetchRequest = mockWebServer.takeRequest();
+        assertEquals(mFetchPath, fetchRequest.getPath());
+    }
+
+    @Test
+    public void testFetchAndValidateCustomAudienceUpdatableDataDebuggable() throws Exception {
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                CustomAudienceUpdatableDataFixture
+                                                        .getFullSuccessfulJsonResponseString())));
+        CustomAudienceUpdatableData expectedUpdatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderFullSuccessfulResponse().build();
+
+        CustomAudienceUpdatableData updatableData =
+                mBackgroundFetchRunnerSpy
+                        .fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                mFetchUri,
+                                /*debuggable=*/ true)
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);

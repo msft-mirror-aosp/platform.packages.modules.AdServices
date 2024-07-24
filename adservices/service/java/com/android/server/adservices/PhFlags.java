@@ -18,12 +18,14 @@ package com.android.server.adservices;
 import android.annotation.NonNull;
 import android.provider.DeviceConfig;
 
+import com.android.adservices.service.CommonPhFlags;
+
 /**
  * Flags Implementation that delegates to DeviceConfig.
  *
  * @hide
  */
-public final class PhFlags implements Flags {
+public final class PhFlags extends CommonPhFlags implements Flags {
 
     private static final PhFlags sSingleton = new PhFlags();
 

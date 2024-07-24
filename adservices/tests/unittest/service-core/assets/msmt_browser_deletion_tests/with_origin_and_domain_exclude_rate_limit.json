@@ -150,7 +150,8 @@
           }
         ],
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T2",
@@ -169,7 +170,8 @@
           }
         ],
         "triggerTime": 1648665733605,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T3",
@@ -188,7 +190,8 @@
           }
         ],
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T4",
@@ -207,7 +210,8 @@
           }
         ],
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T5",
@@ -226,7 +230,8 @@
           }
         ],
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "Trigger6",
@@ -245,7 +250,8 @@
           }
         ],
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [
@@ -373,7 +379,8 @@
         "status": 0,
         "debugCleartextPayload": "",
         "sourceId" : "S1",
-        "triggerId" : "T1"
+        "triggerId" : "T1",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a2",
@@ -385,7 +392,8 @@
         "status": 0,
         "debugCleartextPayload": "",
         "sourceId" : "S1",
-        "triggerId" : "T2"
+        "triggerId" : "T2",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a3",
@@ -397,7 +405,8 @@
         "status": 0,
         "debugCleartextPayload": "",
         "sourceId" : "S2",
-        "triggerId" : "T2"
+        "triggerId" : "T2",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a4",
@@ -409,7 +418,8 @@
         "status": 0,
         "debugCleartextPayload": "",
         "sourceId" : "S2",
-        "triggerId" : "T4"
+        "triggerId" : "T4",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a5",
@@ -421,7 +431,8 @@
         "status": 0,
         "debugCleartextPayload": "",
         "sourceId" : "S3",
-        "triggerId" : "T3"
+        "triggerId" : "T3",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a6",
@@ -433,7 +444,8 @@
         "status": 0,
         "debugCleartextPayload": "",
         "sourceId" : "S3",
-        "triggerId" : "T5"
+        "triggerId" : "T5",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a7",
@@ -445,7 +457,8 @@
         "status": 0,
         "debugCleartextPayload": "",
         "sourceId" : "S5",
-        "triggerId" : "T5"
+        "triggerId" : "T5",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a8",
@@ -457,7 +470,8 @@
         "status": 0,
         "debugCleartextPayload": "",
         "sourceId" : "S6",
-        "triggerId" : "Trigger6"
+        "triggerId" : "Trigger6",
+        "aggregation_coordinator_origin": "https://test.test"
       }
     ],
     "attributions": [
@@ -690,7 +704,8 @@
           }
         ],
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T2",
@@ -709,7 +724,8 @@
           }
         ],
         "triggerTime": 1648665733605,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T3",
@@ -728,7 +744,8 @@
           }
         ],
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T4",
@@ -747,7 +764,8 @@
           }
         ],
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "T5",
@@ -766,7 +784,8 @@
           }
         ],
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       },
       {
         "id": "Trigger6",
@@ -785,7 +804,8 @@
           }
         ],
         "triggerTime": 1648665733601,
-        "registrant": "android-app://com.registrant.deleteCandidate"
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "aggregatableSourceRegistrationTimeConfig": "INCLUDE"
       }
     ],
     "event_reports": [
@@ -913,7 +933,8 @@
         "status": 2,
         "debugCleartextPayload": "",
         "sourceId" : "S1",
-        "triggerId" : "T1"
+        "triggerId" : "T1",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a2",
@@ -925,7 +946,8 @@
         "status": 2,
         "debugCleartextPayload": "",
         "sourceId" : "S1",
-        "triggerId" : "T2"
+        "triggerId" : "T2",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a3",
@@ -937,7 +959,8 @@
         "status": 0,
         "debugCleartextPayload": "",
         "sourceId" : "S2",
-        "triggerId" : "T2"
+        "triggerId" : "T2",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a4",
@@ -949,7 +972,8 @@
         "status": 2,
         "debugCleartextPayload": "",
         "sourceId" : "S2",
-        "triggerId" : "T4"
+        "triggerId" : "T4",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a5",
@@ -961,7 +985,8 @@
         "status": 0,
         "debugCleartextPayload": "",
         "sourceId" : "S3",
-        "triggerId" : "T3"
+        "triggerId" : "T3",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a6",
@@ -973,7 +998,8 @@
         "status": 2,
         "debugCleartextPayload": "",
         "sourceId" : "S3",
-        "triggerId" : "T5"
+        "triggerId" : "T5",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a7",
@@ -985,7 +1011,8 @@
         "status": 2,
         "debugCleartextPayload": "",
         "sourceId" : "S5",
-        "triggerId" : "T5"
+        "triggerId" : "T5",
+        "aggregation_coordinator_origin": "https://test.test"
       },
       {
         "id": "a8",
@@ -997,7 +1024,8 @@
         "status": 2,
         "debugCleartextPayload": "",
         "sourceId" : "S6",
-        "triggerId" : "Trigger6"
+        "triggerId" : "Trigger6",
+        "aggregation_coordinator_origin": "https://test.test"
       }
     ],
     "attributions": [

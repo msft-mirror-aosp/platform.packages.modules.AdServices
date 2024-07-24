@@ -138,7 +138,7 @@ public class ClassifierInputManager {
                                             applicationInfo.descriptionRes)));
                     break;
                 default:
-                    LogUtil.e("Invalid input field in config: {}", inputField);
+                    LogUtil.e("Invalid input field in config: %s", inputField);
                     return null;
             }
         }
@@ -171,7 +171,7 @@ public class ClassifierInputManager {
             PackageManager packageManager, ApplicationInfo applicationInfo, int resourceId) {
         if (!SdkLevel.isAtLeastS()) {
             LogUtil.d(
-                    "English app resource not available for SDK version {} - "
+                    "English app resource not available for SDK version %d - "
                             + "returning localized app resource",
                     Build.VERSION.SDK_INT);
             return getLocalAppResource(packageManager, applicationInfo, resourceId);
@@ -192,7 +192,7 @@ public class ClassifierInputManager {
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e("No resources returned from packageManager.");
         } catch (Resources.NotFoundException e) {
-            LogUtil.e("Resource not found by packageManager - resourceId: {}", resourceId);
+            LogUtil.e("Resource not found by packageManager - resourceId: %d", resourceId);
         }
         return EMPTY_STRING;
     }
@@ -204,7 +204,7 @@ public class ClassifierInputManager {
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e("No resources returned from packageManager.");
         } catch (Resources.NotFoundException e) {
-            LogUtil.e("Resource not found by packageManager - resourceId: {}", resourceId);
+            LogUtil.e("Resource not found by packageManager - resourceId: %d", resourceId);
         }
         return EMPTY_STRING;
     }

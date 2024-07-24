@@ -16,20 +16,21 @@
 
 package android.adservices.test.scenario.adservices.topics;
 
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
+
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.content.Context;
+import android.platform.test.option.StringOption;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -45,29 +46,22 @@ public class GetTopicsApiCall {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final String SDKNAME = "sdk1";
+    private static final String DEFAULT_SDKNAME = "sdk1";
 
-    @Before
-    public void setup() {
-        disableGlobalKillSwitch();
-        disableTopicsKillSwitch();
-        enableUserConsent(true);
-        overrideDisableTopicsEnrollmentCheck("1");
-        // Extra flags need to be set when test is executed on S- for service to run (e.g.
-        // to avoid invoking system-server related code).
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-    }
+    private static final String OPTION_SDKNAME = "sdk_name";
 
-    @After
-    public void teardown() {
-        enableUserConsent(false);
-        overrideDisableTopicsEnrollmentCheck("0");
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-    }
+    // To supply value, use {@code -e sdk_name sdk1} in the instrumentation command.
+    @Rule(order = 0)
+    public StringOption sdkOption =
+            new StringOption(OPTION_SDKNAME).setRequired(false).setDefault(DEFAULT_SDKNAME);
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    .setTopicsKillSwitch(false)
+                    .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
+                    .setCompatModeFlags();
 
     private void measureGetTopics(String label) throws Exception {
         Log.i(TAG, "Calling getTopics()");
@@ -75,7 +69,7 @@ public class GetTopicsApiCall {
         AdvertisingTopicsClient advertisingTopicsClient =
                 new android.adservices.clients.topics.AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
-                        .setSdkName(SDKNAME)
+                        .setSdkName(sdkOption.get())
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
@@ -95,28 +89,5 @@ public class GetTopicsApiCall {
         // We need to sleep here to prevent going above the Rate Limit.
         Thread.sleep(1000);
         measureGetTopics("TOPICS_HOT_START_LATENCY_METRIC");
-    }
-
-    // Override global_kill_switch to ignore the effect of actual PH values.
-    protected void disableGlobalKillSwitch() {
-        ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
-    }
-
-    // Override topics_kill_switch to ignore the effect of actual PH values.
-    protected void disableTopicsKillSwitch() {
-        ShellUtils.runShellCommand("device_config put adservices topics_kill_switch false");
-    }
-
-    // Override User Consent
-    protected void enableUserConsent(boolean isEnabled) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.consent_manager_debug_mode " + isEnabled);
-    }
-
-    // Override the flag to disable Topics enrollment check.
-    private void overrideDisableTopicsEnrollmentCheck(String val) {
-        // Setting it to 1 here disables the Topics' enrollment check.
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 }

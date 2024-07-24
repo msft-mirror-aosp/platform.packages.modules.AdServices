@@ -23,13 +23,13 @@ public class EnrollmentFixture {
     public static final EnrollmentData getValidEnrollment() {
         return new EnrollmentData.Builder()
                 .setEnrollmentId("E1")
-                .setCompanyId("1001")
+                .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                 .setSdkNames("sdk1")
                 .setAttributionSourceRegistrationUrl(Arrays.asList("https://test.com/source"))
                 .setAttributionTriggerRegistrationUrl(Arrays.asList("https://test.com/trigger"))
                 .setAttributionReportingUrl(Arrays.asList("https://test.com"))
                 .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test.com"))
-                .setEncryptionKeyUrl(Arrays.asList("https://test.com/keys"))
+                .setEncryptionKeyUrl("https://test.com/keys")
                 .build();
     }
 }

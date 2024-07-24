@@ -18,11 +18,11 @@ package com.android.adservices.download;
 
 import static com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus.SUCCESS;
 import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -32,10 +32,11 @@ import android.database.DatabaseUtils;
 import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.shared.SharedDbHelper;
@@ -45,9 +46,10 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSession;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.AddFileGroupRequest;
 import com.google.android.libraries.mobiledatadownload.DownloadFileGroupRequest;
@@ -73,17 +75,21 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.quality.Strictness;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 /** Unit tests for {@link MobileDataDownloadFactory} */
-@SmallTest
-public class MobileDataDownloadTest {
-
-    private final Context mContext = ApplicationProvider.getApplicationContext();
+@RequiresSdkLevelAtLeastS
+@SpyStatic(MddLogger.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(MobileDataDownloadFactory.class)
+@SpyStatic(UxStatesManager.class)
+@SpyStatic(EnrollmentDao.class)
+@SpyStatic(EncryptionKeyDao.class)
+@SpyStatic(ConsentManager.class)
+@SpyStatic(CommonClassifierHelper.class)
+public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestCase {
     private static final int MAX_HANDLE_TASK_WAIT_TIME_SECS = 300;
     private static final long WAIT_FOR_WIFI_CONNECTION_MS = 5 * 1000; // 5 seconds.
     private static boolean sNeedWifiConnectionWait = true;
@@ -107,9 +113,10 @@ public class MobileDataDownloadTest {
     private static final String TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/922/217081737fd739c74dd3ca5c407813d818526577";
     private static final String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1800/29dbe982cc8bf8f4ae05557b96cc7d8f69c4c0e4";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1986/9e98784bcdb26a3eb2ab3f65ee811f43177c761f";
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1/manifest_config_1658790241927.binaryproto";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/2998/b35ed340576e8a72385af87b95f1f526abdb7f5f";
+
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1281/a245b0927ba27b3d954b0ca2775651ccfc9a5e84";
@@ -118,19 +125,17 @@ public class MobileDataDownloadTest {
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
 
-    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 5;
+    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 64;
     private static final int PTB_ENROLLMENT_ENTRIES = 1;
     private static final int OEM_ENROLLMENT_ENTRIES = 114;
 
-    private static final int PRODUCTION_FILEGROUP_VERSION = 1;
+    private static final int PRODUCTION_FILEGROUP_VERSION = 0;
     private static final int PTB_FILEGROUP_VERSION = 0;
     private static final int OEM_FILEGROUP_VERSION = 0;
 
     public static final String TEST_TOPIC_FILE_GROUP_NAME = "topics-classifier-model";
     public static final String ENROLLMENT_FILE_GROUP_NAME = "adtech_enrollment_data";
     public static final String UI_OTA_STRINGS_FILE_GROUP_NAME = "ui-ota-strings";
-
-    private StaticMockitoSession mStaticMockSession = null;
     private SynchronousFileStorage mFileStorage;
     private FileDownloader mFileDownloader;
     private SharedDbHelper mDbHelper;
@@ -138,9 +143,10 @@ public class MobileDataDownloadTest {
 
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
+    @Mock UxStatesManager mUxStatesManager;
 
     @Before
-    public void setup() throws Exception {
+    public void setUp() throws Exception {
         // Add latency to fix the boot up WIFI connection delay. We only need to wait once during
         // the whole test suite run.
         // Checking wifi connection using WifiManager isn't working on low-performance devices.
@@ -149,23 +155,7 @@ public class MobileDataDownloadTest {
             sNeedWifiConnectionWait = false;
         }
 
-        MockitoAnnotations.initMocks(this);
-
-        // Start a mockitoSession to mock static method.
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(MddLogger.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(MobileDataDownloadFactory.class)
-                        .spyStatic(EnrollmentDao.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(CommonClassifierHelper.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-
-        doReturn(/* Download max download threads */ 2)
-                .when(mMockFlags)
-                .getDownloaderMaxDownloadThreads();
+        mockMddFlags();
 
         mFileStorage = MobileDataDownloadFactory.getFileStorage(mContext);
         mFileDownloader =
@@ -173,23 +163,18 @@ public class MobileDataDownloadTest {
 
         mDbHelper = DbTestUtil.getSharedDbHelperForTest();
 
-        when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         // Mock static method ConsentManager.getInstance() to return test ConsentManager
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
-
+        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
         overridingMddLoggingLevel("VERBOSE");
     }
 
     @After
     public void teardown() throws ExecutionException, InterruptedException {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
         if (mMdd != null) {
             mMdd.clear().get();
         }
-
         overridingMddLoggingLevel("INFO");
     }
 
@@ -199,9 +184,9 @@ public class MobileDataDownloadTest {
                 getMddForTesting(
                         mContext,
                         FlagsFactory.getFlagsForTest(),
-                        ImmutableList.<FileGroupPopulator>builder()
-                                .build()); // Pass in an empty list of FileGroupPopulator. Add ad
-        // hoc datafilegroup to MDD manually below.
+                        // Pass in an empty list of FileGroupPopulator. Add ad hoc DataFileGroup
+                        // to MDD manually below.
+                        ImmutableList.of());
 
         DataFileGroup dataFileGroup =
                 createDataFileGroup(
@@ -242,8 +227,8 @@ public class MobileDataDownloadTest {
     public void testTopicsManifestFileGroupPopulator_ManifestConfigOverrider_NoFileGroup()
             throws ExecutionException, InterruptedException, TimeoutException {
         createMddForTopics(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
-        // The server side test model build_id = 1800, which equals to bundled model build_id =
-        // 1800. ManifestConfigOverrider will not add the DataFileGroup in the
+        // The server side test model build_id = 1986, which equals to bundled model build_id =
+        // 1986. ManifestConfigOverrider will not add the DataFileGroup in the
         // TopicsManifestFileGroupPopulator and will not download either.
         assertThat(
                         mMdd.getFileGroup(
@@ -263,7 +248,7 @@ public class MobileDataDownloadTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         // Set the bundled build_id to 1 so the server side build_id will be bigger. This will
         // trigger MDD download.
-        ExtendedMockito.doReturn(1L)
+        doReturn(1L)
                 .when(
                         () ->
                                 CommonClassifierHelper.getBundledModelBuildId(
@@ -285,7 +270,7 @@ public class MobileDataDownloadTest {
                 .isEqualTo(/* Test filegroup version number */ 0);
         assertThat(clientFileGroup.getFileCount()).isEqualTo(6);
         assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
-        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 1800);
+        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 1986);
     }
 
     /**
@@ -421,7 +406,7 @@ public class MobileDataDownloadTest {
     @Test
     public void testMddTopicsOnConsentGiven_gaUxEnabled()
             throws ExecutionException, InterruptedException, TimeoutException {
-        ExtendedMockito.doReturn(1L)
+        doReturn(1L)
                 .when(
                         () ->
                                 CommonClassifierHelper.getBundledModelBuildId(
@@ -493,18 +478,36 @@ public class MobileDataDownloadTest {
         assertThat(clientFileGroup).isNull();
     }
 
+    // Topics MFGP should be disabled for U18 UX.
     @Test
-    public void testMddLoggerKillSwitchIsOn() {
-        // Killswitch is on. MddLogger should be disabled.
-        doReturn(true).when(mMockFlags).getMddLoggerKillSwitch();
+    public void topicsDownloadTest_U18UxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(PrivacySandboxUxCollection.U18_UX).when(mUxStatesManager).getUx();
+
+        createMddForTopics(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(TEST_TOPIC_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
+    }
+
+    @Test
+    public void testMddLoggerFeatureFlagIsOff() {
+        // The feature flag is off. MddLogger should be disabled.
+        doReturn(false).when(mMockFlags).getMddLoggerEnabled();
         Optional<Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);
         assertThat(mddLogger).isAbsent();
     }
 
     @Test
-    public void testMddLoggerKillSwitchIsOff() {
-        // Killswitch is off. MddLogger should be enabled.
-        doReturn(false).when(mMockFlags).getMddLoggerKillSwitch();
+    public void testMddLoggerFeatureFlagIsOn() {
+        // The feature flag is on. MddLogger should be enabled.
+        doReturn(true).when(mMockFlags).getMddLoggerEnabled();
         Optional<Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);
         assertThat(mddLogger).isPresent();
     }
@@ -581,7 +584,7 @@ public class MobileDataDownloadTest {
      * @return a MobileDataDownload instance.
      */
     @NonNull
-    private MobileDataDownload getMddForTesting(
+    private static MobileDataDownload getMddForTesting(
             @NonNull Context context,
             @NonNull Flags flags,
             @NonNull ImmutableList<FileGroupPopulator> fileGroupPopulators) {
@@ -633,10 +636,9 @@ public class MobileDataDownloadTest {
                 getMddForTesting(
                         mContext,
                         mMockFlags,
-                        ImmutableList.<FileGroupPopulator>builder()
-                                .add(fileGroupPopulator)
-                                .build()); // List of FileGroupPopulator that contains Measurement
-        // FileGroupPopulator only.
+                        // List of FileGroupPopulator that contains Measurement FileGroupPopulator
+                        // only.
+                        ImmutableList.of(fileGroupPopulator));
 
         // Calling handleTask directly to trigger the MDD's background download on wifi. This should
         // be done in tests only.
@@ -658,10 +660,8 @@ public class MobileDataDownloadTest {
                 getMddForTesting(
                         mContext,
                         mMockFlags,
-                        ImmutableList.<FileGroupPopulator>builder()
-                                .add(fileGroupPopulator)
-                                .build()); // List of FileGroupPopulator that contains Topics
-        // FileGroupPopulator only.
+                        // List of FileGroupPopulator that contains Topics FileGroupPopulator only.
+                        ImmutableList.of(fileGroupPopulator));
 
         // Calling handleTask directly to trigger the MDD's background download on wifi. This should
         // be done in tests only.
@@ -683,10 +683,9 @@ public class MobileDataDownloadTest {
                 getMddForTesting(
                         mContext,
                         mMockFlags,
-                        ImmutableList.<FileGroupPopulator>builder()
-                                .add(fileGroupPopulator)
-                                .build()); // List of FileGroupPopulator that contains UI OTA String
-        // FileGroupPopulator only.
+                        // List of FileGroupPopulator that contains UI OTA String FileGroupPopulator
+                        // only.
+                        ImmutableList.of(fileGroupPopulator));
 
         // Calling handleTask directly to trigger the MDD's background download on wifi. This should
         // be done in tests only.
@@ -710,28 +709,42 @@ public class MobileDataDownloadTest {
         assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
         assertThat(clientFileGroup.getVersionNumber()).isEqualTo(fileGroupVersion);
 
-        ExtendedMockito.doReturn(mMdd)
+        doReturn(mMdd)
                 .when(() -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
 
         EnrollmentDataDownloadManager enrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(mContext, mMockFlags);
         EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper, mMockFlags);
+        doReturn(enrollmentDao).when(() -> EnrollmentDao.getInstance(any(Context.class)));
 
-        ExtendedMockito.doReturn(enrollmentDao)
-                .when(() -> EnrollmentDao.getInstance(any(Context.class)));
+        EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);
+        doReturn(encryptionKeyDao).when(() -> EncryptionKeyDao.getInstance(any(Context.class)));
 
         assertThat(enrollmentDao.deleteAll()).isTrue();
         // Verify no enrollment data after table cleared.
         assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(0);
         // Verify enrollment data file read from MDD and insert the data into the enrollment
         // database.
-        assertThat(enrollmentDataDownloadManager.readAndInsertEnrolmentDataFromMdd().get())
+        assertThat(enrollmentDataDownloadManager.readAndInsertEnrollmentDataFromMdd().get())
                 .isEqualTo(SUCCESS);
         assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(enrollmentEntries);
         assertThat(enrollmentDao.deleteAll()).isTrue();
     }
 
-    private void overridingMddLoggingLevel(String loggingLevel) {
+    private void mockMddFlags() {
+        extendedMockito.mockGetFlags(mMockFlags);
+
+        doReturn(2).when(mMockFlags).getDownloaderMaxDownloadThreads();
+        doReturn(false).when(mMockFlags).getEncryptionKeyNewEnrollmentFetchKillSwitch();
+        doReturn(Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS)
+                .when(mMockFlags)
+                .getEncryptionKeyNetworkConnectTimeoutMs();
+        doReturn(Flags.ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS)
+                .when(mMockFlags)
+                .getEncryptionKeyNetworkReadTimeoutMs();
+    }
+
+    private static void overridingMddLoggingLevel(String loggingLevel) {
         ShellUtils.runShellCommand("setprop log.tag.MDD %s", loggingLevel);
     }
 }

@@ -22,7 +22,7 @@
     <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
 
     <metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
-        <option name="directory-keys" value="/sdcard/Pictures" />
+        <option name="directory-keys" value="/sdcard/Documents/adservices-tests" />
         <option name="clean-up" value="false" />
         <option name="collect-on-run-ended-only" value="true" />
     </metrics_collector>
@@ -48,6 +48,12 @@
         <option name="push"
                 value="com.example.adservices.samples.ui.consenttestapp.apk->/data/local/tmp/cts/install/com.example.adservices.samples.ui.consenttestapp.apk" />
     </target_preparer>
+
+    <!-- Enabled API access without ad_services_config -->
+    <option name="run-command"
+            value="device_config put adservices app_config_returns_enabled_by_detault true" />
+    <option name="teardown-command"
+            value="device_config put adservices app_config_returns_enabled_by_detault false" />
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false" /> <!-- Allow hidden API uses -->

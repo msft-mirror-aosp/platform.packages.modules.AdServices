@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.targetprep.TargetSetupError;
@@ -28,59 +30,79 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
 public class SdkSandboxMetricsHostTest extends BaseHostJUnit4Test {
 
-    private static final String METRICS_TEST_APP_PACKAGE = "com.android.tests.sdksandbox";
-    private static final String METRICS_TEST_APP_APK = "SdkSandboxMetricsTestApp.apk";
+    private static final String TEST_APP_PACKAGE = "com.android.tests.sdksandbox";
+    private static final String TEST_APP_APK = "SdkSandboxMetricsTestApp.apk";
+    private static final String TEST_APP_CLASS_NAME = "SdkSandboxMetricsTestApp";
+    private static final String SECONDARY_TEST_APP_PACKAGE =
+            "com.android.tests.sdksandbox.secondary";
+    private static final String SECONDARY_TEST_APP_APK = "SdkSandboxMetricsSecondaryTestApp.apk";
+    private static final String SECONDARY_TEST_APP_CLASS_NAME = "SdkSandboxMetricsSecondaryTestApp";
+
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     private DeviceSdkLevel mDeviceSdkLevel;
 
     @Before
     public void setUp() throws DeviceNotAvailableException, TargetSetupError {
+        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
         mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
-        installPackage(METRICS_TEST_APP_APK);
+        installPackage(TEST_APP_APK);
+        installPackage(SECONDARY_TEST_APP_APK);
     }
 
     @After
     public void tearDown() throws DeviceNotAvailableException {
-        uninstallPackage(METRICS_TEST_APP_PACKAGE);
+        uninstallPackage(TEST_APP_PACKAGE);
+        uninstallPackage(SECONDARY_TEST_APP_PACKAGE);
     }
 
-    @Ignore("b/282666880")
     @Test
     public void testSdkCanAccessSdkSandboxExitReasons() throws Exception {
         assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
-        runPhase("testSdkCanAccessSdkSandboxExitReasons");
+        runPhase(TEST_APP_PACKAGE, TEST_APP_CLASS_NAME, "testSdkCanAccessSdkSandboxExitReasons");
+    }
+
+    @Test
+    public void testSdkCannotAccessOtherSdkSandboxExitReasons() throws Exception {
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+        runPhase(
+                SECONDARY_TEST_APP_PACKAGE,
+                SECONDARY_TEST_APP_CLASS_NAME,
+                "startAndCrashSdkSandbox");
+        runPhase(
+                TEST_APP_PACKAGE,
+                TEST_APP_CLASS_NAME,
+                "testSdkCannotAccessExitReasonsFromOtherSdkSandboxUids");
     }
 
     @Test
     public void testAppWithDumpPermissionCanAccessSdkSandboxExitReasons() throws Exception {
         assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
-        runPhase("testAppWithDumpPermissionCanAccessSdkSandboxExitReasons");
+        runPhase(
+                TEST_APP_PACKAGE,
+                TEST_APP_CLASS_NAME,
+                "testAppWithDumpPermissionCanAccessSdkSandboxExitReasons");
     }
 
     @Test
     public void testSdkSandboxCrashGeneratesDropboxReport() throws Exception {
         assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
-        runPhase("testCrashSandboxGeneratesDropboxReport");
+        runPhase(TEST_APP_PACKAGE, TEST_APP_CLASS_NAME, "testCrashSandboxGeneratesDropboxReport");
     }
+
     /**
      * Runs the given phase of a test by calling into the device. Throws an exception if the test
      * phase fails.
      *
      * <p>For example, <code>runPhase("testExample");</code>
      */
-    private void runPhase(String phase) throws Exception {
-        assertThat(
-                        runDeviceTests(
-                                METRICS_TEST_APP_PACKAGE,
-                                METRICS_TEST_APP_PACKAGE + ".SdkSandboxMetricsTestApp",
-                                phase))
-                .isTrue();
+    private void runPhase(String packageName, String className, String phase) throws Exception {
+        assertThat(runDeviceTests(packageName, packageName + "." + className, phase)).isTrue();
     }
 }

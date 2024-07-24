@@ -70,7 +70,7 @@ public class MainActionDelegate {
                                 mMainViewModel.setConsent(true);
                                 break;
                             case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showOptOutDialogFragment(
                                                 mAdServicesSettingsMainActivity, mMainViewModel);
@@ -83,24 +83,21 @@ public class MainActionDelegate {
                                 }
                                 break;
                             case DISPLAY_APPS_FRAGMENT:
-                                UiStatsLogger.logManageAppsSelected(
-                                        mAdServicesSettingsMainActivity);
+                                UiStatsLogger.logManageAppsSelected();
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,
                                                 AppsActivity.class));
                                 break;
                             case DISPLAY_TOPICS_FRAGMENT:
-                                UiStatsLogger.logManageTopicsSelected(
-                                        mAdServicesSettingsMainActivity);
+                                UiStatsLogger.logManageTopicsSelected();
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,
                                                 TopicsActivity.class));
                                 break;
                             case DISPLAY_MEASUREMENT_FRAGMENT:
-                                UiStatsLogger.logManageMeasurementSelected(
-                                        mAdServicesSettingsMainActivity);
+                                UiStatsLogger.logManageMeasurementSelected();
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,

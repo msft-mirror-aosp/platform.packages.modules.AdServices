@@ -24,15 +24,19 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical">
+        android:scrollbars="vertical"
+        android:focusableInTouchMode="true">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:focusableInTouchMode="true" >
+            android:orientation="vertical">
+            <View
+                android:id="@+id/adservices_ppapi_title_spacing"
+                android:visibility="@integer/adservices_ppapi_title_spacing"
+                android:layout_height="18dp"
+                android:layout_width="match_parent"/>
             <TextView
                 android:id="@+id/topics_introduction"
-                android:layout_marginTop="18dp"
                 android:paddingHorizontal="24dp"
                 android:text="@string/settingsUI_topics_view_subtitle"
                 style="@style/MainStyle.Body2" />
@@ -59,12 +63,15 @@
                 android:layout_marginTop="48dp"
                 android:layout_marginBottom="16dp"
                 android:gravity="center"
+                android:focusable="false"
                 android:visibility="gone"
                 android:orientation="vertical">
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_placeholder_icon_for_empty_topics_list"
+                    android:focusable="false"
+                    android:importantForAccessibility="no"
                     android:contentDescription="@string/ic_placeholder_icon_for_empty_topics_list_description" />
                 <TextView
                     android:id="@+id/no_topics_state"
@@ -140,8 +147,7 @@
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="24dp"
                     android:paddingBottom="48dp"
-                    android:orientation="vertical"
-                    android:focusableInTouchMode="true" >
+                    android:orientation="vertical">
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -165,7 +171,6 @@
                     android:paddingHorizontal="24dp"
                     android:paddingBottom="48dp"
                     android:orientation="vertical"
-                    android:focusableInTouchMode="true"
                     android:visibility="gone">
                     <ImageView
                         android:layout_width="wrap_content"

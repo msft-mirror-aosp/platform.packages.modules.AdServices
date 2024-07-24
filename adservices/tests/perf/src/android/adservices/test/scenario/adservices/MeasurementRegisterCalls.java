@@ -35,9 +35,8 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mockwebserver.MockResponse;
@@ -46,6 +45,7 @@ import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -87,8 +87,9 @@ public class MeasurementRegisterCalls {
     private static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 20;
     private static final int AGGREGATE_REPORTING_JOB_ID = 7;
 
-    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            SERVER_BASE_URI + ":" + KEYS_PORT + "/keys";
+    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN =
+            SERVER_BASE_URI + ":" + KEYS_PORT;
+    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH = "keys";
     private static final String REGISTRATION_RESPONSE_SOURCE_HEADER =
             "Attribution-Reporting-Register-Source";
     private static final String REGISTRATION_RESPONSE_TRIGGER_HEADER =
@@ -99,6 +100,10 @@ public class MeasurementRegisterCalls {
             "/.well-known/attribution-reporting/report-aggregate-attribution";
     public static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
             "/.well-known/attribution-reporting/report-event-attribution";
+
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
 
     @BeforeClass
     public static void setupDevicePropertiesAndInitializeClient() throws Exception {
@@ -129,6 +134,7 @@ public class MeasurementRegisterCalls {
         executeDeleteRegistrations();
         executeRegisterSource();
         executeRegisterTrigger();
+        executeAttribution();
         executeRegisterWebSource();
         executeRegisterWebTrigger();
         executeAttribution();
@@ -589,8 +595,14 @@ public class MeasurementRegisterCalls {
         // Set aggregate key URL.
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_aggregate_encryption_key_coordinator_url",
-                AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
+                "measurement_default_aggregation_coordinator_origin",
+                AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN,
+                /* makeDefault */ false);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregation_coordinator_path",
+                AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH,
                 /* makeDefault */ false);
 
         // Set flag to pre seed enrollment.
@@ -607,10 +619,12 @@ public class MeasurementRegisterCalls {
                 Boolean.toString(false),
                 /* makeDefault */ false);
 
-        // Set flags for back-compat AdServices functionality for Android S-.
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
+        // Set aggregate encryption key coordinator origin list.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregation_coordinator_origin_list",
+                AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN,
+                /* makeDefault */ false);
 
         sleep();
     }
@@ -678,7 +692,12 @@ public class MeasurementRegisterCalls {
         // Reset aggregate key URL.
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_aggregate_encryption_key_coordinator_url",
+                "measurement_default_aggregation_coordinator_origin",
+                "null",
+                /* makeDefault */ false);
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregation_coordinator_path",
                 "null",
                 /* makeDefault */ false);
 
@@ -696,9 +715,11 @@ public class MeasurementRegisterCalls {
                 "null",
                 /* makeDefault */ false);
 
-        // Reset back-compat related flags.
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
+        // Reset aggregate encryption key coordinator origin list.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregation_coordinator_origin_list",
+                "null",
+                /* makeDefault */ false);
     }
 }

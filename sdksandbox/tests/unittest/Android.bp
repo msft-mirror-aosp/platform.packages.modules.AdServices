@@ -30,6 +30,9 @@ java_defaults {
         "compatibility-device-util-axt-minus-dexmaker",
         "mockito-target-extended-minus-junit4",
         "truth",
+        "flag-junit",
+        "platform-test-annotations",
+        "adservices-test-utility",
         "SdkSandboxTestUtils",
         "SdkSandbox-java-lib",
     ],
@@ -74,7 +77,7 @@ android_test {
 android_test {
     name: "SdkSandboxManagerServiceUnitTests",
     srcs: [
-        "src/com/android/server/sdksandbox/*.java",
+        "src/com/android/server/sdksandbox/**/*.java",
         ":framework-sdksandbox-aidl-sources",
     ],
     defaults: ["SdkSandboxUnitTestsDefault"],
@@ -84,11 +87,16 @@ android_test {
         "service-sdksandbox.impl",
         "services.core",
         "modules-utils-build",
+        "sdk_sandbox_flags_lib",
     ],
     data: [
         ":SampleCodeProviderApp",
-        ":SampleServiceApp",
+        ":SampleApp",
         ":CodeProviderWithResources",
+        ":CtsSdkProviderAppWithoutSdkProviderClassNameProperty",
+    ],
+    java_resources: [
+        "verification/corrupt_allowlist.binarypb",
     ],
 }
 

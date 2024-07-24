@@ -26,11 +26,11 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.measurement.MeasurementDbHelper;
 import com.android.adservices.data.measurement.MeasurementTables;
-import com.android.adservices.service.measurement.WebUtil;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

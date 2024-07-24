@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkLifecycleHelper;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Process;
 
@@ -47,21 +49,19 @@ public class SdkSandboxDataIsolationTestApp {
 
     private static final String APP_PKG = "com.android.sdksandbox.cts.app";
     private static final String APP_2_PKG = "com.android.sdksandbox.cts.app2";
-
     private static final String CURRENT_USER_ID =
             String.valueOf(Process.myUserHandle().getUserId(Process.myUid()));
-
     private static final String SDK_NAME = "com.android.sdksandbox.cts.provider.dataisolationtest";
-
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
-
     private static final String JAVA_FILE_PERMISSION_DENIED_MSG =
             "open failed: EACCES (Permission denied)";
     private static final String JAVA_FILE_NOT_FOUND_MSG =
             "open failed: ENOENT (No such file or directory)";
 
-    private SdkSandboxManager mSdkSandboxManager;
+    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final SdkLifecycleHelper mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);
 
+    private SdkSandboxManager mSdkSandboxManager;
     private IDataIsolationTestSdkApi mSdk;
 
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
@@ -69,21 +69,16 @@ public class SdkSandboxDataIsolationTestApp {
     @Before
     public void setup() {
         mRule.getScenario();
-        mSdkSandboxManager =
-                ApplicationProvider.getApplicationContext()
-                        .getSystemService(SdkSandboxManager.class);
-        assertThat(mSdkSandboxManager).isNotNull();
+        mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
 
         // unload SDK to fix flakiness
-        mSdkSandboxManager.unloadSdk(SDK_NAME);
+        mSdkLifecycleHelper.unloadSdk(SDK_NAME);
     }
 
     @After
     public void tearDown() {
         // unload SDK to fix flakiness
-        if (mSdkSandboxManager != null) {
-            mSdkSandboxManager.unloadSdk(SDK_NAME);
-        }
+        mSdkLifecycleHelper.unloadSdk(SDK_NAME);
     }
 
     @Test

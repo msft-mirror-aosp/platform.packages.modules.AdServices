@@ -26,12 +26,12 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:focusableInTouchMode="true"
         android:scrollbars="vertical">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:focusableInTouchMode="true" >
+            android:orientation="vertical">
             <LinearLayout
                 android:id="@+id/no_blocked_apps_message"
                 android:layout_width="match_parent"

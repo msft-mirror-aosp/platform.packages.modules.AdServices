@@ -19,8 +19,8 @@ package com.android.adservices.service.measurement.aggregation;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.EventReport;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public final class AggregateReportFixture {
-    private AggregateReportFixture() { }
+    private AggregateReportFixture() {}
 
     private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
     private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
@@ -51,7 +51,10 @@ public final class AggregateReportFixture {
                 .setStatus(EventReport.Status.PENDING)
                 .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                 .setDedupKey(ValidAggregateReportParams.DEDUP_KEY)
-                .setRegistrationOrigin(ValidAggregateReportParams.REGISTRATION_ORIGIN);
+                .setRegistrationOrigin(ValidAggregateReportParams.REGISTRATION_ORIGIN)
+                .setAggregationCoordinatorOrigin(
+                        ValidAggregateReportParams.AGGREGATION_COORDINATOR_ORIGIN)
+                .setIsFakeReport(false);
     }
 
     public static AggregateReport getValidAggregateReport() {
@@ -70,6 +73,8 @@ public final class AggregateReportFixture {
         public static final UnsignedLong DEDUP_KEY = new UnsignedLong(67878545L);
         public static final Uri REGISTRATION_ORIGIN =
                 WebUtil.validUri("https://subdomain.example.test");
+        public static final Uri AGGREGATION_COORDINATOR_ORIGIN =
+                WebUtil.validUri("https://coordinator.example.test");
 
         public static final String getDebugPayload() {
             List<AggregateHistogramContribution> contributions = new ArrayList<>();

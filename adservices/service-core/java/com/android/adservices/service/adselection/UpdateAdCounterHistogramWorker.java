@@ -16,13 +16,20 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.UpdateAdCounterHistogramRequest.INVALID_AD_EVENT_TYPE_MESSAGE;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
 
 import android.adservices.adselection.UpdateAdCounterHistogramCallback;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.common.FrequencyCapFilters;
 import android.annotation.NonNull;
 import android.os.Build;
 import android.os.RemoteException;
@@ -33,8 +40,10 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.internal.util.Preconditions;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -65,6 +74,7 @@ public class UpdateAdCounterHistogramWorker {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ConsentManager mConsentManager;
     private final int mCallerUid;
+    @NonNull private final DevContext mDevContext;
 
     public UpdateAdCounterHistogramWorker(
             @NonNull AdCounterHistogramUpdater adCounterHistogramUpdater,
@@ -74,7 +84,8 @@ public class UpdateAdCounterHistogramWorker {
             @NonNull Flags flags,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull ConsentManager consentManager,
-            int callerUid) {
+            int callerUid,
+            @NonNull DevContext devContext) {
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(clock);
@@ -82,6 +93,7 @@ public class UpdateAdCounterHistogramWorker {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(consentManager);
+        Objects.requireNonNull(devContext);
 
         mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mExecutorService = MoreExecutors.listeningDecorator(executor);
@@ -91,6 +103,7 @@ public class UpdateAdCounterHistogramWorker {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mConsentManager = consentManager;
         mCallerUid = callerUid;
+        mDevContext = devContext;
     }
 
     /**
@@ -118,8 +131,11 @@ public class UpdateAdCounterHistogramWorker {
                             public void onSuccess(Void unusedResult) {
                                 sLogger.v("Completed updateAdCounterHistogram execution");
                                 mAdServicesLogger.logFledgeApiCallStats(
-                                        LOGGING_API_NAME, AdServicesStatusUtils.STATUS_SUCCESS, 0);
-                                notifySuccess(callback);
+                                        LOGGING_API_NAME,
+                                        inputParams.getCallerPackageName(),
+                                        STATUS_SUCCESS,
+                                        0);
+                                notifySuccess(inputParams.getCallerPackageName(), callback);
                             }
 
                             @Override
@@ -127,7 +143,7 @@ public class UpdateAdCounterHistogramWorker {
                                 sLogger.d(
                                         t,
                                         "Error encountered in updateAdCounterHistogram execution");
-                                invokeFailure(callback, t);
+                                invokeFailure(inputParams.getCallerPackageName(), callback, t);
                             }
                         },
                         mExecutorService);
@@ -151,8 +167,8 @@ public class UpdateAdCounterHistogramWorker {
         sLogger.v("Validating updateAdCounterHistogram request");
 
         if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            sLogger.v("Ad selection filtering disabled");
-            throw new IllegalStateException();
+            sLogger.v("Warning: Ad selection filtering disabled");
+            throw new IllegalStateException("Ad selection filtering disabled");
         }
 
         mAdSelectionServiceFilter.filterRequest(
@@ -162,7 +178,8 @@ public class UpdateAdCounterHistogramWorker {
                 false,
                 mCallerUid,
                 LOGGING_API_NAME,
-                FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM);
+                FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM,
+                mDevContext);
 
         // TODO(b/271147154): Merge into the filterRequest call once all filters update
         //  FLEDGE per-app consent
@@ -174,28 +191,39 @@ public class UpdateAdCounterHistogramWorker {
             throw new ConsentManager.RevokedConsentException();
         }
 
+        Preconditions.checkArgument(
+                inputParams.getAdEventType() >= FrequencyCapFilters.AD_EVENT_TYPE_MIN
+                        && inputParams.getAdEventType() <= FrequencyCapFilters.AD_EVENT_TYPE_MAX,
+                INVALID_AD_EVENT_TYPE_MESSAGE);
+
         return null;
     }
 
-    private void notifySuccess(@NonNull UpdateAdCounterHistogramCallback callback) {
+    private void notifySuccess(
+            String callerAppPackageName, @NonNull UpdateAdCounterHistogramCallback callback) {
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send successful result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(
-                    LOGGING_API_NAME, AdServicesStatusUtils.STATUS_UNKNOWN_ERROR, 0);
+                    LOGGING_API_NAME, callerAppPackageName, STATUS_UNKNOWN_ERROR, /*latencyMs=*/ 0);
             throw new RuntimeException(e);
         }
     }
 
     private void invokeFailure(
-            @NonNull UpdateAdCounterHistogramCallback callback, @NonNull Throwable t) {
+            String callerAppPackageName,
+            @NonNull UpdateAdCounterHistogramCallback callback,
+            @NonNull Throwable t) {
         // TODO(b/271147154): Modify to check for FilterException cause once consent is
         //  incorporated into the filter
         if (t instanceof ConsentManager.RevokedConsentException) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    LOGGING_API_NAME, AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED, 0);
-            notifySuccess(callback);
+                    LOGGING_API_NAME,
+                    callerAppPackageName,
+                    STATUS_USER_CONSENT_REVOKED,
+                    /*latencyMs=*/ 0);
+            notifySuccess(callerAppPackageName, callback);
             return;
         }
 
@@ -205,21 +233,23 @@ public class UpdateAdCounterHistogramWorker {
         if (isFilterException) {
             resultCode = FilterException.getResultCode(t);
         } else if (t instanceof IllegalArgumentException || t instanceof NullPointerException) {
-            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+            resultCode = STATUS_INVALID_ARGUMENT;
         } else {
-            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            resultCode = STATUS_INTERNAL_ERROR;
         }
 
         // Skip logging if a FilterException occurs; the AdSelectionServiceFilter internally
         // ensures that the failing assertion is logged
         if (!isFilterException) {
-            mAdServicesLogger.logFledgeApiCallStats(LOGGING_API_NAME, resultCode, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    LOGGING_API_NAME, callerAppPackageName, resultCode, /*latencyMs=*/ 0);
         }
 
-        notifyFailure(callback, resultCode, t.getMessage());
+        notifyFailure(callerAppPackageName, callback, resultCode, t.getMessage());
     }
 
     private void notifyFailure(
+            String callerAppPackageName,
             @NonNull UpdateAdCounterHistogramCallback callback,
             int statusCode,
             @NonNull String errorMessage) {
@@ -232,7 +262,7 @@ public class UpdateAdCounterHistogramWorker {
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send failed result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(
-                    LOGGING_API_NAME, AdServicesStatusUtils.STATUS_UNKNOWN_ERROR, 0);
+                    LOGGING_API_NAME, callerAppPackageName, STATUS_UNKNOWN_ERROR, /*latencyMs=*/ 0);
             throw new RuntimeException(e);
         }
     }

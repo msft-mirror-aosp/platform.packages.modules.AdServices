@@ -21,13 +21,15 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
-import com.android.adservices.service.measurement.util.Web;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,6 +41,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -72,6 +75,8 @@ public class Trigger {
     @Nullable private String mPlatformAdId;
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
+    @Nullable private Uri mAggregationCoordinatorOrigin;
+    private SourceRegistrationTimeConfig mAggregatableSourceRegistrationTimeConfig;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -80,6 +85,11 @@ public class Trigger {
         int IGNORED = 1;
         int ATTRIBUTED = 2;
         int MARKED_TO_DELETE = 3;
+    }
+
+    public enum SourceRegistrationTimeConfig {
+        INCLUDE,
+        EXCLUDE
     }
 
     private Trigger() {
@@ -106,6 +116,8 @@ public class Trigger {
                 && mIsDebugReporting == trigger.mIsDebugReporting
                 && mAdIdPermission == trigger.mAdIdPermission
                 && mArDebugPermission == trigger.mArDebugPermission
+                && mAggregatableSourceRegistrationTimeConfig
+                        == trigger.mAggregatableSourceRegistrationTimeConfig
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
@@ -146,7 +158,8 @@ public class Trigger {
                 mDebugJoinKey,
                 mPlatformAdId,
                 mDebugAdId,
-                mRegistrationOrigin);
+                mRegistrationOrigin,
+                mAggregatableSourceRegistrationTimeConfig);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -248,13 +261,13 @@ public class Trigger {
      * Returns the AggregatableAttributionTrigger object, which is constructed using the aggregate
      * trigger data string and aggregate values string in Trigger.
      */
-    public Optional<AggregatableAttributionTrigger> getAggregatableAttributionTrigger()
+    public Optional<AggregatableAttributionTrigger> getAggregatableAttributionTrigger(Flags flags)
             throws JSONException {
         if (mAggregatableAttributionTrigger != null) {
             return mAggregatableAttributionTrigger;
         }
 
-        mAggregatableAttributionTrigger = parseAggregateTrigger();
+        mAggregatableAttributionTrigger = parseAggregateTrigger(flags);
         return mAggregatableAttributionTrigger;
     }
 
@@ -327,9 +340,8 @@ public class Trigger {
     }
 
     /**
-     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
-     * ID, to be matched with a web source's {@link Source#getDebugAdId()} value at the time of
-     * generating reports.
+     * Returns actual platform AdID from getAdId() on app trigger registration, to be matched with a
+     * web source's {@link Trigger#getDebugAdId()} value at the time of generating reports.
      */
     @Nullable
     public String getPlatformAdId() {
@@ -351,11 +363,25 @@ public class Trigger {
         return mRegistrationOrigin;
     }
 
+    /** Returns coordinator origin for aggregatable reports */
+    @Nullable
+    public Uri getAggregationCoordinatorOrigin() {
+        return mAggregationCoordinatorOrigin;
+    }
+
+    /**
+     * Return {@link SourceRegistrationTimeConfig#EXCLUDE} if the {@link AggregateReport} should not
+     * include the attributed {@link Source} registration time during attribution reporting. Returns
+     * {@link SourceRegistrationTimeConfig#INCLUDE} otherwise.
+     */
+    public SourceRegistrationTimeConfig getAggregatableSourceRegistrationTimeConfig() {
+        return mAggregatableSourceRegistrationTimeConfig;
+    }
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
      */
-    private Optional<AggregatableAttributionTrigger> parseAggregateTrigger()
+    private Optional<AggregatableAttributionTrigger> parseAggregateTrigger(Flags flags)
             throws JSONException, NumberFormatException {
         if (this.mAggregateValues == null) {
             return Optional.empty();
@@ -364,6 +390,7 @@ public class Trigger {
                 ? new JSONArray()
                 : new JSONArray(this.mAggregateTriggerData);
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
+        Filter filter = new Filter(flags);
         for (int i = 0; i < triggerDataArray.length(); i++) {
             JSONObject triggerDatum = triggerDataArray.getJSONObject(i);
             // Remove "0x" prefix.
@@ -380,13 +407,13 @@ public class Trigger {
                             .setSourceKeys(sourceKeySet);
             if (triggerDatum.has("filters") && !triggerDatum.isNull("filters")) {
                 List<FilterMap> filterSet =
-                        Filter.deserializeFilterSet(triggerDatum.getJSONArray("filters"));
+                        filter.deserializeFilterSet(triggerDatum.getJSONArray("filters"));
                 builder.setFilterSet(filterSet);
             }
             if (triggerDatum.has("not_filters")
                     && !triggerDatum.isNull("not_filters")) {
                 List<FilterMap> notFilterSet =
-                        Filter.deserializeFilterSet(triggerDatum.getJSONArray("not_filters"));
+                        filter.deserializeFilterSet(triggerDatum.getJSONArray("not_filters"));
                 builder.setNotFilterSet(notFilterSet);
             }
             if (!triggerDatum.isNull("x_network_data")) {
@@ -414,12 +441,12 @@ public class Trigger {
                 }
                 if (dedupKeyObject.has("filters") && !dedupKeyObject.isNull("filters")) {
                     List<FilterMap> filterSet =
-                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));
+                            filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));
                     builder.setFilterSet(filterSet);
                 }
                 if (dedupKeyObject.has("not_filters") && !dedupKeyObject.isNull("not_filters")) {
                     List<FilterMap> notFilterSet =
-                            Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("not_filters"));
+                            filter.deserializeFilterSet(dedupKeyObject.getJSONArray("not_filters"));
                     builder.setNotFilterSet(notFilterSet);
                 }
                 dedupKeyList.add(builder.build());
@@ -439,10 +466,10 @@ public class Trigger {
      * @return list of {@link EventTrigger}s
      * @throws JSONException if JSON parsing fails
      */
-    public List<EventTrigger> parseEventTriggers() throws JSONException {
+    public List<EventTrigger> parseEventTriggers(Flags flags) throws JSONException {
         JSONArray jsonArray = new JSONArray(this.mEventTriggers);
         List<EventTrigger> eventTriggers = new ArrayList<>();
-
+        boolean readValue = flags.getMeasurementFlexibleEventReportingApiEnabled();
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject eventTrigger = jsonArray.getJSONObject(i);
 
@@ -457,6 +484,13 @@ public class Trigger {
                         eventTrigger.getLong(EventTriggerContract.PRIORITY));
             }
 
+            if (readValue && !eventTrigger.isNull(EventTriggerContract.VALUE)) {
+                eventTriggerBuilder.setTriggerValue(
+                        eventTrigger.getLong(EventTriggerContract.VALUE));
+            } else {
+                eventTriggerBuilder.setTriggerValue(1L);
+            }
+
             if (!eventTrigger.isNull(EventTriggerContract.DEDUPLICATION_KEY)) {
                 eventTriggerBuilder.setDedupKey(new UnsignedLong(
                         eventTrigger.getString(EventTriggerContract.DEDUPLICATION_KEY)));
@@ -464,15 +498,18 @@ public class Trigger {
 
             if (!eventTrigger.isNull(EventTriggerContract.FILTERS)) {
                 List<FilterMap> filterSet =
-                        Filter.deserializeFilterSet(
-                                eventTrigger.getJSONArray(EventTriggerContract.FILTERS));
+                        new Filter(flags)
+                                .deserializeFilterSet(
+                                        eventTrigger.getJSONArray(EventTriggerContract.FILTERS));
                 eventTriggerBuilder.setFilterSet(filterSet);
             }
 
             if (!eventTrigger.isNull(EventTriggerContract.NOT_FILTERS)) {
                 List<FilterMap> notFilterSet =
-                        Filter.deserializeFilterSet(
-                                eventTrigger.getJSONArray(EventTriggerContract.NOT_FILTERS));
+                        new Filter(flags)
+                                .deserializeFilterSet(
+                                        eventTrigger.getJSONArray(
+                                                EventTriggerContract.NOT_FILTERS));
                 eventTriggerBuilder.setNotFilterSet(notFilterSet);
             }
             eventTriggers.add(eventTriggerBuilder.build());
@@ -497,7 +534,9 @@ public class Trigger {
         }
         Map<String, BigInteger> adtechBitMapping = new HashMap<>();
         JSONObject jsonObject = new JSONObject(mAdtechKeyMapping);
-        for (String key : jsonObject.keySet()) {
+        Iterator<String> keys = jsonObject.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
             // Remove "0x" prefix.
             String hexString = jsonObject.getString(key).substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
@@ -516,7 +555,7 @@ public class Trigger {
         if (mDestinationType == EventSurfaceType.APP) {
             return mAttributionDestination;
         } else {
-            Optional<Uri> uri = Web.topPrivateDomainAndScheme(mAttributionDestination);
+            Optional<Uri> uri = WebAddresses.topPrivateDomainAndScheme(mAttributionDestination);
             return uri.orElse(null);
         }
     }
@@ -618,19 +657,19 @@ public class Trigger {
         }
 
         /** See {@link Trigger#isDebugReporting()} */
-        public Trigger.Builder setIsDebugReporting(boolean isDebugReporting) {
+        public Builder setIsDebugReporting(boolean isDebugReporting) {
             mBuilding.mIsDebugReporting = isDebugReporting;
             return this;
         }
 
         /** See {@link Trigger#hasAdIdPermission()} */
-        public Trigger.Builder setAdIdPermission(boolean adIdPermission) {
+        public Builder setAdIdPermission(boolean adIdPermission) {
             mBuilding.mAdIdPermission = adIdPermission;
             return this;
         }
 
         /** See {@link Trigger#hasArDebugPermission()} */
-        public Trigger.Builder setArDebugPermission(boolean arDebugPermission) {
+        public Builder setArDebugPermission(boolean arDebugPermission) {
             mBuilding.mArDebugPermission = arDebugPermission;
             return this;
         }
@@ -690,10 +729,24 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Source#getRegistrationOrigin()} ()} */
+        /** See {@link Trigger#getRegistrationOrigin()} ()} */
         @NonNull
-        public Trigger.Builder setRegistrationOrigin(Uri registrationOrigin) {
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
+        /** See {@link Trigger#getAggregationCoordinatorOrigin()} ()} */
+        public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
+            mBuilding.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
+            return this;
+        }
+
+        /** See {@link Trigger#getAggregatableSourceRegistrationTimeConfig()}. */
+        @NonNull
+        public Builder setAggregatableSourceRegistrationTimeConfig(
+                SourceRegistrationTimeConfig config) {
+            mBuilding.mAggregatableSourceRegistrationTimeConfig = config;
             return this;
         }
 
@@ -704,7 +757,8 @@ public class Trigger {
                     mBuilding.mAttributionDestination,
                     mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant,
-                    mBuilding.mRegistrationOrigin);
+                    mBuilding.mRegistrationOrigin,
+                    mBuilding.mAggregatableSourceRegistrationTimeConfig);
 
             return mBuilding;
         }
@@ -714,6 +768,7 @@ public class Trigger {
     public interface EventTriggerContract {
         String TRIGGER_DATA = "trigger_data";
         String PRIORITY = "priority";
+        String VALUE = "value";
         String DEDUPLICATION_KEY = "deduplication_key";
         String FILTERS = "filters";
         String NOT_FILTERS = "not_filters";

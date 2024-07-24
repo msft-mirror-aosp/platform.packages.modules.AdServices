@@ -16,32 +16,64 @@
 
 package android.adservices.common;
 
-import com.google.common.collect.ImmutableSet;
+import android.os.Parcel;
+
+import com.google.common.collect.ImmutableList;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 
 /** Utility class for creating and testing {@link KeyedFrequencyCap} objects. */
 public class KeyedFrequencyCapFixture {
-    public static final String KEY1 = "key1";
-    public static final String KEY2 = "key2";
-    public static final String KEY3 = "key3";
-    public static final String KEY4 = "key4";
+    public static final int KEY1 = 1;
+    public static final int KEY2 = 2;
+    public static final int KEY3 = 3;
+    public static final int KEY4 = 4;
     public static final int VALID_COUNT = 10;
     public static final int FILTER_COUNT = 1;
-    public static final int FILTER_EXCEED_COUNT = FILTER_COUNT + 1;
+    public static final int FILTER_UNDER_MAX_COUNT = FILTER_COUNT - 1;
+    public static final int FILTER_EXCEED_COUNT = FILTER_COUNT;
     public static final Duration ONE_DAY_DURATION = Duration.ofDays(1);
 
-    public static final ImmutableSet<KeyedFrequencyCap> VALID_KEYED_FREQUENCY_CAP_SET =
-            ImmutableSet.of(
+    public static final ImmutableList<KeyedFrequencyCap> VALID_KEYED_FREQUENCY_CAP_LIST =
+            ImmutableList.of(
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY1).build(),
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY2).build(),
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY3).build(),
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY4).build());
 
-    public static KeyedFrequencyCap.Builder getValidKeyedFrequencyCapBuilderOncePerDay(String key) {
-        return new KeyedFrequencyCap.Builder()
-                .setAdCounterKey(key)
-                .setMaxCount(FILTER_COUNT)
-                .setInterval(ONE_DAY_DURATION);
+    public static final List<KeyedFrequencyCap> KEYED_FREQUENCY_CAP_LIST_CONTAINING_NULL =
+            Arrays.asList(
+                    getValidKeyedFrequencyCapBuilderOncePerDay(KEY1).build(),
+                    getValidKeyedFrequencyCapBuilderOncePerDay(KEY2).build(),
+                    getValidKeyedFrequencyCapBuilderOncePerDay(KEY3).build(),
+                    null,
+                    getValidKeyedFrequencyCapBuilderOncePerDay(KEY4).build());
+
+    public static ImmutableList<KeyedFrequencyCap> getExcessiveNumberOfFrequencyCapsList() {
+        ImmutableList.Builder<KeyedFrequencyCap> listBuilder = ImmutableList.builder();
+
+        // Add just one more than the limit
+        for (int key = 0; key <= FrequencyCapFilters.MAX_NUM_FREQUENCY_CAP_FILTERS; key++) {
+            listBuilder.add(getValidKeyedFrequencyCapBuilderOncePerDay(key).build());
+        }
+
+        return listBuilder.build();
+    }
+
+    public static KeyedFrequencyCap.Builder getValidKeyedFrequencyCapBuilderOncePerDay(int key) {
+        return new KeyedFrequencyCap.Builder(key, FILTER_COUNT, ONE_DAY_DURATION);
+    }
+
+    public static KeyedFrequencyCap getKeyedFrequencyCapWithFields(
+            int adCounterKey, int maxCount, Duration interval) {
+        Parcel sourceParcel = Parcel.obtain();
+        sourceParcel.writeInt(adCounterKey);
+        sourceParcel.writeInt(maxCount);
+        sourceParcel.writeLong(interval.getSeconds());
+        sourceParcel.setDataPosition(0);
+
+        return KeyedFrequencyCap.CREATOR.createFromParcel(sourceParcel);
     }
 }

@@ -56,7 +56,7 @@ public class SandboxedMeasurementManagerTest {
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // Start a foreground activity
-        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
+        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(10_000));
 
         enforceMeasurementEnrollmentCheck(true);
 
@@ -125,26 +125,29 @@ public class SandboxedMeasurementManagerTest {
     // PhFlags will use the default value.
     private void overrideMeasurementKillSwitches(boolean isOverride) {
         String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + overrideString);
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_kill_switch " + overrideString);
+                "device_config put adservices global_kill_switch " + overrideString);
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_register_source_kill_switch "
+                "device_config put adservices measurement_kill_switch " + overrideString);
+        ShellUtils.runShellCommand(
+                "device_config put adservices measurement_api_register_source_kill_switch "
                         + overrideString);
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_register_trigger_kill_switch "
+                "device_config put adservices measurement_api_register_trigger_kill_switch "
                         + overrideString);
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_register_web_source_kill_switch "
+                "device_config put adservices measurement_api_register_web_source_kill_switch "
                         + overrideString);
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_register_web_trigger_kill_switch "
+                "device_config put adservices measurement_api_register_web_trigger_kill_switch "
                         + overrideString);
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_delete_registrations_kill_switch "
+                "device_config put adservices measurement_api_delete_registrations_kill_switch "
                         + overrideString);
         ShellUtils.runShellCommand(
-                "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
-        ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
+                "device_config put adservices measurement_api_status_kill_switch "
+                        + overrideString);
+        ShellUtils.runShellCommand(
+                "device_config put adservices adid_kill_switch " + overrideString);
     }
 }

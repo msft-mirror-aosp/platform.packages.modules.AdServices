@@ -27,6 +27,9 @@
     <!--acts as an application that uses adservices in order for PPAPI to be enabled and notification to be displayed-->
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
 
+    <!-- Permissions required for reading device configs -->
+    <uses-permission android:name="android.permission.READ_DEVICE_CONFIG"/>
+
     <application android:debuggable="true">
         <!-- Activity for the main view of Adservices Settings UI-->
         <activity

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.common.WebUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,6 +39,9 @@ public final class DebugReportTest {
             WebUtil.validUri("https://subdomain.example1.test");
     private static final Uri REGISTRATION_ORIGIN_2 =
             WebUtil.validUri("https://subdomain.example2.test");
+
+    private static final Uri SOURCE_REGISTRANT = Uri.parse("android-app://com.example.abc");
+    private static final long INSERTION_TIME = 1617297798;
 
     @Before
     public void setup() throws JSONException {
@@ -96,6 +99,9 @@ public final class DebugReportTest {
                         .setBody(mBodyJson)
                         .setEnrollmentId("2")
                         .setRegistrationOrigin(REGISTRATION_ORIGIN_1)
+                        .setReferenceId("6")
+                        .setRegistrant(SOURCE_REGISTRANT)
+                        .setInsertionTime(INSERTION_TIME)
                         .build());
     }
 
@@ -111,6 +117,9 @@ public final class DebugReportTest {
                 .setBody(mBodyJson)
                 .setEnrollmentId("2")
                 .setRegistrationOrigin(REGISTRATION_ORIGIN_1)
+                .setReferenceId("6")
+                .setRegistrant(SOURCE_REGISTRANT)
+                .setInsertionTime(INSERTION_TIME)
                 .build();
     }
 
@@ -121,6 +130,9 @@ public final class DebugReportTest {
                 .setBody(mBodyJson)
                 .setEnrollmentId("4")
                 .setRegistrationOrigin(REGISTRATION_ORIGIN_2)
+                .setReferenceId("5")
+                .setRegistrant(SOURCE_REGISTRANT)
+                .setInsertionTime(INSERTION_TIME)
                 .build();
     }
 }

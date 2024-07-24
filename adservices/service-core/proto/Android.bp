@@ -32,11 +32,15 @@ java_library {
         include_dirs: [
             "external/protobuf/src",
             "external/protobuf/java",
+            "external/anonymous-counting-tokens",
+            "external/private-join-and-compute",
         ],
     },
     srcs: [
         ":adservices-proto",
         ":libprotobuf-internal-protos",
+        ":act-proto",
+        ":private-join-and-compute-proto"
     ],
     static_libs: ["libprotobuf-java-lite"],
     apex_available: [
@@ -69,6 +73,7 @@ genrule {
 // Package into java_library to reference in "static_libs" in "adservices-service-core"
 java_library {
     name: "adservices-grpclib-lite",
+    sdk_version: "module_current",
     min_sdk_version: "30",
     apex_available: [
         "com.android.adservices",

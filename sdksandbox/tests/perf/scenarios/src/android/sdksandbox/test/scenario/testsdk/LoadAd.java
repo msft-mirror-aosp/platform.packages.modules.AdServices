@@ -20,66 +20,65 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.os.SystemClock;
+import android.os.Bundle;
 import android.platform.test.scenario.annotation.Scenario;
 
-import androidx.test.uiautomator.By;
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObject2;
-import androidx.test.uiautomator.Until;
 
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 @Scenario
 @RunWith(JUnit4.class)
 public class LoadAd {
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
-    private static final long UI_NAVIGATION_WAIT_MS = 1000;
+    private static final Bundle sArgsBundle = InstrumentationRegistry.getArguments();
 
-    private static final int NUMBER_OF_ADS = 3;
-    private static final int TIME_BETWEEN_RENDERS_S = 2;
-    private static final String LOAD_AD_BUTTON = "loadAdButton";
+    private static final String CLIENT_APP_PACKAGE_NAME_KEY = "client-app-package-name";
+    private static final String CLIENT_APP_ACTIVITY_NAME_KEY = "client-app-activity-name";
+    private static final String MEDIATION_ENABLED_KEY = "mediation_enabled";
+    private static final int WAIT_TIME_BEFORE_END_TEST_MS = 3000;
 
-    private static final String CLIENT_APP = "com.google.android.libraries.internal.exampleclient";
+    protected static String sPackageName;
+    private static String sActivityName;
+    private static boolean sMediationEnabled;
+    private ClientAppUtils mClientAppUtils;
+
+    /** Set up the arguments used to control the app under test. */
+    @BeforeClass
+    public static void setupArguments() {
+        assertThat(sArgsBundle).isNotNull();
+        sPackageName = sArgsBundle.getString(CLIENT_APP_PACKAGE_NAME_KEY);
+        assertThat(sPackageName).isNotNull();
+        sActivityName = sArgsBundle.getString(CLIENT_APP_ACTIVITY_NAME_KEY);
+        assertThat(sActivityName).isNotNull();
+        sMediationEnabled = Boolean.parseBoolean(sArgsBundle.getString(MEDIATION_ENABLED_KEY));
+    }
 
     @AfterClass
     public static void tearDown() throws IOException {
-        sUiDevice.executeShellCommand("am force-stop " + CLIENT_APP);
+        if (sPackageName != null) {
+            sUiDevice.executeShellCommand(ClientAppUtils.getStopAppCommand(sPackageName));
+        }
     }
 
     @Before
     public void setup() throws Exception {
-        sUiDevice.executeShellCommand("am start " + CLIENT_APP + "/" + ".MainActivity");
+        mClientAppUtils = new ClientAppUtils(sPackageName, sActivityName);
+        sUiDevice.executeShellCommand(mClientAppUtils.getStartAppCommand(sMediationEnabled));
     }
 
     @Test
     public void testLoadAd() throws Exception {
-        // Loop to load ad multiple times sequentially
-        for (int i = 0; i < NUMBER_OF_ADS; i++) {
-            loadAd();
-            SystemClock.sleep(TimeUnit.SECONDS.toMillis(TIME_BETWEEN_RENDERS_S));
-            assertThat(getLoadAdButton().getText()).isEqualTo("Load Ad (Ad loaded)");
-        }
-        SystemClock.sleep(TimeUnit.SECONDS.toMillis(2));
-    }
-
-    private UiObject2 getLoadAdButton() {
-        return sUiDevice.wait(
-                Until.findObject(By.res(CLIENT_APP, LOAD_AD_BUTTON)), UI_NAVIGATION_WAIT_MS);
-    }
-
-    void loadAd() {
-        if (getLoadAdButton() != null) {
-            getLoadAdButton().click();
-        } else {
-            throw new RuntimeException("Did not find 'Load Ad' button.");
-        }
+        mClientAppUtils.loadAd(sUiDevice);
+        mClientAppUtils.assertAdLoaded(sUiDevice);
+        Thread.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
 }

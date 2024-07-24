@@ -186,7 +186,8 @@ class AppSearchConsentDao extends AppSearchDao {
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
             @NonNull String userId,
-            @NonNull String apiType) {
+            @NonNull String apiType,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(userId);
@@ -195,7 +196,12 @@ class AppSearchConsentDao extends AppSearchDao {
         String query = getQuery(userId, apiType);
         AppSearchConsentDao dao =
                 AppSearchDao.readConsentData(
-                        AppSearchConsentDao.class, searchSession, executor, NAMESPACE, query);
+                        AppSearchConsentDao.class,
+                        searchSession,
+                        executor,
+                        NAMESPACE,
+                        query,
+                        adServicesPackageName);
         LogUtil.d("AppSearch app consent data read: " + dao + " [ query: " + query + "]");
         if (dao == null) {
             return false;

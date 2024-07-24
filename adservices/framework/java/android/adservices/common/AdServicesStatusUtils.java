@@ -20,7 +20,10 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.os.LimitExceededException;
 
+import com.android.adservices.shared.common.ServiceUnavailableException;
+
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.concurrent.TimeoutException;
@@ -32,64 +35,76 @@ import java.util.concurrent.TimeoutException;
  *
  * @hide
  */
-public class AdServicesStatusUtils {
+public final class AdServicesStatusUtils {
+
     /**
      * The status code has not been set. Keep unset status code the lowest value of the status
      * codes.
      */
     public static final int STATUS_UNSET = -1;
+
     /** The call was successful. */
     public static final int STATUS_SUCCESS = 0;
+
     /**
      * An internal error occurred within the API, which the caller cannot address.
      *
      * <p>This error may be considered similar to {@link IllegalStateException}.
      */
     public static final int STATUS_INTERNAL_ERROR = 1;
+
     /**
      * The caller supplied invalid arguments to the call.
      *
      * <p>This error may be considered similar to {@link IllegalArgumentException}.
      */
     public static final int STATUS_INVALID_ARGUMENT = 2;
+
     /** There was an unknown error. */
     public static final int STATUS_UNKNOWN_ERROR = 3;
+
     /**
      * There was an I/O error.
      *
      * <p>This error may be considered similar to {@link IOException}.
      */
     public static final int STATUS_IO_ERROR = 4;
+
     /**
      * Result code for Rate Limit Reached.
      *
      * <p>This error may be considered similar to {@link LimitExceededException}.
      */
     public static final int STATUS_RATE_LIMIT_REACHED = 5;
+
     /**
      * Killswitch was enabled. AdServices is not available.
      *
      * <p>This error may be considered similar to {@link IllegalStateException}.
      */
     public static final int STATUS_KILLSWITCH_ENABLED = 6;
+
     /**
      * User consent was revoked. AdServices is not available.
      *
      * <p>This error may be considered similar to {@link IllegalStateException}.
      */
     public static final int STATUS_USER_CONSENT_REVOKED = 7;
+
     /**
      * AdServices were disabled. AdServices is not available.
      *
      * <p>This error may be considered similar to {@link IllegalStateException}.
      */
     public static final int STATUS_ADSERVICES_DISABLED = 8;
+
     /**
      * The caller is not authorized to make this call. Permission was not requested.
      *
      * <p>This error may be considered similar to {@link SecurityException}.
      */
     public static final int STATUS_PERMISSION_NOT_REQUESTED = 9;
+
     /**
      * The caller is not authorized to make this call. Caller is not allowed (not present in the
      * allowed list).
@@ -97,24 +112,28 @@ public class AdServicesStatusUtils {
      * <p>This error may be considered similar to {@link SecurityException}.
      */
     public static final int STATUS_CALLER_NOT_ALLOWED = 10;
+
     /**
      * The caller is not authorized to make this call. Call was executed from background thread.
      *
      * <p>This error may be considered similar to {@link IllegalStateException}.
      */
     public static final int STATUS_BACKGROUND_CALLER = 11;
+
     /**
      * The caller is not authorized to make this call.
      *
      * <p>This error may be considered similar to {@link SecurityException}.
      */
     public static final int STATUS_UNAUTHORIZED = 12;
+
     /**
      * There was an internal Timeout within the API, which is non-recoverable by the caller
      *
      * <p>This error may be considered similar to {@link java.util.concurrent.TimeoutException}
      */
     public static final int STATUS_TIMEOUT = 13;
+
     /**
      * The device is not running a version of WebView that supports JSSandbox, required for FLEDGE
      * Ad Selection.
@@ -123,28 +142,102 @@ public class AdServicesStatusUtils {
      */
     public static final int STATUS_JS_SANDBOX_UNAVAILABLE = 14;
 
-    /** The error message to be returned along with {@link IllegalStateException}. */
-    public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
+    /**
+     * The service received an invalid object from the remote server.
+     *
+     * <p>This error may be considered similar to {@link InvalidObjectException}.
+     */
+    public static final int STATUS_INVALID_OBJECT = 15;
+
+    /**
+     * The caller is not authorized to make this call because it crosses user boundaries.
+     *
+     * <p>This error may be considered similar to {@link SecurityException}.
+     */
+    public static final int STATUS_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES = 16;
+
+    /**
+     * Result code for Server Rate Limit Reached.
+     *
+     * <p>This error may be considered similar to {@link LimitExceededException}.
+     */
+    public static final int STATUS_SERVER_RATE_LIMIT_REACHED = 17;
+
+    /**
+     * Consent notification has not been displayed yet. AdServices is not available.
+     *
+     * <p>This error may be considered similar to {@link IllegalStateException}.
+     */
+    public static final int STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET = 18;
+
+    public static final int FAILURE_REASON_UNSET = 0;
+
+    // Failure Reason - Package Allowlist
+    public static final int FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST = 1;
+
+    // Failure Reason - Package Blocklist
+    public static final int FAILURE_REASON_PACKAGE_BLOCKLISTED = 2;
+
+    // Failure Reason - Enrollment
+    public static final int FAILURE_REASON_ENROLLMENT_BLOCKLISTED = 3;
+    public static final int FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND = 4;
+    public static final int FAILURE_REASON_ENROLLMENT_INVALID_ID = 5;
+
+    // Failure Reason - Dev Options
+    public static final int FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST = 6;
+
+    // Failure Reason - Foreground
+    public static final int FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND = 7;
+    public static final int FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION = 8;
+
+    // Failure Reason - App Manifest AdServices Config
+    public static final int FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION = 9;
+
+    // Failure Reason - Calling Package
+    public static final int FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND = 10;
+    public static final int FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID = 11;
+
+    /**
+     * Result code for Encryption related failures.
+     *
+     * <p>This error may be considered similar to {@link IllegalArgumentException}.
+     */
+    public static final int STATUS_ENCRYPTION_FAILURE = 19;
+
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
+
+    /** The error message to be returned along with {@link LimitExceededException}. */
+    public static final String SERVER_RATE_LIMIT_REACHED_ERROR_MESSAGE =
+            "Server rate limit exceeded.";
+
     /**
      * The error message to be returned along with {@link SecurityException} when permission was not
      * requested in the manifest.
      */
     public static final String SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE =
             "Caller is not authorized to call this API. Permission was not requested.";
+
     /**
      * The error message to be returned along with {@link SecurityException} when caller is not
      * allowed to call AdServices (not present in the allowed list).
      */
     public static final String SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE =
             "Caller is not authorized to call this API. Caller is not allowed.";
+
     /**
      * The error message to be returned along with {@link SecurityException} when call was executed
      * from the background thread.
      */
     public static final String ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE =
             "Background thread is not allowed to call this service.";
+
+    /**
+     * The error message to be returned along with {@link SecurityException} when call failed
+     * because it crosses user boundaries.
+     */
+    public static final String SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES =
+            "Caller is not authorized to access information from another user";
 
     /**
      * The error message to be returned along with {@link SecurityException} when caller not allowed
@@ -156,6 +249,13 @@ public class AdServicesStatusUtils {
     /** The error message to be returned along with {@link TimeoutException}. */
     public static final String TIMED_OUT_ERROR_MESSAGE = "API timed out.";
 
+    /** The error message to be returned along with {@link InvalidObjectException}. */
+    public static final String INVALID_OBJECT_ERROR_MESSAGE =
+            "The service received an invalid object from the server.";
+
+    /** The error message to be returned along with {@link IllegalArgumentException}. */
+    public static final String ENCRYPTION_FAILURE_MESSAGE = "Failed to encrypt responses.";
+
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
         return statusCode == STATUS_SUCCESS;
@@ -165,14 +265,17 @@ public class AdServicesStatusUtils {
     @NonNull
     public static Exception asException(@StatusCode int statusCode) {
         switch (statusCode) {
+            case STATUS_ENCRYPTION_FAILURE:
+                return new IllegalArgumentException(ENCRYPTION_FAILURE_MESSAGE);
             case STATUS_INVALID_ARGUMENT:
                 return new IllegalArgumentException();
             case STATUS_IO_ERROR:
                 return new IOException();
             case STATUS_KILLSWITCH_ENABLED: // Intentional fallthrough
+            case STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET: // Intentional fallthrough
             case STATUS_USER_CONSENT_REVOKED: // Intentional fallthrough
             case STATUS_JS_SANDBOX_UNAVAILABLE:
-                return new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+                return new ServiceUnavailableException();
             case STATUS_PERMISSION_NOT_REQUESTED:
                 return new SecurityException(
                         SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
@@ -187,6 +290,10 @@ public class AdServicesStatusUtils {
                 return new TimeoutException(TIMED_OUT_ERROR_MESSAGE);
             case STATUS_RATE_LIMIT_REACHED:
                 return new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE);
+            case STATUS_INVALID_OBJECT:
+                return new InvalidObjectException(INVALID_OBJECT_ERROR_MESSAGE);
+            case STATUS_SERVER_RATE_LIMIT_REACHED:
+                return new LimitExceededException(SERVER_RATE_LIMIT_REACHED_ERROR_MESSAGE);
             default:
                 return new IllegalStateException();
         }
@@ -221,8 +328,41 @@ public class AdServicesStatusUtils {
                 STATUS_BACKGROUND_CALLER,
                 STATUS_UNAUTHORIZED,
                 STATUS_TIMEOUT,
-                STATUS_JS_SANDBOX_UNAVAILABLE
+                STATUS_JS_SANDBOX_UNAVAILABLE,
+                STATUS_INVALID_OBJECT,
+                STATUS_SERVER_RATE_LIMIT_REACHED,
+                STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET,
+                STATUS_ENCRYPTION_FAILURE
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}
+
+    /**
+     * Failure reason codes that are common across various APIs.
+     *
+     * @hide
+     */
+    @IntDef(
+            prefix = {"FAILURE_REASON_"},
+            value = {
+                FAILURE_REASON_UNSET,
+                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST,
+                FAILURE_REASON_PACKAGE_BLOCKLISTED,
+                FAILURE_REASON_ENROLLMENT_BLOCKLISTED,
+                FAILURE_REASON_ENROLLMENT_MATCH_NOT_FOUND,
+                FAILURE_REASON_ENROLLMENT_INVALID_ID,
+                FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST,
+                FAILURE_REASON_FOREGROUND_APP_NOT_IN_FOREGROUND,
+                FAILURE_REASON_FOREGROUND_ASSERTION_EXCEPTION,
+                FAILURE_REASON_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION,
+                FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND,
+                FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface FailureReason {}
+
+
+    private AdServicesStatusUtils() {
+        throw new UnsupportedOperationException();
+    }
 }

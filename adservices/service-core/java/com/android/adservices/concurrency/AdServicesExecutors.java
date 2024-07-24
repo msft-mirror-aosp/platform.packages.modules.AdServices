@@ -17,19 +17,23 @@
 package com.android.adservices.concurrency;
 
 import android.annotation.NonNull;
-import android.annotation.SuppressLint;
+import android.os.Process;
+import android.os.StrictMode;
+import android.os.StrictMode.ThreadPolicy;
+
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * All executors of the PP API module.
@@ -51,20 +55,27 @@ public final class AdServicesExecutors {
     private static final String SCHEDULED_NAME = "scheduled";
     private static final String BLOCKING_NAME = "blocking";
 
-    private static ThreadFactory getFactory(final String threadPrefix) {
-        return new ThreadFactory() {
-            private final AtomicLong mThreadCount = new AtomicLong(0L);
-
-            @SuppressLint("DefaultLocale")
-            @Override
-            public Thread newThread(Runnable runnable) {
-                Thread thread = Executors.defaultThreadFactory().newThread(runnable);
-                thread.setName(
-                        String.format(
-                                Locale.US, "%s-%d", threadPrefix, mThreadCount.incrementAndGet()));
-                return thread;
-            }
-        };
+    private static ThreadFactory createThreadFactory(
+            String name, int priority, Optional<StrictMode.ThreadPolicy> policy) {
+        return new ThreadFactoryBuilder()
+                .setDaemon(true)
+                .setNameFormat(name + "-%d")
+                .setThreadFactory(
+                        new ThreadFactory() {
+                            @Override
+                            public Thread newThread(final Runnable runnable) {
+                                return new Thread(
+                                        () -> {
+                                            if (policy.isPresent()) {
+                                                StrictMode.setThreadPolicy(policy.get());
+                                            }
+                                            // Process class operates on the current thread.
+                                            Process.setThreadPriority(priority);
+                                            runnable.run();
+                                        });
+                            }
+                        })
+                .build();
     }
 
     private static final ListeningExecutorService sLightWeightExecutor =
@@ -82,7 +93,10 @@ public final class AdServicesExecutors {
                             /* keepAliveTime= */ 60L,
                             TimeUnit.SECONDS,
                             new LinkedBlockingQueue<>(),
-                            getFactory(LIGHTWEIGHT_NAME)));
+                            createThreadFactory(
+                                    LIGHTWEIGHT_NAME,
+                                    Process.THREAD_PRIORITY_DEFAULT,
+                                    Optional.of(getAsyncThreadPolicy()))));
 
     /**
      * Functions that don't do direct I/O and that are fast (under ten milliseconds or thereabouts)
@@ -107,7 +121,10 @@ public final class AdServicesExecutors {
                             /* keepAliveTime= */ 60L,
                             TimeUnit.SECONDS,
                             new LinkedBlockingQueue<>(),
-                            getFactory(BACKGROUND_NAME)));
+                            createThreadFactory(
+                                    BACKGROUND_NAME,
+                                    Process.THREAD_PRIORITY_BACKGROUND,
+                                    Optional.of(getIoThreadPolicy()))));
 
     /**
      * Functions that directly execute disk I/O, or that are CPU bound and long-running (over ten
@@ -127,15 +144,16 @@ public final class AdServicesExecutors {
                     /* corePoolSize= */ Math.min(
                             MAX_SCHEDULED_EXECUTOR_THREADS,
                             Runtime.getRuntime().availableProcessors()),
-                    getFactory(SCHEDULED_NAME));
+                    createThreadFactory(
+                            SCHEDULED_NAME,
+                            Process.THREAD_PRIORITY_DEFAULT,
+                            Optional.of(getIoThreadPolicy())));
 
     /**
      * Functions that require to be run with a delay, or have timed executions should run on this
      * Executor.
      *
      * <p>Example includes having timeouts on Futures.
-     *
-     * @return
      */
     @NonNull
     public static ScheduledThreadPoolExecutor getScheduler() {
@@ -144,7 +162,12 @@ public final class AdServicesExecutors {
 
     private static final ListeningExecutorService sBlockingExecutor =
             MoreExecutors.listeningDecorator(
-                    Executors.newCachedThreadPool(getFactory(BLOCKING_NAME)));
+                    Executors.newCachedThreadPool(
+                            createThreadFactory(
+                                    BLOCKING_NAME,
+                                    Process.THREAD_PRIORITY_BACKGROUND
+                                            + Process.THREAD_PRIORITY_LESS_FAVORABLE,
+                                    /* policy = */ Optional.empty())));
 
     /**
      * Functions that directly execute network I/O, or that block their thread awaiting the progress
@@ -165,6 +188,21 @@ public final class AdServicesExecutors {
     @NonNull
     public static ListeningExecutorService getBlockingExecutor() {
         return sBlockingExecutor;
+    }
+
+    @VisibleForTesting
+    static ThreadPolicy getAsyncThreadPolicy() {
+        return new ThreadPolicy.Builder().detectAll().penaltyLog().build();
+    }
+
+    @VisibleForTesting
+    static ThreadPolicy getIoThreadPolicy() {
+        return new ThreadPolicy.Builder()
+                .detectNetwork()
+                .detectResourceMismatches()
+                .detectUnbufferedIo()
+                .penaltyLog()
+                .build();
     }
 
     private AdServicesExecutors() {}

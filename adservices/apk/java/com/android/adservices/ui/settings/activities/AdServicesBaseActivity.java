@@ -15,6 +15,9 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -23,8 +26,8 @@ import androidx.annotation.RequiresApi;
 import androidx.core.view.WindowCompat;
 
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.ui.ModeSelector;
 import com.android.adservices.ui.OTAResourcesManager;
+import com.android.adservices.ui.UxSelector;
 import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
 
 /**
@@ -35,17 +38,34 @@ import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivity
-        implements ModeSelector {
+        implements UxSelector {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Context context = getApplicationContext();
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
-            OTAResourcesManager.applyOTAResources(getApplicationContext(), false);
+            OTAResourcesManager.applyOTAResources(context, false);
         }
-        if (FlagsFactory.getFlags().getU18UxEnabled()) {
-            initWithMode(/* should refresh UI */ false);
+        if (isUxStatesReady(this)) {
+            initWithUx(this, context);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (isUxStatesReady(this)) {
+            initWithUx(this, getApplicationContext());
+        }
+    }
+
+    @Override
+    public void initGaUxWithPas() {
+        // overriding in base activity since PAS layout will be the same as GA.
+        initGA();
     }
 
     @Override

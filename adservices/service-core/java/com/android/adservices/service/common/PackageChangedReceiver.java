@@ -131,7 +131,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         if (SdkLevel.isAtLeastT()
                 && packageName != null
                 && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
-            LogUtil.i(
+            LogUtil.d(
                     "Aborting attempt to receive in PackageChangedReceiver on T+ for"
                             + " ExtServices");
             return;
@@ -194,12 +194,17 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
         LogUtil.d("Package Fully Removed:" + packageUri);
         sBackgroundExecutor.execute(
-                () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
+                () ->
+                        MeasurementImpl.getInstance(
+                                        SdkLevel.isAtLeastS()
+                                                ? context
+                                                : context.getApplicationContext())
+                                .deletePackageRecords(packageUri));
 
         // Log wipeout event triggered by request to uninstall package on device
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
         wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.UNINSTALL);
-        logWipeoutStats(wipeoutStatus);
+        logWipeoutStats(wipeoutStatus, packageUri.toString());
     }
 
     @VisibleForTesting
@@ -215,10 +220,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                     MeasurementImpl.getInstance(context).deletePackageRecords(packageUri);
                 });
 
-        // Log wipeout event triggered by request (from Android) to delete data of package on device
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
         wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.CLEAR_DATA);
-        logWipeoutStats(wipeoutStatus);
+        logWipeoutStats(wipeoutStatus, packageUri.toString());
     }
 
     @VisibleForTesting
@@ -280,6 +284,12 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                             getSharedStorageDatabase(context)
                                     .appInstallDao()
                                     .deleteByPackageName(packageUri.toString()));
+            LogUtil.d("Deleting frequency cap histogram data for package: " + packageUri);
+            sBackgroundExecutor.execute(
+                    () ->
+                            getSharedStorageDatabase(context)
+                                    .frequencyCapDao()
+                                    .deleteHistogramDataBySourceApp(packageUri.toString()));
         }
     }
 
@@ -290,6 +300,10 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     @VisibleForTesting
     void consentOnPackageFullyRemoved(
             @NonNull Context context, @NonNull Uri packageUri, int packageUid) {
+        if (!SdkLevel.isAtLeastS()) {
+            LogUtil.d("consentOnPackageFullyRemoved is not needed on Android R, returning...");
+            return;
+        }
         Objects.requireNonNull(context);
         Objects.requireNonNull(packageUri);
 
@@ -297,7 +311,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Deleting consent data for package %s with UID %d", packageName, packageUid);
         sBackgroundExecutor.execute(
                 () -> {
-                    ConsentManager instance = ConsentManager.getInstance(context);
+                    ConsentManager instance = ConsentManager.getInstance();
                     if (packageUid == DEFAULT_PACKAGE_UID) {
                         // There can be multiple instances of PackageChangedReceiver, e.g. in
                         // different user profiles. The system broadcasts a package change
@@ -372,12 +386,13 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         return SharedStorageDatabase.getInstance(context);
     }
 
-    private void logWipeoutStats(WipeoutStatus wipeoutStatus) {
+    private void logWipeoutStats(WipeoutStatus wipeoutStatus, String appPackageName) {
         AdServicesLoggerImpl.getInstance()
                 .logMeasurementWipeoutStats(
                         new MeasurementWipeoutStats.Builder()
                                 .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
-                                .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .setWipeoutType(wipeoutStatus.getWipeoutType().getValue())
+                                .setSourceRegistrant(appPackageName)
                                 .build());
     }
 }

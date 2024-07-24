@@ -32,7 +32,7 @@ public abstract class ObliviousHttpRequest {
     @SuppressWarnings("mutable")
     abstract byte[] cipherText();
 
-    /** Rreturns the Oblivious HTTP request context that should be saved for decryption */
+    /** Returns the Oblivious HTTP request context that should be saved for decryption */
     public abstract ObliviousHttpRequestContext requestContext();
 
     /** Create a Oblivious HTTP Request object */

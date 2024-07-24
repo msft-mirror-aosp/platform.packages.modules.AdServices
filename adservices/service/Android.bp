@@ -29,10 +29,18 @@ filegroup {
 
 java_sdk_library {
     name: "service-adservices",
-    srcs: [":service-adservices-sources"],
+    srcs: [
+        ":service-adservices-sources",
+        ":adservices-service-common-flags-sources",
+    ],
     sdk_version: "system_server_current",
     min_sdk_version: "Tiramisu",
-    permitted_packages: ["com.android.server.adservices"],
+    permitted_packages: [
+        "com.android.adservices.shared",
+        "com.android.adservices.service", // TODO(b/306522832): needed by CommonFlags, ideally they should be moved to a separate package
+        "com.android.server.adservices",
+        "com.google.errorprone.annotations",
+    ],
     libs: [
         "framework-configinfrastructure",
         "framework-adservices.impl",
@@ -40,7 +48,11 @@ java_sdk_library {
         "service-sdksandbox.impl",
     ],
     static_libs: [
+        "adservices-shared-storage",
+        "modules-utils-backgroundthread",
         "modules-utils-preconditions",
+        "modules-utils-shell-command-handler",
+        "error_prone_annotations",
     ],
     defaults: [
         "framework-system-server-module-defaults",

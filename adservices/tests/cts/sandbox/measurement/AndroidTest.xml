@@ -34,11 +34,16 @@
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
+        <!-- Override Consent notification to debug mode to grant user consent -->
+        <option name="run-command" value="setprop debug.adservices.consent_notified_debug_mode true"/>
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <!-- Disable SDK sandbox killswitch to ignore the effect of actual PH values. -->
         <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
 
+        <!-- Disable Consent notification to debug mode to grant user consent -->
+        <option name="teardown-command"
+                value="setprop debug.adservices.consent_notified_debug_mode false"/>
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
         <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
 

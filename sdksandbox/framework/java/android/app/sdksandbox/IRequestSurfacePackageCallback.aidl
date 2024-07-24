@@ -16,11 +16,12 @@
 
 package android.app.sdksandbox;
 
+import android.app.sdksandbox.SandboxLatencyInfo;
 import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
 /** @hide */
 oneway interface IRequestSurfacePackageCallback {
-    void onSurfacePackageReady(in SurfacePackage surfacePackage, int surfacePackageId, in Bundle params, long timeSystemServerCalledApp);
-    void onSurfacePackageError(int errorCode, String errorMsg, long timeSystemServerCalledApp);
+    void onSurfacePackageReady(in SurfacePackage surfacePackage, int surfacePackageId, in Bundle params, in SandboxLatencyInfo sandboxLatencyInfo);
+    void onSurfacePackageError(int errorCode, String errorMsg, in SandboxLatencyInfo sandboxLatencyInfo);
 }

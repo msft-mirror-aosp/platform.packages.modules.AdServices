@@ -23,14 +23,17 @@ import static com.android.adservices.service.measurement.PrivacyParams.MAX_CONFI
 import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
 
 import android.annotation.NonNull;
+import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
-import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerSpec;
+import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import com.google.common.collect.ImmutableList;
 
@@ -39,11 +42,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 /** Does event report window related calculations, e.g. count, reporting time. */
 public class EventReportWindowCalcDelegate {
-    private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
     private static final String EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER = ",";
 
     private final Flags mFlags;
@@ -53,32 +54,42 @@ public class EventReportWindowCalcDelegate {
     }
 
     /**
-     * Max reports count based on conversion destination type and installation state.
+     * Max reports count given the Source object.
      *
+     * @param source the Source object
      * @return maximum number of reports allowed
-     * @param isInstallCase is app installed
      */
-    public int getMaxReportCount(@NonNull Source source, boolean isInstallCase) {
-        if (source.getSourceType() == Source.SourceType.EVENT
-                && mFlags.getMeasurementEnableVtcConfigurableMaxEventReports()) {
-            // Max VTC event reports are configurable
-            int configuredMaxReports = mFlags.getMeasurementVtcConfigurableMaxEventReportsCount();
-            // Additional report essentially for first open + 1 post install conversion. If there
-            // is already more than 1 report allowed, no need to have that additional report.
-            if (isInstallCase && configuredMaxReports == PrivacyParams.EVENT_SOURCE_MAX_REPORTS) {
-                return PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS;
-            }
-            return configuredMaxReports;
+    public int getMaxReportCount(Source source) {
+        return getMaxReportCount(source, source.isInstallDetectionEnabled());
+    }
+
+    /**
+     * Max reports count based on conversion destination type.
+     *
+     * @param source the Source object
+     * @param destinationType destination type
+     * @return maximum number of reports allowed
+     */
+    public int getMaxReportCount(@NonNull Source source, @EventSurfaceType int destinationType) {
+        return getMaxReportCount(source, isInstallCase(source, destinationType));
+    }
+
+    private int getMaxReportCount(@NonNull Source source, boolean isInstallCase) {
+        // TODO(b/290101531): Cleanup flags
+        if (mFlags.getMeasurementFlexLiteApiEnabled() && source.getMaxEventLevelReports() != null) {
+            return source.getMaxEventLevelReports();
         }
 
-        if (isInstallCase) {
-            return source.getSourceType() == Source.SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS
-                    : PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
+        if (source.getSourceType() == Source.SourceType.EVENT) {
+            // Additional report essentially for first open + 1 post install conversion. If there
+            // is already more than 1 report allowed, no need to have that additional report.
+            if (isInstallCase && !source.hasWebDestinations() && isDefaultConfiguredVtc()) {
+                return PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS;
+            }
+            return mFlags.getMeasurementVtcConfigurableMaxEventReportsCount();
         }
-        return source.getSourceType() == Source.SourceType.EVENT
-                ? PrivacyParams.EVENT_SOURCE_MAX_REPORTS
-                : PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS;
+
+        return PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS;
     }
 
     /**
@@ -95,14 +106,74 @@ public class EventReportWindowCalcDelegate {
 
         // Cases where source could have both web and app destinations, there if the trigger
         // destination is an app, and it was installed, then installState should be considered true.
-        boolean isAppInstalled = isAppInstalled(source, destinationType);
-        List<Long> reportingWindows = getEarlyReportingWindows(source, isAppInstalled);
-        for (Long window : reportingWindows) {
-            if (triggerTime <= window) {
-                return window + ONE_HOUR_IN_MILLIS;
+        List<Pair<Long, Long>> reportingWindows =
+                getEffectiveReportingWindows(source, isInstallCase(source, destinationType));
+        for (Pair<Long, Long> window : reportingWindows) {
+            if (isWithinWindow(triggerTime, window)) {
+                return window.second + mFlags.getMeasurementMinEventReportDelayMillis();
             }
         }
-        return source.getEventReportWindow() + ONE_HOUR_IN_MILLIS;
+
+        return -1;
+    }
+
+    private boolean isWithinWindow(long time, Pair<Long, Long> window) {
+        return window.first <= time && time < window.second;
+    }
+
+    /**
+     * Enum shows trigger time and source window time relationship. It is used to generate different
+     * verbose debug reports.
+     */
+    public enum MomentPlacement {
+        BEFORE,
+        AFTER,
+        WITHIN;
+    }
+
+    /**
+     * @param source source for which the window is calculated
+     * @param trigger trigger
+     * @param triggerData trigger data
+     * @return how trigger time falls in source windows
+     */
+    public MomentPlacement fallsWithinWindow(
+            @NonNull Source source,
+            @NonNull Trigger trigger,
+            @NonNull UnsignedLong triggerData) {
+        long triggerTime = trigger.getTriggerTime();
+
+        // Non-flex source
+        if (source.getTriggerSpecs() == null) {
+            List<Pair<Long, Long>> reportingWindows =
+                    getEffectiveReportingWindows(
+                            source, isInstallCase(source, trigger.getDestinationType()));
+            if (triggerTime < reportingWindows.get(0).first) {
+                return MomentPlacement.BEFORE;
+            }
+            if (triggerTime >= reportingWindows.get(reportingWindows.size() - 1).second) {
+                return MomentPlacement.AFTER;
+            }
+            return MomentPlacement.WITHIN;
+        }
+
+        // Flex source
+        TriggerSpecs triggerSpecs = source.getTriggerSpecs();
+        long sourceRegistrationTime = source.getEventTime();
+
+        if (triggerTime
+                < triggerSpecs.findReportingStartTimeForTriggerData(triggerData)
+                        + sourceRegistrationTime) {
+            return MomentPlacement.BEFORE;
+        }
+
+        List<Long> reportingWindows = triggerSpecs.findReportingEndTimesForTriggerData(triggerData);
+        for (Long window : reportingWindows) {
+            if (triggerTime < window + sourceRegistrationTime) {
+                return MomentPlacement.WITHIN;
+            }
+        }
+        return MomentPlacement.AFTER;
     }
 
     /**
@@ -112,23 +183,25 @@ public class EventReportWindowCalcDelegate {
      * @return reporting time in milliseconds
      */
     public long getReportingTimeForNoising(
-            @NonNull Source source, int windowIndex, boolean isInstallCase) {
-        List<Long> windowList = getEarlyReportingWindows(source, isInstallCase);
-        return windowIndex < windowList.size()
-                ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS
-                : source.getEventReportWindow() + ONE_HOUR_IN_MILLIS;
+            @NonNull Source source, int windowIndex) {
+        List<Pair<Long, Long>> reportingWindows = getEffectiveReportingWindows(
+                source, source.isInstallDetectionEnabled());
+        Pair<Long, Long> finalWindow = reportingWindows.get(reportingWindows.size() - 1);
+        // TODO: (b/288646239) remove this check, confirming noising indexing accuracy.
+        return windowIndex < reportingWindows.size()
+                ? reportingWindows.get(windowIndex).second
+                        + mFlags.getMeasurementMinEventReportDelayMillis()
+                : finalWindow.second + mFlags.getMeasurementMinEventReportDelayMillis();
     }
 
     /**
-     * Returns effective, i.e. the ones that occur before {@link Source#getEventReportWindow()},
-     * event reporting windows count for noising cases.
+     * Returns effective, that is, the ones that occur before {@link
+     * Source#getEffectiveEventReportWindow()}, event reporting windows count for noising cases.
      *
      * @param source source for which the count is requested
-     * @param isInstallCase true of cool down window was specified
      */
-    public int getReportingWindowCountForNoising(@NonNull Source source, boolean isInstallCase) {
-        // Early Count + expiry
-        return getEarlyReportingWindows(source, isInstallCase).size() + 1;
+    public int getReportingWindowCountForNoising(@NonNull Source source) {
+        return getEffectiveReportingWindows(source, source.isInstallDetectionEnabled()).size();
     }
 
     /**
@@ -136,107 +209,220 @@ public class EventReportWindowCalcDelegate {
      *
      * @param windowIndex window index corresponding to which the reporting time should be returned
      * @param triggerDataIndex trigger data state index
-     * @param reportSpec flex event report spec
+     * @param triggerSpecs flex event trigger specs
      */
-    public long getReportingTimeForNoisingFlexEventAPI(
-            int windowIndex, int triggerDataIndex, ReportSpec reportSpec) {
-        return reportSpec.getWindowEndTime(triggerDataIndex, windowIndex) + ONE_HOUR_IN_MILLIS;
+    public long getReportingTimeForNoisingFlexEventApi(
+            int windowIndex, int triggerDataIndex, TriggerSpecs triggerSpecs) {
+        for (TriggerSpec triggerSpec : triggerSpecs.getTriggerSpecs()) {
+            triggerDataIndex -= triggerSpec.getTriggerData().size();
+            if (triggerDataIndex < 0) {
+                return triggerSpec.getEventReportWindowsEnd().get(windowIndex)
+                        + mFlags.getMeasurementMinEventReportDelayMillis();
+            }
+        }
+        return 0;
     }
 
-    private boolean isAppInstalled(Source source, int destinationType) {
+    /**
+     * Calculates the reporting time based on the {@link Trigger} time for flexible event report API
+     *
+     * @param triggerSpecs the report specification to be processed
+     * @param sourceRegistrationTime source registration time
+     * @param triggerTime trigger time
+     * @param triggerData the trigger data
+     * @return the reporting time
+     */
+    public long getFlexEventReportingTime(
+            TriggerSpecs triggerSpecs,
+            long sourceRegistrationTime,
+            long triggerTime,
+            UnsignedLong triggerData) {
+        if (triggerTime < sourceRegistrationTime) {
+            return -1L;
+        }
+        if (triggerTime
+                < triggerSpecs.findReportingStartTimeForTriggerData(triggerData)
+                        + sourceRegistrationTime) {
+            return -1L;
+        }
+
+        List<Long> reportingWindows = triggerSpecs.findReportingEndTimesForTriggerData(triggerData);
+        for (Long window : reportingWindows) {
+            if (triggerTime < window + sourceRegistrationTime) {
+                return sourceRegistrationTime + window
+                        + mFlags.getMeasurementMinEventReportDelayMillis();
+            }
+        }
+        return -1L;
+    }
+
+    private static boolean isInstallCase(Source source, @EventSurfaceType int destinationType) {
         return destinationType == EventSurfaceType.APP && source.isInstallAttributed();
     }
 
     /**
      * If the flag is enabled and the specified report windows are valid, picks from flag controlled
-     * configurable early reporting windows. Otherwise, falls back to the statical {@link
-     * com.android.adservices.service.measurement.PrivacyParams} values. It curtails the windows
-     * that occur after {@link Source#getEventReportWindow()} because they would effectively be
-     * unusable.
+     * configurable early reporting windows. Otherwise, falls back to the values provided in
+     * {@code getDefaultEarlyReportingWindowEnds}, which can have install-related custom behaviour.
+     * It curtails the windows that occur after {@link Source#getEffectiveEventReportWindow()}
+     * because they would effectively be unusable.
      */
-    private List<Long> getEarlyReportingWindows(Source source, boolean installState) {
-        List<Long> earlyWindows;
-        List<Long> defaultEarlyWindows = getDefaultEarlyReportingWindows(source, installState);
-        earlyWindows = getConfiguredOrDefaultEarlyReportingWindows(source, defaultEarlyWindows);
-
-        List<Long> windowList = new ArrayList<>();
-        for (long windowDelta : earlyWindows) {
-            long window = source.getEventTime() + windowDelta;
-            if (source.getEventReportWindow() <= window) {
-                continue;
-            }
-            windowList.add(window);
+    private List<Pair<Long, Long>> getEffectiveReportingWindows(Source source,
+            boolean installState) {
+        // TODO(b/290221611) Remove early reporting windows from code, only use them for flags.
+        if (mFlags.getMeasurementFlexLiteApiEnabled() && source.hasManualEventReportWindows()) {
+            return source.parsedProcessedEventReportWindows();
         }
+        List<Long> defaultEarlyWindowEnds =
+                getDefaultEarlyReportingWindowEnds(
+                        source.getSourceType(),
+                        installState && !source.hasWebDestinations());
+        List<Long> earlyWindowEnds =
+                getConfiguredOrDefaultEarlyReportingWindowEnds(
+                        source.getSourceType(), defaultEarlyWindowEnds);
+        // Add source event time to windows
+        earlyWindowEnds =
+                earlyWindowEnds.stream()
+                        .map((x) -> source.getEventTime() + x)
+                        .collect(Collectors.toList());
+
+        List<Pair<Long, Long>> windowList = new ArrayList<>();
+        long windowStart = 0L;
+        Pair<Long, Long> finalWindow =
+                getFinalReportingWindow(source, earlyWindowEnds);
+
+        for (long windowEnd : earlyWindowEnds) {
+            // Start time of `finalWindow` is either 0 or one of `earlyWindowEnds` times; stop
+            // iterating if we see it, and add `finalWindow`.
+            if (windowStart == finalWindow.first) {
+                break;
+            }
+            windowList.add(Pair.create(windowStart, windowEnd));
+            windowStart = windowEnd;
+        }
+
+        windowList.add(finalWindow);
+
         return ImmutableList.copyOf(windowList);
     }
 
-    private static List<Long> getDefaultEarlyReportingWindows(Source source, boolean installState) {
+    /**
+     * Returns the default early reporting windows
+     *
+     * @param sourceType Source's Type
+     * @param installAttributionEnabled whether windows for install attribution should be provided
+     * @return a list of windows
+     */
+    public static List<Long> getDefaultEarlyReportingWindowEnds(
+            Source.SourceType sourceType, boolean installAttributionEnabled) {
         long[] earlyWindows;
-        if (installState) {
+        if (installAttributionEnabled) {
             earlyWindows =
-                    source.getSourceType() == Source.SourceType.EVENT
+                    sourceType == Source.SourceType.EVENT
                             ? INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
                             : INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
         } else {
             earlyWindows =
-                    source.getSourceType() == Source.SourceType.EVENT
+                    sourceType == Source.SourceType.EVENT
                             ? EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
                             : NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
         }
-        return LongStream.of(earlyWindows).boxed().collect(Collectors.toList());
+        return asList(earlyWindows);
     }
 
-    private List<Long> getConfiguredOrDefaultEarlyReportingWindows(
-            Source source, List<Long> defaultEarlyWindows) {
-        if (!mFlags.getMeasurementEnableConfigurableEventReportingWindows()) {
-            return defaultEarlyWindows;
+    /**
+     * Returns default or configured (via flag) early reporting windows for the SourceType
+     *
+     * @param sourceType Source's Type
+     * @param defaultEarlyWindows default value for early windows
+     * @return list of windows
+     */
+    public List<Long> getConfiguredOrDefaultEarlyReportingWindowEnds(
+            Source.SourceType sourceType, List<Long> defaultEarlyWindowEnds) {
+        // `defaultEarlyWindowEnds` may contain custom install-related logic, which we only apply if
+        // the configurable report windows (and max reports) are in their default state. Without
+        // this check, we may construct default-value report windows without the custom
+        // install-related logic applied.
+        if ((sourceType == Source.SourceType.EVENT && isDefaultConfiguredVtc())
+                || (sourceType == Source.SourceType.NAVIGATION && isDefaultConfiguredCtc())) {
+            return defaultEarlyWindowEnds;
         }
 
-        String earlyReportingWindowsString =
-                pickEarlyReportingWindowsConfig(mFlags, source.getSourceType());
-
-        if (earlyReportingWindowsString == null) {
-            LogUtil.d("Invalid configurable early reporting windows; null");
-            return defaultEarlyWindows;
-        }
+        String earlyReportingWindowsString = pickEarlyReportingWindowsConfig(mFlags, sourceType);
 
         if (earlyReportingWindowsString.isEmpty()) {
             // No early reporting windows specified. It needs to be handled separately because
-            // splitting an empty string results into an array containing a single element,
-            // i.e. "". We want to handle it as an array having no element.
-
-            if (Source.SourceType.EVENT.equals(source.getSourceType())) {
-                // We need to add a reporting window at 2d for post-install case. Non-install case
-                // has no early reporting window by default.
-                return defaultEarlyWindows;
-            }
+            // splitting an empty string results in an array containing a single empty string. We
+            // want to handle it as an empty array.
             return Collections.emptyList();
         }
 
-        ImmutableList.Builder<Long> earlyWindows = new ImmutableList.Builder<>();
+        ImmutableList.Builder<Long> earlyWindowEnds = new ImmutableList.Builder<>();
         String[] split =
                 earlyReportingWindowsString.split(EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER);
         if (split.length > MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS) {
-            LogUtil.d(
-                    "Invalid configurable early reporting window; more than allowed size: "
-                            + MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS);
-            return defaultEarlyWindows;
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Invalid configurable early reporting window; more than allowed size: "
+                                    + MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS);
+            return defaultEarlyWindowEnds;
         }
 
-        for (String window : split) {
+        for (String windowEnd : split) {
             try {
-                earlyWindows.add(TimeUnit.SECONDS.toMillis(Long.parseLong(window)));
+                earlyWindowEnds.add(TimeUnit.SECONDS.toMillis(Long.parseLong(windowEnd)));
             } catch (NumberFormatException e) {
-                LogUtil.d(e, "Configurable early reporting window parsing failed.");
-                return defaultEarlyWindows;
+                LoggerFactory.getMeasurementLogger()
+                        .d(e, "Configurable early reporting window parsing failed.");
+                return defaultEarlyWindowEnds;
             }
         }
-        return earlyWindows.build();
+        return earlyWindowEnds.build();
     }
 
-    private String pickEarlyReportingWindowsConfig(Flags flags, Source.SourceType sourceType) {
+    private Pair<Long, Long> getFinalReportingWindow(
+            Source source, List<Long> earlyWindowEnds) {
+        // The latest end-time we can associate with a report for this source
+        long effectiveExpiry = Math.min(
+                source.getEffectiveEventReportWindow(), source.getExpiryTime());
+        // Find the latest end-time that can start a window ending at effectiveExpiry
+        for (int i = earlyWindowEnds.size() - 1; i >= 0; i--) {
+            long windowEnd = earlyWindowEnds.get(i);
+            if (windowEnd < effectiveExpiry) {
+                return Pair.create(windowEnd, effectiveExpiry);
+            }
+        }
+        return Pair.create(0L, effectiveExpiry);
+    }
+
+    /** Indicates whether VTC report windows and max reports are default configured, which can
+     * affect custom install-related attribution.
+     */
+    public boolean isDefaultConfiguredVtc() {
+        return mFlags.getMeasurementEventReportsVtcEarlyReportingWindows().isEmpty()
+                && mFlags.getMeasurementVtcConfigurableMaxEventReportsCount() == 1;
+    }
+
+    /** Indicates whether CTC report windows are default configured, which can affect custom
+     * install-related attribution.
+     */
+    private boolean isDefaultConfiguredCtc() {
+        return mFlags.getMeasurementEventReportsCtcEarlyReportingWindows().equals(
+                Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
+    }
+
+    private static String pickEarlyReportingWindowsConfig(Flags flags,
+            Source.SourceType sourceType) {
         return sourceType == Source.SourceType.EVENT
                 ? flags.getMeasurementEventReportsVtcEarlyReportingWindows()
                 : flags.getMeasurementEventReportsCtcEarlyReportingWindows();
+    }
+
+    private static List<Long> asList(long[] values) {
+        final List<Long> list = new ArrayList<>();
+        for (Long value : values) {
+            list.add(value);
+        }
+        return list;
     }
 }

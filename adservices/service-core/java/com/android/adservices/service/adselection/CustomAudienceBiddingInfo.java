@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -46,6 +47,12 @@ public abstract class CustomAudienceBiddingInfo {
     public abstract CustomAudienceSignals getCustomAudienceSignals();
 
     /**
+     * @return Buyer contextual signals that are used for reporting
+     */
+    @Nullable
+    public abstract BuyerContextualSignals getBuyerContextualSignals();
+
+    /**
      * @return generic builder
      */
     public static Builder builder() {
@@ -58,12 +65,14 @@ public abstract class CustomAudienceBiddingInfo {
      * @param biddingLogicUri URI that fetches bidding logic
      * @param buyerDecisionLogicJs JS that helps in making bidding decision
      * @param customAudienceSignals signals for CA
+     * @param buyerContextualSignals contextual signals used in {@code reportWin}
      * @return an instance of CustomAudienceBiddingInfo
      */
     public static CustomAudienceBiddingInfo create(
             @NonNull Uri biddingLogicUri,
             @NonNull String buyerDecisionLogicJs,
-            @NonNull CustomAudienceSignals customAudienceSignals) {
+            @NonNull CustomAudienceSignals customAudienceSignals,
+            @Nullable BuyerContextualSignals buyerContextualSignals) {
         Objects.requireNonNull(biddingLogicUri);
         Objects.requireNonNull(buyerDecisionLogicJs);
         Objects.requireNonNull(customAudienceSignals);
@@ -72,17 +81,22 @@ public abstract class CustomAudienceBiddingInfo {
                 .setBiddingLogicUri(biddingLogicUri)
                 .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                 .setCustomAudienceSignals(customAudienceSignals)
+                .setBuyerContextualSignals(buyerContextualSignals)
                 .build();
     }
 
     /**
      * Creates an object of CustomAudienceBiddingInfo
+     *
      * @param customAudience CA data
      * @param buyerDecisionLogicJs JS that helps in making bidding decision
+     * @param buyerContextualSignals contextual signals used in {@code reportWin}
      * @return an instance of CustomAudienceBiddingInfo
      */
     public static CustomAudienceBiddingInfo create(
-            @NonNull DBCustomAudience customAudience, @NonNull String buyerDecisionLogicJs) {
+            @NonNull DBCustomAudience customAudience,
+            @NonNull String buyerDecisionLogicJs,
+            @Nullable BuyerContextualSignals buyerContextualSignals) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(buyerDecisionLogicJs);
 
@@ -100,6 +114,7 @@ public abstract class CustomAudienceBiddingInfo {
                 .setBiddingLogicUri(biddingLogicUri)
                 .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                 .setCustomAudienceSignals(customAudienceSignals)
+                .setBuyerContextualSignals(buyerContextualSignals)
                 .build();
     }
 
@@ -115,6 +130,9 @@ public abstract class CustomAudienceBiddingInfo {
         /** Sets the CustomAudienceSignals. */
         public abstract Builder setCustomAudienceSignals(
                 CustomAudienceSignals customAudienceSignals);
+
+        /** Sets the BuyerContextualSignals. */
+        public abstract Builder setBuyerContextualSignals(BuyerContextualSignals value);
 
         /** Build a CustomAudienceBiddingInfo object. */
         public abstract CustomAudienceBiddingInfo build();

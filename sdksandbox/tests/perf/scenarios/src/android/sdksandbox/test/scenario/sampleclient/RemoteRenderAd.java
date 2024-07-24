@@ -15,7 +15,6 @@
  */
 package android.sdksandbox.test.scenario.sampleclient;
 
-import android.os.SystemClock;
 import android.platform.test.scenario.annotation.Scenario;
 
 import org.junit.AfterClass;
@@ -25,14 +24,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 @Scenario
 @RunWith(JUnit4.class)
 public class RemoteRenderAd {
-
-    private static final int NUMBER_OF_ADS = 3;
-    private static final int TIME_BETWEEN_RENDERS_S = 2;
+    private static final int WAIT_TIME_BEFORE_END_TEST_MS = 3000;
     private SdkSandboxTestHelper mSdkSandboxTestHelper = new SdkSandboxTestHelper();
 
     @AfterClass
@@ -47,13 +43,8 @@ public class RemoteRenderAd {
     }
 
     @Test
-    public void testRemoteRenderAd() {
-
-        // Loop to remote render ad multiple times sequentially
-        for (int i = 0; i < NUMBER_OF_ADS; i++) {
-            mSdkSandboxTestHelper.remoteRenderAd();
-            SystemClock.sleep(TimeUnit.SECONDS.toMillis(TIME_BETWEEN_RENDERS_S));
-        }
-        SystemClock.sleep(TimeUnit.SECONDS.toMillis(2));
+    public void testRemoteRenderAd() throws Exception {
+        mSdkSandboxTestHelper.remoteRenderAd();
+        Thread.sleep(WAIT_TIME_BEFORE_END_TEST_MS);
     }
 }

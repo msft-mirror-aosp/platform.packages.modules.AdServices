@@ -20,6 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 
+import android.net.Uri;
+
+import com.android.adservices.common.WebUtil;
+
 import org.junit.Test;
 
 import java.util.UUID;
@@ -37,6 +41,10 @@ public class AttributionTest {
     private static final long SOME_OTHER_LONG = 1L;
     private static final String SOURCE_ID = UUID.randomUUID().toString();
     private static final String TRIGGER_ID = UUID.randomUUID().toString();
+    private static final Uri REGISTRATION_ORIGIN =
+            WebUtil.validUri("https://subdomain.example.test");
+    private static final Uri OTHER_REGISTRATION_ORIGIN =
+            WebUtil.validUri("https://other.example.test");
 
     @Test
     public void equals_pass() {
@@ -50,6 +58,9 @@ public class AttributionTest {
 
     @Test
     public void equals_fail() {
+        assertNotEquals(
+                createExampleAttributionBuilder().setScope(Attribution.Scope.EVENT).build(),
+                createExampleAttributionBuilder().build());
         assertNotEquals(
                 createExampleAttributionBuilder().setRegistrant(SOME_OTHER_STRING).build(),
                 createExampleAttributionBuilder().build());
@@ -85,6 +96,11 @@ public class AttributionTest {
         assertNotEquals(
                 createExampleAttributionBuilder().setTriggerId(SOME_OTHER_STRING).build(),
                 createExampleAttributionBuilder().build());
+        assertNotEquals(
+                createExampleAttributionBuilder()
+                        .setRegistrationOrigin(OTHER_REGISTRATION_ORIGIN)
+                        .build(),
+                createExampleAttributionBuilder().build());
     }
 
     @Test
@@ -96,6 +112,12 @@ public class AttributionTest {
 
     @Test
     public void hashCode_fail() {
+        assertNotEquals(
+                createExampleAttributionBuilder()
+                        .setScope(Attribution.Scope.EVENT)
+                        .build()
+                        .hashCode(),
+                createExampleAttributionBuilder().build().hashCode());
         assertNotEquals(
                 createExampleAttributionBuilder()
                         .setRegistrant(SOME_OTHER_STRING)
@@ -147,10 +169,19 @@ public class AttributionTest {
                         .build()
                         .hashCode(),
                 createExampleAttributionBuilder().build().hashCode());
+        assertNotEquals(
+                createExampleAttributionBuilder()
+                        .setRegistrationOrigin(OTHER_REGISTRATION_ORIGIN)
+                        .build()
+                        .hashCode(),
+                createExampleAttributionBuilder().build().hashCode());
     }
 
     @Test
     public void getters() {
+        assertEquals(
+                Attribution.Scope.AGGREGATE,
+                createExampleAttributionBuilder().build().getScope());
         assertEquals(
                 REGISTRANT, createExampleAttributionBuilder().build().getRegistrant());
         assertEquals(
@@ -171,6 +202,9 @@ public class AttributionTest {
                 createExampleAttributionBuilder().build().getEnrollmentId());
         assertEquals(SOURCE_ID, createExampleAttributionBuilder().build().getSourceId());
         assertEquals(TRIGGER_ID, createExampleAttributionBuilder().build().getTriggerId());
+        assertEquals(
+                REGISTRATION_ORIGIN,
+                createExampleAttributionBuilder().build().getRegistrationOrigin());
     }
 
     @Test
@@ -201,6 +235,7 @@ public class AttributionTest {
     private static Attribution.Builder createExampleAttributionBuilder() {
         return new Attribution.Builder()
                 .setId(ID)
+                .setScope(Attribution.Scope.AGGREGATE)
                 .setRegistrant(REGISTRANT)
                 .setTriggerTime(TRIGGER_TIME)
                 .setEnrollmentId(ENROLLMENT_ID)
@@ -209,6 +244,7 @@ public class AttributionTest {
                 .setSourceOrigin(PUBLISHER_ORIGIN)
                 .setSourceSite(PUBLISHER_SITE)
                 .setSourceId(SOURCE_ID)
-                .setTriggerId(TRIGGER_ID);
+                .setTriggerId(TRIGGER_ID)
+                .setRegistrationOrigin(REGISTRATION_ORIGIN);
     }
 }

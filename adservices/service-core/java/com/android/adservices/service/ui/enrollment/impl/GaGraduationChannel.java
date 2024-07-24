@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.ui.enrollment;
+package com.android.adservices.service.ui.enrollment.impl;
 
 import android.content.Context;
 import android.os.Build;
@@ -23,9 +23,11 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 // TO-DO (b/285005057): Add graduation channel body when design is finalized.
+
 /** Enroll through graduation channel. */
 @RequiresApi(Build.VERSION_CODES.S)
 public class GaGraduationChannel implements PrivacySandboxEnrollmentChannel {

@@ -24,7 +24,8 @@ import com.android.adservices.data.common.DBAdData;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-/** Strategy for serializing an AdData object to JSON */
+
+/** Strategy for converting to and from an AdData object in different parts of the code */
 public interface AdDataConversionStrategy {
     /**
      * Serialize {@link DBAdData} to {@link JSONObject}.
@@ -40,7 +41,7 @@ public interface AdDataConversionStrategy {
      * @param json the {@link JSONObject} object to dwserialize
      * @return the {@link DBAdData} deserialized from the json
      */
-    DBAdData fromJson(JSONObject json) throws JSONException;
+    DBAdData.Builder fromJson(JSONObject json) throws JSONException;
 
     /**
      * Parse parcelable {@link AdData} to storage model {@link DBAdData}.
@@ -49,5 +50,5 @@ public interface AdDataConversionStrategy {
      * @return storage model
      */
     @NonNull
-    DBAdData fromServiceObject(@NonNull AdData parcelable);
+    DBAdData.Builder fromServiceObject(@NonNull AdData parcelable);
 }

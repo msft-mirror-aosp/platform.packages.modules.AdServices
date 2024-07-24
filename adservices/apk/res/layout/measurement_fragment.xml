@@ -24,18 +24,27 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical">
+        android:scrollbars="vertical"
+        android:focusableInTouchMode="true">
 
         <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:focusableInTouchMode="true" >
+        android:orientation="vertical">
+            <View
+                android:id="@+id/adservices_ppapi_title_spacing"
+                android:visibility="@integer/adservices_ppapi_title_spacing"
+                android:layout_height="18dp"
+                android:layout_width="match_parent"/>
             <TextView
-                android:layout_marginTop="18dp"
                 android:paddingHorizontal="24dp"
                 android:text="@string/settingsUI_measurement_view_intro_text"
                 style="@style/MainStyle.Body2" />
+            <View
+                android:id="@+id/measurement_switch_bar_spacing"
+                android:visibility="@integer/measurement_switch_bar_spacing"
+                android:layout_height="18dp"
+                android:layout_width="match_parent"/>
 
             <com.android.settingslib.widget.MainSwitchBar
             android:id="@+id/measurement_switch_bar"
@@ -63,8 +72,8 @@
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="24dp"
                 android:paddingBottom="48dp"
-                android:orientation="vertical"
-                android:focusableInTouchMode="true" >
+                android:focusable="false"
+                android:orientation="vertical">
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -72,7 +81,6 @@
                     android:layout_marginBottom="18dp"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />
-
                 <TextView
                     android:id="@+id/measurement_footer"
                     android:text="@string/settingsUI_measurement_view_footer_text"

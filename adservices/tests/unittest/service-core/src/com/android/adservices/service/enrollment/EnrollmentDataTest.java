@@ -26,6 +26,8 @@ import static org.junit.Assert.assertNull;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.proto.PrivacySandboxApi;
+
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -37,7 +39,13 @@ import java.util.List;
 @SmallTest
 public final class EnrollmentDataTest {
     private static final String ENROLLMENT_ID = "1";
-    private static final String COMPANY_ID = "100";
+    private static final String ENROLLED_API_NAMES =
+            "PRIVACY_SANDBOX_API_TOPICS PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE TEST1";
+    private static final ImmutableList<PrivacySandboxApi> ENROLLED_API_ENUMS =
+            ImmutableList.of(
+                    PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS,
+                    PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,
+                    PrivacySandboxApi.PRIVACY_SANDBOX_API_UNKNOWN);
     private static final ImmutableList<String> SDK_NAMES = ImmutableList.of("Admob");
     private static final ImmutableList<String> ATTRIBUTION_SOURCE_REGISTRATION_URLS =
             ImmutableList.of("source1.example.com", "source2.example.com");
@@ -47,20 +55,19 @@ public final class EnrollmentDataTest {
             ImmutableList.of("reporting1.example.com", "reporting2.example.com");
     private static final ImmutableList<String> REMARKETING_RESPONSE_BASED_REGISTRATION_URLS =
             ImmutableList.of("remarketing1.example.com", "remarketing2.example.com");
-    private static final ImmutableList<String> ENCRYPTION_KEY_URLS =
-            ImmutableList.of("encryption1.example.com", "encryption2.example.com");
+    private static final String ENCRYPTION_KEY_URL = "encryption1.example.com";
 
     private EnrollmentData createEnrollmentData() {
         return new EnrollmentData.Builder()
                 .setEnrollmentId(ENROLLMENT_ID)
-                .setCompanyId(COMPANY_ID)
+                .setEnrolledAPIs(ENROLLED_API_NAMES)
                 .setSdkNames(SDK_NAMES)
                 .setAttributionSourceRegistrationUrl(ATTRIBUTION_SOURCE_REGISTRATION_URLS)
                 .setAttributionTriggerRegistrationUrl(ATTRIBUTION_TRIGGER_REGISTRATION_URLS)
                 .setAttributionReportingUrl(ATTRIBUTION_REPORTING_REGISTRATION_URLS)
                 .setRemarketingResponseBasedRegistrationUrl(
                         REMARKETING_RESPONSE_BASED_REGISTRATION_URLS)
-                .setEncryptionKeyUrl(ENCRYPTION_KEY_URLS)
+                .setEncryptionKeyUrl(ENCRYPTION_KEY_URL)
                 .build();
     }
 
@@ -69,7 +76,8 @@ public final class EnrollmentDataTest {
         EnrollmentData enrollmentData = createEnrollmentData();
 
         assertEquals(ENROLLMENT_ID, enrollmentData.getEnrollmentId());
-        assertEquals(COMPANY_ID, enrollmentData.getCompanyId());
+        assertThat(enrollmentData.getEnrolledAPIs()).containsExactlyElementsIn(ENROLLED_API_ENUMS);
+        assertEquals(ENROLLED_API_NAMES, enrollmentData.getEnrolledAPIsString());
         assertThat(enrollmentData.getSdkNames()).containsExactlyElementsIn(SDK_NAMES);
         assertThat(enrollmentData.getAttributionSourceRegistrationUrl())
                 .containsExactlyElementsIn(ATTRIBUTION_SOURCE_REGISTRATION_URLS);
@@ -79,8 +87,7 @@ public final class EnrollmentDataTest {
                 .containsExactlyElementsIn(ATTRIBUTION_REPORTING_REGISTRATION_URLS);
         assertThat(enrollmentData.getRemarketingResponseBasedRegistrationUrl())
                 .containsExactlyElementsIn(REMARKETING_RESPONSE_BASED_REGISTRATION_URLS);
-        assertThat(enrollmentData.getEncryptionKeyUrl())
-                .containsExactlyElementsIn(ENCRYPTION_KEY_URLS);
+        assertEquals(ENCRYPTION_KEY_URL, enrollmentData.getEncryptionKeyUrl());
     }
 
     @Test
@@ -88,7 +95,7 @@ public final class EnrollmentDataTest {
         EnrollmentData enrollmentData =
                 new EnrollmentData.Builder()
                         .setEnrollmentId(ENROLLMENT_ID)
-                        .setCompanyId(COMPANY_ID)
+                        .setEnrolledAPIs(ENROLLED_API_NAMES)
                         .setSdkNames(String.join(SEPARATOR, SDK_NAMES))
                         .setAttributionSourceRegistrationUrl(
                                 String.join(SEPARATOR, ATTRIBUTION_SOURCE_REGISTRATION_URLS))
@@ -99,11 +106,12 @@ public final class EnrollmentDataTest {
                         .setRemarketingResponseBasedRegistrationUrl(
                                 String.join(
                                         SEPARATOR, REMARKETING_RESPONSE_BASED_REGISTRATION_URLS))
-                        .setEncryptionKeyUrl(String.join(SEPARATOR, ENCRYPTION_KEY_URLS))
+                        .setEncryptionKeyUrl(ENCRYPTION_KEY_URL)
                         .build();
 
         assertEquals(ENROLLMENT_ID, enrollmentData.getEnrollmentId());
-        assertEquals(COMPANY_ID, enrollmentData.getCompanyId());
+        assertThat(enrollmentData.getEnrolledAPIs()).containsExactlyElementsIn(ENROLLED_API_ENUMS);
+        assertEquals(ENROLLED_API_NAMES, enrollmentData.getEnrolledAPIsString());
         assertThat(enrollmentData.getSdkNames()).containsExactlyElementsIn(SDK_NAMES);
         assertThat(enrollmentData.getAttributionSourceRegistrationUrl())
                 .containsExactlyElementsIn(ATTRIBUTION_SOURCE_REGISTRATION_URLS);
@@ -113,8 +121,7 @@ public final class EnrollmentDataTest {
                 .containsExactlyElementsIn(ATTRIBUTION_REPORTING_REGISTRATION_URLS);
         assertThat(enrollmentData.getRemarketingResponseBasedRegistrationUrl())
                 .containsExactlyElementsIn(REMARKETING_RESPONSE_BASED_REGISTRATION_URLS);
-        assertThat(enrollmentData.getEncryptionKeyUrl())
-                .containsExactlyElementsIn(ENCRYPTION_KEY_URLS);
+        assertEquals(ENCRYPTION_KEY_URL, enrollmentData.getEncryptionKeyUrl());
     }
 
     @Test
@@ -140,13 +147,14 @@ public final class EnrollmentDataTest {
     public void testDefaults() throws Exception {
         EnrollmentData enrollmentData = new EnrollmentData.Builder().build();
         assertNull(enrollmentData.getEnrollmentId());
-        assertNull(enrollmentData.getCompanyId());
+        assertEquals(0, enrollmentData.getEnrolledAPIs().size());
+        assertNull(enrollmentData.getEnrolledAPIsString());
         assertEquals(enrollmentData.getSdkNames().size(), 0);
         assertEquals(enrollmentData.getAttributionSourceRegistrationUrl().size(), 0);
         assertEquals(enrollmentData.getAttributionTriggerRegistrationUrl().size(), 0);
         assertEquals(enrollmentData.getAttributionReportingUrl().size(), 0);
         assertEquals(enrollmentData.getRemarketingResponseBasedRegistrationUrl().size(), 0);
-        assertEquals(enrollmentData.getEncryptionKeyUrl().size(), 0);
+        assertNull(enrollmentData.getEncryptionKeyUrl());
     }
 
     @Test
@@ -154,7 +162,7 @@ public final class EnrollmentDataTest {
         EnrollmentData e1 =
                 new EnrollmentData.Builder()
                         .setEnrollmentId("2")
-                        .setCompanyId("1002")
+                        .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                         .setSdkNames("2sdk")
                         .setAttributionSourceRegistrationUrl(
                                 Arrays.asList(
@@ -164,12 +172,12 @@ public final class EnrollmentDataTest {
                         .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
                         .setRemarketingResponseBasedRegistrationUrl(
                                 Arrays.asList("https://2test.com"))
-                        .setEncryptionKeyUrl(Arrays.asList("https://2test.com/keys"))
+                        .setEncryptionKeyUrl("https://2test.com/keys")
                         .build();
         EnrollmentData e2 =
                 new EnrollmentData.Builder()
                         .setEnrollmentId("2")
-                        .setCompanyId("1002")
+                        .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                         .setSdkNames("2sdk")
                         .setAttributionSourceRegistrationUrl(
                                 Arrays.asList(
@@ -179,8 +187,34 @@ public final class EnrollmentDataTest {
                         .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
                         .setRemarketingResponseBasedRegistrationUrl(
                                 Arrays.asList("https://2test.com"))
-                        .setEncryptionKeyUrl(Arrays.asList("https://2test.com/keys"))
+                        .setEncryptionKeyUrl("https://2test.com/keys")
                         .build();
         assertEquals(e1, e2);
+    }
+
+    @Test
+    public void testSetEnrolledAPIs_returnsUnknownAPI() {
+        EnrollmentData e1 =
+                new EnrollmentData.Builder()
+                        .setEnrollmentId("2")
+                        .setEnrolledAPIs("foo-inc")
+                        .setSdkNames("2sdk")
+                        .setAttributionSourceRegistrationUrl(
+                                Arrays.asList(
+                                        "https://2test.com/source", "https://2test2.com/source"))
+                        .setAttributionTriggerRegistrationUrl(
+                                Arrays.asList("https://2test.com/trigger"))
+                        .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
+                        .setRemarketingResponseBasedRegistrationUrl(
+                                Arrays.asList("https://2test.com"))
+                        .setEncryptionKeyUrl("https://2test.com/keys")
+                        .build();
+
+        String enrolledAPIsString = e1.getEnrolledAPIsString();
+        assertEquals("foo-inc", enrolledAPIsString);
+        ImmutableList<PrivacySandboxApi> enrolledAPIUnknown =
+                ImmutableList.of(PrivacySandboxApi.PRIVACY_SANDBOX_API_UNKNOWN);
+        assertEquals(1, e1.getEnrolledAPIs().size());
+        assertThat(e1.getEnrolledAPIs()).containsExactlyElementsIn(enrolledAPIUnknown);
     }
 }

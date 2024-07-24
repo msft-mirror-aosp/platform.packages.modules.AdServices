@@ -21,6 +21,9 @@ import static org.junit.Assert.assertThrows;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link GetTopicsParam} */
@@ -29,7 +32,9 @@ public final class GetTopicsParamTest {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final String SOME_SDK_PACKAGE_NAME = "SomeSdkPackageName";
-    private static final int SOME_UID = 11;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void test_nonNull() {

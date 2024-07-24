@@ -17,5 +17,6 @@
 <ad-services-config>
     <attribution allowAdPartnersToAccess="1234" allowAllToAccess="false" />
     <custom-audiences allowAllToAccess="true" />
+    <protected-signals allowAllToAccess="true" />
     <topics allowAllToAccess="true" />
 </ad-services-config>

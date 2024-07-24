@@ -29,6 +29,7 @@ import com.android.adservices.service.consent.App;
 import com.android.adservices.service.topics.TopicsMapper;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
+import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 
 import java.io.IOException;
@@ -264,5 +265,161 @@ public class DialogFragmentManager {
 
         sIsShowing = true;
         dialog.show(fragmentActivity.getSupportFragmentManager(), "showResetAppDialog");
+    }
+
+    /**
+     * Shows the speed-bump dialog for turn on the switch of Topics
+     *
+     * @param fragmentActivity {@link FragmentActivity}.
+     */
+    public static void showOptInTopicsDialog(@NonNull FragmentActivity fragmentActivity) {
+        if (sIsShowing) return;
+        OnClickListener acknowledgeListener = (dialogInterface, buttonId) -> sIsShowing = false;
+
+        SpeedBumpDialogFragment dialog =
+                SpeedBumpDialogFragment.newInstance(
+                        fragmentActivity.getString(R.string.settingsUI_dialog_topics_opt_in_title),
+                        fragmentActivity.getString(
+                                R.string.settingsUI_dialog_topics_opt_in_message),
+                        fragmentActivity.getString(R.string.settingsUI_dialog_acknowledge),
+                        "",
+                        acknowledgeListener);
+
+        sIsShowing = true;
+        dialog.show(fragmentActivity.getSupportFragmentManager(), "OptInTopicsDialogFragment");
+    }
+
+    /**
+     * Shows the speed-bump dialog of turning off topics.
+     *
+     * @param fragmentActivity {@link FragmentActivity}.
+     * @param topicsViewModel {@link TopicsViewModel}.
+     */
+    public static void showOptOutTopicsDialog(
+            @NonNull FragmentActivity fragmentActivity, TopicsViewModel topicsViewModel) {
+        if (sIsShowing) return;
+        OnClickListener optOutTopicsListener =
+                (dialogInterface, buttonId) -> {
+                    topicsViewModel.setTopicsConsent(false);
+                    topicsViewModel.refresh();
+                    sIsShowing = false;
+                };
+
+        SpeedBumpDialogFragment dialog =
+                SpeedBumpDialogFragment.newInstance(
+                        fragmentActivity.getString(R.string.settingsUI_dialog_topics_opt_out_title),
+                        fragmentActivity.getString(
+                                R.string.settingsUI_dialog_topics_opt_out_message),
+                        fragmentActivity.getString(
+                                R.string.settingsUI_dialog_opt_out_positive_text),
+                        fragmentActivity.getString(R.string.settingsUI_dialog_negative_text),
+                        optOutTopicsListener);
+
+        sIsShowing = true;
+        dialog.show(fragmentActivity.getSupportFragmentManager(), "OptOutTopicsDialogFragment");
+    }
+
+    /**
+     * Shows the speed-bump dialog for turn on the switch of apps
+     *
+     * @param fragmentActivity {@link FragmentActivity}.
+     */
+    public static void showOptInAppsDialog(@NonNull FragmentActivity fragmentActivity) {
+        if (sIsShowing) return;
+        OnClickListener acknowledgeListener = (dialogInterface, buttonId) -> sIsShowing = false;
+
+        SpeedBumpDialogFragment dialog =
+                SpeedBumpDialogFragment.newInstance(
+                        fragmentActivity.getString(R.string.settingsUI_dialog_apps_opt_in_title),
+                        fragmentActivity.getString(R.string.settingsUI_dialog_apps_opt_in_message),
+                        fragmentActivity.getString(R.string.settingsUI_dialog_acknowledge),
+                        "",
+                        acknowledgeListener);
+
+        sIsShowing = true;
+        dialog.show(fragmentActivity.getSupportFragmentManager(), "OptInAppsDialogFragment");
+    }
+
+    /**
+     * Shows the speed-bump dialog of turning off apps.
+     *
+     * @param fragmentActivity {@link FragmentActivity}.
+     * @param appsViewModel {@link AppsViewModel}.
+     */
+    public static void showOptOutAppsDialog(
+            @NonNull FragmentActivity fragmentActivity, AppsViewModel appsViewModel) {
+        if (sIsShowing) return;
+        OnClickListener optOutAppsListener =
+                (dialogInterface, buttonId) -> {
+                    appsViewModel.setAppsConsent(false);
+                    appsViewModel.refresh();
+                    sIsShowing = false;
+                };
+
+        SpeedBumpDialogFragment dialog =
+                SpeedBumpDialogFragment.newInstance(
+                        fragmentActivity.getString(R.string.settingsUI_dialog_apps_opt_out_title),
+                        fragmentActivity.getString(R.string.settingsUI_dialog_apps_opt_out_message),
+                        fragmentActivity.getString(
+                                R.string.settingsUI_dialog_opt_out_positive_text),
+                        fragmentActivity.getString(R.string.settingsUI_dialog_negative_text),
+                        optOutAppsListener);
+
+        sIsShowing = true;
+        dialog.show(fragmentActivity.getSupportFragmentManager(), "OptOutAppsDialogFragment");
+    }
+
+    /**
+     * Shows the speed-bump dialog for turn on the switch of measurement
+     *
+     * @param fragmentActivity {@link FragmentActivity}.
+     */
+    public static void showOptInMeasurementDialog(@NonNull FragmentActivity fragmentActivity) {
+        if (sIsShowing) return;
+        OnClickListener acknowledgeListener = (dialogInterface, buttonId) -> sIsShowing = false;
+
+        SpeedBumpDialogFragment dialog =
+                SpeedBumpDialogFragment.newInstance(
+                        fragmentActivity.getString(
+                                R.string.settingsUI_dialog_measurement_opt_in_title),
+                        fragmentActivity.getString(
+                                R.string.settingsUI_dialog_measurement_opt_in_message),
+                        fragmentActivity.getString(R.string.settingsUI_dialog_acknowledge),
+                        "",
+                        acknowledgeListener);
+
+        sIsShowing = true;
+        dialog.show(fragmentActivity.getSupportFragmentManager(), "OptInMeasurementDialogFragment");
+    }
+
+    /**
+     * Shows the speed-bump dialog of turning off measurement.
+     *
+     * @param fragmentActivity {@link FragmentActivity}.
+     * @param measurementViewModel {@link MeasurementViewModel}.
+     */
+    public static void showOptOutMeasurementDialog(
+            @NonNull FragmentActivity fragmentActivity, MeasurementViewModel measurementViewModel) {
+        if (sIsShowing) return;
+        OnClickListener optOutMeasurementListener =
+                (dialogInterface, buttonId) -> {
+                    measurementViewModel.setMeasurementConsent(false);
+                    sIsShowing = false;
+                };
+
+        SpeedBumpDialogFragment dialog =
+                SpeedBumpDialogFragment.newInstance(
+                        fragmentActivity.getString(
+                                R.string.settingsUI_dialog_measurement_opt_out_title),
+                        fragmentActivity.getString(
+                                R.string.settingsUI_dialog_measurement_opt_out_message),
+                        fragmentActivity.getString(
+                                R.string.settingsUI_dialog_opt_out_positive_text),
+                        fragmentActivity.getString(R.string.settingsUI_dialog_negative_text),
+                        optOutMeasurementListener);
+
+        sIsShowing = true;
+        dialog.show(
+                fragmentActivity.getSupportFragmentManager(), "OptOutMeasurementDialogFragment");
     }
 }

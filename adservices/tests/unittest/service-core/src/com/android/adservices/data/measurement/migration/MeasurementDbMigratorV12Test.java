@@ -75,7 +75,7 @@ public class MeasurementDbMigratorV12Test extends MeasurementDbMigratorTestBase 
         tableAndNewColumnPairs.add(
                 new Pair<>(
                         MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS));
+                        MeasurementTablesDeprecated.SourceContract.MAX_BUCKET_INCREMENTS));
 
         tableAndNewColumnPairs.forEach(
                 pair -> {

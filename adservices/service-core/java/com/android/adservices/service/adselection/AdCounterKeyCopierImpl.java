@@ -22,7 +22,6 @@ import android.annotation.NonNull;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.common.DBAdData;
-import com.android.adservices.service.common.JsonUtils;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptRecordArgument;
 import com.android.internal.annotations.VisibleForTesting;
@@ -70,7 +69,7 @@ public class AdCounterKeyCopierImpl implements AdCounterKeyCopier {
 
         return originalRecordArgument.getCopyWithFields(
                 Collections.singletonList(
-                        JSScriptArgument.stringArrayArg(
+                        JSScriptArgument.numericArrayArg(
                                 AD_COUNTER_KEYS_FIELD_NAME,
                                 new ArrayList<>(sourceAdData.getAdCounterKeys()))));
     }
@@ -89,7 +88,7 @@ public class AdCounterKeyCopierImpl implements AdCounterKeyCopier {
 
         return originalRecordArgument.getCopyWithFields(
                 Collections.singletonList(
-                        JSScriptArgument.stringArrayArg(
+                        JSScriptArgument.numericArrayArg(
                                 AD_COUNTER_KEYS_FIELD_NAME,
                                 new ArrayList<>(sourceAdData.getAdCounterKeys()))));
     }
@@ -106,14 +105,10 @@ public class AdCounterKeyCopierImpl implements AdCounterKeyCopier {
             return targetBuilder;
         }
 
-        HashSet<String> keysSet = new HashSet<>();
+        HashSet<Integer> keysSet = new HashSet<>();
         for (int index = 0; index < keysArray.length(); index++) {
             try {
-                String key =
-                        JsonUtils.getStringFromJsonArrayAtIndex(
-                                keysArray,
-                                index,
-                                "Error parsing ad counter keys from logic result");
+                int key = keysArray.getInt(index);
                 keysSet.add(key);
             } catch (JSONException exception) {
                 sLogger.d(
@@ -130,9 +125,9 @@ public class AdCounterKeyCopierImpl implements AdCounterKeyCopier {
             @NonNull DBAdSelection.Builder targetBuilder, @NonNull AdScoringOutcome sourceOutcome) {
         Objects.requireNonNull(targetBuilder);
         Objects.requireNonNull(sourceOutcome);
-        Set<String> keys =
+        Set<Integer> keys =
                 sourceOutcome.getAdWithScore().getAdWithBid().getAdData().getAdCounterKeys();
         sLogger.v("Copying %d ad counter keys to ad selection entry builder", keys.size());
-        return targetBuilder.setAdCounterKeys(keys);
+        return targetBuilder.setAdCounterIntKeys(keys);
     }
 }

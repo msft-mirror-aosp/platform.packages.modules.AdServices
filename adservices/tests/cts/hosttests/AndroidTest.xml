@@ -30,11 +30,7 @@
         <option name="jar" value="CtsAdServicesHostTests.jar" />
     </test>
 
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-    </target_preparer>
+    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
 
     <object type="module_controller"
         class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >

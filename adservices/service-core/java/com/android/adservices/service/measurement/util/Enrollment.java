@@ -18,20 +18,20 @@ package com.android.adservices.service.measurement.util;
 
 import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
 import java.util.Optional;
 
 /** Enrollment utilities for measurement. */
 public final class Enrollment {
-
-    public static final String FAKE_ENROLLMENT = "fake_enrollment";
+    public static final String LOCALHOST_ENROLLMENT_ID = "localhost_enrollment_id";
+    public static final String LOCALHOST_IP_ENROLLMENT_ID = "localhost_ip_enrollment_id";
 
     private Enrollment() { }
 
@@ -51,50 +51,43 @@ public final class Enrollment {
             EnrollmentDao enrollmentDao,
             Context context,
             Flags flags) {
+        if (WebAddresses.isLocalhost(registrationUri)) {
+            return Optional.of(
+                    WebAddresses.isLocalhostIp(registrationUri)
+                            ? LOCALHOST_IP_ENROLLMENT_ID
+                            : LOCALHOST_ENROLLMENT_ID);
+        }
+
         Uri uriWithoutParams = registrationUri.buildUpon().clearQuery().fragment(null).build();
 
         EnrollmentData enrollmentData =
                 enrollmentDao.getEnrollmentDataFromMeasurementUrl(uriWithoutParams);
         if (enrollmentData == null) {
-            LogUtil.w(
-                    "Enrollment check failed, Reason: Enrollment Id Not Found, "
-                            + "Registration URI: %s",
-                    registrationUri);
+            LoggerFactory.getMeasurementLogger()
+                    .w(
+                            "Enrollment check failed, Reason: Enrollment Id Not Found, "
+                                    + "Registration URI: %s",
+                            registrationUri);
             return Optional.empty();
         }
         if (flags.isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
-            LogUtil.w(
-                    "Enrollment check failed, Reason: Enrollment Id in blocklist, "
-                            + "Registration URI: %s, Enrollment Id: %s",
-                    registrationUri, enrollmentData.getEnrollmentId());
+            LoggerFactory.getMeasurementLogger()
+                    .w(
+                            "Enrollment check failed, Reason: Enrollment Id in blocklist, "
+                                    + "Registration URI: %s, Enrollment Id: %s",
+                            registrationUri, enrollmentData.getEnrollmentId());
             return Optional.empty();
         }
-        // TODO(b/269798827): Enable for R.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                && !AppManifestConfigHelper.isAllowedAttributionAccess(
-                        context, packageName, enrollmentData.getEnrollmentId())) {
-            LogUtil.w(
-                    "Enrollment check failed, Reason: Enrollment Id missing from "
-                            + "App Manifest AdTech allowlist, "
-                            + "Registration URI: %s, Enrollment Id: %s",
-                    registrationUri, enrollmentData.getEnrollmentId());
+        if (!AppManifestConfigHelper.isAllowedAttributionAccess(
+                packageName, enrollmentData.getEnrollmentId())) {
+            LoggerFactory.getMeasurementLogger()
+                    .w(
+                            "Enrollment check failed, Reason: Enrollment Id missing from "
+                                    + "App Manifest AdTech allowlist, "
+                                    + "Registration URI: %s, Enrollment Id: %s",
+                            registrationUri, enrollmentData.getEnrollmentId());
             return Optional.empty();
         }
         return Optional.of(enrollmentData.getEnrollmentId());
-    }
-
-    /**
-     * Returns an {@code Optional<Uri>} of the ad-tech server URL that accepts attribution reports.
-     *
-     * @param enrollmentId the enrollment record ID.
-     * @param enrollmentDao an instance of {@code EnrollmentDao}.
-     */
-    public static Optional<Uri> maybeGetReportingOrigin(String enrollmentId,
-            EnrollmentDao enrollmentDao) {
-        EnrollmentData enrollmentData = enrollmentDao.getEnrollmentData(enrollmentId);
-        if (enrollmentData != null && enrollmentData.getAttributionReportingUrl().size() > 0) {
-            return Optional.of(Uri.parse(enrollmentData.getAttributionReportingUrl().get(0)));
-        }
-        return Optional.empty();
     }
 }

@@ -43,9 +43,24 @@ android_test {
         "cts",
         "general-tests",
         "mts-adservices",
+        "mcts-adservices",
     ],
     min_sdk_version: "Tiramisu",
     manifest: "CtsAdServicesEndToEndTestsManifest.xml",
     test_config: "CtsAdServicesEndToEndTests.xml",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
+}
+
+android_test {
+    name: "CtsAdExtServicesEndToEndTests",
+    defaults: ["cts-adservices-endtoend-defaults"],
+    test_suites: [
+        "cts",
+        "general-tests",
+        "mts-extservices",
+        "mcts-extservices",
+    ],
+    min_sdk_version: "30",
+    max_sdk_version: "32",
+    manifest: "CtsAdExtServicesEndToEndTestsManifest.xml",
+    test_config: "CtsAdExtServicesEndToEndTests.xml",
 }

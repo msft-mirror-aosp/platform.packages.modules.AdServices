@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.consent;
 
-import com.android.internal.annotations.VisibleForTesting;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 
 /** ConsentManager related Constants. */
 public class ConsentConstants {
@@ -36,8 +36,7 @@ public class ConsentConstants {
 
     public static final String DEFAULT_AD_ID_STATE = "DEFAULT_AD_ID_STATE";
 
-    @VisibleForTesting
-    static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
+    public static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
             "MANUAL_INTERACTION_WITH_CONSENT_RECORDED";
 
     public static final String CONSENT_KEY = "CONSENT";
@@ -49,14 +48,18 @@ public class ConsentConstants {
     // Internal datastore version
     static final int STORAGE_VERSION = 1;
 
-    // Internal datastore filename. The name should be unique to avoid multiple threads or processes
-    // to update the same file.
-    static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
+    // Internal datastore filename. The name should be unique to avoid multiple threads or
+    // processes to update the same file.
+    static final String STORAGE_XML_IDENTIFIER =
+            FileCompatUtils.getAdservicesFilename("ConsentManagerStorageIdentifier.xml");
 
     // The name of shared preferences file to store status of one-time migrations.
     // Once a migration has happened, it marks corresponding shared preferences to prevent it
     // happens again.
     static final String SHARED_PREFS_CONSENT = "PPAPI_Consent";
+
+    public static final String SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH =
+            "CONSENT_HAS_MIGRATED_TO_APP_SEARCH";
 
     // Shared preferences to mark whether consent data from AppSearch has migrated to AdServices.
     public static final String SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED =
@@ -65,6 +68,10 @@ public class ConsentConstants {
     // Shared preferences to mark whether PPAPI consent has been migrated to system server
     public static final String SHARED_PREFS_KEY_HAS_MIGRATED =
             "CONSENT_HAS_MIGRATED_TO_SYSTEM_SERVER";
+
+    // Shared preferences to mark whether AdExtData has been migrated to system server
+    public static final String SHARED_PREFS_KEY_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER =
+            "CONSENT_HAS_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER";
 
     // Shared preferences to mark whether PPAPI consent has been cleared.
     static final String SHARED_PREFS_KEY_PPAPI_HAS_CLEARED = "CONSENT_HAS_CLEARED_IN_PPAPI";
@@ -92,4 +99,6 @@ public class ConsentConstants {
     public static final String IS_ADULT_ACCOUNT = "IS_ADULT_ACCOUNT";
 
     public static final String WAS_U18_NOTIFICATION_DISPLAYED = "WAS_U18_NOTIFICATION_DISPLAYED";
+
+    public static final String PAS_NOTIFICATION_DISPLAYED_ONCE = "PAS_NOTIFICATION_DISPLAYED_ONCE";
 }

@@ -29,8 +29,8 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
+import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -56,7 +56,7 @@ public class BlockedTopicsViewModel extends AndroidViewModel {
     public BlockedTopicsViewModel(@NonNull Application application) {
         super(application);
 
-        mConsentManager = ConsentManager.getInstance(application);
+        mConsentManager = ConsentManager.getInstance();
         mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
     }
 

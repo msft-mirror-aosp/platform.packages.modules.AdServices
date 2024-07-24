@@ -22,6 +22,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import android.os.LimitExceededException;
 
@@ -32,10 +33,10 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /** Utility class to filter FLEDGE requests. */
 // TODO(b/269798827): Enable for R.
@@ -48,7 +49,7 @@ public abstract class AbstractFledgeServiceFilter {
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final FledgeAllowListsFilter mFledgeAllowListsFilter;
-    @NonNull private final Supplier<Throttler> mThrottlerSupplier;
+    @NonNull private final Throttler mThrottler;
 
     public AbstractFledgeServiceFilter(
             @NonNull Context context,
@@ -57,14 +58,14 @@ public abstract class AbstractFledgeServiceFilter {
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull Supplier<Throttler> throttlerSupplier) {
+            @NonNull Throttler throttler) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(fledgeAllowListsFilter);
-        Objects.requireNonNull(throttlerSupplier);
+        Objects.requireNonNull(throttler);
 
         mContext = context;
         mConsentManager = consentManager;
@@ -72,7 +73,7 @@ public abstract class AbstractFledgeServiceFilter {
         mAppImportanceFilter = appImportanceFilter;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mFledgeAllowListsFilter = fledgeAllowListsFilter;
-        mThrottlerSupplier = throttlerSupplier;
+        mThrottler = throttler;
     }
 
     /**
@@ -82,13 +83,23 @@ public abstract class AbstractFledgeServiceFilter {
      *     user consent
      */
     protected void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
+
         if (!userConsent.isGiven()) {
+            throw new ConsentManager.RevokedConsentException();
+        }
+    }
+
+    /**
+     * Asserts caller has user consent to use FLEDGE APIs in the calling app and persists consent
+     * for.
+     *
+     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
+     *     user consent
+     */
+    protected void assertAndPersistCallerHasUserConsentForApp(String callerPackageName)
+            throws ConsentManager.RevokedConsentException {
+        if (mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(callerPackageName)) {
             throw new ConsentManager.RevokedConsentException();
         }
     }
@@ -118,6 +129,26 @@ public abstract class AbstractFledgeServiceFilter {
     }
 
     /**
+     * Extract and return an {@link AdTechIdentifier} from the given {@link Uri} after checking if
+     * the ad tech is enrolled and authorized to perform the operation for the package.
+     *
+     * @param uriForAdTech a {@link Uri} matching the ad tech to check against
+     * @param callerPackageName the package name to check against
+     * @param apiType The type of API calling: custom audience or protect signals
+     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
+     *     to perform the operation
+     */
+    protected AdTechIdentifier getAndAssertAdTechFromUriAllowed(
+            String callerPackageName,
+            Uri uriForAdTech,
+            int apiName,
+            @AppManifestConfigCall.ApiType int apiType)
+            throws FledgeAuthorizationFilter.AdTechNotAllowedException {
+        return mFledgeAuthorizationFilter.getAndAssertAdTechFromUriAllowed(
+                mContext, callerPackageName, uriForAdTech, apiName, apiType);
+    }
+
+    /**
      * Check if a certain ad tech is enrolled and authorized to perform the operation for the
      * package.
      *
@@ -127,11 +158,24 @@ public abstract class AbstractFledgeServiceFilter {
      *     to perform the operation
      */
     protected void assertFledgeEnrollment(
-            AdTechIdentifier adTech, String callerPackageName, int apiName)
+            AdTechIdentifier adTech,
+            String callerPackageName,
+            int apiName,
+            @NonNull DevContext devContext,
+            @AppManifestConfigCall.ApiType int apiType)
             throws FledgeAuthorizationFilter.AdTechNotAllowedException {
+        Uri adTechUri = Uri.parse("https://" + adTech.toString());
+        boolean isLocalhostAddress =
+                WebAddresses.isLocalhost(adTechUri) || WebAddresses.isLocalhostIp(adTechUri);
+        boolean isDeveloperMode = devContext.getDevOptionsEnabled();
+        if (isLocalhostAddress && isDeveloperMode) {
+            // Skip check for localhost and 127.0.0.1 addresses for debuggable CTS.
+            return;
+        }
+
         if (!mFlags.getDisableFledgeEnrollmentCheck()) {
             mFledgeAuthorizationFilter.assertAdTechAllowed(
-                    mContext, callerPackageName, adTech, apiName);
+                    mContext, callerPackageName, adTech, apiName, apiType);
         }
     }
 
@@ -141,9 +185,10 @@ public abstract class AbstractFledgeServiceFilter {
      * @param callerPackageName the package name to be validated.
      * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
      */
-    protected void assertAppInAllowList(String callerPackageName, int apiName)
+    protected void assertAppInAllowList(
+            String callerPackageName, int apiName, @AppManifestConfigCall.ApiType int apiType)
             throws FledgeAllowListsFilter.AppNotAllowedException {
-        mFledgeAllowListsFilter.assertAppCanUsePpapi(callerPackageName, apiName);
+        mFledgeAllowListsFilter.assertAppInAllowlist(callerPackageName, apiName, apiType);
     }
 
     /**
@@ -156,8 +201,7 @@ public abstract class AbstractFledgeServiceFilter {
     protected void assertCallerNotThrottled(final String callerPackageName, Throttler.ApiKey apiKey)
             throws LimitExceededException {
         sLogger.v("Checking if API is throttled for package: %s ", callerPackageName);
-        Throttler throttler = mThrottlerSupplier.get();
-        boolean isThrottled = !throttler.tryAcquire(apiKey, callerPackageName);
+        boolean isThrottled = !mThrottler.tryAcquire(apiKey, callerPackageName);
 
         if (isThrottled) {
             sLogger.e(String.format("Rate Limit Reached for API: %s", apiKey));
@@ -184,5 +228,6 @@ public abstract class AbstractFledgeServiceFilter {
             boolean enforceConsent,
             int callerUid,
             int apiName,
-            @NonNull Throttler.ApiKey apiKey);
+            @NonNull Throttler.ApiKey apiKey,
+            @NonNull DevContext devContext);
 }

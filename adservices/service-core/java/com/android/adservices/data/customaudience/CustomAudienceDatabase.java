@@ -22,7 +22,6 @@ import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RenameColumn;
-import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 import androidx.room.migration.AutoMigrationSpec;
@@ -30,6 +29,7 @@ import androidx.room.migration.AutoMigrationSpec;
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.BinderFlagReader;
+import com.android.adservices.service.common.compat.FileCompatUtils;
 
 import java.util.Objects;
 
@@ -38,20 +38,29 @@ import java.util.Objects;
         entities = {
             DBCustomAudience.class,
             DBCustomAudienceBackgroundFetchData.class,
-            DBCustomAudienceOverride.class
+            DBCustomAudienceOverride.class,
+            DBCustomAudienceQuarantine.class,
+            DBPartialCustomAudience.class,
+            DBScheduledCustomAudienceUpdate.class
         },
         version = CustomAudienceDatabase.DATABASE_VERSION,
         autoMigrations = {
             @AutoMigration(from = 1, to = 2, spec = CustomAudienceDatabase.AutoMigration1To2.class),
             @AutoMigration(from = 2, to = 3),
+            @AutoMigration(from = 3, to = 4),
+            @AutoMigration(from = 4, to = 5),
+            @AutoMigration(from = 5, to = 6),
+            @AutoMigration(from = 6, to = 7),
+            @AutoMigration(from = 7, to = 8, spec = CustomAudienceDatabase.AutoMigration7To8.class),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 3;
+    public static final int DATABASE_VERSION = 8;
     // TODO(b/230653780): Should we separate the DB.
-    public static final String DATABASE_NAME = "customaudience.db";
+    public static final String DATABASE_NAME =
+            FileCompatUtils.getAdservicesFilename("customaudience.db");
 
     @RenameColumn(
             tableName = DBCustomAudience.TABLE_NAME,
@@ -66,6 +75,8 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
             fromColumnName = "daily_update_url",
             toColumnName = "daily_update_uri")
     static class AutoMigration1To2 implements AutoMigrationSpec {}
+
+    static class AutoMigration7To8 implements AutoMigrationSpec {}
 
     private static volatile CustomAudienceDatabase sSingleton;
 
@@ -86,9 +97,15 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
                                 BinderFlagReader.readFlag(
                                         () ->
                                                 FlagsFactory.getFlags()
-                                                        .getFledgeAdSelectionFilteringEnabled()));
+                                                        .getFledgeAdSelectionFilteringEnabled()),
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeAuctionServerAdRenderIdEnabled())
+                        );
                 sSingleton =
-                        Room.databaseBuilder(context, CustomAudienceDatabase.class, DATABASE_NAME)
+                        FileCompatUtils.roomDatabaseBuilderHelper(
+                                        context, CustomAudienceDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
                                 .addTypeConverter(converters)
                                 .build();

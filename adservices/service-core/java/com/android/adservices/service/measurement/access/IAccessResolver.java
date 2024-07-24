@@ -25,9 +25,10 @@ public interface IAccessResolver {
     /**
      * @param context to retrieve contextual parameters. This method is chosen over constructor to
      *     pass context to avoid memory leak issues
-     * @return true, if access is granted, false otherwise
+     * @return AccessContainer
      */
-    boolean isAllowed(@NonNull Context context);
+    @NonNull
+    AccessInfo getAccessInfo(@NonNull Context context);
 
     /** @return error status code to return in case the access was not granted. */
     @AdServicesStatusUtils.StatusCode

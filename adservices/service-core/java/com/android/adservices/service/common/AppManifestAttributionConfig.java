@@ -16,14 +16,15 @@
 
 package com.android.adservices.service.common;
 
-import android.annotation.NonNull;
+import android.annotation.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 
 /** Attribution part of the app manifest config (<ad-services-config>). */
-public class AppManifestAttributionConfig {
-    private final boolean mAllowAllToAccess;
-    private final List<String> mAllowAdPartnersToAccess;
+final class AppManifestAttributionConfig extends AppManifestApiConfig {
+
+    @Nullable private static AppManifestAttributionConfig sEnabledByDefaultInstance;
 
     /**
      * Constructor.
@@ -32,20 +33,15 @@ public class AppManifestAttributionConfig {
      * @param allowAdPartnersToAccess corresponds to the list in the config.
      */
     public AppManifestAttributionConfig(
-            boolean allowAllToAccess, @NonNull List<String> allowAdPartnersToAccess) {
-        mAllowAllToAccess = allowAllToAccess;
-        mAllowAdPartnersToAccess = allowAdPartnersToAccess;
+            boolean allowAllToAccess, List<String> allowAdPartnersToAccess) {
+        super(allowAllToAccess, allowAdPartnersToAccess);
     }
 
-    /** Getter for allowAllToAccess. */
-    @NonNull
-    public boolean getAllowAllToAccess() {
-        return mAllowAllToAccess;
-    }
-
-    /** Getter for allowAdPartnersToAccess. */
-    @NonNull
-    public List<String> getAllowAdPartnersToAccess() {
-        return mAllowAdPartnersToAccess;
+    static AppManifestAttributionConfig getEnabledByDefaultInstance() {
+        if (sEnabledByDefaultInstance == null) {
+            sEnabledByDefaultInstance =
+                    new AppManifestAttributionConfig(true, Collections.emptyList());
+        }
+        return sEnabledByDefaultInstance;
     }
 }

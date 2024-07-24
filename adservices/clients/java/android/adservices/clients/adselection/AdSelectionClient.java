@@ -17,13 +17,18 @@
 package android.adservices.clients.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionManager;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.adselection.GetAdSelectionDataOutcome;
+import android.adservices.adselection.GetAdSelectionDataRequest;
+import android.adservices.adselection.PersistAdSelectionResultRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.annotation.NonNull;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.os.OutcomeReceiver;
@@ -85,6 +90,33 @@ public class AdSelectionClient {
     }
 
     /**
+     * Invokes the {@code selectAds} method of {@link AdSelectionManager}, and returns a future with
+     * {@link AdSelectionOutcome} if succeeds, or an {@link Exception} if fails.
+     */
+    @NonNull
+    public ListenableFuture<AdSelectionOutcome> selectAds(
+            @NonNull AdSelectionFromOutcomesConfig config) {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mAdSelectionManager.selectAds(
+                            config,
+                            mExecutor,
+                            new OutcomeReceiver<AdSelectionOutcome, Exception>() {
+                                @Override
+                                public void onResult(@NonNull AdSelectionOutcome result) {
+                                    completer.set(result);
+                                }
+
+                                @Override
+                                public void onError(@NonNull Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    return "Ad Selection from outcomes";
+                });
+    }
+
+    /**
      * Invokes the {@code reportImpression} method of {@link AdSelectionManager}, and returns a Void
      * future
      */
@@ -111,19 +143,12 @@ public class AdSelectionClient {
                 });
     }
 
-    /**
-     * Invokes the {@code reportInteraction} method of {@link AdSelectionManager}, and returns a
-     * Void future
-     *
-     * @hide
-     */
+    /** Invokes {@link AdSelectionManager#reportEvent} and returns a Void future */
     @NonNull
-    public ListenableFuture<Void> reportInteraction(@NonNull ReportInteractionRequest request) {
-        // TODO(b/274723533): Uncomment this after un-hiding
-/*
+    public ListenableFuture<Void> reportEvent(@NonNull ReportEventRequest request) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    mAdSelectionManager.reportInteraction(
+                    mAdSelectionManager.reportEvent(
                             request,
                             mExecutor,
                             new OutcomeReceiver<Object, Exception>() {
@@ -137,10 +162,8 @@ public class AdSelectionClient {
                                     completer.setException(error);
                                 }
                             });
-                    return "reportInteraction";
+                    return "reportEvent";
                 });
-*/
-        return CallbackToFutureAdapter.getFuture(completer -> null);
     }
 
     /**
@@ -152,8 +175,6 @@ public class AdSelectionClient {
     @NonNull
     public ListenableFuture<Void> updateAdCounterHistogram(
             @NonNull UpdateAdCounterHistogramRequest request) {
-        // TODO(b/221876775): Uncomment this when un-hiding frequency cap classes
-        /*
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mAdSelectionManager.updateAdCounterHistogram(
@@ -172,8 +193,6 @@ public class AdSelectionClient {
                             });
                     return "updateAdCounterHistogram";
                 });
-        */
-        return CallbackToFutureAdapter.getFuture(completer -> null);
     }
 
     /**
@@ -182,8 +201,81 @@ public class AdSelectionClient {
      */
     @NonNull
     public ListenableFuture<Void> setAppInstallAdvertisers(
-            @NonNull SetAppInstallAdvertisersRequest setAppInstallAdvertisersRequest) {
-        return CallbackToFutureAdapter.getFuture(completer -> null);
+            @NonNull SetAppInstallAdvertisersRequest request) {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mAdSelectionManager.setAppInstallAdvertisers(
+                            request,
+                            mExecutor,
+                            new OutcomeReceiver<Object, Exception>() {
+                                @Override
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(@NonNull Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    return "setAppInstallAdvertisers";
+                });
+    }
+
+    /**
+     * Invokes the {@getAdSelectionData} method of {@link AdSelectionManager}, and returns a
+     * GetAdSelectionDataOutcome future.
+     */
+    @NonNull
+    @SuppressLint("MissingPermission")
+    public ListenableFuture<GetAdSelectionDataOutcome> getAdSelectionData(
+            @NonNull GetAdSelectionDataRequest request) {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mAdSelectionManager.getAdSelectionData(
+                            request,
+                            mExecutor,
+                            new OutcomeReceiver<GetAdSelectionDataOutcome, Exception>() {
+                                @Override
+                                public void onResult(@NonNull GetAdSelectionDataOutcome result) {
+                                    completer.set(result);
+                                }
+
+                                @Override
+                                public void onError(@NonNull Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    return "getAdSelectionData";
+                });
+    }
+
+    /**
+     * Invokes the {@persistAdSelectionResult} method of {@link AdSelectionManager}, and returns a
+     * AdSelectionOutcome future.
+     */
+    @NonNull
+    @SuppressLint("MissingPermission")
+    public ListenableFuture<AdSelectionOutcome> persistAdSelectionResult(
+            @NonNull PersistAdSelectionResultRequest request) {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mAdSelectionManager.persistAdSelectionResult(
+                            request,
+                            mExecutor,
+                            new OutcomeReceiver<AdSelectionOutcome, Exception>() {
+                                @Override
+                                public void onResult(@NonNull AdSelectionOutcome result) {
+                                    completer.set(result);
+                                }
+
+                                @Override
+                                public void onError(@NonNull Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    return "persistAdSelectionResult";
+                });
     }
 
     /** Builder class. */

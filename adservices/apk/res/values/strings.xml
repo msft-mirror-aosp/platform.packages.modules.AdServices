@@ -15,6 +15,8 @@
 -->
 <!-- IMPORTANT! If adding new strings, then run generate_adservices_public_xml.py -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Name of the AdExtServices app that is deployed on S-. -->
+    <string name="app_name" translatable="false">Android Services Library</string>
     <!-- Title of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE] -->
     <string name="permlab_accessAdServicesTopics">access AdServices Topics API</string>
     <!-- Description of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE] -->
@@ -46,6 +48,11 @@
     <!-- Description of an application permission that lets it access Ad ID API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_adServicesAccessAdId">Allows an application to access Ad ID API.</string>
 
+    <!-- Title of an application permission that lets it access AdServices Cobalt Upload API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload">Access to AdServices Cobalt Upload API</string>
+    <!-- Description of an application permission that lets it access AdServices Cobalt Upload API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload">Allows an application to access AdServices Cobalt Upload API.</string>
+
     <!-- Title of an application permission that lets it access App Set ID API. [CHAR LIMIT=NONE] -->
     <string name="permlab_adServicesAccessAppSetId">Access to App Set ID API</string>
     <!-- Description of an application permission that lets it access App Set ID API. [CHAR LIMIT=NONE] -->
@@ -71,6 +78,11 @@
     <!-- Description of an application permission that lets it access AdServicesManager’s APIs. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesManager">Allows an application to access AdServicesManager’s APIs.</string>
 
+    <!-- Title of an application permission that allows calling updating AdId API via Common Service. [CHAR LIMIT=NONE] -->
+    <string name="permlab_updateAdservicesAdId">Access to AdService’s update AdId API.</string>
+    <!-- Description of an application permission that allows calling updating AdId API via Common Service.. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_updateAdservicesAdId">Allows an application to access AdService’s update AdId API.</string>
+
     <!-- Settings App UI strings -->
 
     <!--*****************************************************************************************-->
@@ -78,7 +90,7 @@
     <!--*****************************************************************************************-->
 
     <!-- Text for the label of the app. This will appear as the app name on notifications sent by this app. [CHAR LIMIT=NONE] -->
-    <string name="app_label">Android System</string>
+    <string name="app_label">Ad Privacy</string>
 
     <!-- EU Notification UI strings *************************************************************-->
     <!-- Text for the main title of the EU notification. [CHAR LIMIT=NONE] -->
@@ -573,6 +585,8 @@
     <string name="settingsUI_dialog_measurement_opt_out_title">Turn off ad measurement?</string>
     <!-- Text for speedbump dialog message of turning off switch of measurement.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_measurement_opt_out_message">All pending ad measurement reports will be deleted and no new reports will be generated or shared.</string>
+    <!-- Text for dialog button to acknowledge and dismiss dialog.[CHAR LIMIT=NONE] -->
+    <string name="settingsUI_dialog_acknowledge" translatable="false">@string/notificationUI_right_control_button_text</string>
     <!--    TODO (b/265360122): remove these strings of the speed bump of resetting ad measurement -->
     <!--    title for button to reset ads measurement. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_dialog_reset_measurement_title" translatable="false">Clear data for Ads measurement?</string>
@@ -620,7 +634,7 @@
     <!-- Title text of the topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_ga_title" translatable="false">@string/settingsUI_topics_ga_title</string>
     <!-- Sub title text of the topics view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_view_ga_subtitle">Topics of interest are based on the apps you’ve used recently, and are used by apps to show you personalized ads.\n\nYou can block topics you don’t want shared with apps. Android also auto-deletes topics regularly.</string>
+    <string name="settingsUI_topics_view_ga_subtitle">Topics of interest are based on the apps you’ve used recently, and are used by apps to show you personalized ads.\n\nYou can block topics you don’t want shared with apps. Android also auto-deletes topics regularly.\n\nWhile this feature can be turned on, you may not see a list of topics until this feature is fully available and apps start using it.</string>
     <!-- Text for the toggle in the topics page.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_switch_title">Allow ad topics</string>
     <!-- Text for the button to open blocked topics view. [CHAR LIMIT=NONE] -->
@@ -636,7 +650,7 @@
     <!-- Text for the toggle in the apps page.[CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_switch_title">Allow app-suggested ads</string>
     <!-- Sub title text of the apps view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_apps_view_ga_subtitle">Apps you use can determine what you like and then suggest ads on other apps.\n\nYou can block apps from making suggestions. Android also auto-deletes app-suggested data regularly.</string>
+    <string name="settingsUI_apps_view_ga_subtitle">Apps you use can determine what you like and then suggest ads on other apps.\n\nYou can block apps from making suggestions. Android also auto-deletes app-suggested data regularly.\n\nWhile this feature can be turned on, you may not see a list of apps until this feature is fully available and apps start using it.</string>
     <!-- Text for the button to open blocked apps fragment  [CHAR LIMIT=NONE] -->
     <string name="settingsUI_blocked_apps_ga_title">Apps you blocked</string>
     <!-- Text for the button to reset all apps. [CHAR LIMIT=NONE] -->
@@ -650,13 +664,13 @@
 
     <!-- U18 Notification Card *************************************************************-->
     <!-- Text for the title of the U18 notification card in notification center. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_u18_notification_title">New ads privacy feature available</string>
+    <string name="notificationUI_u18_notification_title">New ads privacy feature now available</string>
     <!-- Text for the content of the U18 notification card in notification center. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_u18_notification_content">Only very limited info is shared between apps to help measure ad performance</string>
 
     <!-- U18 Notification Activity *********************************************************-->
     <!-- Text for the title of the explainer for the ad measurement section of the U18 notification landing page. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_u18_header_title" translatable="false">@string/notificationUI_header_ga_title_v2</string>
+    <string name="notificationUI_u18_header_title" translatable="false">@string/notificationUI_u18_notification_title</string>
     <!-- Text for the body of the explainer for the ad measurement section of the U18 notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_u18_body1">We’re launching a new ad privacy feature called ad measurement. Android shares only very limited information between apps, such as when an ad was shown to you, to help apps measure the performance of ads.</string>
     <!-- Text for the body of the explainer for the ad measurement section of the U18 notification landing page. This also includes a link to a privacy policy page [CHAR LIMIT=NONE] -->
@@ -673,6 +687,128 @@
     <string name="settingsUI_u18_measurement_view_title" translatable="false">@string/settingsUI_main_view_info_text8</string>
     <!-- Text for the U18 explanation of ad measurement. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_u18_main_view_measurement_info">Apps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect only limited types of data.</string>
+
+    <!--*****************************************************************************************-->
+    <!-- PAS Strings ****************************************************************************-->
+    <!--*****************************************************************************************-->
+
+    <!-- PAS Notification Card ******************************************************************-->
+    <!-- Text for the title of the PAS notification card in notification center. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_notification_title">New ad privacy features</string>
+    <!-- Text for the content of the PAS notification card in notification center. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_notification_content">Get more choice over the ads you see while helping to protect your identity</string>
+
+    <!-- PAS Re-Notification Card ***************************************************************-->
+    <!-- Text for the title of the PAS re-notification card in notification center. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_re_notification_title">Updates to your ad privacy features</string>
+    <!-- Text for the content of the PAS re-notification card in notification center. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_re_notification_content">Get more choice over the ads you see while helping to protect your identity</string>
+
+    <!-- PAS Notification Activity **************************************************************-->
+    <!-- Text for the title of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_header_title" translatable="false">@string/notificationUI_pas_notification_title</string>
+    <!-- Text for the body of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_body_main">Android is expanding ad privacy features to restrict what apps can learn about you when they show you personalized ads.</string>
+    <!-- Text for the subtitle of the explainer for subsection 1 of the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_subtitle1" translatable="false">@string/settingsUI_apps_ga_title</string>
+    <!-- Text for the body of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_body1">Apps and their advertising partners can use your activity across other apps on this device to personalize ads while still helping keep your identity private and secure.</string>
+    <!-- Text for the button that expands an explainer section for additional info on the current section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_expand_button_text1">More about app-suggested ads</string>
+    <!-- Text for the subtitle of the explainer for subsection 2 of the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_subtitle2" translatable="false">@string/settingsUI_main_view_info_text8</string>
+    <!-- Text for the body of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_body2">Limited types of data are shared between apps to understand the performance of their ads, such as the time of day an ad was shown to you.</string>
+    <!-- Text for the button that expands an explainer section for additional info on the current section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_expand_button_text2">More about ad measurement</string>
+    <!-- Text at the end of PAS notification activity explaining changes can be made in privacy settings. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_text3" translatable="false">@string/notificationUI_you_can_change_in_privacy_settings</string>
+    <!-- Text for button to open Privacy Sandbox Settings from confirmation activity. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_left_control_button_text" translatable="false">@string/notificationUI_confirmation_left_control_button_text</string>
+    <!-- Text for button to acknowledge and dismiss PAS notification activity.  [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_right_control_button_text" translatable="false">@string/notificationUI_right_control_button_text</string>
+
+    <!-- PAS Re-Notification Activity ***********************************************************-->
+    <!-- Text for the title of the explainer for the PAS re-notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_renotify_header_title" translatable="false">@string/notificationUI_pas_re_notification_title</string>
+    <!-- Text for the body of the explainer for the PAS re-notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_renotify_body_main" translatable="false">@string/notificationUI_pas_body_main</string>
+    <!-- Text for the subtitle of the explainer for subsection 1 of the PAS re-notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_renotify_subtitle1" translatable="false">@string/settingsUI_apps_ga_title</string>
+    <!-- Text for the body of the explainer for the PAS re-notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_renotify_body1" translatable="false">@string/notificationUI_pas_body1</string>
+    <!-- Text for the button that expands an explainer section for additional info on the current section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_renotify_expand_button_text1" translatable="false">@string/notificationUI_pas_expand_button_text1</string>
+    <!-- Text for the subtitle of the explainer for subsection 2 of the PAS re-notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_renotify_subtitle2" translatable="false">@string/settingsUI_main_view_info_text8</string>
+    <!-- Text for the body of the explainer for the PAS re-notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_renotify_body2" translatable="false">@string/notificationUI_pas_body2</string>
+    <!-- Text for the button that expands an explainer section for additional info on the current section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_renotify_expand_button_text2" translatable="false">@string/notificationUI_pas_expand_button_text2</string>
+    <!-- Text at the end of PAS re-notification activity explaining changes can be made in privacy settings. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_renotify_text3" translatable="false">@string/notificationUI_you_can_change_in_privacy_settings</string>
+    <!-- Text for button to open Privacy Sandbox Settings from confirmation activity. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_renotify_left_control_button_text" translatable="false">@string/notificationUI_confirmation_left_control_button_text</string>
+    <!-- Text for button to acknowledge and dismiss PAS re-notification activity.  [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_renotify_right_control_button_text" translatable="false">@string/notificationUI_right_control_button_text</string>
+
+    <!-- PAS Combined Notification Activity & dropdown ***********************************************************-->
+    <!-- Text for the title of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_header_title" translatable="false">@string/notificationUI_pas_notification_title</string>
+    <!-- Text for the body 1 of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_body_1" translatable="false">@string/notificationUI_pas_body_main</string>
+    <!-- Text for the body 2 of the explainer for the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_body_2">Android notes topics of interest based on apps you’ve used recently. Also, apps and their advertising partners can use your activity across other apps on this device to personalize ads while still helping keep your identity private and secure.</string>
+    <!-- Text for explanation of ad measurement of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_body_3" translatable="false">@string/notificationUI_container3_ga_introduction</string>
+    <!-- Text for subtitle in the dropdown info about ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_subtitle1" translatable="false">@string/notificationUI_how_it_works_row_subtitle1</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_body1" translatable="false">@string/notificationUI_how_it_works_row_body1</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_body2">&#8226;&#160;&#160;Apps you use can also determine what you like based on your app activity. For example, if you regularly use cooking apps, you may see ads for grocery delivery services or related content in other apps.\n\nApps can securely store this information so that it can only be used by their advertising partners to personalize ads on other apps.</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_body3">Later, an app you use can ask for this information – either your ad topics or ads suggested by the apps you’ve used.</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_body4" translatable="false">@string/notificationUI_how_it_works_row_body5</string>
+    <!-- Text for subtitle in the dropdown info about ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_subtitle2" translatable="false">@string/notificationUI_how_it_works_subtitle2</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_combined_dropdown_body5">Apps you use can ask Android for information to help them measure the performance of their ads. Android helps protect your privacy by limiting the information apps can share with one another.</string>
+
+    <!-- PAS Additional Info Dropdown Sections **************************************************-->
+    <!-- Text for the subtitle of the explainer for a subsection of the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_msmt_dropdown_subtitle1">What data is used?</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_msmt_body1">Apps you use can ask Android for information that helps them measure the performance of their ads. Android helps protect your privacy by limiting the information apps can share with one another.</string>
+    <!-- Text for the subtitle of the explainer for a subsection of the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_msmt_dropdown_subtitle2">How is my identity protected?</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_msmt_body2">Android uses multiple privacy measures such as aggregation and noising data to limit the information apps can share with one another and help protect your identity.\n\nAd measurement data is also deleted regularly from your device.</string>
+    <!-- Text for the subtitle of the explainer for a subsection of the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_app_dropdown_subtitle1" translatable="false">@string/notificationUI_pas_msmt_dropdown_subtitle1</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_app_body1">Your app activity can be used to suggest ads.</string>
+    <!-- Text for the subtitle of the explainer for a subsection of the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_app_dropdown_subtitle2">How do apps use this data?</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_app_body2">Apps can securely store this information so that it can only be used by their advertising partners to personalize ads on other apps. For example, if you regularly use cooking apps, you may see ads for grocery delivery services or related content in other apps.</string>
+    <!-- Text for the subtitle of the explainer for a subsection of the PAS notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_app_dropdown_subtitle3">How can I manage this data?</string>
+    <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_app_body3">You can block specific apps from sharing your activity with advertising partners. You can reset or turn app-suggested ads off at any time in your privacy settings. Android also auto-deletes this data regularly.</string>
+    <!-- Link that takes user to additional info on ad privacy for Android. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_leanr_more_link"><a href="https://support.google.com/android?p=ad_privacy">Learn more about how Android helps protect your privacy</a></string>
+
+    <!-- PAS Settings Activity ******************************************************************-->
+    <!-- Title for the PAS apps view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_pas_apps_view_body_text">Apps and their advertising partners can use your activity across other apps on this device to personalize ads while still keeping information about you private and secure.\n\nFor example, if you regularly use cooking apps, you may see ads for grocery delivery services or related content in other apps.\n\nAndroid auto-deletes your activity regularly, but you can also block apps from sharing this information with their advertising partners.</string>
+    <!-- Text for the PAS footer explanation of apps/PAS API controls for ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_pas_apps_view_footer">It’s common for apps and their advertising partners to remember things you’re interested in to personalize your experience. Apps can securely store this information so that it can only be used by their advertising partners to show ads on other apps.\n\nYou can block an app from sharing your activity data with advertising partners. Android also auto-deletes shared activity data regularly, so an app you use again might reappear on this list.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the ad topics setting, your advertising ID settings, and whether the app you’re using personalized ads.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about app-suggested ads</a></string>
+    <!-- Text for the PAS footer explanation of measurement API controls for ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_pas_msmt_view_footer">Android uses multiple privacy measures such as aggregation and noising data to limit the information apps can share with one another and help protect your identity.\n\nYour browser may have a similar setting. If ad measurement is on for both Android and your browser, a company may be able to measure the effectiveness of an ad between apps you use and sites you visit. Your browsing history is kept private on your device.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about ad measurement</a></string>
+    <!-- Text for the PAS footer explanation of measurement API controls for ad privacy. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_pas_topics_view_footer">Android notes topics of interest based on the apps you’ve used in the last few weeks.\n\nLater, an app you use can ask Android for your topics to personalize the ads you see. Android shares up to 3 topics while protecting your identity and information about your app usage.\n\nAndroid auto-deletes topics regularly. As you continue using apps, a topic might reappear on the list. Or you can block topics you don’t want Android to share with apps.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the app-suggested ads setting, your advertising ID settings, and whether the app you’re using personalized ads.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about ad topics</a></string>
 
     <!--*****************************************************************************************-->
     <!-- Other Strings **************************************************************************-->
@@ -1581,4 +1717,7 @@
     <string name="topic10445">Travel Agencies &amp; Services</string>
     <!-- Text for the topic name for topic Travel Guides &amp; Travelogues. [CHAR LIMIT=NONE] -->
     <string name="topic10446">Travel Guides &amp; Travelogues</string>
+
+    <!-- Text for shell command activity -->
+    <string name="shell_command_activity_header" translatable="false">Shell Command Activity</string>
 </resources>

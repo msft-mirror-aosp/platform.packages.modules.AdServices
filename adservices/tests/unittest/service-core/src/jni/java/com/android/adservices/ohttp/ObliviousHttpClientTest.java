@@ -16,6 +16,8 @@
 
 package com.android.adservices.ohttp;
 
+import static com.android.adservices.ohttp.ObliviousHttpTestFixtures.getTestVectors;
+
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 
 import com.google.common.io.BaseEncoding;
@@ -27,13 +29,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ObliviousHttpClientTest {
-
-    private static final String SERVER_PUBLIC_KEY =
-            "6d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f012e76fcdcef62";
 
     @Test
     public void create_unsupportedAlgorithms_throwsError() throws InvalidKeySpecException {
@@ -51,50 +49,50 @@ public class ObliviousHttpClientTest {
     @Test
     public void create_supportedAlgorithms_clientCreatedSuccessfully()
             throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
-        OhttpTestVector testVector = getTestVectors().get(0);
-        ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.mKeyConfig);
+        ObliviousHttpTestFixtures.OhttpTestVector testVector = getTestVectors().get(0);
+        ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.keyConfig);
         Truth.assertThat(actualClient).isNotNull();
     }
 
     @Test
     public void create_supportedAlgorithms_kemIdSetCorrectly()
             throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
-        OhttpTestVector testVector = getTestVectors().get(0);
-        ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.mKeyConfig);
+        ObliviousHttpTestFixtures.OhttpTestVector testVector = getTestVectors().get(0);
+        ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.keyConfig);
         Assert.assertEquals(
                 actualClient.getHpkeAlgorithmSpec().kem().identifier(),
-                testVector.mKeyConfig.kemid());
+                testVector.keyConfig.kemId());
     }
 
     @Test
     public void create_supportedAlgorithms_kdfIdSetCorrectly()
             throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
-        OhttpTestVector testVector = getTestVectors().get(0);
-        ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.mKeyConfig);
+        ObliviousHttpTestFixtures.OhttpTestVector testVector = getTestVectors().get(0);
+        ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.keyConfig);
         Assert.assertEquals(
                 actualClient.getHpkeAlgorithmSpec().kdf().identifier(),
-                testVector.mKeyConfig.kdfId());
+                testVector.keyConfig.kdfId());
     }
 
     @Test
     public void create_supportedAlgorithms_aeadIdSetCorrectly()
             throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
-        OhttpTestVector testVector = getTestVectors().get(0);
-        ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.mKeyConfig);
+        ObliviousHttpTestFixtures.OhttpTestVector testVector = getTestVectors().get(0);
+        ObliviousHttpClient actualClient = ObliviousHttpClient.create(testVector.keyConfig);
         Assert.assertEquals(
                 actualClient.getHpkeAlgorithmSpec().aead().identifier(),
-                testVector.mKeyConfig.aeadId());
+                testVector.keyConfig.aeadId());
     }
 
     @Test
     public void createObliviousHttpRequest_testAllTestVectors()
             throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
-        List<OhttpTestVector> testVectors = getTestVectors();
-        for (OhttpTestVector testVector : testVectors) {
-            ObliviousHttpClient client = ObliviousHttpClient.create(testVector.mKeyConfig);
-            String plainText = testVector.mPlainText;
+        List<ObliviousHttpTestFixtures.OhttpTestVector> testVectors = getTestVectors();
+        for (ObliviousHttpTestFixtures.OhttpTestVector testVector : testVectors) {
+            ObliviousHttpClient client = ObliviousHttpClient.create(testVector.keyConfig);
+            String plainText = testVector.plainText;
             byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
-            byte[] seedBytes = testVector.mSeed.getBytes(StandardCharsets.US_ASCII);
+            byte[] seedBytes = testVector.seed.getBytes(StandardCharsets.US_ASCII);
 
             ObliviousHttpRequest request =
                     client.createObliviousHttpRequest(plainTextBytes, seedBytes);
@@ -103,154 +101,72 @@ public class ObliviousHttpClientTest {
                     BaseEncoding.base16()
                             .lowerCase()
                             .encode(request.requestContext().encapsulatedSharedSecret().getBytes()),
-                    testVector.mExpectedEnc);
+                    testVector.expectedEnc);
             Assert.assertEquals(
                     BaseEncoding.base16().lowerCase().encode(request.serialize()),
-                    testVector.mRequestCipherText);
+                    testVector.requestCipherText);
         }
     }
 
     @Test
     public void decryptObliviousHttpResponse_testAllTestVectors()
             throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
-        List<OhttpTestVector> testVectors = getTestVectors();
-        for (OhttpTestVector testVector : testVectors) {
-            ObliviousHttpClient client = ObliviousHttpClient.create(testVector.mKeyConfig);
-            String plainText = testVector.mPlainText;
+        List<ObliviousHttpTestFixtures.OhttpTestVector> testVectors = getTestVectors();
+        for (ObliviousHttpTestFixtures.OhttpTestVector testVector : testVectors) {
+            ObliviousHttpClient client = ObliviousHttpClient.create(testVector.keyConfig);
+            String plainText = testVector.plainText;
             byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
-            byte[] seedBytes = testVector.mSeed.getBytes(StandardCharsets.US_ASCII);
+            byte[] seedBytes = testVector.seed.getBytes(StandardCharsets.US_ASCII);
 
             ObliviousHttpRequest request =
                     client.createObliviousHttpRequest(plainTextBytes, seedBytes);
             byte[] decryptedResponse =
                     client.decryptObliviousHttpResponse(
-                            BaseEncoding.base16()
-                                    .lowerCase()
-                                    .decode(testVector.mResponseCipherText),
+                            BaseEncoding.base16().lowerCase().decode(testVector.responseCipherText),
                             request.requestContext());
 
             Assert.assertEquals(
-                    new String(decryptedResponse, "UTF-8"), testVector.mResponsePlainText);
+                    new String(decryptedResponse, "UTF-8"), testVector.responsePlainText);
         }
     }
 
-    private ObliviousHttpKeyConfig getKeyConfig(int keyIdentifier) throws InvalidKeySpecException {
-        byte[] keyId = new byte[1];
-        keyId[0] = (byte) (keyIdentifier & 0xFF);
-        String keyConfigHex =
-                BaseEncoding.base16().lowerCase().encode(keyId)
-                        + "0020"
-                        + SERVER_PUBLIC_KEY
-                        + "000400010002";
-        return ObliviousHttpKeyConfig.fromSerializedKeyConfig(
-                BaseEncoding.base16().lowerCase().decode(keyConfigHex));
-    }
+    @Test
+    public void decryptObliviousHttpResponse_withAuctionResult() throws Exception {
+        String keyConfigString =
+                "0400206d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f"
+                        + "012e76fcdcef62000400010002";
+        ObliviousHttpKeyConfig keyConfig =
+                ObliviousHttpKeyConfig.fromSerializedKeyConfig(
+                        BaseEncoding.base16().lowerCase().decode(keyConfigString));
+        ObliviousHttpClient client = ObliviousHttpClient.create(keyConfig);
 
-    private List<OhttpTestVector> getTestVectors() throws InvalidKeySpecException {
-        List<OhttpTestVector> testVectors = new ArrayList<>();
+        String plainText = "doesnt matter";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+        String seed = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
+        byte[] seedBytes = seed.getBytes(StandardCharsets.US_ASCII);
+        ObliviousHttpRequest request = client.createObliviousHttpRequest(plainTextBytes, seedBytes);
 
-        String expectedEnc = "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67";
-        String requestCipherText =
-                "040020000100021cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d"
-                        + "0b18cb9a672ef2da3b97acee493624b9959f0fc6df008a6f0701c923c5a60ed0ed2c34";
-        String responseCipherText =
-                "6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6cf623"
-                        + "a32dba30cdf1a011543bdd7e95ace60be30b029574dc3be9abee478df9";
-        testVectors.add(
-                new OhttpTestVector(
-                        /* keyId= */ 4,
-                        /* seed= */ "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
-                        expectedEnc,
-                        /* plainText= */ "test request 1",
-                        requestCipherText,
-                        /* responsePlainText= */ "test response 1",
-                        responseCipherText,
-                        getKeyConfig(4)));
+        String cipherText =
+                "6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c"
+                    + "f964b13dc827c6e6b50c6f3ad47c9e75f4fa938531478fcaf95c500b694ce422e083d94cde6a"
+                    + "5995d7f656868da9777fb32823f83652626ce837efc4a962069ab968e14206e83036a740767a"
+                    + "a83e0572c44dd6b9d5cf7f9e895d641f3c0c85626fb8ff253c692a3ba76bc900e1da038216e1"
+                    + "8ffabffc1d933683dd9621e29dab19173e261a6b16f73277448d43c814b2532515729ed89eca"
+                    + "7af797a80d3dd4c3965ee25f8b98c3e423e2ad12b27029c80358bb9f9d55b357ba88ec6e2aa"
+                    + "8eabaf004b0c6fcff364388e72f3bcadd39923f2f3d2bfe8e15beb474d53f78f7a74295e13e8"
+                    + "37256c756df";
+        byte[] decryptedResponse =
+                client.decryptObliviousHttpResponse(
+                        BaseEncoding.base16().lowerCase().decode(cipherText),
+                        request.requestContext());
 
-        expectedEnc = "4a4f8ccde198d66e99b4c014418a3223ce256c98900ae4a6811fd10f7eb84c2c";
-        requestCipherText =
-                "060020000100024a4f8ccde198d66e99b4c014418a3223ce256c98900ae4a6811fd1"
-                        + "0f7eb84c2cbf6ca81bd6badb87b1f44f6cd07b78a3f1653f810b3e7cc41c1876e2086a";
-        responseCipherText =
-                "6262626262626262626262626262626262626262626262626262626262626262a22d"
-                        + "516e6d6dcdc5766bdafa221535c6eeb5c760ec524ca8afda52446e176d";
-        testVectors.add(
-                new OhttpTestVector(
-                        /* keyId= */ 6,
-                        /* seed= */ "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-                        expectedEnc,
-                        /* plainText= */ "test request 2",
-                        requestCipherText,
-                        /* responsePlainText= */ "test response 2",
-                        responseCipherText,
-                        getKeyConfig(6)));
+        String expectedJsonString =
+                "{\"adRenderUrl\":\"test-376003777.com\","
+                        + "\"adComponentRenderUrls\":[],\"interestGroupName\":\"shoe\","
+                        + "\"interestGroupOwner\":\"https://bid1.com\",\"score\":233,"
+                        + "\"bid\":3,\"isChaff\":false,\"biddingGroups\":"
+                        + "{\"https://bid1.com\":{\"index\":[0]}}}";
 
-        expectedEnc = "ab4f197998fcc56cc6ed68c1d931af9bb522ec00743e181f7330915df4aa3176";
-        requestCipherText =
-                "07002000010002ab4f197998fcc56cc6ed68c1d931af9bb522ec00743e181f733091"
-                        + "5df4aa3176381c0cf6c37e022bed9cc4d5207f9655464c638648336863b09f3bab2f65";
-        responseCipherText =
-                "62626262626262626262626262626262626262626262626262626262626262621985"
-                        + "bad58d33af4bca24f175cec5b058c1f1318eabde53c48811c10c6125f8";
-        testVectors.add(
-                new OhttpTestVector(
-                        /* keyId= */ 7,
-                        /* seed= */ "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
-                        expectedEnc,
-                        /* plainText= */ "test request 3",
-                        requestCipherText,
-                        /* responsePlainText= */ "test response 3",
-                        responseCipherText,
-                        getKeyConfig(7)));
-
-        expectedEnc = "815fb6314405e007d04ed215c223d5cd4b799d07bb7189ad10dbf324ea534271";
-        requestCipherText =
-                "02002000010002815fb6314405e007d04ed215c223d5cd4b799d07bb7189ad10dbf3"
-                        + "24ea534271ae11a5b10b92b52da258ffd92d62567916f0dbf2bf00bf51c617ca4ee05a";
-        responseCipherText =
-                "6464646464646464646464646464646464646464646464646464646464646464b33e"
-                        + "dd2665c9200931580a82cc6ceca195ed390bad54a199ba2e72bc16ef9a";
-        testVectors.add(
-                new OhttpTestVector(
-                        /* keyId= */ 2,
-                        /* seed= */ "cccccccccccccccccccccccccccccccc",
-                        expectedEnc,
-                        /* plainText= */ "test request 4",
-                        requestCipherText,
-                        /* responsePlainText= */ "test response 4",
-                        responseCipherText,
-                        getKeyConfig(2)));
-
-        return testVectors;
-    }
-
-    private static class OhttpTestVector {
-        int mKeyId;
-        String mSeed;
-        String mExpectedEnc;
-        String mPlainText;
-        String mRequestCipherText;
-        String mResponsePlainText;
-        String mResponseCipherText;
-        ObliviousHttpKeyConfig mKeyConfig;
-
-        OhttpTestVector(
-                int keyId,
-                String seed,
-                String expectedEnc,
-                String plainText,
-                String requestCipherText,
-                String responsePlainText,
-                String responseCipherText,
-                ObliviousHttpKeyConfig keyConfig) {
-            this.mKeyId = keyId;
-            this.mSeed = seed;
-            this.mExpectedEnc = expectedEnc;
-            this.mPlainText = plainText;
-            this.mRequestCipherText = requestCipherText;
-            this.mResponsePlainText = responsePlainText;
-            this.mResponseCipherText = responseCipherText;
-            this.mKeyConfig = keyConfig;
-        }
+        Assert.assertEquals(new String(decryptedResponse, "UTF-8"), expectedJsonString);
     }
 }

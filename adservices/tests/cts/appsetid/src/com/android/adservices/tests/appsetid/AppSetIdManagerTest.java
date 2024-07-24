@@ -15,36 +15,32 @@
  */
 package com.android.adservices.tests.appsetid;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.appsetid.AppSetId;
 import android.adservices.appsetid.AppSetIdManager;
-import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.SystemProperties;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
-import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.common.OutcomeReceiverForTests;
+import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.shared.common.ServiceUnavailableException;
 import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -53,52 +49,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@RunWith(AndroidJUnit4.class)
-public class AppSetIdManagerTest {
+public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
+
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final float DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND = 5f;
-
-    private static String sPreviousAppAllowList;
-
-    @BeforeClass
-    public static void setupClass() {
-        if (!SdkLevel.isAtLeastT()) {
-            sPreviousAppAllowList =
-                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                            sContext.getPackageName());
-        }
-    }
 
     @Before
     public void setup() throws Exception {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        overrideAppSetIdKillSwitch(true);
         // Cool-off rate limiter in case it was initialized by another test
         TimeUnit.SECONDS.sleep(1);
-    }
-
-    @After
-    public void tearDown() {
-        overrideAppSetIdKillSwitch(false);
-    }
-
-    @AfterClass
-    public static void tearDownAfterClass() {
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(sPreviousAppAllowList);
-        }
-    }
-
-    // Override appsetid related kill switch to ignore the effect of actual PH values.
-    // If shouldOverride = true, override appsetid related kill switch to OFF to allow adservices
-    // If shouldOverride = false, override appsetid related kill switch to meaningless value so that
-    // PhFlags will use the default value.
-    private void overrideAppSetIdKillSwitch(boolean shouldOverride) {
-        String overrideString = shouldOverride ? "false" : "null";
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.appsetid_kill_switch " + overrideString);
     }
 
     @Test
@@ -117,6 +76,7 @@ public class AppSetIdManagerTest {
 
                     @Override
                     public void onError(Exception error) {
+                        Log.e(mTag, "Failed to get AppSet Id!", error);
                         Assert.fail();
                     }
                 };
@@ -153,6 +113,17 @@ public class AppSetIdManagerTest {
         if (executedInLessThanOneSec) {
             assertTrue(reachedLimit);
         }
+    }
+
+    @Test
+    @RequiresLowRamDevice
+    public void testAppSetIdManager_whenDeviceNotSupported() throws Exception {
+        AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
+        assertWithMessage("appSetIdManager").that(appSetIdManager).isNotNull();
+        OutcomeReceiverForTests<AppSetId> receiver = new OutcomeReceiverForTests<>();
+
+        appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, receiver);
+        receiver.assertFailure(ServiceUnavailableException.class);
     }
 
     private boolean getAppSetIdAndVerifyRateLimitReached(AppSetIdManager manager)

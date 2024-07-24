@@ -35,13 +35,13 @@ public class PermissionAccessResolverTest {
     @Test
     public void isAllowedNoPermissionFails() {
         mClassUnderTest = new PermissionAccessResolver(false);
-        assertFalse(mClassUnderTest.isAllowed(sContext));
+        assertFalse(mClassUnderTest.getAccessInfo(sContext).isAllowedAccess());
     }
 
     @Test
     public void isAllowedSuccess() {
         mClassUnderTest = new PermissionAccessResolver(true);
-        assertTrue(mClassUnderTest.isAllowed(sContext));
+        assertTrue(mClassUnderTest.getAccessInfo(sContext).isAllowedAccess());
     }
 
     @Test

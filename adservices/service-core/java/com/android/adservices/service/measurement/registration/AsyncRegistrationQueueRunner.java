@@ -16,34 +16,36 @@
 
 package com.android.adservices.service.measurement.registration;
 
-
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
-import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
+import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
-import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -64,30 +66,70 @@ public class AsyncRegistrationQueueRunner {
     private final ContentResolver mContentResolver;
     private final DebugReportApi mDebugReportApi;
     private final SourceNoiseHandler mSourceNoiseHandler;
+    private final Flags mFlags;
+    private final AdServicesLogger mLogger;
+    private final Context mContext;
 
     private AsyncRegistrationQueueRunner(Context context) {
+        mContext = context;
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mAsyncSourceFetcher = new AsyncSourceFetcher(context);
         mAsyncTriggerFetcher = new AsyncTriggerFetcher(context);
         mContentResolver = context.getContentResolver();
-        mDebugReportApi = new DebugReportApi(context, FlagsFactory.getFlags());
-        mSourceNoiseHandler = new SourceNoiseHandler(FlagsFactory.getFlags());
+        mFlags = FlagsFactory.getFlags();
+        mDebugReportApi = new DebugReportApi(context, mFlags);
+        mSourceNoiseHandler = new SourceNoiseHandler(mFlags);
+        mLogger = AdServicesLoggerImpl.getInstance();
     }
 
     @VisibleForTesting
     public AsyncRegistrationQueueRunner(
+            Context context,
             ContentResolver contentResolver,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
             DatastoreManager datastoreManager,
             DebugReportApi debugReportApi,
-            SourceNoiseHandler sourceNoiseHandler) {
+            SourceNoiseHandler sourceNoiseHandler,
+            Flags flags) {
+        this(
+                context,
+                contentResolver,
+                asyncSourceFetcher,
+                asyncTriggerFetcher,
+                datastoreManager,
+                debugReportApi,
+                sourceNoiseHandler,
+                flags,
+                AdServicesLoggerImpl.getInstance());
+    }
+
+    @VisibleForTesting
+    public AsyncRegistrationQueueRunner(
+            Context context,
+            ContentResolver contentResolver,
+            AsyncSourceFetcher asyncSourceFetcher,
+            AsyncTriggerFetcher asyncTriggerFetcher,
+            DatastoreManager datastoreManager,
+            DebugReportApi debugReportApi,
+            SourceNoiseHandler sourceNoiseHandler,
+            Flags flags,
+            AdServicesLogger logger) {
+        mContext = context;
         mAsyncSourceFetcher = asyncSourceFetcher;
         mAsyncTriggerFetcher = asyncTriggerFetcher;
         mDatastoreManager = datastoreManager;
         mContentResolver = contentResolver;
         mDebugReportApi = debugReportApi;
         mSourceNoiseHandler = sourceNoiseHandler;
+        mFlags = flags;
+        mLogger = logger;
+    }
+
+    enum ProcessingResult {
+        THREAD_INTERRUPTED,
+        SUCCESS_WITH_PENDING_RECORDS,
+        SUCCESS_ALL_RECORDS_PROCESSED
     }
 
     /**
@@ -104,44 +146,74 @@ public class AsyncRegistrationQueueRunner {
     }
 
     /** Processes records in the AsyncRegistration Queue table. */
-    public void runAsyncRegistrationQueueWorker() {
-        Flags flags = FlagsFactory.getFlags();
-        int recordServiceLimit = flags.getMeasurementMaxRegistrationsPerJobInvocation();
-        int retryLimit = flags.getMeasurementMaxRetriesPerRegistrationRequest();
+    public ProcessingResult runAsyncRegistrationQueueWorker() {
+        int recordServiceLimit = mFlags.getMeasurementMaxRegistrationsPerJobInvocation();
+        int retryLimit = mFlags.getMeasurementMaxRetriesPerRegistrationRequest();
 
         Set<Uri> failedOrigins = new HashSet<>();
         for (int i = 0; i < recordServiceLimit; i++) {
-            Optional<AsyncRegistration> optAsyncRegistration =
-                    mDatastoreManager.runInTransactionWithResult(
-                            (dao) ->
-                                    dao.fetchNextQueuedAsyncRegistration(
-                                            retryLimit, failedOrigins));
-
-            AsyncRegistration asyncRegistration;
-            if (optAsyncRegistration.isPresent()) {
-                asyncRegistration = optAsyncRegistration.get();
-            } else {
-                LogUtil.d("AsyncRegistrationQueueRunner: no async registration fetched.");
-                return;
+            // If the job service's requirements specified at runtime are no longer met, the job
+            // service will interrupt this thread.  If the thread has been interrupted, it will exit
+            // early.
+            if (Thread.currentThread().isInterrupted()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "AsyncRegistrationQueueRunner runAsyncRegistrationQueueWorker "
+                                        + "thread interrupted, exiting early.");
+                return ProcessingResult.THREAD_INTERRUPTED;
             }
 
-            if (asyncRegistration.isSourceRequest()) {
-                LogUtil.d("AsyncRegistrationQueueRunner:" + " processing source");
-                processSourceRegistration(asyncRegistration, failedOrigins);
-            } else {
-                LogUtil.d("AsyncRegistrationQueueRunner:" + " processing trigger");
-                processTriggerRegistration(asyncRegistration, failedOrigins);
+            AsyncRegistration asyncRegistration = fetchNext(retryLimit, failedOrigins);
+            if (null == asyncRegistration) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("AsyncRegistrationQueueRunner: no async registration fetched.");
+                return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
             }
+
+            processAsyncRecord(asyncRegistration, failedOrigins);
+        }
+
+        return hasPendingRecords(retryLimit, failedOrigins);
+    }
+
+    private AsyncRegistration fetchNext(int retryLimit, Set<Uri> failedOrigins) {
+        return mDatastoreManager
+                .runInTransactionWithResult(
+                        (dao) -> dao.fetchNextQueuedAsyncRegistration(retryLimit, failedOrigins))
+                .orElse(null);
+    }
+
+    private void processAsyncRecord(AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
+        if (asyncRegistration.isSourceRequest()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("AsyncRegistrationQueueRunner:" + " processing source");
+            processSourceRegistration(asyncRegistration, failedOrigins);
+        } else {
+            LoggerFactory.getMeasurementLogger()
+                    .d("AsyncRegistrationQueueRunner:" + " processing trigger");
+            processTriggerRegistration(asyncRegistration, failedOrigins);
+        }
+    }
+
+    private ProcessingResult hasPendingRecords(int retryLimit, Set<Uri> failedOrigins) {
+        AsyncRegistration asyncRegistration = fetchNext(retryLimit, failedOrigins);
+        if (null == asyncRegistration) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("AsyncRegistrationQueueRunner: no more pending async records.");
+            return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
+        } else {
+            return ProcessingResult.SUCCESS_WITH_PENDING_RECORDS;
         }
     }
 
     private void processSourceRegistration(
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         long startTime = asyncRegistration.getRequestTime();
         Optional<Source> resultSource =
-                mAsyncSourceFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirect);
+                mAsyncSourceFetcher.fetchSource(
+                        asyncRegistration, asyncFetchStatus, asyncRedirects);
         long endTime = System.currentTimeMillis();
         asyncFetchStatus.setRegistrationDelay(endTime - startTime);
 
@@ -153,7 +225,7 @@ public class AsyncRegistrationQueueRunner {
                                     storeSource(resultSource.get(), asyncRegistration, dao);
                                 }
                                 handleSuccess(
-                                        asyncRegistration, asyncFetchStatus, asyncRedirect, dao);
+                                        asyncRegistration, asyncFetchStatus, asyncRedirects, dao);
                             } else {
                                 handleFailure(
                                         asyncRegistration, asyncFetchStatus, failedOrigins, dao);
@@ -164,9 +236,10 @@ public class AsyncRegistrationQueueRunner {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.STORAGE_ERROR);
         }
 
+        asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
         FetcherUtil.emitHeaderMetrics(
-                FlagsFactory.getFlags(),
-                AdServicesLoggerImpl.getInstance(),
+                mFlags.getMaxResponseBasedRegistrationPayloadSizeBytes(),
+                mLogger,
                 asyncRegistration,
                 asyncFetchStatus);
     }
@@ -186,6 +259,15 @@ public class AsyncRegistrationQueueRunner {
                         ? EventSurfaceType.WEB
                         : EventSurfaceType.APP;
         if (isSourceAllowedToInsert(source, topOrigin, publisherType, dao, mDebugReportApi)) {
+            // If preinstall check is enabled and any app destinations are already installed,
+            // mark the source for deletion. Note the source is persisted so that the fake event
+            // report generated can be cleaned up after the source is deleted by
+            // DeleteExpiredJobService.
+            if (mFlags.getMeasurementEnablePreinstallCheck()
+                    && source.shouldDropSourceIfInstalled()
+                    && Applications.anyAppsInstalled(mContext, source.getAppDestinations())) {
+                source.setStatus(Source.Status.MARKED_TO_DELETE);
+            }
             insertSourceFromTransaction(source, dao);
             mDebugReportApi.scheduleSourceSuccessDebugReport(source, dao);
         }
@@ -194,10 +276,11 @@ public class AsyncRegistrationQueueRunner {
     private void processTriggerRegistration(
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
         long startTime = asyncRegistration.getRequestTime();
-        Optional<Trigger> resultTrigger = mAsyncTriggerFetcher.fetchTrigger(
-                asyncRegistration, asyncFetchStatus, asyncRedirect);
+        Optional<Trigger> resultTrigger =
+                mAsyncTriggerFetcher.fetchTrigger(
+                        asyncRegistration, asyncFetchStatus, asyncRedirects);
         long endTime = System.currentTimeMillis();
         asyncFetchStatus.setRegistrationDelay(endTime - startTime);
 
@@ -209,7 +292,7 @@ public class AsyncRegistrationQueueRunner {
                                     storeTrigger(resultTrigger.get(), dao);
                                 }
                                 handleSuccess(
-                                        asyncRegistration, asyncFetchStatus, asyncRedirect, dao);
+                                        asyncRegistration, asyncFetchStatus, asyncRedirects, dao);
                             } else {
                                 handleFailure(
                                         asyncRegistration, asyncFetchStatus, failedOrigins, dao);
@@ -220,11 +303,13 @@ public class AsyncRegistrationQueueRunner {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.STORAGE_ERROR);
         }
 
+        asyncFetchStatus.setRetryCount(Long.valueOf(asyncRegistration.getRetryCount()).intValue());
+        long headerSizeLimitBytes =
+                mFlags.getMeasurementEnableUpdateTriggerHeaderLimit()
+                        ? mFlags.getMaxTriggerRegistrationHeaderSizeBytes()
+                        : mFlags.getMaxResponseBasedRegistrationPayloadSizeBytes();
         FetcherUtil.emitHeaderMetrics(
-                FlagsFactory.getFlags(),
-                AdServicesLoggerImpl.getInstance(),
-                asyncRegistration,
-                asyncFetchStatus);
+                headerSizeLimitBytes, mLogger, asyncRegistration, asyncFetchStatus);
     }
 
     /** Visible only for testing. */
@@ -236,7 +321,8 @@ public class AsyncRegistrationQueueRunner {
             } catch (DatastoreException e) {
                 mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                         trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
-                LogUtil.e(e, "Insert trigger to DB error, generate trigger-unknown-error report");
+                LoggerFactory.getMeasurementLogger()
+                        .e(e, "Insert trigger to DB error, generate trigger-unknown-error report");
                 throw new DatastoreException(
                         "Insert trigger to DB error, generate trigger-unknown-error report");
             }
@@ -253,37 +339,53 @@ public class AsyncRegistrationQueueRunner {
             IMeasurementDao dao,
             DebugReportApi debugReportApi)
             throws DatastoreException {
-        long windowStartTime = source.getEventTime() - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS;
+        Flags flags = FlagsFactory.getFlags();
+        long windowStartTime =
+                source.getEventTime() - flags.getMeasurementRateLimitWindowMilliseconds();
         Optional<Uri> publisher = getTopLevelPublisher(topOrigin, publisherType);
         if (!publisher.isPresent()) {
-            LogUtil.d("insertSources: getTopLevelPublisher failed", topOrigin);
+            LoggerFactory.getMeasurementLogger()
+                    .d("insertSources: getTopLevelPublisher failed, topOrigin: %s", topOrigin);
             return false;
+        }
+        if (flags.getMeasurementEnableDestinationRateLimit()) {
+            if (source.getAppDestinations() != null
+                    && !sourceIsWithinTimeBasedDestinationLimits(
+                            debugReportApi,
+                            source,
+                            publisher.get(),
+                            publisherType,
+                            source.getEnrollmentId(),
+                            source.getAppDestinations(),
+                            EventSurfaceType.APP,
+                            source.getEventTime(),
+                            dao)) {
+                return false;
+            }
+
+            if (source.getWebDestinations() != null
+                    && !sourceIsWithinTimeBasedDestinationLimits(
+                            debugReportApi,
+                            source,
+                            publisher.get(),
+                            publisherType,
+                            source.getEnrollmentId(),
+                            source.getWebDestinations(),
+                            EventSurfaceType.WEB,
+                            source.getEventTime(),
+                            dao)) {
+                return false;
+            }
         }
         long numOfSourcesPerPublisher =
                 dao.getNumSourcesPerPublisher(
                         BaseUriExtractor.getBaseUri(topOrigin), publisherType);
-
-        if (numOfSourcesPerPublisher >= SystemHealthParams.getMaxSourcesPerPublisher()) {
-            LogUtil.d(
+        if (numOfSourcesPerPublisher >= flags.getMeasurementMaxSourcesPerPublisher()) {
+            LoggerFactory.getMeasurementLogger().d(
                     "insertSources: Max limit of %s sources for publisher - %s reached.",
-                    SystemHealthParams.getMaxSourcesPerPublisher(), publisher);
+                    flags.getMeasurementMaxSourcesPerPublisher(), publisher);
             debugReportApi.scheduleSourceStorageLimitDebugReport(
                     source, String.valueOf(numOfSourcesPerPublisher), dao);
-            return false;
-        }
-        int numOfOriginExcludingRegistrationOrigin =
-                dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
-                        source.getRegistrationOrigin(),
-                        publisher.get(),
-                        publisherType,
-                        source.getEnrollmentId(),
-                        source.getEventTime(),
-                        PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW);
-        if (numOfOriginExcludingRegistrationOrigin > 0) {
-            LogUtil.d(
-                    "insertSources: Max limit of 1 reporting origin for publisher - %s and"
-                            + " enrollment - %s reached.",
-                    publisher, source.getEnrollmentId());
             return false;
         }
         if (source.getAppDestinations() != null
@@ -315,6 +417,93 @@ public class AsyncRegistrationQueueRunner {
                         dao)) {
             return false;
         }
+        int numOfOriginExcludingRegistrationOrigin =
+                dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                        source.getRegistrationOrigin(),
+                        publisher.get(),
+                        publisherType,
+                        source.getEnrollmentId(),
+                        source.getEventTime(),
+                        flags.getMeasurementMinReportingOriginUpdateWindow());
+        if (numOfOriginExcludingRegistrationOrigin
+                >= flags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
+            debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "insertSources: Max limit of 1 reporting origin for publisher - %s and"
+                                    + " enrollment - %s reached.",
+                            publisher, source.getEnrollmentId());
+            return false;
+        }
+        if (!source.hasValidInformationGain(flags)) {
+            debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean sourceIsWithinTimeBasedDestinationLimits(
+            DebugReportApi debugReportApi,
+            Source source,
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            String enrollmentId,
+            List<Uri> destinations,
+            @EventSurfaceType int destinationType,
+            long requestTime,
+            IMeasurementDao dao)
+            throws DatastoreException {
+        long windowStartTime = source.getEventTime()
+                - FlagsFactory.getFlags().getMeasurementDestinationRateLimitWindow();
+        int destinationReportingCount =
+                dao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        publisher,
+                        publisherType,
+                        enrollmentId,
+                        destinations,
+                        destinationType,
+                        windowStartTime,
+                        requestTime);
+        // Same reporting-site destination limit
+        int maxDistinctReportingDestinations =
+                FlagsFactory.getFlags()
+                        .getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow();
+        boolean hitSameReportingRateLimit =
+                destinationReportingCount + destinations.size() > maxDistinctReportingDestinations;
+        if (hitSameReportingRateLimit) {
+            LoggerFactory.getMeasurementLogger().d(
+                    "AsyncRegistrationQueueRunner: "
+                            + (destinationType == EventSurfaceType.APP ? "App" : "Web")
+                            + " MaxDestPerPublisherXEnrollmentPerRateLimitWindow exceeded");
+        }
+        // Global destination limit
+        int destinationCount =
+                dao.countDistinctDestinationsPerPublisherPerRateLimitWindow(
+                        publisher,
+                        publisherType,
+                        destinations,
+                        destinationType,
+                        windowStartTime,
+                        requestTime);
+        int maxDistinctDestinations =
+                FlagsFactory.getFlags()
+                        .getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow();
+        boolean hitRateLimit = destinationCount + destinations.size() > maxDistinctDestinations;
+        if (hitRateLimit) {
+            LoggerFactory.getMeasurementLogger().d(
+                    "AsyncRegistrationQueueRunner: "
+                            + (destinationType == EventSurfaceType.APP ? "App" : "Web")
+                            + " MaxDestinationsPerPublisherPerRateLimitWindow exceeded");
+        }
+
+        if (hitSameReportingRateLimit) {
+            debugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+                    source, String.valueOf(maxDistinctReportingDestinations), dao);
+            return false;
+        } else if (hitRateLimit) {
+            debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
+            return false;
+        }
         return true;
     }
 
@@ -330,44 +519,58 @@ public class AsyncRegistrationQueueRunner {
             long requestTime,
             IMeasurementDao dao)
             throws DatastoreException {
-        int destinationCount =
-                dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
-                        publisher,
-                        publisherType,
-                        enrollmentId,
-                        destinations,
-                        destinationType,
-                        windowStartTime,
-                        requestTime);
-        int maxDistinctDestinations =
-                FlagsFactory.getFlags().getMeasurementMaxDistinctDestinationsInActiveSource();
+        Flags flags = FlagsFactory.getFlags();
+        int destinationCount;
+        if (flags.getMeasurementEnableDestinationRateLimit()) {
+            destinationCount =
+                    dao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                            publisher,
+                            publisherType,
+                            enrollmentId,
+                            destinations,
+                            destinationType,
+                            requestTime);
+        } else {
+            destinationCount =
+                    dao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                            publisher,
+                            publisherType,
+                            enrollmentId,
+                            destinations,
+                            destinationType,
+                            windowStartTime,
+                            requestTime);
+        }
+        int maxDistinctDestinations = flags.getMeasurementMaxDistinctDestinationsInActiveSource();
         if (destinationCount + destinations.size() > maxDistinctDestinations) {
-            LogUtil.d(
-                    "AsyncRegistrationQueueRunner: "
-                            + (destinationType == EventSurfaceType.APP ? "App" : "Web")
-                            + " destination count >= "
-                            + "MaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource");
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "AsyncRegistrationQueueRunner: "
+                                    + (destinationType == EventSurfaceType.APP ? "App" : "Web")
+                                    + " destination count >= MaxDistinctDestinations"
+                                    + "PerPublisherXEnrollmentInActiveSource");
             debugReportApi.scheduleSourceDestinationLimitDebugReport(
                     source, String.valueOf(maxDistinctDestinations), dao);
             return false;
         }
 
-        int destinationEnrollmentCount =
-                dao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
+        int distinctReportingOriginCount =
+                dao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         publisher,
                         publisherType,
                         destinations,
-                        enrollmentId,
+                        source.getRegistrationOrigin(),
                         windowStartTime,
                         requestTime);
-        if (destinationEnrollmentCount
-                >= PrivacyParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInSource()) {
+        if (distinctReportingOriginCount
+                >= flags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource()) {
             debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
-            LogUtil.d(
-                    "AsyncRegistrationQueueRunner: "
-                            + (destinationType == EventSurfaceType.APP ? "App" : "Web")
-                            + " enrollment count >= "
-                            + "MaxDistinctEnrollmentsPerPublisherXDestinationInSource");
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "AsyncRegistrationQueueRunner: "
+                                    + (destinationType == EventSurfaceType.APP ? "App" : "Web")
+                                    + " distinct reporting origin count >= "
+                                    + "MaxDistinctRepOrigPerPublisherXDestInSource exceeded");
             return false;
         }
         return true;
@@ -381,18 +584,19 @@ public class AsyncRegistrationQueueRunner {
                     dao.getNumTriggersPerDestination(
                             trigger.getAttributionDestination(), trigger.getDestinationType());
         } catch (DatastoreException e) {
-            LogUtil.e("Unable to fetch number of triggers currently registered per destination.");
+            LoggerFactory.getMeasurementLogger()
+                    .e("Unable to fetch number of triggers currently registered per destination.");
             return false;
         }
-
-        return triggerInsertedPerDestination < SystemHealthParams.getMaxTriggersPerDestination();
+        return triggerInsertedPerDestination
+                < FlagsFactory.getFlags().getMeasurementMaxTriggersPerDestination();
     }
 
-    private static AsyncRegistration createAsyncRegistrationFromRedirect(
-            AsyncRegistration asyncRegistration, Uri redirectUri) {
+    private AsyncRegistration createAsyncRegistrationFromRedirect(
+            AsyncRegistration asyncRegistration, AsyncRedirect asyncRedirect) {
         return new AsyncRegistration.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setRegistrationUri(redirectUri)
+                .setRegistrationUri(asyncRedirect.getUri())
                 .setWebDestination(asyncRegistration.getWebDestination())
                 .setOsDestination(asyncRegistration.getOsDestination())
                 .setRegistrant(asyncRegistration.getRegistrant())
@@ -405,16 +609,17 @@ public class AsyncRegistrationQueueRunner {
                 .setDebugKeyAllowed(asyncRegistration.getDebugKeyAllowed())
                 .setAdIdPermission(asyncRegistration.hasAdIdPermission())
                 .setRegistrationId(asyncRegistration.getRegistrationId())
+                .setRedirectBehavior(asyncRedirect.getRedirectBehavior())
                 .build();
     }
 
-    private List<EventReport> generateFakeEventReports(Source source) {
-        List<Source.FakeReport> fakeReports =
-                mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(source);
+    private List<EventReport> generateFakeEventReports(
+            String sourceId, Source source, List<Source.FakeReport> fakeReports) {
         return fakeReports.stream()
                 .map(
                         fakeReport ->
                                 new EventReport.Builder()
+                                        .setSourceId(sourceId)
                                         .setSourceEventId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
@@ -431,29 +636,30 @@ public class AsyncRegistrationQueueRunner {
                                         .setSourceType(source.getSourceType())
                                         .setStatus(EventReport.Status.PENDING)
                                         .setRandomizedTriggerRate(
-                                                mSourceNoiseHandler.getRandomAttributionProbability(
+                                                mSourceNoiseHandler.getRandomizedTriggerRate(
                                                         source))
                                         .setRegistrationOrigin(source.getRegistrationOrigin())
+                                        .setSourceDebugKey(getSourceDebugKeyForNoisedReport(source))
                                         .build())
                 .collect(Collectors.toList());
     }
 
     @VisibleForTesting
     void insertSourceFromTransaction(Source source, IMeasurementDao dao) throws DatastoreException {
-        List<EventReport> eventReports = generateFakeEventReports(source);
-        if (!eventReports.isEmpty()) {
+        List<Source.FakeReport> fakeReports =
+                mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(source);
+
+        final String sourceId = insertSource(source, dao);
+        if (sourceId == null) {
+            // Source was not saved due to DB size restrictions
+            return;
+        }
+
+        if (fakeReports != null) {
             mDebugReportApi.scheduleSourceNoisedDebugReport(source, dao);
-        }
-        try {
-            dao.insertSource(source);
-        } catch (DatastoreException e) {
-            mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, dao);
-            LogUtil.e(e, "Insert source to DB error, generate source-unknown-error report");
-            throw new DatastoreException(
-                    "Insert source to DB error, generate source-unknown-error report");
-        }
-        for (EventReport report : eventReports) {
-            dao.insertEventReport(report);
+            for (EventReport report : generateFakeEventReports(sourceId, source, fakeReports)) {
+                dao.insertEventReport(report);
+            }
         }
         // We want to account for attribution if fake report generation was considered
         // based on the probability. In that case the attribution mode will be NEVER
@@ -464,29 +670,43 @@ public class AsyncRegistrationQueueRunner {
             // non-null.
             if (!Objects.isNull(source.getAppDestinations())) {
                 for (Uri destination : source.getAppDestinations()) {
-                    dao.insertAttribution(createFakeAttributionRateLimit(source, destination));
+                    dao.insertAttribution(
+                            createFakeAttributionRateLimit(sourceId, source, destination));
                 }
             }
 
             if (!Objects.isNull(source.getWebDestinations())) {
                 for (Uri destination : source.getWebDestinations()) {
-                    dao.insertAttribution(createFakeAttributionRateLimit(source, destination));
+                    dao.insertAttribution(
+                            createFakeAttributionRateLimit(sourceId, source, destination));
                 }
             }
+        }
+    }
+
+    private String insertSource(Source source, IMeasurementDao dao) throws DatastoreException {
+        try {
+            return dao.insertSource(source);
+        } catch (DatastoreException e) {
+            mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, dao);
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Insert source to DB error, generate source-unknown-error report");
+            throw new DatastoreException(
+                    "Insert source to DB error, generate source-unknown-error report");
         }
     }
 
     private void handleSuccess(
             AsyncRegistration asyncRegistration,
             AsyncFetchStatus asyncFetchStatus,
-            AsyncRedirect asyncRedirect,
+            AsyncRedirects asyncRedirects,
             IMeasurementDao dao)
             throws DatastoreException {
         // deleteAsyncRegistration will throw an exception & rollback the transaction if the record
         // is already deleted. This can happen if both fallback & regular job are running at the
         // same time or if deletion job deletes the records.
         dao.deleteAsyncRegistration(asyncRegistration.getId());
-        if (asyncRedirect.getRedirects().isEmpty()) {
+        if (asyncRedirects.getRedirects().isEmpty()) {
             return;
         }
         int maxRedirects = FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects();
@@ -495,16 +715,17 @@ public class AsyncRegistrationQueueRunner {
                         asyncRegistration.getRegistrationId(),
                         DataType.REGISTRATION_REDIRECT_COUNT);
         int currentCount = keyValueData.getRegistrationRedirectCount();
-        if (currentCount == maxRedirects) {
+        if (currentCount >= maxRedirects) {
             asyncFetchStatus.setRedirectError(true);
             return;
         }
-        for (Uri uri : asyncRedirect.getRedirects()) {
+
+        for (AsyncRedirect asyncRedirect : asyncRedirects.getRedirects()) {
             if (currentCount >= maxRedirects) {
                 break;
             }
             dao.insertAsyncRegistration(
-                    createAsyncRegistrationFromRedirect(asyncRegistration, uri));
+                    createAsyncRegistrationFromRedirect(asyncRegistration, asyncRedirect));
             currentCount++;
         }
         keyValueData.setRegistrationRedirectCount(currentCount);
@@ -518,24 +739,26 @@ public class AsyncRegistrationQueueRunner {
             IMeasurementDao dao)
             throws DatastoreException {
         if (asyncFetchStatus.canRetry()) {
-            LogUtil.d(
-                    "AsyncRegistrationQueueRunner: "
-                            + "async "
-                            + asyncRegistration.getType()
-                            + " registration will be queued for retry "
-                            + "Fetch Status : "
-                            + asyncFetchStatus.getResponseStatus());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "AsyncRegistrationQueueRunner: "
+                                    + "async "
+                                    + asyncRegistration.getType()
+                                    + " registration will be queued for retry "
+                                    + "Fetch Status : "
+                                    + asyncFetchStatus.getResponseStatus());
             failedOrigins.add(BaseUriExtractor.getBaseUri(asyncRegistration.getRegistrationUri()));
             asyncRegistration.incrementRetryCount();
             dao.updateRetryCount(asyncRegistration);
         } else {
-            LogUtil.d(
-                    "AsyncRegistrationQueueRunner: "
-                            + "async "
-                            + asyncRegistration.getType()
-                            + " registration will not be queued for retry. "
-                            + "Fetch Status : "
-                            + asyncFetchStatus.getResponseStatus());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "AsyncRegistrationQueueRunner: "
+                                    + "async "
+                                    + asyncRegistration.getType()
+                                    + " registration will not be queued for retry. "
+                                    + "Fetch Status : "
+                                    + asyncFetchStatus.getResponseStatus());
             dao.deleteAsyncRegistration(asyncRegistration.getId());
         }
     }
@@ -547,7 +770,8 @@ public class AsyncRegistrationQueueRunner {
      * @param destination destination for attribution
      * @return a fake {@link Attribution}
      */
-    private Attribution createFakeAttributionRateLimit(Source source, Uri destination) {
+    private Attribution createFakeAttributionRateLimit(
+            String sourceId, Source source, Uri destination) {
         Optional<Uri> topLevelPublisher =
                 getTopLevelPublisher(source.getPublisher(), source.getPublisherType());
 
@@ -567,9 +791,11 @@ public class AsyncRegistrationQueueRunner {
                 .setEnrollmentId(source.getEnrollmentId())
                 .setTriggerTime(source.getEventTime())
                 .setRegistrant(source.getRegistrant().toString())
-                .setSourceId(source.getId())
+                .setSourceId(sourceId)
                 // Intentionally kept it as null because it's a fake attribution
                 .setTriggerId(null)
+                // Intentionally using source here since trigger is not available
+                .setRegistrationOrigin(source.getRegistrationOrigin())
                 .build();
     }
 
@@ -577,7 +803,7 @@ public class AsyncRegistrationQueueRunner {
             Uri topOrigin, @EventSurfaceType int publisherType) {
         return publisherType == EventSurfaceType.APP
                 ? Optional.of(topOrigin)
-                : Web.topPrivateDomainAndScheme(topOrigin);
+                : WebAddresses.topPrivateDomainAndScheme(topOrigin);
     }
 
     private Uri getPublisher(AsyncRegistration request) {
@@ -591,7 +817,18 @@ public class AsyncRegistrationQueueRunner {
                 contentProviderClient.insert(TriggerContentProvider.TRIGGER_URI, null);
             }
         } catch (RemoteException e) {
-            LogUtil.e(e, "Trigger Content Provider invocation failed.");
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Trigger Content Provider invocation failed.");
         }
+    }
+
+    @Nullable
+    private UnsignedLong getSourceDebugKeyForNoisedReport(@NonNull Source source) {
+        if ((source.getPublisherType() == EventSurfaceType.APP && source.hasAdIdPermission())
+                || (source.getPublisherType() == EventSurfaceType.WEB
+                        && source.hasArDebugPermission())) {
+            return source.getDebugKey();
+        }
+        return null;
     }
 }

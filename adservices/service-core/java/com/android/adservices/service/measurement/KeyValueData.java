@@ -31,7 +31,12 @@ import java.util.Objects;
  */
 public class KeyValueData {
     public enum DataType {
-        REGISTRATION_REDIRECT_COUNT
+        REGISTRATION_REDIRECT_COUNT,
+        EVENT_REPORT_RETRY_COUNT,
+        DEBUG_EVENT_REPORT_RETRY_COUNT,
+        AGGREGATE_REPORT_RETRY_COUNT,
+        DEBUG_AGGREGATE_REPORT_RETRY_COUNT,
+        DEBUG_REPORT_RETRY_COUNT
     }
 
     private DataType mDataType = null;
@@ -112,5 +117,31 @@ public class KeyValueData {
             throw new IllegalStateException("Illegal method call");
         }
         mValue = String.valueOf(value);
+    }
+
+    /** Set the Aggregate/Event/Debug Report Retry Count value */
+    public int getReportRetryCount() {
+        validateOfTypeReport();
+        if (mValue == null) {
+            // Default value is 0,
+            return 0;
+        }
+        return Integer.parseInt(mValue);
+    }
+
+    /** Set the Aggregate/Event/Debug Report Retry Count value */
+    public void setReportRetryCount(int value) {
+        validateOfTypeReport();
+        mValue = String.valueOf(value);
+    }
+
+    private void validateOfTypeReport() {
+        if (mDataType != DataType.AGGREGATE_REPORT_RETRY_COUNT
+                && mDataType != DataType.DEBUG_AGGREGATE_REPORT_RETRY_COUNT
+                && mDataType != DataType.EVENT_REPORT_RETRY_COUNT
+                && mDataType != DataType.DEBUG_EVENT_REPORT_RETRY_COUNT
+                && mDataType != DataType.DEBUG_REPORT_RETRY_COUNT) {
+            throw new IllegalStateException("Illegal method call");
+        }
     }
 }

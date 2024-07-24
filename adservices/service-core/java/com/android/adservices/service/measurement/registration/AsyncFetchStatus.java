@@ -16,9 +16,7 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import java.util.Optional;
 
-import javax.annotation.Nullable;
 
 /** POJO for storing source and trigger fetcher status */
 public class AsyncFetchStatus {
@@ -27,7 +25,8 @@ public class AsyncFetchStatus {
         SUCCESS,
         SERVER_UNAVAILABLE,
         NETWORK_ERROR,
-        INVALID_URL
+        INVALID_URL,
+        HEADER_SIZE_LIMIT_EXCEEDED
     }
 
     public enum EntityStatus {
@@ -45,16 +44,20 @@ public class AsyncFetchStatus {
 
     private EntityStatus mEntityStatus;
 
-    @Nullable private Long mResponseSize;
+    private long mResponseSize;
 
-    @Nullable private Long mRegistrationDelay;
+    private long mRegistrationDelay;
 
     private boolean mIsRedirectError;
+    private int mRetryCount;
+    private boolean mIsRedirectOnly;
 
     public AsyncFetchStatus() {
         mResponseStatus = ResponseStatus.UNKNOWN;
         mEntityStatus = EntityStatus.UNKNOWN;
         mIsRedirectError = false;
+        mResponseSize = 0L;
+        mRegistrationDelay = 0L;
     }
 
     /** Get the status of a communication with an Ad Tech server. */
@@ -83,22 +86,22 @@ public class AsyncFetchStatus {
     }
 
     /** Get response header size. */
-    public Optional<Long> getResponseSize() {
-        return Optional.ofNullable(mResponseSize);
+    public long getResponseSize() {
+        return mResponseSize;
     }
 
     /** Set response header size. */
-    public void setResponseSize(Long responseSize) {
+    public void setResponseSize(long responseSize) {
         mResponseSize = responseSize;
     }
 
     /** Get registration delay. */
-    public Optional<Long> getRegistrationDelay() {
-        return Optional.ofNullable(mRegistrationDelay);
+    public long getRegistrationDelay() {
+        return mRegistrationDelay;
     }
 
     /** Set registration delay. */
-    public void setRegistrationDelay(Long registrationDelay) {
+    public void setRegistrationDelay(long registrationDelay) {
         mRegistrationDelay = registrationDelay;
     }
 
@@ -110,6 +113,26 @@ public class AsyncFetchStatus {
     /** Set redirect error status. */
     public void setRedirectError(boolean isRedirectError) {
         mIsRedirectError = isRedirectError;
+    }
+
+    /** Get retry count. */
+    public int getRetryCount() {
+        return mRetryCount;
+    }
+
+    /** Set retry count. */
+    public void setRetryCount(int retryCount) {
+        mRetryCount = retryCount;
+    }
+
+    /** Get redirect status. */
+    public boolean isRedirectOnly() {
+        return mIsRedirectOnly;
+    }
+
+    /** Set redirect status. */
+    public void setRedirectOnlyStatus(boolean isRedirectOnly) {
+        mIsRedirectOnly = isRedirectOnly;
     }
 
     /** Returns true if request is successful. */

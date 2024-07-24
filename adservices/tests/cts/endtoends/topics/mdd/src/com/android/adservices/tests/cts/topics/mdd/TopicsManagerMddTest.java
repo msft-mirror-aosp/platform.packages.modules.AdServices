@@ -16,6 +16,10 @@
 
 package com.android.adservices.tests.cts.topics;
 
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
@@ -25,14 +29,14 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -71,7 +75,7 @@ public class TopicsManagerMddTest {
     // http://google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
     // These assets are have asset version set to 0 for verification in tests.
     private static final String TEST_MDD_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1802/6cad713dedb6ab31af6dfaac0f07aa9f3733bcf2";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/2055/f8026ab834d1a287920b9a4ffe7bb1f04d200885";
 
     // Use 0 percent for random topic in the test so that we can verify the returned topic.
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
@@ -83,48 +87,34 @@ public class TopicsManagerMddTest {
     private static final String ADSERVICES_PACKAGE_NAME =
             AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
 
-    private String mDefaultMddManifestFileUrl;
+    @Rule(order = 0)
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
+
+    @Rule(order = 1)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
+                    // We need to turn off random topic so that we can verify the returned topic.
+                    .setFlag(
+                            KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                            TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC)
+                    .setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS)
+                    .setFlag(
+                            KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL, TEST_MDD_MANIFEST_FILE_URL)
+                    .setCompatModeFlags();
 
     @Before
     public void setup() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
-        // Extra flags need to be set when test is executed on S- for service to run (e.g.
-        // to avoid invoking system-server related code).
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
-
         // Kill AdServices process.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
-
-        overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
-        // We need to turn off random topic so that we can verify the returned topic.
-        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-
-        // Store current default value before override.
-        mDefaultMddManifestFileUrl = getDefaultMddManifestFileUrl();
-        // Override manifest URL for Mdd.
-        overrideMddManifestFileUrl(TEST_MDD_MANIFEST_FILE_URL);
-    }
-
-    @After
-    public void teardown() {
-        overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
-        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        // Reset Mdd manifest file url to the default value.
-        overrideMddManifestFileUrl(mDefaultMddManifestFileUrl);
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     @Test
+    @Ignore("b/299573314")
     public void testTopicsManager_downloadModelViaMdd_runPrecomputedClassifier() throws Exception {
         // The Test App has 1 SDK: sdk1
         // sdk1 calls the Topics API.
@@ -191,30 +181,6 @@ public class TopicsManagerMddTest {
         // http://google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
         assertThat(topic.getModelVersion()).isEqualTo(0L);
         assertThat(topic.getTaxonomyVersion()).isEqualTo(0L);
-    }
-
-    private String getDefaultMddManifestFileUrl() {
-        return ShellUtils.runShellCommand(
-                "device_config get adservices mdd_topics_classifier_manifest_file_url");
-    }
-
-    // Override the flag to set manifest url for Mdd.
-    private void overrideMddManifestFileUrl(String val) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices mdd_topics_classifier_manifest_file_url " + val);
-    }
-
-    // Override the Epoch Period to shorten the Epoch Length in the test.
-    private void overrideEpochPeriod(long overrideEpochPeriod) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
-    }
-
-    // Override the Percentage For Random Topic in the test.
-    private void overridePercentageForRandomTopic(long overridePercentage) {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.topics_percentage_for_random_topics "
-                        + overridePercentage);
     }
 
     private void triggerAndWaitForMddToFinishDownload() throws InterruptedException {

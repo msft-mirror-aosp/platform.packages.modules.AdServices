@@ -16,37 +16,39 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlagsForTest;
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.computeClassifierAssetChecksum;
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.getTopTopics;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockRandom;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -92,22 +94,24 @@ public class CommonClassifierHelperTest {
     private ImmutableMap<String, ImmutableMap<String, String>> productionClassifierAssetsMetadata;
     private long mProductionTaxonomyVersion;
     private long mProductionModelVersion;
-    private MockitoSession mMockitoSession = null;
 
     @Mock SynchronousFileStorage mMockFileStorage;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
     @Mock AdServicesLogger mLogger;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
+    @Rule(order = 1)
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .spyStatic(ErrorLogUtil.class)
+                    .build();
+
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .initMocks(this)
-                        .startMocking();
-
-        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        mockGetFlagsForTest();
 
         mTestModelManager =
                 new ModelManager(
@@ -131,6 +135,8 @@ public class CommonClassifierHelperTest {
                         mMockFileStorage,
                         mMockDownloadedFiles);
 
+        doNothingOnErrorLogUtilError();
+
         testLabels = mTestModelManager.retrieveLabels();
         testClassifierAssetsMetadata = mTestModelManager.retrieveClassifierAssetsMetadata();
         mTestTaxonomyVersion =
@@ -153,13 +159,6 @@ public class CommonClassifierHelperTest {
                         productionClassifierAssetsMetadata
                                 .get("tflite_model")
                                 .get("asset_version"));
-    }
-
-    @After
-    public void tearDown() {
-        if (mMockitoSession != null) {
-            mMockitoSession.finishMocking();
-        }
     }
 
     @Test
@@ -578,7 +577,7 @@ public class CommonClassifierHelperTest {
         assertThat(
                         CommonClassifierHelper.getBundledModelBuildId(
                                 sContext, PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH))
-                .isEqualTo(1800);
+                .isEqualTo(1986);
         // Verify test model build_id.
         assertThat(
                         CommonClassifierHelper.getBundledModelBuildId(

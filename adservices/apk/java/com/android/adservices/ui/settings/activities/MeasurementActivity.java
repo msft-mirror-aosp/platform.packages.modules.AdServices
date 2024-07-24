@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+
 import android.os.Build;
 import android.os.Bundle;
 
@@ -22,6 +24,7 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.ui.settings.activitydelegates.MeasurementActivityActionDelegate;
 import com.android.adservices.ui.settings.delegates.MeasurementActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
@@ -40,6 +43,32 @@ public class MeasurementActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!isUxStatesReady(this)) {
+            initFragment();
+        }
+    }
+
+    @Override
+    public void initBeta() {
+        initActivity();
+    }
+
+    @Override
+    public void initGA() {
+        initActivity();
+    }
+
+    @Override
+    public void initU18() {
+        initActivity();
+    }
+
+    @Override
+    public void initRvc() {
+        initU18();
+    }
+
+    private void initFragment() {
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()
                 .beginTransaction()
@@ -49,21 +78,15 @@ public class MeasurementActivity extends AdServicesBaseActivity {
                         null)
                 .setReorderingAllowed(true)
                 .commit();
-        initActionDelegate();
-    }
-
-    @Override
-    public void initBeta() {}
-
-    @Override
-    public void initGA() {}
-
-    @Override
-    public void initU18() {}
-
-    private void initActionDelegate() {
         mActionDelegate =
                 new MeasurementActionDelegate(
                         this, new ViewModelProvider(this).get(MeasurementViewModel.class));
+    }
+
+    private void initActivity() {
+        setContentView(R.layout.measurement_activity);
+        // no need to store since not using
+        new MeasurementActivityActionDelegate(
+                this, new ViewModelProvider(this).get(MeasurementViewModel.class));
     }
 }

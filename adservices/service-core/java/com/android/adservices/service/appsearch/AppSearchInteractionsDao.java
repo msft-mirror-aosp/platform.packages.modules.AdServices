@@ -192,7 +192,8 @@ class AppSearchInteractionsDao extends AppSearchDao {
     public static PrivacySandboxFeatureType getPrivacySandboxFeatureType(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(userId);
@@ -200,7 +201,12 @@ class AppSearchInteractionsDao extends AppSearchDao {
         String query = getQuery(userId, API_TYPE_PRIVACY_SANDBOX_FEATURE);
         AppSearchInteractionsDao dao =
                 AppSearchDao.readConsentData(
-                        AppSearchInteractionsDao.class, searchSession, executor, NAMESPACE, query);
+                        AppSearchInteractionsDao.class,
+                        searchSession,
+                        executor,
+                        NAMESPACE,
+                        query,
+                        adServicesPackageName);
         LogUtil.d("AppSearch interactions data read: " + dao + " [ query: " + query + "]");
         if (dao == null) {
             return PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED;
@@ -219,7 +225,8 @@ class AppSearchInteractionsDao extends AppSearchDao {
     public static @ConsentManager.UserManualInteraction int getManualInteractions(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
-            @NonNull String userId) {
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(userId);
@@ -227,7 +234,12 @@ class AppSearchInteractionsDao extends AppSearchDao {
         String query = getQuery(userId, API_TYPE_INTERACTIONS);
         AppSearchInteractionsDao dao =
                 AppSearchDao.readConsentData(
-                        AppSearchInteractionsDao.class, searchSession, executor, NAMESPACE, query);
+                        AppSearchInteractionsDao.class,
+                        searchSession,
+                        executor,
+                        NAMESPACE,
+                        query,
+                        adServicesPackageName);
         LogUtil.d("AppSearch interactions data read: " + dao + " [ query: " + query + "]");
         if (dao == null) {
             return ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;

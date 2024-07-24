@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_DEFAULT;
+
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
@@ -31,7 +33,6 @@ import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.DBAdData;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.internal.util.Preconditions;
 
@@ -48,13 +49,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * POJO represents a Custom Audience Database Entity.
- * TODO: Align on the class naming strategy. (b/228095626)
+ * POJO represents a Custom Audience Database Entity. TODO: Align on the class naming strategy.
+ * (b/228095626)
  */
 @Entity(
         tableName = DBCustomAudience.TABLE_NAME,
-        primaryKeys = {"owner", "buyer", "name"}
-)
+        primaryKeys = {"owner", "buyer", "name"})
 @TypeConverters({DBCustomAudience.Converters.class})
 public class DBCustomAudience {
     public static final String TABLE_NAME = "custom_audience";
@@ -104,6 +104,13 @@ public class DBCustomAudience {
     @Nullable
     private final List<DBAdData> mAds;
 
+    @ColumnInfo(name = "debuggable", defaultValue = "0")
+    private final boolean mDebuggable;
+
+    @ColumnInfo(name = "auction_server_request_flags", defaultValue = "0")
+    @CustomAudience.AuctionServerRequestFlag
+    private final int mAuctionServerRequestFlags;
+
     public DBCustomAudience(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
@@ -115,13 +122,16 @@ public class DBCustomAudience {
             @Nullable AdSelectionSignals userBiddingSignals,
             @Nullable DBTrustedBiddingData trustedBiddingData,
             @NonNull Uri biddingLogicUri,
-            @Nullable List<DBAdData> ads) {
+            @Nullable List<DBAdData> ads,
+            boolean debuggable,
+            @CustomAudience.AuctionServerRequestFlag int auctionServerRequestFlags) {
         Preconditions.checkStringNotEmpty(owner, "Owner must be provided");
         Objects.requireNonNull(buyer, "Buyer must be provided.");
         Preconditions.checkStringNotEmpty(name, "Name must be provided");
         Objects.requireNonNull(expirationTime, "Expiration time must be provided.");
         Objects.requireNonNull(creationTime, "Creation time must be provided.");
-        Objects.requireNonNull(lastAdsAndBiddingDataUpdatedTime,
+        Objects.requireNonNull(
+                lastAdsAndBiddingDataUpdatedTime,
                 "Last ads and bidding data updated time must be provided.");
         Objects.requireNonNull(biddingLogicUri, "Bidding logic uri must be provided.");
 
@@ -136,6 +146,8 @@ public class DBCustomAudience {
         mTrustedBiddingData = trustedBiddingData;
         mBiddingLogicUri = biddingLogicUri;
         mAds = ads;
+        mDebuggable = debuggable;
+        mAuctionServerRequestFlags = auctionServerRequestFlags;
     }
 
     /**
@@ -146,7 +158,9 @@ public class DBCustomAudience {
      *     owner app identifier
      * @param currentTime the timestamp when calling the method
      * @param defaultExpireIn the default expiration from activation
-     * @param flags adservices flags
+     * @param adDataConversionStrategy Strategy to convert ads from DB
+     * @param debuggable If the CA was created in a debuggable context
+     * @param auctionServerRequestFlagsEnabled If auction server request flags are enabled.
      * @return storage model
      */
     @NonNull
@@ -155,17 +169,19 @@ public class DBCustomAudience {
             @NonNull String callerPackageName,
             @NonNull Instant currentTime,
             @NonNull Duration defaultExpireIn,
-            @NonNull Flags flags) {
+            @NonNull AdDataConversionStrategy adDataConversionStrategy,
+            boolean debuggable,
+            boolean auctionServerRequestFlagsEnabled) {
         Objects.requireNonNull(parcelable);
         Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(currentTime);
         Objects.requireNonNull(defaultExpireIn);
-        Objects.requireNonNull(flags);
+        Objects.requireNonNull(adDataConversionStrategy);
 
         // Setting default value to be currentTime.
         // Make it easier at query for activated CAs.
-        Instant activationTime = Optional.ofNullable(parcelable.getActivationTime()).orElse(
-                currentTime);
+        Instant activationTime =
+                Optional.ofNullable(parcelable.getActivationTime()).orElse(currentTime);
         if (activationTime.isBefore(currentTime)) {
             activationTime = currentTime;
         }
@@ -174,13 +190,12 @@ public class DBCustomAudience {
                 Optional.ofNullable(parcelable.getExpirationTime())
                         .orElse(activationTime.plus(defaultExpireIn));
 
-        Instant lastAdsAndBiddingDataUpdatedTime = parcelable.getAds().isEmpty()
-                || parcelable.getTrustedBiddingData() == null
-                || parcelable.getUserBiddingSignals() == null
-                ? Instant.EPOCH : currentTime;
-        AdDataConversionStrategy adDataConversionStrategy =
-                AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                        flags.getFledgeAdSelectionFilteringEnabled());
+        Instant lastAdsAndBiddingDataUpdatedTime =
+                parcelable.getAds().isEmpty()
+                                || parcelable.getTrustedBiddingData() == null
+                                || parcelable.getUserBiddingSignals() == null
+                        ? Instant.EPOCH
+                        : currentTime;
 
         return new DBCustomAudience.Builder()
                 .setName(parcelable.getName())
@@ -193,16 +208,27 @@ public class DBCustomAudience {
                 .setBiddingLogicUri(parcelable.getBiddingLogicUri())
                 .setTrustedBiddingData(
                         DBTrustedBiddingData.fromServiceObject(parcelable.getTrustedBiddingData()))
+                .setDebuggable(debuggable)
                 .setAds(
                         parcelable.getAds().isEmpty()
                                 ? null
                                 : parcelable.getAds().stream()
-                                        .map(adDataConversionStrategy::fromServiceObject)
+                                        .map(
+                                                parcelableAd ->
+                                                        adDataConversionStrategy
+                                                                .fromServiceObject(parcelableAd)
+                                                                .build())
                                         .collect(Collectors.toList()))
                 .setUserBiddingSignals(parcelable.getUserBiddingSignals())
+                .setAuctionServerRequestFlags(
+                        auctionServerRequestFlagsEnabled
+                                ? parcelable.getAuctionServerRequestFlags()
+                                : FLAG_AUCTION_SERVER_REQUEST_DEFAULT)
                 .build();
     }
 
+    // TODO(b/321092996) Update this once {@link CustomAudienceUpdatableData} is updated with the
+    // new field
     /**
      * Creates a copy of the current {@link DBCustomAudience} object updated with data from a {@link
      * CustomAudienceUpdatableData} object.
@@ -257,6 +283,7 @@ public class DBCustomAudience {
     /**
      * Identifies the CustomAudience within the set of ones created for this combination of owner
      * and buyer.
+     *
      * <p>Max length: 200 bytes
      */
     @NonNull
@@ -267,7 +294,9 @@ public class DBCustomAudience {
     /**
      * Defines until when the CA end to be effective, this can be used to remove a user from this CA
      * only after a defined period of time.
+     *
      * <p>Default to be 60 days after activation(Pending product confirm).
+     *
      * <p>Should be within 1 year since activation.
      */
     @NonNull
@@ -279,6 +308,7 @@ public class DBCustomAudience {
      * Defines when the CA starts to be effective, this can be used to enroll a user to this CA only
      * after a defined interval (for example to track the fact that the user has not been using the
      * app in the last n days).
+     *
      * <p>Should be within 1 year since creation.
      */
     @NonNull
@@ -286,17 +316,13 @@ public class DBCustomAudience {
         return mActivationTime;
     }
 
-    /**
-     * Returns the time the CA was created.
-     */
+    /** Returns the time the CA was created. */
     @NonNull
     public Instant getCreationTime() {
         return mCreationTime;
     }
 
-    /**
-     * Returns the time the CA ads and bidding data was last updated.
-     */
+    /** Returns the time the CA ads and bidding data was last updated. */
     @NonNull
     public Instant getLastAdsAndBiddingDataUpdatedTime() {
         return mLastAdsAndBiddingDataUpdatedTime;
@@ -327,12 +353,21 @@ public class DBCustomAudience {
         return mBiddingLogicUri;
     }
 
-    /**
-     * Returns Ads metadata that used to render an ad.
-     */
+    /** Returns Ads metadata that used to render an ad. */
     @Nullable
     public List<DBAdData> getAds() {
         return mAds;
+    }
+
+    /** Returns if CA was created in a debuggable context. */
+    public boolean isDebuggable() {
+        return mDebuggable;
+    }
+
+    /** Returns the bitfield of auction server request flags. */
+    @CustomAudience.AuctionServerRequestFlag
+    public int getAuctionServerRequestFlags() {
+        return mAuctionServerRequestFlags;
     }
 
     @Override
@@ -350,7 +385,8 @@ public class DBCustomAudience {
                 && Objects.equals(mUserBiddingSignals, that.mUserBiddingSignals)
                 && Objects.equals(mTrustedBiddingData, that.mTrustedBiddingData)
                 && mBiddingLogicUri.equals(that.mBiddingLogicUri)
-                && Objects.equals(mAds, that.mAds);
+                && Objects.equals(mAds, that.mAds)
+                && mAuctionServerRequestFlags == that.mAuctionServerRequestFlags;
     }
 
     @Override
@@ -366,7 +402,31 @@ public class DBCustomAudience {
                 mUserBiddingSignals,
                 mTrustedBiddingData,
                 mBiddingLogicUri,
-                mAds);
+                mAds,
+                mDebuggable,
+                mAuctionServerRequestFlags);
+    }
+
+    /**
+     * @return a new builder instance created from this object's cloned data
+     * @hide
+     */
+    @NonNull
+    public DBCustomAudience.Builder cloneToBuilder() {
+        return new DBCustomAudience.Builder()
+                .setOwner(this.mOwner)
+                .setBuyer(this.mBuyer)
+                .setName(this.mName)
+                .setExpirationTime(this.mExpirationTime)
+                .setActivationTime(this.mActivationTime)
+                .setCreationTime(this.mCreationTime)
+                .setLastAdsAndBiddingDataUpdatedTime(this.mLastAdsAndBiddingDataUpdatedTime)
+                .setUserBiddingSignals(this.mUserBiddingSignals)
+                .setTrustedBiddingData(this.mTrustedBiddingData)
+                .setBiddingLogicUri(this.mBiddingLogicUri)
+                .setAds(this.mAds)
+                .setDebuggable(this.mDebuggable)
+                .setAuctionServerRequestFlags(this.mAuctionServerRequestFlags);
     }
 
     @Override
@@ -396,12 +456,14 @@ public class DBCustomAudience {
                 + mBiddingLogicUri
                 + ", mAds="
                 + mAds
+                + ", mDebuggable="
+                + mDebuggable
+                + ", mAuctionServerRequestFlags="
+                + mAuctionServerRequestFlags
                 + '}';
     }
 
-    /**
-     * Builder to construct a {@link DBCustomAudience}.
-     */
+    /** Builder to construct a {@link DBCustomAudience}. */
     public static final class Builder {
         private String mOwner;
         private AdTechIdentifier mBuyer;
@@ -414,9 +476,10 @@ public class DBCustomAudience {
         private DBTrustedBiddingData mTrustedBiddingData;
         private Uri mBiddingLogicUri;
         private List<DBAdData> mAds;
+        private boolean mDebuggable;
+        @CustomAudience.AuctionServerRequestFlag private int mAuctionServerRequestFlags;
 
-        public Builder() {
-        }
+        public Builder() {}
 
         public Builder(@NonNull DBCustomAudience customAudience) {
             Objects.requireNonNull(customAudience, "Custom audience must not be null.");
@@ -433,6 +496,8 @@ public class DBCustomAudience {
             mTrustedBiddingData = customAudience.getTrustedBiddingData();
             mBiddingLogicUri = customAudience.getBiddingLogicUri();
             mAds = customAudience.getAds();
+            mDebuggable = customAudience.isDebuggable();
+            mAuctionServerRequestFlags = customAudience.getAuctionServerRequestFlags();
         }
 
         /** See {@link #getOwner()} for detail. */
@@ -447,41 +512,31 @@ public class DBCustomAudience {
             return this;
         }
 
-        /**
-         * See {@link #getName()} for detail.
-         */
+        /** See {@link #getName()} for detail. */
         public Builder setName(String name) {
             mName = name;
             return this;
         }
 
-        /**
-         * See {@link #getExpirationTime()} for detail.
-         */
+        /** See {@link #getExpirationTime()} for detail. */
         public Builder setExpirationTime(Instant expirationTime) {
             mExpirationTime = expirationTime;
             return this;
         }
 
-        /**
-         * See {@link #getActivationTime()} for detail.
-         */
+        /** See {@link #getActivationTime()} for detail. */
         public Builder setActivationTime(Instant activationTime) {
             mActivationTime = activationTime;
             return this;
         }
 
-        /**
-         * See {@link #getCreationTime()} for detail.
-         */
+        /** See {@link #getCreationTime()} for detail. */
         public Builder setCreationTime(Instant creationTime) {
             mCreationTime = creationTime;
             return this;
         }
 
-        /**
-         * See {@link #getLastAdsAndBiddingDataUpdatedTime()} for detail.
-         */
+        /** See {@link #getLastAdsAndBiddingDataUpdatedTime()} for detail. */
         public Builder setLastAdsAndBiddingDataUpdatedTime(
                 Instant lastAdsAndBiddingDataUpdatedTime) {
             mLastAdsAndBiddingDataUpdatedTime = lastAdsAndBiddingDataUpdatedTime;
@@ -494,9 +549,7 @@ public class DBCustomAudience {
             return this;
         }
 
-        /**
-         * See {@link #getTrustedBiddingData()} for detail.
-         */
+        /** See {@link #getTrustedBiddingData()} for detail. */
         public Builder setTrustedBiddingData(DBTrustedBiddingData trustedBiddingData) {
             mTrustedBiddingData = trustedBiddingData;
             return this;
@@ -508,11 +561,23 @@ public class DBCustomAudience {
             return this;
         }
 
-        /**
-         * See {@link #getAds()} for detail.
-         */
+        /** See {@link #getAds()} for detail. */
         public Builder setAds(List<DBAdData> ads) {
             mAds = ads;
+            return this;
+        }
+
+        /** See {@link #isDebuggable()} for detail. */
+        public Builder setDebuggable(boolean debuggable) {
+            mDebuggable = debuggable;
+            return this;
+        }
+
+        /** Sets the bitfield of auction server request flags. */
+        @NonNull
+        public Builder setAuctionServerRequestFlags(
+                @CustomAudience.AuctionServerRequestFlag int auctionServerRequestFlags) {
+            mAuctionServerRequestFlags = auctionServerRequestFlags;
             return this;
         }
 
@@ -533,7 +598,9 @@ public class DBCustomAudience {
                     mUserBiddingSignals,
                     mTrustedBiddingData,
                     mBiddingLogicUri,
-                    mAds);
+                    mAds,
+                    mDebuggable,
+                    mAuctionServerRequestFlags);
         }
     }
 
@@ -550,9 +617,10 @@ public class DBCustomAudience {
 
         private final AdDataConversionStrategy mAdDataConversionStrategy;
 
-        public Converters(boolean filteringEnabled) {
+        public Converters(boolean filteringEnabled, boolean adRenderIdEnabled) {
             mAdDataConversionStrategy =
-                    AdDataConversionStrategyFactory.getAdDataConversionStrategy(filteringEnabled);
+                    AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                            filteringEnabled, adRenderIdEnabled);
         }
 
         /** Serialize {@link List<DBAdData>} to Json. */
@@ -587,7 +655,7 @@ public class DBCustomAudience {
                 List<DBAdData> result = new ArrayList<>();
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject jsonObject = array.getJSONObject(i);
-                    result.add(mAdDataConversionStrategy.fromJson(jsonObject));
+                    result.add(mAdDataConversionStrategy.fromJson(jsonObject).build());
                 }
                 return result;
             } catch (JSONException jsonException) {

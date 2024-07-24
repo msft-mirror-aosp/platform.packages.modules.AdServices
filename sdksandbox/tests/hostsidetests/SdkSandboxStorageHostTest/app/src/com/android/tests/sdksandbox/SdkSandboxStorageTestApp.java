@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThrows;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
@@ -68,29 +69,28 @@ public class SdkSandboxStorageTestApp {
 
     @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
-    private Context mContext;
+    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final SdkLifecycleHelper mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);
+
     private SdkSandboxManager mSdkSandboxManager;
     private IStorageTestSdk1Api mSdk;
     private UiDevice mUiDevice;
 
     @Before
     public void setup() {
-        mContext = ApplicationProvider.getApplicationContext();
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
         mRule.getScenario();
         mUiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // unload SDK to fix flakiness
-        mSdkSandboxManager.unloadSdk(SDK_NAME);
+        mSdkLifecycleHelper.unloadSdk(SDK_NAME);
     }
 
     @After
     public void tearDown() {
         // unload SDK to fix flakiness
-        if (mSdkSandboxManager != null) {
-            mSdkSandboxManager.unloadSdk(SDK_NAME);
-        }
+        mSdkLifecycleHelper.unloadSdk(SDK_NAME);
     }
 
     @Test
@@ -149,19 +149,18 @@ public class SdkSandboxStorageTestApp {
         int uid = Process.myUid();
         UserHandle user = Process.myUserHandle();
 
-        // Have the sdk use up space
         final StorageStats initialAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats initialUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
+        // Have the sdk use up space
         final int sizeInBytes = 10000000; // 10 MB
-        mSdk.createFilesInSharedStorage(sizeInBytes, /*inCacheDir*/ false);
-        mSdk.createFilesInSharedStorage(sizeInBytes, /*inCacheDir*/ true);
+        mSdk.createFilesInStorage(sizeInBytes);
 
         final StorageStats finalAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats finalUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 
-        long deltaAppSize = 2 * sizeInBytes;
-        long deltaCacheSize = sizeInBytes;
+        long deltaAppSize = 4 * sizeInBytes;
+        long deltaCacheSize = 2 * sizeInBytes;
 
         // Assert app size is same
         final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();

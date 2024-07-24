@@ -23,18 +23,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.service.measurement.PrivacyParams;
 
-import com.google.common.math.DoubleMath;
-
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -73,7 +67,7 @@ public class CombinatoricsTest {
     @Test
     public void testGetKCombinationAtIndex() {
         // Test Case { {combinationIndex, k}, expectedOutput}
-        int[][][] testCases = {
+        long[][][] testCases = {
                 {{0, 0}, {}},
 
                 {{0, 1}, {0}}, {{1, 1}, {1}}, {{2, 1}, {2}},
@@ -105,15 +99,16 @@ public class CombinatoricsTest {
         Arrays.stream(testCases).forEach((testCase) ->
                 assertArrayEquals(testCase[1],
                         Combinatorics.getKCombinationAtIndex(
-                                /*combinationIndex=*/testCase[0][0], /*k=*/testCase[0][1])));
+                                /*combinationIndex=*/ testCase[0][0],
+                                /*k=*/ (int) testCase[0][1])));
     }
 
     @Test
     public void testGetKCombinationNoRepeat() {
         for (int k = 1; k < 5; k++) {
-            Set<List<Integer>> seenCombinations = new HashSet<>();
+            Set<List<Long>> seenCombinations = new HashSet<>();
             for (int combinationIndex = 0; combinationIndex < 3000; combinationIndex++) {
-                List<Integer> combination =
+                List<Long> combination =
                         Arrays.stream(Combinatorics.getKCombinationAtIndex(combinationIndex,
                                 k)).boxed().collect(
                                 Collectors.toList());
@@ -126,22 +121,22 @@ public class CombinatoricsTest {
     public void testGetKCombinationMatchesDefinition() {
         for (int k = 1; k < 5; k++) {
             for (int index = 0; index < 3000; index++) {
-                int[] combination = Combinatorics.getKCombinationAtIndex(index, k);
-                int sum = 0;
+                long[] combination = Combinatorics.getKCombinationAtIndex(index, k);
+                long sum = 0;
                 for (int i = 0; i < k; i++) {
-                    sum += Combinatorics.getBinomialCoefficient(combination[i], k - i);
+                    sum += Combinatorics.getBinomialCoefficient((int) combination[i], k - i);
                 }
-                assertEquals(sum, index);
+                assertEquals(sum, (long) index);
             }
         }
     }
 
     @Test
     public void testGetNumberOfStarsAndBarsSequences() {
-        assertEquals(3, Combinatorics.getNumberOfStarsAndBarsSequences(
+        assertEquals(3L, Combinatorics.getNumberOfStarsAndBarsSequences(
                 /*numStars=*/1, /*numBars=*/2
         ));
-        assertEquals(2925, Combinatorics.getNumberOfStarsAndBarsSequences(
+        assertEquals(2925L, Combinatorics.getNumberOfStarsAndBarsSequences(
                 /*numStars=*/3, /*numBars=*/24
         ));
     }
@@ -149,14 +144,14 @@ public class CombinatoricsTest {
     @Test
     public void testGetStarIndices() {
         // Test Case: { {numStars, sequenceIndex}, expectedOutput }
-        int[][][] testCases = {
-                {{1, 2, 2}, {2}},
-                {{3, 24, 23}, {6, 3, 0}},
+        long[][][] testCases = {
+                {{1L, 2L, 2L}, {2L}},
+                {{3L, 24L, 23L}, {6L, 3L, 0L}},
         };
 
         Arrays.stream(testCases).forEach((testCase) ->
                 assertArrayEquals(testCase[1],
-                        Combinatorics.getStarIndices(/*numStars=*/testCase[0][0],
+                        Combinatorics.getStarIndices(/*numStars=*/ (int) testCase[0][0],
                                 /*sequenceIndex=*/testCase[0][2])));
 
     }
@@ -164,9 +159,9 @@ public class CombinatoricsTest {
     @Test
     public void testGetBarsPrecedingEachStar() {
         // Test Case: {starIndices, expectedOutput}
-        int[][][] testCases = {
-                {{2}, {2}},
-                {{6, 3, 0}, {4, 2, 0}}
+        long[][][] testCases = {
+                {{2L}, {2L}},
+                {{6L, 3L, 0L}, {4L, 2L, 0L}}
         };
 
         Arrays.stream(testCases).forEach((testCase) ->
@@ -199,7 +194,7 @@ public class CombinatoricsTest {
         int[][] testCasesOverflow = {
             {3, Integer.MAX_VALUE - 1, 3},
             {3, 8, Integer.MAX_VALUE - 1},
-            {8, 10, 6},
+            {8, 40, 26},
         };
 
         Arrays.stream(testCasesOverflow)
@@ -213,13 +208,13 @@ public class CombinatoricsTest {
     }
 
     @Test
-    public void testNumStatesFlexAPI() {
+    public void testNumStatesFlexApi() {
         // Test Case: {numBucketIncrements, perTypeNumWindows, perTypeCap}, {expected number of
         // states}
         int[][][][] testCases = {
             {{{3}, {3, 3, 3, 3, 3, 3, 3, 3}, {3, 3, 3, 3, 3, 3, 3, 3}}, {{2925}}},
-            {{{3}, {8, 8}, {2, 2}}, {{-1}}},
-            {{{2}, {6, 7}, {1, 2}}, {{-1}}},
+            {{{2}, {2, 2}, {2, 2}}, {{15}}},
+            {{{3}, {2, 2}, {2, 2}}, {{27}}},
             {{{3}, {2, 2}, {3, 3}}, {{35}}},
             {{{3}, {4, 4}, {2, 2}}, {{125}}},
             {{{7}, {2, 2}, {3, 3}}, {{100}}},
@@ -228,11 +223,6 @@ public class CombinatoricsTest {
             {{{1000}, {2, 2, 2}, {4, 5, 4}}, {{4725}}},
             {{{1000}, {2, 2, 2, 2}, {4, 5, 4, 2}}, {{28350}}},
             {{{5}, {2}, {5}}, {{21}}},
-            {{{100}, {2, 2, 2, 2}, {5, 6, 6, 6}}, {{-1}}},
-            // number of trigger events out of range
-            {{{5}, {2, 2, 2, 2, 2, 2, 2, 2, 2}, {1, 1, 1, 1, 1, 1, 1, 1, 1}}, {{-1}}},
-            // trigger data cardinality out of range
-            {{{5}, {6}, {5}}, {{-1}}} // number reporting windows out of range
         };
 
         Arrays.stream(testCases)
@@ -240,7 +230,7 @@ public class CombinatoricsTest {
                         (testCase) ->
                                 assertEquals(
                                         testCase[1][0][0],
-                                        Combinatorics.getNumStatesFlexAPI(
+                                        Combinatorics.getNumStatesFlexApi(
                                                 testCase[0][0][0],
                                                 testCase[0][1],
                                                 testCase[0][2])));
@@ -253,7 +243,8 @@ public class CombinatoricsTest {
             {2925.0, 0.24263221679834088d},
             {3.0, 0.0002494582008677539d},
             {455.0, 0.037820279032938435d},
-            {2.0, 0.0001663056055328264d}
+            {2.0, 0.0001663056055328264d},
+            {1.0, 0.00008315280276d}
         };
 
         Arrays.stream(testCases)
@@ -261,11 +252,7 @@ public class CombinatoricsTest {
                         (testCase) -> {
                             double result =
                                     100 * Combinatorics.getFlipProbability((int) testCase[0]);
-                            assertTrue(
-                                    DoubleMath.fuzzyEquals(
-                                            testCase[1],
-                                            result,
-                                            PrivacyParams.NUMBER_EQUAL_THRESHOLD));
+                            assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
     }
 
@@ -276,7 +263,8 @@ public class CombinatoricsTest {
             {2925.0, 11.461727965384876d},
             {3.0, 1.5849265115082312d},
             {455.0, 8.821556150827456d},
-            {2.0, 0.9999820053790732d}
+            {2.0, 0.9999820053790732d},
+            {1.0, 0.0d}
         };
 
         Arrays.stream(testCases)
@@ -286,87 +274,8 @@ public class CombinatoricsTest {
                                     Combinatorics.getInformationGain(
                                             (int) testCase[0],
                                             Combinatorics.getFlipProbability((int) testCase[0]));
-                            assertTrue(
-                                    DoubleMath.fuzzyEquals(
-                                            testCase[1],
-                                            result,
-                                            PrivacyParams.NUMBER_EQUAL_THRESHOLD));
+                            assertEquals(testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD);
                         });
-    }
-
-    @Test
-    public void getSingleRandomSelectReportSet_checkNoDuplication_success() {
-        int[][][] testCases = getTestCaseForRandomState();
-
-        Arrays.stream(testCases)
-                .forEach(
-                        (testCase) -> {
-                            Map<List<Integer>, Integer> dp = new HashMap<>();
-                            ArrayList<List<Combinatorics.AtomReportState>> allReportSets =
-                                    new ArrayList<>();
-                            int numberStates =
-                                    Combinatorics.getNumStatesFlexAPI(
-                                            testCase[0][0], testCase[1], testCase[2]);
-                            for (int i = 0; i < numberStates; i++) {
-                                List<Combinatorics.AtomReportState> ithSet =
-                                        Combinatorics.getReportSetBasedOnRank(
-                                                testCase[0][0], testCase[1], testCase[2], i, dp);
-                                Collections.sort(ithSet, new AtomReportStateComparator());
-                                allReportSets.add(ithSet);
-                            }
-                            HashSet<List<Combinatorics.AtomReportState>> set =
-                                    new HashSet<>(allReportSets);
-                            assertEquals(allReportSets.size(), set.size());
-                        });
-    }
-
-    @Test
-    public void getSingleRandomSelectReportSet_checkReportSetsMeetRequirement_success() {
-        int[][][] testCases = getTestCaseForRandomState();
-
-        Arrays.stream(testCases)
-                .forEach(
-                        (testCase) -> {
-                            Map<List<Integer>, Integer> dp = new HashMap<>();
-                            int numberStates =
-                                    Combinatorics.getNumStatesFlexAPI(
-                                            testCase[0][0], testCase[1], testCase[2]);
-                            for (int i = 0; i < numberStates; i++) {
-                                List<Combinatorics.AtomReportState> ithSet =
-                                        Combinatorics.getReportSetBasedOnRank(
-                                                testCase[0][0], testCase[1], testCase[2], i, dp);
-                                assertTrue(
-                                        atomReportStateSetMeetRequirement(
-                                                testCase[0][0], testCase[1], testCase[2], ithSet));
-                            }
-                        });
-    }
-
-    private static int[][][] getTestCaseForRandomState() {
-        // Test Case: {numBucketIncrements, perTypeNumWindows, perTypeCap}}
-        int[][][] testCases = {
-            {{2}, {2, 2}, {1, 1}},
-            {{3}, {2, 2}, {3, 3}},
-            {{7}, {2, 2}, {3, 3}},
-            {
-                {3},
-                {3, 3, 3, 3, 3, 3, 3, 3},
-                {
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE,
-                    Integer.MAX_VALUE
-                }
-            }, // Default parameters for existing event reporting API. Since no local limited is
-            // set, just put max integer value here.
-            {{5}, {3, 3, 3, 3, 3, 3, 3, 3}, {3, 3, 3, 3, 3, 3, 3, 3}},
-            // larger test case. On purpose comment out for long-running time.
-        };
-        return testCases;
     }
 
     private static boolean atomReportStateSetMeetRequirement(

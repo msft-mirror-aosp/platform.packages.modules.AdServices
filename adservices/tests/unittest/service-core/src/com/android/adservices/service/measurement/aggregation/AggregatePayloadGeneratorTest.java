@@ -16,11 +16,17 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
@@ -31,7 +37,11 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -44,10 +54,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /** Unit tests for {@link AggregatePayloadGenerator} */
 @SmallTest
+@RunWith(MockitoJUnitRunner.class)
 public final class AggregatePayloadGeneratorTest {
+    @Mock Flags mFlags;
+    private AggregatePayloadGenerator mAggregatePayloadGenerator;
+    private static final long BIG_LOOKBACK_WINDOW_VALUE = 1000L;
+    private static final long SMALL_LOOKBACK_WINDOW_VALUE = 100L;
+
+    @Before
+    public void before() {
+        mAggregatePayloadGenerator = new AggregatePayloadGenerator(mFlags);
+    }
 
     @Test
     public void testGenerateAttributionReport_twoContributions_filterSetMatches()
@@ -122,7 +143,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -130,7 +151,198 @@ public final class AggregatePayloadGeneratorTest {
                         .setAggregatableAttributionTrigger(attributionTrigger)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
+        assertTrue(aggregateHistogramContributions.isPresent());
+        List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
+
+        assertEquals(contributions.size(), 2);
+        assertTrue(
+                contributions.contains(
+                        new AggregateHistogramContribution.Builder()
+                                .setKey(BigInteger.valueOf(1369L))
+                                .setValue(32768)
+                                .build()));
+        assertTrue(
+                contributions.contains(
+                        new AggregateHistogramContribution.Builder()
+                                .setKey(BigInteger.valueOf(2693L))
+                                .setValue(1664)
+                                .build()));
+    }
+
+    @Test
+    public void testGenerateAttributionReport_filterSetMatches_withPayloadPadding()
+            throws JSONException {
+        when(mFlags.getMeasurementEnableAggregatableReportPayloadPadding()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration()).thenReturn(5);
+        // Build AggregatableAttributionSource.
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
+        aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
+        aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put(
+                "conversion_subdomain", Collections.singletonList("electronics.megastore"));
+        sourceFilterMap.put("product", Arrays.asList("1234", "234"));
+        sourceFilterMap.put("ctid", Collections.singletonList("id"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        AggregatableAttributionSource attributionSource =
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregatableSource)
+                        .setFilterMap(sourceFilter)
+                        .build();
+
+        // Build AggregatableAttributionTrigger.
+        List<AggregateTriggerData> triggerDataList = new ArrayList<>();
+        // First filter map does not match, second does.
+        Map<String, List<String>> triggerDataFilter1 = new HashMap<>();
+        triggerDataFilter1.put("product", Collections.singletonList("unmatched"));
+        triggerDataFilter1.put("ctid", Collections.singletonList("unmatched"));
+        FilterMap filterMap1 =
+                new FilterMap.Builder().setAttributionFilterMap(triggerDataFilter1).build();
+        // Apply this key_piece to "campaignCounts".
+        Map<String, List<String>> triggerDataFilter2 = new HashMap<>();
+        triggerDataFilter2.put("product", Collections.singletonList("1234"));
+        triggerDataFilter2.put("ctid", Collections.singletonList("id"));
+        FilterMap filterMap2 =
+                new FilterMap.Builder().setAttributionFilterMap(triggerDataFilter2).build();
+        // First not-filter map matches, second does not.
+        Map<String, List<String>> triggerDataNotFilter1 = new HashMap<>();
+        triggerDataNotFilter1.put("product", Collections.singletonList("matches_when_negated"));
+        FilterMap notFilterMap1 =
+                new FilterMap.Builder().setAttributionFilterMap(triggerDataNotFilter1).build();
+        Map<String, List<String>> triggerDataNotFilter2 = new HashMap<>();
+        triggerDataNotFilter2.put("product", Collections.singletonList("234"));
+        FilterMap notFilterMap2 =
+                new FilterMap.Builder().setAttributionFilterMap(triggerDataNotFilter2).build();
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(1024L))
+                        .setSourceKeys(new HashSet<>(Collections.singletonList("campaignCounts")))
+                        .setFilterSet(List.of(filterMap1, filterMap2))
+                        .setNotFilterSet(List.of(notFilterMap1, notFilterMap2))
+                        .build());
+        // Apply this key_piece to "geoValue".
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(2688L))
+                        .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
+                        .build());
+
+        Map<String, Integer> values = new HashMap<>();
+        values.put("campaignCounts", 32768);
+        values.put("geoValue", 1664);
+        AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setTriggerData(triggerDataList)
+                        .setValues(values)
+                        .build();
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregatableAttributionSource(attributionSource)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableAttributionTrigger(attributionTrigger)
+                        .build();
+        Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
+        assertTrue(aggregateHistogramContributions.isPresent());
+        AggregateHistogramContribution nullContribution =
+                new AggregateHistogramContribution.Builder().setValue(0).build();
+        List<AggregateHistogramContribution> expectedContributions =
+                List.of(
+                        new AggregateHistogramContribution.Builder()
+                                .setKey(BigInteger.valueOf(1369L))
+                                .setValue(32768)
+                                .build(),
+                        new AggregateHistogramContribution.Builder()
+                                .setKey(BigInteger.valueOf(2693L))
+                                .setValue(1664)
+                                .build(),
+                        nullContribution,
+                        nullContribution,
+                        nullContribution);
+        assertThat(aggregateHistogramContributions.get())
+                .containsExactlyElementsIn(expectedContributions);
+    }
+
+    @Test
+    public void testGenerateAttributionReport_insideLookbackWindow_filterSetMatches()
+            throws JSONException {
+        doReturn(true).when(mFlags).getMeasurementEnableLookbackWindowFilter();
+        // Build AggregatableAttributionSource.
+        JSONObject aggregatableSource = new JSONObject();
+        aggregatableSource.put("campaignCounts", "0x159");
+        aggregatableSource.put("geoValue", "0x5");
+        FilterMap sourceFilter =
+                new FilterMap.Builder()
+                        .addStringListValue(
+                                "conversion_subdomain", List.of("electronics.megastore"))
+                        .addStringListValue("product", List.of("1234", "234"))
+                        .addStringListValue("ctid", List.of("id"))
+                        .build();
+
+        // Build AggregatableAttributionTrigger.
+        List<AggregateTriggerData> triggerDataList = new ArrayList<>();
+        // First filter map does not match, second does.
+        FilterMap filterMap1 =
+                new FilterMap.Builder()
+                        .addStringListValue("product", List.of("unmatched"))
+                        .addStringListValue("ctid", List.of("unmatched"))
+                        .build();
+        FilterMap filterMap2 =
+                new FilterMap.Builder()
+                        .addStringListValue("product", List.of("1234"))
+                        .addStringListValue("ctid", List.of("id"))
+                        // Source is inside of the bigger look back window.
+                        .addLongValue(FilterMap.LOOKBACK_WINDOW, BIG_LOOKBACK_WINDOW_VALUE)
+                        .build();
+        // First not-filter map matches, second does not.
+        FilterMap notFilterMap1 =
+                new FilterMap.Builder()
+                        .addStringListValue("product", List.of("matches_when_negated"))
+                        // Source is outside of the smaller look back window.
+                        .addLongValue(FilterMap.LOOKBACK_WINDOW, SMALL_LOOKBACK_WINDOW_VALUE)
+                        .build();
+        FilterMap notFilterMap2 =
+                new FilterMap.Builder().addStringListValue("product", List.of("234")).build();
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(1024L))
+                        .setSourceKeys(new HashSet<>(Collections.singletonList("campaignCounts")))
+                        .setFilterSet(List.of(filterMap1, filterMap2))
+                        .setNotFilterSet(List.of(notFilterMap1, notFilterMap2))
+                        .build());
+        // Apply this key_piece to "geoValue".
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(2688L))
+                        .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
+                        .build());
+
+        Map<String, Integer> values = new HashMap<>();
+        values.put("campaignCounts", 32768);
+        values.put("geoValue", 1664);
+        AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setTriggerData(triggerDataList)
+                        .setValues(values)
+                        .build();
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregateSource(aggregatableSource.toString())
+                        .setFilterDataString(sourceFilter.serializeAsJson(mFlags).toString())
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableAttributionTrigger(attributionTrigger)
+                        .setTriggerTime(TimeUnit.SECONDS.toMillis(BIG_LOOKBACK_WINDOW_VALUE - 1))
+                        .build();
+        Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -215,7 +427,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -223,7 +435,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAggregatableAttributionTrigger(attributionTrigger)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -286,7 +498,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -294,7 +506,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAggregatableAttributionTrigger(attributionTrigger)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -357,7 +569,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -365,7 +577,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAggregatableAttributionTrigger(attributionTrigger)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -430,7 +642,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -438,7 +650,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAggregatableAttributionTrigger(attributionTrigger)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -520,7 +732,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -528,7 +740,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAggregatableAttributionTrigger(attributionTrigger)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -578,7 +790,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -586,7 +798,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAggregatableAttributionTrigger(attributionTrigger)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -634,7 +846,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setValues(values).build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         .build();
         Trigger trigger =
@@ -642,7 +854,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAggregatableAttributionTrigger(attributionTrigger)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -700,7 +912,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -714,7 +926,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAdtechBitMapping(adtechBitMapString)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -790,7 +1002,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -804,7 +1016,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAdtechBitMapping(adtechBitMapString)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -872,7 +1084,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -884,7 +1096,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAdtechBitMapping(null)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -943,7 +1155,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -957,7 +1169,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAdtechBitMapping(adtechBitMapString)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
@@ -1016,7 +1228,7 @@ public final class AggregatePayloadGeneratorTest {
                         .build();
 
         Source source =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setAggregatableAttributionSource(attributionSource)
                         // Derived XNA source
                         .setParentId(UUID.randomUUID().toString())
@@ -1030,7 +1242,7 @@ public final class AggregatePayloadGeneratorTest {
                         .setAdtechBitMapping(adtechBitMapString)
                         .build();
         Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
-                AggregatePayloadGenerator.generateAttributionReport(source, trigger);
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
         assertTrue(aggregateHistogramContributions.isPresent());
         List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 

@@ -42,8 +42,8 @@ public final class RegistrationRequestTest {
     private RegistrationRequest createExampleAttribution() {
         return new RegistrationRequest.Builder(
                         RegistrationRequest.REGISTER_SOURCE,
-                        Uri.parse("http://baz.com"),
-                        sContext.getAttributionSource().getPackageName(),
+                        Uri.parse("https://baz.test"),
+                        sContext.getPackageName(),
                         SDK_PACKAGE_NAME)
                 .setRequestTime(1000L)
                 .setAdIdPermissionGranted(true)
@@ -51,7 +51,7 @@ public final class RegistrationRequestTest {
     }
 
     void verifyExampleAttribution(RegistrationRequest request) {
-        assertEquals("http://baz.com", request.getRegistrationUri().toString());
+        assertEquals("https://baz.test", request.getRegistrationUri().toString());
         assertEquals(RegistrationRequest.REGISTER_SOURCE,
                 request.getRegistrationType());
         assertNull(request.getInputEvent());
@@ -68,8 +68,34 @@ public final class RegistrationRequestTest {
                 () ->
                         new RegistrationRequest.Builder(
                                         RegistrationRequest.INVALID,
-                                        Uri.parse("http://foo.com"),
-                                        sContext.getAttributionSource().getPackageName(),
+                                        Uri.parse("https://foo.test"),
+                                        sContext.getPackageName(),
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testRegistrationUriWithoutScheme_throwsException() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new RegistrationRequest.Builder(
+                                        RegistrationRequest.REGISTER_SOURCE,
+                                        Uri.parse("foo.test"),
+                                        sContext.getPackageName(),
+                                        SDK_PACKAGE_NAME)
+                                .build());
+    }
+
+    @Test
+    public void testRegistrationUriWithNonHttpsScheme_throwsException() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new RegistrationRequest.Builder(
+                                        RegistrationRequest.REGISTER_SOURCE,
+                                        Uri.parse("http://foo.test"),
+                                        sContext.getPackageName(),
                                         SDK_PACKAGE_NAME)
                                 .build());
     }
@@ -82,7 +108,7 @@ public final class RegistrationRequestTest {
                         new RegistrationRequest.Builder(
                                         RegistrationRequest.REGISTER_TRIGGER,
                                         /* registrationUri = */ null,
-                                        sContext.getAttributionSource().getPackageName(),
+                                        sContext.getPackageName(),
                                         SDK_PACKAGE_NAME)
                                 .build());
     }
@@ -94,7 +120,7 @@ public final class RegistrationRequestTest {
                 () ->
                         new RegistrationRequest.Builder(
                                         RegistrationRequest.REGISTER_TRIGGER,
-                                        Uri.parse("http://foo.com"),
+                                        Uri.parse("https://foo.test"),
                                         /* appPackageName = */ null,
                                         SDK_PACKAGE_NAME)
                                 .build());
@@ -107,8 +133,8 @@ public final class RegistrationRequestTest {
                 () ->
                         new RegistrationRequest.Builder(
                                         RegistrationRequest.REGISTER_TRIGGER,
-                                        /* registrationUri = */ Uri.parse("http://foo.com"),
-                                        sContext.getAttributionSource().getPackageName(),
+                                        /* registrationUri = */ Uri.parse("https://foo.test"),
+                                        sContext.getPackageName(),
                                         /* sdkPackageName = */ null)
                                 .build());
     }
@@ -118,11 +144,11 @@ public final class RegistrationRequestTest {
         RegistrationRequest request =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
-                                Uri.parse("http://foo.com"),
-                                sContext.getAttributionSource().getPackageName(),
+                                Uri.parse("https://foo.test"),
+                                sContext.getPackageName(),
                                 SDK_PACKAGE_NAME)
                         .build();
-        assertEquals("http://foo.com", request.getRegistrationUri().toString());
+        assertEquals("https://foo.test", request.getRegistrationUri().toString());
         assertEquals(RegistrationRequest.REGISTER_TRIGGER, request.getRegistrationType());
         assertNull(request.getInputEvent());
         assertNotNull(request.getAppPackageName());

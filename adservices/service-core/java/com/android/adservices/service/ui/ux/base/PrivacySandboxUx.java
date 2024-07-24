@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.ui.ux;
+package com.android.adservices.service.ui.ux.base;
 
 import android.content.Context;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.enrollment.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
 
 import com.google.errorprone.annotations.Immutable;
 
@@ -35,8 +35,4 @@ public interface PrivacySandboxUx {
             PrivacySandboxEnrollmentChannel enrollmentChannel,
             Context context,
             ConsentManager consentManager);
-
-    /** Select a specific mode of the UX for the user. */
-    void selectMode(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager);
 }

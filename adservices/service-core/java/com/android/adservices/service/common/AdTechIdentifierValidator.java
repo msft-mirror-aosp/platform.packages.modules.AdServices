@@ -29,8 +29,7 @@ import com.google.common.net.InternetDomainName;
 
 import java.util.Objects;
 
-/** Validation utility class for Ad Tech Identifier. */
-// TODO(b/239729221): Apply this to AdSelection
+/** Validation utility class for {@link android.adservices.common.AdTechIdentifier}. */
 public class AdTechIdentifierValidator implements Validator<String> {
     @VisibleForTesting
     public static final String IDENTIFIER_SHOULD_NOT_BE_NULL_OR_EMPTY =

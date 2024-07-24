@@ -21,10 +21,12 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -63,6 +65,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     @NonNull private final Flags mFlags;
     @NonNull private final JsFetcher mJsFetcher;
+    @NonNull private final DevContext mDevContext;
 
     public AdOutcomeSelectorImpl(
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
@@ -71,13 +74,15 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
             @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull AdSelectionDevOverridesHelper adSelectionDevOverridesHelper,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            @NonNull DevContext devContext) {
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(devContext);
 
         mAdSelectionScriptEngine = adSelectionScriptEngine;
         mAdServicesHttpsClient = adServicesHttpsClient;
@@ -87,12 +92,14 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         mAdSelectionDevOverridesHelper = adSelectionDevOverridesHelper;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(flags);
         mFlags = flags;
+        mDevContext = devContext;
         mJsFetcher =
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mAdServicesHttpsClient,
-                        mFlags);
+                        mFlags,
+                        mDevContext);
     }
 
     /**
@@ -105,7 +112,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
      */
     @Override
     public FluentFuture<Long> runAdOutcomeSelector(
-            @NonNull List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris,
+            @NonNull List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris,
             @NonNull AdSelectionFromOutcomesConfig config) {
         Objects.requireNonNull(adSelectionIdWithBidAndRenderUris);
         Objects.requireNonNull(config);
@@ -114,6 +121,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
                 AdServicesHttpClientRequest.builder()
                         .setUri(config.getSelectionLogicUri())
                         .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .setDevContext(mDevContext)
                         .build();
 
         FluentFuture<String> selectionLogicJsFuture =

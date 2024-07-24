@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.ui.ux;
+package com.android.adservices.service.ui.ux.impl;
 
-import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 
 import android.content.Context;
 import android.os.Build;
@@ -24,11 +24,16 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.enrollment.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.ux.base.PrivacySandboxUx;
+
+import com.google.errorprone.annotations.Immutable;
 
 // TO-DO(b/284177542): Implement revoke consent logic for Unsupported UX.
+
 /** Unsupported UX class that ensures no privacy sandbox features are available. */
 @RequiresApi(Build.VERSION_CODES.S)
+@Immutable
 public class UnsupportedUx implements PrivacySandboxUx {
 
     /** Whether a user should not be eligible for any privacy sandbox UX. */
@@ -42,8 +47,4 @@ public class UnsupportedUx implements PrivacySandboxUx {
             PrivacySandboxEnrollmentChannel enrollmentChannel,
             Context context,
             ConsentManager consentManager) {}
-
-    /** No mode should be available for Unsupported UX. */
-    public void selectMode(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager) {}
 }

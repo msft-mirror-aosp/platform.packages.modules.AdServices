@@ -15,7 +15,6 @@
  */
 package com.android.adservices.ui.ganotifications;
 
-import static com.android.adservices.ui.ganotifications.ConsentNotificationGaV2Screen2Fragment.IS_EU_DEVICE_ARGUMENT_KEY;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISMISSED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED;
@@ -41,6 +40,7 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.UxUtil;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
@@ -61,8 +61,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View inflatedView;
-        mIsEUDevice =
-                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
+        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
         if (mIsEUDevice) {
             inflatedView = inflater.inflate(
                     R.layout.consent_notification_screen_1_ga_v2_eu, container, false);
@@ -78,10 +77,8 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
         setupListeners(savedInstanceState);
 
         ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
-        ConsentManager.getInstance(requireContext())
-                .enable(requireContext(), AdServicesApiType.FLEDGE);
-        ConsentManager.getInstance(requireContext())
-                .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+        ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.FLEDGE);
+        ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
     }
 
     @Override

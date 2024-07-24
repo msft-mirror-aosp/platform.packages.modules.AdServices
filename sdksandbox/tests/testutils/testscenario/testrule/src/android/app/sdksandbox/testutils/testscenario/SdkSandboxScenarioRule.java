@@ -121,7 +121,9 @@ public class SdkSandboxScenarioRule implements TestRule {
                             InstrumentationRegistry.getInstrumentation().getContext();
                     mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
                     final IBinder textExecutor = loadTestSdk();
-                    mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(textExecutor);
+                    if (textExecutor != null) {
+                        mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(textExecutor);
+                    }
                 }
                 try {
                     base.evaluate();
@@ -141,11 +143,14 @@ public class SdkSandboxScenarioRule implements TestRule {
 
     public void assertSdkTestRunPasses(String testMethodName, Bundle params) throws Throwable {
         try (ActivityScenario scenario = ActivityScenario.launch(SdkSandboxCtsActivity.class)) {
-
             if (mSdkSandboxManager.getSandboxedSdks().isEmpty()) {
                 final IBinder textExecutor = loadTestSdk();
-                mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(textExecutor);
+                if (textExecutor != null) {
+                    mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(textExecutor);
+                }
             }
+            Assume.assumeTrue("No SDK executor. SDK sandbox is disabled", mTestExecutor != null);
+
             assertThat(scenario.getState()).isEqualTo(Lifecycle.State.RESUMED);
             setView(scenario);
 
@@ -241,6 +246,7 @@ public class SdkSandboxScenarioRule implements TestRule {
         }
     }
 
+    // Returns test SDK for use in tests, returns null only if SDK sandbox is disabled.
     private IBinder loadTestSdk() throws Exception {
         final Bundle loadParams = new Bundle(2);
         loadParams.putBundle(ISdkSandboxTestExecutor.TEST_SETUP_PARAMS, mTestInstanceSetupParams);
@@ -249,14 +255,25 @@ public class SdkSandboxScenarioRule implements TestRule {
         mSdkSandboxManager.loadSdk(mSdkName, loadParams, Runnable::run, callback);
         try {
             callback.assertLoadSdkIsSuccessful();
-        } catch (Exception e) {
-            Assume.assumeTrue(
-                    "Skipping test because Sdk Sandbox is disabled",
-                    callback.getLoadSdkErrorCode()
-                            != SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
+        } catch (IllegalStateException e) {
+            // The underlying {@link WaitableCountDownLatch} used by the
+            // {@link FakeLoadSdkCallback} will throw this exception if we timeout waiting for a
+            // response. In which case, we should _not_ attempt to retrieve the error code because
+            // the getLoadSdkErrorCode call will likely fail as the callback would not have
+            // resolved yet.
             throw e;
+        } catch (AssertionError | Exception e) {
+            // We cannot use Assume here, since loadTestSdk runs in @BeforeClass.
+            // We allow null and then check for null when test executes.
+            if (callback.getLoadSdkErrorCode() != SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED) {
+                throw e;
+            }
         }
         final SandboxedSdk testSdk = callback.getSandboxedSdk();
+        // Allow returned SDK to be null, in the case when SDK sandbox is disabled.
+        if (testSdk == null) {
+            return null;
+        }
         Assert.assertNotNull(testSdk.getInterface());
         return testSdk.getInterface();
     }

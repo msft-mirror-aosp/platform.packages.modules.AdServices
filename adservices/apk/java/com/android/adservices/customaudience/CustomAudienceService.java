@@ -31,8 +31,7 @@ import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
-
-import com.google.common.annotations.VisibleForTesting;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
@@ -86,10 +85,6 @@ public class CustomAudienceService extends Service {
 
     /** @return {@code true} if the Privacy Sandbox has user consent */
     private boolean hasUserConsent() {
-        if (mFlags.getGaUxFeatureEnabled()) {
-            return ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven();
-        } else {
-            return ConsentManager.getInstance(this).getConsent().isGiven();
-        }
+        return ConsentManager.getInstance().getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 }

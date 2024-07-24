@@ -34,13 +34,11 @@ public final class StatusParamTest {
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
 
     private StatusParam createExample() {
-        return new StatusParam.Builder(
-                        sContext.getAttributionSource().getPackageName(), SDK_PACKAGE_NAME)
-                .build();
+        return new StatusParam.Builder(sContext.getPackageName(), SDK_PACKAGE_NAME).build();
     }
 
     void verifyExample(StatusParam param) {
-        assertEquals(sContext.getAttributionSource().getPackageName(), param.getAppPackageName());
+        assertEquals(sContext.getPackageName(), param.getAppPackageName());
         assertEquals(SDK_PACKAGE_NAME, param.getSdkPackageName());
     }
 

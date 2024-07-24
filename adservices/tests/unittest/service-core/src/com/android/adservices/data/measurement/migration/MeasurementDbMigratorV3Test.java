@@ -33,10 +33,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 
 import org.json.JSONException;

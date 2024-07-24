@@ -31,25 +31,26 @@ final class PreEnrolledAdTechForTest {
                 SECOND_ENROLLMENT,
                 TOPICS_SAMPLE_APPS,
                 MSMT_SYS_HEALTH_TEST_ENROLLMENT,
-                LOCAL_SERVER_FOR_MSMT_REMARKETING);
+                LOCAL_SERVER_FOR_MSMT_REMARKETING,
+                LOCAL_SERVER_FOR_PAS);
     }
 
     private static final EnrollmentData SIMPLE_ENROLLMENT =
             new EnrollmentData.Builder()
                     .setEnrollmentId("E1")
-                    .setCompanyId("1001")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                     .setSdkNames("sdk1")
                     .setAttributionSourceRegistrationUrl(Arrays.asList("https://test.com/source"))
                     .setAttributionTriggerRegistrationUrl(Arrays.asList("https://test.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://test.com/keys"))
+                    .setEncryptionKeyUrl("https://test.com/keys")
                     .build();
 
     private static final EnrollmentData ONE_SDK_MULTIPLE_URLS =
             new EnrollmentData.Builder()
                     .setEnrollmentId("E2")
-                    .setCompanyId("1002")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                     .setSdkNames("sdk2")
                     .setAttributionSourceRegistrationUrl(
                             Arrays.asList(
@@ -58,26 +59,26 @@ final class PreEnrolledAdTechForTest {
                             Arrays.asList("https://test2.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://test2.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test2.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://test2.com/keys"))
+                    .setEncryptionKeyUrl("https://test2.com/keys")
                     .build();
 
     private static final EnrollmentData SECOND_ENROLLMENT =
             new EnrollmentData.Builder()
                     .setEnrollmentId("E3")
-                    .setCompanyId("1001")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                     .setSdkNames("sdk3")
                     .setAttributionSourceRegistrationUrl(Arrays.asList("https://test3.com/source"))
                     .setAttributionTriggerRegistrationUrl(
                             Arrays.asList("https://test3.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://test3.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test3.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://test3.com/keys"))
+                    .setEncryptionKeyUrl("https://test3.com/keys")
                     .build();
 
     private static final EnrollmentData TOPICS_SAMPLE_APPS =
             new EnrollmentData.Builder()
                     .setEnrollmentId("E4")
-                    .setCompanyId("1001")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_TOPICS")
                     .setSdkNames(
                             Arrays.asList(
                                     "SdkName1", "SdkName2", "SdkName3", "SdkName4", "SdkName5"))
@@ -85,13 +86,13 @@ final class PreEnrolledAdTechForTest {
                     .setAttributionTriggerRegistrationUrl(Arrays.asList("https://test.com/trigger"))
                     .setAttributionReportingUrl(Arrays.asList("https://test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://test.com"))
-                    .setEncryptionKeyUrl(Arrays.asList("https://test.com/keys"))
+                    .setEncryptionKeyUrl("https://test.com/keys")
                     .build();
 
     private static final EnrollmentData MSMT_SYS_HEALTH_TEST_ENROLLMENT =
             new EnrollmentData.Builder()
                     .setEnrollmentId("E5")
-                    .setCompanyId("1003")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                     .setAttributionSourceRegistrationUrl(
                             Arrays.asList("https://rb-measurement.com/source"))
                     .setAttributionTriggerRegistrationUrl(
@@ -102,7 +103,7 @@ final class PreEnrolledAdTechForTest {
     private static final EnrollmentData LOCAL_SERVER_FOR_MSMT_REMARKETING =
             new EnrollmentData.Builder()
                     .setEnrollmentId("E6")
-                    .setCompanyId("1004")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                     .setAttributionSourceRegistrationUrl(
                             Arrays.asList("https://localhost:8080/source"))
                     .setAttributionTriggerRegistrationUrl(
@@ -110,5 +111,12 @@ final class PreEnrolledAdTechForTest {
                     .setAttributionReportingUrl(Arrays.asList("https://localhost:8080"))
                     .setRemarketingResponseBasedRegistrationUrl(
                             Arrays.asList("https://localhost:8080"))
+                    .build();
+
+    private static final EnrollmentData LOCAL_SERVER_FOR_PAS =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("E7")
+                    .setEnrolledAPIs("PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS")
+                    .setEncryptionKeyUrl("https://localhost")
                     .build();
 }

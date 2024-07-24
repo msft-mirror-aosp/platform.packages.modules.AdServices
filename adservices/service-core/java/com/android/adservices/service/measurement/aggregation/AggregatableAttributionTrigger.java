@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.util.Filter;
 
@@ -80,20 +81,22 @@ public class AggregatableAttributionTrigger {
      *
      * @param sourceFilterMap the source filter map of the AggregatableAttributionSource.
      */
-    public Optional<AggregateDeduplicationKey> maybeExtractDedupKey(FilterMap sourceFilterMap) {
+    public Optional<AggregateDeduplicationKey> maybeExtractDedupKey(
+            FilterMap sourceFilterMap, Flags flags) {
         if (getAggregateDeduplicationKeys().isEmpty()) return Optional.empty();
 
+        Filter filter = new Filter(flags);
         for (AggregateDeduplicationKey key : getAggregateDeduplicationKeys().get()) {
-            if (sourceFilterMap.getAttributionFilterMap().isEmpty()) {
+            if (sourceFilterMap.isEmpty(flags)) {
                 return Optional.of(key);
             }
             if (key.getFilterSet().isPresent()
-                    && !Filter.isFilterMatch(sourceFilterMap, key.getFilterSet().get(), true)) {
+                    && !filter.isFilterMatch(sourceFilterMap, key.getFilterSet().get(), true)) {
                 continue;
             }
 
             if (key.getNotFilterSet().isPresent()
-                    && !Filter.isFilterMatch(sourceFilterMap, key.getNotFilterSet().get(), false)) {
+                    && !filter.isFilterMatch(sourceFilterMap, key.getNotFilterSet().get(), false)) {
                 continue;
             }
             if (key.getDeduplicationKey().isEmpty()) {

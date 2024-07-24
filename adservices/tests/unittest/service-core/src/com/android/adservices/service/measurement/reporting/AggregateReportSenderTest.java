@@ -18,8 +18,12 @@ package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
 
+import android.content.Context;
 import android.net.Uri;
 
+import androidx.test.core.app.ApplicationProvider;
+
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -37,6 +41,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import javax.net.ssl.HttpsURLConnection;
+
 public class AggregateReportSenderTest {
 
     @Rule
@@ -49,9 +55,12 @@ public class AggregateReportSenderTest {
     private static final String VERSION = "1234";
     private static final String REPORT_ID = "A1";
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
+    private static final String COORDINATOR_ORIGIN = "https://coordinator.origin";
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
             + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
             + "\"value\":1664}]}";
+
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
     private AggregateReportBody createAggregateReportBodyExample1() {
         return new AggregateReportBody.Builder()
@@ -62,6 +71,7 @@ public class AggregateReportSenderTest {
                 .setReportId(REPORT_ID)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
                 .build();
     }
 
@@ -78,10 +88,11 @@ public class AggregateReportSenderTest {
         Mockito.when(httpUrlConnection.getResponseCode()).thenReturn(200);
 
         JSONObject aggregateReportJson =
-                createAggregateReportBodyExample1().toJson(AggregateCryptoFixture.getKey());
+                createAggregateReportBodyExample1()
+                        .toJson(AggregateCryptoFixture.getKey(), FlagsFactory.getFlags());
         Uri reportingOrigin = Uri.parse(REPORTING_ORIGIN);
 
-        AggregateReportSender aggregateReportSender = new AggregateReportSender(false);
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(false, sContext);
         AggregateReportSender spyAggregateReportSender = Mockito.spy(aggregateReportSender);
 
         Mockito.doReturn(httpUrlConnection).when(spyAggregateReportSender)
@@ -96,20 +107,21 @@ public class AggregateReportSenderTest {
 
     @Test
     public void testCreateHttpUrlConnection() throws Exception {
-        HttpURLConnection mockConnection = Mockito.mock(HttpURLConnection.class);
+        HttpsURLConnection mockConnection = Mockito.mock(HttpsURLConnection.class);
         URL spyUrl = Mockito.spy(new URL("https://foo"));
         Mockito.doReturn(mockConnection).when(spyUrl).openConnection();
 
-        AggregateReportSender aggregateReportSender = new AggregateReportSender(false);
-        HttpURLConnection connection = aggregateReportSender.createHttpUrlConnection(spyUrl);
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(false, sContext);
+        HttpsURLConnection connection =
+                (HttpsURLConnection) aggregateReportSender.createHttpUrlConnection(spyUrl);
         assertEquals(mockConnection, connection);
     }
 
     @Test
     public void testDebugReportUriPath() {
-        Truth.assertThat(new AggregateReportSender(false).getReportUriPath())
+        Truth.assertThat(new AggregateReportSender(false, sContext).getReportUriPath())
                 .isEqualTo(AggregateReportSender.AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
-        Truth.assertThat(new AggregateReportSender(true).getReportUriPath())
+        Truth.assertThat(new AggregateReportSender(true, sContext).getReportUriPath())
                 .isEqualTo(AggregateReportSender.DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
     }
 }

@@ -16,16 +16,27 @@
 
 package com.android.adservices.data.measurement;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_UNKNOWN_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Abstract class for Datastore management.
  */
 public abstract class DatastoreManager {
+    final AdServicesErrorLogger mErrorLogger;
+
+    protected DatastoreManager(AdServicesErrorLogger errorLogger) {
+        mErrorLogger = errorLogger;
+    }
 
     /**
      * Consumer interface for Dao operations.
@@ -90,12 +101,30 @@ public abstract class DatastoreManager {
         } catch (DatastoreException ex) {
             result = Optional.empty();
             safePrintDataStoreVersion();
-            LogUtil.e(ex, "DatastoreException thrown during transaction");
+            LoggerFactory.getMeasurementLogger()
+                    .e(ex, "DatastoreException thrown during transaction");
+            mErrorLogger.logErrorWithExceptionInfo(
+                    ex,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             transaction.rollback();
+
+            if (FlagsFactory.getFlags()
+                            .getMeasurementEnableDatastoreManagerThrowDatastoreException()
+                    && ThreadLocalRandom.current().nextFloat()
+                            < FlagsFactory.getFlags()
+                                    .getMeasurementThrowUnknownExceptionSamplingRate()) {
+                throw new IllegalStateException(ex);
+            }
         } catch (Exception ex) {
             // Catch all exceptions for rollback
             safePrintDataStoreVersion();
-            LogUtil.e(ex, "Unhandled exception thrown during transaction");
+            LoggerFactory.getMeasurementLogger()
+                    .e(ex, "Unhandled exception thrown during transaction");
+            mErrorLogger.logErrorWithExceptionInfo(
+                    ex,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_UNKNOWN_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             transaction.rollback();
             throw ex;
         } finally {
@@ -121,10 +150,11 @@ public abstract class DatastoreManager {
     /** Prints the underlying data store version catching exceptions it can raise. */
     private void safePrintDataStoreVersion() {
         try {
-            LogUtil.w("Underlying datastore version: " + getDataStoreVersion());
+            LoggerFactory.getMeasurementLogger()
+                    .w("Underlying datastore version: " + getDataStoreVersion());
         } catch (Exception e) {
             // If fetching data store version throws an exception, skip printing the DB version.
-            LogUtil.e(e, "Failed to print data store version.");
+            LoggerFactory.getMeasurementLogger().e(e, "Failed to print data store version.");
         }
     }
 

@@ -55,6 +55,26 @@ public class AggregateCryptoConverterTest {
                     + "{\"bucket\": \"3\", \"value\":4}"
                     + "]}";
 
+    private static final String PADDED_PAYLOAD1 =
+            "{\"operation\":\"histogram\", "
+                    + "\"data\": ["
+                    + "{\"bucket\": \"1\", \"value\":2},"
+                    + "{\"bucket\": \"3\", \"value\":4},"
+                    + "{\"bucket\": \"0\", \"value\":0},"
+                    + "{\"bucket\": \"0\", \"value\":0},"
+                    + "{\"bucket\": \"0\", \"value\":0}"
+                    + "]}";
+
+    private static final String PADDED_PAYLOAD2 =
+            "{\"operation\":\"histogram\", "
+                    + "\"data\": ["
+                    + "{\"bucket\": \"1\", \"value\":2},"
+                    + "{\"bucket\": \"3\", \"value\":4},"
+                    + "{\"bucket\": \"5\", \"value\":6},"
+                    + "{\"bucket\": \"0\", \"value\":0},"
+                    + "{\"bucket\": \"0\", \"value\":0}"
+                    + "]}";
+
     @Test
     public void testEncrypt_successfully() throws Exception {
         String result =
@@ -62,6 +82,17 @@ public class AggregateCryptoConverterTest {
                         AggregateCryptoFixture.getPublicKeyBase64(), DEFAULT_PAYLOAD, SHARED_INFO);
         assertNotNull(result);
         assertEncryptedPayload(result, SHARED_INFO);
+    }
+
+    @Test
+    public void testEncrypt_payloadPadding_sameSize() throws Exception {
+        String result1 =
+                AggregateCryptoConverter.encrypt(
+                        AggregateCryptoFixture.getPublicKeyBase64(), PADDED_PAYLOAD1, SHARED_INFO);
+        String result2 =
+                AggregateCryptoConverter.encrypt(
+                        AggregateCryptoFixture.getPublicKeyBase64(), PADDED_PAYLOAD2, SHARED_INFO);
+        assertEquals(result1.length(), result2.length());
     }
 
     @Test

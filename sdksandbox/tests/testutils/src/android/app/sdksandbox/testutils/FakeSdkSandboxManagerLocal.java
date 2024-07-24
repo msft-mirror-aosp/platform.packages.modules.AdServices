@@ -19,6 +19,7 @@ package android.app.sdksandbox.testutils;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ProviderInfo;
 import android.os.IBinder;
 
@@ -49,6 +50,14 @@ public class FakeSdkSandboxManagerLocal implements SdkSandboxManagerLocal {
     public String getSdkSandboxProcessNameForInstrumentation(
             @NonNull ApplicationInfo clientAppInfo) {
         return clientAppInfo.processName + "_sdk_sandbox_instr";
+    }
+
+    @NonNull
+    @Override
+    public ApplicationInfo getSdkSandboxApplicationInfoForInstrumentation(
+            @NonNull ApplicationInfo clientAppInfo, boolean isSdkInSandbox) {
+        clientAppInfo.processName = getSdkSandboxProcessNameForInstrumentation(clientAppInfo);
+        return clientAppInfo;
     }
 
     @Override
@@ -87,4 +96,8 @@ public class FakeSdkSandboxManagerLocal implements SdkSandboxManagerLocal {
     public void enforceAllowedToHostSandboxedActivity(
             @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName) {}
 
+    @Override
+    public int getEffectiveTargetSdkVersion(int sdkSandboxUid) throws NameNotFoundException {
+        return 0;
+    }
 }

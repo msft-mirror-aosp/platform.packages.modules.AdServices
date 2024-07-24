@@ -34,11 +34,11 @@
 
         <!-- Defaulting the API rate limit -->
         <option name="run-command"
-                value="device_config put
-                adservices measurement_register_source_request_permits_per_second 25.0" />
+                value="device_config put adservices measurement_register_source_request_permits_per_second 25.0" />
         <option name="run-command"
-                value="device_config put
-                adservices measurement_register_web_source_request_permits_per_second 25.0" />
+                value="device_config put adservices measurement_register_web_source_request_permits_per_second 25.0" />
+        <option name="run-command"
+            value="device_config put adservices measurement_register_sources_request_permits_per_second 25.0" />
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />

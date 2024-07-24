@@ -22,26 +22,49 @@ android_test {
         "src/**/*.java",
     ],
     static_libs: [
-        "androidx.concurrent_concurrent-futures",
-        "compatibility-device-util-axt",
-        "truth",
-        "adservices-test-fixtures",
-        "adservices-clients",
         "adservices-test-utility",
     ],
     libs: [
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices-lib",
         "framework-sdksandbox.impl",
     ],
     test_suites: [
         "cts",
         "general-tests",
         "mts-adservices",
+        "mcts-adservices",
     ],
     // To fix Pre-submit warning, suggested by farivar@
     javacflags: ["-parameters"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
-    test_mainline_modules: ["com.google.android.adservices.apex"],
+}
+
+android_test {
+    name: "CtsAdExtServicesEndToEndTestMeasurement",
+    srcs: [
+        "src/**/*.java",
+    ],
+    static_libs: [
+        "adservices-test-utility",
+    ],
+    libs: [
+        "android.ext.adservices",
+        "android.test.base",
+        "framework-adservices-lib",
+        "framework-sdksandbox.impl",
+    ],
+    test_suites: [
+        "cts",
+        "general-tests",
+        "mts-extservices",
+        "mcts-extservices",
+    ],
+    javacflags: ["-parameters"],
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    max_sdk_version: "32",
+    test_config: "AndroidTest.ExtServices.xml",
+    manifest: "AndroidManifestExtServices.xml",
 }

@@ -18,6 +18,7 @@
           package="com.android.sdksandboxcode_mediatee">
 
     <application>
+        <profileable android:shell="true" android:enabled="true" />
         <sdk-library android:name="com.android.sdksandboxcode_mediatee"
                      android:versionMajor="1" />
         <property android:name="android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME"

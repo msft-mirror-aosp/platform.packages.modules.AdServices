@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
+
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -27,7 +29,9 @@ import android.test.mock.MockContentResolver;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -40,17 +44,16 @@ import com.android.adservices.service.measurement.registration.AsyncTriggerFetch
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.mockito.stubbing.Answer;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 class TestObjectProvider {
-    private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
-
     @IntDef(
             value = {
                 Type.DENOISED,
@@ -63,13 +66,20 @@ class TestObjectProvider {
     }
 
     static AttributionJobHandlerWrapper getAttributionJobHandler(
-            DatastoreManager datastoreManager, Flags flags) {
+            DatastoreManager datastoreManager, Flags flags, AdServicesErrorLogger errorLogger) {
         return new AttributionJobHandlerWrapper(
                 datastoreManager,
                 flags,
-                new DebugReportApi(ApplicationProvider.getApplicationContext(), flags),
+                new DebugReportApi(
+                        ApplicationProvider.getApplicationContext(),
+                        flags,
+                        new EventReportWindowCalcDelegate(flags),
+                        new SourceNoiseHandler(flags),
+                        new SQLDatastoreManager(
+                                DbTestUtil.getMeasurementDbHelperForTest(), errorLogger)),
                 new EventReportWindowCalcDelegate(flags),
-                new SourceNoiseHandler(flags));
+                new SourceNoiseHandler(flags),
+                AdServicesLoggerImpl.getInstance());
     }
 
     static MeasurementImpl getMeasurementImpl(
@@ -91,12 +101,13 @@ class TestObjectProvider {
             DatastoreManager datastoreManager,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
-            DebugReportApi debugReportApi) {
+            DebugReportApi debugReportApi,
+            Flags flags) {
         SourceNoiseHandler sourceNoiseHandler =
                 spy(new SourceNoiseHandler(FlagsFactory.getFlagsForTest()));
         if (type == Type.DENOISED) {
             // Disable Impression Noise
-            doReturn(Collections.emptyList())
+            doReturn(null)
                     .when(sourceNoiseHandler)
                     .assignAttributionModeAndGenerateFakeReports(any(Source.class));
         } else if (type == Type.NOISY) {
@@ -108,7 +119,8 @@ class TestObjectProvider {
                         return Collections.singletonList(
                                 new Source.FakeReport(
                                         new UnsignedLong(0L),
-                                        source.getExpiryTime() + ONE_HOUR_IN_MILLIS,
+                                        source.getExpiryTime()
+                                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
                                         source.getAppDestinations()));
                     };
             doAnswer(answerSourceEventReports)
@@ -117,11 +129,13 @@ class TestObjectProvider {
         }
 
         return new AsyncRegistrationQueueRunner(
+                ApplicationProvider.getApplicationContext(),
                 new MockContentResolver(),
                 asyncSourceFetcher,
                 asyncTriggerFetcher,
                 datastoreManager,
                 debugReportApi,
-                sourceNoiseHandler);
+                sourceNoiseHandler,
+                flags);
     }
 }

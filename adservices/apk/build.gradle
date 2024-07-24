@@ -92,7 +92,7 @@ android {
                 'unittest/src',
                 'tests/notification/src',
                 'tests/settings/src',
-                'tests/settingsga/src',
+                'tests/settingsgaota/src',
                 'tests/util/java',
             ]
             java.setIncludes(new HashSet([

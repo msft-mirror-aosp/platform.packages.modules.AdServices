@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.MeasurementHttpClient;
@@ -36,7 +37,11 @@ import java.net.URL;
  * origin.
  */
 public abstract class MeasurementReportSender {
-    private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
+    private final MeasurementHttpClient mNetworkConnection;
+
+    public MeasurementReportSender(Context context) {
+        mNetworkConnection = new MeasurementHttpClient(context);
+    }
 
     /**
      * Sends an event report to the reporting origin.

@@ -42,7 +42,7 @@
 
     <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
                      android:targetPackage="com.android.tests.sdksandbox"
-                     android:label="SupplementalProcessStorageTestApp"/>
+                     android:label="SdkSandboxStorageTestApp"/>
 
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
 </manifest>

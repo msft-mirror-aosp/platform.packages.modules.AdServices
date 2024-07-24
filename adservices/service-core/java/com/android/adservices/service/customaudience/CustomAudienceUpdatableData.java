@@ -16,8 +16,11 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_DEFAULT;
+
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.customaudience.CustomAudience;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -82,10 +85,14 @@ public abstract class CustomAudienceUpdatableData {
     @NonNull
     public abstract Instant getAttemptedUpdateTime();
 
+    /** Returns the bitfield of auction server request flags. */
+    @CustomAudience.AuctionServerRequestFlag
+    public abstract int getAuctionServerRequestFlags();
+
     /**
      * @return the result type for the update attempt before {@link
      *     #createFromResponseString(Instant, AdTechIdentifier,
-     *     BackgroundFetchRunner.UpdateResultType, String, Flags)} was called
+     *     BackgroundFetchRunner.UpdateResultType, String, Flags, boolean)} was called
      */
     public abstract BackgroundFetchRunner.UpdateResultType getInitialUpdateResult();
 
@@ -188,13 +195,21 @@ public abstract class CustomAudienceUpdatableData {
                         flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         flags.getFledgeCustomAudienceMaxAdsSizeB(),
                         flags.getFledgeCustomAudienceMaxNumAds(),
-                        flags.getFledgeAdSelectionFilteringEnabled());
+                        flags.getFledgeAdSelectionFilteringEnabled(),
+                        flags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        flags.getFledgeAuctionServerAdRenderIdMaxLength());
 
         ReadStatus userBiddingSignalsReadStatus =
                 readUserBiddingSignals(reader, responseHash, dataBuilder);
         ReadStatus trustedBiddingDataReadStatus =
                 readTrustedBiddingData(reader, responseHash, dataBuilder);
         ReadStatus adsReadStatus = readAds(reader, responseHash, dataBuilder);
+
+        ReadStatus auctionServerFlagStatus = ReadStatus.STATUS_UNKNOWN;
+        if (flags.getFledgeAuctionServerRequestFlagsEnabled()) {
+            auctionServerFlagStatus =
+                    readAuctionServerRequestFlags(reader, responseHash, dataBuilder);
+        }
 
         // If there were no useful fields found, or if there was something useful found and
         // successfully updated, then this object should signal a successful update.
@@ -204,7 +219,8 @@ public abstract class CustomAudienceUpdatableData {
                                 || adsReadStatus == ReadStatus.STATUS_FOUND_VALID)
                         || (userBiddingSignalsReadStatus == ReadStatus.STATUS_NOT_FOUND
                                 && trustedBiddingDataReadStatus == ReadStatus.STATUS_NOT_FOUND
-                                && adsReadStatus == ReadStatus.STATUS_NOT_FOUND);
+                                && adsReadStatus == ReadStatus.STATUS_NOT_FOUND)
+                        || auctionServerFlagStatus == ReadStatus.STATUS_FOUND_VALID;
         sLogger.v(
                 "%s Completed parsing JSON response with containsSuccessfulUpdate = %b",
                 responseHash, containsSuccessfulUpdate);
@@ -315,20 +331,40 @@ public abstract class CustomAudienceUpdatableData {
         }
     }
 
+    @VisibleForTesting
+    @NonNull
+    static ReadStatus readAuctionServerRequestFlags(
+            @NonNull CustomAudienceUpdatableDataReader reader,
+            @NonNull String responseHash,
+            @NonNull CustomAudienceUpdatableData.Builder dataBuilder) {
+        try {
+            dataBuilder.setAuctionServerRequestFlags(reader.getAuctionServerRequestFlags());
+            return ReadStatus.STATUS_FOUND_VALID;
+        } catch (JSONException e) {
+            sLogger.e(
+                    e,
+                    INVALID_JSON_TYPE_ERROR_FORMAT,
+                    responseHash,
+                    CustomAudienceUpdatableDataReader.AUCTION_SERVER_REQUEST_FLAGS_KEY);
+            return ReadStatus.STATUS_FOUND_INVALID;
+        }
+    }
+
     /**
      * Gets a Builder to make {@link #createFromResponseString(Instant, AdTechIdentifier,
-     * BackgroundFetchRunner.UpdateResultType, String, Flags)} easier.
+     * BackgroundFetchRunner.UpdateResultType, String, Flags, boolean)} easier.
      */
     @VisibleForTesting
     @NonNull
     public static CustomAudienceUpdatableData.Builder builder() {
-        return new AutoValue_CustomAudienceUpdatableData.Builder();
+        return new AutoValue_CustomAudienceUpdatableData.Builder()
+                .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_DEFAULT);
     }
 
     /**
      * This is a hidden (visible for testing) AutoValue builder to make {@link
      * #createFromResponseString(Instant, AdTechIdentifier, BackgroundFetchRunner.UpdateResultType,
-     * String, Flags)} easier.
+     * String, Flags, boolean)} easier.
      */
     @VisibleForTesting
     @AutoValue.Builder
@@ -348,6 +384,11 @@ public abstract class CustomAudienceUpdatableData {
         /** Sets the time at which the custom audience update was attempted. */
         @NonNull
         public abstract Builder setAttemptedUpdateTime(@NonNull Instant value);
+
+        /** Sets the bitfield of auction server request flags. */
+        @NonNull
+        public abstract Builder setAuctionServerRequestFlags(
+                @CustomAudience.AuctionServerRequestFlag int auctionServerRequestFlags);
 
         /** Sets the result of the update prior to parsing the response string. */
         @NonNull

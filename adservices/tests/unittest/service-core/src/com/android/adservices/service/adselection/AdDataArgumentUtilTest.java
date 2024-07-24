@@ -17,9 +17,9 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
+import static com.android.adservices.service.js.JSScriptArgument.numericArrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
-import static com.android.adservices.service.js.JSScriptArgument.stringArrayArg;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -31,9 +31,12 @@ import android.adservices.common.CommonFixture;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -70,6 +73,9 @@ public class AdDataArgumentUtilTest {
                         AdCounterKeyCopierImpl.AD_COUNTER_KEYS_FIELD_NAME,
                         new JSONArray(AD_DATA_WITH_AD_COUNTER_KEYS.getAdCounterKeys()));
     }
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testShouldReadValidJSON() throws Exception {
@@ -195,7 +201,7 @@ public class AdDataArgumentUtilTest {
                                 jsonArg(
                                         AdDataArgumentUtil.METADATA_FIELD_NAME,
                                         AD_DATA_WITH_AD_COUNTER_KEYS.getMetadata()),
-                                stringArrayArg(
+                                numericArrayArg(
                                         AdCounterKeyCopierImpl.AD_COUNTER_KEYS_FIELD_NAME,
                                         new ArrayList<>(
                                                 AD_DATA_WITH_AD_COUNTER_KEYS.getAdCounterKeys()))));

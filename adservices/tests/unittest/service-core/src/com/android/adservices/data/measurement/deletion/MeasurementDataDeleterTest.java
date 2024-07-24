@@ -39,6 +39,9 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
@@ -49,21 +52,31 @@ import com.android.adservices.service.measurement.aggregation.AggregateHistogram
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
 
 import java.math.BigInteger;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MeasurementDataDeleterTest {
@@ -139,10 +152,24 @@ public class MeasurementDataDeleterTest {
     @Mock private AggregateReport mAggregateReport3;
     @Mock private List<Uri> mOriginUris;
     @Mock private List<Uri> mDomainUris;
+    @Mock private Flags mFlags;
+    @Mock private AdServicesErrorLogger mErrorLogger;
+    @Mock private AdServicesLogger mLogger;
 
     private MeasurementDataDeleter mMeasurementDataDeleter;
 
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .setStrictness(Strictness.WARN)
+                    .build();
+
     private class FakeDatastoreManager extends DatastoreManager {
+        private FakeDatastoreManager() {
+            super(mErrorLogger);
+        }
+
         @Override
         public ITransaction createNewTransaction() {
             return mTransaction;
@@ -160,8 +187,13 @@ public class MeasurementDataDeleterTest {
     }
 
     @Before
-    public void setUp() throws Exception {
-        mMeasurementDataDeleter = new MeasurementDataDeleter(new FakeDatastoreManager());
+    public void setup() throws Exception {
+        MockitoAnnotations.initMocks(this);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(false);
+        mMeasurementDataDeleter =
+                spy(new MeasurementDataDeleter(new FakeDatastoreManager(), mFlags, mLogger));
     }
 
     @Test
@@ -169,13 +201,13 @@ public class MeasurementDataDeleterTest {
             throws DatastoreException {
         // Setup
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source1")
                         .setAggregatableAttributionSource(mAggregatableAttributionSource1)
                         .setAggregateContributions(32666)
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source2")
                         .setAggregatableAttributionSource(mAggregatableAttributionSource2)
                         .setAggregateContributions(6235)
@@ -206,7 +238,7 @@ public class MeasurementDataDeleterTest {
             throws DatastoreException {
         // Setup
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("source1")
                         .setAggregatableAttributionSource(mAggregatableAttributionSource1)
                         .setAggregateContributions(10)
@@ -227,11 +259,69 @@ public class MeasurementDataDeleterTest {
     }
 
     @Test
-    public void resetDedupKeys_hasMatchingEventReports_removesTriggerDedupKeysFromSource()
+    public void resetDedupKeys_matchingReports_removesDedupKeysFromSource()
+            throws DatastoreException, JSONException {
+        String attributionStatus1 = getAttributionStatus(
+                List.of("trigger1", "trigger2", "trigger3"),
+                List.of("4", "5", "6"),
+                List.of("1", "2", "3"));
+        // Setup
+        Source source1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("sourceId1")
+                        .setEventAttributionStatus(attributionStatus1)
+                        .build();
+        String attributionStatus2 = getAttributionStatus(
+                List.of("trigger11", "trigger22", "trigger33"),
+                List.of("44", "55", "66"),
+                List.of("11", "22", "33"));
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("sourceId2")
+                        .setEventAttributionStatus(attributionStatus2)
+                        .build();
+
+        when(mEventReport1.getTriggerDedupKey()).thenReturn(new UnsignedLong("1")); // S1 - T1
+        when(mEventReport1.getTriggerId()).thenReturn("trigger1"); // S1 - T1
+        when(mEventReport2.getTriggerDedupKey()).thenReturn(new UnsignedLong("22")); // S2 - T2
+        when(mEventReport2.getTriggerId()).thenReturn("trigger22"); // S2 - T2
+        when(mEventReport3.getTriggerDedupKey()).thenReturn(new UnsignedLong("3")); // S1 - T3
+        when(mEventReport3.getTriggerId()).thenReturn("trigger3"); // S3 - T3
+        when(mEventReport1.getSourceId()).thenReturn(source1.getId());
+        when(mEventReport2.getSourceId()).thenReturn(source2.getId());
+        when(mEventReport3.getSourceId()).thenReturn(source1.getId());
+
+        when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
+        when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
+
+        // Execution
+        mMeasurementDataDeleter.resetDedupKeys(
+                mMeasurementDao, List.of(mEventReport1, mEventReport2, mEventReport3));
+
+        // Verification
+        ArgumentCaptor<String> attributionStatusArg = ArgumentCaptor.forClass(String.class);
+        verify(mMeasurementDao, times(2)).updateSourceAttributedTriggers(
+                eq(source1.getId()), attributionStatusArg.capture());
+        List<String> attributionStatuses = attributionStatusArg.getAllValues();
+        assertEquals(
+                getAttributionStatus(
+                        List.of("trigger2", "trigger3"), List.of("5", "6"), List.of("2", "3")),
+                attributionStatuses.get(0));
+        assertEquals(
+                getAttributionStatus(List.of("trigger2"), List.of("5"), List.of("2")),
+                attributionStatuses.get(1));
+        String expectedAttributionStatus2 = getAttributionStatus(
+                List.of("trigger11", "trigger33"), List.of("44", "66"), List.of("11", "33"));
+        verify(mMeasurementDao).updateSourceAttributedTriggers(
+                eq(source2.getId()), eq(expectedAttributionStatus2));
+    }
+
+    @Test
+    public void resetDedupKeys_matchingReportsDedupAlignFlagOff_removesDedupKeysFromSource()
             throws DatastoreException {
         // Setup
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
                         .setEventReportDedupKeys(
                                 new ArrayList<>(
@@ -241,7 +331,7 @@ public class MeasurementDataDeleterTest {
                                                 new UnsignedLong("3"))))
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId2")
                         .setEventReportDedupKeys(
                                 new ArrayList<>(
@@ -261,6 +351,8 @@ public class MeasurementDataDeleterTest {
         when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
         when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
 
+        when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(false);
+
         // Execution
         mMeasurementDataDeleter.resetDedupKeys(
                 mMeasurementDao, List.of(mEventReport1, mEventReport2, mEventReport3));
@@ -277,7 +369,7 @@ public class MeasurementDataDeleterTest {
     }
 
     @Test
-    public void resetDedupKeys_eventReportHasNullSourceId_ignoresRemoval()
+    public void resetDedupKeys_eventReportHasNullSourceIdDedup_ignoresRemoval()
             throws DatastoreException {
         // Setup
         when(mEventReport1.getSourceId()).thenReturn(null);
@@ -288,15 +380,32 @@ public class MeasurementDataDeleterTest {
 
         // Verification
         verify(mMeasurementDao, never()).getSource(anyString());
+        verify(mMeasurementDao, never()).updateSourceAttributedTriggers(anyString(), anyString());
+    }
+
+    @Test
+    public void resetDedupKeys_eventReportHasNullSourceIdDedupFlagOff_ignoresRemoval()
+            throws DatastoreException {
+        // Setup
+        when(mEventReport1.getSourceId()).thenReturn(null);
+        when(mEventReport1.getTriggerDedupKey()).thenReturn(new UnsignedLong("1")); // S1 - T1
+
+        when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(false);
+
+        // Execution
+        mMeasurementDataDeleter.resetDedupKeys(mMeasurementDao, List.of(mEventReport1));
+
+        // Verification
+        verify(mMeasurementDao, never()).getSource(anyString());
         verify(mMeasurementDao, never()).updateSourceEventReportDedupKeys(any());
     }
 
     @Test
-    public void resetDedupKeys_hasMatchingAggregateReports_removesTriggerDedupKeysFromSource()
+    public void resetAggregateReportDedupKeys_matchingReports_removesDedupKeysFromSource()
             throws DatastoreException {
         // Setup
         Source source1 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
                         .setAggregateReportDedupKeys(
                                 new ArrayList<>(
@@ -306,7 +415,7 @@ public class MeasurementDataDeleterTest {
                                                 new UnsignedLong("3"))))
                         .build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId2")
                         .setAggregateReportDedupKeys(
                                 new ArrayList<>(
@@ -342,7 +451,7 @@ public class MeasurementDataDeleterTest {
     }
 
     @Test
-    public void resetDedupKeys_AggregateReportHasNullSourceId_ignoresRemoval()
+    public void resetAggregateReportDedupKeys_aggregateReportHasNullSourceId_ignoresRemoval()
             throws DatastoreException {
         // Setup
         when(mAggregateReport1.getSourceId()).thenReturn(null);
@@ -358,7 +467,7 @@ public class MeasurementDataDeleterTest {
     }
 
     @Test
-    public void resetDedupKeys_AggregateReportHasNullDedupKey_ignoresRemoval()
+    public void resetAggregateReportDedupKeys_aggregateReportHasNullDedupKey_ignoresRemoval()
             throws DatastoreException {
         // Setup
         when(mAggregateReport1.getSourceId()).thenReturn(null);
@@ -376,12 +485,12 @@ public class MeasurementDataDeleterTest {
     @Test
     public void delete_deletionModeAll_success() throws DatastoreException {
         // Setup
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
-        List<String> triggerIds = List.of("triggerId1", "triggerId2");
+        Set<String> triggerIds = Set.of("triggerId1", "triggerId2");
         List<String> sourceIds = List.of("sourceId1", "sourceId2");
-        Source source1 = SourceFixture.getValidSourceBuilder().setId("sourceId1").build();
+        List<String> asyncRegistrationIds = List.of("asyncRegId1", "asyncRegId2");
+        Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
         Source source2 =
-                SourceFixture.getValidSourceBuilder()
+                SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId2")
                         .setAggregateReportDedupKeys(
                                 List.of(new UnsignedLong(1L), new UnsignedLong(2L)))
@@ -405,11 +514,11 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         doNothing()
-                .when(subjectUnderTest)
+                .when(mMeasurementDataDeleter)
                 .resetAggregateContributions(
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
         doNothing()
-                .when(subjectUnderTest)
+                .when(mMeasurementDataDeleter)
                 .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
         when(mMeasurementDao.fetchMatchingEventReports(sourceIds, triggerIds))
                 .thenReturn(List.of(mEventReport1, mEventReport2));
@@ -423,6 +532,14 @@ public class MeasurementDataDeleterTest {
                         mDomainUris,
                         DeletionRequest.MATCH_BEHAVIOR_DELETE))
                 .thenReturn(Arrays.asList(source1.getId(), source2.getId()));
+        when(mMeasurementDao.fetchMatchingAsyncRegistrations(
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
+                        START,
+                        END,
+                        mOriginUris,
+                        mDomainUris,
+                        DeletionRequest.MATCH_BEHAVIOR_DELETE))
+                .thenReturn(asyncRegistrationIds);
         when(mMeasurementDao.fetchMatchingTriggers(
                         Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
                         START,
@@ -430,38 +547,185 @@ public class MeasurementDataDeleterTest {
                         mOriginUris,
                         mDomainUris,
                         DeletionRequest.MATCH_BEHAVIOR_DELETE))
-                .thenReturn(Arrays.asList(trigger1.getId(), trigger2.getId()));
+                .thenReturn(Set.of(trigger1.getId(), trigger2.getId()));
+        when(mEventReport1.getSourceId()).thenReturn("sourceId1");
+        when(mEventReport2.getSourceId()).thenReturn("sourceId2");
+        when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
+        when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
 
         // Execution
-        boolean result = subjectUnderTest.delete(deletionParam);
+        boolean result = mMeasurementDataDeleter.delete(deletionParam);
 
         // Assertions
         assertTrue(result);
-        verify(subjectUnderTest)
+        verify(mMeasurementDataDeleter)
                 .resetAggregateContributions(
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
-        verify(subjectUnderTest)
+        verify(mMeasurementDataDeleter)
                 .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
+        verify(mMeasurementDao).deleteAsyncRegistrations(asyncRegistrationIds);
         verify(mMeasurementDao).deleteSources(sourceIds);
         verify(mMeasurementDao).deleteTriggers(triggerIds);
-        verify(mMeasurementDao).deleteAsyncRegistrationsProvidedRegistrant(APP_PACKAGE_NAME);
-        verify(subjectUnderTest)
+        verify(mMeasurementDataDeleter)
                 .resetAggregateReportDedupKeys(
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
     }
 
     @Test
+    public void delete_deletionModeAllFlexApi_success() throws DatastoreException, JSONException {
+        // Setup
+        // A mutable set -- the expected result of MeasurementDao::fetchMatchingTriggers
+        Set<String> triggerIds = new HashSet<>();
+        triggerIds.addAll(List.of("triggerId1", "triggerId2"));
+        // A list -- the expected result of MeasurementDao::fetchMatchingSources
+        List<String> sourceIds = List.of("sourceId1", "sourceId2");
+        // Expected triggers to delete
+        Set<String> extendedTriggerIds = Set.of(
+                "triggerId1", "triggerId2", "triggerId3", "triggerId4");
+        // A mutable set -- the expected result of MeasurementDao::fetchFlexSourceIdsFor
+        Set<String> extendedSourceIds1 = new HashSet<>();
+        extendedSourceIds1.addAll(List.of("sourceId3", "sourceId4"));
+        // Expected parameter passed to MeasurementDao::fetchMatchingEventReports.
+        Set<String> extendedSourceIds2 = Set.of("sourceId1", "sourceId2", "sourceId3", "sourceId4");
+        List<String> asyncRegistrationIds = List.of("asyncRegId1", "asyncRegId2");
+        Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("sourceId2")
+                        .setAggregateReportDedupKeys(
+                                List.of(new UnsignedLong(1L), new UnsignedLong(2L)))
+                        .build();
+
+        // Two Flex API sources
+
+        // One trigger is included in triggerIds, the other is not. Both will be added to the set.
+        String attributionStatus3 = getAttributionStatus(
+                List.of("triggerId2", "triggerId3"),
+                List.of("4", "5"),
+                List.of("1", "2"));
+        Source source3 =
+                SourceFixture.getValidSourceBuilderWithFlexEventReport()
+                        .setId("sourceId3")
+                        .setEventAttributionStatus(attributionStatus3)
+                        .build();
+        // A trigger that is not included in triggerIds will be added to the set.
+        String attributionStatus4 = getAttributionStatus(
+                List.of("triggerId4"),
+                List.of("4"),
+                List.of("1"));
+        Source source4 =
+                SourceFixture.getValidSourceBuilderWithFlexEventReportValueSum()
+                        .setId("sourceId4")
+                        .setEventAttributionStatus(attributionStatus4)
+                        .build();
+
+        when(mEventReport1.getId()).thenReturn("eventReportId1");
+        when(mEventReport2.getId()).thenReturn("eventReportId2");
+        when(mEventReport3.getId()).thenReturn("eventReportId3");
+        when(mAggregateReport1.getId()).thenReturn("aggregateReportId1");
+        when(mAggregateReport2.getId()).thenReturn("aggregateReportId2");
+        DeletionParam deletionParam =
+                new DeletionParam.Builder(
+                                mOriginUris,
+                                mDomainUris,
+                                START,
+                                END,
+                                APP_PACKAGE_NAME,
+                                SDK_PACKAGE_NAME)
+                        .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
+                        .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
+                        .build();
+
+        doNothing()
+                .when(mMeasurementDataDeleter)
+                .resetAggregateContributions(
+                        mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
+        doNothing()
+                .when(mMeasurementDataDeleter)
+                .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
+        // Due to Flex API, MeasurementDao::fetchMatchingEventReports will be called with
+        // extendedSourceIds.
+        when(mMeasurementDao.fetchMatchingEventReports(extendedSourceIds2, triggerIds))
+                .thenReturn(List.of(mEventReport1, mEventReport2, mEventReport3));
+        when(mMeasurementDao.fetchMatchingAggregateReports(sourceIds, triggerIds))
+                .thenReturn(List.of(mAggregateReport1, mAggregateReport2));
+        when(mMeasurementDao.fetchMatchingSources(
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
+                        START,
+                        END,
+                        mOriginUris,
+                        mDomainUris,
+                        DeletionRequest.MATCH_BEHAVIOR_DELETE))
+                .thenReturn(sourceIds);
+        when(mMeasurementDao.fetchMatchingAsyncRegistrations(
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
+                        START,
+                        END,
+                        mOriginUris,
+                        mDomainUris,
+                        DeletionRequest.MATCH_BEHAVIOR_DELETE))
+                .thenReturn(asyncRegistrationIds);
+        when(mMeasurementDao.fetchMatchingTriggers(
+                        Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME),
+                        START,
+                        END,
+                        mOriginUris,
+                        mDomainUris,
+                        DeletionRequest.MATCH_BEHAVIOR_DELETE))
+                .thenReturn(triggerIds);
+        when(mEventReport1.getSourceId()).thenReturn("sourceId1");
+        when(mEventReport2.getSourceId()).thenReturn("sourceId2");
+        when(mEventReport3.getSourceId()).thenReturn("sourceId3");
+        when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
+        when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
+        when(mMeasurementDao.getSource(source3.getId())).thenReturn(source3);
+        when(mMeasurementDao.getSource(source4.getId())).thenReturn(source4);
+
+        // Flex API
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMeasurementDao.fetchFlexSourceIdsFor(triggerIds))
+                .thenReturn(extendedSourceIds1);
+
+        // Execution
+        boolean result = mMeasurementDataDeleter.delete(deletionParam);
+
+        // Assertions
+        assertTrue(result);
+        verify(mMeasurementDataDeleter)
+                .resetAggregateContributions(
+                        mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
+        verify(mMeasurementDataDeleter)
+                .resetDedupKeys(
+                        mMeasurementDao, List.of(mEventReport1, mEventReport2, mEventReport3));
+        verify(mMeasurementDao).deleteAsyncRegistrations(asyncRegistrationIds);
+        verify(mMeasurementDao).deleteSources(sourceIds);
+        verify(mMeasurementDao).deleteTriggers(extendedTriggerIds);
+        verify(mMeasurementDataDeleter)
+                .resetAggregateReportDedupKeys(
+                        mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
+        ArgumentCaptor<String> sourceIdArg = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> attributionStatusArg = ArgumentCaptor.forClass(String.class);
+        verify(mMeasurementDao, times(2)).updateSourceAttributedTriggers(
+                sourceIdArg.capture(), attributionStatusArg.capture());
+        assertEquals(Set.of("sourceId3", "sourceId4"), new HashSet(sourceIdArg.getAllValues()));
+        assertEquals(
+                List.of(new JSONArray().toString(), new JSONArray().toString()),
+                attributionStatusArg.getAllValues());
+    }
+
+    @Test
     public void delete_deletionModeExcludeInternalData_success() throws DatastoreException {
         // Setup
-        MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
-        List<String> triggerIds = List.of("triggerId1", "triggerId2");
+        Set<String> triggerIds = Set.of("triggerId1", "triggerId2");
         List<String> sourceIds = List.of("sourceId1", "sourceId2");
-        Source source1 = SourceFixture.getValidSourceBuilder().setId("sourceId1").build();
-        Source source2 = SourceFixture.getValidSourceBuilder().setId("sourceId2").build();
+        Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
+        Source source2 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId2").build();
         Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().setId("triggerId1").build();
         Trigger trigger2 = TriggerFixture.getValidTriggerBuilder().setId("triggerId2").build();
         when(mEventReport1.getId()).thenReturn("eventReportId1");
         when(mEventReport2.getId()).thenReturn("eventReportId2");
+        when(mEventReport1.getSourceId()).thenReturn("sourceId1");
+        when(mEventReport2.getSourceId()).thenReturn("sourceId2");
         when(mAggregateReport1.getId()).thenReturn("aggregateReportId1");
         when(mAggregateReport2.getId()).thenReturn("aggregateReportId2");
         DeletionParam deletionParam =
@@ -477,11 +741,11 @@ public class MeasurementDataDeleterTest {
                         .build();
 
         doNothing()
-                .when(subjectUnderTest)
+                .when(mMeasurementDataDeleter)
                 .resetAggregateContributions(
                         mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
         doNothing()
-                .when(subjectUnderTest)
+                .when(mMeasurementDataDeleter)
                 .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
         when(mMeasurementDao.fetchMatchingEventReports(sourceIds, triggerIds))
                 .thenReturn(List.of(mEventReport1, mEventReport2));
@@ -502,10 +766,12 @@ public class MeasurementDataDeleterTest {
                         mOriginUris,
                         mDomainUris,
                         DeletionRequest.MATCH_BEHAVIOR_DELETE))
-                .thenReturn(Arrays.asList(trigger1.getId(), trigger2.getId()));
+                .thenReturn(Set.of(trigger1.getId(), trigger2.getId()));
+        when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
+        when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
 
         // Execution
-        boolean result = subjectUnderTest.delete(deletionParam);
+        boolean result = mMeasurementDataDeleter.delete(deletionParam);
 
         // Assertions
         assertTrue(result);
@@ -527,7 +793,24 @@ public class MeasurementDataDeleterTest {
                         eq(Source.Status.MARKED_TO_DELETE));
         verify(mMeasurementDao)
                 .updateTriggerStatus(
-                        eq(List.of(trigger1.getId(), trigger2.getId())),
+                        eq(Set.of(trigger1.getId(), trigger2.getId())),
                         eq(Trigger.Status.MARKED_TO_DELETE));
+    }
+
+    private static String getAttributionStatus(List<String> triggerIds, List<String> triggerData,
+            List<String> dedupKeys) {
+        try {
+            JSONArray attributionStatus = new JSONArray();
+            for (int i = 0; i < triggerIds.size(); i++) {
+                attributionStatus.put(
+                        new JSONObject()
+                                .put("trigger_id", triggerIds.get(i))
+                                .put("trigger_data", triggerData.get(i))
+                                .put("dedup_key", dedupKeys.get(i)));
+            }
+            return attributionStatus.toString();
+        } catch (JSONException ignored) {
+            return null;
+        }
     }
 }

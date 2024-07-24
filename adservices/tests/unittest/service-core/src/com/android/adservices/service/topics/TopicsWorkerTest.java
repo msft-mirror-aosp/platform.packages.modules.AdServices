@@ -44,8 +44,11 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockRandom;
+import com.android.adservices.cobalt.TopicsCobaltLogger;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
@@ -55,13 +58,16 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Correspondence;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -90,6 +96,10 @@ public class TopicsWorkerTest {
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesManager mMockAdServicesManager;
     @Mock AppSearchConsentManager mAppSearchConsentManager;
+    @Mock TopicsCobaltLogger mTopicsCobaltLogger;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -121,7 +131,8 @@ public class TopicsWorkerTest {
                         mLogger,
                         mBlockedTopicsManager,
                         new GlobalBlockedTopicsManager(
-                                /* globalBlockedTopicsManager= */ new HashSet<>()));
+                                /* globalBlockedTopicIds= */ new HashSet<>()),
+                        mTopicsCobaltLogger);
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
 
@@ -176,6 +187,289 @@ public class TopicsWorkerTest {
                 .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
         assertThat(getTopicsResult.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
+
+        // getTopic() + loadCache() + handleSdkTopicsAssignmentForAppInstallation()
+        verify(mMockEpochManager, times(3)).getCurrentEpochId();
+        verify(mMockFlags, times(3)).getTopicsNumberOfLookBackEpochs();
+    }
+
+    @Test
+    public void testGetTopics_enableEncryption_disablePlaintextTopics() {
+        final long epochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
+        EncryptedTopic encryptedTopic1 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic1.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier1",
+                        /* encapsulatedKey */ "encapsulatedKey1".getBytes(StandardCharsets.UTF_8));
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
+        EncryptedTopic encryptedTopic2 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic2.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier2",
+                        /* encapsulatedKey */ "encapsulatedKey2".getBytes(StandardCharsets.UTF_8));
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
+        EncryptedTopic encryptedTopic3 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic3.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier3",
+                        /* encapsulatedKey */ "encapsulatedKey3".getBytes(StandardCharsets.UTF_8));
+        Topic[] topics = {topic1, topic2, topic3};
+        EncryptedTopic[] encryptedTopics = {encryptedTopic1, encryptedTopic2, encryptedTopic3};
+        // persist returned topics into DB
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
+
+            EncryptedTopic currentEncryptedTopic =
+                    encryptedTopics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, EncryptedTopic> returnedEncryptedTopicsMap = new HashMap<>();
+            returnedEncryptedTopicsMap.put(appSdkKey, currentEncryptedTopic);
+            mTopicsDao.persistReturnedAppEncryptedTopicsMap(numEpoch, returnedEncryptedTopicsMap);
+        }
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+        when(mMockFlags.getTopicsEncryptionEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsDisablePlaintextResponse()).thenReturn(true);
+
+        // Real Cache Manager requires loading cache before getTopics() being called.
+        mTopicsWorker.loadCache();
+
+        GetTopicsResult getTopicsResult = mTopicsWorker.getTopics("app", "sdk");
+
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(STATUS_SUCCESS)
+                        .setTaxonomyVersions(List.of())
+                        .setModelVersions(List.of())
+                        .setTopics(List.of())
+                        .setEncryptedTopics(
+                                Arrays.asList(
+                                        encryptedTopic1.getEncryptedTopic(),
+                                        encryptedTopic2.getEncryptedTopic(),
+                                        encryptedTopic3.getEncryptedTopic()))
+                        .setEncryptionKeys(
+                                Arrays.asList(
+                                        encryptedTopic1.getKeyIdentifier(),
+                                        encryptedTopic2.getKeyIdentifier(),
+                                        encryptedTopic3.getKeyIdentifier()))
+                        .setEncapsulatedKeys(
+                                Arrays.asList(
+                                        encryptedTopic1.getEncapsulatedKey(),
+                                        encryptedTopic2.getEncapsulatedKey(),
+                                        encryptedTopic3.getEncapsulatedKey()))
+                        .build();
+
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
+        Correspondence<byte[], byte[]> equalByteArray =
+                Correspondence.from(Arrays::equals, "Equal byte array check");
+        assertThat(getTopicsResult.getEncryptedTopics())
+                .comparingElementsUsing(equalByteArray)
+                .containsExactlyElementsIn(expectedGetTopicsResult.getEncryptedTopics());
+        assertThat(getTopicsResult.getEncryptionKeys())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getEncryptionKeys());
+        assertThat(getTopicsResult.getEncapsulatedKeys())
+                .comparingElementsUsing(equalByteArray)
+                .containsExactlyElementsIn(expectedGetTopicsResult.getEncapsulatedKeys());
+
+        // getTopic() + loadCache() + handleSdkTopicsAssignmentForAppInstallation()
+        verify(mMockEpochManager, times(3)).getCurrentEpochId();
+        verify(mMockFlags, times(3)).getTopicsNumberOfLookBackEpochs();
+    }
+
+    @Test
+    public void testGetTopics_enableEncryption_featureOn() {
+        final long epochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
+        EncryptedTopic encryptedTopic1 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic1.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier1",
+                        /* encapsulatedKey */ "encapsulatedKey1".getBytes(StandardCharsets.UTF_8));
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
+        EncryptedTopic encryptedTopic2 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic2.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier2",
+                        /* encapsulatedKey */ "encapsulatedKey2".getBytes(StandardCharsets.UTF_8));
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
+        EncryptedTopic encryptedTopic3 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic3.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier3",
+                        /* encapsulatedKey */ "encapsulatedKey3".getBytes(StandardCharsets.UTF_8));
+        Topic[] topics = {topic1, topic2, topic3};
+        EncryptedTopic[] encryptedTopics = {encryptedTopic1, encryptedTopic2, encryptedTopic3};
+        // persist returned topics into DB
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
+
+            EncryptedTopic currentEncryptedTopic =
+                    encryptedTopics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, EncryptedTopic> returnedEncryptedTopicsMap = new HashMap<>();
+            returnedEncryptedTopicsMap.put(appSdkKey, currentEncryptedTopic);
+            mTopicsDao.persistReturnedAppEncryptedTopicsMap(numEpoch, returnedEncryptedTopicsMap);
+        }
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+        when(mMockFlags.getTopicsEncryptionEnabled()).thenReturn(true);
+
+        // Real Cache Manager requires loading cache before getTopics() being called.
+        mTopicsWorker.loadCache();
+
+        GetTopicsResult getTopicsResult = mTopicsWorker.getTopics("app", "sdk");
+
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(STATUS_SUCCESS)
+                        .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
+                        .setModelVersions(Arrays.asList(4L, 5L, 6L))
+                        .setTopics(Arrays.asList(1, 2, 3))
+                        .setEncryptedTopics(
+                                Arrays.asList(
+                                        encryptedTopic1.getEncryptedTopic(),
+                                        encryptedTopic2.getEncryptedTopic(),
+                                        encryptedTopic3.getEncryptedTopic()))
+                        .setEncryptionKeys(
+                                Arrays.asList(
+                                        encryptedTopic1.getKeyIdentifier(),
+                                        encryptedTopic2.getKeyIdentifier(),
+                                        encryptedTopic3.getKeyIdentifier()))
+                        .setEncapsulatedKeys(
+                                Arrays.asList(
+                                        encryptedTopic1.getEncapsulatedKey(),
+                                        encryptedTopic2.getEncapsulatedKey(),
+                                        encryptedTopic3.getEncapsulatedKey()))
+                        .build();
+
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
+        Correspondence<byte[], byte[]> equalByteArray =
+                Correspondence.from(Arrays::equals, "Equal byte array check");
+        assertThat(getTopicsResult.getEncryptedTopics())
+                .comparingElementsUsing(equalByteArray)
+                .containsExactlyElementsIn(expectedGetTopicsResult.getEncryptedTopics());
+        assertThat(getTopicsResult.getEncryptionKeys())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getEncryptionKeys());
+        assertThat(getTopicsResult.getEncapsulatedKeys())
+                .comparingElementsUsing(equalByteArray)
+                .containsExactlyElementsIn(expectedGetTopicsResult.getEncapsulatedKeys());
+
+        // getTopic() + loadCache() + handleSdkTopicsAssignmentForAppInstallation()
+        verify(mMockEpochManager, times(3)).getCurrentEpochId();
+        verify(mMockFlags, times(3)).getTopicsNumberOfLookBackEpochs();
+    }
+
+    @Test
+    public void testGetTopics_enableEncryption_featureOff() {
+        final long epochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 4L);
+        EncryptedTopic encryptedTopic1 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic1.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier1",
+                        /* encapsulatedKey */ "encapsulatedKey1".getBytes(StandardCharsets.UTF_8));
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 2L, /* modelVersion */ 5L);
+        EncryptedTopic encryptedTopic2 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic2.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier2",
+                        /* encapsulatedKey */ "encapsulatedKey2".getBytes(StandardCharsets.UTF_8));
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 3L, /* modelVersion */ 6L);
+        EncryptedTopic encryptedTopic3 =
+                EncryptedTopic.create(
+                        /* encryptedTopic */ topic3.toString().getBytes(StandardCharsets.UTF_8),
+                        /* keyIdentifier */ "keyIdentifier3",
+                        /* encapsulatedKey */ "encapsulatedKey3".getBytes(StandardCharsets.UTF_8));
+        Topic[] topics = {topic1, topic2, topic3};
+        EncryptedTopic[] encryptedTopics = {encryptedTopic1, encryptedTopic2, encryptedTopic3};
+        // persist returned topics into DB
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
+
+            EncryptedTopic currentEncryptedTopic =
+                    encryptedTopics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, EncryptedTopic> returnedEncryptedTopicsMap = new HashMap<>();
+            returnedEncryptedTopicsMap.put(appSdkKey, currentEncryptedTopic);
+            mTopicsDao.persistReturnedAppEncryptedTopicsMap(numEpoch, returnedEncryptedTopicsMap);
+        }
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        // Feature off; Db flag on.
+        when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+        when(mMockFlags.getTopicsEncryptionEnabled()).thenReturn(false);
+
+        // Real Cache Manager requires loading cache before getTopics() being called.
+        mTopicsWorker.loadCache();
+
+        GetTopicsResult getTopicsResult = mTopicsWorker.getTopics("app", "sdk");
+
+        // Expect empty encrypted fields.
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(STATUS_SUCCESS)
+                        .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
+                        .setModelVersions(Arrays.asList(4L, 5L, 6L))
+                        .setTopics(Arrays.asList(1, 2, 3))
+                        .setEncryptedTopics(Arrays.asList())
+                        .setEncryptionKeys(Arrays.asList())
+                        .setEncapsulatedKeys(Arrays.asList())
+                        .build();
+
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
+        Correspondence<byte[], byte[]> equalByteArray =
+                Correspondence.from(Arrays::equals, "Equal byte array check");
+        assertThat(getTopicsResult.getEncryptedTopics())
+                .comparingElementsUsing(equalByteArray)
+                .containsExactlyElementsIn(expectedGetTopicsResult.getEncryptedTopics());
+        assertThat(getTopicsResult.getEncryptionKeys())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getEncryptionKeys());
+        assertThat(getTopicsResult.getEncapsulatedKeys())
+                .comparingElementsUsing(equalByteArray)
+                .containsExactlyElementsIn(expectedGetTopicsResult.getEncapsulatedKeys());
 
         // getTopic() + loadCache() + handleSdkTopicsAssignmentForAppInstallation()
         verify(mMockEpochManager, times(3)).getCurrentEpochId();

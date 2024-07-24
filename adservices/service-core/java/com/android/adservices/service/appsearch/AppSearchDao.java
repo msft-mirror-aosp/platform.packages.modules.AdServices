@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.appsearch;
 
+import static com.android.adservices.service.consent.ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE;
+
 import android.annotation.NonNull;
 import android.os.Build;
 
@@ -31,16 +33,21 @@ import androidx.appsearch.app.RemoveByDocumentIdRequest;
 import androidx.appsearch.app.SearchResults;
 import androidx.appsearch.app.SearchSpec;
 import androidx.appsearch.app.SetSchemaRequest;
+import androidx.appsearch.app.SetSchemaResponse.MigrationFailure;
 import androidx.appsearch.exceptions.AppSearchException;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.consent.ConsentConstants;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -53,12 +60,8 @@ import java.util.function.BiFunction;
  * Base class for all data access objects for AppSearch. This class handles the common logic for
  * reading from and writing to AppSearch.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 class AppSearchDao {
-    // Timeout for AppSearch search query in milliseconds.
-    private static final int TIMEOUT_MS = 500;
-
     /**
      * Iterate over the search results returned for the search query by AppSearch.
      *
@@ -83,13 +86,31 @@ class AppSearchDao {
                             // Converts GenericDocument object to the type of object passed in cls.
                             documentResult = genericDocument.toDocumentClass(cls);
                         } catch (AppSearchException e) {
-                            LogUtil.e("Failed to convert GenericDocument to " + cls.getName(), e);
+                            LogUtil.e(e, "Failed to convert GenericDocument to %s", cls.getName());
                         }
                     }
 
                     return documentResult;
                 },
                 executor);
+    }
+
+    @VisibleForTesting
+    static List<String> getAllowedPackages(String adServicesPackageName) {
+        Flags flags = FlagsFactory.getFlags();
+        String overrideAllowList = flags.getAppsearchWriterAllowListOverride();
+
+        if (!overrideAllowList.isEmpty()) {
+            return AllowLists.splitAllowList(overrideAllowList);
+        }
+
+        /* We want the extservices package name, not the adservices package name, so replace the
+         * suffix from adservices with the extservices suffix.
+         */
+        return Collections.singletonList(
+                adServicesPackageName.replace(
+                        AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX,
+                        AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX));
     }
 
     /**
@@ -105,14 +126,16 @@ class AppSearchDao {
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
             @NonNull String namespace,
-            @NonNull String query) {
+            @NonNull String query,
+            @NonNull String adServicesPackageName) {
         return readData(
                 cls,
                 searchSession,
                 executor,
                 namespace,
                 query,
-                (session, spec) -> session.search(query, spec));
+                (session, spec) -> session.search(query, spec),
+                adServicesPackageName);
     }
 
     /**
@@ -128,14 +151,16 @@ class AppSearchDao {
             @NonNull ListenableFuture<AppSearchSession> searchSession,
             @NonNull Executor executor,
             @NonNull String namespace,
-            @NonNull String query) {
+            @NonNull String query,
+            @NonNull String adServicesPackageName) {
         return readData(
                 cls,
                 searchSession,
                 executor,
                 namespace,
                 query,
-                (session, spec) -> session.search(query, spec));
+                (session, spec) -> session.search(query, spec),
+                adServicesPackageName);
     }
 
     @Nullable
@@ -145,7 +170,8 @@ class AppSearchDao {
             @NonNull Executor executor,
             @NonNull String namespace,
             @NonNull String query,
-            @NonNull BiFunction<S, SearchSpec, SearchResults> sessionQuery) {
+            @NonNull BiFunction<S, SearchSpec, SearchResults> sessionQuery,
+            @NonNull String adServicesPackageName) {
         Objects.requireNonNull(cls);
         Objects.requireNonNull(searchSession);
         Objects.requireNonNull(executor);
@@ -158,7 +184,12 @@ class AppSearchDao {
         }
 
         try {
-            SearchSpec searchSpec = new SearchSpec.Builder().addFilterNamespaces(namespace).build();
+            List<String> allowedPackages = getAllowedPackages(adServicesPackageName);
+            SearchSpec searchSpec =
+                    new SearchSpec.Builder()
+                            .addFilterNamespaces(namespace)
+                            .addFilterPackageNames(allowedPackages)
+                            .build();
             ListenableFuture<SearchResults> searchFuture =
                     Futures.transform(
                             searchSession,
@@ -170,9 +201,14 @@ class AppSearchDao {
                                     results -> iterateSearchResults(cls, results, executor),
                                     executor)
                             .transform(result -> ((T) result), executor);
-            return future.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+            // Currently all read operations have the same timeout, so reading it directly from the
+            // flags here. In the future, if we want these operations to have independent timeouts,
+            // we should add the timeout value as a parameter to this function.
+            int timeout = FlagsFactory.getFlags().getAppSearchReadTimeout();
+            return future.get(timeout, TimeUnit.MILLISECONDS);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            LogUtil.e("getConsent() Appsearch lookup failed with: ", e);
+            LogUtil.e(e, "getConsent() AppSearch lookup failed");
         }
         return null;
     }
@@ -183,9 +219,9 @@ class AppSearchDao {
      * we specify the packageIdentifier as that of the T+ AdServices APK, which after OTA, needs
      * access to the data written before OTA. What is written is the subclass type of DAO.
      *
-     * @return the result of the write.
+     * @return the result of the write operation.
      */
-    FluentFuture<AppSearchBatchResult<String, Void>> writeData(
+    AppSearchBatchResult<String, Void> writeData(
             @NonNull ListenableFuture<AppSearchSession> appSearchSession,
             @NonNull List<PackageIdentifier> packageIdentifiers,
             @NonNull Executor executor) {
@@ -212,14 +248,17 @@ class AppSearchDao {
                                         // If we get failures in schemaResponse then we cannot try
                                         // to write.
                                         if (!setSchemaResponse.getMigrationFailures().isEmpty()) {
+                                            MigrationFailure failure =
+                                                    setSchemaResponse.getMigrationFailures().get(0);
                                             LogUtil.e(
                                                     "SetSchemaResponse migration failure: "
-                                                            + setSchemaResponse
-                                                                    .getMigrationFailures()
-                                                                    .get(0));
-                                            throw new RuntimeException(
-                                                    ConsentConstants
-                                                            .ERROR_MESSAGE_APPSEARCH_FAILURE);
+                                                            + failure);
+                                            String message =
+                                                    String.format(
+                                                            "%s Migration failure: %s",
+                                                            ERROR_MESSAGE_APPSEARCH_FAILURE,
+                                                            failure.getAppSearchResult());
+                                            throw new RuntimeException(message);
                                         }
                                         // The database knows about this schemaType and write can
                                         // occur.
@@ -229,21 +268,27 @@ class AppSearchDao {
                                                 executor);
                                     },
                                     executor);
-            return putFuture;
+
+            // Currently all write operations have the same timeout, so reading it directly from the
+            // flags here. In the future, if we want these operations to have independent timeouts,
+            // we should add the timeout value as a parameter to this function.
+            int timeout = FlagsFactory.getFlags().getAppSearchWriteTimeout();
+            return putFuture.get(timeout, TimeUnit.MILLISECONDS);
         } catch (AppSearchException e) {
-            LogUtil.e("Cannot instantiate AppSearch database: " + e.getMessage());
+            LogUtil.e(e, "Cannot instantiate AppSearch database");
+            throw new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE, e);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            LogUtil.e(e, "Failed to write data to AppSearch database");
+            throw new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE, e);
         }
-        return FluentFuture.from(
-                Futures.immediateFailedFuture(
-                        new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE)));
     }
 
     /**
      * Delete a row from the database.
      *
-     * @return the result of the delete.
+     * @return the result of the delete operation.
      */
-    protected static <T> FluentFuture<AppSearchBatchResult<String, Void>> deleteData(
+    protected static <T> AppSearchBatchResult<String, Void> deleteData(
             @NonNull Class<T> cls,
             @NonNull ListenableFuture<AppSearchSession> appSearchSession,
             @NonNull Executor executor,
@@ -269,14 +314,17 @@ class AppSearchDao {
                                         // If we get failures in schemaResponse then we cannot try
                                         // to write.
                                         if (!setSchemaResponse.getMigrationFailures().isEmpty()) {
+                                            MigrationFailure failure =
+                                                    setSchemaResponse.getMigrationFailures().get(0);
                                             LogUtil.e(
                                                     "SetSchemaResponse migration failure: "
-                                                            + setSchemaResponse
-                                                                    .getMigrationFailures()
-                                                                    .get(0));
-                                            throw new RuntimeException(
-                                                    ConsentConstants
-                                                            .ERROR_MESSAGE_APPSEARCH_FAILURE);
+                                                            + failure);
+                                            String message =
+                                                    String.format(
+                                                            "%s Migration failure: %s",
+                                                            ERROR_MESSAGE_APPSEARCH_FAILURE,
+                                                            failure.getAppSearchResult());
+                                            throw new RuntimeException(message);
                                         }
                                         // The database knows about this schemaType and write can
                                         // occur.
@@ -286,12 +334,18 @@ class AppSearchDao {
                                                 executor);
                                     },
                                     executor);
-            return deleteFuture;
+
+            // Currently all write operations have the same timeout, so reading it directly from the
+            // flags here. In the future, if we want these operations to have independent timeouts,
+            // we should add the timeout value as a parameter to this function.
+            int timeout = FlagsFactory.getFlags().getAppSearchWriteTimeout();
+            return deleteFuture.get(timeout, TimeUnit.MILLISECONDS);
         } catch (AppSearchException e) {
-            LogUtil.e("Cannot instantiate AppSearch database: " + e.getMessage());
+            LogUtil.e(e, "Cannot instantiate AppSearch database");
+            throw new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE, e);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            LogUtil.e(e, "Failed to delete data from AppSearch");
+            throw new RuntimeException(ERROR_MESSAGE_APPSEARCH_FAILURE, e);
         }
-        return FluentFuture.from(
-                Futures.immediateFailedFuture(
-                        new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE)));
     }
 }

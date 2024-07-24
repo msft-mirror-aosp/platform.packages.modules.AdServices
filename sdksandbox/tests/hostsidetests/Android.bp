@@ -62,7 +62,6 @@ android_test_helper_app {
     defaults: ["platform_app_defaults"],
     platform_apis: true,
     srcs: [
-        "app/src/**/SdkSandboxEmptyActivity.java",
         "app/src/**/SdkSandboxTestActivity.java",
     ],
     static_libs: [

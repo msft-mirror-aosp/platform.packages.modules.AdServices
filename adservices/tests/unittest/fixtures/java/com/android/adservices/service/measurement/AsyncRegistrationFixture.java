@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.registration.AsyncRedirect;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 
 import java.util.UUID;
@@ -39,7 +40,9 @@ public class AsyncRegistrationFixture {
                 .setRetryCount(ValidAsyncRegistrationParams.RETRY_COUNT)
                 .setType(ValidAsyncRegistrationParams.TYPE)
                 .setDebugKeyAllowed(ValidAsyncRegistrationParams.DEBUG_KEY_ALLOWED)
-                .setRegistrationId(ValidAsyncRegistrationParams.REGISTRATION_ID);
+                .setRegistrationId(ValidAsyncRegistrationParams.REGISTRATION_ID)
+                .setPostBody(ValidAsyncRegistrationParams.POST_BODY)
+                .setRedirectBehavior(ValidAsyncRegistrationParams.REDIRECT_BEHAVIOR);
     }
 
     public static AsyncRegistration getValidAsyncRegistration() {
@@ -60,5 +63,8 @@ public class AsyncRegistrationFixture {
                 AsyncRegistration.RegistrationType.APP_SOURCE;
         public static final String REGISTRATION_ID = "R1";
         public static final String PLATFORM_AD_ID = "test-platform-ad-id";
+        public static final String POST_BODY = "{\"ad_location\":\"bottom_right\"}";
+        public static final AsyncRedirect.RedirectBehavior REDIRECT_BEHAVIOR =
+                AsyncRedirect.RedirectBehavior.AS_IS;
     }
 }

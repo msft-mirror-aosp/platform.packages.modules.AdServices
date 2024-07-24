@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.Manifest;
 import android.app.NotificationManager;
+import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -32,7 +33,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.media.MediaDrm;
 import android.media.UnsupportedSchemeException;
 import android.net.Uri;
@@ -44,7 +44,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -64,6 +63,9 @@ import java.util.UUID;
 @RunWith(JUnit4.class)
 public class SdkSandboxRestrictionsTest {
 
+    private final Context mContext =
+            InstrumentationRegistry.getInstrumentation().getTargetContext();
+
     @Before
     public void setUp() {
         assumeTrue(
@@ -74,9 +76,8 @@ public class SdkSandboxRestrictionsTest {
     /** Tests that the SDK sandbox cannot send notifications. */
     @Test
     public void testNoNotifications() {
-        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         NotificationManager notificationManager =
-                context.getSystemService(NotificationManager.class);
+                mContext.getSystemService(NotificationManager.class);
         assertThat(notificationManager.areNotificationsEnabled()).isFalse();
     }
 
@@ -98,52 +99,46 @@ public class SdkSandboxRestrictionsTest {
      */
     @Test
     public void testCannotRequestPermissions() {
-        Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        Intent intent = new Intent(PackageManager.ACTION_REQUEST_PERMISSIONS);
-        intent.putExtra(PackageManager.EXTRA_REQUEST_PERMISSIONS_NAMES,
-                new String[] {Manifest.permission.INSTALL_PACKAGES});
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        Intent intent =
+                new Intent(PackageManager.ACTION_REQUEST_PERMISSIONS)
+                        .putExtra(
+                                PackageManager.EXTRA_REQUEST_PERMISSIONS_NAMES,
+                                new String[] {Manifest.permission.INSTALL_PACKAGES})
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         String packageName;
         try {
-            packageName = context.getPackageManager().getPermissionControllerPackageName();
+            packageName = mContext.getPackageManager().getPermissionControllerPackageName();
         } catch (Exception e) {
             packageName = "test.package";
         }
         intent.setPackage(packageName);
 
-        SecurityException thrown = assertThrows(
-                SecurityException.class,
-                () -> context.startActivity(intent));
+        SecurityException thrown =
+                assertThrows(SecurityException.class, () -> mContext.startActivity(intent));
         assertThat(thrown).hasMessageThat().contains("may not be started from an SDK sandbox uid.");
     }
 
-    /**
-     * Tests that sandbox cannot send implicit broadcast intents.
-     */
+    /** Tests that sandbox cannot send implicit broadcast intents. */
     @Test
     public void testNoImplicitIntents() {
-        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final Intent sendIntent =
+                new Intent()
+                        .setAction(Intent.ACTION_SEND)
+                        .putExtra(Intent.EXTRA_TEXT, "text")
+                        .setType("text/plain")
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        Intent sendIntent = new Intent();
-        sendIntent.setAction(Intent.ACTION_SEND);
-        sendIntent.putExtra(Intent.EXTRA_TEXT, "text");
-        sendIntent.setType("text/plain");
-        sendIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        SecurityException thrown = assertThrows(
-                SecurityException.class,
-                () -> ctx.startActivity(sendIntent));
+        SecurityException thrown =
+                assertThrows(SecurityException.class, () -> mContext.startActivity(sendIntent));
         assertThat(thrown).hasMessageThat().contains("may not be started from an SDK sandbox uid.");
     }
 
     /** Tests that the sandbox cannot send broadcasts. */
     @Test
     public void testSendBroadcastsRestrictions_withAction() {
-        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-
         Intent intent = new Intent(Intent.ACTION_VIEW);
         SecurityException thrown =
-                assertThrows(SecurityException.class, () -> context.sendBroadcast(intent));
+                assertThrows(SecurityException.class, () -> mContext.sendBroadcast(intent));
         assertThat(thrown).hasMessageThat().contains("may not be broadcast from an SDK sandbox");
     }
 
@@ -151,11 +146,9 @@ public class SdkSandboxRestrictionsTest {
     @Test
     public void testSendBroadcastRestrictions_withoutAction() {
         assumeTrue(SdkLevel.isAtLeastU());
-        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        Intent intent = new Intent();
 
         SecurityException thrown =
-                assertThrows(SecurityException.class, () -> context.sendBroadcast(intent));
+                assertThrows(SecurityException.class, () -> mContext.sendBroadcast(new Intent()));
         assertThat(thrown).hasMessageThat().contains("may not be broadcast from an SDK sandbox");
     }
 
@@ -164,38 +157,35 @@ public class SdkSandboxRestrictionsTest {
      */
     @Test
     public void testUrlViewIntents() {
-        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Intent intent =
+                new Intent()
+                        .setAction(Intent.ACTION_VIEW)
+                        .setData(Uri.parse("https://www.android.com"))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse("https://www.android.com"));
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        ctx.startActivity(intent);
+        mContext.startActivity(intent);
     }
 
     /** Tests that the sandbox cannot send explicit intents by specifying a package or component. */
     @Test
     public void testNoExplicitIntents() {
-        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-
-        Intent packageIntent = new Intent(Intent.ACTION_VIEW);
-        packageIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        packageIntent.setPackage("test.package");
-        assertThrows(ActivityNotFoundException.class, () -> context.startActivity(packageIntent));
+        Intent packageIntent =
+                new Intent(Intent.ACTION_VIEW)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .setPackage("test.package");
+        assertThrows(ActivityNotFoundException.class, () -> mContext.startActivity(packageIntent));
 
         Intent componentIntent = new Intent(Intent.ACTION_VIEW);
         componentIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         componentIntent.setComponent(new ComponentName("test.package", "TestClass"));
-        assertThrows(ActivityNotFoundException.class, () -> context.startActivity(componentIntent));
+        assertThrows(
+                ActivityNotFoundException.class, () -> mContext.startActivity(componentIntent));
     }
 
     /** Tests that sandbox cannot execute code in read-write locations. */
     @Test
     public void testSandboxCannotExecute_WriteLocation() throws Exception {
-        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-
-        Path scriptPath = Paths.get(context.getDataDir().toString(), "example.sh");
+        Path scriptPath = Paths.get(mContext.getDataDir().toString(), "example.sh");
         String scriptContents = "#!/bin/bash\necho \"Should not run!\"";
 
         Files.write(scriptPath, scriptContents.getBytes());
@@ -217,15 +207,13 @@ public class SdkSandboxRestrictionsTest {
                 () -> Runtime.getRuntime().exec(scriptPath.toString()));
     }
 
-    /**
-     * Tests that Sdk Sandbox cannot access app specific external storage
-     */
+    /** Tests that Sdk Sandbox cannot access app specific external storage */
     @Test
-    public void testSanboxCannotAccess_AppSpecificFiles() throws Exception {
+    public void testSandboxCannotAccess_AppSpecificFiles() throws Exception {
         // Check that the sandbox does not have legacy external storage access
         assertThat(Environment.isExternalStorageLegacy()).isFalse();
 
-         // Can't read ExternalStorageDir
+        // Can't read ExternalStorageDir
         assertThat(Environment.getExternalStorageDirectory().list()).isNull();
 
         final String[] types = new String[] {
@@ -240,60 +228,59 @@ public class SdkSandboxRestrictionsTest {
                 Environment.DIRECTORY_DCIM,
                 Environment.DIRECTORY_DOCUMENTS
         };
-
-        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
         for (String type : types) {
-            File dir = ctx.getExternalFilesDir(type);
+            File dir = mContext.getExternalFilesDir(type);
             assertThat(dir).isNull();
         }
 
         // Also, cannot access app-specific cache files
-        assertThat(ctx.getExternalCacheDir()).isNull();
+        assertThat(mContext.getExternalCacheDir()).isNull();
     }
 
     /** Tests that Sdk Sandbox cannot access app specific external storage */
     @Test
-    @Ignore("b/234563287")
-    public void testSanboxCannotAccess_MediaStoreApi() throws Exception {
-        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final ContentResolver resolver = ctx.getContentResolver();
+    public void testSandboxCannotAccess_MediaStoreApi() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        ContentResolver resolver = mContext.getContentResolver();
 
         // Cannot create new item on media store
-        final Uri audioCollection = MediaStore.Audio.Media.getContentUri(
-                MediaStore.VOLUME_EXTERNAL_PRIMARY);
-        final ContentValues newItem = new ContentValues();
+        Uri audioCollection =
+                MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+        ContentValues newItem = new ContentValues();
         newItem.put(MediaStore.Audio.Media.DISPLAY_NAME, "New Audio Item");
         newItem.put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg");
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                () -> resolver.insert(audioCollection, newItem));
-        assertThat(thrown).hasMessageThat().contains("Unknown URL content");
+        assertThrows(SecurityException.class, () -> resolver.insert(audioCollection, newItem));
 
         // Cannot query on media store
         String[] projection = new String[] {
             MediaStore.Audio.Media._ID,
         };
-        try (Cursor cursor = resolver.query(audioCollection, projection, null, null, null, null)) {
-            assertThat(cursor).isNull();
-        }
+        assertThrows(
+                SecurityException.class,
+                () -> resolver.query(audioCollection, projection, null, null, null, null));
     }
 
-    /**
-     * Tests that Sdk Sandbox cannot access Storage Access Framework
-     */
     @Test
-    public void testSanboxCannotAccess_StorageAccessFramework() throws Exception {
+    public void testSdkCannotAccessSdkSandboxManager() throws Exception {
+        SdkSandboxManager sdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
+        assertThat(sdkSandboxManager).isNull();
+    }
+
+    /** Tests that Sdk Sandbox cannot access Storage Access Framework */
+    @Test
+    public void testSandboxCannotAccess_StorageAccessFramework() throws Exception {
         final String[] intentList = {
                 Intent.ACTION_CREATE_DOCUMENT,
                 Intent.ACTION_OPEN_DOCUMENT,
                 Intent.ACTION_OPEN_DOCUMENT_TREE};
 
-        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
         for (int i = 0; i < intentList.length; i++) {
             Intent intent = new Intent(intentList[i]);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-            SecurityException thrown = assertThrows(SecurityException.class,
-                    () -> ctx.startActivity(intent));
+            SecurityException thrown =
+                    assertThrows(SecurityException.class, () -> mContext.startActivity(intent));
             assertThat(thrown)
                     .hasMessageThat()
                     .contains("may not be started from an SDK sandbox uid.");
@@ -303,10 +290,10 @@ public class SdkSandboxRestrictionsTest {
     /** Test that sdk sandbox can't grant read uri permission. */
     @Test
     public void testCheckUriPermission() throws Exception {
-        Context context = InstrumentationRegistry.getInstrumentation().getContext();
         Uri uri = Uri.parse("content://com.example.sdk.provider/abc");
         int ret =
-                context.checkCallingOrSelfUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                mContext.checkCallingOrSelfUriPermission(
+                        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
         assertThat(ret).isEqualTo(PackageManager.PERMISSION_DENIED);
     }
 }

@@ -22,8 +22,9 @@
 
     <queries>
         <package android:name="com.android.codeproviderresources_1" />
-        <package android:name="com.android.serviceprovider" />
+        <package android:name="com.android.emptysampleapp" />
         <package android:name="com.android.codeprovider_1" />
+        <package android:name="com.android.property_sdkprovider_classname_not_present_1" />
     </queries>
 
     <application android:debuggable="true">
@@ -32,6 +33,8 @@
         android:certDigest="0B:44:2D:88:FA:A7:B3:AD:23:8D:DE:29:8A:A1:9B:D5:62:03:92:0B:BF:D8:D3:EB:C8:99:33:2C:8E:E1:15:99" />
         <uses-sdk-library android:name="com.android.codeproviderresources" android:versionMajor="1"
         android:certDigest="0B:44:2D:88:FA:A7:B3:AD:23:8D:DE:29:8A:A1:9B:D5:62:03:92:0B:BF:D8:D3:EB:C8:99:33:2C:8E:E1:15:99" />
+        <uses-sdk-library android:name="com.android.property_sdkprovider_classname_not_present" android:versionMajor="1"
+                          android:certDigest="0B:44:2D:88:FA:A7:B3:AD:23:8D:DE:29:8A:A1:9B:D5:62:03:92:0B:BF:D8:D3:EB:C8:99:33:2C:8E:E1:15:99" />
     </application>
 
     <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"

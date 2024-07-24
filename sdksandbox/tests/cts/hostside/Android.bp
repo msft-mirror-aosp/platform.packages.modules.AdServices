@@ -32,13 +32,13 @@ java_test_host {
         "cts",
         "mts-adservices",
         "general-tests",
+        "mcts-adservices",
     ],
     data: [
         ":CtsSdkSandboxHostTestApp",
         ":CtsSdkSandboxHostTestApp2",
         ":SdkSandboxDataIsolationTestProvider",
         ":SdkSandboxStorageTestProvider",
-        ":SdkSandboxMediationTestProvider",
     ],
 }
 
@@ -54,7 +54,6 @@ android_test_helper_app {
     ],
     static_libs: [
         "CtsStorageTestSdkApi",
-        "CtsMediationTestSdkApi",
         "CtsDataIsolationTestSdkApi",
         "SdkSandboxTestUtils",
         "androidx.core_core",
@@ -113,35 +112,6 @@ android_test_helper_app {
     ],
     min_sdk_version: "33",
     target_sdk_version: "33",
-}
-
-android_test_helper_app {
-    name: "SdkSandboxMediationTestProvider",
-    manifest: "provider/MediationTestManifest.xml",
-    defaults: ["platform_app_defaults"],
-    certificate: ":sdksandbox-test",
-    srcs: [
-        "provider/src/**/mediationtest/*.java",
-    ],
-    static_libs: [
-        "CtsMediationTestSdkApi",
-        "compatibility-device-util-axt",
-    ],
-    min_sdk_version: "33",
-    target_sdk_version: "33",
-}
-
-java_library {
-    name: "CtsMediationTestSdkApi",
-    srcs: [
-        "provider/src/**/mediationtest/*.aidl",
-        ":framework-sdksandbox-aidl-sources",
-    ],
-    libs: [
-        "framework-sdksandbox.impl",
-    ],
-    min_sdk_version: "33", // This is passed to the AIDL compiler so that generated Java code doesn't use newer (>33) APIs
-
 }
 
 java_library {

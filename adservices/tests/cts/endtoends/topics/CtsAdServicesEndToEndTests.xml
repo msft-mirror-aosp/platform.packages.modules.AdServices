@@ -34,31 +34,7 @@
         <option name="package" value="com.android.adservices.tests.cts.endtoendtest"/>
     </test>
 
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
-        <option name="run-command" value="device_config put adservices global_kill_switch false" />
-        <option name="run-command" value="device_config put adservices topics_kill_switch false" />
-        <!-- Override Consent Manager to debug mode to grant user consent -->
-        <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
-        <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
-        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE" />
-        <!-- Override the flag to disable Topics enrollment check. -->
-        <option name="run-command" value="setprop debug.adservices.disable_topics_enrollment_check true" />
-        <!-- Forces using bundled model files. -->
-        <option name="run-command" value="device_config put adservices classifier_force_use_bundled_files true" />
-
-        <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
-        <option name="teardown-command" value="setprop debug.adservices.disable_topics_enrollment_check false" />
-        <option name="teardown-command" value="device_config put adservices classifier_force_use_bundled_files false" />
-
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-
-        <!-- Revert the classifier type to the default value. This is to avoid skipping the in-test
-        reverting when the on-device classifier test fails. -->
-        <option name="teardown-command" value="device_config put adservices classifier_type 3" />
-    </target_preparer>
+    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
 
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">

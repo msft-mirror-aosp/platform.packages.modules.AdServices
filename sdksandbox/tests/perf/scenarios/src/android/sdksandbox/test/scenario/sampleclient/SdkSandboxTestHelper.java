@@ -19,8 +19,6 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.os.SystemClock;
-
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
@@ -34,10 +32,13 @@ public class SdkSandboxTestHelper {
 
     private static final long UI_NAVIGATION_WAIT_MS = 5000;
     private static final long UI_WAIT_LOADSDK_MS = 500;
+
+    private static final long UI_WAIT_REMOTE_RENDER_MS = 2000;
     private static final long UI_RETRIES_WAIT_LOADSDK = 10;
     private static final String SANDBOX_TEST_CLIENT_APP = "com.android.sdksandboxclient";
-    private static final String LOAD_BUTTON = "load_code_button";
-    private static final String RENDER_BUTTON = "request_surface_button";
+    private static final String LOAD_BUTTON = "load_sdks_button";
+    private static final String RENDER_BUTTON = "new_banner_ad_button";
+    private static final String BOTTOM_BANNER_VIEW = "bottom_banner_view";
 
     /** Open sandbox client test app using shell command line. */
     public void openClientApp() throws Exception {
@@ -46,7 +47,7 @@ public class SdkSandboxTestHelper {
     }
 
     /** Load sdk on sandbox client test app by clicking the loadSdk button. */
-    public void loadSandboxSdk() {
+    public void loadSandboxSdk() throws Exception {
         if (getLoadSdkButton() != null) {
             getLoadSdkButton().click();
         } else {
@@ -57,7 +58,7 @@ public class SdkSandboxTestHelper {
         boolean sdkLoaded = false;
         // wait until loadSdk.
         while (!sdkLoaded && retries < UI_RETRIES_WAIT_LOADSDK) {
-            SystemClock.sleep(UI_WAIT_LOADSDK_MS);
+            Thread.sleep(UI_WAIT_LOADSDK_MS);
             if (getLoadSdkButton().getText().equals("Unload SDKs")) {
                 sdkLoaded = true;
             }
@@ -67,13 +68,15 @@ public class SdkSandboxTestHelper {
         assertThat(getLoadSdkButton().getText()).isEqualTo("Unload SDKs");
     }
 
-    /** Remote render ad on sandbox client test app by clicking request surface button. */
-    public void remoteRenderAd() {
-        if (getRequestSurfaceButton() != null) {
-            getRequestSurfaceButton().click();
+    /** Remote render ad on sandbox client test app by clicking banner ad button. */
+    public void remoteRenderAd() throws Exception {
+        if (getNewBannerAdButton() != null) {
+            getNewBannerAdButton().click();
         } else {
-            throw new RuntimeException("Did not find 'Load Surface Package' button.");
+            throw new RuntimeException("Did not find 'New Banner Ad' button.");
         }
+        Thread.sleep(UI_WAIT_REMOTE_RENDER_MS);
+        assertThat(getBannerAdView()).isNotNull();
     }
 
     public static void closeClientApp() throws IOException {
@@ -86,9 +89,15 @@ public class SdkSandboxTestHelper {
                 UI_NAVIGATION_WAIT_MS);
     }
 
-    private UiObject2 getRequestSurfaceButton() {
+    private UiObject2 getNewBannerAdButton() {
         return sUiDevice.wait(
                 Until.findObject(By.res(SANDBOX_TEST_CLIENT_APP, RENDER_BUTTON)),
+                UI_NAVIGATION_WAIT_MS);
+    }
+
+    private UiObject2 getBannerAdView() {
+        return sUiDevice.wait(
+                Until.findObject(By.res(SANDBOX_TEST_CLIENT_APP, BOTTOM_BANNER_VIEW)),
                 UI_NAVIGATION_WAIT_MS);
     }
 }

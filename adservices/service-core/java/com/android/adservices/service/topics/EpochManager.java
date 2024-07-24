@@ -28,14 +28,17 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -47,6 +50,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
@@ -112,8 +116,11 @@ public class EpochManager {
     private final Random mRandom;
     private final Classifier mClassifier;
     private final Flags mFlags;
-    // Use Clock.SYSTEM_CLOCK except in unit tests, which pass in a local instance of Clock to mock.
+    // Use Clock.getInstance() except in unit tests, which pass in a local instance of Clock to
+    // mock.
     private final Clock mClock;
+    private final ClassifierManager mClassifierManager;
+    private final EncryptionManager mEncryptionManager;
 
     @VisibleForTesting
     EpochManager(
@@ -122,13 +129,17 @@ public class EpochManager {
             @NonNull Random random,
             @NonNull Classifier classifier,
             Flags flags,
-            @NonNull Clock clock) {
+            @NonNull Clock clock,
+            @NonNull ClassifierManager classifierManager,
+            @NonNull EncryptionManager encryptionManager) {
         mTopicsDao = topicsDao;
         mDbHelper = dbHelper;
         mRandom = random;
         mClassifier = classifier;
         mFlags = flags;
         mClock = clock;
+        mClassifierManager = classifierManager;
+        mEncryptionManager = encryptionManager;
     }
 
     /** Returns an instance of the EpochManager given a context. */
@@ -143,7 +154,9 @@ public class EpochManager {
                                 new Random(),
                                 ClassifierManager.getInstance(context),
                                 FlagsFactory.getFlags(),
-                                Clock.SYSTEM_CLOCK);
+                                Clock.getInstance(),
+                                ClassifierManager.getInstance(context),
+                                EncryptionManager.getInstance(context));
             }
             return sSingleton;
         }
@@ -244,6 +257,18 @@ public class EpochManager {
 
             // And persist the map to DB so that we can reuse later.
             mTopicsDao.persistReturnedAppTopicsMap(currentEpochId, returnedAppSdkTopics);
+
+            // Encrypt and store encrypted topics if the feature is enabled and the version 9 db
+            // is available.
+            if (mFlags.getTopicsEncryptionEnabled() && mFlags.getEnableDatabaseSchemaVersion9()) {
+                // encryptedTopicMapTopics = Map<Pair<App, Sdk>, EncryptedTopic>
+                Map<Pair<String, String>, EncryptedTopic> encryptedTopicMapTopics =
+                        encryptTopicsMap(returnedAppSdkTopics);
+                sLogger.v("encryptedTopicMapTopics size is  %d", returnedAppSdkTopics.size());
+
+                mTopicsDao.persistReturnedAppEncryptedTopicsMap(
+                        currentEpochId, encryptedTopicMapTopics);
+            }
 
             // Mark the transaction successful.
             db.setTransactionSuccessful();
@@ -376,6 +401,30 @@ public class EpochManager {
         return callersCanLearnMap;
     }
 
+    // Encrypts Topic to corresponding EncryptedTopic.
+    // Map<Pair<App, Sdk>, EncryptedTopic>
+    private Map<Pair<String, String>, EncryptedTopic> encryptTopicsMap(
+            Map<Pair<String, String>, Topic> unencryptedMap) {
+        Map<Pair<String, String>, EncryptedTopic> encryptedTopicMap = new HashMap<>();
+        for (Map.Entry<Pair<String, String>, Topic> entry : unencryptedMap.entrySet()) {
+            Optional<EncryptedTopic> optionalEncryptedTopic =
+                    mEncryptionManager.encryptTopic(
+                            /* Topic */ entry.getValue(), /* sdkName */ entry.getKey().second);
+            if (optionalEncryptedTopic.isPresent()) {
+                encryptedTopicMap.put(entry.getKey(), optionalEncryptedTopic.get());
+            } else {
+                ErrorLogUtil.e(
+                        AdServicesStatsLog
+                                .AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_FAILURE,
+                        AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
+                sLogger.d(
+                        "Failed to encrypt %s for (%s, %s) caller.",
+                        entry.getValue(), entry.getKey().first, entry.getKey().second);
+            }
+        }
+        return encryptedTopicMap;
+    }
+
     // Inputs:
     // callersCanLearnMap = Map<Topic, Set<Caller>> map from topic to set of callers that can learn
     // about the topic. Caller = App or Sdk.
@@ -394,6 +443,16 @@ public class EpochManager {
 
         for (Map.Entry<String, List<String>> appSdks : appSdksUsageMap.entrySet()) {
             Topic returnedTopic = selectRandomTopic(topTopics);
+            if(mFlags.getEnableLoggedTopic()
+                    && mTopicsDao.supportsLoggedTopicInReturnedTopicTable()) {
+                returnedTopic =
+                        Topic.create(
+                                returnedTopic.getTopic(),
+                                returnedTopic.getTaxonomyVersion(),
+                                returnedTopic.getModelVersion(),
+                                getTopicIdForLogging(returnedTopic));
+            }
+
             String app = appSdks.getKey();
 
             // Check if the app can learn this topic.
@@ -469,6 +528,14 @@ public class EpochManager {
                     tableColumnPair.first, tableColumnPair.second, epochToDeleteFrom);
         }
 
+        if (mFlags.getEnableDatabaseSchemaVersion9()) {
+            // Delete data from ReturnedEncryptedTopic table.
+            mTopicsDao.deleteDataOfOldEpochs(
+                    TopicsTables.ReturnedEncryptedTopicContract.TABLE,
+                    TopicsTables.ReturnedEncryptedTopicContract.EPOCH_ID,
+                    epochToDeleteFrom);
+        }
+
         // In app installation, we need to assign topics to newly installed app-sdk caller. In order
         // to check topic learnability of the sdk, CallerCanLearnTopicsContract needs to persist
         // numberOfLookBackEpochs more epochs. For example, assume current epoch is T. In app
@@ -519,5 +586,45 @@ public class EpochManager {
         writer.println("==== EpochManager Dump ====");
         long epochId = getCurrentEpochId();
         writer.println(String.format("Current epochId is %d", epochId));
+    }
+
+    // Gets a topic ID for logging from the given topic using randomized response mechanism.
+    @VisibleForTesting
+    int getTopicIdForLogging(Topic topic) {
+        List<Integer> topicsTaxonomy = mClassifierManager.getTopicsTaxonomy();
+
+        // Probability of logging real vs. random topic:
+        // Real topic: e^privacyBudget / (e^privacyBudget + taxonomySize - 1)
+        // Random topic: (taxonomySize - 1) / (e^privacyBudget + taxonomySize - 1)
+        double expPrivacyBudget = Math.exp(mFlags.getTopicsPrivacyBudgetForTopicIdDistribution());
+        int taxonomySize = topicsTaxonomy.size();
+        double pRandomization =
+                expPrivacyBudget == Double.POSITIVE_INFINITY
+                        ? 0d
+                        : (taxonomySize - 1d) / (expPrivacyBudget + taxonomySize - 1d);
+
+        int topicId = topic.getTopic();
+
+        // In order to prevent select a random topic from being stuck in a loop,
+        // return the topic directly if taxonomy size is 0 or 1.
+        if (taxonomySize <= 1) {
+            return topicId;
+        }
+
+        if (mRandom.nextDouble() < pRandomization) {
+            // Log a random topic ID other than the real one.
+            int randomTopicId = topicId;
+
+            // Set a maximum attempts to prevent select a random topic from being stuck in the loop.
+            int maxAttempts = 5;
+
+            while (randomTopicId == topicId && maxAttempts-- > 0) {
+                randomTopicId = topicsTaxonomy.get(mRandom.nextInt(taxonomySize));
+            }
+
+            return randomTopicId;
+        } else {
+            return topicId;
+        }
     }
 }

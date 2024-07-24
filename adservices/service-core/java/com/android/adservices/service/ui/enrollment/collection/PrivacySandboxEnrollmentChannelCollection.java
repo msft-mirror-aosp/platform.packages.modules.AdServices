@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.ui.enrollment;
+package com.android.adservices.service.ui.enrollment.collection;
 
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
+
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
 
 /** Base collection for all privacy sandbox UX enrollment channels. */
 @RequiresApi(Build.VERSION_CODES.S)

@@ -50,10 +50,12 @@ public class E2EDenoisedMockTest extends E2EMockTest {
             Map<String, String> phFlagsMap)
             throws RemoteException {
         super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
+        mAttributionHelper =
+                TestObjectProvider.getAttributionJobHandler(
+                        mDatastoreManager, mFlags, mErrorLogger);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager,
+                        mDatastoreManager,
                         mClickVerifier,
                         mMeasurementDataDeleter,
                         mMockContentResolver);
@@ -61,9 +63,10 @@ public class E2EDenoisedMockTest extends E2EMockTest {
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.DENOISED,
-                        sDatastoreManager,
+                        mDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        mDebugReportApi);
+                        mDebugReportApi,
+                        mFlags);
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.ui.enrollment;
+package com.android.adservices.service.ui.enrollment.impl;
 
 import android.content.Context;
 import android.os.Build;
@@ -24,7 +24,8 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
+import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
+import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 /** Enroll through consent notification debug mode. */
 @RequiresApi(Build.VERSION_CODES.S)
@@ -45,7 +46,7 @@ public class FirstConsentNotificationChannel implements PrivacySandboxEnrollment
         // Reconsent bit does not matter here.
         ConsentNotificationJobService.schedule(
                 context,
-                /* AdIdEnabled= */ consentManager.isAdIdEnabled(),
-                /* IsReconsent= */ false);
+                /* adidEnabled= */ consentManager.isAdIdEnabled(),
+                /* reConsentStatus= */ false);
     }
 }

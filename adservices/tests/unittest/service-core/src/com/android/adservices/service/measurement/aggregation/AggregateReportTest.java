@@ -20,12 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 
 import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.junit.Test;
@@ -127,7 +128,7 @@ public final class AggregateReportTest {
         assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getPublisher());
         assertEquals(Uri.parse("https://example.test/aS"),
                 attributionReport.getAttributionDestination());
-        assertEquals(5L, attributionReport.getSourceRegistrationTime());
+        assertEquals(Long.valueOf(5L), attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
         assertEquals("enrollment-id", attributionReport.getEnrollmentId());
         assertEquals(DEBUG_CLEARTEXT_PAYLOAD, attributionReport.getDebugCleartextPayload());
@@ -144,6 +145,7 @@ public final class AggregateReportTest {
         assertEquals(
                 AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN,
                 attributionReport.getRegistrationOrigin());
+        assertFalse(attributionReport.isFakeReport());
     }
 
     @Test
@@ -154,7 +156,7 @@ public final class AggregateReportTest {
         assertEquals(
                 Uri.parse("https://example.test/aS"),
                 attributionReport.getAttributionDestination());
-        assertEquals(5L, attributionReport.getSourceRegistrationTime());
+        assertEquals(Long.valueOf(5L), attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
         assertEquals("enrollment-id", attributionReport.getEnrollmentId());
         assertEquals(DEBUG_CLEARTEXT_PAYLOAD, attributionReport.getDebugCleartextPayload());
@@ -171,6 +173,7 @@ public final class AggregateReportTest {
         assertEquals(
                 AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN,
                 attributionReport.getRegistrationOrigin());
+        assertFalse(attributionReport.isFakeReport());
     }
 
     @Test
@@ -180,7 +183,7 @@ public final class AggregateReportTest {
         assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getPublisher());
         assertEquals(Uri.parse("https://example.test/aS"),
                 attributionReport.getAttributionDestination());
-        assertEquals(5L, attributionReport.getSourceRegistrationTime());
+        assertEquals(Long.valueOf(5L), attributionReport.getSourceRegistrationTime());
         assertEquals(1L, attributionReport.getScheduledReportTime());
         assertEquals("enrollment-id", attributionReport.getEnrollmentId());
         assertEquals(DEBUG_CLEARTEXT_PAYLOAD, attributionReport.getDebugCleartextPayload());
@@ -197,6 +200,7 @@ public final class AggregateReportTest {
         assertEquals(
                 AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN,
                 attributionReport.getRegistrationOrigin());
+        assertFalse(attributionReport.isFakeReport());
     }
 
     @Test
@@ -206,7 +210,7 @@ public final class AggregateReportTest {
         assertNull(attributionReport.getId());
         assertNull(attributionReport.getPublisher());
         assertNull(attributionReport.getAttributionDestination());
-        assertEquals(0L, attributionReport.getSourceRegistrationTime());
+        assertNull(attributionReport.getSourceRegistrationTime());
         assertEquals(0L, attributionReport.getScheduledReportTime());
         assertNull(attributionReport.getEnrollmentId());
         assertNull(attributionReport.getDebugCleartextPayload());
@@ -220,6 +224,7 @@ public final class AggregateReportTest {
         assertNull(attributionReport.getSourceId());
         assertNull(attributionReport.getTriggerId());
         assertNull(attributionReport.getRegistrationOrigin());
+        assertFalse(attributionReport.isFakeReport());
     }
 
     @Test

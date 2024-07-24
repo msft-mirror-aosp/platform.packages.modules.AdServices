@@ -24,7 +24,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOverrideCallback;
-import android.adservices.adselection.BuyersDecisionLogic;
+import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
@@ -68,6 +68,7 @@ public class AdSelectionOverrider {
     @NonNull private final Flags mFlags;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     private final int mCallerUid;
+    @NonNull private final String mCallerAppPackageName;
 
     /**
      * Creates an instance of {@link AdSelectionOverrider} with the given {@link DevContext}, {@link
@@ -107,6 +108,7 @@ public class AdSelectionOverrider {
         mFlags = flags;
         mAppImportanceFilter = appImportanceFilter;
         mCallerUid = callerUid;
+        mCallerAppPackageName = devContext.getCallingAppPackageName();
     }
 
     /**
@@ -119,7 +121,7 @@ public class AdSelectionOverrider {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
-            @NonNull BuyersDecisionLogic buyersDecisionLogic,
+            @NonNull PerBuyerDecisionLogic perBuyerDecisionLogic,
             @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
         int shortApiName =
@@ -143,7 +145,7 @@ public class AdSelectionOverrider {
                                         adSelectionConfig,
                                         decisionLogicJS,
                                         trustedScoringSignals,
-                                        buyersDecisionLogic),
+                                        perBuyerDecisionLogic),
                         mLightweightExecutorService)
                 .addCallback(
                         new FutureCallback<Integer>() {
@@ -404,7 +406,7 @@ public class AdSelectionOverrider {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
-            @NonNull BuyersDecisionLogic buyersDecisionLogic) {
+            @NonNull PerBuyerDecisionLogic perBuyerDecisionLogic) {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
@@ -418,7 +420,7 @@ public class AdSelectionOverrider {
                                     adSelectionConfig,
                                     decisionLogicJS,
                                     trustedScoringSignals,
-                                    buyersDecisionLogic);
+                                    perBuyerDecisionLogic);
                             return AdServicesStatusUtils.STATUS_SUCCESS;
                         }));
     }
@@ -506,12 +508,8 @@ public class AdSelectionOverrider {
     }
 
     private AdServicesApiConsent getAdServicesApiConsent() {
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
+        AdServicesApiConsent userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
+
         return userConsent;
     }
 
@@ -533,7 +531,8 @@ public class AdSelectionOverrider {
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, mCallerAppPackageName, resultCode, /*latencyMs=*/ 0);
         }
     }
 
@@ -551,7 +550,8 @@ public class AdSelectionOverrider {
             resultCodeInt = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCodeInt, 0);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, mCallerAppPackageName, resultCodeInt, /*latencyMs=*/ 0);
         }
     }
 

@@ -75,9 +75,7 @@ public class WebTriggerRegistrationRequestInternalTest {
                 NullPointerException.class,
                 () ->
                         new WebTriggerRegistrationRequestInternal.Builder(
-                                        null,
-                                        CONTEXT.getAttributionSource().getPackageName(),
-                                        SDK_PACKAGE_NAME)
+                                        null, CONTEXT.getPackageName(), SDK_PACKAGE_NAME)
                                 .build());
     }
 
@@ -100,7 +98,7 @@ public class WebTriggerRegistrationRequestInternalTest {
                 () ->
                         new WebTriggerRegistrationRequestInternal.Builder(
                                         EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST,
-                                        CONTEXT.getAttributionSource().getPackageName(),
+                                        CONTEXT.getPackageName(),
                                         /* sdkPackageName = */ null)
                                 .build());
     }
@@ -138,7 +136,7 @@ public class WebTriggerRegistrationRequestInternalTest {
     private WebTriggerRegistrationRequestInternal createExampleRegistrationRequest() {
         return new WebTriggerRegistrationRequestInternal.Builder(
                         EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST,
-                        CONTEXT.getAttributionSource().getPackageName(),
+                        CONTEXT.getPackageName(),
                         SDK_PACKAGE_NAME)
                 .setAdIdPermissionGranted(true)
                 .build();
@@ -146,7 +144,7 @@ public class WebTriggerRegistrationRequestInternalTest {
 
     private void verifyExampleRegistrationInternal(WebTriggerRegistrationRequestInternal request) {
         verifyExampleRegistration(request.getTriggerRegistrationRequest());
-        assertEquals(CONTEXT.getAttributionSource().getPackageName(), request.getAppPackageName());
+        assertEquals(CONTEXT.getPackageName(), request.getAppPackageName());
         assertTrue(request.isAdIdPermissionGranted());
     }
 

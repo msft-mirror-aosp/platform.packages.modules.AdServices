@@ -19,20 +19,22 @@ package com.android.adservices.service.adselection;
 import static org.junit.Assert.assertEquals;
 
 import android.adservices.adselection.AdWithBid;
-import android.adservices.adselection.ContextualAds;
-import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.adselection.SignedContextualAds;
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AppInstallFilters;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -47,14 +49,17 @@ public class AdFiltererNoOpImplTest {
     private static final AdData.Builder AD_DATA_BUILDER =
             AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0);
 
-    private static final ContextualAds.Builder CONTEXTUAL_ADS_BUILDER =
-            ContextualAdsFixture.aContextualAdBuilder()
+    private static final SignedContextualAds.Builder CONTEXTUAL_ADS_BUILDER =
+            SignedContextualAdsFixture.aContextualAdsWithEmptySignatureBuilder()
                     .setAdsWithBid(ImmutableList.of(new AdWithBid(AD_DATA_BUILDER.build(), 1.0)))
                     .setBuyer(CommonFixture.VALID_BUYER_1)
                     .setDecisionLogicUri(
                             CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/decisionPath/"));
 
     private AdFilterer mAdFilterer;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -64,7 +69,7 @@ public class AdFiltererNoOpImplTest {
     @Test
     public void testFilterNullAdFilters() {
         final AdData adData = AD_DATA_BUILDER.setAdFilters(null).build();
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
@@ -82,7 +87,7 @@ public class AdFiltererNoOpImplTest {
                                         .setFrequencyCapFilters(null)
                                         .build())
                         .build();
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
@@ -100,7 +105,7 @@ public class AdFiltererNoOpImplTest {
                         .setAdFilters(
                                 new AdFilters.Builder().setAppInstallFilters(appFilters).build())
                         .build();
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
@@ -122,7 +127,7 @@ public class AdFiltererNoOpImplTest {
                         .setAdFilters(
                                 new AdFilters.Builder().setAppInstallFilters(appFilters).build())
                         .build();
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
                         .build();
@@ -151,7 +156,7 @@ public class AdFiltererNoOpImplTest {
                         .setAdFilters(
                                 new AdFilters.Builder().setAppInstallFilters(appFilters2).build())
                         .build();
-        final ContextualAds contextualAds =
+        final SignedContextualAds contextualAds =
                 CONTEXTUAL_ADS_BUILDER
                         .setAdsWithBid(
                                 ImmutableList.of(

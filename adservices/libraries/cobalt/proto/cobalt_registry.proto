@@ -15,7 +15,7 @@ syntax = "proto3";
 
 package cobalt;
 
-import "cobalt/proto/metric_definition.proto";
+import "metric_definition.proto";
 
 option java_multiple_files = true;
 option java_package = "com.google.cobalt";
@@ -63,6 +63,11 @@ message ProjectConfig {
   repeated MetricDefinition metrics = 3;
   string project_contact = 4;
 
+  // Identifier of the app that is expected to log the metrics for this project.
+  // Depending on the platform, this may represent an "app" or "component", and
+  // the format of package identifiers may be different.
+  string app_package_identifier = 7;
+
   // Experiment namespaces supported for experiment ids in this project.
   repeated string experiments_namespaces = 5;
 
@@ -75,15 +80,17 @@ message ProjectConfig {
 //
 // A CobaltRegistry can be in one of two states:
 //
-// (1) It can contain data for a single Cobalt project. In this case, there is a
-// single
+// (1) It can contain data for a single Cobalt project. In this case, there is a single
 //     CustomerConfig which contains a single ProjectConfig.
 //
-// (2) It can contain data for multiple Cobalt projects. In this case, there may
-// be any number of
+// (2) It can contain data for multiple Cobalt projects. In this case, there may be any number of
 //     |customers|, which in turn may contain any number of ProjectConfigs.
 message CobaltRegistry {
   reserved 1, 2, 3, 4;
   // Cobalt customer registration.
   repeated CustomerConfig customers = 5;
+
+  // Customer IDs that have been previously used and deleted from the registry.
+  // These IDs must not be reused for new customers.
+  repeated uint32 deleted_customer_ids = 6;
 }

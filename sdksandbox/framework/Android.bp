@@ -48,7 +48,10 @@ filegroup {
 java_defaults {
     name: "framework-sdksandbox-jarjar-defaults",
     jarjar_rules: ":framework-sdksandbox-jarjar",
-    static_libs: ["modules-utils-build"],
+    static_libs: [
+        "modules-utils-build",
+        "sdk_sandbox_flags_lib",
+    ],
     libs: [
         "androidx.annotation_annotation",
     ],
@@ -76,5 +79,8 @@ java_sdk_library {
             "com.android.sdksandbox.**",
             "com.android.server.sdksandbox.**",
         ],
+    },
+    lint: {
+        baseline_filename: "lint-baseline.xml",
     },
 }

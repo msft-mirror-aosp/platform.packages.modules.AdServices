@@ -17,16 +17,19 @@
 package android.adservices.test.scenario.adservices;
 
 import android.adservices.adid.AdId;
+import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.adid.AdIdManager;
+import android.adservices.common.AdServicesOutcomeReceiver;
 import android.content.Context;
-import android.os.OutcomeReceiver;
 import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,7 +47,6 @@ import java.util.concurrent.Executors;
 public class GetAdId {
     private static final String TAG = GetAdId.class.getSimpleName();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final AdIdManager sAdIdManager = AdIdManager.get(sContext);
     private static final Executor sExecutor = Executors.newCachedThreadPool();
 
     @Before
@@ -54,9 +56,22 @@ public class GetAdId {
 
     @Test
     public void test_getAdId() throws ExecutionException, InterruptedException {
+        if (SdkLevel.isAtLeastS()) {
+            testSPlus();
+        } else {
+            // Android R testing is a special case as we will need to use the custom
+            // AdServicesOutcomeReceiver. Since there are no plans to expose the AdId
+            // API with the custom AdServicesOutcomeReceiver as a parameter on R, we will invoke
+            // AdIdCompatibleManager, which is available internally.
+            testR();
+        }
+    }
+
+    private void testSPlus() throws ExecutionException, InterruptedException {
+        AdIdManager adIdManager = AdIdManager.get(sContext);
         CompletableFuture<AdId> future = new CompletableFuture<>();
-        OutcomeReceiver callback =
-                new OutcomeReceiver<AdId, Exception>() {
+        android.os.OutcomeReceiver<AdId, Exception> callback =
+                new android.os.OutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull AdId adId) {
                         future.complete(adId);
@@ -64,12 +79,37 @@ public class GetAdId {
 
                     @Override
                     public void onError(@NonNull Exception error) {
+                        Log.e(TAG, "Retrieving Ad ID resulted in an error!", error);
                         Assert.fail();
                     }
                 };
 
         Trace.beginSection(TAG + "#GetAdId");
-        sAdIdManager.getAdId(sExecutor, callback);
+        adIdManager.getAdId(sExecutor, callback);
+        AdId adId = future.get();
+        Assert.assertEquals(AdId.ZERO_OUT.length(), adId.getAdId().length());
+        Trace.endSection();
+    }
+
+    private void testR() throws ExecutionException, InterruptedException {
+        AdIdCompatibleManager compatAdIdManagerManager = new AdIdCompatibleManager(sContext);
+        CompletableFuture<AdId> future = new CompletableFuture<>();
+        AdServicesOutcomeReceiver<AdId, Exception> callback =
+                new AdServicesOutcomeReceiver<>() {
+                    @Override
+                    public void onResult(@NonNull AdId adId) {
+                        future.complete(adId);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Exception error) {
+                        Log.e(TAG, "Retrieving Ad ID resulted in an error!", error);
+                        Assert.fail();
+                    }
+                };
+
+        Trace.beginSection(TAG + "#GetAdId");
+        compatAdIdManagerManager.getAdId(sExecutor, callback);
         AdId adId = future.get();
         Assert.assertEquals(AdId.ZERO_OUT.length(), adId.getAdId().length());
         Trace.endSection();

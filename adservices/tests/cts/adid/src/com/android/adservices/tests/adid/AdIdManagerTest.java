@@ -15,178 +15,166 @@
  */
 package com.android.adservices.tests.adid;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
-import android.content.Context;
 import android.os.LimitExceededException;
-import android.os.OutcomeReceiver;
-import android.os.SystemProperties;
-import android.text.TextUtils;
+import android.util.Log;
 
-import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.common.AdservicesTestHelper;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
+import com.android.adservices.common.ExceptionFailureSyncCallback;
+import com.android.adservices.common.OutcomeReceiverForTests;
+import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-@RunWith(AndroidJUnit4.class)
-public class AdIdManagerTest {
-    private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final float DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND = 25f;
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+public final class AdIdManagerTest extends CtsAdIdEndToEndTestCase {
 
-    private String mPreviousAppAllowList;
+    private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
+
+    private AdIdManager mAdIdManager;
 
     @Before
     public void setup() throws Exception {
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
-        overrideAdIdKillSwitch(true);
-        overridePpapiAppAllowList();
-        // Cool-off rate limiter in case it was initialized by another test
+        Log.v(mTag, "setup(): sleeping 1s");
         TimeUnit.SECONDS.sleep(1);
-    }
 
-    @After
-    public void tearDown() {
-        overrideAdIdKillSwitch(false);
-        setPpapiAppAllowList(mPreviousAppAllowList);
-    }
-
-    // Override adid related kill switch to ignore the effect of actual PH values.
-    // If shouldOverride = true, override adid related kill switch to OFF to allow adservices
-    // If shouldOverride = false, override adid related kill switch to meaningless value so that
-    // PhFlags will use the default value.
-    private void overrideAdIdKillSwitch(boolean shouldOverride) {
-        String overrideString = shouldOverride ? "false" : "null";
-        ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
-    }
-
-    private void setPpapiAppAllowList(String allowList) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + allowList);
-    }
-
-    private void overridePpapiAppAllowList() {
-        mPreviousAppAllowList =
-                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
-        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
+        mAdIdManager = AdIdManager.get(sContext);
+        assertWithMessage("AdIdManager on context %s", sContext).that(mAdIdManager).isNotNull();
     }
 
     @Test
-    public void testAdIdManager() throws Exception {
-        AdIdManager adIdManager = AdIdManager.get(sContext);
-        CompletableFuture<AdId> future = new CompletableFuture<>();
-        OutcomeReceiver<AdId, Exception> callback =
-                new OutcomeReceiver<AdId, Exception>() {
-                    @Override
-                    public void onResult(AdId result) {
-                        future.complete(result);
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        Assert.fail();
-                    }
-                };
-        adIdManager.getAdId(CALLBACK_EXECUTOR, callback);
-        AdId resultAdId = future.get();
-        Assert.assertNotNull(resultAdId.getAdId());
-        Assert.assertNotNull(resultAdId.isLimitAdTrackingEnabled());
+    @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
+    public void testAdIdManager_SPlus() throws Exception {
+        OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
+        mAdIdManager.getAdId(sCallbackExecutor, callback);
+        validateAdIdManagerTestResults(callback);
     }
 
     @Test
+    public void testAdIdManager_R() throws Exception {
+        AdServicesOutcomeReceiverForTests<AdId> callback =
+                new AdServicesOutcomeReceiverForTests<>();
+        mAdIdManager.getAdId(sCallbackExecutor, callback);
+        validateAdIdManagerTestResults(callback);
+    }
+
+    private void validateAdIdManagerTestResults(ExceptionFailureSyncCallback<AdId> callback)
+            throws Exception {
+        AdId resultAdId = callback.assertSuccess();
+        Log.v(mTag, "AdId: " + toString(resultAdId));
+
+        assertWithMessage("getAdId()").that(resultAdId.getAdId()).isNotNull();
+        assertWithMessage("isLimitAdTrackingEnabled()")
+                .that(resultAdId.isLimitAdTrackingEnabled())
+                .isNotNull();
+    }
+
+    @Test
+    @FlakyTest(bugId = 322812739)
     public void testAdIdManager_verifyRateLimitReached() throws Exception {
-        final AdIdManager adIdManager = AdIdManager.get(sContext);
-
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getAdIdRequestPerSecond();
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = flags.getAdIdRequestPerSecond();
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(getAdIdAndVerifyRateLimitReached(adIdManager));
+            Log.v(
+                    mTag,
+                    "calling getAdIdAndVerifyRateLimitReached() "
+                            + (i + 1)
+                            + "/"
+                            + (int) requestPerSecond);
+            assertWithMessage("getAdIdAndVerifyRateLimitReached() at step %s", i)
+                    .that(getAdIdAndVerifyRateLimitReached())
+                    .isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
         // triggering one more call without checking the outcome.
-        getAdIdAndVerifyRateLimitReached(adIdManager);
+        getAdIdAndVerifyRateLimitReached();
 
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit = getAdIdAndVerifyRateLimitReached(adIdManager);
-        final boolean executedInLessThanOneSec =
+        boolean reachedLimit = getAdIdAndVerifyRateLimitReached();
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
+        Log.d(
+                mTag,
+                "testAdIdManager_verifyRateLimitReached(): reachedLimit="
+                        + reachedLimit
+                        + ", executedInLessThanOneSec="
+                        + executedInLessThanOneSec);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertWithMessage("reachedLimit when executedInLessThanOneSec")
+                    .that(reachedLimit)
+                    .isTrue();
         }
     }
 
-    private boolean getAdIdAndVerifyRateLimitReached(AdIdManager manager)
+    private boolean getAdIdAndVerifyRateLimitReached() throws InterruptedException {
+        if (SdkLevel.isAtLeastS()) {
+            OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
+            mAdIdManager.getAdId(sCallbackExecutor, callback);
+            return verifyAdIdRateLimitReached(callback);
+        } else {
+            AdServicesOutcomeReceiverForTests<AdId> callback =
+                    new AdServicesOutcomeReceiverForTests<>();
+            mAdIdManager.getAdId(sCallbackExecutor, callback);
+            return verifyAdIdRateLimitReached(callback);
+        }
+    }
+
+    private boolean verifyAdIdRateLimitReached(ExceptionFailureSyncCallback<AdId> callback)
             throws InterruptedException {
-        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        callback.assertCalled();
+        AdId result = callback.getResult();
+        Exception error = callback.getError();
+        Log.v(
+                mTag,
+                "getAdIdAndVerifyRateLimitReached(): result="
+                        + toString(result)
+                        + ", error="
+                        + error);
 
-        manager.getAdId(
-                CALLBACK_EXECUTOR,
-                createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
-
-        countDownLatch.await();
-        return reachedLimit.get();
+        return error instanceof LimitExceededException;
     }
 
-    private OutcomeReceiver<AdId, Exception> createCallbackWithCountdownOnLimitExceeded(
-            CountDownLatch countDownLatch, AtomicBoolean reachedLimit) {
-        return new OutcomeReceiver<AdId, Exception>() {
-            @Override
-            public void onResult(@NonNull AdId result) {
-                countDownLatch.countDown();
-            }
+    @Test
+    @RequiresLowRamDevice
+    @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
+    public void testAdIdManager_whenDeviceNotSupported_SPlus() throws Exception {
+        AdIdManager adIdManager = AdIdManager.get(sContext);
+        assertWithMessage("adIdManager").that(adIdManager).isNotNull();
+        OutcomeReceiverForTests<AdId> receiver = new OutcomeReceiverForTests<>();
 
-            @Override
-            public void onError(@NonNull Exception error) {
-                if (error instanceof LimitExceededException) {
-                    reachedLimit.set(true);
-                }
-                countDownLatch.countDown();
-            }
-        };
+        adIdManager.getAdId(sCallbackExecutor, receiver);
+        receiver.assertFailure(IllegalStateException.class);
     }
 
-    private float getAdIdRequestPerSecond() {
-        try {
-            String permitString =
-                    SystemProperties.get("debug.adservices.adid_request_permits_per_second");
-            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Float.parseFloat(permitString);
-            }
+    @Test
+    @RequiresLowRamDevice
+    public void testAdIdManager_whenDeviceNotSupported_R() throws Exception {
+        AdIdManager adIdManager = AdIdManager.get(sContext);
+        assertWithMessage("adIdManager").that(adIdManager).isNotNull();
+        AdServicesOutcomeReceiverForTests<AdId> receiver =
+                new AdServicesOutcomeReceiverForTests<>();
 
-            permitString =
-                    ShellUtils.runShellCommand(
-                            "device_config get adservices adid_request_permits_per_second");
-            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Float.parseFloat(permitString);
-            }
-            return DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND;
-        } catch (Exception e) {
-            return DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND;
-        }
+        adIdManager.getAdId(sCallbackExecutor, receiver);
+        receiver.assertFailure(IllegalStateException.class);
+    }
+
+    private static String toString(AdId adId) {
+        return adId == null ? null : adId.getAdId();
     }
 }

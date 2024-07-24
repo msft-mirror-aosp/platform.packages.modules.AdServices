@@ -25,6 +25,7 @@ java_test_host {
         "cts",
         "general-tests",
         "mts-adservices",
+        "mcts-adservices",
     ],
     libs: [
         "cts-tradefed",
@@ -32,10 +33,37 @@ java_test_host {
         "platformprotos",
     ],
     static_libs: [
+        "adservices-host-side-test-utility",
         "cts-statsd-atom-host-test-utils",
     ],
     data: [
         ":CtsAdservicesHostTestApp",
     ],
     per_testcase_directory: true,
+}
+
+java_test_host {
+    name: "CtsAdExtServicesHostTests",
+    defaults: ["cts_defaults"],
+    srcs: ["src/**/*.java"],
+    // tag this module as a cts test artifact
+    test_suites: [
+        "cts",
+        "general-tests",
+        "mts-extservices",
+        "mcts-extservices",
+    ],
+    libs: [
+        "cts-tradefed",
+        "tradefed",
+        "platformprotos",
+    ],
+    static_libs: [
+        "adservices-host-side-test-utility",
+        "cts-statsd-atom-host-test-utils",
+    ],
+    data: [
+        ":CtsAdservicesHostTestApp"
+    ],
+    test_config: "AndroidTest.ExtServices.xml"
 }

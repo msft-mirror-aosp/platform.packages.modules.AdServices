@@ -25,6 +25,7 @@ android_test_helper_app {
     ],
     static_libs: [
         "adservices-clients",
+        "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth",

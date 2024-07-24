@@ -22,12 +22,10 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 
-import com.android.apiimplementation.SdkApi;
-
 public class SandboxedSdkMediateeProvider extends SandboxedSdkProvider {
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
-        return new SandboxedSdk(new SdkApi(getContext()));
+        return new SandboxedSdk(new MediateeSdkApi());
     }
 
     @Override

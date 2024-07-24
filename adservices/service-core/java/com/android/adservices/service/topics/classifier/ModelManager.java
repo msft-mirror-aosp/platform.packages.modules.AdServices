@@ -16,6 +16,23 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_MISSING_PROPERTY_OR_ASSET_NAME;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_PROPERTY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_CLASSIFIER_MODEL_FILE_LOAD_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_CLASSIFIER_MODEL_FILE_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__NO_CLASSIFIER_MODEL_AVAILABLE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_BUNDLED_METADATA_FILE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_CLASSIFIER_ASSETS_METADATA_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_LABELS_FILE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_PRECOMUTRED_APP_TOPICS_LIST_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_PRECOMUTRED_LABELS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_TOP_APPS_FILE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_LOAD_ML_MODEL_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
@@ -31,6 +48,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.download.MobileDataDownloadFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.ClassifierInputConfig.ClassifierInputField;
 import com.android.internal.annotations.VisibleForTesting;
@@ -198,6 +216,10 @@ public class ModelManager {
             fileGroup = mobileDataDownload.getFileGroup(getFileGroupRequest).get();
         } catch (ExecutionException | InterruptedException e) {
             sLogger.e(e, "Unable to load MDD file group.");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return null;
         }
         return fileGroup;
@@ -259,6 +281,9 @@ public class ModelManager {
             MappedByteBuffer buffer = null;
             if (downloadedFile == null) {
                 sLogger.e("Failed to find downloaded model file");
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_CLASSIFIER_MODEL_FILE_NOT_FOUND,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 return ByteBuffer.allocate(0);
             } else {
                 buffer =
@@ -280,6 +305,10 @@ public class ModelManager {
                 return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
             } catch (IOException | NullPointerException e) {
                 sLogger.e(e, "Error loading the bundled classifier model");
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_LOAD_ML_MODEL_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 return ByteBuffer.allocate(0);
             }
         }
@@ -296,6 +325,10 @@ public class ModelManager {
                 return mAssetManager.openFd(mModelFilePath).getLength() > 0;
             } catch (IOException e) {
                 sLogger.e(e, "[ML] No classifier model available.");
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__NO_CLASSIFIER_MODEL_AVAILABLE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 return false;
             }
         }
@@ -319,6 +352,10 @@ public class ModelManager {
                 inputStream = mAssetManager.open(mLabelsFilePath);
             } catch (IOException e) {
                 sLogger.e(e, "Failed to read labels file");
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_LABELS_FILE_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             }
         }
         return inputStream == null ? labels.build() : getLabelsList(labels, inputStream);
@@ -339,6 +376,10 @@ public class ModelManager {
             }
         } catch (IOException e) {
             sLogger.e(e, "Unable to read precomputed labels");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_PRECOMUTRED_LABELS_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             // When catching IOException -> return empty immutable list
             // TODO(b/226944089): A strategy to handle exceptions
             //  in Classifier and PrecomputedLoader
@@ -369,6 +410,10 @@ public class ModelManager {
                 inputStream = mAssetManager.open(mTopAppsFilePath);
             } catch (IOException e) {
                 sLogger.e(e, "Failed to read top apps file");
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_TOP_APPS_FILE_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             }
         }
         return inputStream == null
@@ -416,6 +461,9 @@ public class ModelManager {
                                 "Unable to load topicID \"%s\" in app \"%s\", "
                                         + "because it is not a valid topic in labels file.",
                                 appTopic, app);
+                        ErrorLogUtil.e(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                         continue;
                     }
 
@@ -427,6 +475,10 @@ public class ModelManager {
             }
         } catch (IOException e) {
             sLogger.e(e, "Unable to read precomputed app topics list");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_PRECOMUTRED_APP_TOPICS_LIST_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             // When catching IOException -> return empty hash map
             // TODO(b/226944089): A strategy to handle exceptions
             //  in Classifier and PrecomputedLoader
@@ -457,6 +509,10 @@ public class ModelManager {
                 inputStream = mAssetManager.open(mClassifierAssetsMetadataPath);
             } catch (IOException e) {
                 sLogger.e(e, "Failed to read bundled metadata file");
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_BUNDLED_METADATA_FILE_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             }
         }
         return inputStream == null
@@ -500,9 +556,12 @@ public class ModelManager {
                                 // in the ASSETS_PROPERTY_ATTRIBUTIONS.
                                 reader.skipValue();
                                 sLogger.e(
-                                        attribution,
-                                        " is a redundant metadata attribution of "
-                                                + "metadata property.");
+                                        "%s is a redundant metadata attribution of "
+                                                + "metadata property.",
+                                        attribution);
+                                ErrorLogUtil.e(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_PROPERTY,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                             }
                         }
                     } else if (elementKeyName.equals(ASSET_ELEMENT_NAME)) {
@@ -518,8 +577,11 @@ public class ModelManager {
                                 // in the ASSET_NORMAL_ATTRIBUTIONS.
                                 reader.skipValue();
                                 sLogger.e(
-                                        attribution,
-                                        " is a redundant metadata attribution of asset.");
+                                        "%s is a redundant metadata attribution of asset.",
+                                        attribution);
+                                ErrorLogUtil.e(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                             }
                         }
                     } else {
@@ -531,6 +593,9 @@ public class ModelManager {
                                 "Can't load this json element, "
                                         + "because \"property\" or \"asset_name\" "
                                         + "can't be found in the json element.");
+                        ErrorLogUtil.e(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_MISSING_PROPERTY_OR_ASSET_NAME,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                     }
                 }
                 reader.endObject();
@@ -544,6 +609,10 @@ public class ModelManager {
             reader.endArray();
         } catch (IOException e) {
             sLogger.e(e, "Unable to read classifier assets metadata file");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_CLASSIFIER_ASSETS_METADATA_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             // When catching IOException -> return empty immutable map
             return ImmutableMap.of();
         }
@@ -596,7 +665,7 @@ public class ModelManager {
                     try {
                         inputFields.add(ClassifierInputField.valueOf(line));
                     } catch (IllegalArgumentException e) {
-                        LogUtil.e("Invalid input field in classifier input config: {}", line);
+                        LogUtil.e("Invalid input field in classifier input config: %s", line);
                         return ClassifierInputConfig.getEmptyConfig();
                     }
                 }
@@ -627,7 +696,7 @@ public class ModelManager {
         try {
             String formattedInput =
                     String.format(classifierInputConfig.getInputFormat(), (Object[]) inputFields);
-            LogUtil.d("Validated classifier input format: {}", formattedInput);
+            LogUtil.d("Validated classifier input format: %s", formattedInput);
         } catch (IllegalFormatException e) {
             LogUtil.e("Classifier input config is incorrectly formatted");
             return false;
@@ -643,6 +712,9 @@ public class ModelManager {
         ClientFile downloadedFile = mDownloadedFiles.get(fileId);
         if (downloadedFile == null) {
             sLogger.e("Failed to find downloaded %s file", fileId);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_CLASSIFIER_MODEL_FILE_NOT_FOUND,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return inputStream;
         }
         try {
@@ -651,6 +723,10 @@ public class ModelManager {
                             Uri.parse(downloadedFile.getFileUri()), ReadStreamOpener.create());
         } catch (IOException e) {
             sLogger.e(e, "Failed to load fileId = %s", fileId);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_CLASSIFIER_MODEL_FILE_LOAD_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
         return inputStream;
     }

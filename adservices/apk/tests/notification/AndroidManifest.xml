@@ -27,6 +27,9 @@
     <!--acts as an application that uses adservices in order for PPAPI to be enabled and notification to be displayed-->
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
 
+    <!-- Permissions required for reading device configs -->
+    <uses-permission android:name="android.permission.READ_DEVICE_CONFIG"/>
+
     <application android:debuggable="true">
         <activity
                 android:name="com.android.adservices.ui.notifications.ConsentNotificationActivity"
@@ -34,6 +37,27 @@
                 android:theme="@style/AdServices.NotificationTheme">
             <intent-filter>
                 <action android:name="android.test.adservices.ui.NOTIFICATIONS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.test.adservices.ui.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity for the apps view of Adservices Settings UI-->
+        <activity
+            android:name="com.android.adservices.ui.settings.activities.AppsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SubSettingsBase">
+            <intent-filter android:priority="1">
+                <action android:name="android.test.adservices.ui.APPS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

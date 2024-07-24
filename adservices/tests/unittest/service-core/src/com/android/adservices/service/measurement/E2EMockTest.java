@@ -20,10 +20,13 @@ import static com.android.adservices.ResultCode.RESULT_OK;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+
+import static java.util.Map.entry;
 
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
@@ -40,11 +43,14 @@ import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
 import com.android.adservices.service.measurement.actions.InstallApp;
+import com.android.adservices.service.measurement.actions.RegisterListSources;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.RegisterWebSource;
@@ -56,6 +62,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
@@ -63,8 +70,10 @@ import com.android.adservices.service.measurement.registration.AsyncTriggerFetch
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobHandlerWrapper;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobHandlerWrapper;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -85,8 +94,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -114,10 +125,10 @@ public abstract class E2EMockTest extends E2ETest {
     AsyncRegistrationQueueRunner mAsyncRegistrationQueueRunner;
     AsyncSourceFetcher mAsyncSourceFetcher;
     AsyncTriggerFetcher mAsyncTriggerFetcher;
+    AdServicesErrorLogger mErrorLogger;
 
     EnrollmentDao mEnrollmentDao;
-    static DatastoreManager sDatastoreManager =
-            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+    DatastoreManager mDatastoreManager;
 
     ContentResolver mMockContentResolver;
     ContentProviderClient mMockContentProviderClient;
@@ -125,43 +136,69 @@ public abstract class E2EMockTest extends E2ETest {
     private final Map<String, String> mUriToEnrollmentId = new HashMap<>();
     protected DebugReportApi mDebugReportApi;
 
-    @Rule public final E2EMockStatic.E2EMockStaticRule mE2EMockStaticRule;
+    @Rule(order = 11)
+    public final E2EMockStatic.E2EMockStaticRule e2EMockStaticRule;
+
+    private static Map<String, String> sPhFlags =
+            Map.ofEntries(
+                    entry("measurement_enable_configurable_aggregate_report_delay", "true"),
+                    entry("measurement_aggregate_report_delay_config", "0,0"));
 
     E2EMockTest(
             Collection<Action> actions,
             ReportObjects expectedOutput,
             ParamsProvider paramsProvider,
             String name,
-            Map<String, String> phFlagsMap)
-            throws RemoteException {
-        super(actions, expectedOutput, name, phFlagsMap);
+            Map<String, String> phFlagsMap) throws RemoteException {
+        super(
+                actions,
+                expectedOutput,
+                name,
+                ((Supplier<Map<String, String>>)
+                                () -> {
+                                    for (String key : sPhFlags.keySet()) {
+                                        phFlagsMap.putIfAbsent(key, sPhFlags.get(key));
+                                    }
+                                    return phFlagsMap;
+                                })
+                        .get());
         mClickVerifier = mock(ClickVerifier.class);
         mFlags = FlagsFactory.getFlags();
-        mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
-        mMeasurementDataDeleter = spy(new MeasurementDataDeleter(sDatastoreManager));
+        mErrorLogger = mock(AdServicesErrorLogger.class);
+        mDatastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger);
+        e2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
+        mMeasurementDataDeleter = spy(new MeasurementDataDeleter(mDatastoreManager, mFlags));
 
         mEnrollmentDao =
                 new EnrollmentDao(
                         ApplicationProvider.getApplicationContext(),
                         DbTestUtil.getSharedDbHelperForTest(),
                         mFlags,
-                        /* enable seed */ true);
+                        /* enable seed */ true,
+                        AdServicesLoggerImpl.getInstance(),
+                        EnrollmentUtil.getInstance(sContext));
 
         mAsyncSourceFetcher =
                 spy(
                         new AsyncSourceFetcher(
                                 sContext,
                                 mEnrollmentDao,
-                                mFlags,
-                                AdServicesLoggerImpl.getInstance()));
+                                mFlags));
         mAsyncTriggerFetcher =
                 spy(
                         new AsyncTriggerFetcher(
                                 sContext,
                                 mEnrollmentDao,
-                                mFlags,
-                                AdServicesLoggerImpl.getInstance()));
-        mDebugReportApi = new DebugReportApi(sContext, mFlags);
+                                mFlags));
+        mDebugReportApi =
+                new DebugReportApi(
+                        sContext,
+                        mFlags,
+                        new EventReportWindowCalcDelegate(mFlags),
+                        new SourceNoiseHandler(mFlags),
+                        new SQLDatastoreManager(
+                                DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
         mMockContentResolver = mock(ContentResolver.class);
         mMockContentProviderClient = mock(ContentProviderClient.class);
         when(mMockContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI))
@@ -174,11 +211,26 @@ public abstract class E2EMockTest extends E2ETest {
         when(mMockContentProviderClient.insert(
                         eq(AsyncRegistrationContentProvider.TRIGGER_URI), any()))
                 .thenReturn(AsyncRegistrationContentProvider.TRIGGER_URI);
-        when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
+        when(mClickVerifier.isInputEventVerifiable(any(), anyLong(), anyString())).thenReturn(true);
     }
 
     @Override
     void prepareRegistrationServer(RegisterSource sourceRegistration) throws IOException {
+        for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
+            if (sourceRegistration.mUriConfigMap.get(uri).shouldEnroll()) {
+                updateEnrollment(uri);
+            }
+            HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
+            when(urlConnection.getResponseCode()).thenReturn(200);
+            Answer<Map<String, List<String>>> headerFieldsMockAnswer =
+                    invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
+            Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
+            Mockito.doReturn(urlConnection).when(mAsyncSourceFetcher).openUrl(new URL(uri));
+        }
+    }
+
+    @Override
+    void prepareRegistrationServer(RegisterListSources sourceRegistration) throws IOException {
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
             if (sourceRegistration.mUriConfigMap.get(uri).shouldEnroll()) {
                 updateEnrollment(uri);
@@ -251,7 +303,7 @@ public abstract class E2EMockTest extends E2ETest {
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
         }
     }
 
@@ -267,7 +319,21 @@ public abstract class E2EMockTest extends E2ETest {
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
+        }
+    }
+
+    @Override
+    void processAction(RegisterListSources sourceRegistration) throws IOException, JSONException {
+        prepareRegistrationServer(sourceRegistration);
+        Assert.assertEquals(
+                "MeasurementImpl.registerWebSource failed",
+                RESULT_OK,
+                mMeasurementImpl.registerSources(
+                        sourceRegistration.mRegistrationRequest, sourceRegistration.mTimestamp));
+        mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        if (sourceRegistration.mDebugReporting) {
+            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
         }
     }
 
@@ -297,7 +363,7 @@ public abstract class E2EMockTest extends E2ETest {
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
         if (triggerRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(triggerRegistration.mTimestamp);
         }
     }
 
@@ -318,20 +384,24 @@ public abstract class E2EMockTest extends E2ETest {
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
         if (triggerRegistration.mDebugReporting) {
-            processActualDebugReportApiJob();
+            processActualDebugReportApiJob(triggerRegistration.mTimestamp);
         }
     }
 
     // Triggers debug reports to be sent
     void processActualDebugReportJob(long timestamp, long delay) throws IOException, JSONException {
+        long maxAggregateReportUploadRetryWindowMs =
+                Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
         long reportTime = timestamp + delay;
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
-                        sDatastoreManager,
-                        reportTime - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        mDatastoreManager,
+                        reportTime
+                                - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportTime,
-                        true);
+                        true,
+                        mFlags,
+                        ApplicationProvider.getApplicationContext());
 
         processActualDebugEventReports(
                 timestamp,
@@ -341,11 +411,11 @@ public abstract class E2EMockTest extends E2ETest {
 
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
-                        sDatastoreManager,
-                        reportTime - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        mDatastoreManager,
+                        reportTime - maxAggregateReportUploadRetryWindowMs,
                         reportTime,
-                        true);
+                        true,
+                        mFlags);
 
         processActualDebugAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],
@@ -354,20 +424,23 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     // Process actual additional debug reports.
-    protected void processActualDebugReportApiJob() throws IOException, JSONException {
+    protected void processActualDebugReportApiJob(long timestamp)
+            throws IOException, JSONException {
         Object[] reportCaptures =
                 DebugReportingJobHandlerWrapper.spyPerformScheduledPendingReports(
-                        mEnrollmentDao, sDatastoreManager);
+                        mDatastoreManager, sContext);
 
         processActualDebugReports(
-                (List<Uri>) reportCaptures[1], (List<JSONObject>) reportCaptures[2]);
+                timestamp,
+                (List<Uri>) reportCaptures[1],
+                (List<JSONObject>) reportCaptures[2]);
     }
 
     @Override
     void processAction(InstallApp installApp) {
         Assert.assertTrue(
                 "measurementDao.doInstallAttribution failed",
-                sDatastoreManager.runInTransaction(
+                mDatastoreManager.runInTransaction(
                         measurementDao ->
                                 measurementDao.doInstallAttribution(
                                         installApp.mUri, installApp.mTimestamp)));
@@ -377,11 +450,7 @@ public abstract class E2EMockTest extends E2ETest {
     void processAction(UninstallApp uninstallApp) {
         Assert.assertTrue(
                 "measurementDao.undoInstallAttribution failed",
-                sDatastoreManager.runInTransaction(
-                        measurementDao -> {
-                            measurementDao.deleteAppRecords(uninstallApp.mUri);
-                            measurementDao.undoInstallAttribution(uninstallApp.mUri);
-                        }));
+                mMeasurementImpl.deletePackageRecords(uninstallApp.mUri));
     }
 
     @Override
@@ -392,12 +461,13 @@ public abstract class E2EMockTest extends E2ETest {
 
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
-                        sDatastoreManager,
+                        mDatastoreManager,
                         reportingJob.mTimestamp
-                                - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                                - Flags.DEFAULT_MEASUREMENT_MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         reportingJob.mTimestamp,
-                        false);
+                        false,
+                        mFlags,
+                        ApplicationProvider.getApplicationContext());
 
         processActualEventReports(
                 (List<EventReport>) eventCaptures[0],
@@ -407,18 +477,19 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Override
     void processAction(AggregateReportingJob reportingJob) throws IOException, JSONException {
+        long maxAggregateReportUploadRetryWindowMs =
+                Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
         long earliestValidInsertion =
                 reportingJob.mTimestamp - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
         runDeleteExpiredRecordsJob(earliestValidInsertion);
 
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        mEnrollmentDao,
-                        sDatastoreManager,
-                        reportingJob.mTimestamp
-                                - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        mDatastoreManager,
+                        reportingJob.mTimestamp - maxAggregateReportUploadRetryWindowMs,
                         reportingJob.mTimestamp,
-                        false);
+                        false,
+                        mFlags);
 
         processActualAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],
@@ -444,13 +515,17 @@ public abstract class E2EMockTest extends E2ETest {
         List<JSONObject> eventReportObjects =
                 getActualEventReportObjects(eventReports, destinations, payloads);
         for (JSONObject obj : eventReportObjects) {
-            obj.put(TestFormatJsonMapping.REPORT_TIME_KEY, triggerTime);
+            obj.put(TestFormatJsonMapping.REPORT_TIME_KEY, String.valueOf(triggerTime));
         }
         mActualOutput.mDebugEventReportObjects.addAll(eventReportObjects);
     }
 
-    void processActualDebugReports(List<Uri> destinations, List<JSONObject> payloads) {
-        List<JSONObject> debugReportObjects = getActualDebugReportObjects(destinations, payloads);
+    void processActualDebugReports(
+            long timestamp,
+            List<Uri> destinations,
+            List<JSONObject> payloads) {
+        List<JSONObject> debugReportObjects = getActualDebugReportObjects(
+                timestamp, destinations, payloads);
         mActualOutput.mDebugReportObjects.addAll(debugReportObjects);
     }
 
@@ -468,10 +543,13 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     private List<JSONObject> getActualDebugReportObjects(
-            List<Uri> destinations, List<JSONObject> payloads) {
+            long timestamp,
+            List<Uri> destinations,
+            List<JSONObject> payloads) {
         List<JSONObject> result = new ArrayList<>();
         for (int i = 0; i < destinations.size(); i++) {
             Map<String, Object> map = new HashMap<>();
+            map.put(TestFormatJsonMapping.REPORT_TIME_KEY, String.valueOf(timestamp));
             map.put(TestFormatJsonMapping.REPORT_TO_KEY, destinations.get(i).toString());
             map.put(TestFormatJsonMapping.PAYLOAD_KEY, payloads.get(i));
             result.add(new JSONObject(map));
@@ -486,7 +564,8 @@ public abstract class E2EMockTest extends E2ETest {
             List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> aggregateReportObjects =
-                getActualAggregateReportObjects(aggregateReports, destinations, payloads);
+                getActualAggregateReportObjects(aggregateReports, destinations, payloads,
+                        TimeUnit.HOURS.toMillis(1));
         mActualOutput.mAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
@@ -496,14 +575,15 @@ public abstract class E2EMockTest extends E2ETest {
             List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> aggregateReportObjects =
-                getActualAggregateReportObjects(aggregateReports, destinations, payloads);
+                getActualAggregateReportObjects(aggregateReports, destinations, payloads, 0L);
         mActualOutput.mDebugAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
     private List<JSONObject> getActualAggregateReportObjects(
             List<AggregateReport> aggregateReports,
             List<Uri> destinations,
-            List<JSONObject> payloads)
+            List<JSONObject> payloads,
+            long reportDelay)
             throws JSONException {
         List<JSONObject> result = new ArrayList<>();
         for (int i = 0; i < destinations.size(); i++) {
@@ -513,7 +593,8 @@ public abstract class E2EMockTest extends E2ETest {
                             .put(
                                     TestFormatJsonMapping.REPORT_TIME_KEY,
                                     String.valueOf(
-                                            aggregateReports.get(i).getScheduledReportTime()))
+                                            aggregateReports.get(i).getScheduledReportTime()
+                                                    + reportDelay))
                             .put(
                                     TestFormatJsonMapping.REPORT_TO_KEY,
                                     destinations.get(i).toString())
@@ -555,6 +636,12 @@ public abstract class E2EMockTest extends E2ETest {
         if (!triggerDebugKey.isEmpty()) {
             aggregateJson.put(AggregateReportPayloadKeys.TRIGGER_DEBUG_KEY, triggerDebugKey);
         }
+        if (sharedInfo.has(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME)) {
+            aggregateJson.put(
+                    AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME,
+                    sharedInfo.optString(AggregateReportPayloadKeys.SOURCE_REGISTRATION_TIME));
+        }
+
         return aggregateJson;
     }
 
@@ -605,9 +692,9 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     private void runDeleteExpiredRecordsJob(long earliestValidInsertion) {
-        sDatastoreManager
-                .runInTransaction(
-                        dao -> dao.deleteExpiredRecords(earliestValidInsertion));
+        int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
+        mDatastoreManager.runInTransaction(
+                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit));
     }
 
     void updateEnrollment(String uri) {
@@ -645,7 +732,8 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     private String getEnrollmentId(String uri) {
-        String authority = Uri.parse(uri).getAuthority();
+        Optional<Uri> domainAndScheme = WebAddresses.topPrivateDomainAndScheme(Uri.parse(uri));
+        String authority = domainAndScheme.get().getAuthority();
         return mUriToEnrollmentId.computeIfAbsent(authority, k -> "enrollment-id-" + authority);
     }
 

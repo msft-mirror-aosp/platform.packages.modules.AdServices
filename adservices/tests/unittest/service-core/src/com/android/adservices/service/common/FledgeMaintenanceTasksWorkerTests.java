@@ -16,122 +16,76 @@
 
 package com.android.adservices.service.common;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 
-import android.adservices.adselection.CustomAudienceSignalsFixture;
-import android.adservices.adselection.ReportInteractionRequest;
-import android.net.Uri;
+import static com.google.common.truth.Truth.assertThat;
 
-import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
-import com.android.adservices.data.adselection.AdSelectionDatabase;
+import android.adservices.common.CommonFixture;
+import android.adservices.common.KeyedFrequencyCap;
+import android.content.pm.PackageManager;
+
+import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.DBAdSelection;
-import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
-import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
+import com.android.adservices.data.adselection.EncryptionContextDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.InteractionReportingTableClearedStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-
-import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
-import java.time.Clock;
+import java.time.Instant;
 
 public class FledgeMaintenanceTasksWorkerTests {
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
-    private static final Uri BIDDING_LOGIC_URI = Uri.parse("https://biddinglogic.com");
-    private static final Uri EXPIRED_BIDDING_LOGIC_URI =
-            Uri.parse("https://expiredbiddinglogic.com");
-
-    private static final long AD_SELECTION_ID_1 = 12345L;
-    private static final long AD_SELECTION_ID_2 = 23456L;
-
-    private static final String CLICK_EVENT = "click";
-    private static final int SELLER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
-    private static final Uri SELLER_CLICK_URI = Uri.parse("https://www.seller.com/" + CLICK_EVENT);
-
-    private static final DBAdSelection DB_AD_SELECTION =
-            new DBAdSelection.Builder()
-                    .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
-                    .setContextualSignals("contextualSignals")
-                    .setBiddingLogicUri(BIDDING_LOGIC_URI)
-                    .setWinningAdRenderUri(Uri.parse("https://winningAd.com"))
-                    .setWinningAdBid(5)
-                    .setCreationTimestamp(Clock.systemUTC().instant())
-                    .setCallerPackageName("testPackageName")
-                    .build();
-
-    private static final DBBuyerDecisionLogic DB_BUYER_DECISION_LOGIC =
-            new DBBuyerDecisionLogic.Builder()
-                    .setBuyerDecisionLogicJs("buyerDecisionLogicJS")
-                    .setBiddingLogicUri(BIDDING_LOGIC_URI)
-                    .build();
-
-    private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION =
-            DBRegisteredAdInteraction.builder()
-                    .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setInteractionKey(CLICK_EVENT)
-                    .setDestination(SELLER_DESTINATION)
-                    .setInteractionReportingUri(SELLER_CLICK_URI)
-                    .build();
-
-    private static final DBAdSelection EXPIRED_DB_AD_SELECTION =
-            new DBAdSelection.Builder()
-                    .setAdSelectionId(AD_SELECTION_ID_2)
-                    .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
-                    .setContextualSignals("contextualSignals")
-                    .setBiddingLogicUri(EXPIRED_BIDDING_LOGIC_URI)
-                    .setWinningAdRenderUri(Uri.parse("https://winningAd.com"))
-                    .setWinningAdBid(5)
-                    .setCreationTimestamp(
-                            Clock.systemUTC()
-                                    .instant()
-                                    .minusSeconds(2 * TEST_FLAGS.getAdSelectionExpirationWindowS()))
-                    .setCallerPackageName("testPackageName")
-                    .build();
-
-    private static final DBBuyerDecisionLogic EXPIRED_DB_BUYER_DECISION_LOGIC =
-            new DBBuyerDecisionLogic.Builder()
-                    .setBuyerDecisionLogicJs("buyerDecisionLogicJS")
-                    .setBiddingLogicUri(EXPIRED_BIDDING_LOGIC_URI)
-                    .build();
-
-    private static final DBRegisteredAdInteraction EXPIRED_DB_REGISTERED_INTERACTION =
-            DBRegisteredAdInteraction.builder()
-                    .setAdSelectionId(AD_SELECTION_ID_2)
-                    .setInteractionKey(CLICK_EVENT)
-                    .setDestination(SELLER_DESTINATION)
-                    .setInteractionReportingUri(SELLER_CLICK_URI)
-                    .build();
-
-    private AdSelectionEntryDao mAdSelectionEntryDao;
+    @Mock private AdSelectionEntryDao mAdSelectionEntryDaoMock;
+    @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDaoMock;
+    @Mock private FrequencyCapDao mFrequencyCapDaoMock;
+    @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock private EncryptionContextDao mEncryptionContextDaoMock;
+    @Mock private PackageManager mPackageManagerMock;
     private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;
     private MockitoSession mMockitoSession;
 
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
+    @Mock private KAnonMessageDao mKAnonMessageDaoMock;
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setup() {
-        mAdSelectionEntryDao =
-                Room.inMemoryDatabaseBuilder(
-                                ApplicationProvider.getApplicationContext(),
-                                AdSelectionDatabase.class)
-                        .build()
-                        .adSelectionEntryDao();
+        mMockitoSession = ExtendedMockito.mockitoSession().initMocks(this).startMocking();
 
-        mMockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
-
-        mFledgeMaintenanceTasksWorker = new FledgeMaintenanceTasksWorker(mAdSelectionEntryDao);
+        mFledgeMaintenanceTasksWorker =
+                new FledgeMaintenanceTasksWorker(
+                        TEST_FLAGS,
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
     }
 
     @After
@@ -142,121 +96,378 @@ public class FledgeMaintenanceTasksWorkerTests {
     }
 
     @Test
-    public void testFledgeMaintenanceWorkerDoesNotRemoveValidData() throws Exception {
-        // Add valid ad selection
-        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION);
+    public void testClearExpiredAdSelectionData_removesExpiredData() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<InteractionReportingTableClearedStats> argumentCaptor =
+                ArgumentCaptor.forClass(InteractionReportingTableClearedStats.class);
 
-        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
-
-        // Add valid decision logic
-        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC);
-
-        assertTrue(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
-
-        // Add valid registered ad event
-        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
-                AD_SELECTION_ID_1,
-                ImmutableList.of(DB_REGISTERED_INTERACTION),
-                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount(),
-                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount(),
-                SELLER_DESTINATION);
-
-        assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
-                        DB_REGISTERED_INTERACTION.getAdSelectionId(),
-                        DB_REGISTERED_INTERACTION.getInteractionKey(),
-                        DB_REGISTERED_INTERACTION.getDestination()));
-
-        // Clear expired data
         mFledgeMaintenanceTasksWorker.clearExpiredAdSelectionData();
 
-        // Assert that valid data was not cleared
-        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
-        assertTrue(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
-        assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
-                        DB_REGISTERED_INTERACTION.getAdSelectionId(),
-                        DB_REGISTERED_INTERACTION.getInteractionKey(),
-                        DB_REGISTERED_INTERACTION.getDestination()));
+        // Verifies InteractionReportingTableClearedStats get the correct value.
+        verify(mAdServicesLoggerMock, times(1))
+                .logInteractionReportingTableClearedStats(argumentCaptor.capture());
+        InteractionReportingTableClearedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getNumUrisCleared()).isEqualTo(0);
+        assertThat(stats.getNumUnreportedUris()).isEqualTo(-1);
+
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        TEST_FLAGS.getAdSelectionExpirationWindowS());
+
+        verify(mAdSelectionEntryDaoMock).removeExpiredAdSelection(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock).removeExpiredBuyerDecisionLogic();
+        verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractions();
+        verify(mAdSelectionEntryDaoMock)
+                .removeExpiredAdSelectionInitializations(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock, never())
+                .removeExpiredRegisteredAdInteractionsFromUnifiedTable();
+        verify(mEncryptionContextDaoMock)
+                .removeExpiredEncryptionContext(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock, times(2)).getTotalNumRegisteredAdInteractions();
+        verifyNoMoreInteractions(mAdSelectionEntryDaoMock);
+        verify(mAdSelectionDebugReportDaoMock).deleteDebugReportsBeforeTime(expectedExpirationTime);
+        verifyNoMoreInteractions(mAdSelectionDebugReportDaoMock);
     }
 
     @Test
-    public void testFledgeMaintenanceWorkerRemovesExpiredData() throws Exception {
-        // Add valid and expired ad selections
-        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION);
-        mAdSelectionEntryDao.persistAdSelection(EXPIRED_DB_AD_SELECTION);
+    public void
+            testClearExpiredAdSelectionData_serverAuctionDisabled_doesntClearDataFromUnifiedFlow() {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<InteractionReportingTableClearedStats> argumentCaptor =
+                ArgumentCaptor.forClass(InteractionReportingTableClearedStats.class);
 
-        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
-        assertTrue(
-                mAdSelectionEntryDao.doesAdSelectionIdExist(
-                        EXPIRED_DB_AD_SELECTION.getAdSelectionId()));
+        Flags flagsWithAuctionServerDisabled =
+                new Flags() {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabled() {
+                        return false;
+                    }
 
-        // Add valid and expired buyer decision logics
-        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC);
-        mAdSelectionEntryDao.persistBuyerDecisionLogic(EXPIRED_DB_BUYER_DECISION_LOGIC);
+                    @Override
+                    public boolean getFledgeEventLevelDebugReportingEnabled() {
+                        return true;
+                    }
 
-        assertTrue(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
-        assertTrue(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        EXPIRED_DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
+                    @Override
+                    public boolean getFledgeBeaconReportingMetricsEnabled() {
+                        return true;
+                    }
+                };
+        FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerWithAuctionDisabled =
+                new FledgeMaintenanceTasksWorker(
+                        flagsWithAuctionServerDisabled,
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
 
-        // Add valid and expired registered ad events
-        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
-                AD_SELECTION_ID_1,
-                ImmutableList.of(DB_REGISTERED_INTERACTION),
-                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount(),
-                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount(),
-                SELLER_DESTINATION);
-        // Add valid and expired registered ad events
-        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
-                AD_SELECTION_ID_2,
-                ImmutableList.of(EXPIRED_DB_REGISTERED_INTERACTION),
-                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount(),
-                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount(),
-                SELLER_DESTINATION);
+        mFledgeMaintenanceTasksWorkerWithAuctionDisabled.clearExpiredAdSelectionData();
 
-        assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
-                        DB_REGISTERED_INTERACTION.getAdSelectionId(),
-                        DB_REGISTERED_INTERACTION.getInteractionKey(),
-                        DB_REGISTERED_INTERACTION.getDestination()));
-        assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
-                        EXPIRED_DB_REGISTERED_INTERACTION.getAdSelectionId(),
-                        EXPIRED_DB_REGISTERED_INTERACTION.getInteractionKey(),
-                        EXPIRED_DB_REGISTERED_INTERACTION.getDestination()));
+        // Verifies InteractionReportingTableClearedStats get the correct value.
+        verify(mAdServicesLoggerMock, times(1))
+                .logInteractionReportingTableClearedStats(argumentCaptor.capture());
+        InteractionReportingTableClearedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getNumUrisCleared()).isEqualTo(0);
+        assertThat(stats.getNumUnreportedUris()).isEqualTo(-1);
 
-        // Clear expired data
-        mFledgeMaintenanceTasksWorker.clearExpiredAdSelectionData();
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        flagsWithAuctionServerDisabled.getAdSelectionExpirationWindowS());
+        verify(mAdSelectionEntryDaoMock).removeExpiredAdSelection(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock).removeExpiredBuyerDecisionLogic();
+        verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractions();
+        verify(mAdSelectionEntryDaoMock, never())
+                .removeExpiredAdSelectionInitializations(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock, never())
+                .removeExpiredRegisteredAdInteractionsFromUnifiedTable();
+        verify(mEncryptionContextDaoMock, never())
+                .removeExpiredEncryptionContext(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock, times(2)).getTotalNumRegisteredAdInteractions();
+        verifyNoMoreInteractions(mAdSelectionEntryDaoMock);
+        verify(mAdSelectionDebugReportDaoMock).deleteDebugReportsBeforeTime(expectedExpirationTime);
+        verifyNoMoreInteractions(mAdSelectionDebugReportDaoMock);
+    }
 
-        // Assert expired data was removed
-        assertFalse(
-                mAdSelectionEntryDao.doesAdSelectionIdExist(
-                        EXPIRED_DB_AD_SELECTION.getAdSelectionId()));
-        assertFalse(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        EXPIRED_DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
-        assertFalse(
-                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
-                        EXPIRED_DB_REGISTERED_INTERACTION.getAdSelectionId(),
-                        EXPIRED_DB_REGISTERED_INTERACTION.getInteractionKey(),
-                        EXPIRED_DB_REGISTERED_INTERACTION.getDestination()));
+    @Test
+    public void
+            testClearExpiredAdSelectionData_serverAuctionDisabled_unifiedTablesEnabled_ClearsUnifiedTables() {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<InteractionReportingTableClearedStats> argumentCaptor =
+                ArgumentCaptor.forClass(InteractionReportingTableClearedStats.class);
 
-        // Assert that valid data was not cleared
-        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(DB_AD_SELECTION.getAdSelectionId()));
-        assertTrue(
-                mAdSelectionEntryDao.doesBuyerDecisionLogicExist(
-                        DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
-        assertTrue(
-                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
-                        DB_REGISTERED_INTERACTION.getAdSelectionId(),
-                        DB_REGISTERED_INTERACTION.getInteractionKey(),
-                        DB_REGISTERED_INTERACTION.getDestination()));
+        Flags flagsWithAuctionServerDisabled =
+                new Flags() {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeEventLevelDebugReportingEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeBeaconReportingMetricsEnabled() {
+                        return true;
+                    }
+                };
+        FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerWithAuctionDisabled =
+                new FledgeMaintenanceTasksWorker(
+                        flagsWithAuctionServerDisabled,
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
+
+        mFledgeMaintenanceTasksWorkerWithAuctionDisabled.clearExpiredAdSelectionData();
+
+        // Verifies InteractionReportingTableClearedStats get the correct value.
+        verify(mAdServicesLoggerMock, times(1))
+                .logInteractionReportingTableClearedStats(argumentCaptor.capture());
+        InteractionReportingTableClearedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getNumUrisCleared()).isEqualTo(0);
+        assertThat(stats.getNumUnreportedUris()).isEqualTo(-1);
+
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        flagsWithAuctionServerDisabled.getAdSelectionExpirationWindowS());
+        verify(mAdSelectionEntryDaoMock).removeExpiredAdSelection(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock).removeExpiredBuyerDecisionLogic();
+        verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractions();
+        verify(mAdSelectionEntryDaoMock)
+                .removeExpiredAdSelectionInitializations(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock).removeExpiredRegisteredAdInteractionsFromUnifiedTable();
+        verify(mEncryptionContextDaoMock, never())
+                .removeExpiredEncryptionContext(eq(expectedExpirationTime));
+        verify(mAdSelectionEntryDaoMock, times(2)).getTotalNumRegisteredAdInteractions();
+        verifyNoMoreInteractions(mAdSelectionEntryDaoMock);
+        verify(mAdSelectionDebugReportDaoMock, never())
+                .deleteDebugReportsBeforeTime(expectedExpirationTime);
+        verifyNoMoreInteractions(mAdSelectionDebugReportDaoMock);
+    }
+
+    @Test
+    public void testClearExpiredFrequencyCapHistogramData_adFilteringEnabled_doesMaintenance() {
+        final class FlagsWithAdFilteringFeatureEnabled implements Flags {
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return false;
+            }
+        }
+
+        FledgeMaintenanceTasksWorker worker =
+                new FledgeMaintenanceTasksWorker(
+                        new FlagsWithAdFilteringFeatureEnabled(),
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
+
+        worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
+
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        KeyedFrequencyCap.MAX_INTERVAL.getSeconds());
+
+        verify(mFrequencyCapDaoMock).deleteAllExpiredHistogramData(eq(expectedExpirationTime));
+        verify(mFrequencyCapDaoMock)
+                .deleteAllDisallowedBuyerHistogramData(any(EnrollmentDao.class));
+        verify(mFrequencyCapDaoMock)
+                .deleteAllDisallowedSourceAppHistogramData(
+                        any(PackageManager.class), any(Flags.class));
+        verifyNoMoreInteractions(mFrequencyCapDaoMock);
+    }
+
+    @Test
+    public void
+            testClearExpiredFrequencyCapHistogramData_enrollmentDisabled_skipsBuyerMaintenance() {
+        final class FlagsWithAdFilteringFeatureEnabled implements Flags {
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return true;
+            }
+        }
+
+        FledgeMaintenanceTasksWorker worker =
+                new FledgeMaintenanceTasksWorker(
+                        new FlagsWithAdFilteringFeatureEnabled(),
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
+
+        worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
+
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        KeyedFrequencyCap.MAX_INTERVAL.getSeconds());
+
+        verify(mFrequencyCapDaoMock).deleteAllExpiredHistogramData(eq(expectedExpirationTime));
+        verify(mFrequencyCapDaoMock)
+                .deleteAllDisallowedSourceAppHistogramData(
+                        any(PackageManager.class), any(Flags.class));
+        verifyNoMoreInteractions(mFrequencyCapDaoMock);
+    }
+
+    @Test
+    public void testClearExpiredFrequencyCapHistogramData_adFilteringDisabled_skipsMaintenance() {
+        final class FlagsWithAdFilteringFeatureDisabled implements Flags {
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return false;
+            }
+
+            @Override
+            public boolean getDisableFledgeEnrollmentCheck() {
+                return false;
+            }
+        }
+
+        FledgeMaintenanceTasksWorker worker =
+                new FledgeMaintenanceTasksWorker(
+                        new FlagsWithAdFilteringFeatureDisabled(),
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
+
+        worker.clearInvalidFrequencyCapHistogramData(mPackageManagerMock);
+
+        verifyNoMoreInteractions(mFrequencyCapDaoMock, mPackageManagerMock);
+    }
+
+    @Test
+    public void testClearExpiredAdSelectionDataDebugReportingDisabledDoesNotClearDebugReportData() {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<InteractionReportingTableClearedStats> argumentCaptor =
+                ArgumentCaptor.forClass(InteractionReportingTableClearedStats.class);
+
+        Flags flagsWithAuctionServerDisabled =
+                new Flags() {
+                    @Override
+                    public boolean getFledgeEventLevelDebugReportingEnabled() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeBeaconReportingMetricsEnabled() {
+                        return true;
+                    }
+                };
+        FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerWithAuctionDisabled =
+                new FledgeMaintenanceTasksWorker(
+                        flagsWithAuctionServerDisabled,
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
+
+        mFledgeMaintenanceTasksWorkerWithAuctionDisabled.clearExpiredAdSelectionData();
+
+        // Verifies InteractionReportingTableClearedStats get the correct value.
+        verify(mAdServicesLoggerMock, times(1))
+                .logInteractionReportingTableClearedStats(argumentCaptor.capture());
+        InteractionReportingTableClearedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getNumUrisCleared()).isEqualTo(0);
+        assertThat(stats.getNumUnreportedUris()).isEqualTo(-1);
+
+        Instant expectedExpirationTime =
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
+                        flagsWithAuctionServerDisabled.getAdSelectionExpirationWindowS());
+        verify(mAdSelectionDebugReportDaoMock, never())
+                .deleteDebugReportsBeforeTime(expectedExpirationTime);
+        verifyNoMoreInteractions(mAdSelectionDebugReportDaoMock);
+    }
+
+    @Test
+    public void
+            testRemovedExpiredKAnonEntites_withKAnonFeatureFlagEnabled_removesExpiredEntities() {
+        final class FlagWithKAnonEnabled implements Flags {
+            @Override
+            public boolean getFledgeKAnonSignJoinFeatureEnabled() {
+                return true;
+            }
+        }
+        FledgeMaintenanceTasksWorker worker =
+                new FledgeMaintenanceTasksWorker(
+                        new FlagWithKAnonEnabled(),
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
+
+        worker.clearExpiredKAnonMessageEntities();
+
+        verify(mKAnonMessageDaoMock, times(1))
+                .removeExpiredEntities(CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI.instant());
+    }
+
+    @Test
+    public void testRemovedExpiredKAnonEntites_withKAnonFeatureFlagDisabled_doesNothing() {
+        final class FlagWithKAnonEnabled implements Flags {
+            @Override
+            public boolean getFledgeKAnonSignJoinFeatureEnabled() {
+                return false;
+            }
+        }
+        FledgeMaintenanceTasksWorker worker =
+                new FledgeMaintenanceTasksWorker(
+                        new FlagWithKAnonEnabled(),
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        mEnrollmentDaoMock,
+                        mEncryptionContextDaoMock,
+                        mAdSelectionDebugReportDaoMock,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        mKAnonMessageDaoMock);
+
+        worker.clearExpiredKAnonMessageEntities();
+
+        verifyZeroInteractions(mKAnonMessageDaoMock);
     }
 }

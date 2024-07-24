@@ -23,35 +23,48 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+
 import org.junit.Test;
 
 /** Unit tests for {@link GetAppSetIdParam} */
+@RequiresSdkLevelAtLeastS()
 @SmallTest
-public final class GetAppSetIdParamTest {
+public final class GetAppSetIdParamTest extends AdServicesUnitTestCase {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_SDK_PACKAGE_NAME = "SomeSdkPackageName";
 
     @Test
     public void test_nonNull() {
-        GetAppSetIdParam request =
+        GetAppSetIdParam param =
                 new GetAppSetIdParam.Builder()
                         .setAppPackageName(SOME_PACKAGE_NAME)
                         .setSdkPackageName(SOME_SDK_PACKAGE_NAME)
                         .build();
 
-        assertThat(request.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
-        assertThat(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
+        expect.that(param.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
+        expect.that(param.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
 
         // no file descriptor marshalling.
-        assertThat(request.describeContents()).isEqualTo(0);
+        expect.that(param.describeContents()).isEqualTo(0);
 
         Parcel parcel = Parcel.obtain();
-        request.writeToParcel(parcel, 0);
-        parcel.setDataPosition(0);
 
-        GetAppSetIdParam createdRequest = GetAppSetIdParam.CREATOR.createFromParcel(parcel);
-        assertThat(createdRequest).isNotEqualTo(request);
-        assertThat(GetAppSetIdParam.CREATOR.newArray(1)).hasLength(1);
+        try {
+            param.writeToParcel(parcel, 0);
+            parcel.setDataPosition(0);
+
+            GetAppSetIdParam createdParam = GetAppSetIdParam.CREATOR.createFromParcel(parcel);
+            expect.that(createdParam).isNotSameInstanceAs(param);
+
+            // equals() is not overridden.
+            expect.that(createdParam).isNotEqualTo(param);
+        } finally {
+            parcel.recycle();
+        }
+
+        assertThat(GetAppSetIdParam.CREATOR.newArray(1).length).isEqualTo(1);
     }
 
     @Test
@@ -61,7 +74,7 @@ public final class GetAppSetIdParamTest {
                 () -> {
                     GetAppSetIdParam unusedRequest =
                             new GetAppSetIdParam.Builder()
-                                    // Not setting AppPackagename making it null.
+                                    // Not setting AppPackageName making it null.
                                     .build();
                 });
 

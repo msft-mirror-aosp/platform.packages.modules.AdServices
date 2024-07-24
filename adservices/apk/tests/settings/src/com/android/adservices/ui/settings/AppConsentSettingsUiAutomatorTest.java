@@ -18,7 +18,6 @@ package com.android.adservices.ui.settings;
 
 import static com.google.common.truth.Truth.assertThat;
 
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -29,15 +28,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiScrollable;
-import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.Flags;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
@@ -47,6 +44,7 @@ import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -67,6 +65,10 @@ public class AppConsentSettingsUiAutomatorTest {
 
     private String mTestName;
 
+    @Rule(order = 0)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
+
     @Before
     public void setup() throws UiObjectNotFoundException {
         String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APP_APK_PATH);
@@ -77,10 +79,6 @@ public class AppConsentSettingsUiAutomatorTest {
 
         // Start from the home screen
         sDevice.pressHome();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.setFlags();
-        }
     }
 
     @After
@@ -91,10 +89,6 @@ public class AppConsentSettingsUiAutomatorTest {
 
         // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
         ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_APP_NAME);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
     }
 
     // TODO: Remove this blank test along with the other @Ignore. b/268351419
@@ -109,8 +103,7 @@ public class AppConsentSettingsUiAutomatorTest {
 
     @Test
     @Ignore("Flaky test. (b/268351419)")
-    public void consentSystemServerOnlyTest()
-            throws UiObjectNotFoundException, InterruptedException {
+    public void consentSystemServerOnlyTest() throws InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         // System server is not available on S-, skip this test for S-
@@ -120,7 +113,7 @@ public class AppConsentSettingsUiAutomatorTest {
 
     @Test
     @Ignore("Flaky test. (b/268351419)")
-    public void consentPpApiOnlyTest() throws UiObjectNotFoundException, InterruptedException {
+    public void consentPpApiOnlyTest() throws InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         appConsentTest(1, false);
@@ -128,8 +121,7 @@ public class AppConsentSettingsUiAutomatorTest {
 
     @Test
     @Ignore("Flaky test. (b/268351419)")
-    public void consentSystemServerAndPpApiTest()
-            throws UiObjectNotFoundException, InterruptedException {
+    public void consentSystemServerAndPpApiTest() throws InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         // System server is not available on S-, skip this test for S-
@@ -171,8 +163,7 @@ public class AppConsentSettingsUiAutomatorTest {
 
     @Test
     @Ignore("Flaky test. (b/268351419)")
-    public void consentPpApiOnlyDialogsOnTest()
-            throws UiObjectNotFoundException, InterruptedException {
+    public void consentPpApiOnlyDialogsOnTest() throws InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         appConsentTest(1, true);
@@ -180,8 +171,7 @@ public class AppConsentSettingsUiAutomatorTest {
 
     @Test
     @Ignore("Flaky test. (b/268351419)")
-    public void consentSystemServerAndPpApiDialogsOnTest()
-            throws UiObjectNotFoundException, InterruptedException {
+    public void consentSystemServerAndPpApiDialogsOnTest() throws InterruptedException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         // System server is not available on S-, skip this test for S-
@@ -189,13 +179,12 @@ public class AppConsentSettingsUiAutomatorTest {
         appConsentTest(2, true);
     }
 
-    private void setPpApiConsentToGiven() throws UiObjectNotFoundException {
+    private void setPpApiConsentToGiven() {
         // launch app
         launchSettingApp();
 
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(mainSwitch.exists()).isTrue();
+        UiObject2 mainSwitch = ApkTestUtil.getConsentSwitch(sDevice);
+        assertThat(mainSwitch).isNotNull();
 
         if (!mainSwitch.isChecked()) {
             mainSwitch.click();
@@ -219,7 +208,7 @@ public class AppConsentSettingsUiAutomatorTest {
     }
 
     private void appConsentTest(int consentSourceOfTruth, boolean dialogsOn)
-            throws UiObjectNotFoundException, InterruptedException {
+            throws InterruptedException {
         ShellUtils.runShellCommand(
                 "device_config put adservices consent_source_of_truth " + consentSourceOfTruth);
         ShellUtils.runShellCommand(
@@ -239,87 +228,81 @@ public class AppConsentSettingsUiAutomatorTest {
 
         // open apps view
         launchSettingApp();
-        scrollToAndClick(R.string.settingsUI_apps_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
 
         blockAppConsent(dialogsOn);
 
         unblockAppConsent(dialogsOn);
 
-        assertThat(getElement(R.string.settingsUI_block_app_title).exists()).isTrue();
+        assertThat(ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_app_title))
+                .isNotNull();
 
         resetAppConsent(dialogsOn);
 
-        assertThat(getElement(R.string.settingsUI_block_app_title, 0).exists()).isFalse();
-        assertThat(getElement(R.string.settingsUI_blocked_apps_title, 0).exists()).isFalse();
-        assertThat(getElement(R.string.settingsUI_apps_view_no_apps_text, 0).exists()).isTrue();
+        assertThat(ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_app_title, 0))
+                .isNull();
+        assertThat(ApkTestUtil.getElement(sDevice, R.string.settingsUI_blocked_apps_title, 0))
+                .isNull();
+        assertThat(ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_view_no_apps_text, 0))
+                .isNotNull();
     }
 
-    private void unblockAppConsent(boolean dialogsOn) throws UiObjectNotFoundException {
-        scrollToAndClick(R.string.settingsUI_blocked_apps_title);
-        scrollToAndClick(R.string.settingsUI_unblock_app_title);
+    private void unblockAppConsent(boolean dialogsOn) throws InterruptedException {
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_apps_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_unblock_app_title);
 
         if (dialogsOn) {
             // click unblock
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_unblock_app_message);
-            UiObject positiveText =
-                    getElement(R.string.settingsUI_dialog_unblock_app_positive_text);
-            assertThat(dialogTitle.exists()).isTrue();
-            assertThat(positiveText.exists()).isTrue();
+            UiObject2 dialogTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_unblock_app_message);
+            UiObject2 positiveText =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_unblock_app_positive_text);
+            assertThat(dialogTitle).isNotNull();
+            assertThat(positiveText).isNotNull();
 
             // confirm
             positiveText.click();
         }
 
-        assertThat(getElement(R.string.settingsUI_apps_view_no_blocked_apps_text).exists())
-                .isTrue();
+        assertThat(
+                        ApkTestUtil.getElement(
+                                sDevice,
+                                R.string.settingsUI_apps_view_no_blocked_apps_text))
+                .isNotNull();
         sDevice.pressBack();
     }
 
-    private void resetAppConsent(boolean dialogsOn) throws UiObjectNotFoundException {
-        scrollToAndClick(R.string.settingsUI_reset_apps_title);
+    private void resetAppConsent(boolean dialogsOn) throws InterruptedException {
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_apps_title);
 
         if (dialogsOn) {
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_reset_app_message);
-            UiObject positiveText = getElement(R.string.settingsUI_dialog_reset_app_positive_text);
-            assertThat(dialogTitle.exists()).isTrue();
-            assertThat(positiveText.exists()).isTrue();
+            UiObject2 dialogTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_reset_app_message);
+            UiObject2 positiveText =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_reset_app_positive_text);
+            assertThat(dialogTitle).isNotNull();
+            assertThat(positiveText).isNotNull();
 
             // confirm
             positiveText.click();
         }
     }
 
-    private void blockAppConsent(boolean dialogsOn) throws UiObjectNotFoundException {
-        scrollToAndClick(R.string.settingsUI_block_app_title);
+    private void blockAppConsent(boolean dialogsOn) throws InterruptedException {
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_block_app_title);
 
         if (dialogsOn) {
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_block_app_message);
-            UiObject positiveText = getElement(R.string.settingsUI_dialog_block_app_positive_text);
-            assertThat(dialogTitle.exists()).isTrue();
-            assertThat(positiveText.exists()).isTrue();
+            UiObject2 dialogTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_block_app_message);
+            UiObject2 positiveText =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_block_app_positive_text);
+            assertThat(dialogTitle).isNotNull();
+            assertThat(positiveText).isNotNull();
             positiveText.click();
         }
-    }
-
-    private UiObject getElement(int resId) {
-        return sDevice.findObject(new UiSelector().text(getString(resId)));
-    }
-
-    private UiObject getElement(int resId, int index) {
-        return sDevice.findObject(new UiSelector().text(getString(resId)).instance(index));
-    }
-
-    private String getString(int resourceId) {
-        return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
-    }
-
-    private void scrollToAndClick(int resId) throws UiObjectNotFoundException {
-        UiScrollable scrollView =
-                new UiScrollable(
-                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
-        UiObject element = sDevice.findObject(new UiSelector().text(getString(resId)));
-        scrollView.scrollIntoView(element);
-        element.click();
     }
 
     private void initiateTestAppConsent() throws InterruptedException {
@@ -331,6 +314,9 @@ public class AppConsentSettingsUiAutomatorTest {
         ShellUtils.runShellCommand(
                 "device_config put adservices"
                         + " fledge_custom_audience_service_kill_switch false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices"
+                        + " fledge_schedule_custom_audience_update_enabled true");
         ShellUtils.runShellCommand(
                 "device_config put adservices disable_fledge_enrollment_check true");
 

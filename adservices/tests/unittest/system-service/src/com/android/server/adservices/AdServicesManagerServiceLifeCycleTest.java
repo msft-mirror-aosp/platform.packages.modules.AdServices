@@ -15,8 +15,7 @@
  */
 package com.android.server.adservices;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetLocalManager;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetLocalManagerNotFound;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doNothing;
@@ -25,19 +24,20 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
+import android.util.Log;
 
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSession;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.quality.Strictness;
 
 public final class AdServicesManagerServiceLifeCycleTest {
+
+    private static final String TAG = AdServicesManagerServiceLifeCycleTest.class.getSimpleName();
 
     @Mock private Context mContext;
     @Mock private AdServicesManagerService mService;
@@ -45,26 +45,15 @@ public final class AdServicesManagerServiceLifeCycleTest {
 
     // Need to use a spy to mock publishBinderService()
     private AdServicesManagerService.Lifecycle mSpyLifecycle;
-    private StaticMockitoSession mMockSession;
 
-    // TODO(b/281577492): use ExtendedMockitoRule and remove these 2 session methods
-    private void startMockitoSession() {
-        mMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(LocalManagerRegistry.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-    }
-
-    @After
-    public void finishMockitoSession() {
-        mMockSession.finishMocking();
-    }
+    @Rule
+    public final AdServicesExtendedMockitoRule extendedMockito =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(LocalManagerRegistry.class)
+                    .build();
 
     @Before
     public void setUp() {
-        startMockitoSession();
         mSpyLifecycle = spy(new AdServicesManagerService.Lifecycle(mContext, mService));
         doNothing().when(mSpyLifecycle).publishBinderService();
         mockGetLocalManager(SdkSandboxManagerLocal.class, mSdkSandboxManagerLocal);
@@ -93,6 +82,16 @@ public final class AdServicesManagerServiceLifeCycleTest {
 
         verifyBinderPublished();
         verifyAdServiceRegisteredOnSdkManager(/* published= */ true);
+    }
+
+    private static <T> void mockGetLocalManager(Class<T> managerClass, T manager) {
+        Log.v(TAG, "mockGetLocalManager(" + managerClass + ", " + manager + ")");
+        doReturn(manager).when(() -> LocalManagerRegistry.getManager(managerClass));
+    }
+
+    private static void mockGetLocalManagerNotFound(Class<?> managerClass) {
+        Log.v(TAG, "mockGetLocalManagerNotFound(" + managerClass + ")");
+        doReturn(null).when(() -> LocalManagerRegistry.getManager(managerClass));
     }
 
     private void verifyAdServiceRegisteredOnSdkManager(boolean published) {

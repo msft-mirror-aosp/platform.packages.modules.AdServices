@@ -16,11 +16,15 @@
 
 package com.android.server.adservices.rollback;
 
+import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.server.adservices.rollback.RollbackHandlingManager.DUMP_PREFIX;
 import static com.android.server.adservices.rollback.RollbackHandlingManager.STORAGE_XML_IDENTIFIER;
 import static com.android.server.adservices.rollback.RollbackHandlingManager.VERSION_KEY;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
@@ -29,8 +33,8 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.shared.storage.BooleanFileDatastore;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.server.adservices.common.BooleanFileDatastore;
 
 import org.junit.After;
 import org.junit.Before;
@@ -42,6 +46,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 public class RollbackHandlingManagerTest {
+
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
 
@@ -139,5 +144,35 @@ public class RollbackHandlingManagerTest {
                         rollbackHandlingManager.wasAdServicesDataDeleted(
                                 AdServicesManager.MEASUREMENT_DELETION))
                 .isFalse();
+    }
+
+    @Test
+    public void testDump() throws Exception {
+        RollbackHandlingManager rollbackHandlingManager =
+                RollbackHandlingManager.createRollbackHandlingManager(
+                        BASE_DIR, /* userIdentifier= */ 0, DATASTORE_VERSION);
+        BooleanFileDatastore datastore =
+                rollbackHandlingManager.getOrCreateBooleanFileDatastore(
+                        AdServicesManager.MEASUREMENT_DELETION);
+        String prefix = "_";
+
+        String dump = dump(pw -> rollbackHandlingManager.dump(pw, prefix));
+
+        assertWithMessage("content of dump()")
+                .that(dump)
+                .startsWith(prefix + "RollbackHandlingManager:");
+        assertDumpHasPrefix(dump, prefix);
+        assertWithMessage("content of dump()")
+                .that(dump)
+                .startsWith(prefix + "RollbackHandlingManager:");
+        assertWithMessage("content of dump() (BASE_DIR)").that(dump).contains(BASE_DIR);
+        assertWithMessage("content of dump() (DATASTORE_VERSION)")
+                .that(dump)
+                .contains(Integer.toString(DATASTORE_VERSION));
+        assertWithMessage("content of dump() (# datastores)").that(dump).contains("1 datastores");
+
+        String datastoreDump =
+                dump(pw -> datastore.dump(pw, prefix + DUMP_PREFIX + DUMP_PREFIX + DUMP_PREFIX));
+        assertWithMessage("content of dump() (datastore)").that(dump).contains(datastoreDump);
     }
 }

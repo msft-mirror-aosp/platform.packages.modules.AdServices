@@ -34,6 +34,8 @@ import java.util.Objects;
 @AutoValue
 public abstract class Topic {
 
+    private static final int DEFAULT_LOGGED_TOPIC = -1;
+
     /**
      * @return an Integer represents the topic details
      */
@@ -48,6 +50,11 @@ public abstract class Topic {
      * @return the model version number
      */
     public abstract long getModelVersion();
+
+    /**
+     * @return an Integer represents the logged topic
+     */
+    public abstract int getLoggedTopic();
 
     /**
      * @return generic builder
@@ -70,11 +77,32 @@ public abstract class Topic {
             int topic,
             long taxonomyVersion,
             long modelVersion) {
-        Objects.requireNonNull(topic);
-
         return builder().setTopic(topic)
                 .setTaxonomyVersion(taxonomyVersion)
-                .setModelVersion(modelVersion).build();
+                .setModelVersion(modelVersion)
+                .setLoggedTopic(DEFAULT_LOGGED_TOPIC).build();
+    }
+
+    /**
+     * Create an instance of Topic with logged topic.
+     *
+     * @param topic topic details
+     * @param taxonomyVersion taxonomy version number
+     * @param modelVersion model version number
+     * @param loggedTopic logged topic details
+     * @return an instance of Topic
+     */
+    // TODO(b/292013667): Clean the different create method in Topic
+    @NonNull
+    public static Topic create(
+            int topic,
+            long taxonomyVersion,
+            long modelVersion,
+            int loggedTopic) {
+        return builder().setTopic(topic)
+                .setTaxonomyVersion(taxonomyVersion)
+                .setModelVersion(modelVersion)
+                .setLoggedTopic(loggedTopic).build();
     }
 
     /**
@@ -90,6 +118,9 @@ public abstract class Topic {
 
         /** Set Model Version */
         public abstract Builder setModelVersion(long modelVersion);
+
+        /** Set Logged Topic */
+        public abstract Builder setLoggedTopic(int loggedTopic);
 
         /** Build a Topic instance */
         @NonNull
@@ -108,5 +139,35 @@ public abstract class Topic {
                 .setTaxonomyVersion(getTaxonomyVersion())
                 .setModelVersion(getModelVersion())
                 .build();
+    }
+
+    /**
+     * The definition of two topics are equal only based on
+     * their topic, taxonomyVersion and modelVersion.
+     */
+    @Override
+    public boolean equals(Object object) {
+        // If the object is compared with itself then return true
+        if (object == this) {
+            return true;
+        }
+
+        // Check if object is an instance of Topic
+        if (!(object instanceof Topic)) {
+            return false;
+        }
+
+        // typecast object to Topic so that we can compare data members
+        Topic topic = (Topic) object;
+
+        // Compare the data members and return accordingly
+        return getTopic() == topic.getTopic()
+                && getModelVersion() == topic.getModelVersion()
+                && getTaxonomyVersion() == topic.getTaxonomyVersion();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getTopic(), getTaxonomyVersion(), getModelVersion());
     }
 }

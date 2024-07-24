@@ -20,17 +20,28 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import android.net.Uri;
 
 import com.android.adservices.HpkeJni;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.quality.Strictness;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
@@ -55,9 +66,19 @@ public class AggregateReportBodyTest {
     private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(27628792L);
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(23443234L);
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
+
+    private static final String COORDINATOR_ORIGIN = "https://coordinator.origin";
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
             + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
             + "\"value\":1664}]}";
+    private Flags mMockFlags;
+
+    @Rule
+    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule.Builder(this)
+                    .spyStatic(FlagsFactory.class)
+                    .setStrictness(Strictness.LENIENT)
+                    .build();
 
     private AggregateReportBody createAggregateReportBodyExample1() {
         return new AggregateReportBody.Builder()
@@ -70,6 +91,8 @@ public class AggregateReportBodyTest {
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                .setDebugMode("enabled")
                 .build();
     }
 
@@ -82,8 +105,10 @@ public class AggregateReportBodyTest {
                 .setReportId(REPORT_ID)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
                 .setSourceDebugKey(null)
                 .setTriggerDebugKey(null)
+                .setDebugMode(null)
                 .build();
     }
 
@@ -97,6 +122,8 @@ public class AggregateReportBodyTest {
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                .setDebugMode(null)
                 .build();
     }
 
@@ -110,14 +137,24 @@ public class AggregateReportBodyTest {
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                .setDebugMode(null)
                 .build();
+    }
+
+    @Before
+    public void before() {
+        mMockFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(true);
     }
 
     @Test
     public void testSharedInfoJsonSerialization() throws JSONException {
         AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
-        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
-        JSONObject aggregateJson = aggregateReport.toJson(AggregateCryptoFixture.getKey());
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson(mMockFlags);
+        JSONObject aggregateJson =
+                aggregateReport.toJson(AggregateCryptoFixture.getKey(), mMockFlags);
 
         assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
         assertEquals(VERSION, sharedInfoJson.get("version"));
@@ -127,13 +164,16 @@ public class AggregateReportBodyTest {
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
         assertEquals(SOURCE_DEBUG_KEY.toString(), aggregateJson.get("source_debug_key"));
         assertEquals(TRIGGER_DEBUG_KEY.toString(), aggregateJson.get("trigger_debug_key"));
+        assertEquals(COORDINATOR_ORIGIN, aggregateJson.get("aggregation_coordinator_origin"));
     }
 
     @Test
-    public void testJsonSerializationWithNullDebugKeys() throws JSONException {
-        AggregateReportBody aggregateReport = createAggregateReportBodyExampleWithNullDebugKeys();
-        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
-        JSONObject aggregateJson = aggregateReport.toJson(AggregateCryptoFixture.getKey());
+    public void testSharedInfoJsonSerialization_originFlagDisabled() throws JSONException {
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginEnabled()).thenReturn(false);
+        AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson(mMockFlags);
+        JSONObject aggregateJson =
+                aggregateReport.toJson(AggregateCryptoFixture.getKey(), mMockFlags);
 
         assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
         assertEquals(VERSION, sharedInfoJson.get("version"));
@@ -141,6 +181,25 @@ public class AggregateReportBodyTest {
         assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
         assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
+        assertEquals(SOURCE_DEBUG_KEY.toString(), aggregateJson.get("source_debug_key"));
+        assertEquals(TRIGGER_DEBUG_KEY.toString(), aggregateJson.get("trigger_debug_key"));
+        assertTrue(aggregateJson.isNull("aggregation_coordinator_origin"));
+    }
+
+    @Test
+    public void testJsonSerializationWithNullDebugKeys() throws JSONException {
+        AggregateReportBody aggregateReport = createAggregateReportBodyExampleWithNullDebugKeys();
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson(mMockFlags);
+        JSONObject aggregateJson =
+                aggregateReport.toJson(AggregateCryptoFixture.getKey(), mMockFlags);
+
+        assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
+        assertEquals(VERSION, sharedInfoJson.get("version"));
+        assertEquals(REPORT_ID, sharedInfoJson.get("report_id"));
+        assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
+        assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
+        assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
+        assertEquals(COORDINATOR_ORIGIN, aggregateJson.get("aggregation_coordinator_origin"));
         assertNull(aggregateJson.opt("source_debug_key"));
         assertNull(aggregateJson.opt("trigger_debug_key"));
     }
@@ -149,8 +208,9 @@ public class AggregateReportBodyTest {
     public void testJsonSerializationWithSingleSourceDebugKeys() throws JSONException {
         AggregateReportBody aggregateReport =
                 createAggregateReportBodyExampleWithSingleSourceDebugKey();
-        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
-        JSONObject aggregateJson = aggregateReport.toJson(AggregateCryptoFixture.getKey());
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson(mMockFlags);
+        JSONObject aggregateJson =
+                aggregateReport.toJson(AggregateCryptoFixture.getKey(), mMockFlags);
 
         assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
         assertEquals(VERSION, sharedInfoJson.get("version"));
@@ -159,6 +219,7 @@ public class AggregateReportBodyTest {
         assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
         assertEquals(SOURCE_DEBUG_KEY.toString(), aggregateJson.get("source_debug_key"));
+        assertEquals(COORDINATOR_ORIGIN, aggregateJson.get("aggregation_coordinator_origin"));
         assertNull(aggregateJson.opt("trigger_debug_key"));
     }
 
@@ -166,8 +227,9 @@ public class AggregateReportBodyTest {
     public void testJsonSerializationWithSingleTriggerDebugKeys() throws JSONException {
         AggregateReportBody aggregateReport =
                 createAggregateReportBodyExampleWithSingleTriggerDebugKey();
-        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
-        JSONObject aggregateJson = aggregateReport.toJson(AggregateCryptoFixture.getKey());
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson(mMockFlags);
+        JSONObject aggregateJson =
+                aggregateReport.toJson(AggregateCryptoFixture.getKey(), mMockFlags);
 
         assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
         assertEquals(VERSION, sharedInfoJson.get("version"));
@@ -177,6 +239,35 @@ public class AggregateReportBodyTest {
         assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
         assertNull(aggregateJson.opt("source_debug_key"));
         assertEquals(TRIGGER_DEBUG_KEY.toString(), aggregateJson.get("trigger_debug_key"));
+        assertEquals(COORDINATOR_ORIGIN, aggregateJson.get("aggregation_coordinator_origin"));
+    }
+
+    @Test
+    public void testSharedInfoJsonSerializationWithoutSourceRegistrationTime()
+            throws JSONException {
+        when(mMockFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
+                .thenReturn(true);
+        JSONObject sharedInfoJson =
+                new AggregateReportBody.Builder()
+                        .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                        // A null value indicates the registration time was never set.
+                        .setSourceRegistrationTime(null)
+                        .setScheduledReportTime(SCHEDULED_REPORT_TIME)
+                        .setApiVersion(VERSION)
+                        .setReportId(REPORT_ID)
+                        .setReportingOrigin(REPORTING_ORIGIN)
+                        .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                        .build()
+                        .sharedInfoToJson(mMockFlags);
+
+        assertEquals(
+                AggregateReportBody.EXCLUDED_SOURCE_REGISTRATION_TIME,
+                sharedInfoJson.get("source_registration_time"));
+        assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
+        assertEquals(VERSION, sharedInfoJson.get("version"));
+        assertEquals(REPORT_ID, sharedInfoJson.get("report_id"));
+        assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
+        assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
     }
 
     @Test
@@ -190,6 +281,9 @@ public class AggregateReportBodyTest {
         JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
 
         assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
+        assertEquals(
+                AggregateCryptoConverter.encode(DEBUG_CLEARTEXT_PAYLOAD),
+                aggregateServicePayloads.opt("debug_cleartext_payload"));
         assertEncodedDebugPayload(aggregateServicePayloads);
         assertEncryptedPayload(aggregateServicePayloads);
     }
@@ -206,9 +300,7 @@ public class AggregateReportBodyTest {
         JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
 
         assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
-        assertEquals(
-                AggregateCryptoConverter.encode(DEBUG_CLEARTEXT_PAYLOAD),
-                aggregateServicePayloads.opt("debug_cleartext_payload"));
+        assertNull(aggregateServicePayloads.opt("debug_cleartext_payload"));
         assertEncodedDebugPayload(aggregateServicePayloads);
         assertEncryptedPayload(aggregateServicePayloads);
     }
@@ -227,6 +319,25 @@ public class AggregateReportBodyTest {
         assertNull(aggregateServicePayloads.opt("debug_cleartext_payload"));
         assertEncodedDebugPayload(aggregateServicePayloads);
         assertEncryptedPayload(aggregateServicePayloads);
+    }
+
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithDebugMode() throws Exception {
+        AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
+
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson(mMockFlags);
+
+        assertEquals("enabled", sharedInfoJson.get("debug_mode"));
+    }
+
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithoutDebugMode() throws Exception {
+        AggregateReportBody aggregateReport =
+                createAggregateReportBodyExampleWithSingleSourceDebugKey();
+
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson(mMockFlags);
+
+        assertNull(sharedInfoJson.opt("debug_mode"));
     }
 
     private void assertEncodedDebugPayload(JSONObject aggregateServicePayloads) throws Exception {

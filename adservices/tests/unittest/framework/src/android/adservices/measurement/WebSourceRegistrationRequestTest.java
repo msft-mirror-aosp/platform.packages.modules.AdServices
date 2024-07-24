@@ -26,7 +26,6 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.view.KeyEvent;
 
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -129,12 +128,20 @@ public class WebSourceRegistrationRequestTest {
                         new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, null)
                                 .setInputEvent(INPUT_KEY_EVENT)
                                 .build());
+    }
 
+    @Test
+    public void testMaxWebSourceParam_failsWhenExceeds() {
+        assertNotNull(
+                new WebSourceRegistrationRequest.Builder(
+                                generateWebSourceParamsList(80), TOP_ORIGIN_URI)
+                        .setInputEvent(INPUT_KEY_EVENT)
+                        .build());
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         new WebSourceRegistrationRequest.Builder(
-                                        generateWebSourceParamsList(21), TOP_ORIGIN_URI)
+                                        generateWebSourceParamsList(81), TOP_ORIGIN_URI)
                                 .setInputEvent(INPUT_KEY_EVENT)
                                 .build());
     }

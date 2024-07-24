@@ -39,6 +39,10 @@ android_library {
         "framework-annotations-lib",
     ],
     static_libs: [
+        "adservices-assets",
+        "adservices-clients",
+        "adservices-shared-testing",
+        "adservices-test-utility",
         "androidx.test.runner",
         "compatibility-device-util-axt",
     ],

@@ -24,17 +24,24 @@ android_test_helper_app {
     srcs: [
         "src/**/*.java",
     ],
+    plugins: [
+        "androidx.appsearch_appsearch-compiler-plugin",
+    ],
     static_libs: [
-            "adservices-clients",
-            "androidx.appcompat_appcompat",
-            "androidx-constraintlayout_constraintlayout",
-            "com.google.android.material_material",
-            "androidx.concurrent_concurrent-futures",
+        "adservices-clients",
+        "adservices-test-utility",
+        "androidx-constraintlayout_constraintlayout",
+        "androidx.appcompat_appcompat",
+        "androidx.appsearch_appsearch",
+        "androidx.appsearch_appsearch-platform-storage",
+        "androidx.concurrent_concurrent-futures",
+        "com.google.android.material_material",
     ],
     // Tag this module as a cts test artifact
     test_suites: [
         "cts",
         "general-tests",
         "mts-adservices",
+        "mcts-adservices",
     ],
 }

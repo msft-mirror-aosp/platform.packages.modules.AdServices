@@ -25,8 +25,11 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.service.js.JSScriptArgument;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 @SmallTest
@@ -35,12 +38,15 @@ public class SelectAdsFromOutcomesArgumentUtilTest {
     private static final long AD_SELECTION_ID = 123456789101112L;
     private static final double BID = 10.0;
     private static final Uri URI = Uri.parse("www.test.com");
-    private static final AdSelectionIdWithBidAndRenderUri ID_WITH_BID_AND_RENDER_URI =
-            AdSelectionIdWithBidAndRenderUri.builder()
+    private static final AdSelectionResultBidAndUri ID_WITH_BID_AND_RENDER_URI =
+            AdSelectionResultBidAndUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID)
-                    .setBid(BID)
-                    .setRenderUri(URI)
+                    .setWinningAdBid(BID)
+                    .setWinningAdRenderUri(URI)
                     .build();
+
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testConvertsToScriptArgument() {

@@ -34,14 +34,12 @@ java_library {
         ":statslog-sdksandbox-java-gen",
     ],
     libs: [
+        "androidx.annotation_annotation",
         "framework-statsd.stubs.module_lib",
     ],
     apex_available: [
         "com.android.adservices",
     ],
-    lint: {
-        baseline_filename: "lint-baseline.xml",
-    },
 }
 
 filegroup {
@@ -78,6 +76,7 @@ java_sdk_library {
         "framework-sdksandbox.impl",
         "framework-statsd.stubs.module_lib",
         "jsr305",
+        "keepanno-annotations",
     ],
     static_libs: [
         "sdksandbox-statsd",
@@ -85,11 +84,16 @@ java_sdk_library {
         "modules-utils-backgroundthread",
         "modules-utils-build",
         "modules-utils-shell-command-handler",
+        "sdksandbox-service-proto-lite",
+        "sdk_sandbox_flags_lib",
     ],
     defaults: [
         "framework-system-server-module-defaults",
         "framework-system-server-module-optimize-defaults",
         "sdksandbox-java-defaults",
+    ],
+    java_resources: [
+        ":platform_api_allowlist_per_target_sdk_version_current.binarypb",
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

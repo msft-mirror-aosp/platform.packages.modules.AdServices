@@ -17,7 +17,9 @@
 package android.adservices.common;
 
 import android.net.Uri;
+import android.os.Parcel;
 
+import com.android.adservices.AdServicesParcelableUtil;
 import com.android.adservices.common.JsonFixture;
 
 import com.google.common.collect.ImmutableList;
@@ -31,13 +33,13 @@ import java.util.List;
 public class AdDataFixture {
     // TODO(b/266837113) Set to true once app install is unhidden
     public static final boolean APP_INSTALL_ENABLED = false;
-    // TODO(b/221876775) Set to true once fcap is unhidden
-    public static final boolean FCAP_ENABLED = false;
     public static final String VALID_METADATA = "{\"example\": \"metadata\", \"valid\": true}";
     public static final String INVALID_METADATA = "not.{real!metadata} = 1";
 
-    public static ImmutableSet<String> getAdCounterKeys() {
-        return ImmutableSet.<String>builder()
+    public static final String VALID_RENDER_ID = "render-id";
+
+    public static ImmutableSet<Integer> getAdCounterKeys() {
+        return ImmutableSet.<Integer>builder()
                 .add(
                         KeyedFrequencyCapFixture.KEY1,
                         KeyedFrequencyCapFixture.KEY2,
@@ -46,7 +48,22 @@ public class AdDataFixture {
                 .build();
     }
 
+    public static ImmutableSet<Integer> getExcessiveNumberOfAdCounterKeys() {
+        ImmutableSet.Builder<Integer> setBuilder = ImmutableSet.builder();
+
+        // Add just one more than the limit
+        for (int key = 0; key <= AdData.MAX_NUM_AD_COUNTER_KEYS; key++) {
+            setBuilder.add(key);
+        }
+
+        return setBuilder.build();
+    }
+
     public static Uri getValidRenderUriByBuyer(AdTechIdentifier buyer, int sequence) {
+        return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
+    }
+
+    public static Uri getValidRenderUriByBuyer(AdTechIdentifier buyer, String sequence) {
         return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
     }
 
@@ -65,6 +82,16 @@ public class AdDataFixture {
                 getValidFilterAdDataByBuyer(buyer, 2),
                 getValidAdDataByBuyer(buyer, 3),
                 getValidAdDataByBuyer(buyer, 4));
+    }
+
+    public static List<AdData> getValidFilterAdsWithAdRenderIdByBuyer(AdTechIdentifier buyer) {
+        return ImmutableList.of(
+                getValidFilterAdDataWithAdRenderIdByBuyer(buyer, 1),
+                getValidFilterAdDataWithAdRenderIdByBuyer(buyer, 2),
+                getValidFilterAdDataByBuyer(buyer, 3),
+                getValidFilterAdDataByBuyer(buyer, 4),
+                getValidAdDataByBuyer(buyer, 5),
+                getValidAdDataByBuyer(buyer, 6));
     }
 
     public static List<AdData> getInvalidAdsByBuyer(AdTechIdentifier buyer) {
@@ -101,6 +128,14 @@ public class AdDataFixture {
                 .setMetadata(metadata);
     }
 
+    public static AdData.Builder getValidAdDataWithSubdomainBuilderByBuyer(
+            AdTechIdentifier buyer, int sequenceNumber) {
+        return getValidAdDataBuilderByBuyer(buyer, sequenceNumber)
+                .setRenderUri(
+                        CommonFixture.getUriWithValidSubdomain(
+                                buyer.toString(), "/testing/hello" + sequenceNumber));
+    }
+
     // TODO(b/266837113) Merge with getValidAdDataByBuyer once filters are unhidden
     public static AdData.Builder getValidFilterAdDataBuilderByBuyer(
             AdTechIdentifier buyer, int sequenceNumber) {
@@ -114,7 +149,58 @@ public class AdDataFixture {
         return getValidFilterAdDataBuilderByBuyer(buyer, sequenceNumber).build();
     }
 
+    // TODO(b/266837113) Merge with getValidAdDataByBuyer once filters are unhidden
+    public static AdData getValidFilterAdDataWithAdRenderIdByBuyer(
+            AdTechIdentifier buyer, int sequenceNumber) {
+        return getValidFilterAdDataBuilderByBuyer(buyer, sequenceNumber)
+                .setAdRenderId(String.valueOf(sequenceNumber))
+                .build();
+    }
+
+    public static AdData getValidFilterAdDataWithAdRenderIdByBuyer(
+            AdTechIdentifier buyer, String sequenceString) {
+
+        String metadata;
+        try {
+            metadata = JsonFixture.formatAsOrgJsonJSONObjectString(VALID_METADATA);
+        } catch (JSONException exception) {
+            throw new IllegalStateException("Error parsing valid metadata!", exception);
+        }
+
+        return new AdData.Builder()
+                .setRenderUri(getValidRenderUriByBuyer(buyer, sequenceString))
+                .setMetadata(metadata)
+                .setAdCounterKeys(getAdCounterKeys())
+                .setAdFilters(AdFiltersFixture.getValidAdFilters())
+                .setAdRenderId(sequenceString)
+                .build();
+    }
+
     public static AdData getValidAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
         return getValidAdDataBuilderByBuyer(buyer, sequenceNumber).build();
+    }
+
+    public static AdData getAdDataWithExceededFrequencyCapLimits(
+            AdTechIdentifier buyer, int sequenceNumber) {
+        AdData sourceAdData = getValidAdDataByBuyer(buyer, sequenceNumber);
+
+        Parcel sourceParcel = Parcel.obtain();
+        sourceAdData.getRenderUri().writeToParcel(sourceParcel, 0);
+        sourceParcel.writeString(sourceAdData.getMetadata());
+        AdServicesParcelableUtil.writeNullableToParcel(
+                sourceParcel,
+                getExcessiveNumberOfAdCounterKeys(),
+                AdServicesParcelableUtil::writeIntegerSetToParcel);
+        AdServicesParcelableUtil.writeNullableToParcel(
+                sourceParcel,
+                new AdFilters.Builder()
+                        .setFrequencyCapFilters(
+                                FrequencyCapFiltersFixture
+                                        .getFrequencyCapFiltersWithExcessiveNumFilters())
+                        .build(),
+                (targetParcel, sourceFilters) -> sourceFilters.writeToParcel(targetParcel, 0));
+        sourceParcel.setDataPosition(0);
+
+        return AdData.CREATOR.createFromParcel(sourceParcel);
     }
 }

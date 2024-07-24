@@ -24,14 +24,20 @@ import com.android.internal.annotations.VisibleForTesting;
 public enum AdServicesApiType {
     TOPICS,
     FLEDGE,
-    MEASUREMENTS;
+    MEASUREMENTS,
+    ALL_API,
+    UNKNOWN;
 
     // to support scenario when GA UX is on but the consent is server from PP API
+    @VisibleForTesting static final String CONSENT_ALL = "CONSENT";
+
+    @VisibleForTesting static final String CONSENT_ALL_APPSEARCH = "CONSENT-ALL";
     @VisibleForTesting static final String CONSENT_FLEDGE = "CONSENT-FLEDGE";
     @VisibleForTesting static final String CONSENT_MEASUREMENT = "CONSENT-MEASUREMENT";
     @VisibleForTesting static final String CONSENT_TOPICS = "CONSENT-TOPICS";
 
-    /** Map the {@link AdServicesApiType} to Consent API type integer. */
+
+    /** Maps the {@link AdServicesApiType} to Consent API type integer. */
     public int toConsentApiType() {
         switch (this) {
             case TOPICS:
@@ -40,13 +46,15 @@ public enum AdServicesApiType {
                 return ConsentParcel.FLEDGE;
             case MEASUREMENTS:
                 return ConsentParcel.MEASUREMENT;
+            case ALL_API:
+                return ConsentParcel.ALL_API;
             default:
                 return ConsentParcel.UNKNOWN;
         }
     }
 
     /**
-     * Map the {@link AdServicesApiType} to {@link String} which represents the key in the PP API
+     * Maps the {@link AdServicesApiType} to {@link String} which represents the key in the PP API
      * datastore.
      *
      * @return key which can be used to retrieved data for {@link AdServicesApiType} from PP API
@@ -60,8 +68,36 @@ public enum AdServicesApiType {
                 return CONSENT_FLEDGE;
             case MEASUREMENTS:
                 return CONSENT_MEASUREMENT;
+            case ALL_API:
+                return CONSENT_ALL;
             default:
                 throw new IllegalStateException("AdServicesApiType doesn't exist.");
         }
+    }
+
+    /** Maps the {@link AdServicesApiType} to AppSearch storage Key. */
+    public String toAppSearchKey() {
+        switch (this) {
+            case TOPICS:
+                return CONSENT_TOPICS;
+            case FLEDGE:
+                return CONSENT_FLEDGE;
+            case MEASUREMENTS:
+                return CONSENT_MEASUREMENT;
+            case ALL_API:
+                return CONSENT_ALL_APPSEARCH;
+            default:
+                throw new IllegalStateException("AdServicesApiType doesn't exist.");
+        }
+    }
+
+    /** Gets AdserviceApiType from datastore key. */
+    public static AdServicesApiType fromPpApiDatastoreKey(String ppApiDatastoreKey) {
+        for (AdServicesApiType apiType : AdServicesApiType.values()) {
+            if (apiType.toPpApiDatastoreKey().equals(ppApiDatastoreKey)) {
+                return apiType;
+            }
+        }
+        return UNKNOWN;
     }
 }

@@ -30,6 +30,8 @@
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Permite que um aplicativo tenha acesso à API AdServices Consent."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Acessar a API Ad ID"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Permite que um aplicativo tenha acesso a API Ad ID."</string>
+    <string name="permlab_adServicesAccessAdServicesCobaltUpload" msgid="3305366770828562349">"Acesso à API AdServices Cobalt Upload"</string>
+    <string name="permdesc_adServicesAccessAdServicesCobaltUpload" msgid="2584490228435633488">"Permite que um aplicativo acesse a API AdServices Cobalt Upload."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Acessar a API App Set ID"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Permite que um aplicativo tenha acesso à API App Set Id."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Acesso à API Consent Service"</string>
@@ -40,7 +42,9 @@
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"Permite que um aplicativo tenha acesso à API de estado de ativação do AdService."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"Acesso às APIs do AdServicesManager"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"Permite que um aplicativo acesse APIs do AdServicesManager."</string>
-    <string name="app_label" msgid="5985320129629013968">"Sistema Android"</string>
+    <string name="permlab_updateAdservicesAdId" msgid="1817012692601139702">"Acesso à API de atualização do ID de publicidade do AdService."</string>
+    <string name="permdesc_updateAdservicesAdId" msgid="1594321436876709737">"Permite que um aplicativo acesse a API de atualização do ID de publicidade do AdService."</string>
+    <string name="app_label" msgid="5844694701336604490">"Privacidade de anúncios"</string>
     <string name="notificationUI_notification_title_eu" msgid="6328781145332100489">"Participe do programa Beta da privacidade de anúncios do Android"</string>
     <string name="notificationUI_notification_content_eu" msgid="4119222762583017840">"O Android está procurando como os apps podem mostrar anúncios de forma mais particular"</string>
     <string name="notificationUI_notification_cta_eu" msgid="1294908454704864207">"Saiba mais"</string>
@@ -143,8 +147,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Desbloquear"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interesses bloqueados"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Redefinir todos os interesses"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Não há interesses para mostrar no momento"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Não há temas para mostrar no momento"</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"Não há interesses para mostrar no momento."</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"Não há temas para mostrar no momento.\nSaiba mais sobre "<a href="https://support.google.com/android?p=ad_privacy">"temas de anúncios"</a></string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Sandbox de privacidade"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"A versão Beta da privacidade de anúncios do Android oferece novos recursos usados pelos apps para mostrar anúncios que você pode gostar. Essas tecnologias não usam identificadores de dispositivo.\n\nO Android pode estimar os tipos de anúncios que podem ser do seu interesse e salvar essa informação temporariamente no seu dispositivo. Isso permite que os apps mostrem anúncios relevantes sem rastrear sua atividade nos sites e apps de outros desenvolvedores."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Você não tem interesses bloqueados"</string>
@@ -157,7 +161,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Conferir apps bloqueados"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Redefinir interesses estimados por apps"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Nenhum app está gerando interesses para você no momento"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Não há apps para mostrar no momento"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"Não há apps para mostrar no momento. \nSaiba mais sobre "<a href="https://support.google.com/android?p=ad_privacy">"anúncios sugeridos por apps"</a></string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Sandbox de privacidade"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"A versão Beta da privacidade de anúncios do Android oferece novos recursos usados pelos apps para mostrar anúncios que você pode gostar. Essas tecnologias não usam identificadores de dispositivo.\n\nOs apps podem estimar os tipos de anúncios que podem ser do seu interesse e salvar essa informação temporariamente no seu dispositivo. Isso permite que os apps mostrem anúncios relevantes sem rastrear sua atividade nos sites e apps de outros desenvolvedores."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Você não tem apps bloqueados"</string>
@@ -187,30 +191,92 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Redefinir anúncios sugeridos por apps?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Os dados de sugestão de anúncio dos apps na sua lista serão excluídos, e os apps vão passar a sugerir novos anúncios. Talvez você ainda encontre alguns anúncios relacionados."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Os dados do app foram redefinidos"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Redefinir todos os temas?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Redefinir anúncios sugeridos por apps"</string>
+    <string name="settingsUI_dialog_topics_opt_in_title" msgid="8121927422479701361">"Os temas de anúncios estão ativados"</string>
+    <string name="settingsUI_dialog_topics_opt_in_message" msgid="906156509464496182">"O Android vai começar a salvar temas de interesse, mas pode demorar um pouco para os primeiros aparecerem."</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="729119757000459089">"Desativar temas de anúncios?"</string>
+    <string name="settingsUI_dialog_topics_opt_out_message" msgid="1536431481297878931">"Esta lista de temas será excluída. O Android vai parar de salvar temas de interesse, mas é possível que você ainda encontre anúncios relevantes."</string>
+    <string name="settingsUI_dialog_apps_opt_in_title" msgid="1802639238531107941">"Os anúncios sugeridos por apps estão ativados"</string>
+    <string name="settingsUI_dialog_apps_opt_in_message" msgid="6335861029594000364">"Apps poderão sugerir anúncios. Uma lista dos apps será mostrada depois que eles começarem a sugerir anúncios."</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="2152898453001885432">"Desativar os anúncios sugeridos por apps?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_message" msgid="6894065908128443334">"Todos os dados de sugestão de anúncio serão excluídos. Os apps não poderão sugerir anúncios, mas é possível que você ainda encontre anúncios relevantes."</string>
+    <string name="settingsUI_dialog_measurement_opt_in_title" msgid="313317715284771681">"A medição de anúncios está ativada"</string>
+    <string name="settingsUI_dialog_measurement_opt_in_message" msgid="1122570790810645916">"O Android pode compartilhar apenas algumas informações limitadas com apps para que eles meçam a performance dos anúncios deles."</string>
+    <string name="settingsUI_dialog_measurement_opt_out_title" msgid="1629867723206716370">"Desativar a medição de anúncios?"</string>
+    <string name="settingsUI_dialog_measurement_opt_out_message" msgid="1050338738668085641">"Todos os relatórios pendentes de medição de anúncios serão excluídos, e nenhum relatório novo será gerado ou compartilhado."</string>
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privacidade de anúncios"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Temas de anúncios"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Anúncios sugeridos por apps"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"O Android registra temas de interesse com base nos apps usados recentemente e na frequência com que você os usa."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Os apps que você usa também determinam o que você gosta com base no seu uso."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Os apps que você usa podem pedir informações ao Android para ajudá-los a medir a performance dos anúncios. O Android permite que apps coletem tipos limitados de dados."</string>
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916">"Saiba mais sobre "<a href="https://support.google.com/android?p=ad_privacy">"privacidade de anúncios no Android"</a></string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Ativado/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> temas"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Ativado / # tema}one{Ativado / # tema}many{Ativado / # de temas}other{Ativado / # temas}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Ativado/<xliff:g id="APPS_COUNT">%1$d</xliff:g> apps"</string>
     <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Ativado / # app}one{Ativado / # app}many{Ativado / # de apps}other{Ativado / # apps}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Ativado"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Desativado"</string>
-    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Seus temas de interesse têm base nos apps usados recentemente. Eles são usados por apps para mostrar anúncios personalizados.\n\nÉ possível bloquear os temas que você não quer compartilhar com apps. O Android também exclui temas automaticamente com frequência."</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="2539452210063311377">"Seus temas de interesse têm base nos apps usados recentemente. Eles são usados por apps para mostrar anúncios personalizados.\n\nÉ possível bloquear os temas que você não quer compartilhar. O Android exclui temas automaticamente e com frequência.\n\nEmbora esse recurso possa ser ativado, talvez você não tenha acesso a uma lista de temas até que o recurso esteja totalmente disponível e comece a ser usado pelos aplicativos."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Permitir temas de anúncios"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Temas de anúncio que você bloqueou"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Redefinir todos os temas de anúncios"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"O Android registra temas de interesse com base nos apps usados nas últimas semanas.\n\nDepois, um app usado por você pode pedir temas ao Android para personalizar os anúncios que você recebe. O Android compartilha até três temas sem revelar sua identidade e informações sobre seu uso de apps.\n\nO Android exclui temas automaticamente e com frequência. Conforme você continua usando apps, um tema pode reaparecer na lista. Você também pode bloquear temas que não quer que o Android compartilhe com apps.\n\nNos seus apps, um anúncio que você recebe pode ser personalizado dependendo dessa configuração, de anúncios sugeridos por apps, ID de publicidade e se o app que você está usando personaliza anúncios ou não."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Permitir anúncios sugeridos por apps"</string>
-    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Os temas que você gosta são determinados de acordo com os apps que você usa e então, anúncios são sugeridos para outros apps.\n\nVocê pode bloquear as sugestões de apps. Além disso, o Android exclui de forma automática e regular os dados sugeridos por apps."</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="1869320244600600364">"Os apps que você usa podem determinar seus gostos e sugerir anúncios em outros apps.\n\nÉ possível bloquear as sugestões. O Android também exclui dados sugeridos por apps automaticamente e com frequência.\n\nEmbora esse recurso possa ser ativado, talvez você não tenha acesso a uma lista de apps até que o recurso esteja totalmente disponível e comece a ser usado pelos aplicativos."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps bloqueados"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Redefinir dados sugeridos por apps"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Os apps que você usa guardam seus interesses para personalizar sua experiência. Eles também armazenam os temas de seu interesse com o Android.\n\nPor exemplo, se você usar um app de treino para maratonas, o app supõe que você tem interesse em tênis de corrida. Depois, se você usar um outro app, pode encontrar um anúncio de tênis, sugerido pelo primeiro app.\n\nO Android exclui automaticamente e com frequência dados sugeridos por apps. No entanto, um app que for usado de novo pode voltar a aparecer na sua lista. Ou então, você pode bloquear as sugestões de anúncios de um app.\n\nOs anúncios podem ser personalizados dependendo dessa configuração, dos temas de anúncios, dos ID de publicidade e se o app usado personaliza anúncios ou não."</string>
+    <string name="notificationUI_u18_notification_title" msgid="6595699762182970754">"Novo recurso de privacidade de anúncios disponível"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Apenas informações muito limitadas são compartilhadas entre apps para ajudar a medir a performance do anúncio"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Estamos lançando um recurso de privacidade de anúncios chamado \"medição de anúncios\". O Android compartilha apenas informações muito limitadas entre apps, como quando um anúncio foi mostrado para você, para ajudar os apps a medir a performance de anúncios."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Você pode mudar as configurações de privacidade de anúncios."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Os apps que você usa podem pedir informações ao Android para medir a performance dos anúncios. O Android permite que apps coletem apenas tipos limitados de dados."</string>
+    <!-- no translation found for notificationUI_pas_notification_title (2880747565880976151) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_notification_content (7200569206675143377) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_re_notification_title (1612904687007265472) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_re_notification_content (9047623340455640294) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_body_main (371275798529092654) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_body1 (537707631782767256) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_expand_button_text1 (2379258858617055290) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_body2 (7375288059359352651) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_expand_button_text2 (4280828889465163839) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle1 (9217875245904594608) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_msmt_body1 (8137499250834619055) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_msmt_dropdown_subtitle2 (9103617585020938272) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_msmt_body2 (6851292551607742780) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_app_body1 (3661071599833077753) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle2 (3728208089340373091) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_app_body2 (4045452140643598861) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_app_dropdown_subtitle3 (3464616082120107461) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_app_body3 (2314209349205046774) -->
+    <skip />
+    <!-- no translation found for notificationUI_pas_leanr_more_link (1435562037697292354) -->
+    <skip />
+    <!-- no translation found for settingsUI_pas_apps_view_body_text (1361388534766061773) -->
+    <skip />
+    <!-- no translation found for settingsUI_pas_apps_view_footer (8579532462533659757) -->
+    <skip />
+    <!-- no translation found for settingsUI_pas_msmt_view_footer (36182838044629137) -->
+    <skip />
+    <!-- no translation found for settingsUI_pas_topics_view_footer (3024519684713767142) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustração colorida de símbolos representando temas de interesse, como música, notícias e esportes"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustração colorida de um cadeado dentro de um círculo"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Pequena ilustração em preto e branco de nove pontos formando um quadrado"</string>
@@ -275,7 +341,7 @@
     <string name="topic10058" msgid="9149178644022969766">"Redes e estações de TV"</string>
     <string name="topic10059" msgid="6300562669238320524">"Programas de TV"</string>
     <string name="topic10060" msgid="3901256055064835246">"Programas de TV de comédia"</string>
-    <string name="topic10061" msgid="8343924749123326062">"Documentários de TV e não ficção"</string>
+    <string name="topic10061" msgid="8343924749123326062">"Não ficção e documentários de TV"</string>
     <string name="topic10062" msgid="9183355218976951211">"Dramas da TV"</string>
     <string name="topic10063" msgid="644340831620792432">"Novelas de TV"</string>
     <string name="topic10064" msgid="5961885645457010998">"Programas de TV para a família"</string>
@@ -314,7 +380,7 @@
     <string name="topic10097" msgid="4716536434833425748">"Compras de automóveis"</string>
     <string name="topic10098" msgid="6401980112135995019">"Veículos usados"</string>
     <string name="topic10099" msgid="8018714209926584445">"Exposições de automóveis"</string>
-    <string name="topic10100" msgid="2481422464734249871">"Condicionamento físico e beleza"</string>
+    <string name="topic10100" msgid="2481422464734249871">"Beleza e fitness"</string>
     <string name="topic10101" msgid="7889144198021629053">"Arte corporal"</string>
     <string name="topic10102" msgid="577637051755692238">"Cuidados faciais e corporais"</string>
     <string name="topic10103" msgid="6618157344631408510">"Antiperspirantes"</string>

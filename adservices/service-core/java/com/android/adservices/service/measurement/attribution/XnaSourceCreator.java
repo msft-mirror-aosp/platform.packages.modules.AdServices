@@ -20,7 +20,8 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
@@ -49,6 +50,14 @@ import java.util.stream.Collectors;
 /** Class facilitates creation of derived source for XNA. */
 public class XnaSourceCreator {
     private static final String HEX_PREFIX = "0x";
+    private final Flags mFlags;
+    private final Filter mFilter;
+
+    public XnaSourceCreator(@NonNull Flags flags) {
+        mFlags = flags;
+        mFilter = new Filter(flags);
+    }
+
     /**
      * Generates derived sources using the trigger and parent sources.
      *
@@ -63,11 +72,12 @@ public class XnaSourceCreator {
             JSONArray attributionConfigsJsonArray = new JSONArray(trigger.getAttributionConfig());
             for (int i = 0; i < attributionConfigsJsonArray.length(); i++) {
                 attributionConfigs.add(
-                        new AttributionConfig.Builder(attributionConfigsJsonArray.getJSONObject(i))
+                        new AttributionConfig.Builder(
+                                        attributionConfigsJsonArray.getJSONObject(i), mFlags)
                                 .build());
             }
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to parse attribution configs.");
+            LoggerFactory.getMeasurementLogger().d(e, "Failed to parse attribution configs.");
             return Collections.emptyList();
         }
 
@@ -107,15 +117,17 @@ public class XnaSourceCreator {
                 // Trigger time was before (source event time + attribution config expiry override)
                 .filter(createSourceExpiryOverridePredicate(attributionConfig, trigger))
                 // Source's filter data should match the provided attributionConfig filters
-                .filter(createFilterMatchPredicate(sourceFilters, true))
+                .filter(createFilterMatchPredicate(sourceFilters, trigger, true))
                 // Source's filter data should not coincide with the provided attributionConfig
                 // not_filters
-                .filter(createFilterMatchPredicate(sourceNotFilters, false))
+                .filter(createFilterMatchPredicate(sourceNotFilters, trigger, false))
                 .map(
                         parentSource -> {
                             alreadyConsumedSourceIds.add(parentSource.getId());
                             return generateDerivedSource(attributionConfig, parentSource, trigger);
                         })
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toList());
     }
 
@@ -143,23 +155,26 @@ public class XnaSourceCreator {
     }
 
     private Predicate<Source> createFilterMatchPredicate(
-            @Nullable List<FilterMap> filterSet, boolean match) {
+            @Nullable List<FilterMap> filterSet, Trigger trigger, boolean match) {
         return (source) ->
                 Optional.ofNullable(filterSet)
                         .map(
                                 filter -> {
                                     try {
-                                        return Filter.isFilterMatch(
-                                                source.getFilterData(), filter, match);
+                                        return mFilter.isFilterMatch(
+                                                source.getFilterData(trigger, mFlags),
+                                                filter,
+                                                match);
                                     } catch (JSONException e) {
-                                        LogUtil.d(e, "Failed to parse source filterData.");
+                                        LoggerFactory.getMeasurementLogger()
+                                                .d(e, "Failed to parse source filterData.");
                                         return false;
                                     }
                                 })
                         .orElse(true);
     }
 
-    private Source generateDerivedSource(
+    private Optional<Source> generateDerivedSource(
             AttributionConfig attributionConfig, Source parentSource, Trigger trigger) {
         Source.Builder builder = Source.Builder.from(parentSource);
         // A derived source will not be persisted in the DB. Generated reports should be related to
@@ -173,36 +188,57 @@ public class XnaSourceCreator {
                 attributionConfig.getPostInstallExclusivityWindow(),
                 builder::setInstallCooldownWindow);
         Optional.ofNullable(attributionConfig.getFilterData())
-                .map(Filter::serializeFilterSet)
-                .map(JSONArray::toString)
-                .ifPresent(builder::setFilterData);
+                .map(filterData -> filterData.serializeAsJson(mFlags))
+                .map(JSONObject::toString)
+                .ifPresent(builder::setFilterDataString);
         builder.setExpiryTime(calculateDerivedSourceExpiry(attributionConfig, parentSource));
-        builder.setAggregateSource(createAggregatableSourceWithSharedKeys(parentSource));
+        builder.setAggregateSource(createAggregatableSourceWithSharedKeys(parentSource, trigger));
 
         boolean isInstallAttributed =
                 Optional.ofNullable(parentSource.getInstallTime())
                         .map(installTime -> installTime < trigger.getTriggerTime())
                         .orElse(false);
         builder.setInstallAttributed(isInstallAttributed);
-
-        // Skip copying these parameters on the derived source
-        builder.setDebugKey(null);
+        builder.setSharedDebugKey(null);
+        if (mFlags.getMeasurementEnableSharedSourceDebugKey()) {
+            builder.setDebugKey(parentSource.getSharedDebugKey());
+        } else {
+            builder.setDebugKey(null);
+        }
+        // Don't let the serving Ad-tech share the AdId and join key with the derived source
+        builder.setDebugAdId(null);
+        builder.setDebugJoinKey(null);
         builder.setAggregateReportDedupKeys(new ArrayList<>());
         builder.setEventReportDedupKeys(new ArrayList<>());
-        return builder.build();
+        if (mFlags.getMeasurementEnableSharedFilterDataKeysXNA()
+                && parentSource.getSharedFilterDataKeys() != null) {
+            try {
+                builder.setFilterDataString(
+                        parentSource
+                                .getSharedFilterData(trigger, mFlags)
+                                .serializeAsJson(mFlags)
+                                .toString());
+            } catch (JSONException e) {
+                LoggerFactory.getMeasurementLogger().d(e, "Failed to parse shared filter keys.");
+                return Optional.empty();
+            }
+            builder.setSharedFilterDataKeys(null);
+        }
+        return Optional.of(builder.build());
     }
 
-    private String createAggregatableSourceWithSharedKeys(Source parentSource) {
+    private String createAggregatableSourceWithSharedKeys(Source parentSource, Trigger trigger) {
         String sharedAggregationKeysString = parentSource.getSharedAggregationKeys();
         try {
-            if (sharedAggregationKeysString == null
-                    || !parentSource.getAggregatableAttributionSource().isPresent()) {
+            Optional<AggregatableAttributionSource> aggregateAttributionSource =
+                    parentSource.getAggregatableAttributionSource(trigger, mFlags);
+            if (sharedAggregationKeysString == null || !aggregateAttributionSource.isPresent()) {
                 return null;
             }
 
             JSONArray sharedAggregationKeysArray = new JSONArray(sharedAggregationKeysString);
             AggregatableAttributionSource baseAggregatableAttributionSource =
-                    parentSource.getAggregatableAttributionSource().get();
+                    aggregateAttributionSource.get();
             Map<String, BigInteger> baseAggregatableSource =
                     baseAggregatableAttributionSource.getAggregatableSource();
             Map<String, String> derivedAggregatableSource = new HashMap<>();
@@ -216,7 +252,8 @@ public class XnaSourceCreator {
 
             return new JSONObject(derivedAggregatableSource).toString();
         } catch (JSONException e) {
-            LogUtil.d(e, "Failed to set AggregatableAttributionSource for derived source.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "Failed to set AggregatableAttributionSource for derived source.");
             return null;
         }
     }

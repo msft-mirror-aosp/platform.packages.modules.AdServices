@@ -40,6 +40,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -127,6 +128,9 @@ public class JsFetcherTest {
     private Flags mFlags;
     private JsFetcher mJsFetcher;
 
+    @Rule(order = 0)
+    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+
     @Before
     public void setUp() throws Exception {
         mStaticMockSession =
@@ -147,7 +151,7 @@ public class JsFetcherTest {
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
                                 CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
                         .build()
                         .customAudienceDao();
         mAdSelectionEntryDao =
@@ -164,7 +168,8 @@ public class JsFetcherTest {
                         ImmutableMap.of(
                                 JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
                                 BUYER_BIDDING_LOGIC_JS_VERSION),
-                        false);
+                        false,
+                        mDevContext);
         mDefaultDispatcher =
                 new Dispatcher() {
                     @Override
@@ -185,7 +190,8 @@ public class JsFetcherTest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mWebClient,
-                        mFlags);
+                        mFlags,
+                        mDevContext);
     }
 
     @After
@@ -338,6 +344,7 @@ public class JsFetcherTest {
                 AdServicesHttpClientRequest.builder()
                         .setUri(prebuiltUri)
                         .setUseCache(false)
+                        .setDevContext(DevContext.createForDevOptionsDisabled())
                         .build();
         FluentFuture<String> decisionLogicFuture =
                 mJsFetcher.getOutcomeSelectionLogic(
@@ -359,7 +366,10 @@ public class JsFetcherTest {
         ImmutableMap<Integer, Long> versionMap =
                 mJsFetcher.getVersionMap(
                         JsVersionHelper.getRequestWithVersionHeader(
-                                mFetchJsUri, ImmutableMap.of(payloadType, version), false),
+                                mFetchJsUri,
+                                ImmutableMap.of(payloadType, version),
+                                false,
+                                mDevContext),
                         AdServicesHttpClientResponse.builder()
                                 .setResponseHeaders(
                                         ImmutableMap.of(

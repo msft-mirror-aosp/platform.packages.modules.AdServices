@@ -16,7 +16,11 @@
 
 package com.android.adservices.service.common.httpclient;
 
+import android.annotation.NonNull;
 import android.net.Uri;
+
+import com.android.adservices.service.common.httpclient.AdServicesHttpUtil.HttpMethodType;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
@@ -26,7 +30,7 @@ import com.google.common.collect.ImmutableSet;
 @AutoValue
 public abstract class AdServicesHttpClientRequest {
 
-    /** @return uri that is used to make the request */
+    /** @return uri that is used to make the request. */
     public abstract Uri getUri();
 
     /** @return request properties that need to be piggybacked to the url connection */
@@ -38,42 +42,74 @@ public abstract class AdServicesHttpClientRequest {
     /** @return boolean is the results should be cached or not */
     public abstract boolean getUseCache();
 
+    /** @return The http method type {@link HttpMethodType} */
+    public abstract HttpMethodType getHttpMethodType();
+
+    /** @return The byte array that will be used as a request body for this request.  */
+    @SuppressWarnings("mutable")
+    public abstract byte[] getBodyInBytes();
+
+    /** @return DevContext associated with this call. */
+    @NonNull
+    public abstract DevContext getDevContext();
+
     /**
      * @param uri see {@link #getUri()}
      * @param requestProperties see {@link #getRequestProperties()}
      * @param responseHeaderKeys see {@link #getResponseHeaderKeys()}
      * @param useCache see {@link #getUseCache()}
+     * @param httpMethodType see {@link #getHttpMethodType()}
+     * @param body see {@link #getBodyInBytes()}. This must be an empty array of bytes for GET
+     *     request.
      * @return an instance of {@link AdServicesHttpClientRequest}
      */
     public static AdServicesHttpClientRequest create(
             Uri uri,
             ImmutableMap<String, String> requestProperties,
             ImmutableSet<String> responseHeaderKeys,
-            boolean useCache) {
+            boolean useCache,
+            @NonNull DevContext devContext,
+            HttpMethodType httpMethodType,
+            byte[] body) {
+        if (body.length > 0) {
+            if (httpMethodType != HttpMethodType.POST) {
+                throw new IllegalArgumentException(
+                        "Request method does not allow request mBody: " + httpMethodType);
+            }
+        }
         return builder()
                 .setUri(uri)
                 .setRequestProperties(requestProperties)
                 .setResponseHeaderKeys(responseHeaderKeys)
                 .setUseCache(useCache)
+                .setDevContext(devContext)
+                .setBodyInBytes(body)
+                .setHttpMethodType(httpMethodType)
                 .build();
     }
 
-    /** @return a builder that cane be used to build an {@link AdServicesHttpClientRequest} */
+    /** @return a builder that can be used to build an {@link AdServicesHttpClientRequest} */
     public static AdServicesHttpClientRequest.Builder builder() {
         return new AutoValue_AdServicesHttpClientRequest.Builder()
                 .setRequestProperties(ImmutableMap.of())
                 .setResponseHeaderKeys(ImmutableSet.of())
-                .setUseCache(false);
+                .setUseCache(false)
+                .setHttpMethodType(HttpMethodType.GET)
+                .setBodyInBytes(new byte[0]);
     }
 
     /** Builder that cane be used to build an {@link AdServicesHttpClientRequest} */
     @AutoValue.Builder
     public abstract static class Builder {
 
-        /** @param uri that is used to make the request */
+        /**
+         * @param uri that is used to make the request
+         */
         public abstract AdServicesHttpClientRequest.Builder setUri(Uri uri);
 
-        /** @param queryParams that need to be piggybacked to the url connection */
+        /**
+         * @param queryParams that need to be piggybacked to the url connection
+         */
         public abstract AdServicesHttpClientRequest.Builder setRequestProperties(
                 ImmutableMap<String, String> queryParams);
 
@@ -84,10 +120,29 @@ public abstract class AdServicesHttpClientRequest {
         public abstract AdServicesHttpClientRequest.Builder setResponseHeaderKeys(
                 ImmutableSet<String> responseHeaderKeys);
 
-        /** @param useCache flag to cache the response of this request */
+        /**
+         * @param useCache flag to cache the response of this request
+         */
         public abstract AdServicesHttpClientRequest.Builder setUseCache(boolean useCache);
 
-        /** @return an {@link AdServicesHttpClientRequest} */
+        /**
+         * @param methodType type of HTTP request
+         */
+        public abstract Builder setHttpMethodType(HttpMethodType methodType);
+
+        /**
+         * @param bodyInBytes byte array that is part of the request
+         */
+        public abstract Builder setBodyInBytes(byte[] bodyInBytes);
+
+        /**
+         * @param devContext indicates the dev context associated with this request.
+         */
+        public abstract AdServicesHttpClientRequest.Builder setDevContext(DevContext devContext);
+
+        /**
+         * @return an {@link AdServicesHttpClientRequest}
+         */
         public abstract AdServicesHttpClientRequest build();
     }
 }

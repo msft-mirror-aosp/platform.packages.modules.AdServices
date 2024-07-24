@@ -26,10 +26,12 @@ import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.net.Uri;
 import android.os.Parcel;
-import android.test.suitebuilder.annotation.SmallTest;
 import android.view.KeyEvent;
 
+import androidx.test.filters.SmallTest;
 import androidx.test.runner.AndroidJUnit4;
+
+import com.android.adservices.common.WebUtil;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,22 +56,30 @@ public class MeasurementApiParamsCtsTest {
                         .setEnd(end)
                         .setDomainUris(
                                 List.of(
-                                        Uri.parse("https://d-foo.com"),
-                                        Uri.parse("https://d-bar.com")))
+                                        WebUtil.validUri("https://d-foo.test"),
+                                        WebUtil.validUri("https://d-bar.test")))
                         .setOriginUris(
                                 List.of(
-                                        Uri.parse("https://o-foo.com"),
-                                        Uri.parse("https://o-bar.com")))
+                                        WebUtil.validUri("https://o-foo.test"),
+                                        WebUtil.validUri("https://o-bar.test")))
                         .build();
 
         assertEquals(DeletionRequest.DELETION_MODE_ALL, deletionRequest.getDeletionMode());
         assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, deletionRequest.getMatchBehavior());
         assertEquals(start, deletionRequest.getStart());
         assertEquals(end, deletionRequest.getEnd());
-        assertEquals("https://d-foo.com", deletionRequest.getDomainUris().get(0).toString());
-        assertEquals("https://d-bar.com", deletionRequest.getDomainUris().get(1).toString());
-        assertEquals("https://o-foo.com", deletionRequest.getOriginUris().get(0).toString());
-        assertEquals("https://o-bar.com", deletionRequest.getOriginUris().get(1).toString());
+        assertEquals(
+                WebUtil.validUrl("https://d-foo.test"),
+                deletionRequest.getDomainUris().get(0).toString());
+        assertEquals(
+                WebUtil.validUrl("https://d-bar.test"),
+                deletionRequest.getDomainUris().get(1).toString());
+        assertEquals(
+                WebUtil.validUrl("https://o-foo.test"),
+                deletionRequest.getOriginUris().get(0).toString());
+        assertEquals(
+                WebUtil.validUrl("https://o-bar.test"),
+                deletionRequest.getOriginUris().get(1).toString());
     }
 
     private WebSourceParams createWebSourceParamsExample() {

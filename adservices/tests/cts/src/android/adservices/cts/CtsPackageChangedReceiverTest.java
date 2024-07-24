@@ -22,9 +22,11 @@ import android.content.Intent;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -34,6 +36,10 @@ public class CtsPackageChangedReceiverTest {
             SdkLevel.isAtLeastT()
                     ? "com.android.adservices.PACKAGE_CHANGED"
                     : "com.android.ext.adservices.PACKAGE_CHANGED";
+
+    @Rule
+    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesDeviceSupportedRule();
 
     /**
      * Verify that the com.android.adservices.service.common.PACKAGE_CHANGED broadcast is protected

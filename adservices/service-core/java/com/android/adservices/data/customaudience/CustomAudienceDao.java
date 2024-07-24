@@ -17,13 +17,16 @@
 package com.android.adservices.data.customaudience;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.customaudience.PartialCustomAudience;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
@@ -41,9 +44,12 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * DAO abstract class used to access Custom Audience persistent storage.
@@ -75,6 +81,18 @@ public abstract class CustomAudienceDao {
             @NonNull DBCustomAudienceBackgroundFetchData fetchData);
 
     /**
+     * Adds a new {@link DBCustomAudienceQuarantine} entry to the {@code custom_audience_quarantine}
+     * table.
+     *
+     * <p>This method is not meant to be used on its own, since it doesn't take into account the
+     * maximum size of {@code custom_audience_quarantine}. Use {@link
+     * #safelyInsertCustomAudienceQuarantine} instead.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract void persistCustomAudienceQuarantineData(
+            DBCustomAudienceQuarantine dbCustomAudienceQuarantine);
+
+    /**
      * Adds or updates a given custom audience and background fetch data in a single transaction.
      *
      * <p>This transaction is separate in order to minimize the critical region while locking the
@@ -99,7 +117,9 @@ public abstract class CustomAudienceDao {
      * input parameters have already been validated and are correct.
      */
     public void insertOrOverwriteCustomAudience(
-            @NonNull DBCustomAudience customAudience, @NonNull Uri dailyUpdateUri) {
+            @NonNull DBCustomAudience customAudience,
+            @NonNull Uri dailyUpdateUri,
+            boolean debuggable) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(dailyUpdateUri);
 
@@ -123,6 +143,7 @@ public abstract class CustomAudienceDao {
                         .setName(customAudience.getName())
                         .setDailyUpdateUri(dailyUpdateUri)
                         .setEligibleUpdateTime(eligibleUpdateTime)
+                        .setIsDebuggable(debuggable)
                         .build();
 
         insertOrOverwriteCustomAudienceAndBackgroundFetchData(customAudience, fetchData);
@@ -157,6 +178,33 @@ public abstract class CustomAudienceDao {
         persistCustomAudienceBackgroundFetchData(fetchData);
     }
 
+    /** Returns total size of the {@code custom_audience_quarantine} table. */
+    @Query("SELECT COUNT(*) FROM custom_audience_quarantine")
+    abstract long getTotalNumCustomAudienceQuarantineEntries();
+
+    /**
+     * Safely inserts a {@link DBCustomAudienceQuarantine} into the table.
+     *
+     * @throws IllegalStateException if {@link #getTotalNumCustomAudienceQuarantineEntries} exceeds
+     *     {@code maxEntries}.
+     *     <p>This transaction is separate in order to minimize the critical region while locking
+     *     the database.
+     */
+    @Transaction
+    public void safelyInsertCustomAudienceQuarantine(
+            @NonNull DBCustomAudienceQuarantine dbCustomAudienceQuarantine, long maxEntries)
+            throws IllegalStateException {
+        Objects.requireNonNull(dbCustomAudienceQuarantine);
+
+        if (getTotalNumCustomAudienceQuarantineEntries() >= maxEntries) {
+            String errorMessage =
+                    "Quarantine table maximum has been reached! Not persisting this entry";
+            sLogger.e(errorMessage);
+            throw new IllegalStateException(errorMessage);
+        }
+        persistCustomAudienceQuarantineData(dbCustomAudienceQuarantine);
+    }
+
     /** Get count of custom audience. */
     @Query("SELECT COUNT(*) FROM custom_audience")
     public abstract long getCustomAudienceCount();
@@ -168,6 +216,21 @@ public abstract class CustomAudienceDao {
     /** Get the total number of distinct custom audience owner. */
     @Query("SELECT COUNT(DISTINCT owner) FROM custom_audience")
     public abstract long getCustomAudienceOwnerCount();
+
+    /** List all custom audiences by owner and buyer that are marked as debuggable. */
+    @Query(
+            "SELECT * FROM custom_audience "
+                    + "WHERE owner=:owner AND buyer=:buyer AND debuggable=1")
+    @Nullable
+    public abstract List<DBCustomAudience> listDebuggableCustomAudiencesByOwnerAndBuyer(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer);
+
+    /** Get custom audience by owner, buyer and name that are marked as debuggable. */
+    @Query(
+            "SELECT * FROM custom_audience "
+                    + "WHERE owner = :owner AND buyer = :buyer AND name = :name AND debuggable = 1")
+    public abstract DBCustomAudience getDebuggableCustomAudienceByPrimaryKey(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
 
     /**
      * Get the count of total custom audience, the count for the given owner and the count of
@@ -218,15 +281,47 @@ public abstract class CustomAudienceDao {
             @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
 
     /**
+     * Checks if there is a row in the {@code custom_audience_quarantine} with the unique key
+     * combination of owner and buyer.
+     *
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM custom_audience_quarantine WHERE owner = :owner "
+                    + "AND buyer = :buyer LIMIT 1)")
+    public abstract boolean doesCustomAudienceQuarantineExist(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer);
+
+    /**
+     * Gets expiration time if it exists with the unique key combination of owner and buyer. Returns
+     * null otherwise.
+     */
+    @Nullable
+    @Query(
+            "SELECT quarantine_expiration_time FROM custom_audience_quarantine WHERE owner = :owner"
+                    + " AND buyer = :buyer")
+    public abstract Instant getCustomAudienceQuarantineExpiration(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer);
+
+    /**
      * Get custom audience by its unique key.
      *
      * @return custom audience result if exists.
      */
     @Query("SELECT * FROM custom_audience WHERE owner = :owner AND buyer = :buyer AND name = :name")
     @Nullable
-    @VisibleForTesting
     public abstract DBCustomAudience getCustomAudienceByPrimaryKey(
             @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
+
+    /**
+     * Get custom audiences by buyer and name.
+     *
+     * @return custom audiences result if exists.
+     */
+    @Query("SELECT * FROM custom_audience WHERE buyer = :buyer AND name = :name")
+    @NonNull
+    public abstract List<DBCustomAudience> getCustomAudiencesForBuyerAndName(
+            @NonNull AdTechIdentifier buyer, @NonNull String name);
 
     /**
      * Get custom audience background fetch data by its unique key.
@@ -241,6 +336,32 @@ public abstract class CustomAudienceDao {
     public abstract DBCustomAudienceBackgroundFetchData
             getCustomAudienceBackgroundFetchDataByPrimaryKey(
                     @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
+
+    /**
+     * Get debuggable custom audience background fetch data by its unique key.
+     *
+     * @return custom audience background fetch data if it exists
+     */
+    @Query(
+            "SELECT * FROM custom_audience_background_fetch_data WHERE owner = :owner AND buyer ="
+                    + " :buyer AND name = :name AND is_debuggable = 1")
+    @Nullable
+    public abstract DBCustomAudienceBackgroundFetchData
+            getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                    @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name);
+
+    /**
+     * List debuggable custom audience background fetch data by its unique key.
+     *
+     * @return custom audience background fetch data if it exists
+     */
+    @Query(
+            "SELECT * FROM custom_audience_background_fetch_data "
+                    + "WHERE owner = :owner AND buyer = :buyer AND is_debuggable = 1")
+    @Nullable
+    public abstract List<DBCustomAudienceBackgroundFetchData>
+            listDebuggableCustomAudienceBackgroundFetchData(
+                    @NonNull String owner, @NonNull AdTechIdentifier buyer);
 
     /**
      * Get custom audience JS override by its unique key.
@@ -341,6 +462,25 @@ public abstract class CustomAudienceDao {
     protected abstract int deleteAllExpiredCustomAudiences(@NonNull Instant expiryTime);
 
     /**
+     * Deletes all expired entries of the {@code custom_audience_quarantine} table.
+     *
+     * @return the number of deleted entries
+     */
+    @Query(
+            "DELETE FROM custom_audience_quarantine WHERE quarantine_expiration_time <="
+                    + " :expiryTime")
+    public abstract int deleteAllExpiredQuarantineEntries(@NonNull Instant expiryTime);
+
+    /**
+     * Deletes all entries with the unique combination of owner and buyer.
+     *
+     * @return the number of deleted entries
+     */
+    @Query("DELETE FROM custom_audience_quarantine WHERE owner = :owner " + "AND buyer = :buyer")
+    public abstract int deleteQuarantineEntry(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer);
+
+    /**
      * Deletes background fetch data for all custom audiences which are expired, where the custom
      * audiences' expiration times match or precede the given {@code expiryTime}.
      *
@@ -410,7 +550,8 @@ public abstract class CustomAudienceDao {
         Objects.requireNonNull(flags);
         List<String> ownersToRemove = getAllCustomAudienceOwners();
 
-        CleanupUtils.removeAllowedPackages(ownersToRemove, packageManager, flags);
+        CleanupUtils.removeAllowedPackages(
+                ownersToRemove, packageManager, Arrays.asList(flags.getPpapiAppAllowList()));
 
         long numDisallowedOwnersFound = ownersToRemove.size();
         long numRemovedCustomAudiences = 0;
@@ -586,6 +727,22 @@ public abstract class CustomAudienceDao {
     public abstract void removeCustomAudienceOverridesByPackageName(@NonNull String appPackageName);
 
     /**
+     * Fetch all active Custom Audience including null user_bidding_signals
+     *
+     * @param currentTime to compare against CA time values and find an active CA
+     * @return All the Custom Audience that represent
+     */
+    @Query(
+            "SELECT * FROM custom_audience WHERE activation_time <= (:currentTime) AND"
+                    + " (:currentTime) < expiration_time AND"
+                    + " (last_ads_and_bidding_data_updated_time + (:activeWindowTimeMs)) >="
+                    + " (:currentTime) AND trusted_bidding_data_uri IS NOT NULL AND ads IS"
+                    + " NOT NULL ")
+    @Nullable
+    public abstract List<DBCustomAudience> getAllActiveCustomAudienceForServerSideAuction(
+            Instant currentTime, long activeWindowTimeMs);
+
+    /**
      * Fetch all the Custom Audience corresponding to the buyers
      *
      * @param buyers associated with the Custom Audience
@@ -633,6 +790,85 @@ public abstract class CustomAudienceDao {
                     + "AND :currentTime < ca.expiration_time")
     public abstract int getNumActiveEligibleCustomAudienceBackgroundFetchData(
             @NonNull Instant currentTime);
+
+    /**
+     * Persists a delayed Custom Audience Update along with the overrides
+     *
+     * @param update delayed update
+     * @param partialCustomAudienceList overrides for incoming custom audiences
+     */
+    // TODO(b/324478492) Refactor Update queries in a separate Dao
+    @Transaction
+    public void insertScheduledUpdateAndPartialCustomAudienceList(
+            @NonNull DBScheduledCustomAudienceUpdate update,
+            @NonNull List<PartialCustomAudience> partialCustomAudienceList) {
+        long updateId = insertScheduledCustomAudienceUpdate(update);
+
+        List<DBPartialCustomAudience> dbPartialCustomAudienceList =
+                partialCustomAudienceList.stream()
+                        .map(
+                                partialCa ->
+                                        DBPartialCustomAudience.builder()
+                                                .setUpdateId(updateId)
+                                                .setName(partialCa.getName())
+                                                .setActivationTime(partialCa.getActivationTime())
+                                                .setExpirationTime(partialCa.getExpirationTime())
+                                                .setUserBiddingSignals(
+                                                        partialCa.getUserBiddingSignals())
+                                                .build())
+                        .collect(Collectors.toList());
+        insertPartialCustomAudiencesForUpdate(dbPartialCustomAudienceList);
+    }
+
+    /** Gets updates schedule before a given time along with its corresponding overrides */
+    @Transaction
+    public List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>
+            getScheduledUpdatesAndOverridesBeforeTime(@NonNull Instant timestamp) {
+
+        List<DBScheduledCustomAudienceUpdate> scheduledUpdates =
+                getCustomAudienceUpdatesScheduledBeforeTime(timestamp);
+
+        List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>> updatesList =
+                new ArrayList<>();
+        scheduledUpdates.forEach(
+                update ->
+                        updatesList.add(
+                                new Pair(
+                                        update,
+                                        getPartialAudienceListForUpdateId(update.getUpdateId()))));
+        return updatesList;
+    }
+
+    /** Persists a delayed Custom Audience Update and generated a unique update_id */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    public abstract long insertScheduledCustomAudienceUpdate(
+            @NonNull DBScheduledCustomAudienceUpdate update);
+
+    /** Persists Custom Audience Overrides associated with a delayed update */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    public abstract void insertPartialCustomAudiencesForUpdate(
+            @NonNull List<DBPartialCustomAudience> partialCustomAudienceList);
+
+    /** Gets Custom Audience Overrides associated with a delayed update */
+    @Query("SELECT * FROM partial_custom_audience WHERE update_id = :updateId")
+    public abstract List<DBPartialCustomAudience> getPartialAudienceListForUpdateId(Long updateId);
+
+    /** Gets list of delayed Custom Audience Updates scheduled before the given time */
+    @Query("SELECT * FROM scheduled_custom_audience_update WHERE scheduled_time <= :timestamp")
+    public abstract List<DBScheduledCustomAudienceUpdate>
+            getCustomAudienceUpdatesScheduledBeforeTime(Instant timestamp);
+
+    /** Gets list of delayed Custom Audience Updates created before the given time */
+    @Query("DELETE FROM scheduled_custom_audience_update WHERE creation_time <= :timestamp")
+    public abstract void deleteScheduledCustomAudienceUpdatesCreatedBeforeTime(Instant timestamp);
+
+    /**
+     * Removes a Custom Audience Update from storage and cascades the deletion to associated Partial
+     * Custom Audiences for overrides
+     */
+    @Delete
+    public abstract void deleteScheduledCustomAudienceUpdate(
+            @NonNull DBScheduledCustomAudienceUpdate update);
 
     @VisibleForTesting
     static class BiddingLogicJsWithVersion {
