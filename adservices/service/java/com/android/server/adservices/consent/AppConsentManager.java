@@ -132,7 +132,7 @@ public class AppConsentManager {
     public void setConsentForApp(
             @NonNull String packageName, int packageUid, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
-        mDatastore.put(toDatastoreKey(packageName, packageUid), isConsentRevoked);
+        mDatastore.putBoolean(toDatastoreKey(packageName, packageUid), isConsentRevoked);
     }
 
     /**
@@ -149,7 +149,8 @@ public class AppConsentManager {
     public boolean setConsentForAppIfNew(
             @NonNull String packageName, int packageUid, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
-        return mDatastore.putIfNew(toDatastoreKey(packageName, packageUid), isConsentRevoked);
+        return mDatastore.putBooleanIfNew(
+                toDatastoreKey(packageName, packageUid), isConsentRevoked);
     }
 
     /**
@@ -165,7 +166,7 @@ public class AppConsentManager {
      */
     public boolean isConsentRevokedForApp(@NonNull String packageName, int packageUid)
             throws IllegalArgumentException, IOException {
-        return Boolean.TRUE.equals(mDatastore.get(toDatastoreKey(packageName, packageUid)));
+        return Boolean.TRUE.equals(mDatastore.getBoolean(toDatastoreKey(packageName, packageUid)));
     }
 
     /**
