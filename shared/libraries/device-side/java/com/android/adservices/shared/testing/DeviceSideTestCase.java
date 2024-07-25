@@ -63,7 +63,10 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
     // RavenwoodRule both here and as an instance rule.
     @ClassRule
     public static final RavenwoodRule sRavenwood =
-            new RavenwoodRule.Builder().setPackageName(RAVENWOOD_PACKAGE_NAME).build();
+            new RavenwoodRule.Builder()
+                    .setProvideMainThread(true)
+                    .setPackageName(RAVENWOOD_PACKAGE_NAME)
+                    .build();
 
     // TODO(b/342639109): set proper order
     @Rule public final RavenwoodRule ravenwood = sRavenwood;
