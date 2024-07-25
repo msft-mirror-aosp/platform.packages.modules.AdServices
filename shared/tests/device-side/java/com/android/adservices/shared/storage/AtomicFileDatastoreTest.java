@@ -43,15 +43,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCase {
+public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase {
     private static final String VALID_DIR = sContext.getFilesDir().getAbsolutePath();
-    private static final String FILENAME = "BooleanFileDatastoreTest.xml";
+    private static final String FILENAME = "AtomicFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
     private static final String TEST_KEY = "key";
     private static final String TEST_VERSION_KEY = "version_key";
 
-    private final BooleanFileDatastore mDatastore =
-            new BooleanFileDatastore(VALID_DIR, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY);
+    private final AtomicFileDatastore mDatastore =
+            new AtomicFileDatastore(VALID_DIR, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY);
 
     @Before
     public void initializeDatastore() throws IOException {
@@ -69,7 +69,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 /* parentPath= */ null,
                                 FILENAME,
                                 DATASTORE_VERSION,
@@ -77,7 +77,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 /* parentPath= */ "",
                                 FILENAME,
                                 DATASTORE_VERSION,
@@ -85,7 +85,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 VALID_DIR,
                                 /* filename= */ null,
                                 DATASTORE_VERSION,
@@ -93,7 +93,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 VALID_DIR,
                                 /* filename= */ "",
                                 DATASTORE_VERSION,
@@ -103,7 +103,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 /* file= */ null, DATASTORE_VERSION, TEST_VERSION_KEY));
     }
 
@@ -112,7 +112,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 "I can't believe this is a valid dir",
                                 FILENAME,
                                 DATASTORE_VERSION,
@@ -130,7 +130,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
             assertThrows(
                     IllegalArgumentException.class,
                     () ->
-                            new BooleanFileDatastore(
+                            new AtomicFileDatastore(
                                     path, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY));
         } finally {
             if (!file.delete()) {
@@ -140,7 +140,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
     }
 
     @Test
-    public void testInitializeEmptyBooleanFileDatastore() {
+    public void testInitializeEmptyAtomicFileDatastore() {
         expect.withMessage("keys").that(mDatastore.keySet()).isEmpty();
     }
 
@@ -192,7 +192,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
     public void testGetVersionWithNoPreviousWrite() {
         assertWithMessage("getPreviousStoredVersion()")
                 .that(mDatastore.getPreviousStoredVersion())
-                .isEqualTo(BooleanFileDatastore.NO_PREVIOUS_VERSION);
+                .isEqualTo(AtomicFileDatastore.NO_PREVIOUS_VERSION);
     }
 
     @Test

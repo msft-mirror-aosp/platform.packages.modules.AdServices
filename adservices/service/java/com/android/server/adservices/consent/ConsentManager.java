@@ -18,7 +18,7 @@ package com.android.server.adservices.consent;
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
-import com.android.adservices.shared.storage.BooleanFileDatastore;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
@@ -64,7 +64,7 @@ public final class ConsentManager {
     static final int STORAGE_VERSION = 1;
     static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
 
-    private final BooleanFileDatastore mDatastore;
+    private final AtomicFileDatastore mDatastore;
 
     @VisibleForTesting static final String DEFAULT_CONSENT = "DEFAULT_CONSENT";
 
@@ -83,7 +83,7 @@ public final class ConsentManager {
 
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
 
-    private ConsentManager(@NonNull BooleanFileDatastore datastore) {
+    private ConsentManager(@NonNull AtomicFileDatastore datastore) {
         Objects.requireNonNull(datastore);
 
         mDatastore = datastore;
@@ -102,18 +102,18 @@ public final class ConsentManager {
                 ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
                         baseDir, userIdentifier);
 
-        BooleanFileDatastore datastore = createAndInitBooleanFileDatastore(consentDataStoreDir);
+        AtomicFileDatastore datastore = createAndInitAtomicFileDatastore(consentDataStoreDir);
 
         return new ConsentManager(datastore);
     }
 
     @NonNull
     @VisibleForTesting
-    static BooleanFileDatastore createAndInitBooleanFileDatastore(String consentDataStoreDir)
+    static AtomicFileDatastore createAndInitAtomicFileDatastore(String consentDataStoreDir)
             throws IOException {
         // Create the DataStore and initialize it.
-        BooleanFileDatastore datastore =
-                new BooleanFileDatastore(
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
                         consentDataStoreDir, STORAGE_XML_IDENTIFIER, STORAGE_VERSION, VERSION_KEY);
         datastore.initialize();
         // TODO(b/259607624): implement a method in the datastore which would support

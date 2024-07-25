@@ -17,7 +17,7 @@ package {
 }
 
 // NOTE: currently there's just one library for everything (which in
-// reality is just BooleanFileDataStore), but it might be better to
+// reality is just AtomicFileDataStore), but it might be better to
 // split into multiple libraries in the feature (if it gets bigger
 // and/or if new classes adds external dependencies like proto support)
 java_library {
