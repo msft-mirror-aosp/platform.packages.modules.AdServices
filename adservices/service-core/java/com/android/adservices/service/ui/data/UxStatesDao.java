@@ -76,7 +76,7 @@ public class UxStatesDao {
     /** Return the current UX. */
     public PrivacySandboxUxCollection getUx() {
         for (PrivacySandboxUxCollection uxCollection : PrivacySandboxUxCollection.values()) {
-            if (Boolean.TRUE.equals(mDatastore.get(uxCollection.toString()))) {
+            if (Boolean.TRUE.equals(mDatastore.getBoolean(uxCollection.toString()))) {
                 return uxCollection;
             }
         }
@@ -87,7 +87,7 @@ public class UxStatesDao {
     public void setUx(@NonNull PrivacySandboxUxCollection ux) {
         try {
             for (PrivacySandboxUxCollection uxCollection : PrivacySandboxUxCollection.values()) {
-                mDatastore.put(uxCollection.toString(), ux.equals(uxCollection));
+                mDatastore.putBoolean(uxCollection.toString(), ux.equals(uxCollection));
             }
         } catch (IOException | RuntimeException e) {
             throw new RuntimeException("UxStatesDao: setUx operation failed.", e);
@@ -99,7 +99,8 @@ public class UxStatesDao {
             @NonNull PrivacySandboxUxCollection ux) {
         for (PrivacySandboxEnrollmentChannelCollection enrollmentChannelCollection :
                 ux.getEnrollmentChannelCollection()) {
-            if (Boolean.TRUE.equals(mDatastore.get(enrollmentChannelCollection.toString()))) {
+            if (Boolean.TRUE.equals(
+                    mDatastore.getBoolean(enrollmentChannelCollection.toString()))) {
                 return enrollmentChannelCollection;
             }
         }
@@ -116,7 +117,7 @@ public class UxStatesDao {
         try {
             for (PrivacySandboxEnrollmentChannelCollection enrollmentChannelCollection :
                     ux.getEnrollmentChannelCollection()) {
-                mDatastore.put(
+                mDatastore.putBoolean(
                         enrollmentChannelCollection.toString(),
                         enrollmentChannelCollection.equals(enrollmentChannel));
             }
