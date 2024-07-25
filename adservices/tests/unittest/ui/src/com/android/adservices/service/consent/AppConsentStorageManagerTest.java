@@ -38,7 +38,7 @@ import android.content.pm.PackageManager;
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.service.FlagsFactory;
@@ -69,8 +69,8 @@ import java.util.stream.Collectors;
 public final class AppConsentStorageManagerTest extends AdServicesExtendedMockitoTestCase {
 
     private Context mContextSpy;
-    private BooleanFileDatastore mAppDaoDatastore;
-    private BooleanFileDatastore mConsentDatastore;
+    private AtomicFileDatastore mAppDaoDatastore;
+    private AtomicFileDatastore mConsentDatastore;
     private AppConsentDao mAppConsentDaoSpy;
     private AppConsentStorageManager mAppConsentStorageManager;
     @Mock private UxStatesDao mUxStatesDaoMock;
@@ -79,13 +79,13 @@ public final class AppConsentStorageManagerTest extends AdServicesExtendedMockit
     public void setup() {
         mContextSpy = Mockito.spy(appContext.get());
         mConsentDatastore =
-                new BooleanFileDatastore(
+                new AtomicFileDatastore(
                         mContextSpy,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
                         ConsentConstants.STORAGE_VERSION);
 
         mAppDaoDatastore =
-                new BooleanFileDatastore(
+                new AtomicFileDatastore(
                         mContextSpy, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
 
         mAppConsentDaoSpy =
@@ -129,24 +129,26 @@ public final class AppConsentStorageManagerTest extends AdServicesExtendedMockit
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
 
         mAppConsentStorageManager.setConsentForApp(AppConsentDaoFixture.APP10_PACKAGE_NAME, false);
-        expect.that(mAppDaoDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY)).isFalse();
+        expect.that(mAppDaoDatastore.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY))
+                .isFalse();
         mAppConsentStorageManager.clearConsentForUninstalledApp(
                 AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        expect.that(mAppDaoDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY)).isNull();
+        expect.that(mAppDaoDatastore.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY)).isNull();
     }
 
     @Test
     public void testClearConsentForUninstalledAppWithoutUid() throws IOException {
-        mAppDaoDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
-        mAppDaoDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-        mAppDaoDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mAppDaoDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mAppDaoDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mAppDaoDatastore.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
 
         mAppConsentStorageManager.clearConsentForUninstalledApp(
                 AppConsentDaoFixture.APP20_PACKAGE_NAME);
 
-        expect.that(mAppDaoDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY)).isTrue();
-        expect.that(mAppDaoDatastore.get(AppConsentDaoFixture.APP20_DATASTORE_KEY)).isNull();
-        expect.that(mAppDaoDatastore.get(AppConsentDaoFixture.APP30_DATASTORE_KEY)).isFalse();
+        expect.that(mAppDaoDatastore.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY)).isTrue();
+        expect.that(mAppDaoDatastore.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY)).isNull();
+        expect.that(mAppDaoDatastore.getBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY))
+                .isFalse();
 
         verify(mAppConsentDaoSpy).clearConsentForUninstalledApp(anyString());
     }
@@ -291,8 +293,8 @@ public final class AppConsentStorageManagerTest extends AdServicesExtendedMockit
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        mAppDaoDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mAppDaoDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mAppDaoDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mAppDaoDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
 
         expect.that(
                         mAppConsentStorageManager.isConsentRevokedForApp(
@@ -440,8 +442,8 @@ public final class AppConsentStorageManagerTest extends AdServicesExtendedMockit
 
     private void setMockfor3Apps(boolean value) throws IOException {
         mock3AppsInstalled();
-        mAppDaoDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mAppDaoDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, value);
-        mAppDaoDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mAppDaoDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mAppDaoDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, value);
+        mAppDaoDatastore.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
     }
 }

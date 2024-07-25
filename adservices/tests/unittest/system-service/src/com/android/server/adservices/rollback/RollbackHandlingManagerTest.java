@@ -33,7 +33,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.shared.storage.BooleanFileDatastore;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -52,12 +52,12 @@ public class RollbackHandlingManagerTest {
 
     private static final int DATASTORE_VERSION = 339900900;
 
-    private BooleanFileDatastore mDatastore;
+    private AtomicFileDatastore mDatastore;
 
     @Before
     public void setup() {
         mDatastore =
-                new BooleanFileDatastore(
+                new AtomicFileDatastore(
                         PPAPI_CONTEXT.getFilesDir().getAbsolutePath(),
                         STORAGE_XML_IDENTIFIER,
                         DATASTORE_VERSION,
@@ -106,12 +106,12 @@ public class RollbackHandlingManagerTest {
     }
 
     @Test
-    public void testGetOrCreateBooleanFileDatastore() throws IOException {
+    public void testGetOrCreateAtomicFileDatastore() throws IOException {
         RollbackHandlingManager rollbackHandlingManager =
                 RollbackHandlingManager.createRollbackHandlingManager(
                         BASE_DIR, /* userIdentifier */ 0, DATASTORE_VERSION);
-        BooleanFileDatastore datastore =
-                rollbackHandlingManager.getOrCreateBooleanFileDatastore(
+        AtomicFileDatastore datastore =
+                rollbackHandlingManager.getOrCreateAtomicFileDatastore(
                         AdServicesManager.MEASUREMENT_DELETION);
 
         // Assert that the DataStore is created.
@@ -151,8 +151,8 @@ public class RollbackHandlingManagerTest {
         RollbackHandlingManager rollbackHandlingManager =
                 RollbackHandlingManager.createRollbackHandlingManager(
                         BASE_DIR, /* userIdentifier= */ 0, DATASTORE_VERSION);
-        BooleanFileDatastore datastore =
-                rollbackHandlingManager.getOrCreateBooleanFileDatastore(
+        AtomicFileDatastore datastore =
+                rollbackHandlingManager.getOrCreateAtomicFileDatastore(
                         AdServicesManager.MEASUREMENT_DELETION);
         String prefix = "_";
 

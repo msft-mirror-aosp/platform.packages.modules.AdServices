@@ -22,7 +22,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
@@ -38,9 +38,10 @@ public class UxStatesDaoTest {
 
     @Before
     public void setup() throws IOException {
-        BooleanFileDatastore booleanFileDatastore = new BooleanFileDatastore(
-                mContext, UxStatesDao.TEST_DATASTORE_NAME, UxStatesDao.DATASTORE_VERSION);
-        mUxStatesDao = new UxStatesDao(booleanFileDatastore);
+        AtomicFileDatastore atomicFileDatastore =
+                new AtomicFileDatastore(
+                        mContext, UxStatesDao.TEST_DATASTORE_NAME, UxStatesDao.DATASTORE_VERSION);
+        mUxStatesDao = new UxStatesDao(atomicFileDatastore);
     }
 
     @Test

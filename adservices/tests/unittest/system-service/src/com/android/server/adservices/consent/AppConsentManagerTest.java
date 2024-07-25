@@ -36,7 +36,7 @@ import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.shared.storage.BooleanFileDatastore;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 
 import org.junit.After;
 import org.junit.Before;
@@ -59,8 +59,8 @@ public class AppConsentManagerTest {
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
 
     @Spy
-    private BooleanFileDatastore mDatastoreSpy =
-            new BooleanFileDatastore(
+    private AtomicFileDatastore mDatastoreSpy =
+            new AtomicFileDatastore(
                     BASE_DIR,
                     AppConsentManagerFixture.TEST_DATASTORE_NAME,
                     1,
@@ -174,24 +174,24 @@ public class AppConsentManagerTest {
     @Test
     public void testSetConsentForAppSuccess() throws IOException {
 
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
 
         mAppConsentManager.setConsentForApp(
                 AppConsentManagerFixture.APP10_PACKAGE_NAME,
                 AppConsentManagerFixture.APP10_UID,
                 true);
 
-        assertEquals(true, mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
 
         mAppConsentManager.setConsentForApp(
                 AppConsentManagerFixture.APP20_PACKAGE_NAME,
                 AppConsentManagerFixture.APP20_UID,
                 false);
 
-        assertEquals(true, mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertEquals(false, mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertEquals(false, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
 
         verify(mDatastoreSpy).initialize();
     }
@@ -199,8 +199,8 @@ public class AppConsentManagerTest {
     @Test
     public void testSetConsentForAppIfNewWithNewKeysSuccess() throws IOException {
 
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
 
         assertTrue(
                 mAppConsentManager.setConsentForAppIfNew(
@@ -208,8 +208,8 @@ public class AppConsentManagerTest {
                         AppConsentManagerFixture.APP10_UID,
                         true));
 
-        assertEquals(true, mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
 
         assertFalse(
                 mAppConsentManager.setConsentForAppIfNew(
@@ -217,8 +217,8 @@ public class AppConsentManagerTest {
                         AppConsentManagerFixture.APP20_UID,
                         false));
 
-        assertEquals(true, mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertEquals(false, mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertEquals(false, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
 
         verify(mDatastoreSpy).initialize();
     }
@@ -227,11 +227,11 @@ public class AppConsentManagerTest {
     public void testSetConsentForAppIfNewWithExistingKeysUsesOldValues()
             throws IOException, PackageManager.NameNotFoundException {
 
-        mDatastoreSpy.put(AppConsentManagerFixture.APP10_DATASTORE_KEY, false);
-        mDatastoreSpy.put(AppConsentManagerFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY, true);
 
-        assertEquals(false, mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertEquals(true, mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertEquals(false, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
 
         assertFalse(
                 mAppConsentManager.setConsentForAppIfNew(
@@ -244,8 +244,8 @@ public class AppConsentManagerTest {
                         AppConsentManagerFixture.APP20_UID,
                         false));
 
-        assertEquals(false, mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertEquals(true, mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertEquals(false, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
 
         verify(mDatastoreSpy).initialize();
     }
@@ -253,38 +253,38 @@ public class AppConsentManagerTest {
     @Test
     public void testIsConsentRevokedForAppSuccess() throws IOException {
 
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
         assertFalse(
                 mAppConsentManager.isConsentRevokedForApp(
                         AppConsentManagerFixture.APP10_PACKAGE_NAME,
                         AppConsentManagerFixture.APP10_UID));
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
-        assertFalse(
-                mAppConsentManager.isConsentRevokedForApp(
-                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
-                        AppConsentManagerFixture.APP20_UID));
-
-        mDatastoreSpy.put(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
-
-        assertEquals(true, mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertTrue(
-                mAppConsentManager.isConsentRevokedForApp(
-                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
-                        AppConsentManagerFixture.APP10_UID));
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
         assertFalse(
                 mAppConsentManager.isConsentRevokedForApp(
                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                         AppConsentManagerFixture.APP20_UID));
 
-        mDatastoreSpy.put(AppConsentManagerFixture.APP20_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
 
-        assertEquals(true, mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
         assertTrue(
                 mAppConsentManager.isConsentRevokedForApp(
                         AppConsentManagerFixture.APP10_PACKAGE_NAME,
                         AppConsentManagerFixture.APP10_UID));
-        assertEquals(false, mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertFalse(
+                mAppConsentManager.isConsentRevokedForApp(
+                        AppConsentManagerFixture.APP20_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP20_UID));
+
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY, false);
+
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertTrue(
+                mAppConsentManager.isConsentRevokedForApp(
+                        AppConsentManagerFixture.APP10_PACKAGE_NAME,
+                        AppConsentManagerFixture.APP10_UID));
+        assertEquals(false, mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
         assertFalse(
                 mAppConsentManager.isConsentRevokedForApp(
                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
@@ -295,9 +295,9 @@ public class AppConsentManagerTest {
 
     @Test
     public void testGetKnownAppsWithConsent() throws IOException {
-        mDatastoreSpy.put(AppConsentManagerFixture.APP10_DATASTORE_KEY, false);
-        mDatastoreSpy.put(AppConsentManagerFixture.APP20_DATASTORE_KEY, false);
-        mDatastoreSpy.put(AppConsentManagerFixture.APP30_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP30_DATASTORE_KEY, true);
         List<String> applicationsInstalled =
                 Arrays.asList(
                         AppConsentManagerFixture.APP10_PACKAGE_NAME,
@@ -320,7 +320,7 @@ public class AppConsentManagerTest {
 
     @Test
     public void testGetKnownAppsWithConsentNotExistentApp() throws IOException {
-        mDatastoreSpy.put(AppConsentManagerFixture.APP30_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP30_DATASTORE_KEY, true);
 
         final List<String> knownAppsWithConsent =
                 mAppConsentManager.getKnownAppsWithConsent(new ArrayList<>());
@@ -332,9 +332,9 @@ public class AppConsentManagerTest {
 
     @Test
     public void testGetAppsWithRevokedConsent() throws IOException {
-        mDatastoreSpy.put(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentManagerFixture.APP20_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentManagerFixture.APP30_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP30_DATASTORE_KEY, false);
         List<String> applicationsInstalled =
                 Arrays.asList(
                         AppConsentManagerFixture.APP10_PACKAGE_NAME,
@@ -357,7 +357,7 @@ public class AppConsentManagerTest {
 
     @Test
     public void testGetAppsWithRevokedConsentNonExistentApp() throws IOException {
-        mDatastoreSpy.put(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
 
         final List<String> appsWithRevokedConsent =
                 mAppConsentManager.getAppsWithRevokedConsent(new ArrayList<>());
@@ -369,24 +369,24 @@ public class AppConsentManagerTest {
 
     @Test
     public void testClearAllConsentData() throws IOException {
-        mDatastoreSpy.put(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentManagerFixture.APP20_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentManagerFixture.APP30_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP30_DATASTORE_KEY, false);
 
         mAppConsentManager.clearAllAppConsentData();
 
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP30_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP30_DATASTORE_KEY));
 
         verify(mDatastoreSpy).initialize();
     }
 
     @Test
     public void testClearKnownAppsWithConsent() throws IOException {
-        mDatastoreSpy.put(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentManagerFixture.APP20_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentManagerFixture.APP30_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP30_DATASTORE_KEY, false);
         List<String> applicationsInstalled =
                 Arrays.asList(
                         AppConsentManagerFixture.APP10_PACKAGE_NAME,
@@ -395,9 +395,9 @@ public class AppConsentManagerTest {
 
         mAppConsentManager.clearKnownAppsWithConsent();
 
-        assertNotNull(mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertNotNull(mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP30_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP30_DATASTORE_KEY));
 
         assertTrue(mAppConsentManager.getKnownAppsWithConsent(applicationsInstalled).isEmpty());
         assertFalse(mAppConsentManager.getAppsWithRevokedConsent(applicationsInstalled).isEmpty());
@@ -407,16 +407,16 @@ public class AppConsentManagerTest {
 
     @Test
     public void testClearConsentForUninstalledApp() throws IOException {
-        mDatastoreSpy.put(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentManagerFixture.APP20_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentManagerFixture.APP30_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentManagerFixture.APP30_DATASTORE_KEY, false);
 
         mAppConsentManager.clearConsentForUninstalledApp(
                 AppConsentManagerFixture.APP20_PACKAGE_NAME, AppConsentManagerFixture.APP20_UID);
 
-        assertNotNull(mDatastoreSpy.get(AppConsentManagerFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentManagerFixture.APP20_DATASTORE_KEY));
-        assertNotNull(mDatastoreSpy.get(AppConsentManagerFixture.APP30_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP20_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.getBoolean(AppConsentManagerFixture.APP30_DATASTORE_KEY));
 
         verify(mDatastoreSpy).initialize();
     }

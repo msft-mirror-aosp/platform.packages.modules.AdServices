@@ -26,6 +26,7 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.Trace;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
@@ -80,6 +81,8 @@ public class AsyncRegistrationQueueJobService extends JobService {
                 AdServicesExecutors.getBlockingExecutor()
                         .submit(
                                 () -> {
+                                    Trace.beginSection(
+                                            "AsyncRegistrationQueueJobService#onStartJob#executor");
                                     cancelDeprecatedAsyncRegistrationJob(
                                             AsyncRegistrationQueueJobService.this);
                                     ProcessingResult result = processAsyncRecords();
@@ -114,6 +117,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
                                             // scheduled
                                             jobFinished(params, /* wantsReschedule= */ true);
                                     }
+                                    Trace.endSection();
                                 });
         return true;
     }

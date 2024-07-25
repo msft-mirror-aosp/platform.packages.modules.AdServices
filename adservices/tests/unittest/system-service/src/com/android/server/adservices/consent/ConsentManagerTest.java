@@ -33,7 +33,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.shared.storage.BooleanFileDatastore;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.adservices.feature.PrivacySandboxUxCollection;
@@ -55,12 +55,12 @@ public class ConsentManagerTest {
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
 
-    private BooleanFileDatastore mDatastore;
+    private AtomicFileDatastore mDatastore;
 
     @Before
     public void setup() {
         mDatastore =
-                new BooleanFileDatastore(
+                new AtomicFileDatastore(
                         PPAPI_CONTEXT.getFilesDir().getAbsolutePath(),
                         STORAGE_XML_IDENTIFIER,
                         STORAGE_VERSION,
@@ -90,17 +90,17 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testCreateAndInitBooleanFileDatastore() {
-        BooleanFileDatastore datastore = null;
+    public void testCreateAndInitAtomicFileDatastore() {
+        AtomicFileDatastore datastore = null;
         try {
-            datastore = ConsentManager.createAndInitBooleanFileDatastore(BASE_DIR);
+            datastore = ConsentManager.createAndInitAtomicFileDatastore(BASE_DIR);
         } catch (IOException e) {
             Assert.fail("Fail to create the DataStore");
         }
 
         // Assert that the DataStore is created and initialized with NOTIFICATION_DISPLAYED_ONCE
         // is false.
-        assertThat(datastore.get(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
+        assertThat(datastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
     }
 
     @Test

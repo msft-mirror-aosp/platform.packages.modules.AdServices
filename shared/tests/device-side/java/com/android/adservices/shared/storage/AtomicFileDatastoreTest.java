@@ -43,15 +43,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCase {
+public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase {
     private static final String VALID_DIR = sContext.getFilesDir().getAbsolutePath();
-    private static final String FILENAME = "BooleanFileDatastoreTest.xml";
+    private static final String FILENAME = "AtomicFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
     private static final String TEST_KEY = "key";
     private static final String TEST_VERSION_KEY = "version_key";
 
-    private final BooleanFileDatastore mDatastore =
-            new BooleanFileDatastore(VALID_DIR, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY);
+    private final AtomicFileDatastore mDatastore =
+            new AtomicFileDatastore(VALID_DIR, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY);
 
     @Before
     public void initializeDatastore() throws IOException {
@@ -69,7 +69,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 /* parentPath= */ null,
                                 FILENAME,
                                 DATASTORE_VERSION,
@@ -77,7 +77,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 /* parentPath= */ "",
                                 FILENAME,
                                 DATASTORE_VERSION,
@@ -85,7 +85,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 VALID_DIR,
                                 /* filename= */ null,
                                 DATASTORE_VERSION,
@@ -93,7 +93,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 VALID_DIR,
                                 /* filename= */ "",
                                 DATASTORE_VERSION,
@@ -103,7 +103,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 /* file= */ null, DATASTORE_VERSION, TEST_VERSION_KEY));
     }
 
@@ -112,7 +112,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 "I can't believe this is a valid dir",
                                 FILENAME,
                                 DATASTORE_VERSION,
@@ -130,7 +130,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
             assertThrows(
                     IllegalArgumentException.class,
                     () ->
-                            new BooleanFileDatastore(
+                            new AtomicFileDatastore(
                                     path, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY));
         } finally {
             if (!file.delete()) {
@@ -140,23 +140,23 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
     }
 
     @Test
-    public void testInitializeEmptyBooleanFileDatastore() {
+    public void testInitializeEmptyAtomicFileDatastore() {
         expect.withMessage("keys").that(mDatastore.keySet()).isEmpty();
     }
 
     @Test
     public void testNullOrEmptyKeyFails() {
-        assertThrows(NullPointerException.class, () -> mDatastore.put(null, true));
+        assertThrows(NullPointerException.class, () -> mDatastore.putBoolean(null, true));
 
-        assertThrows(IllegalArgumentException.class, () -> mDatastore.put("", true));
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.putBoolean("", true));
 
-        assertThrows(NullPointerException.class, () -> mDatastore.putIfNew(null, true));
+        assertThrows(NullPointerException.class, () -> mDatastore.putBooleanIfNew(null, true));
 
-        assertThrows(IllegalArgumentException.class, () -> mDatastore.putIfNew("", true));
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.putBooleanIfNew("", true));
 
-        assertThrows(NullPointerException.class, () -> mDatastore.get(null));
+        assertThrows(NullPointerException.class, () -> mDatastore.getBoolean(null));
 
-        assertThrows(IllegalArgumentException.class, () -> mDatastore.get(""));
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.getBoolean(""));
 
         assertThrows(NullPointerException.class, () -> mDatastore.remove(null));
 
@@ -178,7 +178,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
     public void testWriteAndGetVersion() throws IOException {
         // Write value
         boolean insertedValue = false;
-        mDatastore.put(TEST_KEY, insertedValue);
+        mDatastore.putBoolean(TEST_KEY, insertedValue);
 
         // Re-initialize datastore (reads from the file again)
         mDatastore.initialize();
@@ -192,27 +192,27 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
     public void testGetVersionWithNoPreviousWrite() {
         assertWithMessage("getPreviousStoredVersion()")
                 .that(mDatastore.getPreviousStoredVersion())
-                .isEqualTo(BooleanFileDatastore.NO_PREVIOUS_VERSION);
+                .isEqualTo(AtomicFileDatastore.NO_PREVIOUS_VERSION);
     }
 
     @Test
     public void testPutGetUpdateRemove() throws IOException {
         // Should not exist yet
-        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.get(TEST_KEY)).isNull();
+        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.getBoolean(TEST_KEY)).isNull();
 
         // Create
         boolean insertedValue = false;
-        mDatastore.put(TEST_KEY, insertedValue);
+        mDatastore.putBoolean(TEST_KEY, insertedValue);
 
         // Read
-        Boolean readValue = mDatastore.get(TEST_KEY);
+        Boolean readValue = mDatastore.getBoolean(TEST_KEY);
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
 
         // Update
         insertedValue = true;
-        mDatastore.put(TEST_KEY, insertedValue);
-        readValue = mDatastore.get(TEST_KEY);
+        mDatastore.putBoolean(TEST_KEY, insertedValue);
+        readValue = mDatastore.getBoolean(TEST_KEY);
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
 
@@ -220,7 +220,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
 
         // Delete
         mDatastore.remove(TEST_KEY);
-        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.get(TEST_KEY)).isNull();
+        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.getBoolean(TEST_KEY)).isNull();
         assertWithMessage("keys").that(mDatastore.keySet()).isEmpty();
 
         // Should not throw when removing a nonexistent key
@@ -230,27 +230,27 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
     @Test
     public void testPutIfNew() throws IOException {
         // Should not exist yet
-        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.get(TEST_KEY)).isNull();
+        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.getBoolean(TEST_KEY)).isNull();
 
         // Create because it's new
         assertWithMessage("putIfNew(%s, false)", TEST_KEY)
-                .that(mDatastore.putIfNew(TEST_KEY, false))
+                .that(mDatastore.putBooleanIfNew(TEST_KEY, false))
                 .isFalse();
-        Boolean readValue = mDatastore.get(TEST_KEY);
+        Boolean readValue = mDatastore.getBoolean(TEST_KEY);
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isFalse();
 
         // Force overwrite
-        mDatastore.put(TEST_KEY, true);
-        readValue = mDatastore.get(TEST_KEY);
+        mDatastore.putBoolean(TEST_KEY, true);
+        readValue = mDatastore.getBoolean(TEST_KEY);
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isTrue();
 
         // Put should read the existing value
         assertWithMessage("putIfNew(%s, false)", TEST_KEY)
-                .that(mDatastore.putIfNew(TEST_KEY, false))
+                .that(mDatastore.putBooleanIfNew(TEST_KEY, false))
                 .isTrue();
-        readValue = mDatastore.get(TEST_KEY);
+        readValue = mDatastore.getBoolean(TEST_KEY);
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isTrue();
     }
@@ -260,7 +260,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         int numEntries = 10;
         for (int i = 0; i < numEntries; i++) {
             // Even entries are true, odd are false
-            mDatastore.put(TEST_KEY + i, (i & 1) == 0);
+            mDatastore.putBoolean(TEST_KEY + i, (i & 1) == 0);
         }
 
         Set<String> trueKeys = mDatastore.keySetTrue();
@@ -298,7 +298,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         int numEntries = 10;
         for (int i = 0; i < numEntries; i++) {
             // Even entries are true, odd are false
-            mDatastore.put(TEST_KEY + i, (i & 1) == 0);
+            mDatastore.putBoolean(TEST_KEY + i, (i & 1) == 0);
         }
 
         Set<String> trueKeys = mDatastore.keySetTrue();
@@ -352,7 +352,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         int numEntries = 10;
         for (int i = 0; i < numEntries; i++) {
             // Even entries are true, odd are false
-            mDatastore.put(TEST_KEY + i, (i & 1) == 0);
+            mDatastore.putBoolean(TEST_KEY + i, (i & 1) == 0);
         }
 
         Set<String> trueKeys = mDatastore.keySetTrue();
@@ -428,7 +428,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         mocker.mockIsAtLeastS(isAtleastS);
 
         String keyUnlikelyToBeOnDump = "I can't believe it's dumper!";
-        mDatastore.put(keyUnlikelyToBeOnDump, true);
+        mDatastore.putBoolean(keyUnlikelyToBeOnDump, true);
 
         String prefix = "_";
         String dump = dump(pw -> mDatastore.dump(pw, prefix));
@@ -462,9 +462,9 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
         // Add to data store
         for (Pair<String, Boolean> entry : entriesToAdd) {
             expect.withMessage("get(%s)", entry.first)
-                    .that(mDatastore.get(entry.first))
+                    .that(mDatastore.getBoolean(entry.first))
                     .isNull(); // Should not exist yet
-            mDatastore.put(entry.first, entry.second);
+            mDatastore.putBoolean(entry.first, entry.second);
         }
 
         // Delete everything beginning with TEST_KEY + 0.
@@ -483,7 +483,7 @@ public final class BooleanFileDatastoreTest extends SharedExtendedMockitoTestCas
                 .hasSize(entriesThatShouldRemain.size());
         for (Pair<String, Boolean> item : entriesThatShouldRemain) {
             expect.withMessage("entry that should remain (key %s)", item.first)
-                    .that(mDatastore.get(item.first))
+                    .that(mDatastore.getBoolean(item.first))
                     .isEqualTo(item.second);
         }
     }

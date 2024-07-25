@@ -22,7 +22,7 @@ import android.content.pm.PackageManager;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.GuardedBy;
@@ -59,18 +59,18 @@ public class AppConsentDao {
     private volatile boolean mInitialized = false;
 
     /**
-     * The {@link BooleanFileDatastore} will store {@code true} if an app has had its consent
-     * revoked and {@code false} if the app is allowed (has not had its consent revoked). Keys in
-     * the datastore consist of a combination of package name and UID.
+     * The {@link AtomicFileDatastore} will store {@code true} if an app has had its consent revoked
+     * and {@code false} if the app is allowed (has not had its consent revoked). Keys in the
+     * datastore consist of a combination of package name and UID.
      */
-    private final BooleanFileDatastore mDatastore;
+    private final AtomicFileDatastore mDatastore;
 
     private final PackageManager mPackageManager;
 
     /** Constructs the {@link AppConsentDao}. */
     @VisibleForTesting
     public AppConsentDao(
-            @NonNull BooleanFileDatastore datastore, @NonNull PackageManager packageManager) {
+            @NonNull AtomicFileDatastore datastore, @NonNull PackageManager packageManager) {
         Objects.requireNonNull(datastore);
         Objects.requireNonNull(packageManager);
 
@@ -85,8 +85,8 @@ public class AppConsentDao {
         if (sAppConsentDao == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sAppConsentDao == null) {
-                    BooleanFileDatastore datastore =
-                            new BooleanFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
+                    AtomicFileDatastore datastore =
+                            new AtomicFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
                     PackageManager packageManager = context.getPackageManager();
                     sAppConsentDao = new AppConsentDao(datastore, packageManager);
                 }
@@ -163,7 +163,7 @@ public class AppConsentDao {
     public void setConsentForApp(@NonNull String packageName, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
         initializeDatastoreIfNeeded();
-        mDatastore.put(toDatastoreKey(packageName), isConsentRevoked);
+        mDatastore.putBoolean(toDatastoreKey(packageName), isConsentRevoked);
     }
 
     /**
@@ -180,7 +180,7 @@ public class AppConsentDao {
     public boolean setConsentForAppIfNew(@NonNull String packageName, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
         initializeDatastoreIfNeeded();
-        return mDatastore.putIfNew(toDatastoreKey(packageName), isConsentRevoked);
+        return mDatastore.putBooleanIfNew(toDatastoreKey(packageName), isConsentRevoked);
     }
 
     /**
@@ -197,7 +197,7 @@ public class AppConsentDao {
     public boolean isConsentRevokedForApp(@NonNull String packageName)
             throws IllegalArgumentException, IOException {
         initializeDatastoreIfNeeded();
-        return Boolean.TRUE.equals(mDatastore.get(toDatastoreKey(packageName)));
+        return Boolean.TRUE.equals(mDatastore.getBoolean(toDatastoreKey(packageName)));
     }
 
     /**

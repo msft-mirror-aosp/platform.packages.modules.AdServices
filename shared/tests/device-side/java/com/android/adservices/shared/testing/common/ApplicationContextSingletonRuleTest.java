@@ -16,16 +16,16 @@
 
 package com.android.adservices.shared.testing.common;
 
-import static com.android.adservices.shared.util.LogUtil.DEBUG;
-
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
 
 import android.content.Context;
+import android.platform.test.annotations.DisabledOnRavenwood;
 
-import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
-import com.android.adservices.shared.util.LogUtil;
+import com.android.adservices.shared.testing.DeviceSideTestCase;
+import com.android.adservices.shared.testing.DynamicLogger;
+import com.android.adservices.shared.testing.Logger;
 
 import org.junit.After;
 import org.junit.Before;
@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-public final class ApplicationContextSingletonRuleTest extends SharedUnitTestCase {
+public final class ApplicationContextSingletonRuleTest extends DeviceSideTestCase {
     // Not a real test (i.e., it doesn't exist on this class), but it's passed to Description
     private static final String TEST_METHOD_BEING_EXECUTED = "testAmI..OrNot";
 
@@ -45,16 +45,13 @@ public final class ApplicationContextSingletonRuleTest extends SharedUnitTestCas
     @Before
     public void savePreviousContext() {
         mPreviousContext = ApplicationContextSingleton.getForTests();
-        if (DEBUG) {
-            LogUtil.d("@Before: save context as %s", mPreviousContext);
-        }
+        mLog.d("@Before: save context as %s", mPreviousContext);
     }
 
     @After
     public void restorePreviousContext() {
-        if (DEBUG) {
-            LogUtil.d("@After: restoring context as %s", mPreviousContext);
-        }
+        mLog.d("@After: restoring context as %s", mPreviousContext);
+
         ApplicationContextSingleton.setForTests(mPreviousContext);
     }
 
@@ -65,6 +62,8 @@ public final class ApplicationContextSingletonRuleTest extends SharedUnitTestCas
                 () -> new ApplicationContextSingletonRule(null, RESTORE_PREVIOUS));
     }
 
+    // TODO(b/335935200): RavenwoodBaseContext.getApplicationContext() is not supported
+    @DisabledOnRavenwood(blockedBy = Context.class)
     @Test
     public void testDefaultConstructorSetsNonNullContext() throws Throwable {
         ApplicationContextSingletonRule rule =
@@ -229,6 +228,9 @@ public final class ApplicationContextSingletonRuleTest extends SharedUnitTestCas
     // TODO(b/306522832): move to shared place (same package as SimpleStatement)
     private static final class RunnableStatement extends Statement {
 
+        private static final Logger sLogger =
+                new Logger(DynamicLogger.getInstance(), RunnableStatement.class);
+
         private final Runnable mRunnable;
         private boolean mEvaluated;
 
@@ -239,17 +241,13 @@ public final class ApplicationContextSingletonRuleTest extends SharedUnitTestCas
         @Override
         public void evaluate() throws Throwable {
             mEvaluated = true;
-            if (DEBUG) {
-                LogUtil.d(
-                        "RunnableStatement: before run(), ApplicationContextSingleton is %s",
-                        ApplicationContextSingleton.getForTests());
-            }
+            sLogger.d(
+                    "RunnableStatement: before run(), ApplicationContextSingleton is %s",
+                    ApplicationContextSingleton.getForTests());
             mRunnable.run();
-            if (DEBUG) {
-                LogUtil.d(
-                        "RunnableStatement: after run(), ApplicationContextSingleton is %s",
-                        ApplicationContextSingleton.getForTests());
-            }
+            sLogger.d(
+                    "RunnableStatement: after run(), ApplicationContextSingleton is %s",
+                    ApplicationContextSingleton.getForTests());
         }
 
         @Override

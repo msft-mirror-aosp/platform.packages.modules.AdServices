@@ -29,7 +29,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
@@ -357,7 +357,7 @@ public class AppSearchConsentManager {
     @SuppressWarnings("NewApi")
     boolean shouldInitConsentDataFromAppSearch(
             SharedPreferences sharedPreferences,
-            BooleanFileDatastore datastore,
+            AtomicFileDatastore datastore,
             AdServicesManager adServicesManager,
             boolean isU18AppSearchMigrationEnabled) {
         if (!SdkLevel.isAtLeastT() || !FlagsFactory.getFlags().getEnableAppsearchConsentData()) {
@@ -392,11 +392,11 @@ public class AppSearchConsentManager {
         // displayed. This avoids showing the notification to the user again after OTA to T.
         boolean wasU18NotificationRecordedInPpapiOrSystemServer =
                 isU18AppSearchMigrationEnabled
-                        && (datastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED)
+                        && (datastore.getBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED)
                                 || adServicesManager.wasU18NotificationDisplayed());
         boolean wasNotificationDisplayedInAdServices =
-                datastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
-                        || datastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
+                datastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
+                        || datastore.getBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
                         || adServicesManager.wasNotificationDisplayed()
                         || adServicesManager.wasGaUxNotificationDisplayed()
                         || wasU18NotificationRecordedInPpapiOrSystemServer;
@@ -430,7 +430,7 @@ public class AppSearchConsentManager {
      */
     public boolean migrateConsentDataIfNeeded(
             @NonNull SharedPreferences sharedPreferences,
-            @NonNull BooleanFileDatastore datastore,
+            @NonNull AtomicFileDatastore datastore,
             @Nullable AdServicesManager adServicesManager,
             @NonNull AppConsentDao appConsentDao)
             throws IOException {
@@ -466,15 +466,15 @@ public class AppSearchConsentManager {
                 isU18AppSearchMigrationEnabled && wasU18NotificationDisplayed();
 
         if (wasNotificationDisplayed) {
-            datastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
+            datastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
             adServicesManager.recordNotificationDisplayed(true);
         }
         if (wasGaUxNotificationDisplayed) {
-            datastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+            datastore.putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
             adServicesManager.recordGaUxNotificationDisplayed(true);
         }
         if (wasU18NotificationDisplayed) {
-            datastore.put(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
+            datastore.putBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
             adServicesManager.setU18NotificationDisplayed(true);
         }
         if (!wasGaUxNotificationDisplayed
@@ -513,9 +513,9 @@ public class AppSearchConsentManager {
         PrivacySandboxFeatureType currentFeatureType = getCurrentPrivacySandboxFeature();
         for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
             if (featureType.name().equals(currentFeatureType.name())) {
-                datastore.put(featureType.name(), true);
+                datastore.putBoolean(featureType.name(), true);
             } else {
-                datastore.put(featureType.name(), false);
+                datastore.putBoolean(featureType.name(), false);
             }
         }
         adServicesManager.setCurrentPrivacySandboxFeature(currentFeatureType.name());
