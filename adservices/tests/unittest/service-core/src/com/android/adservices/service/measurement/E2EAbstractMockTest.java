@@ -149,14 +149,21 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
     @Rule(order = 11)
     public final AdServicesExtendedMockitoRule extendedMockito;
 
-    private static Map<String, String> sPhFlags =
-            Map.ofEntries(
-                    entry(
-                            FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
-                            AGGREGATE_REPORT_DELAY + ",0"),
-                    entry(
-                            FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
-                            WebUtil.validUrl("https://coordinator.test")));
+    private static Map<String, String> sPhFlags = Map.ofEntries(
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
+                    AGGREGATE_REPORT_DELAY + ",0"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                    WebUtil.validUrl("https://coordinator.test")),
+            entry(
+                    FlagsConstants
+                            .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
+                    "0"),
+            entry(
+                    FlagsConstants
+                            .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
+                    "0"));
 
     E2EAbstractMockTest(
             Collection<Action> actions,
@@ -242,7 +249,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
         when(mClickVerifier.isInputEventVerifiable(any(), anyLong(), anyString())).thenReturn(true);
     }
 
-    void prepareReportNoising(UriConfig uriConfig) {
+    void prepareEventReportNoising(UriConfig uriConfig) {
         List<int[]> fakeReportConfigs = uriConfig.getFakeReportConfigs();
         Mockito.doReturn(fakeReportConfigs)
                 .when(mImpressionNoiseUtil).getReportConfigsForSequenceIndex(any(), anyLong());
@@ -253,6 +260,11 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
         Mockito.doReturn(fakeReportConfigs == null ? 2.0D : 0.0D).when(mSourceNoiseHandler)
                 .getRandomDouble(any());
     }
+
+    void prepareAggregateReportNoising(UriConfig uriConfig) {
+        mAttributionHelper.prepareAggregateReportNoising(uriConfig);
+    }
+
 
     @Override
     void prepareRegistrationServer(RegisterSource sourceRegistration) throws IOException {
@@ -267,7 +279,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
             Mockito.doReturn(urlConnection).when(mAsyncSourceFetcher).openUrl(new URL(uri));
-            prepareReportNoising(uriConfig);
+            prepareEventReportNoising(uriConfig);
         }
     }
 
@@ -284,7 +296,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
             Mockito.doReturn(urlConnection).when(mAsyncSourceFetcher).openUrl(new URL(uri));
-            prepareReportNoising(uriConfig);
+            prepareEventReportNoising(uriConfig);
         }
     }
 
@@ -302,6 +314,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                             getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
             Mockito.doReturn(urlConnection).when(mAsyncTriggerFetcher).openUrl(new URL(uri));
+            prepareAggregateReportNoising(uriConfig);
         }
     }
 
@@ -318,7 +331,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
             Mockito.doReturn(urlConnection).when(mAsyncSourceFetcher).openUrl(new URL(uri));
-            prepareReportNoising(uriConfig);
+            prepareEventReportNoising(uriConfig);
         }
     }
 
@@ -336,6 +349,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                             getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
             Mockito.doReturn(urlConnection).when(mAsyncTriggerFetcher).openUrl(new URL(uri));
+            prepareAggregateReportNoising(uriConfig);
         }
     }
 

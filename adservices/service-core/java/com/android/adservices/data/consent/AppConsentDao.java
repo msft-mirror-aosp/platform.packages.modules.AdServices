@@ -163,7 +163,7 @@ public class AppConsentDao {
     public void setConsentForApp(@NonNull String packageName, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
         initializeDatastoreIfNeeded();
-        mDatastore.put(toDatastoreKey(packageName), isConsentRevoked);
+        mDatastore.putBoolean(toDatastoreKey(packageName), isConsentRevoked);
     }
 
     /**
@@ -180,7 +180,7 @@ public class AppConsentDao {
     public boolean setConsentForAppIfNew(@NonNull String packageName, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
         initializeDatastoreIfNeeded();
-        return mDatastore.putIfNew(toDatastoreKey(packageName), isConsentRevoked);
+        return mDatastore.putBooleanIfNew(toDatastoreKey(packageName), isConsentRevoked);
     }
 
     /**
@@ -197,7 +197,7 @@ public class AppConsentDao {
     public boolean isConsentRevokedForApp(@NonNull String packageName)
             throws IllegalArgumentException, IOException {
         initializeDatastoreIfNeeded();
-        return Boolean.TRUE.equals(mDatastore.get(toDatastoreKey(packageName)));
+        return Boolean.TRUE.equals(mDatastore.getBoolean(toDatastoreKey(packageName)));
     }
 
     /**

@@ -22,7 +22,6 @@ import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
 import android.os.RemoteException;
 
-import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
@@ -85,7 +84,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 "header_presence.json",
                 "lookback_window_precision.json",
                 "max_trigger_state_cardinality.json",
-                "null_aggregatable_report.json",
                 "os_debug_reports.json",
                 "parse_failures.json",
                 "preferred_platform.json",
@@ -198,9 +196,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
                     "true"),
             entry(
-                    FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
-                    WebUtil.validUrl("https://coordinator.test")),
-            entry(
                     FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
                     "true"),
             entry(
@@ -223,6 +218,9 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     "1"),
             entry(
                     FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
                     "true"));
 
     @Parameterized.Parameters(name = "{3}")
@@ -245,7 +243,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 (
                         (Supplier<Map<String, String>>) () -> {
                             for (String key : sPhFlagsForInterop.keySet()) {
-                                phFlagsMap.put(key, sPhFlagsForInterop.get(key));
+                                phFlagsMap.putIfAbsent(key, sPhFlagsForInterop.get(key));
                             }
                             return phFlagsMap;
                         }
@@ -276,7 +274,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
         // For interop tests, we currently expect only one HTTPS response per registration with no
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
-            prepareReportNoising(getNextUriConfig(sourceRegistration.mUriConfigsMap.get(uri)));
+            prepareEventReportNoising(getNextUriConfig(sourceRegistration.mUriConfigsMap.get(uri)));
             updateEnrollment(uri);
             insertSourceOrAssertUnparsable(
                     sourceRegistration.getPublisher(),
@@ -298,6 +296,8 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
         // For interop tests, we currently expect only one HTTPS response per registration with no
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
+            prepareAggregateReportNoising(
+                    getNextUriConfig(triggerRegistration.mUriConfigsMap.get(uri)));
             updateEnrollment(uri);
             insertTriggerOrAssertUnparsable(
                     triggerRegistration.getDestination(),
