@@ -3185,13 +3185,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableMaxAggregateReportsPerSource() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
-                MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE);
-    }
-
-    @Override
     public int getMeasurementMaxAggregateReportsPerSource() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE,
@@ -5216,11 +5209,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH
                         + " = "
                         + getMeasurementRollbackDeletionAppSearchKillSwitch());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE
-                        + " = "
-                        + getMeasurementEnableMaxAggregateReportsPerSource());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE
