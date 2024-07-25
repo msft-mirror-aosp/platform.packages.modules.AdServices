@@ -41,8 +41,10 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 
 import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
+import com.google.cobalt.MetricDefinition.Metadata;
 import com.google.cobalt.MetricDefinition.MetricDimension;
 import com.google.cobalt.MetricDefinition.MetricType;
+import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
@@ -537,6 +539,111 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testValidateMaxReleaseStages_reportNotSetSupported() {
+        assertThat(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.GA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.RELEASE_STAGE_NOT_SET))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateMaxReleaseStages_metricGreaterThanReportPasses() {
+        expect.withMessage("validateMaxReleaseStages(GA, OPEN_BETA)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.GA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.OPEN_BETA))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(OPEN_BETA, DOGFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.OPEN_BETA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DOGFOOD))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(DOGFOOD, FISHFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.DOGFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.FISHFOOD))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(FISHFOOD, DEBUG)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.FISHFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DEBUG))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateMaxReleaseStages_metricEqualToReportPasses() {
+        expect.withMessage("validateMaxReleaseStages(GA, GA)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.GA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.GA))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(OPEN_BETA, OPEN_BETA)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.OPEN_BETA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.OPEN_BETA))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(DOGFOOD, DOGFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.DOGFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DOGFOOD))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(FISHFOOD, FISHFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.FISHFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.FISHFOOD))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(DEBUG, DEBUG)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.DEBUG,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DEBUG))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateMaxReleaseStages_metricLessThanReportFails() {
+        expect.withMessage("validateMaxReleaseStages(OPEN_BETA, GA)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.OPEN_BETA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.GA))
+                .isFalse();
+        expect.withMessage("validateMaxReleaseStages(DOGFOOD, OPEN_BETA)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.DOGFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.OPEN_BETA))
+                .isFalse();
+        expect.withMessage("validateMaxReleaseStages(FISHFOOD, DOGFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.FISHFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DOGFOOD))
+                .isFalse();
+        expect.withMessage("validateMaxReleaseStages(DEBUG, FISHFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.DEBUG,
+                                /* reportMaxReleaseStage= */ ReleaseStage.FISHFOOD))
+                .isFalse();
+        expect.withMessage("validateMaxReleaseStages(RELEASE_STAGE_NOT_SET, DEBUG)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.RELEASE_STAGE_NOT_SET,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DEBUG))
+                .isFalse();
+    }
+
+    @Test
     public void testIsValidReportTypeAndPrivacyMechanism_privateFleetwideOccurrenceCounts() {
         MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
@@ -908,8 +1015,74 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 .isFalse();
     }
 
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_reportReleaseStageNotSetSupported() {
+        MetricDefinition metric =
+                getMetricDefinition(OCCURRENCE).toBuilder()
+                        .addMetricDimensions(getMetricDimension(999))
+                        .build();
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setMaxReleaseStage(ReleaseStage.RELEASE_STAGE_NOT_SET)
+                        .build();
+
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_metricReleaseStageGreaterSupported() {
+        MetricDefinition metric =
+                getMetricDefinition(OCCURRENCE).toBuilder()
+                        .setMetaData(
+                                MetricDefinition.Metadata.newBuilder()
+                                        .setMaxReleaseStage(ReleaseStage.GA))
+                        .build();
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setMaxReleaseStage(ReleaseStage.DEBUG)
+                        .build();
+
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_metricReleaseStageEqualSupported() {
+        MetricDefinition metric =
+                getMetricDefinition(OCCURRENCE).toBuilder()
+                        .setMetaData(
+                                MetricDefinition.Metadata.newBuilder()
+                                        .setMaxReleaseStage(ReleaseStage.GA))
+                        .build();
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setMaxReleaseStage(ReleaseStage.GA)
+                        .build();
+
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_metricReleaseStageLessFails() {
+        MetricDefinition metric =
+                getMetricDefinition(OCCURRENCE).toBuilder()
+                        .setMetaData(
+                                MetricDefinition.Metadata.newBuilder()
+                                        .setMaxReleaseStage(ReleaseStage.DEBUG))
+                        .build();
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setMaxReleaseStage(ReleaseStage.GA)
+                        .build();
+
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
     private static MetricDefinition getMetricDefinition(MetricType metricType) {
-        return MetricDefinition.newBuilder().setMetricType(metricType).build();
+        return MetricDefinition.newBuilder()
+                .setMetricType(metricType)
+                .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.GA))
+                .build();
     }
 
     private static ReportDefinition getReportDefinition(
@@ -919,6 +1092,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 .setPrivacyMechanism(privacyMechanism)
                 .setReportingInterval(DAYS_1)
                 .setSystemProfileSelection(REPORT_ALL)
+                .setMaxReleaseStage(ReleaseStage.DEBUG)
                 .build();
     }
 

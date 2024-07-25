@@ -100,7 +100,7 @@ public final class RollbackHandlingManager {
         BooleanFileDatastore datastore = getOrCreateBooleanFileDatastore(deletionType);
         synchronized (this) {
             try {
-                datastore.put(DELETION_OCCURRED_KEY, /* value */ true);
+                datastore.putBoolean(DELETION_OCCURRED_KEY, /* value */ true);
             } catch (IOException e) {
                 LogUtil.e(e, "Record deletion failed due to IOException thrown by Datastore.");
             }
@@ -112,7 +112,7 @@ public final class RollbackHandlingManager {
             throws IOException {
         BooleanFileDatastore datastore = getOrCreateBooleanFileDatastore(deletionType);
         synchronized (this) {
-            return datastore.get(DELETION_OCCURRED_KEY, /* defaultValue */ false);
+            return datastore.getBoolean(DELETION_OCCURRED_KEY, /* defaultValue */ false);
         }
     }
 
@@ -132,7 +132,7 @@ public final class RollbackHandlingManager {
         BooleanFileDatastore datastore = getOrCreateBooleanFileDatastore(deletionType);
         synchronized (this) {
             try {
-                datastore.put(DELETION_OCCURRED_KEY, /* value */ false);
+                datastore.putBoolean(DELETION_OCCURRED_KEY, /* value */ false);
             } catch (IOException e) {
                 LogUtil.e(
                         e, "Reset deletion status failed due to IOException thrown by Datastore.");

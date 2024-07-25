@@ -163,7 +163,7 @@ public class BooleanFileDatastore {
     }
 
     /**
-     * Stores a value to the datastore file.
+     * Stores a boolean value to the datastore file.
      *
      * <p>This change is committed immediately to file.
      *
@@ -173,7 +173,7 @@ public class BooleanFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    public final void put(String key, boolean value) throws IOException {
+    public final void putBoolean(String key, boolean value) throws IOException {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -187,7 +187,7 @@ public class BooleanFileDatastore {
     }
 
     /**
-     * Stores a value to the datastore file, but only if the key does not already exist.
+     * Stores a boolean value to the datastore file, but only if the key does not already exist.
      *
      * <p>If a change is made to the datastore, it is committed immediately to file.
      *
@@ -198,7 +198,7 @@ public class BooleanFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    public final boolean putIfNew(String key, boolean value) throws IOException {
+    public final boolean putBooleanIfNew(String key, boolean value) throws IOException {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -238,7 +238,7 @@ public class BooleanFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     @Nullable
-    public final Boolean get(String key) {
+    public final Boolean getBoolean(String key) {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -259,7 +259,7 @@ public class BooleanFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     @Nullable
-    public final Boolean get(String key, boolean defaultValue) {
+    public final Boolean getBoolean(String key, boolean defaultValue) {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
