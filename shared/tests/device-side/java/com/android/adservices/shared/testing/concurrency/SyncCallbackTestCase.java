@@ -27,12 +27,12 @@ import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.android.adservices.shared.meta_testing.FakeLogger;
+import com.android.adservices.shared.testing.DeviceSideTestCase;
 import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.LogEntry;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.Nullable;
-import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
 import com.google.common.collect.ImmutableList;
 
@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 
 /** Base class for all {@code SyncCallback} implementations. */
 public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableToString>
-        extends SharedSidelessTestCase {
+        extends DeviceSideTestCase {
 
     /** Timeout for sleeping before asserting the callback was called. */
     protected static final long BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS = 50;

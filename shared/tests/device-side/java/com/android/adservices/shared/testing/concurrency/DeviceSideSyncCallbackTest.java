@@ -19,18 +19,10 @@ import static com.android.adservices.shared.testing.concurrency.DeviceSideConcur
 
 import static org.junit.Assert.assertThrows;
 
-import android.os.Handler;
-import android.platform.test.annotations.DisabledOnRavenwood;
-import android.platform.test.ravenwood.RavenwoodRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 public final class DeviceSideSyncCallbackTest
         extends IBinderSyncCallbackTestCase<DeviceSideSyncCallback> {
-
-    // TODO(b/335935200): temporary rule as this test is not extending DeviceSideTestCase
-    @Rule public final RavenwoodRule ravenwood = new RavenwoodRule.Builder().build();
 
     @Override
     protected DeviceSideSyncCallback newCallback(SyncCallbackSettings settings) {
@@ -42,9 +34,6 @@ public final class DeviceSideSyncCallbackTest
         return callback.internalSetCalled("internalSetCalled()");
     }
 
-    // TODO(b/335935200): Handler constructor fails with : Cannot read field "mQueue" because
-    // "looper" is null
-    @DisabledOnRavenwood(blockedBy = Handler.class)
     // Note: SyncCallbackTestCase already tests what happens when called on main thread, but it's
     // not the "real" main thread, as it's emulated by the SyncCallbackSettings supplier
     @Test
@@ -69,9 +58,6 @@ public final class DeviceSideSyncCallbackTest
                 .contains("onAssertCalledException=" + thrown);
     }
 
-    // TODO(b/335935200): Handler constructor fails with : Cannot read field "mQueue" because
-    // "looper" is null
-    @DisabledOnRavenwood(blockedBy = Handler.class)
     // Note: SyncCallbackTestCase already tests what happens when called on main thread, but it's
     // not the "real" main thread, as it's emulated by the SyncCallbackSettings supplier
     @Test
