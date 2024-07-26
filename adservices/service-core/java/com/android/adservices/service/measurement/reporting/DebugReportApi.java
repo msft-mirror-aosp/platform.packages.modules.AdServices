@@ -55,12 +55,17 @@ public class DebugReportApi {
     public interface Type {
         String SOURCE_DESTINATION_LIMIT = "source-destination-limit";
         String SOURCE_DESTINATION_RATE_LIMIT = "source-destination-rate-limit";
+        String SOURCE_DESTINATION_PER_DAY_RATE_LIMIT = "source-destination-per-day-rate-limit";
         String SOURCE_NOISED = "source-noised";
         String SOURCE_STORAGE_LIMIT = "source-storage-limit";
         String SOURCE_SUCCESS = "source-success";
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
         String SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR =
                 "source-flexible-event-report-value-error";
+        String SOURCE_MAX_EVENT_STATES_LIMIT = "source-max-event-states-limit";
+        String SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT =
+                "source-attribution-scope-info-gain-limit";
+
         String TRIGGER_AGGREGATE_DEDUPLICATED = "trigger-aggregate-deduplicated";
         String TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET = "trigger-aggregate-insufficient-budget";
         String TRIGGER_AGGREGATE_NO_CONTRIBUTIONS = "trigger-aggregate-no-contributions";
@@ -190,10 +195,17 @@ public class DebugReportApi {
     }
 
     /** Schedules the Source Destination rate-limit Debug Report */
-    public void scheduleSourceDestinationRateLimitDebugReport(
+    public void scheduleSourceDestinationPerMinuteRateLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
         scheduleSourceDestinationLimitDebugReport(
                 source, limit, Type.SOURCE_DESTINATION_RATE_LIMIT, dao);
+    }
+
+    /** Schedules the Source Destination per day rate-limit Debug Report */
+    public void scheduleSourceDestinationPerDayRateLimitDebugReport(
+            Source source, String limit, IMeasurementDao dao) {
+        scheduleSourceDestinationLimitDebugReport(
+                source, limit, Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT, dao);
     }
 
     /** Schedules the Source Noised Debug Report */
@@ -260,6 +272,43 @@ public class DebugReportApi {
         }
         scheduleReport(
                 Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR,
+                generateSourceDebugReportBody(source, null),
+                source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
+                source.getRegistrant(),
+                dao);
+    }
+
+    /** Schedules Source Attribution Scope Debug Report */
+    public void scheduleAttributionScopeDebugReport(
+            Source source, Source.AttributionScopeValidationResult result, IMeasurementDao dao) {
+        String type = null;
+        switch (result) {
+            case VALID -> {
+                // No-op.
+            }
+            case INVALID_MAX_EVENT_STATES_LIMIT -> {
+                type = Type.SOURCE_MAX_EVENT_STATES_LIMIT;
+            }
+            case INVALID_INFORMATION_GAIN_LIMIT -> {
+                type = Type.SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT;
+            }
+        }
+        if (type == null) {
+            return;
+        }
+        if (isSourceDebugFlagDisabled(type)) {
+            return;
+        }
+        if (isAdTechNotOptIn(source.isDebugReporting(), type)) {
+            return;
+        }
+        if (!isSourcePermissionGranted(source)) {
+            LoggerFactory.getMeasurementLogger().d("Skipping debug report %s", type);
+            return;
+        }
+        scheduleReport(
+                type,
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),

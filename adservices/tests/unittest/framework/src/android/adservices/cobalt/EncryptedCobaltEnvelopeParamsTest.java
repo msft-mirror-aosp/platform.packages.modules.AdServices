@@ -24,32 +24,24 @@ import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-@RunWith(JUnit4.class)
-public final class EncryptedCobaltEnvelopeParamsTest {
+@RequiresSdkLevelAtLeastS
+public final class EncryptedCobaltEnvelopeParamsTest extends AdServicesUnitTestCase {
     private static final byte[] BYTES = {0x0a, 0x0b, 0x0c};
     private static final int KEY_INDEX = 5;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
-    public void nullCiphertext_throws() throws Exception {
+    public void nullCiphertext_throws() {
         assertThrows(
-                NullPointerException.class,
-                () -> {
-                    new EncryptedCobaltEnvelopeParams(0, 0, null);
-                });
+                NullPointerException.class, () -> new EncryptedCobaltEnvelopeParams(0, 0, null));
     }
 
     @Test
-    public void getMethods_returnExpectedValues() throws Exception {
+    public void getMethods_returnExpectedValues() {
         EncryptedCobaltEnvelopeParams params =
                 new EncryptedCobaltEnvelopeParams(ENVIRONMENT_PROD, KEY_INDEX, BYTES);
         assertThat(params.getEnvironment()).isEqualTo(ENVIRONMENT_PROD);
@@ -60,7 +52,7 @@ public final class EncryptedCobaltEnvelopeParamsTest {
     }
 
     @Test
-    public void parcelContents_areEqualToInput() throws Exception {
+    public void parcelContents_areEqualToInput() {
         EncryptedCobaltEnvelopeParams inputParams =
                 new EncryptedCobaltEnvelopeParams(ENVIRONMENT_PROD, KEY_INDEX, BYTES);
 

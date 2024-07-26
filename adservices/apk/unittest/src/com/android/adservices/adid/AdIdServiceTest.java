@@ -16,13 +16,13 @@
 
 package com.android.adservices.adid;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.Intent;
@@ -31,103 +31,67 @@ import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.function.Supplier;
 
 /** Unit test for {@link com.android.adservices.adid.AdIdService}. */
-public class AdIdServiceTest {
-    private static final String TAG = "AdIdServiceTest";
+@SpyStatic(FlagsFactory.class)
+public final class AdIdServiceTest extends AdServicesExtendedMockitoTestCase {
 
-    @Mock Flags mMockFlags;
-    @Mock AdIdWorker mMockAdIdWorker;
-    @Mock AdServicesLoggerImpl mMockAdServicesLoggerImpl;
-    @Mock AppImportanceFilter mMockAppImportanceFilter;
-    @Mock PackageManager mMockPackageManager;
+    @Mock private Flags mMockFlags;
+    @Mock private AdIdWorker mMockAdIdWorker;
+    @Mock private AppImportanceFilter mMockAppImportanceFilter;
+    @Mock private PackageManager mMockPackageManager;
 
-    /** AdIdService test initial setup. */
     @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
+    public void setFixtures() {
+        mocker.mockGetFlags(mMockFlags);
     }
 
     /** Test adId api level behavior with killswitch off. */
+    @SpyStatic(AdIdWorker.class)
+    @SpyStatic(AppImportanceFilter.class)
     @Test
     public void testBindableAdIdService_killswitchOff() {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(AdIdWorker.class)
-                        .spyStatic(AdServicesLoggerImpl.class)
-                        .spyStatic(AppImportanceFilter.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
+        // Killswitch is off.
+        mockAdIdKillSwitch(false);
 
-        try {
-            // Killswitch is off.
-            doReturn(false).when(mMockFlags).getAdIdKillSwitch();
+        doReturn(mMockAdIdWorker).when(() -> AdIdWorker.getInstance());
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        AdIdService spyAdIdService = spy(new AdIdService());
+        doReturn(mMockPackageManager).when(spyAdIdService).getPackageManager();
+        doReturn(mMockAppImportanceFilter)
+                .when(() -> AppImportanceFilter.create(any(Context.class), any(Supplier.class)));
 
-            ExtendedMockito.doReturn(mMockAdIdWorker).when(() -> AdIdWorker.getInstance());
-
-            AdIdService spyAdIdService = spy(new AdIdService());
-            doReturn(mMockPackageManager).when(spyAdIdService).getPackageManager();
-            ExtendedMockito.doReturn(mMockAppImportanceFilter)
-                    .when(
-                            () ->
-                                    AppImportanceFilter.create(
-                                            any(Context.class), anyInt(), any(Supplier.class)));
-
-            spyAdIdService.onCreate();
-            IBinder binder = spyAdIdService.onBind(getIntentForAdIdService());
-            assertNotNull(binder);
-
-            final StringWriter writer = new StringWriter();
-            spyAdIdService.dump(null, new PrintWriter(writer), null);
-            assertTrue(writer.toString().contains("nothing to dump"));
-        } finally {
-            session.finishMocking();
-        }
+        spyAdIdService.onCreate();
+        IBinder binder = spyAdIdService.onBind(getIntentForAdIdService());
+        expect.withMessage("onBind()").that(binder).isNotNull();
     }
 
     /** Test adId api level behavior with killswitch on. */
     @Test
     public void testBindableAdIdService_killswitchOn() {
-        // Start a mockitoSession to mock static method
-        MockitoSession session =
-                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
+        // Killswitch is on.
+        mockAdIdKillSwitch(true);
 
-        try {
-            // Killswitch is on.
-            doReturn(true).when(mMockFlags).getAdIdKillSwitch();
+        AdIdService adidService = new AdIdService();
+        adidService.onCreate();
+        IBinder binder = adidService.onBind(getIntentForAdIdService());
 
-            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+        expect.withMessage("onBind()").that(binder).isNull();
+    }
 
-            AdIdService adidService = new AdIdService();
-            adidService.onCreate();
-            IBinder binder = adidService.onBind(getIntentForAdIdService());
-            assertNull(binder);
-        } finally {
-            session.finishMocking();
-        }
+    private void mockAdIdKillSwitch(boolean value) {
+        when(mMockFlags.getAdIdKillSwitch()).thenReturn(value);
     }
 
     private Intent getIntentForAdIdService() {

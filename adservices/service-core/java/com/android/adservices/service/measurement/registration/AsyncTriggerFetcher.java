@@ -341,8 +341,8 @@ public class AsyncTriggerFetcher {
                         FetcherUtil.extractStringArray(
                                 json,
                                 TriggerHeaderContract.ATTRIBUTION_SCOPES,
-                                mFlags.getMeasurementMaxAttributionScopesPerSource(),
-                                mFlags.getMeasurementMaxAttributionScopeLength());
+                                Integer.MAX_VALUE,
+                                Integer.MAX_VALUE);
                 if (attributionScopes.isEmpty() || attributionScopes.get().isEmpty()) {
                     LoggerFactory.getMeasurementLogger()
                             .e("parseTrigger: attribution_scopes is invalid.");
@@ -522,7 +522,7 @@ public class AsyncTriggerFetcher {
             }
         }
 
-        asyncRedirects.configure(headers, mFlags, asyncRegistration);
+        asyncRedirects.configure(headers, asyncRegistration);
 
         if (!isTriggerHeaderPresent(headers)) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);

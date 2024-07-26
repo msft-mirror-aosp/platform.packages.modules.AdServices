@@ -33,12 +33,12 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
+import android.adservices.utils.CtsWebViewSupportUtil;
 import android.net.Uri;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.js.JSScriptEngine;
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -185,7 +185,7 @@ public final class PermissionsAppOptOutTest
 
     @Test
     public void testNoEnrollment_selectAds_adSelectionConfig() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
                         AdTechIdentifier.fromString("seller.example.com"));
@@ -205,7 +205,7 @@ public final class PermissionsAppOptOutTest
 
     @Test
     public void testWithEnrollment_selectAds_adSelectionConfig() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
@@ -228,7 +228,7 @@ public final class PermissionsAppOptOutTest
 
     @Test
     public void testNoEnrollment_selectAds_adSelectionFromOutcomesConfig() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
                         AdTechIdentifier.fromString("unauthorized.seller.com"));
@@ -247,7 +247,7 @@ public final class PermissionsAppOptOutTest
 
     @Test
     public void testWithEnrollment_selectAds_adSelectionFromOutcomesConfig() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
@@ -269,7 +269,7 @@ public final class PermissionsAppOptOutTest
 
     @Test
     public void testNoEnrollment_reportImpression() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
                         AdTechIdentifier.fromString("seller.example.com"));
@@ -294,7 +294,7 @@ public final class PermissionsAppOptOutTest
 
     @Test
     public void testWithEnrollment_reportImpression() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(

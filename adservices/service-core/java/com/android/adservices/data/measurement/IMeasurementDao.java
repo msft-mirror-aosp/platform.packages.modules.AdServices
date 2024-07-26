@@ -79,6 +79,23 @@ public interface IMeasurementDao {
     List<String> getSourceAttributionScopes(@NonNull String sourceId) throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}'s attribution scopes for a given source registration,
+     * reporting origin and destination.
+     *
+     * @param registrationId ID of the registration.
+     * @param registrationOrigin source registration origin.
+     * @param destination String for the destination.
+     * @param destinationType DestinationType App/Web.
+     * @return a list of attribution scopes.
+     */
+    Set<String> getNavigationAttributionScopesForRegistration(
+            @NonNull String registrationId,
+            @NonNull String registrationOrigin,
+            @EventSurfaceType int destinationType,
+            @NonNull String destination)
+            throws DatastoreException;
+
+    /**
      * Updates existing sources based on the following criteria for attribution scope:
      *
      * <ol>
@@ -779,8 +796,9 @@ public interface IMeasurementDao {
 
     /**
      * Let matchingSources be unexpired sources that match the provided publisher, publisher type
-     * destination surface type and enrollmentId. Pick and return the sources that have the least
-     * recently used destination excluding the provided list of destinations.
+     * destination surface type and enrollmentId. Pick and return the sources that have the lowest
+     * destination priority value or secondarily the least recently used destination excluding the
+     * provided list of destinations.
      *
      * @param publisher publisher to match
      * @param publisherType publisher surface type, i.e. app/web to match
@@ -788,10 +806,10 @@ public interface IMeasurementDao {
      * @param excludedDestinations destinations to exclude while matching
      * @param destinationType destination type app/web
      * @param windowEndTime selected sources' expiry needs to be greater than this time
-     * @return sources with least recently used destination
+     * @return sources with least recently used destination along with the priority value
      * @throws DatastoreException when accessing the DB fails
      */
-    List<String> fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+    Pair<Long, List<String>> fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
             Uri publisher,
             int publisherType,
             String enrollmentId,
@@ -808,6 +826,17 @@ public interface IMeasurementDao {
      * @throws DatastoreException when accessing the DB fails
      */
     void deletePendingAggregateReportsAndAttributionsForSources(List<String> sourceIds)
+            throws DatastoreException;
+
+    /**
+     * Deletes pending fake event reports for the provided sources. Attributions are not deleted.
+     *
+     * @param sourceIds sources to consider to query the pending reports
+     * @param currentTimeStamp it's practically the current time stamp, we delete only those reports
+     *     that have trigger time in future indicating that they are fake
+     * @throws DatastoreException when deletion fails
+     */
+    void deleteFutureFakeEventReportsForSources(List<String> sourceIds, long currentTimeStamp)
             throws DatastoreException;
 
     /**

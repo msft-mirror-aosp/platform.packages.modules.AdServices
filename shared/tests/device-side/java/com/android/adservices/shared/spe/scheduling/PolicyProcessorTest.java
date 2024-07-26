@@ -35,6 +35,7 @@ import android.app.job.JobInfo;
 import android.app.job.JobInfo.TriggerContentUri;
 import android.content.ComponentName;
 import android.net.Uri;
+import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.proto.JobPolicy;
@@ -46,6 +47,8 @@ import com.android.adservices.shared.spe.framework.TestJobService;
 import org.junit.Test;
 
 /** Unit tests for {@link PolicyProcessor}. */
+// TODO(b/335935200): fails on android.app.job.JobInfo$TriggerContentUri.<init>(JobInfo.java)
+@DisabledOnRavenwood(blockedBy = JobInfo.class)
 public final class PolicyProcessorTest extends SharedUnitTestCase {
 
     @Test
