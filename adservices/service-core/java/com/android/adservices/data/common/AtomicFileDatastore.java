@@ -27,17 +27,16 @@ import java.util.Objects;
 /**
  * {@inheritDoc}
  *
- * <p>This service-side version of {@link
- * com.android.adservices.shared.storage.BooleanFileDatastore} uses a hardcoded version key ({@link
- * #VERSION_KEY}}.
+ * <p>This service-side version of {@link com.android.adservices.shared.storage.AtomicFileDatastore}
+ * uses a hardcoded version key ({@link #VERSION_KEY}}.
  */
-public final class BooleanFileDatastore
-        extends com.android.adservices.shared.storage.BooleanFileDatastore {
+public final class AtomicFileDatastore
+        extends com.android.adservices.shared.storage.AtomicFileDatastore {
 
     @VisibleForTesting
     static final String VERSION_KEY = "com.android.adservices.data.common.VERSION";
 
-    public BooleanFileDatastore(Context adServicesContext, String filename, int datastoreVersion) {
+    public AtomicFileDatastore(Context adServicesContext, String filename, int datastoreVersion) {
         super(
                 FileCompatUtils.newFileHelper(
                         Objects.requireNonNull(adServicesContext).getFilesDir(),

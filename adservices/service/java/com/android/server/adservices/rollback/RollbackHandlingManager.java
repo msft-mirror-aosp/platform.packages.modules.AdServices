@@ -20,7 +20,7 @@ import android.annotation.NonNull;
 import android.app.adservices.AdServicesManager;
 import android.util.ArrayMap;
 
-import com.android.adservices.shared.storage.BooleanFileDatastore;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 
@@ -48,8 +48,7 @@ public final class RollbackHandlingManager {
     private final String mDatastoreDir;
     private final int mPackageVersion;
 
-    private final ArrayMap<Integer, BooleanFileDatastore> mBooleanFileDatastoreMap =
-            new ArrayMap<>();
+    private final ArrayMap<Integer, AtomicFileDatastore> mAtomicFileDatastoreMap = new ArrayMap<>();
 
     private RollbackHandlingManager(@NonNull String datastoreDir, int packageVersion) {
         Objects.requireNonNull(datastoreDir);
@@ -74,20 +73,20 @@ public final class RollbackHandlingManager {
     }
 
     @VisibleForTesting
-    BooleanFileDatastore getOrCreateBooleanFileDatastore(
+    AtomicFileDatastore getOrCreateAtomicFileDatastore(
             @AdServicesManager.DeletionApiType int deletionApiType) throws IOException {
         synchronized (this) {
-            BooleanFileDatastore datastore = mBooleanFileDatastoreMap.get(deletionApiType);
+            AtomicFileDatastore datastore = mAtomicFileDatastoreMap.get(deletionApiType);
             if (datastore == null) {
                 if (deletionApiType == AdServicesManager.MEASUREMENT_DELETION) {
                     datastore =
-                            new BooleanFileDatastore(
+                            new AtomicFileDatastore(
                                     mDatastoreDir,
                                     MSMT_FILE_PREFIX + STORAGE_XML_IDENTIFIER,
                                     mPackageVersion,
                                     VERSION_KEY);
                 }
-                mBooleanFileDatastoreMap.put(deletionApiType, datastore);
+                mAtomicFileDatastoreMap.put(deletionApiType, datastore);
                 datastore.initialize();
             }
             return datastore;
@@ -97,7 +96,7 @@ public final class RollbackHandlingManager {
     /** Saves that a deletion of AdServices data occurred to the storage. */
     public void recordAdServicesDataDeletion(@AdServicesManager.DeletionApiType int deletionType)
             throws IOException {
-        BooleanFileDatastore datastore = getOrCreateBooleanFileDatastore(deletionType);
+        AtomicFileDatastore datastore = getOrCreateAtomicFileDatastore(deletionType);
         synchronized (this) {
             try {
                 datastore.putBoolean(DELETION_OCCURRED_KEY, /* value */ true);
@@ -110,7 +109,7 @@ public final class RollbackHandlingManager {
     /** Returns information about whether a deletion of AdServices data occurred. */
     public boolean wasAdServicesDataDeleted(@AdServicesManager.DeletionApiType int deletionType)
             throws IOException {
-        BooleanFileDatastore datastore = getOrCreateBooleanFileDatastore(deletionType);
+        AtomicFileDatastore datastore = getOrCreateAtomicFileDatastore(deletionType);
         synchronized (this) {
             return datastore.getBoolean(DELETION_OCCURRED_KEY, /* defaultValue */ false);
         }
@@ -119,7 +118,7 @@ public final class RollbackHandlingManager {
     /** Returns the previous version number saved in the datastore file. */
     public int getPreviousStoredVersion(@AdServicesManager.DeletionApiType int deletionType)
             throws IOException {
-        BooleanFileDatastore datastore = getOrCreateBooleanFileDatastore(deletionType);
+        AtomicFileDatastore datastore = getOrCreateAtomicFileDatastore(deletionType);
         return datastore.getPreviousStoredVersion();
     }
 
@@ -129,7 +128,7 @@ public final class RollbackHandlingManager {
      */
     public void resetAdServicesDataDeletion(@AdServicesManager.DeletionApiType int deletionType)
             throws IOException {
-        BooleanFileDatastore datastore = getOrCreateBooleanFileDatastore(deletionType);
+        AtomicFileDatastore datastore = getOrCreateAtomicFileDatastore(deletionType);
         synchronized (this) {
             try {
                 datastore.putBoolean(DELETION_OCCURRED_KEY, /* value */ false);
@@ -148,7 +147,7 @@ public final class RollbackHandlingManager {
         writer.printf("%smDatastoreDir: %s\n", prefix2, mDatastoreDir);
         writer.printf("%smPackageVersion: %s\n", prefix2, mPackageVersion);
 
-        int mapSize = mBooleanFileDatastoreMap.size();
+        int mapSize = mAtomicFileDatastoreMap.size();
         writer.printf("%s%d datastores", prefix2, mapSize);
         if (mapSize == 0) {
             writer.println();
@@ -158,8 +157,8 @@ public final class RollbackHandlingManager {
         String prefix3 = prefix2 + DUMP_PREFIX;
         String prefix4 = prefix3 + DUMP_PREFIX;
         for (int i = 0; i < mapSize; i++) {
-            writer.printf("%s deletion API type %d:\n", prefix3, mBooleanFileDatastoreMap.keyAt(i));
-            mBooleanFileDatastoreMap.valueAt(i).dump(writer, prefix4);
+            writer.printf("%s deletion API type %d:\n", prefix3, mAtomicFileDatastoreMap.keyAt(i));
+            mAtomicFileDatastoreMap.valueAt(i).dump(writer, prefix4);
         }
     }
 
@@ -167,7 +166,7 @@ public final class RollbackHandlingManager {
     @VisibleForTesting
     public void tearDownForTesting() {
         synchronized (this) {
-            mBooleanFileDatastoreMap.clear();
+            mAtomicFileDatastoreMap.clear();
         }
     }
 }
