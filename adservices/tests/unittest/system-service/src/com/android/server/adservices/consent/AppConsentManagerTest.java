@@ -36,7 +36,7 @@ import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.shared.storage.BooleanFileDatastore;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 
 import org.junit.After;
 import org.junit.Before;
@@ -59,8 +59,8 @@ public class AppConsentManagerTest {
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
 
     @Spy
-    private BooleanFileDatastore mDatastoreSpy =
-            new BooleanFileDatastore(
+    private AtomicFileDatastore mDatastoreSpy =
+            new AtomicFileDatastore(
                     BASE_DIR,
                     AppConsentManagerFixture.TEST_DATASTORE_NAME,
                     1,
