@@ -69,6 +69,9 @@ java_defaults {
         "auto_value_annotations",
         "truth",
     ],
+    libs: [
+        "framework-connectivity",
+    ],
     plugins: ["auto_annotation_plugin"],
     min_sdk_version: "30",
 }
