@@ -45,7 +45,7 @@ import android.view.MotionEvent.PointerProperties;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
