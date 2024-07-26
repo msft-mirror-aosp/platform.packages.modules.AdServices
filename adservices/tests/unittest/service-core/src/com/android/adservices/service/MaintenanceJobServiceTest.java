@@ -26,9 +26,7 @@ import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJo
 import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.spe.AdServicesJobInfo.MAINTENANCE_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
@@ -53,6 +51,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -70,6 +69,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -108,6 +108,10 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
     @Mock private PackageManager mPackageManagerMock;
     @Mock private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerMock;
     @Mock private SignalsMaintenanceTasksWorker mSignalsMaintenanceTasksWorkerMock;
+
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() {
@@ -622,7 +626,6 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleIfNeeded_scheduledWithKillSwitchOn() {
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         // Killswitch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();

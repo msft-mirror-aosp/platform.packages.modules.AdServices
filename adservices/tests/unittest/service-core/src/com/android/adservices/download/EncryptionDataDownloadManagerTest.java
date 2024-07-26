@@ -63,7 +63,7 @@ import java.util.List;
 
 /** Tests for {@link EncryptionDataDownloadManager}. */
 @SpyStatic(FlagsFactory.class)
-@MockStatic(ErrorLogUtil.class)
+@SpyStatic(ErrorLogUtil.class)
 @MockStatic(MobileDataDownloadFactory.class)
 @RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
