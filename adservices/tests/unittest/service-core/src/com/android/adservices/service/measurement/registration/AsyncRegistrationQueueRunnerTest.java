@@ -110,6 +110,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -5544,6 +5545,140 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         verify(mMeasurementDao, times(2))
                 .countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong());
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_newAttributionScopesSameRegistration_fail()
+            throws DatastoreException {
+        // setup
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(
+                        any(), any(), anyInt(), any()))
+                .thenReturn(Set.of("1", "2", "3"));
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(8000000000L)
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setAttributionScopes(List.of("4"))
+                        .setAttributionScopeLimit(3L)
+                        .setMaxEventStates(3L)
+                        .build();
+        assertFalse(
+                asyncRegistrationQueueRunner
+                        .isSourceAllowedToInsert(
+                                source,
+                                source.getPublisher(),
+                                EventSurfaceType.APP,
+                                mMeasurementDao,
+                                mAsyncFetchStatus)
+                        .isAllowed());
+
+        // Assertions
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(1))
+                .getNavigationAttributionScopesForRegistration(any(), any(), anyInt(), any());
+    }
+
+    @Test
+    public void isSourceAllowedToInsert_existingAttributionScopesSameRegistration_pass()
+            throws DatastoreException {
+        // setup
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
+                .thenReturn(Integer.valueOf(0));
+        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(
+                        any(), any(), anyInt(), any()))
+                .thenReturn(Set.of("1", "2", "3"));
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(8000000000L)
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setAttributionScopes(List.of("1", "2", "3"))
+                        .setAttributionScopeLimit(3L)
+                        .setMaxEventStates(3L)
+                        .build();
+        assertTrue(
+                asyncRegistrationQueueRunner
+                        .isSourceAllowedToInsert(
+                                source,
+                                source.getPublisher(),
+                                EventSurfaceType.APP,
+                                mMeasurementDao,
+                                mAsyncFetchStatus)
+                        .isAllowed());
+
+        // Assertions
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
+                        any(), anyInt(), any(), any(), anyInt(), anyLong());
+        verify(mMeasurementDao, times(1))
+                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
+                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+        verify(mMeasurementDao, times(1))
+                .getNavigationAttributionScopesForRegistration(any(), any(), anyInt(), any());
     }
 
     @Test
