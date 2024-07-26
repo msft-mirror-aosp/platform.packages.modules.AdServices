@@ -40,7 +40,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -118,7 +118,7 @@ public class ConsentManagerV2 {
 
     private final Flags mFlags;
     private final TopicsWorker mTopicsWorker;
-    private final BooleanFileDatastore mDatastore;
+    private final AtomicFileDatastore mDatastore;
     private final EnrollmentDao mEnrollmentDao;
     private final MeasurementImpl mMeasurementImpl;
     private final CustomAudienceDao mCustomAudienceDao;
@@ -148,7 +148,7 @@ public class ConsentManagerV2 {
             @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull FrequencyCapDao frequencyCapDao,
             @NonNull AdServicesStorageManager adServicesStorageManager,
-            @NonNull BooleanFileDatastore booleanFileDatastore,
+            @NonNull AtomicFileDatastore atomicFileDatastore,
             @NonNull AppSearchConsentStorageManager appSearchConsentStorageManager,
             @NonNull UserProfileIdManager userProfileIdManager,
             @NonNull AppConsentForRStorageManager appConsentForRStorageManager,
@@ -163,7 +163,7 @@ public class ConsentManagerV2 {
         Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(protectedSignalsDao);
         Objects.requireNonNull(frequencyCapDao);
-        Objects.requireNonNull(booleanFileDatastore);
+        Objects.requireNonNull(atomicFileDatastore);
         Objects.requireNonNull(userProfileIdManager);
 
         if (consentSourceOfTruth != Flags.PPAPI_ONLY
@@ -181,7 +181,7 @@ public class ConsentManagerV2 {
 
         mAdServicesStorageManager = adServicesStorageManager;
         mTopicsWorker = topicsWorker;
-        mDatastore = booleanFileDatastore;
+        mDatastore = atomicFileDatastore;
         mEnrollmentDao = enrollmentDao;
         mMeasurementImpl = measurementImpl;
         mCustomAudienceDao = customAudienceDao;
@@ -235,7 +235,7 @@ public class ConsentManagerV2 {
                 if (sConsentManager == null) {
                     // Execute one-time consent migration if needed.
                     int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
-                    BooleanFileDatastore datastore = createAndInitializeDataStore(context);
+                    AtomicFileDatastore datastore = createAndInitializeDataStore(context);
                     AdServicesStorageManager adServicesManager =
                             AdServicesStorageManager.getInstance(
                                     AdServicesManager.getInstance(context));
@@ -827,33 +827,32 @@ public class ConsentManagerV2 {
     }
 
     @VisibleForTesting
-    static BooleanFileDatastore createAndInitializeDataStore(@NonNull Context context) {
-        BooleanFileDatastore booleanFileDatastore =
-                new BooleanFileDatastore(
+    static AtomicFileDatastore createAndInitializeDataStore(@NonNull Context context) {
+        AtomicFileDatastore atomicFileDatastore =
+                new AtomicFileDatastore(
                         context,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
                         ConsentConstants.STORAGE_VERSION);
 
         try {
-            booleanFileDatastore.initialize();
+            atomicFileDatastore.initialize();
             // TODO(b/259607624): implement a method in the datastore which would support
             // this exact scenario - if the value is null, return default value provided
             // in the parameter (similar to SP apply etc.)
-            if (booleanFileDatastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
+            if (atomicFileDatastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
                     == null) {
-                booleanFileDatastore.putBoolean(
-                        ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, false);
+                atomicFileDatastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, false);
             }
-            if (booleanFileDatastore.getBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
+            if (atomicFileDatastore.getBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
                     == null) {
-                booleanFileDatastore.putBoolean(
+                atomicFileDatastore.putBoolean(
                         ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
             }
         } catch (IOException | IllegalArgumentException | NullPointerException e) {
             throw new RuntimeException("Failed to initialize the File Datastore!", e);
         }
 
-        return booleanFileDatastore;
+        return atomicFileDatastore;
     }
 
     // Handle different migration requests based on current consent source of Truth
@@ -864,7 +863,7 @@ public class ConsentManagerV2 {
     @VisibleForTesting
     static void handleConsentMigrationIfNeeded(
             @NonNull Context context,
-            @NonNull BooleanFileDatastore datastore,
+            @NonNull AtomicFileDatastore datastore,
             AdServicesStorageManager adServicesManager,
             @NonNull StatsdAdServicesLogger statsdAdServicesLogger,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
@@ -942,7 +941,7 @@ public class ConsentManagerV2 {
     @SuppressWarnings("NewApi")
     static void migratePpApiConsentToSystemService(
             @NonNull Context context,
-            @NonNull BooleanFileDatastore datastore,
+            @NonNull AtomicFileDatastore datastore,
             @NonNull AdServicesStorageManager adServicesManager,
             @NonNull StatsdAdServicesLogger statsdAdServicesLogger) {
         Objects.requireNonNull(context);
@@ -1041,7 +1040,7 @@ public class ConsentManagerV2 {
     // consent cannot be migrated back to PPAPI. This data clearing should only happen once.
     @VisibleForTesting
     static void clearPpApiConsent(
-            @NonNull Context context, @NonNull BooleanFileDatastore datastore) {
+            @NonNull Context context, @NonNull AtomicFileDatastore datastore) {
         // Exit if PPAPI consent has cleared.
         SharedPreferences sharedPreferences =
                 FileCompatUtils.getSharedPreferencesHelper(
@@ -1119,7 +1118,7 @@ public class ConsentManagerV2 {
     }
 
     private static void storeUserManualInteractionToPpApi(
-            @ConsentManagerV2.UserManualInteraction int interaction, BooleanFileDatastore datastore)
+            @ConsentManagerV2.UserManualInteraction int interaction, AtomicFileDatastore datastore)
             throws IOException {
         switch (interaction) {
             case NO_MANUAL_INTERACTIONS_RECORDED:
@@ -1147,7 +1146,7 @@ public class ConsentManagerV2 {
     @VisibleForTesting
     static void handleConsentMigrationFromAppSearchIfNeeded(
             @NonNull Context context,
-            @NonNull BooleanFileDatastore datastore,
+            @NonNull AtomicFileDatastore datastore,
             @NonNull AppConsentDao appConsentDao,
             @NonNull AppSearchConsentStorageManager appSearchConsentStorageManager,
             @NonNull AdServicesStorageManager adServicesStorageManager,
@@ -1249,7 +1248,7 @@ public class ConsentManagerV2 {
     static AppConsents migrateAppSearchConsents(
             AppSearchConsentStorageManager appSearchConsentManager,
             AdServicesStorageManager adServicesManager,
-            BooleanFileDatastore datastore)
+            AtomicFileDatastore datastore)
             throws IOException {
         Map<String, Boolean> consentMap = new HashMap<>();
         for (AdServicesApiType apiType : AdServicesApiType.values()) {

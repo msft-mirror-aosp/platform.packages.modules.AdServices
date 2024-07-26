@@ -22,7 +22,7 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
@@ -48,10 +48,10 @@ public class UxStatesDao {
 
     private static volatile UxStatesDao sUxStatesDao;
 
-    private final BooleanFileDatastore mDatastore;
+    private final AtomicFileDatastore mDatastore;
 
     @VisibleForTesting
-    public UxStatesDao(@NonNull BooleanFileDatastore datastore) {
+    public UxStatesDao(@NonNull AtomicFileDatastore datastore) {
         Objects.requireNonNull(datastore);
 
         mDatastore = datastore;
@@ -63,8 +63,8 @@ public class UxStatesDao {
         if (sUxStatesDao == null) {
             synchronized (LOCK) {
                 if (sUxStatesDao == null) {
-                    BooleanFileDatastore datastore =
-                            new BooleanFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
+                    AtomicFileDatastore datastore =
+                            new AtomicFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
                     sUxStatesDao = new UxStatesDao(datastore);
                 }
             }

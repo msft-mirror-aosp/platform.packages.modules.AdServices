@@ -111,7 +111,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -217,8 +217,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     private static final int UX_TYPE_COUNT = 5;
     private static final int ENROLLMENT_CHANNEL_COUNT = 22;
 
-    private BooleanFileDatastore mDatastore;
-    private BooleanFileDatastore mConsentDatastore;
+    private AtomicFileDatastore mDatastore;
+    private AtomicFileDatastore mConsentDatastore;
     private ConsentManager mConsentManager;
     private AppConsentDao mAppConsentDaoSpy;
     private EnrollmentDao mEnrollmentDaoSpy;
@@ -248,10 +248,10 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Before
     public void setup() throws IOException {
         mDatastore =
-                new BooleanFileDatastore(
+                new AtomicFileDatastore(
                         mSpyContext, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
         // For each file, we should ensure there is only one instance of datastore that is able to
-        // access it. (Refer to BooleanFileDatastore.class)
+        // access it. (Refer to AtomicFileDatastore.class)
         mConsentDatastore = ConsentManager.createAndInitializeDataStore(mSpyContext);
         mAppConsentDaoSpy = spy(new AppConsentDao(mDatastore, mSpyContext.getPackageManager()));
         mEnrollmentDaoSpy =
@@ -2909,7 +2909,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     public void testHandleConsentMigrationFromAppSearchIfNeeded_notMigrated() throws Exception {
         when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenReturn(false);
-        BooleanFileDatastore mockDatastore = mock(BooleanFileDatastore.class);
+        AtomicFileDatastore mockDatastore = mock(AtomicFileDatastore.class);
         AdServicesManager mockAdServicesManager = mock(AdServicesManager.class);
         SharedPreferences mockSharedPrefs = mock(SharedPreferences.class);
         SharedPreferences.Editor mockEditor = mock(SharedPreferences.Editor.class);

@@ -632,7 +632,7 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
     }
 
-    int DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET = 5;
+    int DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET = 20;
 
     /** Maximum number of filter maps allowed in an attribution filter set. */
     default int getMeasurementMaxFilterMapsPerFilterSet() {
