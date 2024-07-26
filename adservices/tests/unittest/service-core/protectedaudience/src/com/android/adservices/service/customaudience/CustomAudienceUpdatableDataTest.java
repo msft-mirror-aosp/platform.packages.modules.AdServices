@@ -17,6 +17,8 @@
 package com.android.adservices.service.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.OMIT_ADS_VALUE;
 
@@ -282,6 +284,187 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
+    public void testUpdatableDataSuccessWithSellerConfigurationEnabled() throws JSONException {
+        AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
+                AdSelectionSignals.fromString(
+                        JsonFixture.formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString()));
+        boolean expectedContainsSuccessfulUpdate = true;
+        CustomAudienceUpdatableData updatableDataFromBuilder =
+                CustomAudienceUpdatableData.builder()
+                        .setUserBiddingSignals(validUserBiddingSignalsAsJsonObjectString)
+                        .setTrustedBiddingData(VALID_DB_TRUSTED_BIDDING_DATA)
+                        .setAds(VALID_DB_AD_DATA_LIST)
+                        .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
+                        .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
+                        .setContainsSuccessfulUpdate(expectedContainsSuccessfulUpdate)
+                        .setPriority(VALID_PRIORITY_1)
+                        .build();
+
+        assertEquals(
+                validUserBiddingSignalsAsJsonObjectString,
+                updatableDataFromBuilder.getUserBiddingSignals());
+        assertEquals(
+                VALID_DB_TRUSTED_BIDDING_DATA, updatableDataFromBuilder.getTrustedBiddingData());
+        assertEquals(VALID_DB_AD_DATA_LIST, updatableDataFromBuilder.getAds());
+        assertEquals(CommonFixture.FIXED_NOW, updatableDataFromBuilder.getAttemptedUpdateTime());
+        assertEquals(
+                BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                updatableDataFromBuilder.getInitialUpdateResult());
+        assertEquals(
+                expectedContainsSuccessfulUpdate,
+                updatableDataFromBuilder.getContainsSuccessfulUpdate());
+        assertEquals(0, Double.compare(VALID_PRIORITY_1, updatableDataFromBuilder.getPriority()));
+
+        final String jsonResponse =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        validUserBiddingSignalsAsJsonObjectString.toString(),
+                        VALID_DB_TRUSTED_BIDDING_DATA,
+                        VALID_DB_AD_DATA_LIST,
+                        VALID_PRIORITY_1,
+                        false);
+        CustomAudienceUpdatableData updatableDataFromResponseString =
+                CustomAudienceUpdatableData.createFromResponseString(
+                        CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER_1,
+                        BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                        jsonResponse,
+                        new FlagsWithSellerConfigurationSet(true));
+
+        assertEquals(
+                "Manually built updatable data does not match built from response string \""
+                        + jsonResponse
+                        + '"',
+                updatableDataFromBuilder,
+                updatableDataFromResponseString);
+        assertEquals(
+                0,
+                Double.compare(
+                        updatableDataFromResponseString.getPriority(),
+                        updatableDataFromBuilder.getPriority()));
+    }
+
+    @Test
+    public void testUpdatableDataSuccessWithSellerConfigurationDisabled() throws JSONException {
+        AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
+                AdSelectionSignals.fromString(
+                        JsonFixture.formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString()));
+        boolean expectedContainsSuccessfulUpdate = true;
+        CustomAudienceUpdatableData updatableDataFromBuilder =
+                CustomAudienceUpdatableData.builder()
+                        .setUserBiddingSignals(validUserBiddingSignalsAsJsonObjectString)
+                        .setTrustedBiddingData(VALID_DB_TRUSTED_BIDDING_DATA)
+                        .setAds(VALID_DB_AD_DATA_LIST)
+                        .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
+                        .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
+                        .setContainsSuccessfulUpdate(expectedContainsSuccessfulUpdate)
+                        .build();
+
+        assertEquals(
+                validUserBiddingSignalsAsJsonObjectString,
+                updatableDataFromBuilder.getUserBiddingSignals());
+        assertEquals(
+                VALID_DB_TRUSTED_BIDDING_DATA, updatableDataFromBuilder.getTrustedBiddingData());
+        assertEquals(VALID_DB_AD_DATA_LIST, updatableDataFromBuilder.getAds());
+        assertEquals(CommonFixture.FIXED_NOW, updatableDataFromBuilder.getAttemptedUpdateTime());
+        assertEquals(
+                BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                updatableDataFromBuilder.getInitialUpdateResult());
+        assertEquals(
+                expectedContainsSuccessfulUpdate,
+                updatableDataFromBuilder.getContainsSuccessfulUpdate());
+        assertEquals(0, Double.compare(PRIORITY_DEFAULT, updatableDataFromBuilder.getPriority()));
+
+        final String jsonResponse =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        validUserBiddingSignalsAsJsonObjectString.toString(),
+                        VALID_DB_TRUSTED_BIDDING_DATA,
+                        VALID_DB_AD_DATA_LIST,
+                        VALID_PRIORITY_1,
+                        false);
+        CustomAudienceUpdatableData updatableDataFromResponseString =
+                CustomAudienceUpdatableData.createFromResponseString(
+                        CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER_1,
+                        BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                        jsonResponse,
+                        new FlagsWithSellerConfigurationSet(false));
+
+        assertEquals(
+                "Manually built updatable data does not match built from response string \""
+                        + jsonResponse
+                        + '"',
+                updatableDataFromBuilder,
+                updatableDataFromResponseString);
+        assertEquals(
+                0, Double.compare(PRIORITY_DEFAULT, updatableDataFromResponseString.getPriority()));
+    }
+
+    @Test
+    public void testUpdatableDataSuccessWithNoPriorityValueInResponseString() throws JSONException {
+        AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
+                AdSelectionSignals.fromString(
+                        JsonFixture.formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString()));
+        boolean expectedContainsSuccessfulUpdate = true;
+        CustomAudienceUpdatableData updatableDataFromBuilder =
+                CustomAudienceUpdatableData.builder()
+                        .setUserBiddingSignals(validUserBiddingSignalsAsJsonObjectString)
+                        .setTrustedBiddingData(VALID_DB_TRUSTED_BIDDING_DATA)
+                        .setAds(VALID_DB_AD_DATA_LIST)
+                        .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
+                        .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
+                        .setContainsSuccessfulUpdate(expectedContainsSuccessfulUpdate)
+                        .build();
+
+        assertEquals(
+                validUserBiddingSignalsAsJsonObjectString,
+                updatableDataFromBuilder.getUserBiddingSignals());
+        assertEquals(
+                VALID_DB_TRUSTED_BIDDING_DATA, updatableDataFromBuilder.getTrustedBiddingData());
+        assertEquals(VALID_DB_AD_DATA_LIST, updatableDataFromBuilder.getAds());
+        assertEquals(CommonFixture.FIXED_NOW, updatableDataFromBuilder.getAttemptedUpdateTime());
+        assertEquals(
+                BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                updatableDataFromBuilder.getInitialUpdateResult());
+        assertEquals(
+                expectedContainsSuccessfulUpdate,
+                updatableDataFromBuilder.getContainsSuccessfulUpdate());
+        assertEquals(0, Double.compare(PRIORITY_DEFAULT, updatableDataFromBuilder.getPriority()));
+
+        // JSON response with no priority field
+        final String jsonResponse =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        validUserBiddingSignalsAsJsonObjectString.toString(),
+                        VALID_DB_TRUSTED_BIDDING_DATA,
+                        VALID_DB_AD_DATA_LIST);
+
+        CustomAudienceUpdatableData updatableDataFromResponseString =
+                CustomAudienceUpdatableData.createFromResponseString(
+                        CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER_1,
+                        BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                        jsonResponse,
+                        new FlagsWithSellerConfigurationSet(true));
+
+        assertEquals(
+                "Manually built updatable data does not match built from response string \""
+                        + jsonResponse
+                        + '"',
+                updatableDataFromBuilder,
+                updatableDataFromResponseString);
+        // Since default is 0.0, response string and builder should return 0.0
+        assertEquals(
+                0, Double.compare(PRIORITY_DEFAULT, updatableDataFromResponseString.getPriority()));
+        assertEquals(
+                0,
+                Double.compare(
+                        updatableDataFromResponseString.getPriority(),
+                        updatableDataFromBuilder.getPriority()));
+    }
+
+    @Test
     public void testBuildEmptyUpdatableDataSuccess() throws JSONException {
         boolean expectedContainsSuccessfulUpdate = true;
         CustomAudienceUpdatableData updatableDataFromBuilder =
@@ -477,6 +660,7 @@ public class CustomAudienceUpdatableDataTest {
         assertNull(updatableData.getUserBiddingSignals());
         assertNull(updatableData.getTrustedBiddingData());
         assertNull(updatableData.getAds());
+        assertEquals(0, Double.compare(PRIORITY_DEFAULT, updatableData.getPriority()));
         assertEquals(CommonFixture.FIXED_NOW, updatableData.getAttemptedUpdateTime());
         assertEquals(
                 BackgroundFetchRunner.UpdateResultType.SUCCESS,
@@ -593,6 +777,19 @@ public class CustomAudienceUpdatableDataTest {
         @Override
         public boolean getFledgeAuctionServerRequestFlagsEnabled() {
             return mAuctionServerRequestFlagsEnabled;
+        }
+    }
+
+    static class FlagsWithSellerConfigurationSet extends CustomAudienceUpdateableDataTestFlags {
+        private final boolean mSellerConfigurationFlagEnabled;
+
+        FlagsWithSellerConfigurationSet(boolean sellerConfigurationFlagEnabled) {
+            mSellerConfigurationFlagEnabled = sellerConfigurationFlagEnabled;
+        }
+
+        @Override
+        public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+            return mSellerConfigurationFlagEnabled;
         }
     }
 }
