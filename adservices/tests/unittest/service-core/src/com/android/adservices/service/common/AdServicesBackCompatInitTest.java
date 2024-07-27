@@ -55,7 +55,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.modules.utils.build.SdkLevel;
-import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
@@ -67,7 +66,7 @@ import org.mockito.Mock;
 
 import java.util.List;
 
-@MockStatic(ErrorLogUtil.class)
+@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(SdkLevel.class)
 @SpyStatic(PackageChangedReceiver.class)

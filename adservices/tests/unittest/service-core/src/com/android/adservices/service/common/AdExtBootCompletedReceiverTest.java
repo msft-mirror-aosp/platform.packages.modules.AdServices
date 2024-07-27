@@ -34,7 +34,6 @@ import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Rule;
@@ -44,7 +43,7 @@ import org.mockito.Spy;
 
 @SmallTest
 @SpyStatic(AdServicesBackCompatInit.class)
-@MockStatic(ErrorLogUtil.class)
+@SpyStatic(ErrorLogUtil.class)
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         errorCode =

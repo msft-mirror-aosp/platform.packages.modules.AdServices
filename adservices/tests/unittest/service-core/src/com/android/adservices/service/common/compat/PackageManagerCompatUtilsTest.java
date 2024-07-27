@@ -46,6 +46,7 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
@@ -54,7 +55,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-@MockStatic(ErrorLogUtil.class)
+@SpyStatic(ErrorLogUtil.class)
 public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMockitoTestCase {
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
     private static final String EXTSERVICES_PACKAGE_NAME = "com.android.ext.services";
