@@ -16,8 +16,7 @@
 
 package com.android.adservices.data.enrollment;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
@@ -52,6 +51,8 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -68,6 +69,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -76,6 +78,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+@SpyStatic(ErrorLogUtil.class)
 public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -86,6 +89,10 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     @Mock private AdServicesLogger mLogger;
     @Mock private EnrollmentUtil mEnrollmentUtil;
     @Mock private SharedDbHelper mMockDbHelper;
+
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     public static final EnrollmentData ENROLLMENT_DATA1 =
             new EnrollmentData.Builder()
@@ -1309,12 +1316,13 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    @SpyStatic(ErrorLogUtil.class)
-    public void testInsert_throwsSQLException_logsCEL() throws Exception {
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = Any.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
+    public void testInsert_throwsSQLException_logsCEL() {
         SQLiteDatabase db = mock(SQLiteDatabase.class);
         EnrollmentData enrollmentData = mock(EnrollmentData.class);
-
-        doNothingOnErrorLogUtilError();
 
         when(mMockDbHelper.safeGetWritableDatabase()).thenReturn(db);
         when(db.insertWithOnConflict(
@@ -1322,10 +1330,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                 .thenThrow(new SQLException());
 
         assertThat(mEnrollmentDao.insert(enrollmentData)).isFalse();
-
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
     }
 
     @Test
