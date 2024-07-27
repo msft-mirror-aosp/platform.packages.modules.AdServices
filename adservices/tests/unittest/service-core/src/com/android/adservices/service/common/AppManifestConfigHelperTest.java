@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
@@ -34,7 +32,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -44,7 +41,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 
 import android.content.pm.PackageManager;
@@ -55,6 +51,9 @@ import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -64,6 +63,7 @@ import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.verification.VerificationMode;
@@ -74,6 +74,10 @@ import org.mockito.verification.VerificationMode;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(SdkLevel.class)
 @SpyStatic(ErrorLogUtil.class)
+@SetErrorLogUtilDefaultParams(
+        throwable = XmlParseException.class,
+        errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
 public final class AppManifestConfigHelperTest extends AdServicesExtendedMockitoTestCase {
 
     // The extra calls to CA and PAS to verify if they work for ad selection contribute here
@@ -107,12 +111,15 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     @Mock private XmlResourceParser mMockParser;
     @Mock private Flags mMockFlags;
 
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
+
     @Before
     public void setCommonExpectations() {
         appContext.set(mMockContext);
         when(mMockContext.getPackageManager()).thenReturn(mMockPackageManager);
         mocker.mockGetFlags(mMockFlags);
-        doNothingOnErrorLogUtilError();
         doNothing().when(() -> AppManifestConfigMetricsLogger.logUsage(any()));
     }
 
@@ -370,27 +377,27 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
 
     @Test
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
+    @ExpectErrorLogUtilWithExceptionCall(times = NUM_COMPONENTS)
     public void testIsAllowedApiAccess_parsingExceptionSwallowed_enabledByDefault_sPlus()
             throws Exception {
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
-        Exception e = mockAppManifestConfigParserGetConfigThrows();
+        mockAppManifestConfigParserGetConfigThrows();
 
         assertNoAccessAllowed();
 
-        verifyErrorLogUtilErrorLogged(e, times(NUM_COMPONENTS)); // Called once for each API
         verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR);
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(times = NUM_COMPONENTS)
     public void testIsAllowedApiAccess_parsingExceptionSwallowed_enabledByDefault_rMinus()
             throws Exception {
         mocker.mockSdkLevelR();
         mockGetAssetSucceeds(PACKAGE_NAME, RESOURCE_ID);
-        Exception e = mockAppManifestConfigParserGetConfigThrows();
+        mockAppManifestConfigParserGetConfigThrows();
 
         assertNoAccessAllowed();
 
-        verifyErrorLogUtilErrorLogged(e, times(NUM_COMPONENTS)); // Called once for each API
         verifyLogUsageForAllApis(RESULT_DISALLOWED_APP_CONFIG_PARSING_ERROR);
     }
 
@@ -581,18 +588,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                         AppManifestConfigHelper.isAllowedTopicsAccess(
                                 DOESNT_USE_SANDBOX_CHECK, PACKAGE_NAME, ENROLLMENT_ID))
                 .isTrue();
-
-        verifyErrorLogUtilErrorLogged(any(), never());
-    }
-
-    private void verifyErrorLogUtilErrorLogged(Exception e, VerificationMode mode) {
-        // NOTE: e is null when passed as any().
-        Exception exceptionMatcher = e == null ? e : eq(e);
-        verifyErrorLogUtilError(
-                exceptionMatcher,
-                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR),
-                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON),
-                mode);
     }
 
     private void verifyLogUsage(int api, int result) {

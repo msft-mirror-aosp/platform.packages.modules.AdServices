@@ -203,9 +203,10 @@ public final class RegistryValidator {
             return false;
         }
 
-        // TODO(b/343722587): Add remaining validations from the Cobalt config validator. This
-        // includes:
-        //   * report specific validations
+        // TODO(b/343722587): Add remaining validations:
+        // * that private reports can't be added if the new and old metrics don't have the same
+        //   dimensions
+        // * the fields used for privacy are known to the client.
 
         return true;
     }

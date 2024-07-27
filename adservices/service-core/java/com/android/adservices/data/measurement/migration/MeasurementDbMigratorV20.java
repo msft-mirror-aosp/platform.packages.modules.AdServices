@@ -27,9 +27,6 @@ import com.android.adservices.service.Flags;
  * to Trigger, AggregateReport & Aggregate Encryption Key Table.
  */
 public class MeasurementDbMigratorV20 extends AbstractMeasurementDbMigrator {
-
-    private static String sDefaultCoordinatorOrigin =
-            "https://publickeyservice.aws.privacysandboxservices.com";
     private static final String[] ALTER_STATEMENTS = {
             String.format(
                     "ALTER TABLE %1$s ADD %2$s TEXT",
@@ -62,7 +59,7 @@ public class MeasurementDbMigratorV20 extends AbstractMeasurementDbMigrator {
         ContentValues contentValues = new ContentValues();
         contentValues.put(
                 MeasurementTables.AggregateEncryptionKey.AGGREGATION_COORDINATOR_ORIGIN,
-                sDefaultCoordinatorOrigin);
+                Flags.MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN);
         // Set Cloud Coordinator for all present AggregateEncryptionKeys to AWS equivalent.
         db.update(
                 MeasurementTables.AggregateEncryptionKey.TABLE,
@@ -76,7 +73,7 @@ public class MeasurementDbMigratorV20 extends AbstractMeasurementDbMigrator {
         ContentValues contentValues = new ContentValues();
         contentValues.put(
                 MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
-                sDefaultCoordinatorOrigin);
+                Flags.MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN);
         // Set Cloud Coordinator for all present AggregateReport to AWS equivalent.
         db.update(
                 MeasurementTables.AggregateReport.TABLE,

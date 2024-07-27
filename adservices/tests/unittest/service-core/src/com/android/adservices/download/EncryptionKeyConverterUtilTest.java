@@ -16,10 +16,8 @@
 
 package com.android.adservices.download;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.download.EncryptionKeyConverterUtil.createEncryptionKeyFromJson;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_INCORRECT_JSON_VERSION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
@@ -29,12 +27,16 @@ import static java.util.Map.entry;
 import android.net.Uri;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.json.JSONObject;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
@@ -42,12 +44,14 @@ import java.util.Optional;
 
 /** Tests for {@link EncryptionKeyConverterUtil}. */
 @SpyStatic(ErrorLogUtil.class)
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
 public final class EncryptionKeyConverterUtilTest extends AdServicesExtendedMockitoTestCase {
 
-    @Before
-    public void setup() {
-        doNothingOnErrorLogUtilError();
-    }
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     private static final Map SIGNING_V3_DEFAULT_VALUES =
             Map.ofEntries(
@@ -106,6 +110,9 @@ public final class EncryptionKeyConverterUtilTest extends AdServicesExtendedMock
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_INCORRECT_JSON_VERSION)
     public void createEncryptionKeyFromJson_incorrectVersion() throws Exception {
         JSONObject jsonObject = new JSONObject(SIGNING_V3_DEFAULT_VALUES);
         jsonObject.put("version", 2);
@@ -113,12 +120,11 @@ public final class EncryptionKeyConverterUtilTest extends AdServicesExtendedMock
         Optional<EncryptionKey> keyOptional = createEncryptionKeyFromJson(jsonObject);
 
         expect.that(keyOptional.isPresent()).isFalse();
-        verifyErrorLogUtilError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_INCORRECT_JSON_VERSION,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR)
     public void createEncryptionKeyFromJson_incorrectKeyType() throws Exception {
         JSONObject jsonObject = new JSONObject(SIGNING_V3_DEFAULT_VALUES);
         jsonObject.put("keyType", "InvalidKeyType");
@@ -126,12 +132,11 @@ public final class EncryptionKeyConverterUtilTest extends AdServicesExtendedMock
         Optional<EncryptionKey> keyOptional = createEncryptionKeyFromJson(jsonObject);
 
         expect.that(keyOptional.isPresent()).isFalse();
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR)
     public void createEncryptionKeyFromJson_incorrectProtocolType() throws Exception {
         JSONObject jsonObject = new JSONObject(SIGNING_V3_DEFAULT_VALUES);
         jsonObject.put("protocolType", "HASH128");
@@ -139,12 +144,11 @@ public final class EncryptionKeyConverterUtilTest extends AdServicesExtendedMock
         Optional<EncryptionKey> keyOptional = createEncryptionKeyFromJson(jsonObject);
 
         expect.that(keyOptional.isPresent()).isFalse();
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR)
     public void createEncryptionKeyFromJson_incorrectKeyIdFormat() throws Exception {
         JSONObject jsonObject = new JSONObject(SIGNING_V3_DEFAULT_VALUES);
         jsonObject.put("keyId", "abc");
@@ -152,12 +156,11 @@ public final class EncryptionKeyConverterUtilTest extends AdServicesExtendedMock
         Optional<EncryptionKey> keyOptional = createEncryptionKeyFromJson(jsonObject);
 
         expect.that(keyOptional.isPresent()).isFalse();
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR)
     public void createEncryptionKeyFromJson_incorrectExpirationFormat() throws Exception {
         JSONObject jsonObject = new JSONObject(SIGNING_V3_DEFAULT_VALUES);
         jsonObject.put("expiration", " ");
@@ -165,12 +168,11 @@ public final class EncryptionKeyConverterUtilTest extends AdServicesExtendedMock
         Optional<EncryptionKey> keyOptional = createEncryptionKeyFromJson(jsonObject);
 
         expect.that(keyOptional.isPresent()).isFalse();
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR)
     public void createEncryptionKeyFromJson_missingFields() {
         JSONObject jsonObject = new JSONObject(SIGNING_V3_DEFAULT_VALUES);
         jsonObject.remove("expiration");
@@ -178,8 +180,5 @@ public final class EncryptionKeyConverterUtilTest extends AdServicesExtendedMock
         Optional<EncryptionKey> keyOptional = createEncryptionKeyFromJson(jsonObject);
 
         expect.that(keyOptional.isPresent()).isFalse();
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 }

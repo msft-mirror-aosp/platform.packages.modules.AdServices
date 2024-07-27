@@ -16,19 +16,15 @@
 
 package com.android.adservices.data.topics;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import android.database.SQLException;
@@ -38,6 +34,9 @@ import android.util.Pair;
 import androidx.test.filters.MediumTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -45,6 +44,7 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -63,6 +63,9 @@ import java.util.stream.Stream;
 @MediumTest
 @SpyStatic(ErrorLogUtil.class)
 @RequiresSdkLevelAtLeastS
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
 public final class TopicsDaoTest extends AdServicesExtendedMockitoTestCase {
     // TODO: (b/232807776) Replace below hardcoded taxonomy version and model version
     private static final long TAXONOMY_VERSION = 1L;
@@ -73,6 +76,10 @@ public final class TopicsDaoTest extends AdServicesExtendedMockitoTestCase {
 
     private final DbHelper mDBHelper = DbTestUtil.getDbHelperForTest();
     private final TopicsDao mTopicsDao = new TopicsDao(mDBHelper);
+
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() {
@@ -828,30 +835,21 @@ public final class TopicsDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE,
+            times = 11)
     public void testDeleteAllTopicsTables_sqlExceptionOnDelete() {
         // Setup required mocks.
         DbHelper mockDbHelper = Mockito.mock(DbHelper.class);
         SQLiteDatabase mockDatabase = Mockito.mock(SQLiteDatabase.class);
         TopicsDao topicsDao = new TopicsDao(mockDbHelper);
 
-        // Do nothing for ErrorLogUtil calls.
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         // Throw exception on deletion of any table.
         when(mockDbHelper.safeGetWritableDatabase()).thenReturn(mockDatabase);
         when(mockDatabase.delete(any(), any(), any())).thenThrow(SQLException.class);
 
         // Call topicsDao with empty exclusion list.
         topicsDao.deleteAllTopicsTables(/*tablesToExclude*/ List.of());
-
-        // Verify the correct client error log is reported for all 11 tables.
-        verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(
-                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_TABLE_FAILURE),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)),
-                times(11));
     }
 
     @Test
@@ -1159,8 +1157,10 @@ public final class TopicsDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE,
+            times = 3)
     public void testDeleteEntriesFromTableByColumnWithEqualCondition_nonExistingArguments() {
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         // Persist an entry to Returned Topics Table
         long epochId1 = 1L;
         int numberOfLookBackEpochs = 1;
@@ -1203,14 +1203,6 @@ public final class TopicsDaoTest extends AdServicesExtendedMockitoTestCase {
                 /* isStringEqualConditionColumnValue */ false);
         assertThat(mTopicsDao.retrieveReturnedTopics(epochId1, numberOfLookBackEpochs))
                 .isEqualTo(expectedReturnedTopicsMap);
-        verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(
-                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)),
-                times(3));
     }
 
     @Test
@@ -1239,6 +1231,9 @@ public final class TopicsDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE,
+            times = 2)
     public void testDeleteFromTableByColumn_mismatchedTableAndColumnName() {
         // Test with AppClassificationTopics Contract
         long taxonomyVersion = 1L;
@@ -1255,7 +1250,6 @@ public final class TopicsDaoTest extends AdServicesExtendedMockitoTestCase {
         appClassificationTopicsMap1.put(app1, List.of(topic1));
 
         mTopicsDao.persistAppClassificationTopics(epochId1, appClassificationTopicsMap1);
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         // Justify the status before erasing data
         // MapEpoch1: app1 -> topic1
@@ -1285,14 +1279,6 @@ public final class TopicsDaoTest extends AdServicesExtendedMockitoTestCase {
                 List.of(app1));
         // Nothing will happen as no satisfied entry to delete
         assertThat(topicsMapFromDb1).isEqualTo(expectedTopicsMap1);
-        verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(
-                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)),
-                times(2));
     }
 
     @Test

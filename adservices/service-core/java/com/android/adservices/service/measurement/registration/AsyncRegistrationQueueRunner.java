@@ -503,6 +503,24 @@ public class AsyncRegistrationQueueRunner {
                             source, attributionScopeValidationResult, dao);
                     return InsertSourcePermission.NOT_ALLOWED;
                 }
+
+                if (source.getSourceType() == Source.SourceType.NAVIGATION
+                        && source.getAttributionScopes() != null) {
+                    for (Pair<Integer, String> destination :
+                            source.getAllAttributionDestinations()) {
+                        Set<String> navigationAttributionScopes =
+                                dao.getNavigationAttributionScopesForRegistration(
+                                        source.getRegistrationId(),
+                                        source.getRegistrationOrigin().toString(),
+                                        destination.first,
+                                        destination.second);
+                        if (!navigationAttributionScopes.isEmpty()
+                                && !navigationAttributionScopes.equals(
+                                        new HashSet<>(source.getAttributionScopes()))) {
+                            return InsertSourcePermission.NOT_ALLOWED;
+                        }
+                    }
+                }
             }
         } catch (ArithmeticException e) {
             LoggerFactory.getMeasurementLogger()

@@ -287,6 +287,66 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
+    @Override
+    public Set<String> getNavigationAttributionScopesForRegistration(
+            @NonNull String registrationId,
+            @NonNull String registrationOrigin,
+            @EventSurfaceType int destinationType,
+            @NonNull String destination)
+            throws DatastoreException {
+        // Joins Source, SourceDestination and SourceAttributionScope tables on source id.
+        String joinString =
+                " FROM "
+                        + SourceContract.TABLE
+                        + " s INNER JOIN "
+                        + SourceAttributionScopeContract.TABLE
+                        + " a ON s."
+                        + SourceContract.ID
+                        + " = a."
+                        + SourceAttributionScopeContract.SOURCE_ID
+                        + " INNER JOIN "
+                        + SourceDestination.TABLE
+                        + " d ON s."
+                        + SourceContract.ID
+                        + " = d."
+                        + SourceDestination.SOURCE_ID;
+
+        String sourceWhereStatement =
+                mergeConditions(
+                        " AND ",
+                        SourceContract.STATUS + " = " + Source.Status.ACTIVE,
+                        SourceContract.REGISTRATION_ID
+                                + " = "
+                                + DatabaseUtils.sqlEscapeString(registrationId),
+                        SourceContract.SOURCE_TYPE
+                                + " = "
+                                + DatabaseUtils.sqlEscapeString(
+                                        String.valueOf(Source.SourceType.NAVIGATION)),
+                        SourceContract.REGISTRATION_ORIGIN
+                                + " = "
+                                + DatabaseUtils.sqlEscapeString(registrationOrigin),
+                        SourceDestination.DESTINATION_TYPE + " = " + destinationType,
+                        SourceDestination.DESTINATION
+                                + " = "
+                                + DatabaseUtils.sqlEscapeString(destination));
+
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT DISTINCT %1$s" + joinString + " WHERE " + sourceWhereStatement,
+                        SourceAttributionScopeContract.ATTRIBUTION_SCOPE);
+        try (Cursor cursor = mSQLTransaction.getDatabase().rawQuery(query, null)) {
+            Set<String> attributionScopes = new HashSet<>();
+            while (cursor.moveToNext()) {
+                attributionScopes.add(
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        SourceAttributionScopeContract.ATTRIBUTION_SCOPE)));
+            }
+            return attributionScopes;
+        }
+    }
+
     // Given a list of destinations and destination types, return a SELECT statement for matching
     // source IDs.
     private static String selectSourceIdsByDestinations(

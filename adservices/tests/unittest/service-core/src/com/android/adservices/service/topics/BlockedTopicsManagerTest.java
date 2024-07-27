@@ -49,22 +49,25 @@ import android.os.Parcel;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
-import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
@@ -74,6 +77,10 @@ import java.util.List;
 
 /** Unit test to test class {@link com.android.adservices.service.topics.BlockedTopicsManager} */
 @RequiresSdkLevelAtLeastS()
+@SpyStatic(ErrorLogUtil.class)
+@SetErrorLogUtilDefaultParams(
+        throwable = IllegalStateException.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
 public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final long TAXONOMY_VERSION = 1L;
     private static final long MODEL_VERSION = 1L;
@@ -87,6 +94,10 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private AppSearchConsentManager mAppSearchConsentManager;
 
     @Mock private IAdServicesManager mMockIAdServicesManager;
+
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() {
@@ -202,7 +213,9 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @MockStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE)
     public void testBlockTopic_withPpapiAndAdExtDataServiceOnly_throwsException() throws Exception {
         BlockedTopicsManager blockedTopicsManager =
                 getSpiedBlockedTopicsManager(
@@ -219,7 +232,9 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @MockStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE)
     public void testBlockTopic_withAppSearchOnly_throwsException() throws Exception {
         Exception thrown = new IllegalStateException("test");
         ExtendedMockito.doThrow(thrown).when(mAppSearchConsentManager).blockTopic(any());
@@ -230,14 +245,11 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
         Exception e =
                 assertThrows(RuntimeException.class, () -> blockedTopicsManager.blockTopic(TOPIC));
         assertThat(e).hasCauseThat().isSameInstanceAs(thrown);
-        ExtendedMockitoExpectations.verifyErrorLogUtilError(
-                thrown,
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
-    @MockStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REMOVE_BLOCKED_TOPIC_FAILURE)
     public void testUnblockTopic_withPpapiAndAdExtDataServiceOnly_throwsException()
             throws Exception {
         BlockedTopicsManager blockedTopicsManager =
@@ -256,7 +268,8 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @MockStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REMOVE_BLOCKED_TOPIC_FAILURE)
     public void testUnblockTopic_withAppSearchOnly_throwsException() throws Exception {
         Exception thrown = new IllegalStateException("test");
         ExtendedMockito.doThrow(thrown).when(mAppSearchConsentManager).unblockTopic(any());
@@ -268,14 +281,11 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
                 assertThrows(
                         RuntimeException.class, () -> blockedTopicsManager.unblockTopic(TOPIC));
         assertThat(e).hasCauseThat().isSameInstanceAs(thrown);
-        ExtendedMockitoExpectations.verifyErrorLogUtilError(
-                thrown,
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REMOVE_BLOCKED_TOPIC_FAILURE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
-    @MockStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_GET_BLOCKED_TOPIC_FAILURE)
     public void testRetrieveAllBlockedTopics_withPpapiAndAdExtDataServiceOnly_throwsException()
             throws Exception {
         BlockedTopicsManager blockedTopicsManager =
@@ -294,7 +304,8 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @MockStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_GET_BLOCKED_TOPIC_FAILURE)
     public void testRetrieveAllBlockedTopics_withAppSearchOnly_throwsException() throws Exception {
         Exception thrown = new IllegalStateException("test");
         ExtendedMockito.doThrow(thrown).when(mAppSearchConsentManager).retrieveAllBlockedTopics();
@@ -306,14 +317,12 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
                 assertThrows(
                         RuntimeException.class, blockedTopicsManager::retrieveAllBlockedTopics);
         assertThat(e).hasCauseThat().isSameInstanceAs(thrown);
-        ExtendedMockitoExpectations.verifyErrorLogUtilError(
-                thrown,
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_GET_BLOCKED_TOPIC_FAILURE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
-    @MockStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_CLEAR_ALL_BLOCKED_TOPICS_IN_SYSTEM_SERVER_FAILURE)
     public void testClearAllBlockedTopics_withPpapiAndAdExtDataServiceOnly_throwsException()
             throws Exception {
         BlockedTopicsManager blockedTopicsManager =
@@ -331,7 +340,9 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @MockStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_CLEAR_ALL_BLOCKED_TOPICS_IN_SYSTEM_SERVER_FAILURE)
     public void testClearAllBlockedTopics_withAppSearchOnly_throwsException() throws Exception {
         Exception thrown = new IllegalStateException("test");
         ExtendedMockito.doThrow(thrown).when(mAppSearchConsentManager).clearAllBlockedTopics();
@@ -342,10 +353,6 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
         Exception e =
                 assertThrows(RuntimeException.class, blockedTopicsManager::clearAllBlockedTopics);
         assertThat(e).hasCauseThat().isSameInstanceAs(thrown);
-        ExtendedMockitoExpectations.verifyErrorLogUtilError(
-                thrown,
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_CLEAR_ALL_BLOCKED_TOPICS_IN_SYSTEM_SERVER_FAILURE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test

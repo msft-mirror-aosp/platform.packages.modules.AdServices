@@ -155,7 +155,7 @@ android_test {
         // Contains DB Util methods which used in MobileDataDownloadTest.java
         "src/com/android/adservices/data/DbTestUtil.java",
     ],
-    defaults: ["modules-utils-testable-device-config-defaults"],
+    defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
     sdk_version: "module_current",
     compile_multilib: "both",
     min_sdk_version: "Tiramisu",
@@ -174,7 +174,6 @@ android_test {
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
-        "framework-connectivity",
     ],
     test_suites: [
         "general-tests",
@@ -375,7 +374,7 @@ android_test {
         // Contains DB Util methods which used in MobileDataDownloadTest.java
         "src/com/android/adservices/data/DbTestUtil.java",
     ],
-    defaults: ["modules-utils-testable-device-config-defaults"],
+    defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
     sdk_version: "module_current",
     compile_multilib: "both",
     min_sdk_version: "30",
@@ -396,7 +395,6 @@ android_test {
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
-        "framework-connectivity",
     ],
     test_suites: [
         "general-tests",

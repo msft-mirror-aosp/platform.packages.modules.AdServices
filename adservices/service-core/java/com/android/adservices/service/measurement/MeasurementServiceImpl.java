@@ -55,6 +55,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -62,6 +63,7 @@ import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.access.AccessInfo;
 import com.android.adservices.service.measurement.access.AccessResolverInfo;
 import com.android.adservices.service.measurement.access.AppPackageAccessResolver;
@@ -72,11 +74,25 @@ import com.android.adservices.service.measurement.access.IAccessResolver;
 import com.android.adservices.service.measurement.access.KillSwitchAccessResolver;
 import com.android.adservices.service.measurement.access.PermissionAccessResolver;
 import com.android.adservices.service.measurement.access.UserConsentAccessResolver;
+import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
+import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
+import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
+import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
+import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
+import com.android.adservices.service.measurement.reporting.EventReportingJobService;
+import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.List;
 import java.util.Objects;
@@ -96,8 +112,8 @@ import java.util.function.Supplier;
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private static final String RATE_LIMIT_REACHED = "Rate limit reached to call this API.";
     private static final String CALLBACK_ERROR = "Unable to send result to the callback";
-    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private static final Executor sLightExecutor = AdServicesExecutors.getLightWeightExecutor();
+    private final ListeningExecutorService mBackgroundExecutor;
     private final Clock mClock;
     private final MeasurementImpl mMeasurementImpl;
     private final CachedFlags mFlags;
@@ -123,7 +139,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 flags,
                 AdServicesLoggerImpl.getInstance(),
                 appImportanceFilter,
-                DevContextFilter.create(context));
+                DevContextFilter.create(context),
+                AdServicesExecutors.getBackgroundExecutor());
     }
 
     @VisibleForTesting
@@ -136,7 +153,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull CachedFlags flags,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
-            @NonNull DevContextFilter devContextFilter) {
+            @NonNull DevContextFilter devContextFilter,
+            @NonNull ListeningExecutorService backgroundExecutor) {
         mContext = context;
         mClock = clock;
         mMeasurementImpl = measurementImpl;
@@ -146,6 +164,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         mAdServicesLogger = adServicesLogger;
         mAppImportanceFilter = appImportanceFilter;
         mDevContextFilter = devContextFilter;
+        mBackgroundExecutor = backgroundExecutor;
     }
 
     @Override
@@ -174,7 +193,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission =
                 PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
-        sBackgroundExecutor.execute(
+        mBackgroundExecutor.execute(
                 () -> {
                     performRegistration(
                             (service) ->
@@ -235,7 +254,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission =
                 PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
-        sBackgroundExecutor.execute(
+        mBackgroundExecutor.execute(
                 () -> {
                     final Supplier<Boolean> enforceForeground =
                             mFlags::getEnforceForegroundStatusForMeasurementRegisterWebSource;
@@ -298,7 +317,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             return;
         }
         final int callerUid = Binder.getCallingUidOrThrow();
-        sBackgroundExecutor.execute(
+        mBackgroundExecutor.execute(
                 () -> {
                     Supplier<Boolean> foregroundEnforcementSupplier =
                             mFlags::getEnforceForegroundStatusForMeasurementRegisterSources;
@@ -361,7 +380,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         final int callerUid = Binder.getCallingUidOrThrow();
         final boolean attributionPermission =
                 PermissionHelper.hasAttributionPermission(mContext, request.getAppPackageName());
-        sBackgroundExecutor.execute(
+        mBackgroundExecutor.execute(
                 () -> {
                     final Supplier<Boolean> enforceForeground =
                             mFlags::getEnforceForegroundStatusForMeasurementRegisterWebTrigger;
@@ -421,7 +440,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         }
 
         final int callerUid = Binder.getCallingUidOrThrow();
-        sBackgroundExecutor.execute(
+        mBackgroundExecutor.execute(
                 () -> {
                     final Supplier<Boolean> enforceForeground =
                             mFlags::getEnforceForegroundStatusForMeasurementDeleteRegistrations;
@@ -537,6 +556,66 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                 statusCode);
                     }
                 });
+    }
+
+    @Override
+    public void schedulePeriodicJobs(IMeasurementCallback callback) {
+        // Job scheduling is an expensive operation because of calls to JobScheduler.getPendingJob.
+        // Perform scheduling on a background thread so that the main thread isn't held up.
+        FluentFuture.from(
+                        mBackgroundExecutor.submit(
+                                () -> {
+                                    AggregateReportingJobService.scheduleIfNeeded(mContext, false);
+                                    AggregateFallbackReportingJobService.scheduleIfNeeded(
+                                            mContext, false);
+                                    AttributionJobService.scheduleIfNeeded(mContext, false);
+                                    AttributionFallbackJobService.scheduleIfNeeded(mContext, false);
+                                    EventReportingJobService.scheduleIfNeeded(mContext, false);
+                                    EventFallbackReportingJobService.scheduleIfNeeded(
+                                            mContext, false);
+                                    DeleteExpiredJobService.scheduleIfNeeded(mContext, false);
+                                    DeleteUninstalledJobService.scheduleIfNeeded(mContext, false);
+                                    MddJob.scheduleAllMddJobs();
+                                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                            mContext, false);
+                                    AsyncRegistrationFallbackJob.schedule();
+                                    DebugReportingFallbackJobService.scheduleIfNeeded(
+                                            mContext, false);
+                                    VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
+                                            mContext, false);
+                                    EncryptionKeyJobService.scheduleIfNeeded(mContext, false);
+                                }))
+                .addCallback(
+                        new FutureCallback<Object>() {
+                            @Override
+                            public void onSuccess(Object result) {
+                                try {
+                                    if (callback != null) {
+                                        callback.onResult();
+                                    }
+                                } catch (RemoteException e) {
+                                    LoggerFactory.getMeasurementLogger()
+                                            .e(
+                                                    "Unable to call onSuccess callback after"
+                                                            + " scheduling periodic jobs");
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                try {
+                                    if (callback != null) {
+                                        callback.onFailure(null);
+                                    }
+                                } catch (RemoteException e) {
+                                    LoggerFactory.getMeasurementLogger()
+                                            .e(
+                                                    "Unable to call onFailure callback after"
+                                                            + " scheduling periodic jobs");
+                                }
+                            }
+                        },
+                        mBackgroundExecutor);
     }
 
     // Return true if we should throttle (don't allow the API call).
