@@ -1036,7 +1036,7 @@ public class AsyncSourceFetcher {
             }
         }
 
-        asyncRedirects.configure(headers, mFlags, asyncRegistration);
+        asyncRedirects.configure(headers, asyncRegistration);
 
         if (!isSourceHeaderPresent(headers)) {
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);
