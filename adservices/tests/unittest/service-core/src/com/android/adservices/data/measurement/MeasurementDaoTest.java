@@ -183,6 +183,7 @@ public class MeasurementDaoTest {
     private static final long COOLDOWN_WINDOW = TimeUnit.HOURS.toMillis(2);
     private static final long ATTRIBUTION_SCOPE_LIMIT = 3L;
     private static final long MAX_EVENT_STATES = 1000L;
+    private static final String REGISTRATION_ID2 = "R2";
 
     // Fake ID count for initializing triggers.
     private int mValueId = 1;
@@ -4742,6 +4743,106 @@ public class MeasurementDaoTest {
         assertThat(matchingSourceIds2).containsExactly(source0.getId(), source2.getId());
         assertThat(matchingSourceAttributionScopes2)
                 .containsExactly(source0.getAttributionScopes(), source2.getAttributionScopes());
+    }
+
+    @Test
+    public void testGetNavigationAttributionScopesForRegistration() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+
+        insertSourceForAttributionScope(
+                List.of("1"),
+                ATTRIBUTION_SCOPE_LIMIT,
+                MAX_EVENT_STATES,
+                SOURCE_EVENT_TIME,
+                List.of(WEB_ONE_DESTINATION),
+                List.of(APP_ONE_DESTINATION),
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                Source.SourceType.NAVIGATION,
+                Source.Status.ACTIVE);
+        insertSourceForAttributionScope(
+                List.of("2"),
+                ATTRIBUTION_SCOPE_LIMIT,
+                MAX_EVENT_STATES,
+                SOURCE_EVENT_TIME,
+                List.of(WEB_ONE_DESTINATION),
+                List.of(APP_ONE_DESTINATION),
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                Source.SourceType.NAVIGATION,
+                Source.Status.ACTIVE);
+        insertSourceForAttributionScope(
+                List.of("3"),
+                ATTRIBUTION_SCOPE_LIMIT,
+                MAX_EVENT_STATES,
+                SOURCE_EVENT_TIME,
+                List.of(WEB_ONE_DESTINATION),
+                List.of(APP_ONE_DESTINATION),
+                REGISTRATION_ORIGIN_2,
+                REGISTRATION_ID2,
+                Source.SourceType.NAVIGATION,
+                Source.Status.ACTIVE);
+        // Ignored source, attribution scopes ignored.
+        insertSourceForAttributionScope(
+                List.of("4"),
+                ATTRIBUTION_SCOPE_LIMIT,
+                MAX_EVENT_STATES,
+                SOURCE_EVENT_TIME,
+                List.of(WEB_ONE_DESTINATION),
+                List.of(APP_ONE_DESTINATION),
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                Source.SourceType.NAVIGATION,
+                Source.Status.IGNORED);
+        // Event source, attribution scopes ignored.
+        insertSourceForAttributionScope(
+                List.of("5"),
+                ATTRIBUTION_SCOPE_LIMIT,
+                MAX_EVENT_STATES,
+                SOURCE_EVENT_TIME,
+                List.of(WEB_ONE_DESTINATION),
+                List.of(APP_ONE_DESTINATION),
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                Source.SourceType.EVENT,
+                Source.Status.ACTIVE);
+        // Execution
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    assertThat(
+                                    dao.getNavigationAttributionScopesForRegistration(
+                                            SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                                            SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN
+                                                    .toString(),
+                                            EventSurfaceType.WEB,
+                                            WEB_ONE_DESTINATION.toString()))
+                            .containsExactly("1", "2");
+                    assertThat(
+                                    dao.getNavigationAttributionScopesForRegistration(
+                                            REGISTRATION_ID2,
+                                            REGISTRATION_ORIGIN_2.toString(),
+                                            EventSurfaceType.WEB,
+                                            WEB_ONE_DESTINATION.toString()))
+                            .containsExactly("3");
+                    assertThat(
+                                    dao.getNavigationAttributionScopesForRegistration(
+                                            SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                                            SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN
+                                                    .toString(),
+                                            EventSurfaceType.APP,
+                                            APP_ONE_DESTINATION.toString()))
+                            .containsExactly("1", "2");
+                    assertThat(
+                                    dao.getNavigationAttributionScopesForRegistration(
+                                            REGISTRATION_ID2,
+                                            REGISTRATION_ORIGIN_2.toString(),
+                                            EventSurfaceType.APP,
+                                            APP_ONE_DESTINATION.toString()))
+                            .containsExactly("3");
+                });
     }
 
     @Test
@@ -11757,6 +11858,30 @@ public class MeasurementDaoTest {
             List<Uri> webDestinations,
             List<Uri> appDestinations,
             @NonNull Uri reportingOrigin) {
+        return insertSourceForAttributionScope(
+                attributionScopes,
+                attributionScopeLimit,
+                maxEventStates,
+                eventTime,
+                webDestinations,
+                appDestinations,
+                reportingOrigin,
+                SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                Source.SourceType.EVENT,
+                Source.Status.ACTIVE);
+    }
+
+    private Source insertSourceForAttributionScope(
+            List<String> attributionScopes,
+            Long attributionScopeLimit,
+            Long maxEventStates,
+            long eventTime,
+            List<Uri> webDestinations,
+            List<Uri> appDestinations,
+            @NonNull Uri reportingOrigin,
+            String registrationId,
+            Source.SourceType sourceType,
+            @Source.Status int status) {
         Source validSource =
                 SourceFixture.getValidSourceBuilder()
                         .setEventTime(eventTime)
@@ -11766,6 +11891,9 @@ public class MeasurementDaoTest {
                         .setAppDestinations(appDestinations)
                         .setAttributionScopes(attributionScopes)
                         .setRegistrationOrigin(reportingOrigin)
+                        .setSourceType(sourceType)
+                        .setStatus(status)
+                        .setRegistrationId(registrationId)
                         .build();
         AtomicReference<String> insertedSourceId = new AtomicReference<>();
         mDatastoreManager.runInTransaction(

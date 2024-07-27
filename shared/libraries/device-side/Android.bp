@@ -216,6 +216,9 @@ java_library {
         "ravenwood-junit",
         "truth",
     ],
+    libs: [
+        "framework-connectivity",
+    ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
