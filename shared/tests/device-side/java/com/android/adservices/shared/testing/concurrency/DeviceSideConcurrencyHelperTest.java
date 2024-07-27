@@ -17,9 +17,7 @@ package com.android.adservices.shared.testing.concurrency;
 
 import static org.junit.Assert.assertThrows;
 
-import android.os.Handler;
 import android.os.Looper;
-import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.testing.BooleanSyncCallback;
@@ -35,9 +33,6 @@ public final class DeviceSideConcurrencyHelperTest extends SharedUnitTestCase {
                 () -> DeviceSideConcurrencyHelper.runOnMainThread(null));
     }
 
-    // TODO(b/335935200): Handler constructor fails with : Cannot read field "mQueue" because
-    // "looper" is null
-    @DisabledOnRavenwood(blockedBy = Handler.class)
     @Test
     public void testRunOnMainThread() throws Exception {
         BooleanSyncCallback callback =
