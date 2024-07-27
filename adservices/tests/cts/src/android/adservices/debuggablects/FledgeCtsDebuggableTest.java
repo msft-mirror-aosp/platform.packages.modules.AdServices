@@ -24,7 +24,6 @@ import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
-import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
@@ -155,7 +154,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED) // Enabled due to reset during teardown()
 @SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED)
-@SetFlagDisabled(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE)
 @SetFlagDisabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_CPC_BILLING_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED)
