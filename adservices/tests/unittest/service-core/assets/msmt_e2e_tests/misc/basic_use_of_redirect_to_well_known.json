@@ -1,8 +1,5 @@
 {
   "description": "Three sources with equal event-time, and three triggers that match. The second and third sources and triggers are obtained by redirect from the first HTTP fetch of each, using redirection to the .well-known path. Event report task within the expiry window sends the data corresponding to the three sources.",
-  "phflags_override": {
-    "measurement_enable_redirect_to_well_known_path": "true"
-  },
   "input": {
     "sources": [{
       "registration_request": {

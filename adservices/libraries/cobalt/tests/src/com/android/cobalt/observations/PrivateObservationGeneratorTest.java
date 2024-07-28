@@ -24,20 +24,18 @@ import com.android.cobalt.data.EventRecordAndSystemProfile;
 import com.android.cobalt.data.EventVector;
 import com.android.cobalt.system.SystemData;
 import com.android.cobalt.testing.observations.FakeSecureRandom;
+import com.android.cobalt.testing.observations.ObservationFactory;
 
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricDimension;
 import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.MetricDefinition.TimeZonePolicy;
-import com.google.cobalt.Observation;
 import com.google.cobalt.ObservationMetadata;
-import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig;
-import com.google.cobalt.ReportParticipationObservation;
 import com.google.cobalt.SystemProfile;
 import com.google.cobalt.SystemProfileField;
 import com.google.cobalt.UnencryptedObservationBatch;
@@ -192,12 +190,7 @@ public final class PrivateObservationGeneratorTest {
         assertThat(result.get(0).getUnencryptedObservations(0).getContributionId())
                 .isEqualTo(RANDOM_BYTES_2);
         assertThat(result.get(0).getUnencryptedObservations(0).getObservation())
-                .isEqualTo(
-                        Observation.newBuilder()
-                                .setReportParticipation(
-                                        ReportParticipationObservation.getDefaultInstance())
-                                .setRandomId(RANDOM_BYTES_1)
-                                .build());
+                .isEqualTo(ObservationFactory.createReportParticipationObservation(RANDOM_BYTES_1));
     }
 
     @Test
@@ -231,22 +224,15 @@ public final class PrivateObservationGeneratorTest {
                 .isEqualTo(RANDOM_BYTES_3);
         assertThat(result.get(0).getUnencryptedObservations(0).getObservation())
                 .isEqualTo(
-                        Observation.newBuilder()
-                                // Fabricated observations use
-                                // `sampleUniformDistribution(maxIndex)`to choose the index, with
-                                // FakeSecureRandom returning decrementing values starting at the
-                                // max. Max index is 1 event vectors * 11 numIndexPoints - 1 = 10
-                                .setPrivateIndex(PrivateIndexObservation.newBuilder().setIndex(10))
-                                .setRandomId(RANDOM_BYTES_1)
-                                .build());
+                        // Fabricated observations use
+                        // `sampleUniformDistribution(maxIndex)`to choose the index, with
+                        // FakeSecureRandom returning decrementing values starting at the
+                        // max. Max index is 1 event vectors * 11 numIndexPoints - 1 = 10
+                        ObservationFactory.createPrivateIndexObservation(
+                                /* privateIndex= */ 10, RANDOM_BYTES_1));
         assertThat(result.get(0).getUnencryptedObservations(1).getContributionId()).isEmpty();
         assertThat(result.get(0).getUnencryptedObservations(1).getObservation())
-                .isEqualTo(
-                        Observation.newBuilder()
-                                .setReportParticipation(
-                                        ReportParticipationObservation.getDefaultInstance())
-                                .setRandomId(RANDOM_BYTES_2)
-                                .build());
+                .isEqualTo(ObservationFactory.createReportParticipationObservation(RANDOM_BYTES_2));
     }
 
     @Test
@@ -268,19 +254,12 @@ public final class PrivateObservationGeneratorTest {
                 .isEqualTo(RANDOM_BYTES_3);
         assertThat(result.get(0).getUnencryptedObservations(0).getObservation())
                 .isEqualTo(
-                        Observation.newBuilder()
-                                // Value 11 has index 5
-                                .setPrivateIndex(PrivateIndexObservation.newBuilder().setIndex(5))
-                                .setRandomId(RANDOM_BYTES_1)
-                                .build());
+                        // Value 11 has index 5
+                        ObservationFactory.createPrivateIndexObservation(
+                                /* privateIndex= */ 5, RANDOM_BYTES_1));
         assertThat(result.get(0).getUnencryptedObservations(1).getContributionId()).isEmpty();
         assertThat(result.get(0).getUnencryptedObservations(1).getObservation())
-                .isEqualTo(
-                        Observation.newBuilder()
-                                .setReportParticipation(
-                                        ReportParticipationObservation.getDefaultInstance())
-                                .setRandomId(RANDOM_BYTES_2)
-                                .build());
+                .isEqualTo(ObservationFactory.createReportParticipationObservation(RANDOM_BYTES_2));
     }
 
     @Test
@@ -318,27 +297,18 @@ public final class PrivateObservationGeneratorTest {
                 .isEqualTo(RANDOM_BYTES_4);
         assertThat(result.get(0).getUnencryptedObservations(0).getObservation())
                 .isEqualTo(
-                        Observation.newBuilder()
-                                // Value 13 has index 6.
-                                .setPrivateIndex(PrivateIndexObservation.newBuilder().setIndex(6))
-                                .setRandomId(RANDOM_BYTES_1)
-                                .build());
+                        // Value 13 has index 6.
+                        ObservationFactory.createPrivateIndexObservation(
+                                /* privateIndex= */ 6, RANDOM_BYTES_1));
         assertThat(result.get(0).getUnencryptedObservations(1).getContributionId()).isEmpty();
         assertThat(result.get(0).getUnencryptedObservations(1).getObservation())
                 .isEqualTo(
-                        Observation.newBuilder()
-                                // Max index is 1 event vectors * 11 numIndexPoints - 1 = 10
-                                .setPrivateIndex(PrivateIndexObservation.newBuilder().setIndex(10))
-                                .setRandomId(RANDOM_BYTES_2)
-                                .build());
+                        // Max index is 1 event vectors * 11 numIndexPoints - 1 = 10
+                        ObservationFactory.createPrivateIndexObservation(
+                                /* privateIndex= */ 10, RANDOM_BYTES_2));
         assertThat(result.get(0).getUnencryptedObservations(2).getContributionId()).isEmpty();
         assertThat(result.get(0).getUnencryptedObservations(2).getObservation())
-                .isEqualTo(
-                        Observation.newBuilder()
-                                .setReportParticipation(
-                                        ReportParticipationObservation.getDefaultInstance())
-                                .setRandomId(RANDOM_BYTES_3)
-                                .build());
+                .isEqualTo(ObservationFactory.createReportParticipationObservation(RANDOM_BYTES_3));
     }
 
     @Test
@@ -375,27 +345,18 @@ public final class PrivateObservationGeneratorTest {
                 .isEqualTo(RANDOM_BYTES_4);
         assertThat(result.get(0).getUnencryptedObservations(0).getObservation())
                 .isEqualTo(
-                        Observation.newBuilder()
-                                // Event vector (1,5) is index 1. Index 0 is (0,5). Max event vector
-                                // index is 5. Value 3 is Index 1.  The combined index is 7.
-                                .setPrivateIndex(PrivateIndexObservation.newBuilder().setIndex(7))
-                                .setRandomId(RANDOM_BYTES_1)
-                                .build());
+                        // Event vector (1,5) is index 1. Index 0 is (0,5). Max event vector
+                        // index is 5. Value 3 is Index 1.  The combined index is 7.
+                        ObservationFactory.createPrivateIndexObservation(
+                                /* privateIndex= */ 7, RANDOM_BYTES_1));
         assertThat(result.get(0).getUnencryptedObservations(1).getContributionId()).isEmpty();
         assertThat(result.get(0).getUnencryptedObservations(1).getObservation())
                 .isEqualTo(
-                        Observation.newBuilder()
-                                // Max index is 6 event vectors * 11 numIndexPoints - 1 = 65
-                                .setPrivateIndex(PrivateIndexObservation.newBuilder().setIndex(65))
-                                .setRandomId(RANDOM_BYTES_2)
-                                .build());
+                        // Max index is 6 event vectors * 11 numIndexPoints - 1 = 65
+                        ObservationFactory.createPrivateIndexObservation(
+                                /* privateIndex= */ 65, RANDOM_BYTES_2));
         assertThat(result.get(0).getUnencryptedObservations(2).getContributionId()).isEmpty();
         assertThat(result.get(0).getUnencryptedObservations(2).getObservation())
-                .isEqualTo(
-                        Observation.newBuilder()
-                                .setReportParticipation(
-                                        ReportParticipationObservation.getDefaultInstance())
-                                .setRandomId(RANDOM_BYTES_3)
-                                .build());
+                .isEqualTo(ObservationFactory.createReportParticipationObservation(RANDOM_BYTES_3));
     }
 }

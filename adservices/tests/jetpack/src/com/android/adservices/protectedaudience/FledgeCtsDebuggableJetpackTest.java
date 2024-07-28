@@ -171,7 +171,6 @@ public class FledgeCtsDebuggableJetpackTest {
         testUtil.disableDeviceConfigSyncForTests(true);
         testUtil.disableFledgeEnrollmentCheck(true);
         testUtil.enableAdServiceSystemService(true);
-        testUtil.enforceFledgeJsIsolateMaxHeapSize(false);
     }
 
     @AfterClass
@@ -192,7 +191,6 @@ public class FledgeCtsDebuggableJetpackTest {
         testUtil.disableDeviceConfigSyncForTests(false);
         testUtil.disableFledgeEnrollmentCheck(false);
         testUtil.enableAdServiceSystemService(false);
-        testUtil.enforceFledgeJsIsolateMaxHeapSize(true);
     }
 
     @Before

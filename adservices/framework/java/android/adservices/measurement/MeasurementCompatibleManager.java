@@ -33,6 +33,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.os.Trace;
 import android.view.InputEvent;
 
 import com.android.adservices.AdServicesCommon;
@@ -699,6 +700,7 @@ public class MeasurementCompatibleManager {
     /* Make AdId call with timeout */
     @SuppressLint("MissingPermission")
     private void getAdId(MeasurementAdIdCallback measurementAdIdCallback) {
+        Trace.beginSection("MeasurementCompatibleManager#getAdId");
         CountDownLatch countDownLatch = new CountDownLatch(1);
         AtomicBoolean isAdIdEnabled = new AtomicBoolean();
         AtomicReference<String> adIdValue = new AtomicReference<>();
@@ -737,6 +739,7 @@ public class MeasurementCompatibleManager {
         if (timedOut) {
             LogUtil.w("AdId call timed out");
         }
+        Trace.endSection();
         measurementAdIdCallback.onAdIdCallback(isAdIdEnabled.get(), adIdValue.get());
     }
 }

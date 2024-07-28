@@ -161,26 +161,22 @@ public final class VerboseDebugReportingJobService extends JobService {
 
     @VisibleForTesting
     void sendReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                DatastoreManager datastoreManager =
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-                new DebugReportingJobHandler(
-                                datastoreManager,
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.UploadMethod.REGULAR,
-                                getApplicationContext())
-                        .performScheduledPendingReports();
-                return;
-            } finally {
-                lock.unlock();
-            }
+        JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING)
+                .runWithLock(
+                        "VerboseDebugReportingJobService",
+                        () -> {
+                            DatastoreManager datastoreManager =
+                                    DatastoreManagerFactory.getDatastoreManager(
+                                            getApplicationContext());
+                            new DebugReportingJobHandler(
+                                            datastoreManager,
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.UploadMethod.REGULAR,
+                                            getApplicationContext())
+                                    .performScheduledPendingReports();
+                        });
         }
-        LoggerFactory.getMeasurementLogger()
-                .d("VerboseDebugReportingJobService did not acquire the lock");
-    }
 
     @VisibleForTesting
     Future getFutureForTesting() {
