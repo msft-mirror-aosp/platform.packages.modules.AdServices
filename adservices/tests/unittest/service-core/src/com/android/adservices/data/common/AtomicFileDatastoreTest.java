@@ -30,13 +30,13 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public final class BooleanFileDatastoreTest {
+public final class AtomicFileDatastoreTest {
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String FILENAME = "BooleanFileDatastoreTest.xml";
+    private static final String FILENAME = "AtomicFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
 
-    private final BooleanFileDatastore mDatastore =
-            new BooleanFileDatastore(PPAPI_CONTEXT, FILENAME, DATASTORE_VERSION);
+    private final AtomicFileDatastore mDatastore =
+            new AtomicFileDatastore(PPAPI_CONTEXT, FILENAME, DATASTORE_VERSION);
 
     @Before
     public void initializeDatastore() throws IOException {
@@ -52,7 +52,7 @@ public final class BooleanFileDatastoreTest {
     public void testGetVersionKey() {
         assertWithMessage("getVersionKey()")
                 .that(mDatastore.getVersionKey())
-                .isEqualTo(BooleanFileDatastore.VERSION_KEY);
+                .isEqualTo(AtomicFileDatastore.VERSION_KEY);
     }
 
     @Test
@@ -60,17 +60,17 @@ public final class BooleanFileDatastoreTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 /* adServicesContext= */ null, FILENAME, DATASTORE_VERSION));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 PPAPI_CONTEXT, /* filename= */ null, DATASTORE_VERSION));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 PPAPI_CONTEXT, /* filename= */ "", DATASTORE_VERSION));
     }
 }

@@ -3009,7 +3009,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -3043,7 +3042,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -3089,7 +3087,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate only redirect behavior header with no actual redirect
@@ -3119,7 +3116,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(LIST_TYPE_REDIRECT_URI));

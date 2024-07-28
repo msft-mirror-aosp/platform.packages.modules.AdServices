@@ -26,6 +26,7 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.Trace;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
@@ -80,6 +81,8 @@ public class AsyncRegistrationQueueJobService extends JobService {
                 AdServicesExecutors.getBlockingExecutor()
                         .submit(
                                 () -> {
+                                    Trace.beginSection(
+                                            "AsyncRegistrationQueueJobService#onStartJob#executor");
                                     cancelDeprecatedAsyncRegistrationJob(
                                             AsyncRegistrationQueueJobService.this);
                                     ProcessingResult result = processAsyncRecords();
@@ -114,26 +117,22 @@ public class AsyncRegistrationQueueJobService extends JobService {
                                             // scheduled
                                             jobFinished(params, /* wantsReschedule= */ true);
                                     }
+                                    Trace.endSection();
                                 });
         return true;
     }
 
     @VisibleForTesting
     ProcessingResult processAsyncRecords() {
-        final JobLockHolder lock = JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING);
-        if (lock.tryLock()) {
-            try {
-                return AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
-                        .runAsyncRegistrationQueueWorker();
-            } finally {
-                lock.unlock();
-            }
+        return JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING)
+                .callWithLock(
+                        "AsyncRegistrationQueueJobService",
+                        () ->
+                                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
+                                        .runAsyncRegistrationQueueWorker(),
+                        // Another thread is already processingasync registrations.
+                        ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED);
         }
-        LoggerFactory.getMeasurementLogger()
-                .d("AsyncRegistrationQueueJobService did not acquire the lock");
-        // Another thread is already processing async registrations.
-        return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
-    }
 
     @Override
     public boolean onStopJob(JobParameters params) {
