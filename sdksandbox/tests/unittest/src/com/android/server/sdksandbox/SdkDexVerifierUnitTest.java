@@ -19,23 +19,60 @@ package com.android.server.sdksandbox.verifier;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.OutcomeReceiver;
 
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.proto.Verifier.AllowedApi;
+import com.android.server.sdksandbox.proto.Verifier.AllowedApisList;
+import com.android.server.sdksandbox.verifier.SdkDexVerifier.VerificationResult;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class SdkDexVerifierUnitTest extends DeviceSupportedBaseTest {
 
+    private static final String TEST_PACKAGENAME = "com.android.codeproviderresources_1";
+
+    private static final List<AllowedApi> ALL_ALLOWED_APIS =
+            List.of(
+                    AllowedApi.newBuilder().setClassName("Landroid/*").setAllow(true).build(),
+                    AllowedApi.newBuilder().setClassName("Landroidx/*").setAllow(true).build(),
+                    AllowedApi.newBuilder().setClassName("Lcom/android/*").setAllow(true).build(),
+                    AllowedApi.newBuilder()
+                            .setClassName("Lcom/google/android/*")
+                            .setAllow(true)
+                            .build(),
+                    AllowedApi.newBuilder().setClassName("Ljava/*").setAllow(true).build(),
+                    AllowedApi.newBuilder().setClassName("Ljavax/*").setAllow(true).build());
+
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 
     private final SdkDexVerifier mVerifier = SdkDexVerifier.getInstance();
+    private PackageManager mPackageManager;
+
+    @Before
+    public void setUp() {
+        Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        mPackageManager = ctx.getPackageManager();
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
+    }
 
     @Test
     public void getApiTokens_fullyQualifiedRule() {
@@ -170,17 +207,99 @@ public class SdkDexVerifierUnitTest extends DeviceSupportedBaseTest {
                 .isEqualTo("Apk to verify not found: bogusPath");
     }
 
-    private static class TestOutcomeReceiver implements OutcomeReceiver<Void, Exception> {
+    @Test
+    public void startDexVerification_passVerify() throws Exception {
+        AllowedApisList allowlist =
+                AllowedApisList.newBuilder().addAllAllowedApis(ALL_ALLOWED_APIS).build();
+        ApiAllowlistProvider fakeAllowlistProvider = new FakeAllowlistProvider(allowlist);
+        TestOutcomeReceiver callback = new TestOutcomeReceiver();
+        SdkDexVerifier verifier =
+                new SdkDexVerifier(
+                        new SdkDexVerifier.Injector(
+                                fakeAllowlistProvider,
+                                new SerialDexLoader(new DexParserImpl(), MAIN_HANDLER)));
+
+        verifier.startDexVerification(
+                getPackageLocation(TEST_PACKAGENAME), TEST_PACKAGENAME, 33, callback);
+
+        assertThat(callback.getResult().hasPassed()).isTrue();
+        assertThat(callback.getResult().getRestrictedUsages()).isEmpty();
+    }
+
+    @Test
+    public void startDexVerification_failVerify() throws Exception {
+        ArrayList<AllowedApi> allowedApis = new ArrayList<AllowedApi>(ALL_ALLOWED_APIS);
+        allowedApis.add(
+                AllowedApi.newBuilder()
+                        .setClassName("Ljava/lang/String/*")
+                        .setAllow(false)
+                        .build());
+        AllowedApisList allowlist =
+                AllowedApisList.newBuilder().addAllAllowedApis(allowedApis).build();
+        ApiAllowlistProvider fakeAllowlistProvider = new FakeAllowlistProvider(allowlist);
+        TestOutcomeReceiver callback = new TestOutcomeReceiver();
+        SdkDexVerifier verifier =
+                new SdkDexVerifier(
+                        new SdkDexVerifier.Injector(
+                                fakeAllowlistProvider,
+                                new SerialDexLoader(new DexParserImpl(), MAIN_HANDLER)));
+
+        verifier.startDexVerification(
+                getPackageLocation(TEST_PACKAGENAME), TEST_PACKAGENAME, 33, callback);
+
+        assertThat(callback.getResult().hasPassed()).isFalse();
+        assertThat(callback.getResult().getRestrictedUsages().size()).isGreaterThan(0);
+        assertThat(callback.getResult().getRestrictedUsages().get(0))
+                .startsWith("Ljava/lang/String");
+    }
+
+    private String getPackageLocation(String packageName) throws Exception {
+        ApplicationInfo applicationInfo =
+                mPackageManager.getPackageInfo(
+                                packageName,
+                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
+                                        | PackageManager.MATCH_ANY_USER)
+                        .applicationInfo;
+        return applicationInfo.sourceDir;
+    }
+
+    private static class FakeAllowlistProvider extends ApiAllowlistProvider {
+        Map<Long, AllowedApisList> mFakeAllowlist;
+
+        FakeAllowlistProvider(AllowedApisList allowlist) {
+            super();
+            mFakeAllowlist = Map.of(33L, allowlist);
+        }
+
+        @Override
+        public Map<Long, AllowedApisList> loadPlatformApiAllowlist() {
+            return mFakeAllowlist;
+        }
+    }
+
+    private static class TestOutcomeReceiver
+            implements OutcomeReceiver<VerificationResult, Exception> {
         private CountDownLatch mLatch = new CountDownLatch(1);
         private Exception mLastError;
+        private VerificationResult mResult;
 
         public Exception getLastError() throws Exception {
             assertWithMessage("Latch timed out").that(mLatch.await(5, TimeUnit.SECONDS)).isTrue();
             return mLastError;
         }
 
+        public VerificationResult getResult() throws Exception {
+            assertWithMessage("Verification completed in 5 seconds")
+                    .that(mLatch.await(5, TimeUnit.SECONDS))
+                    .isTrue();
+            return mResult;
+        }
+
         @Override
-        public void onResult(Void result) {}
+        public void onResult(VerificationResult result) {
+            mResult = result;
+            mLatch.countDown();
+        }
 
         @Override
         public void onError(Exception e) {
