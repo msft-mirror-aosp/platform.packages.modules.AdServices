@@ -3264,13 +3264,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableRedirectToWellKnownPath() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH,
-                MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH);
-    }
-
-    @Override
     public boolean getMeasurementEnableAttributionScope() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,

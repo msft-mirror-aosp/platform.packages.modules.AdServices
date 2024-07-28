@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.topics;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
@@ -38,7 +37,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -49,6 +47,9 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
@@ -65,6 +66,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -80,6 +82,7 @@ import org.mockito.Spy;
 @MockStatic(ServiceCompatUtils.class)
 @SpyStatic(TopicsWorker.class)
 @RequiresSdkLevelAtLeastS
+@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
 public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
     // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
@@ -94,6 +97,10 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
+
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     private AdServicesJobServiceLogger mSpyLogger;
 
@@ -145,34 +152,24 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED)
     public void testOnStartJob_killSwitchOn_withoutLogging() {
-        doNothingOnErrorLogUtilError();
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
 
         testOnStartJob_killSwitchOn();
 
         verifyLoggingNotHappened(mSpyLogger);
-        verify(
-                () ->
-                        ErrorLogUtil.e(
-                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)));
     }
 
     @Test
+    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED)
     public void testOnStartJob_killSwitchOn_withLogging() throws InterruptedException {
-        doNothingOnErrorLogUtilError();
         mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
         JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStartJob_killSwitchOn();
 
         verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
-        verify(
-                () ->
-                        ErrorLogUtil.e(
-                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)));
     }
 
     @Test
@@ -304,8 +301,8 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED)
     public void testScheduleIfNeeded_scheduledWithKillSwitchOn() {
-        doNothingOnErrorLogUtilError();
         // Kill switch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
@@ -313,11 +310,6 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
         assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
         assertThat(mJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNull();
-        verify(
-                () ->
-                        ErrorLogUtil.e(
-                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)));
     }
 
     @Test

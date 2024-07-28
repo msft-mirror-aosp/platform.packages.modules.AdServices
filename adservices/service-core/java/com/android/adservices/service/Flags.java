@@ -329,7 +329,8 @@ public interface Flags extends ModuleSharedFlags {
      * The suffix that is appended to the aggregation coordinator origin for retrieving the
      * encryption keys.
      */
-    String MEASUREMENT_AGGREGATION_COORDINATOR_PATH = "v1alpha/publicKeys";
+    String MEASUREMENT_AGGREGATION_COORDINATOR_PATH =
+            ".well-known/aggregation-service/v1/public-keys";
 
     /** Returns the URL for fetching public encryption keys for aggregatable reports. */
     default String getMeasurementAggregationCoordinatorPath() {
@@ -348,7 +349,8 @@ public interface Flags extends ModuleSharedFlags {
      * keys for aggregatable reports.
      */
     String MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST =
-            "https://publickeyservice.aws.privacysandboxservices.com";
+            "https://publickeyservice.msmt.aws.privacysandboxservices.com,"
+                    + "https://publickeyservice.msmt.gcp.privacysandboxservices.com";
 
     /**
      * Returns a string which is a comma separated list of origins used to fetch public encryption
@@ -361,7 +363,7 @@ public interface Flags extends ModuleSharedFlags {
     /* The list of origins for creating a URL used to fetch public encryption keys for
     aggregatable reports. AWS is the current default. */
     String MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN =
-            "https://publickeyservice.aws.privacysandboxservices.com";
+            "https://publickeyservice.msmt.aws.privacysandboxservices.com";
 
     /**
      * Returns the default origin for creating the URI used to fetch public encryption keys for
@@ -632,7 +634,7 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
     }
 
-    int DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET = 5;
+    int DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET = 20;
 
     /** Maximum number of filter maps allowed in an attribution filter set. */
     default int getMeasurementMaxFilterMapsPerFilterSet() {
@@ -4846,16 +4848,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the flag to control which allow list to use in getMeasurementApiStatus. */
     default boolean getMsmtEnableApiStatusAllowListCheck() {
         return MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
-    }
-
-    /**
-     * Flag to control whether redirect registration urls should be modified to prefix the path
-     * string with .well-known
-     */
-    boolean MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH = false;
-
-    default boolean getMeasurementEnableRedirectToWellKnownPath() {
-        return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
     }
 
     @ConfigFlag
