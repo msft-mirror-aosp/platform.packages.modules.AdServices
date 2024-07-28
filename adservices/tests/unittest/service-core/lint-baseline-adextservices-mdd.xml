@@ -3,12 +3,34 @@
 
     <issue
         id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getInstance`"
+        errorLine1="        doReturn(mockedAdServicesJobScheduler).when(AdServicesJobScheduler::getInstance);"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/test-util/java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java"
+            line="57"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getInstance`"
+        errorLine1="        doReturn(mockedAdServicesJobServiceFactory).when(AdServicesJobServiceFactory::getInstance);"
+        errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/test-util/java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java"
+            line="65"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="NewApi"
         message="Call requires API level 31 (current min is 30): `getFileStorage`"
         errorLine1="        mFileStorage = MobileDataDownloadFactory.getFileStorage();"
         errorLine2="                                                 ~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="193"
+            line="194"
             column="50"/>
     </issue>
 
@@ -19,7 +41,7 @@
         errorLine2="                                                    ~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="194"
+            line="195"
             column="53"/>
     </issue>
 
@@ -30,7 +52,7 @@
         errorLine2="                                                                   ~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="198"
+            line="199"
             column="68"/>
     </issue>
 
@@ -41,7 +63,7 @@
         errorLine2="                                                            ~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="200"
+            line="201"
             column="61"/>
     </issue>
 
@@ -52,7 +74,7 @@
         errorLine2="                                                              ~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="201"
+            line="202"
             column="63"/>
     </issue>
 
@@ -63,7 +85,7 @@
         errorLine2="                             ~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="442"
+            line="443"
             column="30"/>
     </issue>
 
@@ -74,7 +96,7 @@
         errorLine2="                             ~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="465"
+            line="466"
             column="30"/>
     </issue>
 
@@ -85,7 +107,7 @@
         errorLine2="                             ~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="488"
+            line="489"
             column="30"/>
     </issue>
 
@@ -96,7 +118,7 @@
         errorLine2="                             ~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="512"
+            line="513"
             column="30"/>
     </issue>
 
@@ -107,7 +129,7 @@
         errorLine2="                             ~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="535"
+            line="536"
             column="30"/>
     </issue>
 
@@ -118,7 +140,7 @@
         errorLine2="                             ~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="564"
+            line="565"
             column="30"/>
     </issue>
 
@@ -129,7 +151,7 @@
         errorLine2="                             ~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="566"
+            line="567"
             column="30"/>
     </issue>
 
@@ -140,7 +162,7 @@
         errorLine2="                             ~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="568"
+            line="569"
             column="30"/>
     </issue>
 
@@ -151,7 +173,7 @@
         errorLine2="                                                                           ~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="587"
+            line="588"
             column="76"/>
     </issue>
 
@@ -162,7 +184,7 @@
         errorLine2="                                            ~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="587"
+            line="588"
             column="45"/>
     </issue>
 
@@ -173,7 +195,7 @@
         errorLine2="                                                               ~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="605"
+            line="606"
             column="64"/>
     </issue>
 
@@ -184,7 +206,7 @@
         errorLine2="                                                               ~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="613"
+            line="614"
             column="64"/>
     </issue>
 
@@ -195,7 +217,7 @@
         errorLine2="                                                                       ~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="774"
+            line="775"
             column="72"/>
     </issue>
 
@@ -206,7 +228,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="776"
+            line="777"
             column="43"/>
     </issue>
 
@@ -217,7 +239,7 @@
         errorLine2="                                                              ~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="794"
+            line="795"
             column="63"/>
     </issue>
 
@@ -228,7 +250,7 @@
         errorLine2="                                                             ~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="799"
+            line="800"
             column="62"/>
     </issue>
 
@@ -239,7 +261,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="813"
+            line="814"
             column="43"/>
     </issue>
 
@@ -250,7 +272,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="840"
+            line="841"
             column="43"/>
     </issue>
 
@@ -261,7 +283,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="863"
+            line="864"
             column="43"/>
     </issue>
 
@@ -272,7 +294,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="883"
+            line="884"
             column="43"/>
     </issue>
 
@@ -283,7 +305,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="903"
+            line="904"
             column="43"/>
     </issue>
 
@@ -294,7 +316,7 @@
         errorLine2="                                                            ~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="948"
+            line="949"
             column="61"/>
     </issue>
 
@@ -305,7 +327,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="952"
+            line="953"
             column="17"/>
     </issue>
 
@@ -316,7 +338,7 @@
         errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="956"
+            line="957"
             column="51"/>
     </issue>
 
@@ -327,7 +349,7 @@
         errorLine2="                                                                        ~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="957"
+            line="958"
             column="73"/>
     </issue>
 
@@ -338,7 +360,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="978"
+            line="979"
             column="17"/>
     </issue>
 
@@ -349,7 +371,7 @@
         errorLine2="                                                            ~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="1005"
+            line="1006"
             column="61"/>
     </issue>
 
@@ -360,7 +382,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="1018"
+            line="1019"
             column="50"/>
     </issue>
 
@@ -371,7 +393,7 @@
         errorLine2="                           ~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="1019"
+            line="1020"
             column="28"/>
     </issue>
 
@@ -415,7 +437,7 @@
         errorLine2="                                                    ~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="194"
+            line="195"
             column="53"/>
     </issue>
 
@@ -426,7 +448,7 @@
         errorLine2="                                                               ~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="605"
+            line="606"
             column="64"/>
     </issue>
 
@@ -437,7 +459,7 @@
         errorLine2="                                                               ~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="613"
+            line="614"
             column="64"/>
     </issue>
 
@@ -448,7 +470,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="776"
+            line="777"
             column="43"/>
     </issue>
 
@@ -459,7 +481,7 @@
         errorLine2="                                                              ~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="794"
+            line="795"
             column="63"/>
     </issue>
 
@@ -470,7 +492,7 @@
         errorLine2="                                                             ~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="799"
+            line="800"
             column="62"/>
     </issue>
 
@@ -481,7 +503,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="813"
+            line="814"
             column="43"/>
     </issue>
 
@@ -492,7 +514,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="840"
+            line="841"
             column="43"/>
     </issue>
 
@@ -503,7 +525,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="863"
+            line="864"
             column="43"/>
     </issue>
 
@@ -514,7 +536,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="883"
+            line="884"
             column="43"/>
     </issue>
 
@@ -525,7 +547,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="903"
+            line="904"
             column="43"/>
     </issue>
 
@@ -536,7 +558,7 @@
         errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="950"
+            line="951"
             column="45"/>
     </issue>
 
@@ -547,7 +569,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="952"
+            line="953"
             column="17"/>
     </issue>
 
@@ -558,7 +580,7 @@
         errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="971"
+            line="972"
             column="39"/>
     </issue>
 
@@ -569,7 +591,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="978"
+            line="979"
             column="17"/>
     </issue>
 
@@ -580,7 +602,7 @@
         errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="980"
+            line="981"
             column="45"/>
     </issue>
 
@@ -590,7 +612,7 @@
         errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
         errorLine2=" ~~~~~~~~">
         <location
-            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/790917bd5402ba11fa67cc3875fcd127/manifest_merger/AndroidManifest.xml"
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
             line="17"
             column="2"/>
     </issue>
@@ -601,7 +623,7 @@
         errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
         errorLine2=" ~~~~~~~~">
         <location
-            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/790917bd5402ba11fa67cc3875fcd127/manifest_merger/AndroidManifest.xml"
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
             line="17"
             column="2"/>
     </issue>
@@ -612,7 +634,7 @@
         errorLine1="        android:debuggable=&quot;true&quot;"
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/790917bd5402ba11fa67cc3875fcd127/manifest_merger/AndroidManifest.xml"
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
             line="56"
             column="9"/>
     </issue>
@@ -623,7 +645,7 @@
         errorLine1="    &lt;uses-permission android:name=&quot;android.permission.QUERY_ALL_PACKAGES&quot; />"
         errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/790917bd5402ba11fa67cc3875fcd127/manifest_merger/AndroidManifest.xml"
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
             line="33"
             column="22"/>
     </issue>
@@ -634,7 +656,7 @@
         errorLine1="    &lt;uses-permission android:name=&quot;android.permission.QUERY_ALL_PACKAGES&quot; />"
         errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/790917bd5402ba11fa67cc3875fcd127/manifest_merger/AndroidManifest.xml"
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
             line="33"
             column="22"/>
     </issue>
@@ -689,7 +711,7 @@
         errorLine1="    &lt;application"
         errorLine2="     ~~~~~~~~~~~">
         <location
-            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/790917bd5402ba11fa67cc3875fcd127/manifest_merger/AndroidManifest.xml"
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
             line="54"
             column="6"/>
     </issue>
