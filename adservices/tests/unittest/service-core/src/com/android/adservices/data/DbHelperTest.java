@@ -16,11 +16,12 @@
 
 package com.android.adservices.data;
 
+import static com.android.adservices.common.DbTestUtil.assertMeasurementTablesDoNotExist;
+import static com.android.adservices.common.DbTestUtil.doesIndexExist;
+import static com.android.adservices.common.DbTestUtil.doesTableExist;
+import static com.android.adservices.common.DbTestUtil.doesTableExistAndColumnCountMatch;
+import static com.android.adservices.common.DbTestUtil.getDbHelperForTest;
 import static com.android.adservices.data.DbHelper.DATABASE_VERSION_7;
-import static com.android.adservices.data.DbTestUtil.assertMeasurementTablesDoNotExist;
-import static com.android.adservices.data.DbTestUtil.doesIndexExist;
-import static com.android.adservices.data.DbTestUtil.doesTableExist;
-import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
@@ -97,7 +98,7 @@ public class DbHelperTest {
 
     @Test
     public void testOnCreate() {
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().safeGetReadableDatabase();
+        SQLiteDatabase db = getDbHelperForTest().safeGetReadableDatabase();
         assertNotNull(db);
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_taxonomy", 4));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_classification_topics", 6));
@@ -135,7 +136,7 @@ public class DbHelperTest {
     @Test
     public void onOpen_appliesForeignKeyConstraint() {
         // dbHelper.onOpen gets called implicitly
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().safeGetReadableDatabase();
+        SQLiteDatabase db = getDbHelperForTest().safeGetReadableDatabase();
         try (Cursor cursor = db.rawQuery("PRAGMA foreign_keys", null)) {
             cursor.moveToNext();
             assertEquals(1, cursor.getLong(0));
@@ -144,7 +145,7 @@ public class DbHelperTest {
 
     @Test
     public void testOnUpgrade_topicsV7Migration() {
-        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        DbHelper dbHelper = spy(getDbHelperForTest());
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
         // Do not actually perform queries but verify the invocation.
@@ -167,7 +168,7 @@ public class DbHelperTest {
 
     @Test
     public void testOnUpgrade_topicsV8Migration() {
-        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        DbHelper dbHelper = spy(getDbHelperForTest());
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
         // Do not actually perform queries but verify the invocation.
@@ -206,7 +207,7 @@ public class DbHelperTest {
 
     @Test
     public void testOnUpgrade_topicsV9Migration() {
-        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        DbHelper dbHelper = spy(getDbHelperForTest());
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
         // Do not actually perform queries but verify the invocation.
@@ -237,7 +238,7 @@ public class DbHelperTest {
 
     @Test
     public void testOnUpgrade_topicsMigration_V7_V8_V9() {
-        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        DbHelper dbHelper = spy(getDbHelperForTest());
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
         // Do not actually perform queries but verify the invocation.
@@ -282,7 +283,7 @@ public class DbHelperTest {
 
     @Test
     public void testOnDowngrade() {
-        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        DbHelper dbHelper = spy(getDbHelperForTest());
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
         // Verify no error if downgrading db from current version to V1
@@ -291,7 +292,7 @@ public class DbHelperTest {
 
     @Test
     public void testSafeGetReadableDatabase_exceptionOccurs_validatesErrorLogging() {
-        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        DbHelper dbHelper = spy(getDbHelperForTest());
         Throwable tr = new SQLiteException();
         Mockito.doThrow(tr).when(dbHelper).getReadableDatabase();
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
@@ -309,7 +310,7 @@ public class DbHelperTest {
 
     @Test
     public void testSafeGetWriteDatabase_exceptionOccurs_validatesErrorLogging() {
-        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        DbHelper dbHelper = spy(getDbHelperForTest());
         Throwable tr = new SQLiteException();
         Mockito.doThrow(tr).when(dbHelper).getWritableDatabase();
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));

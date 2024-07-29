@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.measurement;
 
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 

@@ -152,8 +152,6 @@ android_test {
     name: "AdServicesMddIntegrationTests",
     srcs: [
         "src/com/android/adservices/download/MobileDataDownloadTest.java",
-        // Contains DB Util methods which used in MobileDataDownloadTest.java
-        "src/com/android/adservices/data/DbTestUtil.java",
     ],
     defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
     sdk_version: "module_current",
@@ -285,7 +283,6 @@ android_test {
     srcs: [
         "src/com/android/adservices/service/measurement/**/*.java",
         "src/com/android/adservices/data/measurement/**/*.java",
-        "src/com/android/adservices/data/DbTestUtil.java",
         "src/com/android/adservices/MockWebServerRuleFactory.java",
     ],
     test_config: "AndroidTest.Measurement.xml",
@@ -296,7 +293,6 @@ android_test {
     srcs: [
         "src/com/android/adservices/service/measurement/**/*.java",
         "src/com/android/adservices/data/measurement/**/*.java",
-        "src/com/android/adservices/data/DbTestUtil.java",
         "src/com/android/adservices/MockWebServerRuleFactory.java",
     ],
     defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
@@ -309,7 +305,6 @@ android_test {
     srcs: [
         "src/com/android/adservices/service/topics/**/*.java",
         "src/com/android/adservices/data/topics/**/*.java",
-        "src/com/android/adservices/data/DbTestUtil.java",
         "src/com/android/adservices/MockRandom.java",
     ],
     test_config: "AndroidTest.Topics.xml",
@@ -320,7 +315,6 @@ android_test {
     srcs: [
         "src/com/android/adservices/service/topics/**/*.java",
         "src/com/android/adservices/data/topics/**/*.java",
-        "src/com/android/adservices/data/DbTestUtil.java",
         "src/com/android/adservices/MockRandom.java",
     ],
     defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
@@ -371,8 +365,6 @@ android_test {
     name: "AdExtServicesMddIntegrationTests",
     srcs: [
         "src/com/android/adservices/download/MobileDataDownloadTest.java",
-        // Contains DB Util methods which used in MobileDataDownloadTest.java
-        "src/com/android/adservices/data/DbTestUtil.java",
     ],
     defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
     sdk_version: "module_current",

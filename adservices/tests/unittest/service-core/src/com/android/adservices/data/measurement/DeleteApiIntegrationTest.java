@@ -21,7 +21,7 @@ import android.adservices.measurement.DeletionRequest;
 import android.content.res.AssetManager;
 import android.net.Uri;
 
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;

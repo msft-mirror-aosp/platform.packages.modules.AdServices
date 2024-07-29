@@ -16,14 +16,14 @@
 
 package com.android.adservices.data.shared.migration;
 
-import static com.android.adservices.data.DbTestUtil.getDbHelperForTest;
+import static com.android.adservices.common.DbTestUtil.getDbHelperForTest;
 
 import static org.junit.Assert.assertTrue;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.shared.SharedDbHelper;

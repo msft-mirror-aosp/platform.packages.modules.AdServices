@@ -16,9 +16,9 @@
 
 package com.android.adservices.data.measurement.migration;
 
-import static com.android.adservices.data.DbTestUtil.doesIndexExist;
-import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
-import static com.android.adservices.data.DbTestUtil.getTableColumns;
+import static com.android.adservices.common.DbTestUtil.doesIndexExist;
+import static com.android.adservices.common.DbTestUtil.doesTableExistAndColumnCountMatch;
+import static com.android.adservices.common.DbTestUtil.getTableColumns;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -33,9 +33,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.DbHelper;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 

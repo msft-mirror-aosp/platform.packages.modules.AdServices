@@ -16,9 +16,9 @@
 
 package com.android.adservices.data.measurement.migration;
 
-import static com.android.adservices.data.DbTestUtil.doesIndexExist;
-import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
-import static com.android.adservices.data.DbTestUtil.getDbHelperForTest;
+import static com.android.adservices.common.DbTestUtil.doesIndexExist;
+import static com.android.adservices.common.DbTestUtil.doesTableExistAndColumnCountMatch;
+import static com.android.adservices.common.DbTestUtil.getDbHelperForTest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
 
 @RunWith(MockitoJUnitRunner.class)
 public class MeasurementDbMigratorV9Test extends MeasurementDbMigratorTestBase {

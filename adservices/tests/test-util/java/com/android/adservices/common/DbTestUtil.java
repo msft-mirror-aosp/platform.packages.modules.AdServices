@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.data;
+package com.android.adservices.common;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -27,6 +27,7 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.MeasurementDbHelper;
 import com.android.adservices.data.shared.SharedDbHelper;
 
@@ -49,12 +50,13 @@ public final class DbTestUtil {
 
     /** Erases all data from the table rows */
     public static void deleteTable(String tableName) {
-        SQLiteDatabase db = getDbHelperForTest().safeGetWritableDatabase();
-        if (db == null) {
-            return;
-        }
+        try (SQLiteDatabase db = getDbHelperForTest().safeGetWritableDatabase()) {
+            if (db == null) {
+                return;
+            }
 
-        db.delete(tableName, /* whereClause= */ null, /* whereArgs= */ null);
+            db.delete(tableName, /* whereClause= */ null, /* whereArgs= */ null);
+        }
     }
 
     /**
@@ -141,11 +143,6 @@ public final class DbTestUtil {
         String query = "SELECT * FROM sqlite_master WHERE type='table' and name='" + table + "'";
         Cursor cursor = db.rawQuery(query, null);
         return cursor != null && cursor.getCount() > 0;
-    }
-
-    /** Return test database name */
-    public static String getDatabaseNameForTest() {
-        return DATABASE_NAME_FOR_TEST;
     }
 
     public static void assertDatabasesEqual(SQLiteDatabase expectedDb, SQLiteDatabase actualDb) {

@@ -16,8 +16,8 @@
 
 package com.android.adservices.data.measurement.migration;
 
-import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
-import static com.android.adservices.data.DbTestUtil.getTableColumns;
+import static com.android.adservices.common.DbTestUtil.doesTableExistAndColumnCountMatch;
+import static com.android.adservices.common.DbTestUtil.getTableColumns;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
