@@ -17,6 +17,7 @@
 package com.android.adservices.data.enrollment;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
@@ -62,7 +63,6 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.proto.PrivacySandboxApi;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
@@ -389,13 +389,15 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    @SpyStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = SQLiteException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
     public void testDeleteAllDoesNotThrowException() {
         SharedDbHelper helper = Mockito.mock(SharedDbHelper.class);
         SQLiteDatabase readDb = mock(SQLiteDatabase.class);
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         EnrollmentDao enrollmentDao =
                 new EnrollmentDao(
                         sContext,
