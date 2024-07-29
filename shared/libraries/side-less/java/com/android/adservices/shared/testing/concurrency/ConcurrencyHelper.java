@@ -28,7 +28,7 @@ public final class ConcurrencyHelper {
 
     private final Logger mLogger;
 
-    public ConcurrencyHelper(RealLogger realLogger) {
+    ConcurrencyHelper(RealLogger realLogger) {
         mLogger = new Logger(realLogger, ConcurrencyHelper.class);
     }
 

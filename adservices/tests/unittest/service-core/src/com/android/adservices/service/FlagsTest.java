@@ -36,8 +36,14 @@ import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
+import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
+import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
+import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
+import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
+import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
@@ -46,6 +52,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQ
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
+import static com.android.adservices.service.Flags.MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
@@ -442,6 +449,28 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableTriggerDebugSignal() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL",
+                Flags::getMeasurementEnableTriggerDebugSignal);
+    }
+
+    @Test
+    public void testGetMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION",
+                Flags::getMeasurementEnableEventTriggerDebugSignalForCoarseDestination);
+    }
+
+    @Test
+    public void testGetMeasurementTriggerDebugProbabilityForFakeReports() {
+        testFloatFlag(
+                "getMeasurementTriggerDebugSignalProbabilityForFakeReports",
+                MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS,
+                Flags::getMeasurementTriggerDebugSignalProbabilityForFakeReports);
+    }
+
+    @Test
     public void testGetEnableBackCompatInit() {
         testFeatureFlag("DEFAULT_ENABLE_BACK_COMPAT_INIT", Flags::getEnableBackCompatInit);
     }
@@ -449,8 +478,8 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetMsmtEnableSeparateReportTypes() {
         testFeatureFlag(
-                "MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT",
-                Flags::getMeasurementEnableSeparateReportTypesForAttributionRateLimit);
+                "MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT",
+                Flags::getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit);
     }
 
     @Test
@@ -468,10 +497,24 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableDestinationPerDayRateLimitWindow() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW",
+                Flags::getMeasurementEnableDestinationPerDayRateLimitWindow);
+    }
+
+    @Test
     public void testGetMeasurementEnableSourceDestinationLimitAlgorithmField() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD",
                 Flags::getMeasurementEnableSourceDestinationLimitAlgorithmField);
+    }
+
+    @Test
+    public void testGetMeasurementEnableEventLevelEpsilonInSource() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE",
+                Flags::getMeasurementEnableEventLevelEpsilonInSource);
     }
 
     @Test
@@ -532,10 +575,23 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetCobaltOperationalLoggingEnabled() {
+        testFeatureFlag(
+                "COBALT_OPERATIONAL_LOGGING_ENABLED", Flags::getCobaltOperationalLoggingEnabled);
+    }
+
+    @Test
     public void testGetCobaltRegistryOutOfBandUpdateEnabled() {
         testFeatureFlag(
                 "COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED",
                 Flags::getCobaltRegistryOutOfBandUpdateEnabled);
+    }
+
+    @Test
+    public void testGetRNotificationDefaultConsentFixEnabled() {
+        testFeatureFlag(
+                "DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED",
+                Flags::getRNotificationDefaultConsentFixEnabled);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -552,6 +608,7 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     // TODO(b/325074749) - remove once all flags have been converted
+
     /**
      * @deprecated - flags that are converted should call some method like {@code
      *     testFeatureFlagGuardedByMsmtFeatureFlag} instead.
@@ -592,6 +649,11 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetPasProductMetricsV1Enabled() {
+        testFeatureFlag("PAS_PRODUCT_METRICS_V1_ENABLED", Flags::getPasProductMetricsV1Enabled);
+    }
+
+    @Test
     public void testGetMeasurementAttributionFallbackJobEnabled() {
         testMsmtFeatureFlagBackedByLegacyKillSwitchAndGuardedByMsmtEnabled(
                 "getMeasurementAttributionFallbackJobEnabled()",
@@ -627,8 +689,32 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     public void testGetMeasurementDefaultDestinationLimitAlgorithm() {
         testFlag(
                 "getMeasurementDefaultSourceDestinationLimitAlgorithm()",
-                0,
+                MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM,
                 Flags::getMeasurementDefaultSourceDestinationLimitAlgorithm);
+    }
+
+    @Test
+    public void testGetMeasurementDestinationRateLimitWindow() {
+        testFlag(
+                "getMeasurementDestinationRateLimitWindow()",
+                MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW,
+                Flags::getMeasurementDestinationRateLimitWindow);
+    }
+
+    @Test
+    public void testGetMeasurementDestinationPerDayRateLimitWindowInMs() {
+        testFlag(
+                "getMeasurementDestinationPerDayRateLimitWindowInMs()",
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS,
+                Flags::getMeasurementDestinationPerDayRateLimitWindowInMs);
+    }
+
+    @Test
+    public void testGetMeasurementDestinationPerDayRateLimit() {
+        testFlag(
+                "getMeasurementDestinationPerDayRateLimit()",
+                MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT,
+                Flags::getMeasurementDestinationPerDayRateLimit);
     }
 
     @Test
@@ -751,6 +837,45 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementAttributionScopeMaxInfoGainNavigation() {
+        testFloatFlag(
+                "getMeasurementAttributionScopeMaxInfoGainNavigation",
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION,
+                Flags::getMeasurementAttributionScopeMaxInfoGainNavigation);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation() {
+        testFloatFlag(
+                "getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation",
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION,
+                Flags::getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionScopeMaxInfoGainEvent() {
+        testFloatFlag(
+                "getMeasurementAttributionScopeMaxInfoGainEvent",
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT,
+                Flags::getMeasurementAttributionScopeMaxInfoGainEvent);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionScopeMaxInfoGainDualDestinationEvent() {
+        testFloatFlag(
+                "getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent",
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT,
+                Flags::getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent);
+    }
+
+    @Test
+    public void testGetMeasurementEnableFakeReportTriggerTime() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME",
+                Flags::getMeasurementEnableFakeReportTriggerTime);
+    }
+
+    @Test
     public void testGetFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         testFlag(
                 "getFledgeGetAdSelectionDataBuyerInputCreatorVersion",
@@ -764,22 +889,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions",
                 FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS,
                 Flags::getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions);
-    }
-
-    @Test
-    public void testGetMeasurementEnableEventTriggerDebugSignal() {
-        testFlag(
-                "getMeasurementEnableEventTriggerDebugSignal",
-                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL,
-                Flags::getMeasurementEnableEventTriggerDebugSignal);
-    }
-
-    @Test
-    public void testGetMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
-        testFlag(
-                "getMeasurementEnableEventTriggerDebugSignalForCoarseDestination",
-                MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION,
-                Flags::getMeasurementEnableEventTriggerDebugSignalForCoarseDestination);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -839,6 +948,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
     private void testFlag(
             String getterName, long defaultValue, Flaginator<Flags, Long> flaginator) {
+        expect.withMessage("%s", getterName)
+                .that(flaginator.getFlagValue(mFlags))
+                .isEqualTo(defaultValue);
+    }
+
+    private void testFloatFlag(
+            String getterName, float defaultValue, Flaginator<Flags, Float> flaginator) {
         expect.withMessage("%s", getterName)
                 .that(flaginator.getFlagValue(mFlags))
                 .isEqualTo(defaultValue);

@@ -47,8 +47,7 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORING_TIMED_OUT;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_SCORING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.adselection.JsFetcher.MISSING_SCORING_LOGIC;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_HIGHEST_BID_WINS;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
@@ -457,7 +456,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         }
                         return new MockResponse()
                                 .setBody(new JSONObject(jsonMap).toString())
-                                .addHeader(DATA_VERSION_HEADER_BIDDING_KEY, DATA_VERSION_1);
+                                .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_1);
                     } else if (request.getPath()
                             .startsWith(
                                     BUYER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION
@@ -472,7 +471,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         }
                         return new MockResponse()
                                 .setBody(new JSONObject(jsonMap).toString())
-                                .addHeader(DATA_VERSION_HEADER_BIDDING_KEY, DATA_VERSION_2);
+                                .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_2);
                     }
 
                     // The seller params vary based on runtime, so we are returning trusted
@@ -488,7 +487,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                             + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                         return new MockResponse()
                                 .setBody(TRUSTED_SCORING_SIGNALS.toString())
-                                .addHeader(DATA_VERSION_HEADER_SCORING_KEY, DATA_VERSION_1);
+                                .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_1);
                     }
                     sLogger.w("Unexpected call to MockWebServer " + request.getPath());
                     return new MockResponse().setResponseCode(404);
@@ -810,7 +809,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             }
                             return new MockResponse()
                                     .setBody(new JSONObject(jsonMap).toString())
-                                    .addHeader(DATA_VERSION_HEADER_BIDDING_KEY, DATA_VERSION_1);
+                                    .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_1);
                         } else if (request.getPath()
                                 .startsWith(
                                         BUYER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION
@@ -826,7 +825,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                             }
                             return new MockResponse()
                                     .setBody(new JSONObject(jsonMap).toString())
-                                    .addHeader(DATA_VERSION_HEADER_BIDDING_KEY, DATA_VERSION_2);
+                                    .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_2);
                         } else if (request.getPath().equals(SELECTION_PICK_HIGHEST_LOGIC_JS_PATH)) {
                             return new MockResponse().setBody(SELECTION_PICK_HIGHEST_LOGIC_JS);
                         } else if (request.getPath().equals(SELECTION_PICK_NONE_LOGIC_JS_PATH)) {
@@ -861,7 +860,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                             return new MockResponse()
                                     .setBody(TRUSTED_SCORING_SIGNALS.toString())
-                                    .addHeader(DATA_VERSION_HEADER_SCORING_KEY, DATA_VERSION_1);
+                                    .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_1);
                         }
                         sLogger.w("Unexpected call to MockWebServer " + request.getPath());
                         return new MockResponse().setResponseCode(404);
@@ -5925,11 +5924,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     }
 
                     @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
-                    }
-
-                    @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return true;
                     }
@@ -6112,11 +6106,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     }
 
                     @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
-                    }
-
-                    @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return true;
                     }
@@ -6254,11 +6243,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     }
 
                     @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
-                    }
-
-                    @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return true;
                     }
@@ -6388,11 +6372,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     @Override
                     public long getAdSelectionBiddingTimeoutPerBuyerMs() {
                         return lenientPerBuyerTimeOutLimit;
-                    }
-
-                    @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
                     }
 
                     @Override
@@ -6533,11 +6512,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     }
 
                     @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
-                    }
-
-                    @Override
                     public boolean getDisableFledgeEnrollmentCheck() {
                         return true;
                     }
@@ -6664,11 +6638,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     @Override
                     public long getAdSelectionScoringTimeoutMs() {
                         return 1500;
-                    }
-
-                    @Override
-                    public boolean getEnforceIsolateMaxHeapSize() {
-                        return false;
                     }
 
                     @Override
@@ -7491,11 +7460,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
         class FlagsWithThrottling extends AdSelectionE2ETestFlags implements Flags {
             @Override
-            public boolean getEnforceIsolateMaxHeapSize() {
-                return false;
-            }
-
-            @Override
             public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
                 return true;
             }
@@ -8151,11 +8115,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         AdSelectionE2ETestFlags(long biddingLogicVersion, boolean enableDebugReporting) {
             mBiddingLogicVersion = biddingLogicVersion;
             mDebugReportingEnabled = enableDebugReporting;
-        }
-
-        @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
         }
 
         @Override

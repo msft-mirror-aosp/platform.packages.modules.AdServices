@@ -254,6 +254,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 .thenReturn(Flags.MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT);
         when(mFlags.getMeasurementMaxReinstallReattributionWindowSeconds())
                 .thenReturn(Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS);
+        when(mFlags.getMeasurementPrivacyEpsilon())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
     }
 
     @Test
@@ -332,6 +334,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                         + sContext.getPackageName(),
                                                 0,
                                                 false,
+                                                false,
+                                                0,
                                                 false)
                                         .setAdTechDomain(null)
                                         .build()));
@@ -3005,7 +3009,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -3039,7 +3042,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -3085,7 +3087,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate only redirect behavior header with no actual redirect
@@ -3115,7 +3116,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(LIST_TYPE_REDIRECT_URI));
@@ -5374,6 +5374,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                         + sContext.getPackageName(),
                                                 0,
                                                 false,
+                                                false,
+                                                0,
                                                 false)
                                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                                         .build()));
@@ -10356,7 +10358,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void fetchSource_emptyAttributionScopesAndLimitSet_success() throws Exception {
+    public void fetchSource_emptyAttributionScopesAndLimitSet_fails() throws Exception {
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
         when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
         when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
@@ -10384,9 +10386,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         // Assertion
         assertThat(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
-        assertThat(fetch.isPresent()).isTrue();
-        assertThat(fetch.get().getAttributionScopes()).isEqualTo(List.of());
-        assertThat(fetch.get().getAttributionScopeLimit()).isEqualTo(4L);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
         verify(mFetcher, times(1)).openUrl(any());
     }
 
@@ -10721,6 +10723,43 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
+    public void fetchSource_maxEventStatesString_fails() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
+                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"max_event_states\":\"123\""
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
     public void fetchSource_attributionScopeLimitTooSmall_fails() throws Exception {
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
         when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
@@ -10795,6 +10834,43 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
+    public void fetchSource_attributionScopeLimitString_fails() throws Exception {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(10);
+        when(mFlags.getMeasurementMaxAttributionScopeLength()).thenReturn(10);
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\":\""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
+                                                + "\"attribution_scope_limit\":\"123\","
+                                                + "\"max_event_states\":3"
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isEmpty()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
     public void fetchSource_tooManyAttributionScopes_fails() throws Exception {
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
         when(mFlags.getMeasurementMaxAttributionScopesPerSource()).thenReturn(2);
@@ -10829,6 +10905,239 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertThat(asyncFetchStatus.getEntityStatus())
                 .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
         verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_eventLevelEpsilon_success() throws Exception {
+        mockSetEventLevelEpsilonEnabled(true);
+        String validHeader =
+                "{"
+                        + "\"destination\":\""
+                        + DEFAULT_DESTINATION
+                        + "\","
+                        + "\"event_level_epsilon\":"
+                        + 10D
+                        + "}";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(10D, result.getEventLevelEpsilon(), 0);
+    }
+
+    @Test
+    public void fetchSource_eventLevelEpsilonNumber_success() throws Exception {
+        mockSetEventLevelEpsilonEnabled(true);
+        String validHeader =
+                "{"
+                        + "\"destination\":\""
+                        + DEFAULT_DESTINATION
+                        + "\","
+                        + "\"event_level_epsilon\":"
+                        + 12
+                        + "}";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(12D, result.getEventLevelEpsilon(), 0);
+    }
+
+    @Test
+    public void fetchSource_eventLevelEpsilonDefaults_success() throws Exception {
+        mockSetEventLevelEpsilonEnabled(true);
+        String validHeader = "{\"destination\":\"" + DEFAULT_DESTINATION + "\"}";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON, result.getEventLevelEpsilon(), 0);
+    }
+
+    @Test
+    public void fetchSource_eventLevelEpsilonExceedsDefault_fails() throws Exception {
+        mockSetEventLevelEpsilonEnabled(true);
+        String headerWithJsonError =
+                "{"
+                        + "\"destination\":\""
+                        + DEFAULT_DESTINATION
+                        + "\","
+                        + "\"event_level_epsilon\":"
+                        + 14.1D
+                        + "}";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(headerWithJsonError),
+                                "Attribution-Reporting-Info",
+                                List.of("report-header-errors")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
+    public void fetchSource_eventLevelEpsilonNegative_fails() throws Exception {
+        mockSetEventLevelEpsilonEnabled(true);
+        String headerWithJsonError =
+                "{"
+                        + "\"destination\":\""
+                        + DEFAULT_DESTINATION
+                        + "\","
+                        + "\"event_level_epsilon\":"
+                        + -1D
+                        + "\""
+                        + "}";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(headerWithJsonError),
+                                "Attribution-Reporting-Info",
+                                List.of("report-header-errors")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchSource_eventLevelEpsilonString_fails() throws Exception {
+        mockSetEventLevelEpsilonEnabled(true);
+        String headerWithJsonError =
+                "{"
+                        + "\"destination\":\""
+                        + DEFAULT_DESTINATION
+                        + "\","
+                        + "\"event_level_epsilon\":\"some string\""
+                        + "}";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(headerWithJsonError),
+                                "Attribution-Reporting-Info",
+                                List.of("report-header-errors")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
+    public void fetchSource_eventLevelEpsilonNumberAsString_fails() throws Exception {
+        mockSetEventLevelEpsilonEnabled(true);
+        String headerWithJsonError =
+                "{"
+                        + "\"destination\":\""
+                        + DEFAULT_DESTINATION
+                        + "\","
+                        + "\"event_level_epsilon\":\"14.0\""
+                        + "}";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(headerWithJsonError),
+                                "Attribution-Reporting-Info",
+                                List.of("report-header-errors")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {
@@ -11068,5 +11377,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 0 /*int edgeFlags*/,
                 InputDevice.SOURCE_TOUCH_NAVIGATION,
                 0 /*int flags*/);
+    }
+
+    private void mockSetEventLevelEpsilonEnabled(boolean enabled) {
+        when(mFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(enabled);
     }
 }

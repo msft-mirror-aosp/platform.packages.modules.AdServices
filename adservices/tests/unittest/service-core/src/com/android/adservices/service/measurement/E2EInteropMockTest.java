@@ -22,7 +22,6 @@ import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
 import android.os.RemoteException;
 
-import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
@@ -83,8 +82,8 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 "fenced.json",
                 "filter_data_validation.json",
                 "header_presence.json",
+                "lookback_window_precision.json",
                 "max_trigger_state_cardinality.json",
-                "null_aggregatable_report.json",
                 "os_debug_reports.json",
                 "parse_failures.json",
                 "preferred_platform.json",
@@ -96,10 +95,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 "redirect_source_trigger.json",
                 "same_destination_site.json",
                 "source_destination_limit_fifo.json",
-                "source_destination_limit_fifo_and_destination_rate_limit.json",
                 "source_destination_limit_fifo_rate_limits.json",
-                "source_destination_limit_priority_fifo.json",
-                "source_destination_limits.json",
                 "source_header_error_debug_report.json",
                 "source_registration_limits.json",
                 "source_storage_limit_and_destination_rate_limit.json",
@@ -129,13 +125,17 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
     private static final long START_TIME = 1674000000000L;
     private static final String TEST_DIR_NAME = "msmt_interop_tests";
     private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final String UNUSED = "";
     private static final List<AsyncFetchStatus.EntityStatus> sParsingErrors = List.of(
             AsyncFetchStatus.EntityStatus.PARSING_ERROR,
             AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
     private static final Map<String, String> sApiConfigPhFlags = Map.ofEntries(
             entry(
                     "rate_limit_max_attributions",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW),
+                    UNUSED),
+            entry(
+                    "aggregation_coordinator_origins",
+                    UNUSED),
             entry(
                     "rate_limit_max_attribution_reporting_origins",
                     FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION),
@@ -155,10 +155,11 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     "max_destinations_per_rate_limit_window",
                     FlagsConstants.KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW),
             entry(
-                    "max_destinations_per_rate_limit_window_reporting_site",
+                    "max_destinations_per_reporting_site_per_day",
+                    FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT),
+            entry("max_destinations_per_rate_limit_window_reporting_site",
                     FlagsConstants.KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW),
-            entry(
-                    "max_sources_per_origin",
+            entry("max_sources_per_origin",
                     FlagsConstants.KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER),
             entry(
                     "max_event_level_reports_per_destination",
@@ -177,7 +178,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 .replaceAll("\"destination\":", "\"web_destination\":");
     }
 
-    private static Map<String, String> sPhFlagsForInterop = Map.ofEntries(
+    private static final Map<String, String> sPhFlagsForInterop = Map.ofEntries(
             entry(
                     // TODO (b/295382171): remove this after the flag is removed.
                     FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
@@ -195,10 +196,31 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
                     "true"),
             entry(
-                    FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
-                    WebUtil.validUrl("https://coordinator.test")),
-            entry(
                     FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM,
+                    "1"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER,
+                    "true"),
+            entry(
+                    FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
                     "true"));
 
     @Parameterized.Parameters(name = "{3}")
@@ -221,7 +243,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 (
                         (Supplier<Map<String, String>>) () -> {
                             for (String key : sPhFlagsForInterop.keySet()) {
-                                phFlagsMap.put(key, sPhFlagsForInterop.get(key));
+                                phFlagsMap.putIfAbsent(key, sPhFlagsForInterop.get(key));
                             }
                             return phFlagsMap;
                         }
@@ -252,7 +274,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
         // For interop tests, we currently expect only one HTTPS response per registration with no
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
-            prepareReportNoising(getNextUriConfig(sourceRegistration.mUriConfigsMap.get(uri)));
+            prepareEventReportNoising(getNextUriConfig(sourceRegistration.mUriConfigsMap.get(uri)));
             updateEnrollment(uri);
             insertSourceOrAssertUnparsable(
                     sourceRegistration.getPublisher(),
@@ -274,6 +296,8 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
         // For interop tests, we currently expect only one HTTPS response per registration with no
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
+            prepareAggregateReportNoising(
+                    getNextUriConfig(triggerRegistration.mUriConfigsMap.get(uri)));
             updateEnrollment(uri);
             insertTriggerOrAssertUnparsable(
                     triggerRegistration.getDestination(),
@@ -334,7 +358,10 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     mDatastoreManager.runInTransaction(
                             measurementDao ->
                                     mAsyncRegistrationQueueRunner.storeSource(
-                                            maybeSource.get(), asyncRegistration, measurementDao)));
+                                            maybeSource.get(),
+                                            asyncRegistration,
+                                            measurementDao,
+                                            status)));
         } else {
             Assert.assertTrue(sParsingErrors.contains(status.getEntityStatus()));
         }

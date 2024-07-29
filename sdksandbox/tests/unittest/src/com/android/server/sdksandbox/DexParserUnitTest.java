@@ -26,7 +26,8 @@ import android.content.pm.PackageManager;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.server.sdksandbox.verifier.SerialDexLoader.DexLoadResult;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+import com.android.server.sdksandbox.verifier.SerialDexLoader.DexSymbols;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,12 +37,15 @@ import java.util.List;
 import java.util.Map;
 
 /** Unit tests for {@link DexParser}. */
-public class DexParserUnitTest {
+public class DexParserUnitTest extends DeviceSupportedBaseTest {
     private static final String TEST_PACKAGENAME = "com.android.codeproviderresources_1";
+    private static final String BUFFERED_READER_READ_LINE_CLASSNAME = "Ljava/io/BufferedReader";
     private static final String BUFFERED_READER_READ_LINE_METHOD_STRING =
-            "Ljava/io/BufferedReader;readLine;Ljava/lang/String;";
+            "readLine;Ljava/lang/String;";
+    private static final String RESOURCES_GET_DISPLAY_METRICS_CLASSNAME =
+            "Landroid/content/res/Resources";
     private static final String RESOURCES_GET_DISPLAY_METRICS_STRING =
-            "Landroid/content/res/Resources;getDisplayMetrics;Landroid/util/DisplayMetrics;";
+            "getDisplayMetrics;Landroid/util/DisplayMetrics;";
 
     private PackageManager mPackageManager;
     private DexParser mDexParser = new DexParserImpl();
@@ -73,12 +77,14 @@ public class DexParserUnitTest {
         assertThat(apkPathFile.exists()).isTrue();
         Map<File, List<String>> dexList = mDexParser.getDexFilePaths(apkPathFile);
 
-        DexLoadResult dexLoadResult = new DexLoadResult();
+        DexSymbols dexLoadResult = new DexSymbols();
         boolean foundCalledApi = false;
         for (Map.Entry<File, List<String>> dexFile : dexList.entrySet()) {
             for (String dexEntry : dexFile.getValue()) {
                 mDexParser.loadDexSymbols(dexFile.getKey(), dexEntry, dexLoadResult);
-                if (dexLoadResult.hasReferencedMethod(BUFFERED_READER_READ_LINE_METHOD_STRING)) {
+                if (dexLoadResult.hasReferencedMethod(
+                        BUFFERED_READER_READ_LINE_CLASSNAME,
+                        BUFFERED_READER_READ_LINE_METHOD_STRING)) {
                     foundCalledApi = true;
                     break;
                 }
@@ -94,12 +100,14 @@ public class DexParserUnitTest {
         assertThat(apkPathFile.exists()).isTrue();
         Map<File, List<String>> dexList = mDexParser.getDexFilePaths(apkPathFile);
 
-        DexLoadResult dexLoadResult = new DexLoadResult();
+        DexSymbols dexLoadResult = new DexSymbols();
         boolean foundAbsentApi = false;
         for (Map.Entry<File, List<String>> dexFile : dexList.entrySet()) {
             for (String dexEntry : dexFile.getValue()) {
                 mDexParser.loadDexSymbols(dexFile.getKey(), dexEntry, dexLoadResult);
-                if (dexLoadResult.hasReferencedMethod(RESOURCES_GET_DISPLAY_METRICS_STRING)) {
+                if (dexLoadResult.hasReferencedMethod(
+                        RESOURCES_GET_DISPLAY_METRICS_CLASSNAME,
+                        RESOURCES_GET_DISPLAY_METRICS_STRING)) {
                     foundAbsentApi = true;
                     break;
                 }

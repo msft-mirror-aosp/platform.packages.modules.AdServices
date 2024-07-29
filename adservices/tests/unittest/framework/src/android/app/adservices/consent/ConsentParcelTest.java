@@ -25,10 +25,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
 /** Unit tests for {@link ConsentParcel} */
-public final class ConsentParcelTest {
+public final class ConsentParcelTest extends AdServicesUnitTestCase {
 
     @Test
     public void testConsentParcel() {
@@ -57,12 +59,11 @@ public final class ConsentParcelTest {
     public void testConsentParcel_notSetConsentApiType() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    new ConsentParcel.Builder()
-                            // Not set the ConsentApiType.
-                            // .setConsentApiType(xxx)
-                            .setIsGiven(true)
-                            .build();
-                });
+                () ->
+                        new ConsentParcel.Builder()
+                                // Not set the ConsentApiType.
+                                // .setConsentApiType(xxx)
+                                .setIsGiven(true)
+                                .build());
     }
 }

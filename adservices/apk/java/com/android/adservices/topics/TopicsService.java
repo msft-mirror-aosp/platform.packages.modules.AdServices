@@ -15,7 +15,6 @@
  */
 package com.android.adservices.topics;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
@@ -75,7 +74,6 @@ public class TopicsService extends Service {
         AppImportanceFilter appImportanceFilter =
                 AppImportanceFilter.create(
                         this,
-                        AD_SERVICES_API_CALLED__API_CLASS__TARGETING,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
 
         if (mTopicsService == null) {

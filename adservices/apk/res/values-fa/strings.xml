@@ -435,7 +435,7 @@
     <string name="topic10172" msgid="7796145013604839047">"نشر رومیزی"</string>
     <string name="topic10173" msgid="2914187257631238849">"قلم"</string>
     <string name="topic10174" msgid="2115617300581130014">"مدیریت بارگیری"</string>
-    <string name="topic10175" msgid="5871766754983733443">"نرم‌افزار رایگان و اشتراکی"</string>
+    <string name="topic10175" msgid="5871766754983733443">"رایگان‌افزار و هم‌رسان‌افزار"</string>
     <string name="topic10176" msgid="4556902534984350353">"نرم‌افزار پویانمایی و گرافیک"</string>
     <string name="topic10177" msgid="5020885617411375213">"دستیار شخصی هوشمند"</string>
     <string name="topic10178" msgid="6156514295355993755">"پخش‌کننده رسانه"</string>
@@ -483,7 +483,7 @@
     <string name="topic10220" msgid="4812477283307222367">"بازی"</string>
     <string name="topic10221" msgid="2320959705105050635">"بازی‌های سکه‌ای و آرکید"</string>
     <string name="topic10222" msgid="1659423113675232767">"بیلیارد"</string>
-    <string name="topic10223" msgid="3526662148224862522">"بازی‌های صفحه‌ای"</string>
+    <string name="topic10223" msgid="3526662148224862522">"بازی‌های تخته‌ای"</string>
     <string name="topic10224" msgid="8806949357679505576">"بازی‌های استراتژی انتزاعی و شطرنج"</string>
     <string name="topic10225" msgid="564207834821286301">"بازی‌های کارتی"</string>
     <string name="topic10226" msgid="6918788605930334066">"بازی‌های جمع‌آوری کارت"</string>
@@ -676,7 +676,7 @@
     <string name="topic10413" msgid="416366556259783701">"اسکیت روی یخ"</string>
     <string name="topic10414" msgid="6909439381556710013">"هنرهای رزمی"</string>
     <string name="topic10415" msgid="4535534983750709163">"مسابقه موتورسواری"</string>
-    <string name="topic10416" msgid="1687911875093638923">"المپیک"</string>
+    <string name="topic10416" msgid="1687911875093638923">"بازی‌های المپیک"</string>
     <string name="topic10417" msgid="2735521554483279111">"راگبی"</string>
     <string name="topic10418" msgid="8763139538107186007">"دویدن و پیاده‌روی"</string>
     <string name="topic10419" msgid="979581105119036716">"اسکی و اسنوبردسواری"</string>

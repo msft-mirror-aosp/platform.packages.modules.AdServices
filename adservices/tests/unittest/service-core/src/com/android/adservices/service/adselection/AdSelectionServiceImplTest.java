@@ -422,8 +422,7 @@ public class AdSelectionServiceImplTest {
                         DevContext.createForDevOptionsDisabled());
 
         when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
-        when(AppImportanceFilter.create(any(), anyInt(), any()))
-                .thenReturn(mAppImportanceFilterMock);
+        when(AppImportanceFilter.create(any(), any())).thenReturn(mAppImportanceFilterMock);
         doNothing()
                 .when(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
@@ -11472,11 +11471,6 @@ public class AdSelectionServiceImplTest {
         @Override
         public boolean getEnforceForegroundStatusForFledgeOverrides() {
             return true;
-        }
-
-        @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
         }
 
         @Override

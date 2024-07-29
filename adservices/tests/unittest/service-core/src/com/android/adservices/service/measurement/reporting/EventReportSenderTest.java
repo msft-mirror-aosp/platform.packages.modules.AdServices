@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement.reporting;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.net.Uri;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.List;
+import java.util.Map;
 
 public class EventReportSenderTest {
 
@@ -92,6 +94,38 @@ public class EventReportSenderTest {
 
         assertEquals(outputStream.toString(), eventReportJson.toString());
         assertEquals(responseCode, 200);
+    }
+
+    @Test
+    public void testSendEventReportWithExtraHeaders() throws JSONException, IOException {
+        String triggerDebugHeaderKey = "Trigger-Debugging-Available";
+        String triggerDebugHeaderValue = Boolean.TRUE.toString();
+        HttpURLConnection httpUrlConnection = Mockito.mock(HttpURLConnection.class);
+
+        OutputStream outputStream = new ByteArrayOutputStream();
+        Mockito.when(httpUrlConnection.getOutputStream()).thenReturn(outputStream);
+        Mockito.when(httpUrlConnection.getResponseCode()).thenReturn(200);
+
+        Uri reportingOrigin = Uri.parse("https://ad-tech.example");
+        JSONObject eventReportJson = createEventReportPayloadExample1().toJson();
+
+        EventReportSender eventReportSender = new EventReportSender(false, sContext);
+        EventReportSender spyEventReportSender = Mockito.spy(eventReportSender);
+
+        Mockito.doReturn(httpUrlConnection)
+                .when(spyEventReportSender)
+                .createHttpUrlConnection(Mockito.any());
+
+        int responseCode =
+                spyEventReportSender.sendReportWithExtraHeaders(
+                        reportingOrigin,
+                        eventReportJson,
+                        Map.of(triggerDebugHeaderKey, triggerDebugHeaderValue));
+
+        assertEquals(outputStream.toString(), eventReportJson.toString());
+        assertEquals(responseCode, 200);
+        verify(httpUrlConnection)
+                .setRequestProperty(triggerDebugHeaderKey, triggerDebugHeaderValue);
     }
 
     @Test

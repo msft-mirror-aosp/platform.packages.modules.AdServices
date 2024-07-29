@@ -51,8 +51,9 @@ public class EventReportingJobHandlerWrapper {
                 Mockito.spy(
                         new EventReportingJobHandler(datastoreManager, flags, context)
                                 .setIsDebugInstance(isDebugInstance));
-        Mockito.doReturn(200).when(eventReportingJobHandler)
-                .makeHttpPostRequest(any(), any());
+        Mockito.doReturn(200)
+                .when(eventReportingJobHandler)
+                .makeHttpPostRequest(any(), any(), any());
 
         // Perform event reports and capture arguments
         eventReportingJobHandler.performScheduledPendingReportsInWindow(
@@ -63,7 +64,7 @@ public class EventReportingJobHandlerWrapper {
                 .createReportJsonPayload(eventReport.capture());
         ArgumentCaptor<JSONObject> eventPayload = ArgumentCaptor.forClass(JSONObject.class);
         verify(eventReportingJobHandler, atLeast(0))
-                .makeHttpPostRequest(eventDestination.capture(), eventPayload.capture());
+                .makeHttpPostRequest(eventDestination.capture(), eventPayload.capture(), any());
 
         eventReportingJobHandler.performScheduledPendingReportsInWindow(
                 windowStartTime, windowEndTime);

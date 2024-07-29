@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 
 import android.app.ActivityManager;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
@@ -31,6 +30,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.compatibility.common.util.SystemUtil;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,10 +44,7 @@ import java.util.stream.Collectors;
 
 /** Tests for the instrumentation running the Sdk sanbdox tests. */
 @RunWith(JUnit4.class)
-public class SdkSandboxUnixStreamTest {
-
-    @Rule
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+public class SdkSandboxUnixStreamTest extends DeviceSupportedBaseTest {
 
     @Before
     public void setUp() {

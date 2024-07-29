@@ -55,11 +55,12 @@ import java.util.stream.Collectors;
  * by exactly one datastore object. If multiple writing threads or processes attempt to use
  * different instances pointing to the same file, transactions may be lost.
  *
- * <p>Keys must be non-{@code null}, non-empty strings, and values must be booleans.
+ * <p>Keys must be non-{@code null}, non-empty strings, and values can be booleans, integers or
+ * strings.
  *
  * @threadsafe
  */
-public class BooleanFileDatastore {
+public class AtomicFileDatastore {
     public static final int NO_PREVIOUS_VERSION = -1;
 
     private final int mDatastoreVersion;
@@ -74,12 +75,12 @@ public class BooleanFileDatastore {
     private final String mVersionKey;
     private int mPreviousStoredVersion;
 
-    public BooleanFileDatastore(
+    public AtomicFileDatastore(
             String parentPath, String filename, int datastoreVersion, String versionKey) {
         this(newFile(parentPath, filename), datastoreVersion, versionKey);
     }
 
-    public BooleanFileDatastore(File file, int datastoreVersion, String versionKey) {
+    public AtomicFileDatastore(File file, int datastoreVersion, String versionKey) {
         mAtomicFile = new AtomicFile(Objects.requireNonNull(file));
         mDatastoreVersion =
                 Preconditions.checkArgumentNonnegative(
@@ -163,7 +164,7 @@ public class BooleanFileDatastore {
     }
 
     /**
-     * Stores a value to the datastore file.
+     * Stores a boolean value to the datastore file.
      *
      * <p>This change is committed immediately to file.
      *
@@ -173,7 +174,7 @@ public class BooleanFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    public final void put(String key, boolean value) throws IOException {
+    public final void putBoolean(String key, boolean value) throws IOException {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -187,7 +188,7 @@ public class BooleanFileDatastore {
     }
 
     /**
-     * Stores a value to the datastore file, but only if the key does not already exist.
+     * Stores a boolean value to the datastore file, but only if the key does not already exist.
      *
      * <p>If a change is made to the datastore, it is committed immediately to file.
      *
@@ -198,7 +199,7 @@ public class BooleanFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    public final boolean putIfNew(String key, boolean value) throws IOException {
+    public final boolean putBooleanIfNew(String key, boolean value) throws IOException {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -238,7 +239,7 @@ public class BooleanFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     @Nullable
-    public final Boolean get(String key) {
+    public final Boolean getBoolean(String key) {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
@@ -259,7 +260,7 @@ public class BooleanFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     @Nullable
-    public final Boolean get(String key, boolean defaultValue) {
+    public final Boolean getBoolean(String key, boolean defaultValue) {
         Objects.requireNonNull(key);
         Preconditions.checkStringNotEmpty(key, "Key must not be empty");
 
