@@ -53,8 +53,8 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
