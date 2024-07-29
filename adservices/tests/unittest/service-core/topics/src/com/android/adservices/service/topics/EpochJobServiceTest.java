@@ -47,10 +47,8 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -66,7 +64,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -77,7 +74,6 @@ import org.mockito.Spy;
 @SpyStatic(AdServicesJobScheduler.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @SpyStatic(EpochJobService.class)
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ServiceCompatUtils.class)
 @SpyStatic(TopicsWorker.class)
@@ -97,10 +93,6 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     private AdServicesJobServiceLogger mSpyLogger;
 
