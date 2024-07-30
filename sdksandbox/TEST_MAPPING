@@ -313,6 +313,9 @@
       "name": "CtsTextTestCases"
     },
     {
+      "name": "CtsTransitionTestCases"
+    },
+    {
       "name": "CtsUtilTestCases"
     },
     {
