@@ -34,8 +34,8 @@ import androidx.annotation.Nullable;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
