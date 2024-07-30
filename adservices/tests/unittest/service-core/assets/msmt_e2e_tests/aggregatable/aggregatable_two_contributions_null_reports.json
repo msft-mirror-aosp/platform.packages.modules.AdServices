@@ -118,7 +118,14 @@
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799977600"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
@@ -129,458 +136,637 @@
               "key": "0xa85",
               "value": 1664
             }
-          ],
-          "source_registration_time": "799977600"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799027200"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "797408600"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799891200"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "797495000"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799113600"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "797581400"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799545600"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "797667800"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "797644800"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "797754200"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799459200"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "797840600"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "797472000"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "797927000"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799372800"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798013400"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799200000"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798099800"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "798681600"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798186200"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "798595200"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798272600"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "797904000"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798359000"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799718400"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798445400"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799632000"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798531800"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "797817600"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798618200"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "798854400"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798704600"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "797990400"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798791000"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "798422400"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798877400"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "798076800"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "798963800"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799804800"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "799050200"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "798508800"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "799136600"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "799286400"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "799223000"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "797731200"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "799309400"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "798163200"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "799395800"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "798336000"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "799482200"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "798940800"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "799568600"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "798249600"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "799655000"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "797558400"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "799741400"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "797385600"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "799827800"
+          ]
         }
       },
       {
         "report_time": "800004200001",
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
-          "attribution_destination": "android-app:\/\/example.2d1.com",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800004200",
+            "version": "0.1",
+            "source_registration_time": "798768000"
+          },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x0",
               "value": 0
             }
-          ],
-          "source_registration_time": "799914200"
+          ]
         }
       }
     ]

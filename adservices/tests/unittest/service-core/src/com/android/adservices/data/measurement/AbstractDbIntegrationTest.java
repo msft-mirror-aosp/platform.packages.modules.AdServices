@@ -29,7 +29,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
@@ -546,6 +546,7 @@ public abstract class AbstractDbIntegrationTest {
                 attribution.getRegistrant());
         values.put(MeasurementTables.AttributionContract.SOURCE_ID, attribution.getSourceId());
         values.put(MeasurementTables.AttributionContract.TRIGGER_ID, attribution.getTriggerId());
+        values.put(MeasurementTables.AttributionContract.REPORT_ID, attribution.getReportId());
         long row = db.insert(MeasurementTables.AttributionContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Attribution insertion failed");

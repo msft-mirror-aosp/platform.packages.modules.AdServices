@@ -37,8 +37,6 @@ import android.net.Uri;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.WebViewSupportUtil;
-import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -58,7 +56,7 @@ import java.util.concurrent.TimeUnit;
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @EnableDebugFlag(KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED)
 @RequiresSdkLevelAtLeastT(reason = "Protected App Signals is enabled for T+")
-public class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggableCtsTest {
+public final class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggableCtsTest {
 
     private static final String STATUS_FINISHED = "FINISHED";
     private static final int PAS_API_TIMEOUT_SEC = 10;
@@ -72,10 +70,6 @@ public class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggab
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
                     sContext, "adservices_untrusted_test_server.p12", "adservices_test");
-
-    @Rule(order = 7)
-    public final SupportedByConditionRule webViewSupportsJSSandbox =
-            WebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 
     @Before
     public void setUp() throws Exception {

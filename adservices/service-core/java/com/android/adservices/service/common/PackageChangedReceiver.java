@@ -154,6 +154,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                     // The broadcast is received from the system service. On T+ devices, we do this
                     // so
                     // that the PP API process is not woken up if the flag is disabled.
+                case Intent.ACTION_PACKAGE_ADDED:
+                    handlePackageAdded(context, packageUri);
+                    break;
                 case PACKAGE_CHANGED_BROADCAST:
                     switch (intent.getStringExtra(ACTION_KEY)) {
                         case PACKAGE_FULLY_REMOVED:
@@ -279,7 +282,10 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 () ->
                         getCustomAudienceDatabase(context)
                                 .customAudienceDao()
-                                .deleteCustomAudienceDataByOwner(packageUri.toString()));
+                                .deleteCustomAudienceDataByOwner(
+                                        packageUri.toString(),
+                                        FlagsFactory.getFlags()
+                                                .getFledgeFetchCustomAudienceEnabled()));
         if (sFrequencyCapFilteringEnabled) {
             LogUtil.d("Deleting frequency cap histogram data for package: " + packageUri);
             sBackgroundExecutor.execute(
@@ -307,6 +313,13 @@ public class PackageChangedReceiver extends BroadcastReceiver {
             @NonNull Context context, @NonNull Uri packageUri, int packageUid) {
         if (!SdkLevel.isAtLeastS()) {
             LogUtil.d("consentOnPackageFullyRemoved is not needed on Android R, returning...");
+            return;
+        }
+        if (SdkLevel.isAtLeastT() && packageUid == DEFAULT_PACKAGE_UID) {
+            // Event is caused by internal sdk libraries which have a UID of -1
+            LogUtil.d(
+                    "returning, as events on App Uninstallation on T+ should always"
+                            + " have valid UID");
             return;
         }
         Objects.requireNonNull(context);

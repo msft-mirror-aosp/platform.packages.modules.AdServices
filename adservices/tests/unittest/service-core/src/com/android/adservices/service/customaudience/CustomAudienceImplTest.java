@@ -55,6 +55,9 @@ import java.time.Duration;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CustomAudienceImplTest {
+
+    private static final double PRIORITY_1 = 1.0;
+
     private static final CustomAudience VALID_CUSTOM_AUDIENCE =
             CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
                     .build();
@@ -62,6 +65,12 @@ public class CustomAudienceImplTest {
     private static final CustomAudience VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS =
             CustomAudienceFixture.getValidBuilderByBuyerWithAuctionServerRequestFlags(
                             CommonFixture.VALID_BUYER_1, FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
+                    .build();
+
+    /* Seller Configuration flag enabled */
+    private static final CustomAudience VALID_CUSTOM_AUDIENCE_WITH_PRIORITY =
+            CustomAudienceFixture.getValidBuilderByBuyerWithPriority(
+                            CommonFixture.VALID_BUYER_1, PRIORITY_1)
                     .build();
 
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE =
@@ -74,6 +83,12 @@ public class CustomAudienceImplTest {
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS =
             DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(
                             CommonFixture.VALID_BUYER_1)
+                    .build();
+
+    /* Seller Configuration flag enabled */
+    private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE_WITH_PRIORITY =
+            DBCustomAudienceFixture.getValidBuilderByBuyerWithPriority(
+                            CommonFixture.VALID_BUYER_1, PRIORITY_1)
                     .build();
 
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
@@ -237,6 +252,82 @@ public class CustomAudienceImplTest {
     }
 
     @Test
+    public void testJoinCustomAudienceWithSellerConfigFlag_runNormallyFlagEnabled() {
+        Flags flagsWithSellerConfigurationFlagEnabled =
+                new FakeFlagsFactory.TestFlags() {
+                    @Override
+                    public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+                        return true;
+                    }
+                };
+
+        CustomAudienceImpl customAudienceImpl =
+                new CustomAudienceImpl(
+                        mCustomAudienceDaoMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mCustomAudienceValidatorMock,
+                        mClockMock,
+                        flagsWithSellerConfigurationFlagEnabled);
+
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+
+        customAudienceImpl.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE_WITH_PRIORITY,
+                CustomAudienceFixture.VALID_OWNER,
+                DEV_OPTIONS_DISABLED);
+
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        VALID_DB_CUSTOM_AUDIENCE_WITH_PRIORITY,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1),
+                        false);
+        verify(mClockMock).instant();
+        verify(mCustomAudienceQuantityCheckerMock)
+                .check(VALID_CUSTOM_AUDIENCE_WITH_PRIORITY, CustomAudienceFixture.VALID_OWNER);
+        verify(mCustomAudienceValidatorMock).validate(VALID_CUSTOM_AUDIENCE_WITH_PRIORITY);
+        verifyNoMoreInteractions(mClockMock, mCustomAudienceDaoMock, mCustomAudienceValidatorMock);
+    }
+
+    @Test
+    public void testJoinCustomAudienceWithSellerConfigFlag_runNormallyFlagDisabled() {
+        Flags flagsWithSellerConfigurationFlagDisabled =
+                new FakeFlagsFactory.TestFlags() {
+                    @Override
+                    public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+                        return false;
+                    }
+                };
+
+        CustomAudienceImpl customAudienceImpl =
+                new CustomAudienceImpl(
+                        mCustomAudienceDaoMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mCustomAudienceValidatorMock,
+                        mClockMock,
+                        flagsWithSellerConfigurationFlagDisabled);
+
+        when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+
+        customAudienceImpl.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE_WITH_PRIORITY,
+                CustomAudienceFixture.VALID_OWNER,
+                DEV_OPTIONS_DISABLED);
+
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1),
+                        false);
+        verify(mClockMock).instant();
+        verify(mCustomAudienceQuantityCheckerMock)
+                .check(VALID_CUSTOM_AUDIENCE_WITH_PRIORITY, CustomAudienceFixture.VALID_OWNER);
+        verify(mCustomAudienceValidatorMock).validate(VALID_CUSTOM_AUDIENCE_WITH_PRIORITY);
+        verifyNoMoreInteractions(mClockMock, mCustomAudienceDaoMock, mCustomAudienceValidatorMock);
+    }
+
+    @Test
     public void testJoinCustomAudienceWithSubdomains_runNormally() {
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
         doReturn(
@@ -282,7 +373,8 @@ public class CustomAudienceImplTest {
                         Duration.ofMillis(FLAGS.getFledgeCustomAudienceDefaultExpireInMs()),
                         AD_DATA_CONVERSION_STRATEGY,
                         false,
-                        /* auctionServerRequestFlags = */ false);
+                        /* auctionServerRequestFlags */ false,
+                        /* sellerConfigutationFlag */ false);
 
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(

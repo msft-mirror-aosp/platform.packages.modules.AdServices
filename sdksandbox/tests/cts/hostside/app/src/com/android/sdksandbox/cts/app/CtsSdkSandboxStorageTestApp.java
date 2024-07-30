@@ -47,7 +47,8 @@ public class CtsSdkSandboxStorageTestApp {
 
     private static final String SDK_NAME = "com.android.sdksandbox.cts.provider.storagetest";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+    @Rule(order = 0)
+    public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
 
     private static final String KEY_TO_SYNC = "hello";
     private static final String BULK_SYNC_VALUE = "bulksync";

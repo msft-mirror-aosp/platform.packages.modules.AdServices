@@ -41,11 +41,12 @@ import android.content.pm.PackageManager;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
@@ -54,7 +55,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-@MockStatic(ErrorLogUtil.class)
+@SpyStatic(ErrorLogUtil.class)
 public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMockitoTestCase {
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
     private static final String EXTSERVICES_PACKAGE_NAME = "com.android.ext.services";
@@ -272,7 +273,7 @@ public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMocki
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
+    @ExpectErrorLogUtilWithExceptionCall(
             throwable = NameNotFoundException.class,
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
             ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)

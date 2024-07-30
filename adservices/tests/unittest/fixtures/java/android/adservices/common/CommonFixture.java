@@ -101,7 +101,8 @@ public class CommonFixture {
             try {
                 Thread.sleep(wakeupTime - currentTime);
             } catch (InterruptedException ignored) {
-
+                Log.w(LOG_TAG, "Interrupted while sleeping");
+                Thread.currentThread().interrupt();
             }
             currentTime = System.currentTimeMillis();
         }
@@ -121,5 +122,21 @@ public class CommonFixture {
                 return "android.adservices.tests";
             }
         }
+    }
+
+    /** Returns a random alphanumeric string of length n. */
+    public static String getAlphaNumericString(int n) {
+        String AlphaNumericString =
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "abcdefghijklmnopqrstuvxyz";
+
+        StringBuilder sb = new StringBuilder(n);
+
+        for (int i = 0; i < n; i++) {
+            int index = (int) (AlphaNumericString.length() * Math.random());
+
+            // add Character one by one in end of sb
+            sb.append(AlphaNumericString.charAt(index));
+        }
+        return sb.toString();
     }
 }

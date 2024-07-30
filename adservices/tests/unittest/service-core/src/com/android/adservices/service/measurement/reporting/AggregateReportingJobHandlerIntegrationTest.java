@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
@@ -113,7 +113,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
-                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), any());
+                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), any(), any());
         } catch (IOException e) {
             Assert.fail();
         }

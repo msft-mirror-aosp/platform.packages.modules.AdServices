@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 3.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-3.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 package android.adservices.rootcts;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -24,31 +25,29 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
-import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
-import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
 
-public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
-
+public final class FledgeMaintenanceJobTest extends FledgeRootScenarioTest {
     private static final int FLEDGE_MAINTENANCE_JOB_ID = 1;
-
-    @Rule public DeviceTimeRule mDeviceTimeRule = new DeviceTimeRule();
+    private static final int FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S_OVERRIDE = 1;
 
     private final BackgroundJobHelper mBackgroundJobHelper = new BackgroundJobHelper(sContext);
 
-    @Ignore("b/343292815")
     @Test
-    public void testAdSelection_afterOneDay_adSelectionDataCleared() throws Exception {
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
+            value = FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S_OVERRIDE)
+    public void testAdSelection_afterExpirationWindow_adSelectionDataCleared() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -57,18 +56,16 @@ public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
                 makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
-            overrideBiddingLogicVersionToV3(true);
             joinCustomAudience(SHOES_CA);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
-            mDeviceTimeRule.overrideDeviceTimeToPlus25Hours();
+            Thread.sleep(FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S_OVERRIDE * 3 * 1000);
             assertThat(mBackgroundJobHelper.runJob(FLEDGE_MAINTENANCE_JOB_ID)).isTrue();
             Exception exception =
                     assertThrows(
                             ExecutionException.class,
                             () -> doReportImpression(result.getAdSelectionId(), adSelectionConfig));
-            assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
+            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         } finally {
-            overrideBiddingLogicVersionToV3(false);
             leaveCustomAudience(SHOES_CA);
         }
 
@@ -80,8 +77,11 @@ public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
 
     @Test
     @FlakyTest(bugId = 315327390)
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
+            value = FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S_OVERRIDE)
     @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
-    public void testAdSelection_afterOneDay_adInteractionsIsCleared() throws Exception {
+    public void testAdSelection_afterExpirationWindow_adInteractionsIsCleared() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -90,18 +90,16 @@ public final class FledgeMaintenanceJobTest extends FledgeScenarioTest {
                 makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
-            overrideBiddingLogicVersionToV3(true);
-
             joinCustomAudience(SHOES_CA);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
-            mDeviceTimeRule.overrideDeviceTimeToPlus25Hours();
             doReportImpression(result.getAdSelectionId(), adSelectionConfig);
+            Thread.sleep(FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S_OVERRIDE * 3 * 1000);
             assertThat(mBackgroundJobHelper.runJob(FLEDGE_MAINTENANCE_JOB_ID)).isTrue();
             Exception exception =
                     assertThrows(
                             ExecutionException.class,
                             () -> doReportEvent(result.getAdSelectionId(), "click"));
-            assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
+            assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         } finally {
             leaveCustomAudience(SHOES_CA);
         }

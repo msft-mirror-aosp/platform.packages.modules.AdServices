@@ -20,25 +20,32 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assume.assumeTrue;
 
-import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+import android.app.sdksandbox.hosttestutils.SdkSandboxDeviceSupportedHostRule;
 import android.platform.test.annotations.LargeTest;
 
+import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
 public class SdkSandboxMediaHostTest extends BaseHostJUnit4Test {
 
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedHostRule deviceSupportRule =
+            new SdkSandboxDeviceSupportedHostRule(this);
+
     private static final String TEST_APP_PACKAGE_NAME = "com.android.sdksandbox.cts.app";
     private static final String TEST_APP_APK_NAME = "CtsSdkSandboxHostTestApp.apk";
-    public static final int TIME_OUT = 600_000;
+    private static final int TIME_OUT_MS = 600_000;
+    private static final long WAIT_AFTER_REBOOT_MS = 10_000;
 
-    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
+    private DeviceSdkLevel mDeviceSdkLevel;
 
     /**
      * Runs the given phase of a test by calling into the device. Throws an exception if the test
@@ -57,7 +64,7 @@ public class SdkSandboxMediaHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
-        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
+        mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
         uninstallPackage(TEST_APP_PACKAGE_NAME);
     }
 
@@ -74,15 +81,20 @@ public class SdkSandboxMediaHostTest extends BaseHostJUnit4Test {
 
     /**
      * Test that AppOps permissions for sandbox uids correctly initialised after device reboot. See
-     * b/335809734 for context.
+     * b/335809734 for context. Test is meant for V+ devices only - audio focus after reboot was
+     * broken in 24Q2 (last U release) - see b/345381409#comment6
      */
     @Test
     @LargeTest // Reboot device
     public void testAudioFocus_AfterReboot() throws Exception {
+        assumeTrue("Test is meant for V+ devices only", mDeviceSdkLevel.isDeviceAtLeastV());
         installPackage(TEST_APP_APK_NAME);
 
         getDevice().reboot();
-        getDevice().waitForBootComplete(TIME_OUT);
+        getDevice().waitForBootComplete(TIME_OUT_MS);
+        // Allow 10 seconds after boot to avoid zygote contention.
+        Thread.sleep(WAIT_AFTER_REBOOT_MS);
+
         // Explicitly update device config to ensure SDK Sandbox is enabled
         getDevice().executeShellCommand("device_config put adservices disable_sdk_sandbox false");
 

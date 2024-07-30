@@ -21,7 +21,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
@@ -66,7 +65,9 @@ import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
+import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FledgeConsentFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -115,17 +116,16 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 AdServicesLoggerImpl.getInstance(),
                 AppImportanceFilter.create(
                         context,
-                        AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
                 FlagsFactory.getFlags(),
                 CallingAppUidSupplierBinderImpl.create(),
                 new CustomAudienceServiceFilter(
                         context,
-                        ConsentManager.getInstance(),
+                        new FledgeConsentFilter(
+                                ConsentManager.getInstance(), AdServicesLoggerImpl.getInstance()),
                         FlagsFactory.getFlags(),
                         AppImportanceFilter.create(
                                 context,
-                                AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getForegroundStatuslLevelForValidation()),
@@ -133,7 +133,9 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                 context, AdServicesLoggerImpl.getInstance()),
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
-                        Throttler.getInstance(FlagsFactory.getFlags())),
+                        new FledgeApiThrottleFilter(
+                                Throttler.getInstance(FlagsFactory.getFlags()),
+                                AdServicesLoggerImpl.getInstance())),
                 new AdFilteringFeatureFactory(
                         SharedStorageDatabase.getInstance(context).appInstallDao(),
                         SharedStorageDatabase.getInstance(context).frequencyCapDao(),

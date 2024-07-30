@@ -24,7 +24,6 @@ import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdservicesTestHelper;
@@ -35,18 +34,16 @@ import com.android.adservices.tests.ui.libs.UiUtils;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
-@RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class RvcUxAlreadyEnrolledChannelTest {
+public final class RvcUxAlreadyEnrolledChannelTest
+        extends AdServicesRvcUxAlreadyEnrolledChannelTestCase {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -63,16 +60,17 @@ public class RvcUxAlreadyEnrolledChannelTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        UiUtils.setBinderTimeout();
+        mTestName = getTestName();
+
+        UiUtils.setBinderTimeout(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.enableRvc();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.enableRvc(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -80,7 +78,7 @@ public class RvcUxAlreadyEnrolledChannelTest {
 
         // General purpose callback used for expected success calls.
         mCallback =
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
@@ -97,8 +95,6 @@ public class RvcUxAlreadyEnrolledChannelTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -107,9 +103,7 @@ public class RvcUxAlreadyEnrolledChannelTest {
     /** Verify that the U18 ROW notification is displayed for RVC_UX. */
     @Test
     public void testU18NotificationDisplayedForRvcUX_row() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.setAsRowDevice();
+        UiUtils.setAsRowDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -140,6 +134,7 @@ public class RvcUxAlreadyEnrolledChannelTest {
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 UiConstants.UX.RVC_UX,
                 /* isOptIn= */ false,
                 /* isFlipConsent= */ false,
@@ -148,9 +143,7 @@ public class RvcUxAlreadyEnrolledChannelTest {
 
     @Test
     public void testU18NotificationDisplayedForRvcUX_eu() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        UiUtils.setAsEuDevice();
+        UiUtils.setAsEuDevice(flags);
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -180,6 +173,7 @@ public class RvcUxAlreadyEnrolledChannelTest {
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 mDevice,
+                flags,
                 UiConstants.UX.RVC_UX,
                 /* isOptIn= */ false,
                 /* isFlipConsent= */ false,

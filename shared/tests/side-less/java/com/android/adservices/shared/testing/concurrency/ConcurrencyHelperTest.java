@@ -53,7 +53,7 @@ public final class ConcurrencyHelperTest extends SidelessTestCase {
                             executionInfo.time = System.currentTimeMillis();
                             executionInfo.thread = Thread.currentThread();
 
-                            mLogger.d(
+                            mLog.d(
                                     "Called after %dms on thread %s",
                                     executionInfo.time, executionInfo.thread);
                             holder.offer(executionInfo);

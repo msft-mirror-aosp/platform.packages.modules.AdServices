@@ -16,8 +16,8 @@
 
 package com.android.adservices.data.enrollment;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
@@ -52,7 +52,9 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
@@ -61,13 +63,13 @@ import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.proto.PrivacySandboxApi;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -76,6 +78,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+@SpyStatic(ErrorLogUtil.class)
 public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -86,6 +89,10 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     @Mock private AdServicesLogger mLogger;
     @Mock private EnrollmentUtil mEnrollmentUtil;
     @Mock private SharedDbHelper mMockDbHelper;
+
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     public static final EnrollmentData ENROLLMENT_DATA1 =
             new EnrollmentData.Builder()
@@ -382,13 +389,15 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    @SpyStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = SQLiteException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
     public void testDeleteAllDoesNotThrowException() {
         SharedDbHelper helper = Mockito.mock(SharedDbHelper.class);
         SQLiteDatabase readDb = mock(SQLiteDatabase.class);
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         EnrollmentDao enrollmentDao =
                 new EnrollmentDao(
                         sContext,
@@ -484,8 +493,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void getEnrollmentDataFromMeasurementUrl_ForOriginMatchAndSameOrigin_isMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(true);
+    public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndOriginData_isMatch() {
+        // Site based matching should match if the DB has URLs with origins.
         mEnrollmentDao.insert(ENROLLMENT_DATA5);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -529,66 +538,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void getEnrollmentDataFromMeasurementUrl_ForOriginMatchAndSamePort_isMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(true);
-        mEnrollmentDao.insert(ENROLLMENT_DATA5);
-        verify(mEnrollmentUtil, times(1))
-                .logEnrollmentDataStats(
-                        eq(mLogger),
-                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
-                        eq(true),
-                        eq(1));
-
-        EnrollmentData e1 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://port-test.5test3.com:443/source"));
-        EnrollmentData e2 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://port-test.5test3.com:443/trigger"));
-
-        assertEquals(e1, ENROLLMENT_DATA5);
-        assertEquals(e2, ENROLLMENT_DATA5);
-        verify(mEnrollmentUtil, times(2))
-                .logEnrollmentDataStats(
-                        eq(mLogger),
-                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
-                        eq(true),
-                        eq(1));
-        verify(mEnrollmentUtil, times(2)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
-    }
-
-    @Test
-    public void getEnrollmentDataFromMeasurementUrl_ForOriginMatchAndDifferentPort_isNotMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(true);
-        mEnrollmentDao.insert(ENROLLMENT_DATA5);
-        verify(mEnrollmentUtil, times(1))
-                .logEnrollmentDataStats(
-                        eq(mLogger),
-                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
-                        eq(true),
-                        eq(1));
-
-        EnrollmentData e1 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://port-test.5test3.com:8080/source"));
-        EnrollmentData e2 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://port-test.5test3.com:8080/trigger"));
-
-        assertNull(e1);
-        assertNull(e2);
-        verify(mEnrollmentUtil, times(2))
-                .logEnrollmentDataStats(
-                        eq(mLogger),
-                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
-                        eq(true),
-                        eq(1));
-        verify(mEnrollmentUtil, times(2)).logEnrollmentMatchStats(eq(mLogger), eq(false), eq(1));
-    }
-
-    @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndAnyPort_isMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA5);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -624,47 +574,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void
-            getEnrollmentDataFromMeasurementUrl_ForOriginMatchAndDifferentOriginUri_isNotMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(true);
-        mEnrollmentDao.insert(ENROLLMENT_DATA5);
-        verify(mEnrollmentUtil, times(1))
-                .logEnrollmentDataStats(
-                        eq(mLogger),
-                        eq(EnrollmentStatus.TransactionType.WRITE_TRANSACTION_TYPE.getValue()),
-                        eq(true),
-                        eq(1));
-        EnrollmentData e1 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://eu.5test.com/source"));
-
-        EnrollmentData e2 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(Uri.parse("https://5test.com"));
-
-        EnrollmentData e3 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://eu.5test2.com"));
-
-        EnrollmentData e4 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://eu.5test.com/trigger"));
-
-        assertNull(e1);
-        assertNull(e2);
-        assertNull(e3);
-        assertNull(e4);
-        verify(mEnrollmentUtil, times(4))
-                .logEnrollmentDataStats(
-                        eq(mLogger),
-                        eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
-                        eq(true),
-                        eq(1));
-        verify(mEnrollmentUtil, times(4)).logEnrollmentMatchStats(eq(mLogger), eq(false), eq(1));
-    }
-
-    @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndSameSiteUri_isMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -697,7 +607,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndSameETLD_isMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -730,7 +639,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndSamePath_isMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -760,7 +668,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndIncompletePath_isMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -796,7 +703,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndExtraPath_isMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -835,7 +741,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndDifferentUri_isMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA4);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -869,7 +774,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndOneUrlInEnrollment_isMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         EnrollmentData data =
                 new EnrollmentData.Builder()
                         .setEnrollmentId("5")
@@ -916,7 +820,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndDiffSchemeUrl_matchesScheme() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         EnrollmentData data =
                 new EnrollmentData.Builder()
                         .setEnrollmentId("4")
@@ -953,7 +856,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndSameSubdomainChild_isMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA4);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -982,7 +884,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndDifferentDomain_doesNotMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -1010,7 +911,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndDifferentScheme_doesNotMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -1038,7 +938,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndDifferentETld_doesNotMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -1070,7 +969,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void getEnrollmentDataFromMeasurementUrl_ForSiteMatchAndInvalidPublicSuffix_isNoMatch() {
-        when(mMockFlags.getEnforceEnrollmentOriginMatch()).thenReturn(false);
         mEnrollmentDao.insert(ENROLLMENT_DATA4);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -1420,12 +1318,13 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    @SpyStatic(ErrorLogUtil.class)
-    public void testInsert_throwsSQLException_logsCEL() throws Exception {
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = Any.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
+    public void testInsert_throwsSQLException_logsCEL() {
         SQLiteDatabase db = mock(SQLiteDatabase.class);
         EnrollmentData enrollmentData = mock(EnrollmentData.class);
-
-        doNothingOnErrorLogUtilError();
 
         when(mMockDbHelper.safeGetWritableDatabase()).thenReturn(db);
         when(db.insertWithOnConflict(
@@ -1433,10 +1332,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                 .thenThrow(new SQLException());
 
         assertThat(mEnrollmentDao.insert(enrollmentData)).isFalse();
-
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
     }
 
     @Test

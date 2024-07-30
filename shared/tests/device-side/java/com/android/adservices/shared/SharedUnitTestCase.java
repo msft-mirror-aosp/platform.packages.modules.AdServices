@@ -16,12 +16,10 @@
 package com.android.adservices.shared;
 
 import android.os.SystemClock;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import com.android.adservices.shared.testing.DeviceSideTestCase;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -30,11 +28,6 @@ import org.junit.Rule;
 import org.junit.rules.TestName;
 
 public abstract class SharedUnitTestCase extends DeviceSideTestCase {
-
-    private static final String TAG = SharedUnitTestCase.class.getSimpleName();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
 
     // TODO(b/285014040): use custom rule
     @Rule(order = 2)
@@ -45,17 +38,11 @@ public abstract class SharedUnitTestCase extends DeviceSideTestCase {
     protected final void sleep(
             int timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs) {
         String reason = String.format(reasonFmt, reasonArgs);
-        Log.i(
-                TAG,
-                getTestName()
-                        + ": napping "
-                        + timeMs
-                        + "ms on thread "
-                        + Thread.currentThread()
-                        + ". Reason: "
-                        + reason);
+        mLog.i(
+                "%s: napping %dms on thread %s. Reason: %s",
+                getTestName(), timeMs, Thread.currentThread().getName(), reason);
         SystemClock.sleep(timeMs);
-        Log.i(TAG, "Little Suzie woke up!");
+        mLog.i("Little Suzie woke up!");
     }
 
     @Override

@@ -18,8 +18,13 @@ package com.android.adservices.data.customaudience;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_FAIL;
 
+import static com.android.adservices.data.customaudience.CustomAudienceDatabase.MIGRATION_7_8;
+
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.CommonFixture;
@@ -27,8 +32,10 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.app.Instrumentation;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
 
 import androidx.room.testing.MigrationTestHelper;
+import androidx.room.util.TableInfo;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -137,6 +144,108 @@ public class CustomAudienceDatabaseMigrationTest {
         assertTrue(checkIfColumnExists(cursor, debuggableColumnName));
 
         cursor.close();
+    }
+
+    @Test
+    public void testAutoMigration7To8() throws IOException {
+        // Create DB with v7.
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 7);
+
+        // The table added in v7 should already exist.
+        Cursor cursor =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER,
+                                DBScheduledCustomAudienceUpdate.TABLE_NAME));
+        assertEquals(1, cursor.getCount());
+        cursor.close();
+
+        // Column added in v8 should not exist, yet.
+        TableInfo info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+        assertFalse(info.columns.containsKey("is_debuggable"));
+
+        // Close DB before attempting migrations.
+        db.close();
+
+        // Attempt to re-open the database with v8 auto migration and assert success.
+        db = helper.runMigrationsAndValidate(TEST_DB, 8, true);
+        info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+        assertTrue(info.columns.containsKey("is_debuggable"));
+        db.close();
+    }
+
+    @Test
+    public void testManualMigration7To8() throws IOException {
+        // Create DB with v7.
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 7);
+
+        // The table added in v7 should already exist.
+        Cursor cursor =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER,
+                                DBScheduledCustomAudienceUpdate.TABLE_NAME));
+        assertEquals(1, cursor.getCount());
+        cursor.close();
+
+        // Column added in v8 should not exist, yet.
+        TableInfo info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+        assertFalse(info.columns.containsKey("is_debuggable"));
+
+        // Close DB before attempting migrations.
+        db.close();
+
+        // Attempt to re-open the database with v8 manual migration and assert success.
+        db = helper.runMigrationsAndValidate(TEST_DB, 8, true, MIGRATION_7_8);
+        info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+        assertTrue(info.columns.containsKey("is_debuggable"));
+        db.close();
+    }
+
+    // Explicitly reproducing issue from b/336515306 caused due to "is_debuggable" column already
+    // existing before migration and testing the fix.
+    @Test
+    public void testManualMigration7To8_withDuplicateColumn() throws IOException {
+        // Create DB with v7.
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 7);
+
+        // The table added in v7 should already exist.
+        Cursor cursor =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER,
+                                DBScheduledCustomAudienceUpdate.TABLE_NAME));
+        assertEquals(1, cursor.getCount());
+        cursor.close();
+
+        // Column added in v8 should not exist, yet.
+        TableInfo info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+        assertFalse(info.columns.containsKey("is_debuggable"));
+
+        // Add v8 column before migration, effectively sabotaging v8 auto migration.
+        db.execSQL(
+                "ALTER TABLE `scheduled_custom_audience_update` ADD COLUMN `is_debuggable` INTEGER"
+                        + " NOT NULL DEFAULT false");
+        info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+        assertTrue(info.columns.containsKey("is_debuggable"));
+
+        // Close DB before attempting migrations.
+        db.close();
+
+        // Attempt to re-open the database with v8 auto migration and assert failure.
+        Exception thrown =
+                assertThrows(
+                        SQLiteException.class,
+                        () -> {
+                            helper.runMigrationsAndValidate(TEST_DB, 8, true);
+                        });
+        assertThat(thrown).hasMessageThat().contains("duplicate column name: is_debuggable");
+
+        // Attempt to re-open the database with v8 manual migration and assert success.
+        db = helper.runMigrationsAndValidate(TEST_DB, 8, true, MIGRATION_7_8);
+        info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+        assertTrue(info.columns.containsKey("is_debuggable"));
+        db.close();
     }
 
     private boolean checkIfColumnExists(Cursor cursor, String name) {

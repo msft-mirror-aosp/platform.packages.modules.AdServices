@@ -16,14 +16,17 @@
 
 package com.android.adservices.shared;
 
+import android.platform.test.annotations.DisabledOnRavenwood;
+
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
 import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.LogInterceptor;
 
-
 import org.junit.Rule;
 
+// TODO(b/335935200): fix this
+@DisabledOnRavenwood(reason = "Uses ExtendedMockito")
 public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
 
     @Rule(order = 10)

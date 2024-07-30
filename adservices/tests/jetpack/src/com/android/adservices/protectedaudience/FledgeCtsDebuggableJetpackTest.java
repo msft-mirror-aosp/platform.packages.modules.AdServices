@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.utils.CtsWebViewSupportUtil;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
@@ -43,7 +44,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.TestUtil;
-import com.android.adservices.service.js.JSScriptEngine;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -171,7 +171,6 @@ public class FledgeCtsDebuggableJetpackTest {
         testUtil.disableDeviceConfigSyncForTests(true);
         testUtil.disableFledgeEnrollmentCheck(true);
         testUtil.enableAdServiceSystemService(true);
-        testUtil.enforceFledgeJsIsolateMaxHeapSize(false);
     }
 
     @AfterClass
@@ -192,7 +191,6 @@ public class FledgeCtsDebuggableJetpackTest {
         testUtil.disableDeviceConfigSyncForTests(false);
         testUtil.disableFledgeEnrollmentCheck(false);
         testUtil.enableAdServiceSystemService(false);
-        testUtil.enforceFledgeJsIsolateMaxHeapSize(true);
     }
 
     @Before
@@ -201,7 +199,7 @@ public class FledgeCtsDebuggableJetpackTest {
         int extServicesVersion = SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S);
         Assume.assumeTrue(adServicesVersion >= 4 || extServicesVersion >= 9);
 
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(sContext));
 
         mAdSelectionClient = new AdSelectionClient(sContext);
         mCustomAudienceClient = new CustomAudienceClient(sContext);
