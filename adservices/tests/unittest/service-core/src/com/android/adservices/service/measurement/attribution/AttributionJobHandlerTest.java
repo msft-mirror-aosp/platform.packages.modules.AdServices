@@ -7406,6 +7406,61 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
+    public void performAttributions_blockedByRateLimit_inclSourceRegTime_sendNullAggReport()
+            throws DatastoreException, JSONException {
+        testNullAggregateReports_blockedByMaxDistinctReportingOriginsRateLimit(
+                Trigger.SourceRegistrationTimeConfig.INCLUDE,
+                /* triggerContextId= */ null,
+                () -> mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime(),
+                1.0f,
+                (trigger) -> {
+                    try {
+                        captureAndAssertNullAggregateReportsIncludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
+                    } catch (DatastoreException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @Test
+    public void performAttributions_blockedByRateLimit_exclSourceRegTime_sendNullAggReport()
+            throws DatastoreException, JSONException {
+        testNullAggregateReports_blockedByMaxDistinctReportingOriginsRateLimit(
+                Trigger.SourceRegistrationTimeConfig.EXCLUDE,
+                /* triggerContextId= */ null,
+                () -> mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime(),
+                1.0f,
+                (trigger) -> {
+                    try {
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
+                    } catch (DatastoreException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @Test
+    public void
+            performAttributions_blockedByRateLimit_exclSourceRegTime_contextIdSet_sendNullAggReport()
+                    throws DatastoreException, JSONException {
+        testNullAggregateReports_blockedByMaxDistinctReportingOriginsRateLimit(
+                Trigger.SourceRegistrationTimeConfig.EXCLUDE,
+                /* triggerContextId= */ TEST_TRIGGER_CONTEXT_ID,
+                () -> mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime(),
+                1.0f,
+                (trigger) -> {
+                    try {
+                        captureAndAssertNullAggregateReportExcludingSourceRegistrationTime(
+                                trigger, getMeasurementAttributionStats());
+                    } catch (DatastoreException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @Test
     public void performAttributions_triggerAggInsuffBudget_inclSourceRegTime_sendNullAggReport()
             throws DatastoreException, JSONException {
         testNullAggregateReports_triggerAggregateInsufficientBudget(
@@ -7443,7 +7498,7 @@ public class AttributionJobHandlerTest {
 
     @Test
     public void
-            performAttributions_triggerAggInsuffBudget_exclSourceRegTime_contextIdsSet_sendNullAggReport()
+            performAttributions_triggerAggInsuffBudget_exclSourceRegTime_contextIdSet_sendNullAggReport()
                     throws DatastoreException, JSONException {
         testNullAggregateReports_triggerAggregateInsufficientBudget(
                 Trigger.SourceRegistrationTimeConfig.EXCLUDE,
@@ -7935,16 +7990,17 @@ public class AttributionJobHandlerTest {
             float flagValue,
             Consumer<Trigger> assertionFunc)
             throws DatastoreException, JSONException {
+        long triggerTime = 3600000L;
         Trigger trigger =
                 getTriggerBuilderForNullAggReports(sourceRegistrationTimeConfig, triggerContextId)
-                        .setTriggerTime(3600000L)
+                        .setTriggerTime(triggerTime)
                         .build();
         List<Source> matchingSourceList = new ArrayList<>();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregatableReportWindow(
-                                3600001L) // ensure trigger time is before window
+                                triggerTime + 1) // ensure trigger time is before window
                         .build();
         matchingSourceList.add(source);
 
@@ -7980,12 +8036,13 @@ public class AttributionJobHandlerTest {
             float flagValue,
             Consumer<Trigger> assertionFunc)
             throws DatastoreException, JSONException {
+        long triggerTime = 3600000L;
         Trigger trigger =
                 getTriggerBuilderForNullAggReports(sourceRegistrationTimeConfig, triggerContextId)
                         .setAggregateDeduplicationKeys(
                                 "[{\"deduplication_key\": \"0\","
                                         + "\"filters\": [{\"x\": [\"y\"]}]}]")
-                        .setTriggerTime(3600000L)
+                        .setTriggerTime(triggerTime)
                         .build();
         List<Source> matchingSourceList = new ArrayList<>();
         Source source =
@@ -7997,7 +8054,7 @@ public class AttributionJobHandlerTest {
                         // Ensure key matches that of trigger's aggregate deduplication key
                         .setAggregateReportDedupKeys(List.of(new UnsignedLong(0L)))
                         .setAggregatableReportWindow(
-                                3600001L) // ensure trigger time is before window
+                                triggerTime + 1) // ensure trigger time is before window
                         .build();
         matchingSourceList.add(source);
 
@@ -8029,9 +8086,10 @@ public class AttributionJobHandlerTest {
             float flagValue,
             Consumer<Trigger> assertionFunc)
             throws DatastoreException, JSONException {
+        long triggerTime = 3600000L;
         Trigger trigger =
                 getTriggerBuilderForNullAggReports(sourceRegistrationTimeConfig, triggerContextId)
-                        .setTriggerTime(3600000L)
+                        .setTriggerTime(triggerTime)
                         .build();
         List<Source> matchingSourceList = new ArrayList<>();
         Source source =
@@ -8039,7 +8097,7 @@ public class AttributionJobHandlerTest {
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateSource("{\"noMatch\": \"0x159\", \"stillNoMatch\": \"0x5\"}")
                         .setAggregatableReportWindow(
-                                3600001L) // ensure trigger time's before window
+                                triggerTime + 1) // ensure trigger time's before window
                         .build();
         matchingSourceList.add(source);
 
@@ -8077,10 +8135,11 @@ public class AttributionJobHandlerTest {
                         Locale.ENGLISH,
                         "{\"campaignCounts\":32768," + "\"geoValue\":%d}",
                         excessiveAggregateValue);
+        long triggerTime = 3600000L;
         Trigger trigger =
                 getTriggerBuilderForNullAggReports(sourceRegistrationTimeConfig, triggerContextId)
                         .setAggregateValues(aggregateValuesStr)
-                        .setTriggerTime(3600000L)
+                        .setTriggerTime(triggerTime)
                         .build();
         List<Source> matchingSourceList = new ArrayList<>();
         Source source =
@@ -8089,7 +8148,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateSource(
                                 "{\"campaignCounts\": \"0x159\", \"geoValue\": \"0x5\"}")
                         .setAggregatableReportWindow(
-                                3600001L) // ensure trigger time is before window
+                                triggerTime + 1) // ensure trigger time is before window
                         .build();
         matchingSourceList.add(source);
 
@@ -8154,6 +8213,52 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).insertAggregateReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+    }
+
+    private void testNullAggregateReports_blockedByMaxDistinctReportingOriginsRateLimit(
+            Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig,
+            String triggerContextId,
+            Supplier<Float> flagSupplier,
+            float flagValue,
+            Consumer<Trigger> assertionFunc)
+            throws DatastoreException, JSONException {
+        long triggerTime = 3600000L;
+        Trigger trigger =
+                getTriggerBuilderForNullAggReports(sourceRegistrationTimeConfig, triggerContextId)
+                        .setTriggerTime(triggerTime)
+                        .build();
+        List<Source> matchingSourceList = new ArrayList<>();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAggregatableReportWindow(
+                                triggerTime + 1) // ensure trigger time's before window
+                        .build();
+        matchingSourceList.add(source);
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
+        when(mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution()).thenReturn(0);
+        when(flagSupplier.get()).thenReturn(flagValue);
+
+        // Execution
+        AttributionJobHandler.ProcessingResult result = mHandler.performPendingAttributions();
+
+        // Assertion
+        assertEquals(AttributionJobHandler.ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED, result);
+
+        MeasurementAttributionStats measurementAttributionStats = getMeasurementAttributionStats();
+        assertEquals(
+                AttributionStatus.AttributionResult.NOT_ATTRIBUTED.getValue(),
+                measurementAttributionStats.getResult());
+        assertEquals(
+                AttributionStatus.FailureType.RATE_LIMIT_EXCEEDED.getValue(),
+                measurementAttributionStats.getFailureType());
+
+        assertionFunc.accept(trigger);
     }
 
     /**
