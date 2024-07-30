@@ -307,10 +307,16 @@
       "name": "CtsOsTestCases"
     },
     {
+      "name": "CtsPreferenceTestCases"
+    },
+    {
       "name": "CtsProviderTestCases"
     },
     {
       "name": "CtsTextTestCases"
+    },
+    {
+      "name": "CtsTransitionTestCases"
     },
     {
       "name": "CtsUtilTestCases"

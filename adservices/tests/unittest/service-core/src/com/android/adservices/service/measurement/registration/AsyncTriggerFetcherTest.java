@@ -3282,13 +3282,20 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void testMissingHeaderButWithRedirect() throws Exception {
+    public void testMissingRegistrationHeaderButWithRedirect_noHeaderErrorDebugReport()
+            throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
-                        Map.of(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(DEFAULT_REDIRECT)))
+                        Map.of(
+                                AsyncRedirects.REDIRECT_LIST_HEADER_KEY,
+                                List.of(DEFAULT_REDIRECT),
+                                "Attribution-Reporting-Info",
+                                List.of("report-header-errors")))
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
@@ -3309,6 +3316,63 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertFalse(fetch.isPresent());
 
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mDebugReportApi, never())
+                .scheduleHeaderErrorReport(
+                        any(),
+                        any(),
+                        any(),
+                        eq("Attribution-Reporting-Register-Trigger"),
+                        eq(ENROLLMENT_ID),
+                        any(),
+                        any());
+    }
+
+    @Test
+    public void testInvalidRegistrationHeaderWithRedirect_sendHeaderErrorDebugReport()
+            throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                AsyncRedirects.REDIRECT_LIST_HEADER_KEY,
+                                List.of(DEFAULT_REDIRECT),
+                                "Attribution-Reporting-Info",
+                                List.of("report-header-errors"),
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of()))
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(1, asyncRedirects.getRedirects().size());
+        assertEquals(DEFAULT_REDIRECT, asyncRedirects.getRedirects().get(0).getUri().toString());
+
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.HEADER_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mDebugReportApi, times(1))
+                .scheduleHeaderErrorReport(
+                        any(),
+                        any(),
+                        any(),
+                        eq("Attribution-Reporting-Register-Trigger"),
+                        eq(ENROLLMENT_ID),
+                        any(),
+                        any());
     }
 
     @Test
@@ -5424,9 +5488,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .scheduleHeaderErrorReport(
                         any(),
                         any(),
+                        any(),
                         eq(headerName),
                         eq(ENROLLMENT_ID),
-                        eq("Trigger JSON parsing failed"),
                         eq(headerWithJsonError),
                         any());
     }
@@ -5526,6 +5590,36 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         // Assertion
         assertEquals(
                 AsyncFetchStatus.EntityStatus.PARSING_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mDebugReportApi, never())
+                .scheduleHeaderErrorReport(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    public void testAttributionInfoHeaderOnly_doNotSendHeaderErrorDebugReport() throws Exception {
+        // Setup
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        // The header fields only contains attribution info header and have no registration header
+        // or redirect header.
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Info", List.of("report-header-errors")));
+        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
+
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, new AsyncRedirects());
+
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.HEADER_MISSING, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mDebugReportApi, never())
                 .scheduleHeaderErrorReport(any(), any(), any(), any(), any(), any(), any());

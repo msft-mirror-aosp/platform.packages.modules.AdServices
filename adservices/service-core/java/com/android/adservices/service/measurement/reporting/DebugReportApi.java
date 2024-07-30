@@ -460,24 +460,23 @@ public class DebugReportApi {
 
     /** Schedule header parsing and validation errors verbose debug reports. */
     public void scheduleHeaderErrorReport(
-            Uri registrationUri,
+            Uri topOrigin,
+            Uri registrationOrigin,
             Uri registrant,
             String headerName,
             String enrollmentId,
-            String errorMessage,
-            String originalHeader,
+            @Nullable String originalHeader,
             IMeasurementDao dao) {
         try {
             JSONObject body = new JSONObject();
-            body.put(Body.CONTEXT_SITE, registrationUri);
+            body.put(Body.CONTEXT_SITE, topOrigin);
             body.put(Body.HEADER, headerName);
-            body.put(Body.VALUE, originalHeader);
-            body.put(Body.ERROR, errorMessage);
+            body.put(Body.VALUE, originalHeader == null ? "null" : originalHeader);
             scheduleReport(
                     Type.HEADER_PARSING_ERROR,
                     body,
                     enrollmentId,
-                    registrationUri,
+                    registrationOrigin,
                     registrant,
                     dao);
         } catch (JSONException e) {

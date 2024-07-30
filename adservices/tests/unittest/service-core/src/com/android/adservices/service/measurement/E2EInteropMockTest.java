@@ -96,11 +96,9 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 "same_destination_site.json",
                 "source_destination_limit_fifo.json",
                 "source_destination_limit_fifo_rate_limits.json",
-                "source_header_error_debug_report.json",
                 "source_registration_limits.json",
                 "source_storage_limit_and_destination_rate_limit.json",
                 "source_storage_limit_expiry.json",
-                "trigger_header_error_debug_report.json",
                 "verbose_debug_report_multiple_data.json");
     }
 
@@ -126,9 +124,11 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
     private static final String TEST_DIR_NAME = "msmt_interop_tests";
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String UNUSED = "";
-    private static final List<AsyncFetchStatus.EntityStatus> sParsingErrors = List.of(
-            AsyncFetchStatus.EntityStatus.PARSING_ERROR,
-            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+    private static final List<AsyncFetchStatus.EntityStatus> sParsingErrors =
+            List.of(
+                    AsyncFetchStatus.EntityStatus.HEADER_ERROR,
+                    AsyncFetchStatus.EntityStatus.PARSING_ERROR,
+                    AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
     private static final Map<String, String> sApiConfigPhFlags = Map.ofEntries(
             entry(
                     "rate_limit_max_attributions",
@@ -178,50 +178,45 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 .replaceAll("\"destination\":", "\"web_destination\":");
     }
 
-    private static final Map<String, String> sPhFlagsForInterop = Map.ofEntries(
-            entry(
-                    // TODO (b/295382171): remove this after the flag is removed.
-                    FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM,
-                    "1"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER,
-                    "true"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
-                    "true"));
+    private static final Map<String, String> sPhFlagsForInterop =
+            Map.ofEntries(
+                    entry(
+                            // TODO (b/295382171): remove this after the flag is removed.
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
+                            "true"),
+                    entry(
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
+                            "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
+                            "true"),
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID, "true"),
+                    entry(
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
+                            "true"),
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA, "true"),
+                    entry(
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT,
+                            "true"),
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE, "true"),
+                    entry(
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW,
+                            "true"),
+                    entry(
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,
+                            "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY,
+                            "true"),
+                    entry(FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM, "1"),
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER, "true"),
+                    entry(FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED, "true"),
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT, "true"));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -285,9 +280,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri));
         }
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
-        if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
-        }
+        processActualDebugReportApiJob(sourceRegistration.mTimestamp);
     }
 
     @Override
@@ -313,9 +306,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 mAttributionHelper.performPendingAttributions());
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
-        if (triggerRegistration.mDebugReporting) {
-            processActualDebugReportApiJob(triggerRegistration.mTimestamp);
-        }
+        processActualDebugReportApiJob(triggerRegistration.mTimestamp);
     }
 
     private void insertSourceOrAssertUnparsable(

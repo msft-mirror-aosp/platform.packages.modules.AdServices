@@ -19,34 +19,29 @@ package com.android.adservices;
 import java.util.Random;
 
 /**
- * <p> A mock implementation of java.util.Random that returns preset values.
- * Useful for making deterministic tests for classes that rely on a random
- * number sequence. </p>
+ * A mock implementation of java.util.Random that returns preset values. Useful for making
+ * deterministic tests for classes that rely on a random number sequence.
  *
- * <p> The provided array of long or double values is used (in a circular
- * fashion) instead of a random number generator. The arrays are used to
- * implement the Random API through appropriate conversions, as follows: </p>
+ * <p>The provided array of long or double values is used (in a circular fashion) instead of a
+ * random number generator. The arrays are used to implement the Random API through appropriate
+ * conversions, as follows:
  *
  * <ul>
- *
- * <li> <code>long[]</code> values are used for <code>next(int)</code>,
- * <code>nextInt()</code>, <code>nextInt(int)</code>,
- * <code>nextBoolean()</code>, <code>nextByte()</code>, and
- * <code>nextLong()</code>. </li>
- *
- * <li> <code>double[]</code> values are used for <code>nextFloat()</code>,
- * <code>nextGaussian()</code>, and <code>nextDouble()</code>. </li>
- *
+ *   <li><code>long[]</code> values are used for <code>next(int)</code>, <code>nextInt()</code>,
+ *       <code>nextInt(int)</code>, <code>nextBoolean()</code>, <code>nextByte()</code>, and <code>
+ *       nextLong()</code>.
+ *   <li><code>double[]</code> values are used for <code>nextFloat()</code>, <code>nextGaussian()
+ *       </code>, and <code>nextDouble()</code>.
  * </ul>
  */
 
 // Copied from google3/java/com/google/testing/util/MockRandom.java
-public class MockRandom extends Random {
+public final class MockRandom extends Random {
 
-    private int mNextLongIndex = 0;
-    private int mNextDoubleIndex = 0;
-    private long[] mLongValues;
-    private double[] mDoubleValues;
+    private int mNextLongIndex;
+    private int mNextDoubleIndex;
+    private final long[] mLongValues;
+    private final double[] mDoubleValues;
 
     public MockRandom(long[] longValues, double[] doubleValues) {
         this.mLongValues = longValues;

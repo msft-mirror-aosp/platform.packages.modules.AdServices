@@ -305,7 +305,6 @@ android_test {
     srcs: [
         "src/com/android/adservices/service/topics/**/*.java",
         "src/com/android/adservices/data/topics/**/*.java",
-        "src/com/android/adservices/MockRandom.java",
     ],
     test_config: "AndroidTest.Topics.xml",
 }
@@ -315,7 +314,6 @@ android_test {
     srcs: [
         "src/com/android/adservices/service/topics/**/*.java",
         "src/com/android/adservices/data/topics/**/*.java",
-        "src/com/android/adservices/MockRandom.java",
     ],
     defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
     test_config: "AndroidTest.Topics.ExtServices.xml",

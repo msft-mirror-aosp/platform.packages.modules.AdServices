@@ -27,6 +27,7 @@ import android.adservices.common.CommonFixture;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
@@ -44,8 +45,8 @@ import java.util.Map;
 public class ProtectedSignalsArgumentUtilTest {
 
     public static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
-    public static final String SIGNAL_FIELD_NAME = "signals";
     public static final Instant FIXED_NOW = CommonFixture.FIXED_NOW;
+    private static final int MAX_PAYLOAD_SIZE = 256;
     private Map<String, List<ProtectedSignal>> mSignals;
 
     @Rule(order = 0)
@@ -57,34 +58,45 @@ public class ProtectedSignalsArgumentUtilTest {
     }
 
     @Test
-    public void testJSArgument() throws JSONException {
+    public void test_getArgumentsFromRawSignalsAndMaxSize_convertsSuccessfully()
+            throws JSONException {
         ProtectedSignal signal = generateSignal("signal1");
         mSignals.put(getBase64String("test_key"), List.of(signal));
 
-        JSScriptArgument argument =
-                ProtectedSignalsArgumentUtil.asScriptArgument(SIGNAL_FIELD_NAME, mSignals);
+        ImmutableList<JSScriptArgument> argumentList =
+                ProtectedSignalsArgumentUtil.getArgumentsFromRawSignalsAndMaxSize(
+                        mSignals, MAX_PAYLOAD_SIZE);
 
-        assertEquals(SIGNAL_FIELD_NAME, argument.name());
-
-        String expectedVariable =
-                "const signals = [{\"746573745F6B6579\":"
+        JSScriptArgument signals = argumentList.get(0);
+        String expectedSignals =
+                "const __rb_protected_signals = [{\"746573745F6B6579\":"
                         + "[{\"val\":\"7369676E616C31\","
                         + "\"time\":"
                         + FIXED_NOW.getEpochSecond()
                         + ",\"app\":\"android.adservices.tests1\"}]}];";
+        String actualSignals = signals.variableDeclaration();
 
-        String actualVariable = argument.variableDeclaration();
-        assertEquals(expectedVariable, actualVariable);
+        JSScriptArgument maxSize = argumentList.get(1);
+        String expectedMaxSize = "const __rb_max_size_bytes = " + MAX_PAYLOAD_SIZE + ";";
+        String actualMaxSize = maxSize.variableDeclaration();
+
+        assertEquals(2, argumentList.size());
+
+        assertEquals(SignalsDriverLogicGenerator.SIGNALS_ARG_NAME, signals.name());
+        assertEquals(expectedSignals, actualSignals);
+
+        assertEquals(SignalsDriverLogicGenerator.MAX_SIZE_BYTES_ARG_NAME, maxSize.name());
+        assertEquals(expectedMaxSize, actualMaxSize);
     }
 
     @Test
-    public void testEmptySignals() {
+    public void test_marshalToJson_emptySignals_returnsEmptyJson() {
         String expectedEmpty = "[]";
         assertEquals(expectedEmpty, ProtectedSignalsArgumentUtil.marshalToJson(mSignals));
     }
 
     @Test
-    public void testSingleSignal() {
+    public void test_marshalToJson_singleSignal_returnsProperJson() {
         ProtectedSignal signal = generateSignal("signal1");
         mSignals.put(getBase64String("test_key"), List.of(signal));
 
@@ -101,21 +113,7 @@ public class ProtectedSignalsArgumentUtilTest {
     }
 
     @Test
-    public void testHandleInvalidBase64Signal() {
-        ProtectedSignal signal = generateSignal("signal1");
-        mSignals.put("non_base64_string", List.of(signal));
-
-        IllegalStateException exception =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> {
-                            ProtectedSignalsArgumentUtil.marshalToJson(mSignals);
-                        });
-        assertEquals(INVALID_BASE64_SIGNAL, exception.getMessage());
-    }
-
-    @Test
-    public void testMultipleSignals() {
+    public void test_marshalToJson_multipleSignal_returnsProperJson() {
         ProtectedSignal signalA1 = generateSignal("signalA1");
         ProtectedSignal signalA2 = generateSignal("signalA1");
         ProtectedSignal signalB1 = generateSignal("signalB1");
@@ -146,7 +144,7 @@ public class ProtectedSignalsArgumentUtilTest {
     }
 
     @Test
-    public void handleEmptyValue() {
+    public void test_marshalToJson_emptyValue_returnsProperJson() {
         ProtectedSignal signal =
                 ProtectedSignal.builder()
                         .setBase64EncodedValue(getBase64String(""))
@@ -166,6 +164,39 @@ public class ProtectedSignalsArgumentUtilTest {
         assertTrue(isValidJson(actualJSON));
     }
 
+    @Test
+    public void test_marshalToJson_invalidBase64Key_throwsException() {
+        ProtectedSignal signal = generateSignal("signal1");
+        mSignals.put("non_base64_string", List.of(signal));
+
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> {
+                            ProtectedSignalsArgumentUtil.marshalToJson(mSignals);
+                        });
+        assertEquals(INVALID_BASE64_SIGNAL, exception.getMessage());
+    }
+
+    @Test
+    public void test_marshalToJson_invalidBase64Value_throwsException() {
+        ProtectedSignal signal =
+                ProtectedSignal.builder()
+                        .setBase64EncodedValue("non_base64_string")
+                        .setCreationTime(FIXED_NOW)
+                        .setPackageName(PACKAGE)
+                        .build();
+        mSignals.put(getBase64String("test_key"), List.of(signal));
+
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> {
+                            ProtectedSignalsArgumentUtil.marshalToJson(mSignals);
+                        });
+        assertEquals(INVALID_BASE64_SIGNAL, exception.getMessage());
+    }
+
     private ProtectedSignal generateSignal(String value) {
         return ProtectedSignal.builder()
                 .setBase64EncodedValue(getBase64String(value))
@@ -176,8 +207,7 @@ public class ProtectedSignalsArgumentUtilTest {
 
     private boolean isValidJson(String jsonString) {
         try {
-            JsonParser parser = new JsonParser();
-            parser.parse(jsonString);
+            JsonParser.parseString(jsonString);
             return true;
         } catch (JsonSyntaxException e) {
             return false;

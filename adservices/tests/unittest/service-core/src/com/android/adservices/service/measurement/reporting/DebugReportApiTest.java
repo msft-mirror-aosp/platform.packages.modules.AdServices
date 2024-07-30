@@ -79,7 +79,6 @@ public final class DebugReportApiTest {
     private static final String TEST_ENROLLMENT_ID = "enrollment-id";
     private static final String TEST_HEADER_CONTENT = "header-content";
 
-    private static final String TEST_ERROR_MESSAGE = "Invalid JSON";
     private static final String LIMIT = "100";
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private DebugReportApi mDebugReportApi;
@@ -4137,10 +4136,10 @@ public final class DebugReportApiTest {
 
         mDebugReportApi.scheduleHeaderErrorReport(
                 TEST_REGISTRATION_ORIGIN,
+                TEST_REGISTRATION_ORIGIN,
                 TEST_REGISTRANT,
                 HEADER_NAME_SOURCE_REGISTRATION,
                 TEST_ENROLLMENT_ID,
-                TEST_ERROR_MESSAGE,
                 TEST_HEADER_CONTENT,
                 mMeasurementDao);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
