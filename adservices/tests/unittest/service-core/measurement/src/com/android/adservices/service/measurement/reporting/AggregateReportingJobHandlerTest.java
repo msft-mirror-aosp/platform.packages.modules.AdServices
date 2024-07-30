@@ -31,11 +31,14 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -68,6 +71,7 @@ import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.truth.Truth;
 
 import org.json.JSONException;
@@ -114,7 +118,7 @@ public class AggregateReportingJobHandlerTest {
 
     private static final String TRIGGER_CONTEXT_ID = "test_context_id";
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+    protected static Context sContext;
 
     DatastoreManager mDatastoreManager;
 
@@ -125,6 +129,9 @@ public class AggregateReportingJobHandlerTest {
     @Mock Flags mMockFlags;
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesErrorLogger mErrorLogger;
+    @Mock PackageManager mPackageManager;
+
+    AndroidTimeSource mTimeSource;
 
     AggregateReportingJobHandler mAggregateReportingJobHandler;
     AggregateReportingJobHandler mSpyAggregateReportingJobHandler;
@@ -162,6 +169,7 @@ public class AggregateReportingJobHandlerTest {
 
     @Before
     public void setUp() {
+        sContext = spy(ApplicationProvider.getApplicationContext());
         AggregateEncryptionKeyManager mockKeyManager = mock(AggregateEncryptionKeyManager.class);
         ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
         when(mockKeyManager.getAggregateEncryptionKeys(any(), captorNumberOfKeys.capture()))
@@ -174,6 +182,9 @@ public class AggregateReportingJobHandlerTest {
                             return keys;
                         });
         mDatastoreManager = new FakeDatasoreManager();
+
+        mTimeSource = new AndroidTimeSource();
+
         mAggregateReportingJobHandler =
                 new AggregateReportingJobHandler(
                         mDatastoreManager,
@@ -182,7 +193,8 @@ public class AggregateReportingJobHandlerTest {
                         mLogger,
                         ReportingStatus.ReportType.AGGREGATE,
                         ReportingStatus.UploadMethod.UNKNOWN,
-                        sContext);
+                        sContext,
+                        mTimeSource);
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
         mSpyDebugAggregateReportingJobHandler =
                 Mockito.spy(
@@ -193,7 +205,8 @@ public class AggregateReportingJobHandlerTest {
                                         mLogger,
                                         ReportingStatus.ReportType.AGGREGATE,
                                         ReportingStatus.UploadMethod.UNKNOWN,
-                                        sContext)
+                                        sContext,
+                                        mTimeSource)
                                 .setIsDebugInstance(true));
 
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -422,6 +435,168 @@ public class AggregateReportingJobHandlerTest {
         verify(mTransaction, times(3)).begin();
         verify(mTransaction, times(3)).end();
         verify(mMeasurementDao, never()).insertOrUpdateAppReportHistory(any(), any(), anyLong());
+    }
+
+    @Test
+    public void testSendReportFailed_uninstallEnabled_deleteReport()
+            throws DatastoreException, IOException, JSONException {
+        when(mMockFlags.getMeasurementEnableMinReportLifespanForUninstall()).thenReturn(true);
+        when(mMockFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                .thenReturn(TimeUnit.DAYS.toSeconds(1));
+
+        long currentTime = System.currentTimeMillis();
+        Uri publisher = Uri.parse("https://publisher.test");
+
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId(AGGREGATE_REPORT_ID)
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_URI)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setPublisher(publisher)
+                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                        .setApi(AggregateReportFixture.ValidAggregateReportParams.API)
+                        .setTriggerTime(currentTime - TimeUnit.HOURS.toMillis(25))
+                        .build();
+
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
+
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), any(), eq(null), anyString());
+        doReturn(aggregateReportBody)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(any(), eq(REPORTING_URI), any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
+        ReportingStatus status = new ReportingStatus();
+
+        mSpyAggregateReportingJobHandler.performReport(
+                aggregateReport.getId(), AggregateCryptoFixture.getKey(), status);
+
+        Truth.assertThat(status.getUploadStatus()).isEqualTo(ReportingStatus.UploadStatus.FAILURE);
+        Truth.assertThat(status.getFailureStatus())
+                .isEqualTo(ReportingStatus.FailureStatus.APP_UNINSTALLED_OR_OUTSIDE_WINDOW);
+        verify(mMeasurementDao, times(1)).deleteAggregateReport(aggregateReport);
+    }
+
+    @Test
+    public void testSendReportSuccess_uninstallEnabled_hasApps_sendReport()
+            throws DatastoreException,
+                    IOException,
+                    JSONException,
+                    PackageManager.NameNotFoundException {
+
+        when(mMockFlags.getMeasurementEnableMinReportLifespanForUninstall()).thenReturn(true);
+        when(mMockFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                .thenReturn(TimeUnit.DAYS.toSeconds(1));
+
+        long currentTime = System.currentTimeMillis();
+        Uri publisher = Uri.parse("https://publisher.test");
+
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId(AGGREGATE_REPORT_ID)
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_URI)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setPublisher(publisher)
+                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                        .setApi(AggregateReportFixture.ValidAggregateReportParams.API)
+                        .setTriggerTime(currentTime - TimeUnit.HOURS.toMillis(25))
+                        .build();
+
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
+
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), any(), eq(null), anyString());
+        doReturn(aggregateReportBody)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(any(), eq(REPORTING_URI), any());
+
+        ApplicationInfo applicationInfo1 = new ApplicationInfo();
+        applicationInfo1.packageName = APP_DESTINATION.getHost();
+        ApplicationInfo applicationInfo2 = new ApplicationInfo();
+        applicationInfo2.packageName = publisher.getHost();
+
+        when(sContext.getPackageManager()).thenReturn(mPackageManager);
+
+        when(mPackageManager.getApplicationInfo(APP_DESTINATION.getHost(), 0))
+                .thenReturn(applicationInfo1);
+        when(mPackageManager.getApplicationInfo(publisher.getHost(), 0))
+                .thenReturn(applicationInfo2);
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
+        ReportingStatus status = new ReportingStatus();
+
+        mSpyAggregateReportingJobHandler.performReport(
+                aggregateReport.getId(), AggregateCryptoFixture.getKey(), status);
+
+        assertEquals(ReportingStatus.UploadStatus.SUCCESS, status.getUploadStatus());
+        verify(mMeasurementDao, times(0)).deleteAggregateReport(aggregateReport);
+    }
+
+    @Test
+    public void testSendReportSuccess_uninstallEnabled_sendReport()
+            throws DatastoreException, IOException, JSONException {
+        when(mMockFlags.getMeasurementEnableMinReportLifespanForUninstall()).thenReturn(true);
+        when(mMockFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                .thenReturn(TimeUnit.DAYS.toSeconds(1));
+
+        long currentTime = System.currentTimeMillis();
+
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId(AGGREGATE_REPORT_ID)
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_URI)
+                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                        .setApi(AggregateReportFixture.ValidAggregateReportParams.API)
+                        .setTriggerTime(currentTime - TimeUnit.HOURS.toMillis(23))
+                        .build();
+
+        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
+
+        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
+                .thenReturn(aggregateReport);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), any(), eq(null), anyString());
+        doReturn(aggregateReportBody)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(any(), eq(REPORTING_URI), any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(
+                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
+        ReportingStatus status = new ReportingStatus();
+
+        mSpyAggregateReportingJobHandler.performReport(
+                aggregateReport.getId(), AggregateCryptoFixture.getKey(), status);
+
+        assertEquals(ReportingStatus.UploadStatus.SUCCESS, status.getUploadStatus());
+        verify(mMeasurementDao, times(0)).deleteAggregateReport(aggregateReport);
     }
 
     @Test
@@ -764,7 +939,8 @@ public class AggregateReportingJobHandlerTest {
                         mockKeyManager,
                         mMockFlags,
                         mLogger,
-                        sContext);
+                        sContext,
+                        new AndroidTimeSource());
         mSpyAggregateReportingJobHandler = Mockito.spy(mAggregateReportingJobHandler);
 
         assertTrue(

@@ -570,6 +570,9 @@ class AttributionJobHandler {
                             .setTriggerContextId(trigger.getTriggerContextId())
                             .setTriggerTime(trigger.getTriggerTime())
                             .setApi(API);
+            if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()) {
+                aggregateReportBuilder.setTriggerTime(trigger.getTriggerTime());
+            }
             if (trigger.getAggregationCoordinatorOrigin() != null) {
                 aggregateReportBuilder.setAggregationCoordinatorOrigin(
                         trigger.getAggregationCoordinatorOrigin());
@@ -1057,7 +1060,6 @@ class AttributionJobHandler {
                 measurementDao)) {
             return TriggeringStatus.DROPPED;
         }
-
         return TriggeringStatus.ATTRIBUTED;
     }
 
