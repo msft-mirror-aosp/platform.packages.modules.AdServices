@@ -34,7 +34,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
