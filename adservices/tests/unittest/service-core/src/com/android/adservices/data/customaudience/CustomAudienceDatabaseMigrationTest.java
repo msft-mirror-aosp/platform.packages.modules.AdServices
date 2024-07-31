@@ -239,12 +239,7 @@ public class CustomAudienceDatabaseMigrationTest {
                         () -> {
                             helper.runMigrationsAndValidate(TEST_DB, 8, true);
                         });
-        assertThat(thrown)
-                .hasMessageThat()
-                .contains(
-                        "duplicate column name: is_debuggable (code 1 SQLITE_ERROR): , while"
-                                + " compiling: ALTER TABLE `scheduled_custom_audience_update` ADD"
-                                + " COLUMN `is_debuggable` INTEGER NOT NULL DEFAULT false");
+        assertThat(thrown).hasMessageThat().contains("duplicate column name: is_debuggable");
 
         // Attempt to re-open the database with v8 manual migration and assert success.
         db = helper.runMigrationsAndValidate(TEST_DB, 8, true, MIGRATION_7_8);

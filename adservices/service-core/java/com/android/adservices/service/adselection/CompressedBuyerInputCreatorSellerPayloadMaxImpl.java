@@ -24,13 +24,16 @@ import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
+import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
         implements CompressedBuyerInputCreator {
+    public static final int VERSION = 1;
 
     private final CompressedBuyerInputCreatorHelper mCompressedBuyerInputCreatorHelper;
     private final AuctionServerDataCompressor mDataCompressor;
@@ -39,6 +42,8 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final int mStoppingPointBytes;
     private final int mPerBuyerPasMaxSizeBytes;
+    private final Clock mClock;
+    private final GetAdSelectionDataApiCalledStats.Builder mStatsBuilder;
 
     // TODO(b/347314190) investigate making this a flag
     private static final double UNDER_SIZE_TARGET_RATIO = .95;
@@ -48,13 +53,17 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
             AuctionServerDataCompressor dataCompressor,
             int maxNumRecalculations,
             int sellerMaxSizeBytes,
-            int perBuyerPasMaxSizeBytes) {
+            int perBuyerPasMaxSizeBytes,
+            Clock clock,
+            GetAdSelectionDataApiCalledStats.Builder statsBuilder) {
         mCompressedBuyerInputCreatorHelper = compressedBuyerInputCreatorHelper;
         mDataCompressor = dataCompressor;
         mSellerMaxSizeBytes = sellerMaxSizeBytes;
         mMaxNumRecalculations = maxNumRecalculations;
         mStoppingPointBytes = (int) (mSellerMaxSizeBytes * UNDER_SIZE_TARGET_RATIO);
         mPerBuyerPasMaxSizeBytes = perBuyerPasMaxSizeBytes;
+        mClock = clock;
+        mStatsBuilder = statsBuilder;
     }
 
     @Override
@@ -63,6 +72,7 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
                     List<DBCustomAudience> dbCustomAudiences,
                     Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS);
+        long startLatency = mClock.millis();
 
         Map<AdTechIdentifier, BiddingAuctionServers.BuyerInput.Builder> buyerInputs =
                 new HashMap<>();
@@ -75,8 +85,9 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
         // Calculate current total size post PAS and add CAs to buyer input
         int currentEstimatedTotalSize = getCurrentSize(buyerInputs);
         sLogger.v("Initial estimated size after PAS" + currentEstimatedTotalSize);
-        addCAsToBuyerInput(
-                buyerInputs, dbCustomAudiences, perBuyerStats, currentEstimatedTotalSize);
+        int numRecalculations =
+                addCAsToBuyerInput(
+                        buyerInputs, dbCustomAudiences, perBuyerStats, currentEstimatedTotalSize);
 
         mCompressedBuyerInputCreatorHelper.logBuyerInputGeneratedStats(perBuyerStats);
 
@@ -91,9 +102,34 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
                             AuctionServerDataCompressor.UncompressedData.create(
                                     entry.getValue().build().toByteArray())));
         }
-        sLogger.v("Total size:" + getTotalSize(compressedInputs));
+        int totalSizeBytes = getTotalSize(compressedInputs);
+        sLogger.v("Total size:" + totalSizeBytes);
+        logSellerConfigurationMetrics((int) (mClock.millis() - startLatency), numRecalculations);
         Tracing.endAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS, traceCookie);
         return compressedInputs;
+    }
+
+    private void logSellerConfigurationMetrics(
+            int compressedBuyerInputCreatorLatencyMs, int numRecalculations) {
+        GetAdSelectionDataApiCalledStats.PayloadOptimizationResult result =
+                getPayloadOptimizationResult(numRecalculations);
+        mCompressedBuyerInputCreatorHelper.addSellerConfigurationStats(
+                mStatsBuilder,
+                result,
+                compressedBuyerInputCreatorLatencyMs,
+                VERSION,
+                numRecalculations);
+    }
+
+    private GetAdSelectionDataApiCalledStats.PayloadOptimizationResult getPayloadOptimizationResult(
+            int numRecalculations) {
+        if (mMaxNumRecalculations > numRecalculations) {
+            return GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                    .PAYLOAD_WITHIN_REQUESTED_MAX;
+        } else {
+            return GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                    .PAYLOAD_TRUNCATED_FOR_REQUESTED_MAX;
+        }
     }
 
     private int getCompressionSize(BiddingAuctionServers.BuyerInput.Builder buyerInput) {
@@ -135,6 +171,10 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
     private void addPASToBuyerInput(
             Map<AdTechIdentifier, BiddingAuctionServers.BuyerInput.Builder> buyerInputs,
             Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap) {
+        if (mSellerMaxSizeBytes <= 0) {
+            sLogger.v("Max size is 0, returning an empty payload");
+            return;
+        }
         int numBuyers = encodedPayloadMap.keySet().size();
         if (numBuyers * mPerBuyerPasMaxSizeBytes > mSellerMaxSizeBytes) {
             sLogger.v("Not enough space for PAS");
@@ -160,11 +200,15 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
         }
     }
 
-    private void addCAsToBuyerInput(
+    private int addCAsToBuyerInput(
             Map<AdTechIdentifier, BiddingAuctionServers.BuyerInput.Builder> buyerInputs,
             List<DBCustomAudience> dbCustomAudiences,
             Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats,
             int currentEstimatedTotalSize) {
+        if (mSellerMaxSizeBytes <= 0) {
+            sLogger.v("Max size is 0, returning an empty payload");
+            return 0;
+        }
         int currentRecalculations = 0;
         for (DBCustomAudience dBcustomAudience : dbCustomAudiences) {
             if (currentEstimatedTotalSize >= mStoppingPointBytes
@@ -206,5 +250,6 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
                     perBuyerStats, dBcustomAudience, customAudience);
             currentEstimatedTotalSize += nextCustomAudienceCompressedSize;
         }
+        return currentRecalculations;
     }
 }

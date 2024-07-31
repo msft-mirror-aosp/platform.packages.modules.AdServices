@@ -36,12 +36,13 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class LoadSdkSessionUnitTest {
+public class LoadSdkSessionUnitTest extends DeviceSupportedBaseTest {
 
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
     private static final String SDK_NAME = "com.android.codeprovider";

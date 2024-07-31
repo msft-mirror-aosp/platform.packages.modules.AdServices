@@ -16,9 +16,12 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI;
+
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
 import org.junit.Test;
 import org.mockito.Mock;
@@ -29,35 +32,89 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
     @Mock private AuctionServerDataCompressor mDataCompressorMock;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private EncodedPayloadDao mEncodedPayloadDaoMock;
+    private static final int MAX_NUM_RECOMPRESSIONS = 5;
+    private static final int PAS_MAX_SIZE = 10;
+    private static final int MAX_PAYLOAD_SIZE = 20;
 
-    private final boolean mSellerConfigurationDisabled = false;
+    private static final boolean SELLER_CONFIGURATION_DISABLED = false;
+    private static final boolean SELLER_CONFIGURATION_ENABLED = true;
 
     @Test
-    public void createPayloadFormatterReturnsNoOptimizations() {
+    public void testCreatePayloadFormatterReturnsNoOptimizationsSellerConfigurationDisabled() {
         CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
                 new CompressedBuyerInputCreatorFactory(
                         mCompressedBuyerInputCreatorHelperMock,
                         mDataCompressorMock,
-                        mSellerConfigurationDisabled,
+                        SELLER_CONFIGURATION_DISABLED,
                         mCustomAudienceDaoMock,
-                        mEncodedPayloadDaoMock);
+                        mEncodedPayloadDaoMock,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION,
+                        MAX_NUM_RECOMPRESSIONS,
+                        PAS_MAX_SIZE,
+                        FIXED_CLOCK_TRUNCATED_TO_MILLI);
         CompressedBuyerInputCreator compressedBuyerInputCreator =
-                compressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator();
+                compressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
+                        MAX_PAYLOAD_SIZE, GetAdSelectionDataApiCalledStats.builder());
 
         expect.that(compressedBuyerInputCreator)
                 .isInstanceOf(CompressedBuyerInputCreatorNoOptimizations.class);
     }
 
     @Test
-    public void getBuyerInputDataFetcherSellerConfigurationDisabled() {
-        boolean sellerConfigurationEnabled = true;
+    public void testCreatePayloadFormatterReturnsNoOptimizationsVersionIsZero() {
         CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
                 new CompressedBuyerInputCreatorFactory(
                         mCompressedBuyerInputCreatorHelperMock,
                         mDataCompressorMock,
-                        sellerConfigurationEnabled,
+                        SELLER_CONFIGURATION_ENABLED,
                         mCustomAudienceDaoMock,
-                        mEncodedPayloadDaoMock);
+                        mEncodedPayloadDaoMock,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION,
+                        MAX_NUM_RECOMPRESSIONS,
+                        PAS_MAX_SIZE,
+                        FIXED_CLOCK_TRUNCATED_TO_MILLI);
+        CompressedBuyerInputCreator compressedBuyerInputCreator =
+                compressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
+                        MAX_PAYLOAD_SIZE, GetAdSelectionDataApiCalledStats.builder());
+
+        expect.that(compressedBuyerInputCreator)
+                .isInstanceOf(CompressedBuyerInputCreatorNoOptimizations.class);
+    }
+
+    @Test
+    public void testCreatePayloadFormatterReturnsSellerMaxImpl() {
+        CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
+                new CompressedBuyerInputCreatorFactory(
+                        mCompressedBuyerInputCreatorHelperMock,
+                        mDataCompressorMock,
+                        SELLER_CONFIGURATION_ENABLED,
+                        mCustomAudienceDaoMock,
+                        mEncodedPayloadDaoMock,
+                        CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION,
+                        MAX_NUM_RECOMPRESSIONS,
+                        PAS_MAX_SIZE,
+                        FIXED_CLOCK_TRUNCATED_TO_MILLI);
+        CompressedBuyerInputCreator compressedBuyerInputCreator =
+                compressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
+                        MAX_PAYLOAD_SIZE, GetAdSelectionDataApiCalledStats.builder());
+
+        expect.that(compressedBuyerInputCreator)
+                .isInstanceOf(CompressedBuyerInputCreatorSellerPayloadMaxImpl.class);
+    }
+
+    @Test
+    public void testGetBuyerInputDataFetcherSellerConfigurationEnabled() {
+        CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
+                new CompressedBuyerInputCreatorFactory(
+                        mCompressedBuyerInputCreatorHelperMock,
+                        mDataCompressorMock,
+                        SELLER_CONFIGURATION_ENABLED,
+                        mCustomAudienceDaoMock,
+                        mEncodedPayloadDaoMock,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION,
+                        MAX_NUM_RECOMPRESSIONS,
+                        PAS_MAX_SIZE,
+                        FIXED_CLOCK_TRUNCATED_TO_MILLI);
 
         BuyerInputDataFetcher buyerInputDataFetcher =
                 compressedBuyerInputCreatorFactory.getBuyerInputDataFetcher();
@@ -67,18 +124,64 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
     }
 
     @Test
-    public void getBuyerInputDataFetcherSellerConfigurationEnabled() {
+    public void testGetBuyerInputDataFetcherSellerConfigurationDisabled() {
         CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
                 new CompressedBuyerInputCreatorFactory(
                         mCompressedBuyerInputCreatorHelperMock,
                         mDataCompressorMock,
-                        mSellerConfigurationDisabled,
+                        SELLER_CONFIGURATION_DISABLED,
                         mCustomAudienceDaoMock,
-                        mEncodedPayloadDaoMock);
+                        mEncodedPayloadDaoMock,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION,
+                        MAX_NUM_RECOMPRESSIONS,
+                        PAS_MAX_SIZE,
+                        FIXED_CLOCK_TRUNCATED_TO_MILLI);
 
         BuyerInputDataFetcher buyerInputDataFetcher =
                 compressedBuyerInputCreatorFactory.getBuyerInputDataFetcher();
 
         expect.that(buyerInputDataFetcher).isInstanceOf(BuyerInputDataFetcherAllBuyersImpl.class);
+    }
+
+    @Test
+    public void testGetBuyerInputGeneratorArgumentsPreparerSellerConfigurationDisabled() {
+        CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
+                new CompressedBuyerInputCreatorFactory(
+                        mCompressedBuyerInputCreatorHelperMock,
+                        mDataCompressorMock,
+                        SELLER_CONFIGURATION_DISABLED,
+                        mCustomAudienceDaoMock,
+                        mEncodedPayloadDaoMock,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION,
+                        MAX_NUM_RECOMPRESSIONS,
+                        PAS_MAX_SIZE,
+                        FIXED_CLOCK_TRUNCATED_TO_MILLI);
+
+        BuyerInputGeneratorArgumentsPreparer argumentsPreparer =
+                compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();
+
+        expect.that(argumentsPreparer)
+                .isInstanceOf(
+                        BuyerInputGeneratorArgumentsPreparerSellerConfigurationDisabled.class);
+    }
+
+    @Test
+    public void testGetBuyerInputGeneratorArgumentsPreparerSellerConfigurationEnabled() {
+        CompressedBuyerInputCreatorFactory compressedBuyerInputCreatorFactory =
+                new CompressedBuyerInputCreatorFactory(
+                        mCompressedBuyerInputCreatorHelperMock,
+                        mDataCompressorMock,
+                        SELLER_CONFIGURATION_ENABLED,
+                        mCustomAudienceDaoMock,
+                        mEncodedPayloadDaoMock,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION,
+                        MAX_NUM_RECOMPRESSIONS,
+                        PAS_MAX_SIZE,
+                        FIXED_CLOCK_TRUNCATED_TO_MILLI);
+        BuyerInputGeneratorArgumentsPreparer argumentsPreparer =
+                compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();
+
+        expect.that(argumentsPreparer)
+                .isInstanceOf(BuyerInputGeneratorArgumentsPreparerSellerConfigurationEnabled.class);
     }
 }

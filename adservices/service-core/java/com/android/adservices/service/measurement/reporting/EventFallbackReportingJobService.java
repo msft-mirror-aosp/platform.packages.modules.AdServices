@@ -100,31 +100,29 @@ public final class EventFallbackReportingJobService extends JobService {
 
     @VisibleForTesting
     void processPendingReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(EVENT_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                long maxEventReportUploadRetryWindowMs =
-                        FlagsFactory.getFlags().getMeasurementMaxEventReportUploadRetryWindowMs();
-                long eventMainReportingJobPeriodMs =
-                        AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
-                new EventReportingJobHandler(
-                                DatastoreManagerFactory.getDatastoreManager(
-                                        getApplicationContext()),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.EVENT,
-                                ReportingStatus.UploadMethod.FALLBACK,
-                                getApplicationContext())
-                        .performScheduledPendingReportsInWindow(
-                                System.currentTimeMillis() - maxEventReportUploadRetryWindowMs,
-                                System.currentTimeMillis() - eventMainReportingJobPeriodMs);
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger()
-                .d("EventFallbackReportingJobService did not acquire the lock");
+        JobLockHolder.getInstance(EVENT_REPORTING)
+                .runWithLock(
+                        "EventFallbackReportingJobService",
+                        () -> {
+                            long maxEventReportUploadRetryWindowMs =
+                                    FlagsFactory.getFlags()
+                                            .getMeasurementMaxEventReportUploadRetryWindowMs();
+                            long eventMainReportingJobPeriodMs =
+                                    AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
+                            new EventReportingJobHandler(
+                                            DatastoreManagerFactory.getDatastoreManager(
+                                                    getApplicationContext()),
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.ReportType.EVENT,
+                                            ReportingStatus.UploadMethod.FALLBACK,
+                                            getApplicationContext())
+                                    .performScheduledPendingReportsInWindow(
+                                            System.currentTimeMillis()
+                                                    - maxEventReportUploadRetryWindowMs,
+                                            System.currentTimeMillis()
+                                                    - eventMainReportingJobPeriodMs);
+                        });
     }
 
     @Override

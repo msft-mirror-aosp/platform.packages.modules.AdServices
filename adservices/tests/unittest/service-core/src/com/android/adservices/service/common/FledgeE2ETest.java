@@ -22,8 +22,7 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNE
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_SCORING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
@@ -447,8 +446,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         any(),
                         any());
         when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
-        when(AppImportanceFilter.create(any(), anyInt(), any()))
-                .thenReturn(mAppImportanceFilterMock);
+        when(AppImportanceFilter.create(any(), any())).thenReturn(mAppImportanceFilterMock);
         doNothing()
                 .when(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
@@ -4622,7 +4620,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                             + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                         return new MockResponse()
                                 .setBody(TRUSTED_SCORING_SIGNALS.toString())
-                                .addHeader(DATA_VERSION_HEADER_SCORING_KEY, DATA_VERSION_2);
+                                .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_2);
                     }
 
                     if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
@@ -4634,7 +4632,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                             .startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH_WITH_DATA_VERSION)) {
                         return new MockResponse()
                                 .setBody(TRUSTED_BIDDING_SIGNALS.toString())
-                                .addHeader(DATA_VERSION_HEADER_BIDDING_KEY, DATA_VERSION_1);
+                                .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_1);
                     }
                     return new MockResponse().setResponseCode(404);
                 });
@@ -5625,11 +5623,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         @Override
         public long getAdSelectionOverallTimeoutMs() {
             return 300000;
-        }
-
-        @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
         }
 
         @Override

@@ -152,10 +152,8 @@ android_test {
     name: "AdServicesMddIntegrationTests",
     srcs: [
         "src/com/android/adservices/download/MobileDataDownloadTest.java",
-        // Contains DB Util methods which used in MobileDataDownloadTest.java
-        "src/com/android/adservices/data/DbTestUtil.java",
     ],
-    defaults: ["modules-utils-testable-device-config-defaults"],
+    defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
     sdk_version: "module_current",
     compile_multilib: "both",
     min_sdk_version: "Tiramisu",
@@ -174,7 +172,6 @@ android_test {
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
-        "framework-wifi",
     ],
     test_suites: [
         "general-tests",
@@ -184,6 +181,7 @@ android_test {
     instrumentation_for: "AdServicesApk",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline-adservices-mdd.xml",
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
@@ -285,7 +283,6 @@ android_test {
     srcs: [
         "src/com/android/adservices/service/measurement/**/*.java",
         "src/com/android/adservices/data/measurement/**/*.java",
-        "src/com/android/adservices/data/DbTestUtil.java",
         "src/com/android/adservices/MockWebServerRuleFactory.java",
     ],
     test_config: "AndroidTest.Measurement.xml",
@@ -296,7 +293,6 @@ android_test {
     srcs: [
         "src/com/android/adservices/service/measurement/**/*.java",
         "src/com/android/adservices/data/measurement/**/*.java",
-        "src/com/android/adservices/data/DbTestUtil.java",
         "src/com/android/adservices/MockWebServerRuleFactory.java",
     ],
     defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
@@ -309,8 +305,6 @@ android_test {
     srcs: [
         "src/com/android/adservices/service/topics/**/*.java",
         "src/com/android/adservices/data/topics/**/*.java",
-        "src/com/android/adservices/data/DbTestUtil.java",
-        "src/com/android/adservices/MockRandom.java",
     ],
     test_config: "AndroidTest.Topics.xml",
 }
@@ -320,8 +314,6 @@ android_test {
     srcs: [
         "src/com/android/adservices/service/topics/**/*.java",
         "src/com/android/adservices/data/topics/**/*.java",
-        "src/com/android/adservices/data/DbTestUtil.java",
-        "src/com/android/adservices/MockRandom.java",
     ],
     defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
     test_config: "AndroidTest.Topics.ExtServices.xml",
@@ -371,10 +363,8 @@ android_test {
     name: "AdExtServicesMddIntegrationTests",
     srcs: [
         "src/com/android/adservices/download/MobileDataDownloadTest.java",
-        // Contains DB Util methods which used in MobileDataDownloadTest.java
-        "src/com/android/adservices/data/DbTestUtil.java",
     ],
-    defaults: ["modules-utils-testable-device-config-defaults"],
+    defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
     sdk_version: "module_current",
     compile_multilib: "both",
     min_sdk_version: "30",
@@ -395,7 +385,6 @@ android_test {
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
-        "framework-wifi",
     ],
     test_suites: [
         "general-tests",

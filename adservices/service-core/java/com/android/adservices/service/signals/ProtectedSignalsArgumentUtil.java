@@ -39,19 +39,20 @@ public class ProtectedSignalsArgumentUtil {
     public static final String HEX = "%02X";
 
     public static final String INVALID_BASE64_SIGNAL = "Signals have invalid base64 key or values";
+
     /**
      * @param rawSignals map of {@link ProtectedSignal}, where map key is the base64 encoded key for
      *     signals
      * @return an {@link JSScriptArgument}
      */
-    public static JSScriptArgument asScriptArgument(
+    @VisibleForTesting
+    static JSScriptArgument asScriptArgument(
             String name, Map<String, List<ProtectedSignal>> rawSignals) throws JSONException {
         return JSScriptArgument.jsonArrayArg(name, marshalToJson(rawSignals));
     }
 
     @VisibleForTesting
     static String marshalToJson(Map<String, List<ProtectedSignal>> rawSignals) {
-
         /**
          * We analyzed various JSON building approaches, turns out using StringBuilder is orders of
          * magnitude faster. Also, given the signals have base64 encoded strings initially fetched
@@ -60,8 +61,7 @@ public class ProtectedSignalsArgumentUtil {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         for (Map.Entry<String, List<ProtectedSignal>> signalsPerKey : rawSignals.entrySet()) {
-            String json = serializeEntryToJson(signalsPerKey);
-            sb.append(json);
+            serializeEntryToJson(sb, signalsPerKey);
             sb.append(",");
         }
         if (rawSignals.size() > 0) {
@@ -73,9 +73,8 @@ public class ProtectedSignalsArgumentUtil {
         return sb.toString();
     }
 
-    @VisibleForTesting
-    static String serializeEntryToJson(Map.Entry<String, List<ProtectedSignal>> entry) {
-        StringBuilder jsonBuilder = new StringBuilder();
+    private static void serializeEntryToJson(
+            StringBuilder jsonBuilder, Map.Entry<String, List<ProtectedSignal>> entry) {
         jsonBuilder.append("{");
         jsonBuilder.append("\"").append(validateAndSerializeBase64(entry.getKey())).append("\":[");
 
@@ -103,8 +102,6 @@ public class ProtectedSignalsArgumentUtil {
 
         jsonBuilder.append("]");
         jsonBuilder.append("}");
-
-        return jsonBuilder.toString();
     }
 
     // TODO(b/294900378) Avoid second serialization
@@ -122,6 +119,16 @@ public class ProtectedSignalsArgumentUtil {
         }
     }
 
+    /**
+     * Convert a buyer's {@link ProtectedSignal} and maximum payload size allowed to a list of
+     * {@link JSScriptArgument} in order to pass to a JS isolate.
+     *
+     * @param rawSignals A map of the buyer's {@link ProtectedSignal}, where each key is the base64
+     *     encoded key for that signal, and the values are all the signals with that key.
+     * @param maxSizeInBytes The max payload size for the buyer.
+     * @return A {@link JSScriptArgument} list.
+     * @throws JSONException If the JSON we created isn't valid JSON.
+     */
     static ImmutableList<JSScriptArgument> getArgumentsFromRawSignalsAndMaxSize(
             Map<String, List<ProtectedSignal>> rawSignals, int maxSizeInBytes)
             throws JSONException {

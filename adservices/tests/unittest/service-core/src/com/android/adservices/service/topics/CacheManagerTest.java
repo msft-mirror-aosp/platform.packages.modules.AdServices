@@ -35,8 +35,8 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockRandom;
 import com.android.adservices.cobalt.TopicsCobaltLogger;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.DbHelper;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.CombinedTopic;
 import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;

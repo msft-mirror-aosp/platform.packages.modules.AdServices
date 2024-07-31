@@ -15,8 +15,6 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.service.Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID;
@@ -56,8 +54,11 @@ import android.net.Uri;
 import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
@@ -88,6 +89,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -111,6 +113,8 @@ import javax.net.ssl.HttpsURLConnection;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(Enrollment.class)
 @SpyStatic(SdkLevel.class)
+@SpyStatic(ErrorLogUtil.class)
+@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
 /** Unit tests for {@link AsyncTriggerFetcher} */
 @RunWith(Parameterized.class)
 public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTestCase {
@@ -206,6 +210,10 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private DebugReportApi mDebugReportApi;
 
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
+
     // Parameterised setup to run all the tests once with ARA parsing V1 flag on, and once with the
     // flag off.
     private final Boolean mEnableUpdateTriggerHeaderSizeLimit;
@@ -296,6 +304,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 "",
                                 0,
                                 false,
+                                false,
+                                0,
                                 false)
                         .setAdTechDomain(null)
                         .build();
@@ -349,6 +359,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 "",
                                 0,
                                 false,
+                                false,
+                                0,
                                 false)
                         .setAdTechDomain(null)
                         .build();
@@ -783,7 +795,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate only 'location' type header
@@ -819,7 +830,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -866,7 +876,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate behavior config header, but no redirects.
@@ -897,7 +906,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate behavior config header, but no Location type redirect.
@@ -938,7 +946,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -971,7 +978,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
-        when(mFlags.getMeasurementEnableRedirectToWellKnownPath()).thenReturn(true);
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -1033,6 +1039,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testTriggerRequest_eventTriggerData_tooManyFilterMaps() throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder eventTriggers = new StringBuilder("[{\"trigger_data\":\"2\",\"filters\":[");
         for (int i = 0; i < Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET + 1; i++) {
@@ -1144,6 +1151,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testTriggerRequest_eventTriggerData_tooManyNotFilterMaps() throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder eventTriggers = new StringBuilder(
                 "[{\"trigger_data\":\"2\",\"not_filters\":[");
@@ -1754,6 +1762,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testTriggerRequest_eventTriggerData_filters_tooManyFilters() throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
@@ -1932,6 +1941,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testTriggerRequest_eventTriggerData_notFilters_tooManyFilters() throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder notFilters = new StringBuilder("{");
         notFilters.append(
@@ -2093,6 +2103,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testTriggerRequest_tooManyFilterMaps() throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("[");
         for (int i = 0; i < Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET + 1; i++) {
@@ -2287,6 +2298,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testTriggerRequest_AggregateDeduplicationKeys_tooManyFilters() throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         int maxAggregateDeduplicationKeysPerRegistration =
                 Flags.DEFAULT_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
         RegistrationRequest request = buildRequest(TRIGGER_URI);
@@ -2462,6 +2474,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testTriggerRequest_filters_tooManyFilters() throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
@@ -2699,6 +2712,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testTriggerRequest_tooManyNotFilterMaps() throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder notFilters = new StringBuilder("[");
         for (int i = 0; i < Flags.DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET + 1; i++) {
@@ -2773,6 +2787,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testTriggerRequest_notFilters_tooManyFilters() throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder notFilters = new StringBuilder("{");
         notFilters.append(
@@ -2883,10 +2898,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    @SpyStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID)
     public void testBasicTriggerRequest_skipTriggerWhenNotEnrolled_processRedirects()
             throws IOException {
-        doNothingOnErrorLogUtilError();
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         ExtendedMockito.doReturn(Optional.empty())
                 .when(
@@ -2917,9 +2931,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT,
                 asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
-        verifyErrorLogUtilError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
     }
 
     @Test
@@ -3271,13 +3282,20 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void testMissingHeaderButWithRedirect() throws Exception {
+    public void testMissingRegistrationHeaderButWithRedirect_noHeaderErrorDebugReport()
+            throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
-                        Map.of(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(DEFAULT_REDIRECT)))
+                        Map.of(
+                                AsyncRedirects.REDIRECT_LIST_HEADER_KEY,
+                                List.of(DEFAULT_REDIRECT),
+                                "Attribution-Reporting-Info",
+                                List.of("report-header-errors")))
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
@@ -3298,6 +3316,63 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertFalse(fetch.isPresent());
 
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mDebugReportApi, never())
+                .scheduleHeaderErrorReport(
+                        any(),
+                        any(),
+                        any(),
+                        eq("Attribution-Reporting-Register-Trigger"),
+                        eq(ENROLLMENT_ID),
+                        any(),
+                        any());
+    }
+
+    @Test
+    public void testInvalidRegistrationHeaderWithRedirect_sendHeaderErrorDebugReport()
+            throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                AsyncRedirects.REDIRECT_LIST_HEADER_KEY,
+                                List.of(DEFAULT_REDIRECT),
+                                "Attribution-Reporting-Info",
+                                List.of("report-header-errors"),
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of()))
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(1, asyncRedirects.getRedirects().size());
+        assertEquals(DEFAULT_REDIRECT, asyncRedirects.getRedirects().get(0).getUri().toString());
+
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.HEADER_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mDebugReportApi, times(1))
+                .scheduleHeaderErrorReport(
+                        any(),
+                        any(),
+                        any(),
+                        eq("Attribution-Reporting-Register-Trigger"),
+                        eq(ENROLLMENT_ID),
+                        any(),
+                        any());
     }
 
     @Test
@@ -3461,6 +3536,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Test
     public void testBasicTriggerRequestWithAggregateTriggerData_tooManyFilterMaps()
             throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("[");
         int i;
@@ -3534,6 +3610,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Test
     public void testBasicTriggerRequestWithAggregateTriggerData_tooManyNotFilterMaps()
             throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder notFilters = new StringBuilder("[");
         int i;
@@ -4285,6 +4362,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Test
     public void testTriggerRequestWithAggregateTriggerData_filters_tooManyFilters()
             throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
@@ -4438,6 +4516,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Test
     public void testTriggerRequestWithAggregateTriggerData_notFilters_tooManyFilters()
             throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         StringBuilder filters = new StringBuilder("{");
         filters.append(
@@ -4991,6 +5070,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 "",
                                 0,
                                 false,
+                                false,
+                                0,
                                 false)
                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                         .build();
@@ -5020,19 +5101,17 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void basicTriggerRequest_headersMoreThanMaxResponseSize_throwException()
+    public void basicTriggerRequest_headersMoreThanMaxResponseSize_logsSizeExceededError()
             throws Exception {
         // This test is only valid when this flag is enabled.
         Assume.assumeTrue(mEnableUpdateTriggerHeaderSizeLimit);
-        when(mFlags.getMaxTriggerRegistrationHeaderSizeBytes()).thenReturn(0L);
+        Map<String, List<String>> headers = getDefaultHeaders();
+        long headerSize = FetcherUtil.calculateHeadersCharactersLength(headers);
+        when(mFlags.getMaxTriggerRegistrationHeaderSizeBytes()).thenReturn(headerSize - 1);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         asyncFetchStatus.setRegistrationDelay(0L);
@@ -5045,6 +5124,30 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 AsyncFetchStatus.ResponseStatus.HEADER_SIZE_LIMIT_EXCEEDED,
                 asyncFetchStatus.getResponseStatus());
         assertFalse(fetch.isPresent());
+    }
+
+    @Test
+    public void basicTriggerRequest_headersWithinMaxResponseSize_success() throws Exception {
+        // This test is only valid when this flag is enabled.
+        Assume.assumeTrue(mEnableUpdateTriggerHeaderSizeLimit);
+        Map<String, List<String>> headers = getDefaultHeaders();
+        long headerSize = FetcherUtil.calculateHeadersCharactersLength(headers);
+        when(mFlags.getMaxTriggerRegistrationHeaderSizeBytes()).thenReturn(headerSize);
+
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields()).thenReturn(headers);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        asyncFetchStatus.setRetryCount(0);
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
     }
 
     @Test
@@ -5385,9 +5488,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .scheduleHeaderErrorReport(
                         any(),
                         any(),
+                        any(),
                         eq(headerName),
                         eq(ENROLLMENT_ID),
-                        eq("Trigger JSON parsing failed"),
                         eq(headerWithJsonError),
                         any());
     }
@@ -5487,6 +5590,36 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         // Assertion
         assertEquals(
                 AsyncFetchStatus.EntityStatus.PARSING_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mDebugReportApi, never())
+                .scheduleHeaderErrorReport(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    public void testAttributionInfoHeaderOnly_doNotSendHeaderErrorDebugReport() throws Exception {
+        // Setup
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        // The header fields only contains attribution info header and have no registration header
+        // or redirect header.
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Info", List.of("report-header-errors")));
+        doReturn(5000L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
+
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, new AsyncRedirects());
+
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.HEADER_MISSING, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mDebugReportApi, never())
                 .scheduleHeaderErrorReport(any(), any(), any(), any(), any(), any(), any());
@@ -6774,33 +6907,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
         assertThat(fetch.isPresent()).isTrue();
         assertThat(fetch.get().getAttributionScopes()).containsExactly("5", "6");
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
-    public void fetchTrigger_attributionScopeTooLong_fails() throws Exception {
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        RegistrationRequest request = buildRequest(TRIGGER_URI);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Trigger",
-                                List.of("{\"attribution_scopes\": [\"long_attribution_scope\"]}")));
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
-
-        // Execution
-        Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
-        // Assertion
-        assertThat(asyncFetchStatus.getResponseStatus())
-                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
-        assertThat(fetch.isPresent()).isFalse();
-        assertThat(asyncFetchStatus.getEntityStatus())
-                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
         verify(mUrlConnection).setRequestMethod("POST");
     }
 

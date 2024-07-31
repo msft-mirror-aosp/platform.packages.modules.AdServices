@@ -41,7 +41,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** Log verifier for {@code ErrorLogUtil.e(int, int)} invocations. */
+/**
+ * Log verifier for scanning usage of {@code ErrorLogUtil.e(int, int)} invocations. Use {@link
+ * ExpectErrorLogUtilCall} to verify logging calls.
+ */
 public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<ErrorLogUtilCall> {
     @Override
     protected void mockLogCalls() {
