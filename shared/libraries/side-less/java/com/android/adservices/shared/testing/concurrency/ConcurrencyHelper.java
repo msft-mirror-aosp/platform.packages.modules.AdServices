@@ -21,8 +21,13 @@ import com.android.adservices.shared.testing.Logger.RealLogger;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// TODO(b/I343510637): add unit tests / javadoc
-public final class ConcurrencyHelper {
+/**
+ * Helper class for concurrency-related needs.
+ *
+ * <p><b>Note:</b>this class is not directly visible to tests, they should use static methods from
+ * {@link com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper} instead.
+ */
+final class ConcurrencyHelper {
 
     private static final AtomicInteger sThreadId = new AtomicInteger();
 
@@ -32,12 +37,7 @@ public final class ConcurrencyHelper {
         mLogger = new Logger(realLogger, ConcurrencyHelper.class);
     }
 
-    /**
-     * Starts a new thread and runs {@code r} on it after {@code timeoutMs} ms.
-     *
-     * @return the new thread.
-     */
-    public Thread runAsync(long timeoutMs, Runnable r) {
+    Thread runAsync(long timeoutMs, Runnable r) {
         Objects.requireNonNull(r);
         Runnable sleepingBeauty =
                 () -> {
@@ -57,8 +57,7 @@ public final class ConcurrencyHelper {
         return startNewThread(sleepingBeauty);
     }
 
-    /** Starts a new thread to run the given runnable. */
-    public Thread startNewThread(Runnable r) {
+    Thread startNewThread(Runnable r) {
         Objects.requireNonNull(r);
         String threadName = "ConcurrencyHelper-runLaterThread-" + sThreadId.incrementAndGet();
         Thread thread = new Thread(r, threadName);
