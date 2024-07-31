@@ -18,7 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.net.Uri;
 
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
@@ -90,7 +90,10 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
-                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), Mockito.any());
+                    .makeHttpPostRequest(
+                            Mockito.eq(Uri.parse(registration_origin)),
+                            Mockito.any(),
+                            Mockito.eq(null));
         } catch (IOException e) {
             Assert.fail();
         }

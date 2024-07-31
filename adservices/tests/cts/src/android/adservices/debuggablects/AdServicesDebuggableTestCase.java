@@ -17,19 +17,38 @@
 package android.adservices.debuggablects;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
-abstract class AdServicesDebuggableTestCase extends AdServicesCtsTestCase {
-
-    // TODO(b/299104530): add more stuff from AndroidTestDebuggable.xml, make sure all tests
-    // extend this, then clean up that XML
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                .setCompatModeFlags()
-                .setPpapiAppAllowList(sPackageName)
-                .setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true);
-    }
-}
+@DisableGlobalKillSwitch
+@EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
+@EnableDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE)
+@SetAllLogcatTags
+@SetCompatModeFlags
+@SetFlagDisabled(KEY_ADID_KILL_SWITCH)
+@SetFlagDisabled(KEY_FLEDGE_CPC_BILLING_ENABLED)
+@SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
+@SetFlagDisabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+@SetFlagDisabled(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH)
+@SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
+@SetFlagEnabled(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
+@SetFlagEnabled(KEY_MDD_BACKGROUND_TASK_KILL_SWITCH)
+@SetIntegerFlag(name = KEY_SDK_REQUEST_PERMITS_PER_SECOND, value = 100000)
+abstract class AdServicesDebuggableTestCase extends AdServicesCtsTestCase {}

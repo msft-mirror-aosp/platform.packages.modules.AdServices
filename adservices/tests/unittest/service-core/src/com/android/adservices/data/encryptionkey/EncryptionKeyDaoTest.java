@@ -28,7 +28,7 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.stats.AdServicesEncryptionKeyDbTransactionEndedStats;

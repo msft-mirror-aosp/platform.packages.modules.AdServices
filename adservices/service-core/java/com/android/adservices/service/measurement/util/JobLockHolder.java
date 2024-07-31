@@ -23,8 +23,17 @@ import static com.android.adservices.service.measurement.util.JobLockHolder.Type
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.EVENT_REPORTING;
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.VERBOSE_DEBUG_REPORTING;
 
+import android.annotation.Nullable;
+
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.LoggerFactory.Logger;
+
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 /**
  * Holds the lock to be used by the background jobs. The locks will be used by multiple jobs,
@@ -32,7 +41,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * these functions should be able to process at a time. This is to prevent conflicts and ensure that
  * the system runs smoothly.
  */
-public class JobLockHolder {
+public final class JobLockHolder {
     public enum Type {
         AGGREGATE_REPORTING,
         ASYNC_REGISTRATION_PROCESSING,
@@ -44,18 +53,26 @@ public class JobLockHolder {
 
     private static final Map<Type, JobLockHolder> INSTANCES =
             Map.of(
-                    AGGREGATE_REPORTING, new JobLockHolder(),
-                    ASYNC_REGISTRATION_PROCESSING, new JobLockHolder(),
-                    ATTRIBUTION_PROCESSING, new JobLockHolder(),
-                    DEBUG_REPORTING, new JobLockHolder(),
-                    EVENT_REPORTING, new JobLockHolder(),
-                    VERBOSE_DEBUG_REPORTING, new JobLockHolder());
+                    AGGREGATE_REPORTING, new JobLockHolder(AGGREGATE_REPORTING),
+                    ASYNC_REGISTRATION_PROCESSING, new JobLockHolder(ASYNC_REGISTRATION_PROCESSING),
+                    ATTRIBUTION_PROCESSING, new JobLockHolder(ATTRIBUTION_PROCESSING),
+                    DEBUG_REPORTING, new JobLockHolder(DEBUG_REPORTING),
+                    EVENT_REPORTING, new JobLockHolder(EVENT_REPORTING),
+                    VERBOSE_DEBUG_REPORTING, new JobLockHolder(VERBOSE_DEBUG_REPORTING));
+
+    private final Type mType;
 
     /* Holds the lock that will be given per instance */
     private final ReentrantLock mLock;
 
-    private JobLockHolder() {
-        mLock = new ReentrantLock();
+    private JobLockHolder(Type type) {
+        this(type, new ReentrantLock());
+    }
+
+    @VisibleForTesting
+    JobLockHolder(Type type, ReentrantLock lock) {
+        mType = type;
+        mLock = lock;
     }
 
     /**
@@ -69,21 +86,61 @@ public class JobLockHolder {
     }
 
     /**
-     * Tries to acquire the lock. Returns true if the lock was acquired successfully or false if it
-     * has already been acquired by another thread. If lock was acquired, at the end of processing,
-     * a call to {@link JobLockHolder#unlock()} will need to be made.
+     * Runs the given runnable after acquiring the lock.
      *
-     * @return a boolean determining if the lock was successfully acquired or not.
+     * @param tag name of the caller (used for logging purposes)
+     * @param runnable what to run
      */
-    public boolean tryLock() {
-        return mLock.tryLock();
+    public void runWithLock(String tag, Runnable runnable) {
+        Objects.requireNonNull(tag, "tag cannot be null");
+        Objects.requireNonNull(runnable, "runnable cannot be null");
+
+        Logger logger = LoggerFactory.getMeasurementLogger();
+        logger.v("%s.runWithLock(%s) started", tag, mType);
+
+        if (mLock.tryLock()) {
+            try {
+                runnable.run();
+            } finally {
+                mLock.unlock();
+            }
+            return;
+        }
+
+        logger.e("%s.runWithLock(%s) failed to acquire lock", tag, mType);
     }
 
     /**
-     * Releases the lock that was previously acquired. It must be called after the lock has been
-     * successfully acquired.
+     * Calls the given "callable" after acquiring the lock.
+     *
+     * @param tag name of the caller (used for logging purposes)
+     * @param callable what to call (i.e, the value returned by {@code get()}.
+     * @param lockFailureResult what to return if the lock could not be acquired
+     * @return result of callable, or {@code failureResult} if the lock could not be acquired.
      */
-    public void unlock() {
-        mLock.unlock();
+    public <T> T callWithLock(String tag, Supplier<T> callable, @Nullable T lockFailureResult) {
+        Objects.requireNonNull(tag, "tag cannot be null");
+        Objects.requireNonNull(callable, "callable cannot be null");
+
+        Logger logger = LoggerFactory.getMeasurementLogger();
+        logger.v("%s.callWithLock(%s) started", tag, mType);
+
+        if (mLock.tryLock()) {
+            try {
+                return callable.get();
+            } finally {
+                mLock.unlock();
+            }
+        }
+
+        logger.e(
+                "%s.callWithLock(%s) failed to acquire lock; returning %s",
+                tag, mType, lockFailureResult);
+        return lockFailureResult;
+    }
+
+    @Override
+    public String toString() {
+        return "JobLockHolder[mType=" + mType + ", mLock=" + mLock + "]";
     }
 }

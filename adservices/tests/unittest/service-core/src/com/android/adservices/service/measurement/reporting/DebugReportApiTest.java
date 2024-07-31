@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.measurement.reporting;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -77,7 +79,6 @@ public final class DebugReportApiTest {
     private static final String TEST_ENROLLMENT_ID = "enrollment-id";
     private static final String TEST_HEADER_CONTENT = "header-content";
 
-    private static final String TEST_ERROR_MESSAGE = "Invalid JSON";
     private static final String LIMIT = "100";
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private DebugReportApi mDebugReportApi;
@@ -439,7 +440,7 @@ public final class DebugReportApiTest {
     }
 
     @Test
-    public void scheduleSourceDestinationRateLimitDebugReport_success() throws Exception {
+    public void scheduleSourceDestinationPerMinuteRateLimitDebugReport__success() throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -454,7 +455,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+        mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
@@ -462,6 +463,35 @@ public final class DebugReportApiTest {
         assertSourceDebugReportParameters(
                 report,
                 DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT,
+                SourceFixture.ValidSourceParams.PUBLISHER.toString(),
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT));
+    }
+
+    @Test
+    public void scheduleSourceDestinationPerDayRateLimitDebugReport_success() throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setPublisherType(EventSurfaceType.APP)
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(null)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
+                source, LIMIT, mMeasurementDao);
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        assertSourceDebugReportParameters(
+                report,
+                DebugReportApi.Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT,
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
                 Map.of(DebugReportApi.Body.LIMIT, LIMIT));
@@ -480,14 +510,28 @@ public final class DebugReportApiTest {
     }
 
     @Test
-    public void scheduleSourceDestinationRateLimitDebugReport_debugFlagDisabled_dontSchedule()
+    public void
+            scheduleSourceDestinationPerMinuteRateLimitDebugReport_debugFlagDisabled_dontSchedule()
+                    throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        Source source = SourceFixture.getValidSource();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
+                source, LIMIT, mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void scheduleSourceDestinationPerDayRateLimitDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
         when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source = SourceFixture.getValidSource();
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+        mDebugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
@@ -505,14 +549,29 @@ public final class DebugReportApiTest {
     }
 
     @Test
-    public void scheduleSourceDestinationRateLimitDebugReport_sourceFlagDisabled_dontSchedule()
-            throws Exception {
+    public void
+            scheduleSourceDestinationPerMinuteRateLimitDebugReport_sourceFlagDisabled_dontSchedule()
+                    throws Exception {
         when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source = SourceFixture.getValidSource();
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+        mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
+                source, LIMIT, mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void
+            scheduleSourceDestinationPerDayRateLimitDebugReport_sourceFlagDisabled_dontSchedule()
+                    throws Exception {
+        when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
+        Source source = SourceFixture.getValidSource();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
@@ -535,8 +594,9 @@ public final class DebugReportApiTest {
     }
 
     @Test
-    public void scheduleSourceDestinationRateLimitDebugReport_without_enrollmentId_dontSchedule()
-            throws Exception {
+    public void
+            scheduleSourceDestinationPerMinuteRateLimitDebugReport_withoutEnrollment_dontSchedule()
+                    throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -547,7 +607,26 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+        mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
+                source, LIMIT, mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void
+            scheduleSourceDestinationPerDayRateLimitDebugReport_without_enrollmentId_dontSchedule()
+                    throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setEnrollmentId("")
+                        .build();
+
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
@@ -569,7 +648,7 @@ public final class DebugReportApiTest {
     }
 
     @Test
-    public void scheduleSourceDestinationRateLimitDebugReport_adTechNotOptIn_dontSchedule()
+    public void scheduleSourceDestinationPerMinuteRateLimitDebugReport_adTechNotOptIn_dontSchedule()
             throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -580,7 +659,7 @@ public final class DebugReportApiTest {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceDestinationRateLimitDebugReport(
+        mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
@@ -4057,13 +4136,55 @@ public final class DebugReportApiTest {
 
         mDebugReportApi.scheduleHeaderErrorReport(
                 TEST_REGISTRATION_ORIGIN,
+                TEST_REGISTRATION_ORIGIN,
                 TEST_REGISTRANT,
                 HEADER_NAME_SOURCE_REGISTRATION,
                 TEST_ENROLLMENT_ID,
-                TEST_ERROR_MESSAGE,
                 TEST_HEADER_CONTENT,
                 mMeasurementDao);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
+    }
+
+    @Test
+    public void scheduleSourceAttributionScopeDebugReport_maxEventStatesLimit_success()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleAttributionScopeDebugReport(
+                source,
+                Source.AttributionScopeValidationResult.INVALID_MAX_EVENT_STATES_LIMIT,
+                mMeasurementDao);
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        assertThat(captor.getValue().getType()).isEqualTo(Type.SOURCE_MAX_EVENT_STATES_LIMIT);
+    }
+
+    @Test
+    public void scheduleSourceAttributionScopeDebugReport_infoGainLimit_success() throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleAttributionScopeDebugReport(
+                source,
+                Source.AttributionScopeValidationResult.INVALID_INFORMATION_GAIN_LIMIT,
+                mMeasurementDao);
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        assertThat(captor.getValue().getType())
+                .isEqualTo(Type.SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT);
     }
 
     private static void assertSourceDebugReportParameters(

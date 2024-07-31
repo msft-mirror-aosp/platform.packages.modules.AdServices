@@ -18,8 +18,8 @@ package com.android.adservices.data.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;

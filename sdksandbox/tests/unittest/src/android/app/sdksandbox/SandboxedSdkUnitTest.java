@@ -25,6 +25,8 @@ import android.content.pm.VersionedPackage;
 import android.os.Binder;
 import android.os.Parcel;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -32,7 +34,7 @@ import org.junit.runners.JUnit4;
 import java.util.ArrayList;
 
 @RunWith(JUnit4.class)
-public class SandboxedSdkUnitTest {
+public class SandboxedSdkUnitTest extends DeviceSupportedBaseTest {
 
     public static final SharedLibraryInfo SHARED_LIBRARY_INFO =
             new SharedLibraryInfo(

@@ -22,64 +22,11 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
+    <option name="config-descriptor:metadata" key="parameter" value="secondary_user_on_secondary_display" />
     <option name="test-suite-tag" value="cts" />
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
         <option name="test-file-name" value="CtsAdServicesDebuggableDeviceTestCases.apk" />
-    </target_preparer>
-
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- Disable kill switches to ignore the effect of actual PH values. -->
-        <option name="run-command" value="device_config put adservices global_kill_switch false" />
-        <option name="run-command" value="device_config put adservices fledge_select_ads_kill_switch false" />
-        <option name="run-command" value="device_config put adservices fledge_custom_audience_service_kill_switch false" />
-        <option name="run-command" value="device_config put adservices fledge_schedule_custom_audience_update_enabled true" />
-        <option name="run-command" value="device_config put adservices adid_kill_switch false" />
-
-        <!-- Override Consent notification to debug mode to grant user consent -->
-        <option name="run-command"
-                value="setprop debug.adservices.consent_notified_debug_mode true"/>
-        <option name="teardown-command"
-                value="setprop debug.adservices.consent_notified_debug_mode false"/>
-
-        <!-- Override Consent Manager to debug mode to grant user consent -->
-        <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
-        <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
-
-        <!-- Override MDD background job to avoid race condition. -->
-        <option name="run-command"
-                value="device_config put adservices mdd_background_task_kill_switch true"/>
-        <option name="teardown-command"
-                value="device_config put adservices mdd_background_task_kill_switch false"/>
-
-        <!-- Increase the allowed API queries per second -->
-        <option name="run-command" value="device_config put adservices sdk_request_permits_per_second 100000" />
-        <option name="teardown-command" value="device_config put adservices sdk_request_permits_per_second 1" />
-
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-
-        <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
-        <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE" />
-
-        <!-- Temporarily enable enrollment seed for testing -->
-        <option name="run-command"
-                value="device_config put adservices enable_enrollment_test_seed true" />
-        <option name="teardown-command"
-                value="device_config put adservices enable_enrollment_test_seed false" />
-
-        <!-- Disable Register Ad Beacon Feature at run -->
-        <option name="run-command" value="device_config put adservices fledge_register_ad_beacon_enabled false" />
-
-        <!-- Disable Register Ad Beacon Feature at teardown -->
-        <option name="teardown-command" value="device_config put adservices fledge_register_ad_beacon_enabled false" />
-
-        <!-- Disable CPC billing feature at run -->
-        <option name="run-command" value="device_config put adservices fledge_cpc_billing_enabled false" />
-
-        <!-- Disable CPC billing feature at teardown -->
-        <option name="teardown-command" value="device_config put adservices fledge_cpc_billing_enabled false" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
@@ -87,5 +34,7 @@
         <option name="hidden-api-checks" value="false" />
         <option name="exclude-annotation" value="org.junit.Ignore" />
     </test>
+
+    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
 </configuration>
 

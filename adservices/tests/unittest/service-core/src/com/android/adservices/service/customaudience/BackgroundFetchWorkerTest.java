@@ -29,6 +29,7 @@ import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.doAnswer;
@@ -46,7 +47,6 @@ import android.content.pm.PackageManager;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
@@ -306,9 +306,9 @@ public class BackgroundFetchWorkerTest {
         assertThat(expected.getCause()).isInstanceOf(TimeoutException.class);
         // Wait for logger to close.
         assertThat(closeLoggerLatch.await(200, TimeUnit.MILLISECONDS)).isTrue();
-        // Background data already fetched, internal error due to failure in runner.
-        verify(mBackgroundFetchExecutionLoggerSpy)
-                .close(fetchDataList.size(), STATUS_INTERNAL_ERROR);
+        // Test can timeout during cleanup also hence only verify internal error due to failure in
+        // runner.
+        verify(mBackgroundFetchExecutionLoggerSpy).close(anyInt(), eq(STATUS_INTERNAL_ERROR));
     }
 
     @Test
@@ -376,7 +376,6 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 298714561)
     public void testRunBackgroundFetchUpdateOneCustomAudience()
             throws ExecutionException, InterruptedException {
         // Mock a single custom audience eligible for update
@@ -579,7 +578,6 @@ public class BackgroundFetchWorkerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 316155251)
     public void testStopWorkPreemptsDataUpdates() throws Exception {
         int numEligibleCustomAudiences = 16;
         CountDownLatch beforeUpdatingCasLatch = new CountDownLatch(numEligibleCustomAudiences / 4);

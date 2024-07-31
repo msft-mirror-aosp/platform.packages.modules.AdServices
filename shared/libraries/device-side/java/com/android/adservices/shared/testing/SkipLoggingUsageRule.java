@@ -25,11 +25,11 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation used to skip logging usage rule. Use at class level to skip all tests; user at method
- * level to skip individual tests.
+ * level to skip individual tests. Reason for usage must be provided.
  */
 @Retention(RUNTIME)
 @Target({METHOD, TYPE})
 public @interface SkipLoggingUsageRule {
     /** Reason why the test should be skipped. */
-    String reason() default "";
+    String reason();
 }
