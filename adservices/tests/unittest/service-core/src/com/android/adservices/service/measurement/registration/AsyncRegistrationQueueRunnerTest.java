@@ -249,6 +249,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void cleanup() {
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
+        mMockedSource.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
     }
 
     @Before
@@ -346,9 +347,16 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .fetchSource(any(), any(), any());
 
         Source.FakeReport sf = createFakeReport();
-        List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
-        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
-                .thenReturn(eventReportList);
+        List<Source.FakeReport> fakeReports = Collections.singletonList(sf);
+        Answer<?> answerAssignAttributionModeAndGenerateFakeReports =
+                invocation -> {
+                    Source source = invocation.getArgument(0);
+                    source.setAttributionMode(Source.AttributionMode.FALSELY);
+                    return fakeReports;
+                };
+        doAnswer(answerAssignAttributionModeAndGenerateFakeReports)
+                .when(mSourceNoiseHandler)
+                .assignAttributionModeAndGenerateFakeReports(any());
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
                 .thenReturn(validAsyncRegistration)
                 .thenReturn(null);
@@ -399,8 +407,15 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .when(mAsyncSourceFetcher)
                 .fetchSource(any(), any(), any());
 
-        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
-                .thenReturn(Collections.emptyList());
+        Answer<?> answerAssignAttributionModeAndGenerateFakeReports =
+                invocation -> {
+                    Source source = invocation.getArgument(0);
+                    source.setAttributionMode(Source.AttributionMode.NEVER);
+                    return Collections.emptyList();
+                };
+        doAnswer(answerAssignAttributionModeAndGenerateFakeReports)
+                .when(mSourceNoiseHandler)
+                .assignAttributionModeAndGenerateFakeReports(any());
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
                 .thenReturn(validAsyncRegistration)
                 .thenReturn(null);
@@ -2521,6 +2536,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(null)
+                                .setAttributionMode(Source.AttributionMode.FALSELY)
                                 .build());
         List<Source.FakeReport> fakeReports =
                 createFakeReports(
@@ -2529,19 +2545,12 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
-        Answer<?> falseAttributionAnswer =
-                (arg) -> {
-                    source.setAttributionMode(Source.AttributionMode.FALSELY);
-                    return fakeReports;
-                };
-        doAnswer(falseAttributionAnswer)
-                .when(mSourceNoiseHandler)
-                .assignAttributionModeAndGenerateFakeReports(source);
         ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
                 ArgumentCaptor.forClass(Attribution.class);
 
         // Execution
-        asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao, Map.of());
+        asyncRegistrationQueueRunner.insertSourceFromTransaction(
+                source, fakeReports, mMeasurementDao, Map.of());
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
@@ -2575,25 +2584,19 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 .setAppDestinations(null)
                                 .setWebDestinations(
                                         SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                                .setAttributionMode(Source.AttributionMode.FALSELY)
                                 .build());
         List<Source.FakeReport> fakeReports =
                 createFakeReports(
                         source, fakeReportsCount, SourceFixture.ValidSourceParams.WEB_DESTINATIONS);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
-        Answer<?> falseAttributionAnswer =
-                (arg) -> {
-                    source.setAttributionMode(Source.AttributionMode.FALSELY);
-                    return fakeReports;
-                };
-        doAnswer(falseAttributionAnswer)
-                .when(mSourceNoiseHandler)
-                .assignAttributionModeAndGenerateFakeReports(source);
         ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
                 ArgumentCaptor.forClass(Attribution.class);
 
         // Execution
-        asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao, Map.of());
+        asyncRegistrationQueueRunner.insertSourceFromTransaction(
+                source, fakeReports, mMeasurementDao, Map.of());
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
@@ -2628,6 +2631,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(
                                         SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                                .setAttributionMode(Source.AttributionMode.FALSELY)
                                 .build());
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
@@ -2638,21 +2642,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         fakeReportsCount,
                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS);
 
-        Answer<?> falseAttributionAnswer =
-                (arg) -> {
-                    source.setAttributionMode(Source.AttributionMode.FALSELY);
-                    return fakeReports;
-                };
         ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
                 ArgumentCaptor.forClass(Attribution.class);
-        doAnswer(falseAttributionAnswer)
-                .when(mSourceNoiseHandler)
-                .assignAttributionModeAndGenerateFakeReports(source);
         ArgumentCaptor<EventReport> fakeEventReportCaptor =
                 ArgumentCaptor.forClass(EventReport.class);
 
         // Execution
-        asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao, null);
+        asyncRegistrationQueueRunner.insertSourceFromTransaction(
+                source, fakeReports, mMeasurementDao, null);
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
@@ -2783,23 +2780,17 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 .setAppDestinations(
                                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                                 .setWebDestinations(null)
+                                .setAttributionMode(Source.AttributionMode.NEVER)
                                 .build());
         List<Source.FakeReport> fakeReports = Collections.emptyList();
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
-        Answer<?> neverAttributionAnswer =
-                (arg) -> {
-                    source.setAttributionMode(Source.AttributionMode.NEVER);
-                    return fakeReports;
-                };
-        doAnswer(neverAttributionAnswer)
-                .when(mSourceNoiseHandler)
-                .assignAttributionModeAndGenerateFakeReports(source);
         ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
                 ArgumentCaptor.forClass(Attribution.class);
 
         // Execution
-        asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao, null);
+        asyncRegistrationQueueRunner.insertSourceFromTransaction(
+                source, fakeReports, mMeasurementDao, null);
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
@@ -3793,7 +3784,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
-    public void isSourceAllowedToInsert_flexEventApiInvalidEventExceedMaxInfoGain_fail()
+    public void areValidSourcePrivacyParameters_flexEventApiInvalidEventExceedMaxInfoGain_fail()
             throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
@@ -3836,29 +3827,19 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 testSource,
-                                testSource.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
     }
 
     @Test
-    public void isSourceAllowedToInsert_flexEventApiInvalidEventExceedNumStatesArithmetic_fail()
-            throws DatastoreException, JSONException {
+    public void
+            areValidSourcePrivacyParameters_flexEventApiInvalidEventExceedNumStatesArithmetic_fail()
+                   throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         // Info gain is effectively zero, the failure is for exceeding the number of report states.
@@ -3904,29 +3885,19 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 testSource,
-                                testSource.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
     }
 
     @Test
-    public void isSourceAllowedToInsert_flexEventApiInvalidEventExceedNumStatesIterative_fail()
-            throws DatastoreException, JSONException {
+    public void
+            areValidSourcePrivacyParameters_flexEventApiInvalidEventExceedNumStatesIterative_fail()
+                    throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         // Info gain is effectively zero, the failure is for exceeding the number of report states.
@@ -3987,29 +3958,19 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 testSource,
-                                testSource.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
     }
 
     @Test
-    public void isSourceAllowedToInsert_fullFlexHighBoundAndStateCountIterative_catchesException()
-            throws DatastoreException, JSONException {
+    public void
+            areValidSourcePrivacyParameters_fullFlexHighBoundStateCountIterative_catchesException()
+                    throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         // Allow the iterative calculation to overflow
@@ -4075,28 +4036,17 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 testSource,
-                                testSource.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
     }
 
     @Test
-    public void isSourceAllowedToInsert_flexLiteApiExceedMaxInfoGain_fail()
+    public void areValidSourcePrivacyParameters_flexLiteApiExceedMaxInfoGain_fail()
             throws DatastoreException {
         // setup
         Source testSource =
@@ -4125,24 +4075,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 testSource,
-                                testSource.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
     }
 
     @Test
@@ -4195,7 +4134,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
-    public void isSourceAllowedToInsert_flexEventApiValidV1ParamsNavExceedMaxInfoGain_fail()
+    public void areValidSourcePrivacyParameters_flexEventApiValidV1ParamsNavExceedMaxInfoGain_fail()
             throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
@@ -4237,29 +4176,19 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 testSource,
-                                testSource.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
     }
 
     @Test
-    public void isSourceAllowedToInsert_flexEventApiValidV1NavNearBoundaryDualDestination_fail()
-            throws DatastoreException, JSONException {
+    public void
+            areValidSourcePrivacyParameters_flexEventApiValidV1NavNearBoundaryDualDestination_fail()
+                    throws DatastoreException, JSONException {
         // setup
         when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         String triggerSpecsString =
@@ -4301,24 +4230,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 testSource,
-                                testSource.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
     }
 
     @Test
@@ -5154,7 +5072,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
-    public void isSourceAllowedToInsert_maxEventStatesTooSmall_fail() throws DatastoreException {
+    public void areValidSourcePrivacyParameters_maxEventStatesTooSmall_fail()
+            throws DatastoreException {
         // setup
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
         when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
@@ -5165,15 +5084,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -5193,24 +5103,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .build();
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 source,
-                                source.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
 
         // Assertions
-        verify(mMeasurementDao, times(1))
-                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(1))
-                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong());
-        verify(mMeasurementDao, times(1))
-                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mDebugReportApi)
                 .scheduleAttributionScopeDebugReport(
                         any(),
@@ -5279,7 +5178,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
-    public void isSourceAllowedToInsert_eventMaxEventStatesValidInfoGainTooHigh_fail()
+    public void areValidSourcePrivacyParameters_eventMaxEventStatesValidInfoGainTooHigh_fail()
             throws DatastoreException {
         // setup
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
@@ -5291,15 +5190,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -5322,22 +5212,11 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         // Assertions
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 source,
-                                source.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
-        verify(mMeasurementDao, times(1))
-                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(1))
-                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong());
-        verify(mMeasurementDao, times(1))
-                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong());
+                                mFlags));
         verify(mDebugReportApi)
                 .scheduleAttributionScopeDebugReport(
                         any(),
@@ -5346,7 +5225,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
-    public void isSourceAllowedToInsert_navigationMaxEventStatesValidInfoGainTooHigh_fail()
+    public void areValidSourcePrivacyParameters_navigationMaxEventStatesValidInfoGainTooHigh_fail()
             throws DatastoreException {
         // setup
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
@@ -5358,15 +5237,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -5387,24 +5257,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .build();
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 source,
-                                source.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
 
         // Assertions
-        verify(mMeasurementDao, times(1))
-                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(1))
-                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong());
-        verify(mMeasurementDao, times(1))
-                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mDebugReportApi)
                 .scheduleAttributionScopeDebugReport(
                         any(),
@@ -5413,7 +5272,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
-    public void isSourceAllowedToInsert_navigationDualDestinationInfoGainTooHigh_fail()
+    public void areValidSourcePrivacyParameters_navigationDualDestinationInfoGainTooHigh_fail()
             throws DatastoreException {
         // setup
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
@@ -5428,15 +5287,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -5459,24 +5309,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .build();
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 source,
-                                source.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
 
         // Assertions
-        verify(mMeasurementDao, times(2))
-                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(2))
-                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong());
-        verify(mMeasurementDao, times(2))
-                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mDebugReportApi)
                 .scheduleAttributionScopeDebugReport(
                         any(),
@@ -5552,7 +5391,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
-    public void isSourceAllowedToInsert_newAttributionScopesSameRegistration_fail()
+    public void areValidSourcePrivacyParameters_newAttributionScopesSameRegistration_fail()
             throws DatastoreException {
         // setup
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
@@ -5564,15 +5403,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.getNavigationAttributionScopesForRegistration(
                         any(), any(), anyInt(), any()))
                 .thenReturn(Set.of("1", "2", "3"));
@@ -5596,30 +5426,19 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .build();
         assertFalse(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 source,
-                                source.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
 
         // Assertions
-        verify(mMeasurementDao, times(1))
-                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(1))
-                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong());
-        verify(mMeasurementDao, times(1))
-                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mMeasurementDao, times(1))
                 .getNavigationAttributionScopesForRegistration(any(), any(), anyInt(), any());
     }
 
     @Test
-    public void isSourceAllowedToInsert_existingAttributionScopesSameRegistration_pass()
+    public void areValidSourcePrivacyParameters_existingAttributionScopesSameRegistration_pass()
             throws DatastoreException {
         // setup
         when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
@@ -5631,15 +5450,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
-        when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong()))
-                .thenReturn(Integer.valueOf(0));
         when(mMeasurementDao.getNavigationAttributionScopesForRegistration(
                         any(), any(), anyInt(), any()))
                 .thenReturn(Set.of("1", "2", "3"));
@@ -5663,24 +5473,13 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .build();
         assertTrue(
                 asyncRegistrationQueueRunner
-                        .isSourceAllowedToInsert(
+                        .areValidSourcePrivacyParameters(
                                 source,
-                                source.getPublisher(),
-                                EventSurfaceType.APP,
+                                mDebugReportApi,
                                 mMeasurementDao,
-                                mAsyncFetchStatus)
-                        .isAllowed());
+                                mFlags));
 
         // Assertions
-        verify(mMeasurementDao, times(1))
-                .countDistinctDestPerPubXEnrollmentInUnexpiredSourceInWindow(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong());
-        verify(mMeasurementDao, times(1))
-                .countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
-                        any(), anyInt(), any(), any(), anyInt(), anyLong());
-        verify(mMeasurementDao, times(1))
-                .countDistinctReportingOriginsPerPublisherXDestinationInSource(
-                        any(), anyInt(), any(), any(), anyLong(), anyLong());
         verify(mMeasurementDao, times(1))
                 .getNavigationAttributionScopesForRegistration(any(), any(), anyInt(), any());
     }
@@ -6086,20 +5885,14 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         source,
                         fakeReportsCount,
                         SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS);
+        source.setAttributionMode(Source.AttributionMode.FALSELY);
 
-        Answer<?> falseAttributionAnswer =
-                (arg) -> {
-                    source.setAttributionMode(Source.AttributionMode.FALSELY);
-                    return fakeReports;
-                };
-        doAnswer(falseAttributionAnswer)
-                .when(mSourceNoiseHandler)
-                .assignAttributionModeAndGenerateFakeReports(source);
         ArgumentCaptor<EventReport> fakeEventReportCaptor =
                 ArgumentCaptor.forClass(EventReport.class);
 
         // Execution
-        asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao, null);
+        asyncRegistrationQueueRunner.insertSourceFromTransaction(
+                source, fakeReports, mMeasurementDao, null);
 
         // Assertion
         verify(mMeasurementDao).insertSource(source);
