@@ -22,7 +22,8 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.android.server.sdksandbox.verifier.SerialDexLoader.DexLoadResult;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+import com.android.server.sdksandbox.verifier.SerialDexLoader.DexSymbols;
 import com.android.server.sdksandbox.verifier.SerialDexLoader.VerificationHandler;
 
 import org.junit.Test;
@@ -35,7 +36,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class SerialDexLoaderUnitTest {
+public class SerialDexLoaderUnitTest extends DeviceSupportedBaseTest {
     private static final String TAG = "SdkSandboxVerifierTest";
     private static final File APK_PATH_FILE = new File("apk_path");
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
@@ -125,6 +126,89 @@ public class SerialDexLoaderUnitTest {
                 .contains("Error loading dex symbols");
     }
 
+    @Test
+    public void testDexLoadResultCount() throws Exception {
+        DexSymbols dexLoadResult = new DexSymbols();
+        dexLoadResult.addReferencedMethod("class1", "method1");
+        dexLoadResult.addReferencedMethod("class2", "method2");
+        dexLoadResult.addReferencedMethod("class2", "method3");
+
+        assertThat(dexLoadResult.getReferencedMethodCount()).isEqualTo(3);
+    }
+
+    @Test
+    public void testDexLoadResult_sameClass() throws Exception {
+        DexSymbols dexLoadResult = new DexSymbols();
+        dexLoadResult.addReferencedMethod("class1", "method1");
+        dexLoadResult.addReferencedMethod("class1", "method2");
+
+        assertThat(dexLoadResult.getReferencedMethodAtIndex(1)).isEqualTo("method2");
+        assertThat(dexLoadResult.getClassForMethodAtIndex(1)).isEqualTo("class1");
+    }
+
+    @Test
+    public void testDexLoadResult_differentClass() throws Exception {
+        DexSymbols dexLoadResult = new DexSymbols();
+        dexLoadResult.addReferencedMethod("class1", "method1");
+        dexLoadResult.addReferencedMethod("class2", "method2");
+
+        assertThat(dexLoadResult.getReferencedMethodAtIndex(0)).isEqualTo("method1");
+        assertThat(dexLoadResult.getClassForMethodAtIndex(0)).isEqualTo("class1");
+        assertThat(dexLoadResult.getReferencedMethodAtIndex(1)).isEqualTo("method2");
+        assertThat(dexLoadResult.getClassForMethodAtIndex(1)).isEqualTo("class2");
+    }
+
+    @Test
+    public void testDexLoadResult_manyClassesManyMethods() throws Exception {
+        DexSymbols dexLoadResult = new DexSymbols();
+        dexLoadResult.addReferencedMethod("class1", "method1");
+        dexLoadResult.addReferencedMethod("class1", "method2");
+        dexLoadResult.addReferencedMethod("class2", "method3");
+        dexLoadResult.addReferencedMethod("class2", "method4");
+        dexLoadResult.addReferencedMethod("class2", "method5");
+        dexLoadResult.addReferencedMethod("class3", "method6");
+
+        assertThat(dexLoadResult.getReferencedMethodAtIndex(0)).isEqualTo("method1");
+        assertThat(dexLoadResult.getClassForMethodAtIndex(0)).isEqualTo("class1");
+        assertThat(dexLoadResult.getReferencedMethodAtIndex(1)).isEqualTo("method2");
+        assertThat(dexLoadResult.getClassForMethodAtIndex(1)).isEqualTo("class1");
+        assertThat(dexLoadResult.getReferencedMethodAtIndex(2)).isEqualTo("method3");
+        assertThat(dexLoadResult.getClassForMethodAtIndex(2)).isEqualTo("class2");
+        assertThat(dexLoadResult.getReferencedMethodAtIndex(3)).isEqualTo("method4");
+        assertThat(dexLoadResult.getClassForMethodAtIndex(3)).isEqualTo("class2");
+        assertThat(dexLoadResult.getReferencedMethodAtIndex(4)).isEqualTo("method5");
+        assertThat(dexLoadResult.getClassForMethodAtIndex(4)).isEqualTo("class2");
+        assertThat(dexLoadResult.getReferencedMethodAtIndex(5)).isEqualTo("method6");
+        assertThat(dexLoadResult.getClassForMethodAtIndex(5)).isEqualTo("class3");
+    }
+
+    @Test
+    public void testDexLoadResult_clear() throws Exception {
+        DexSymbols dexLoadResult = new DexSymbols();
+        dexLoadResult.addReferencedMethod("class1", "method1");
+        dexLoadResult.addReferencedMethod("class1", "method2");
+        assertThat(dexLoadResult.getReferencedMethodAtIndex(1)).isEqualTo("method2");
+        assertThat(dexLoadResult.getClassForMethodAtIndex(1)).isEqualTo("class1");
+
+        dexLoadResult.clearAndSetDexEntry("fakeDexEntry");
+        dexLoadResult.addReferencedMethod("class2", "method3");
+        dexLoadResult.addReferencedMethod("class2", "method4");
+        assertThat(dexLoadResult.getReferencedMethodAtIndex(1)).isEqualTo("method4");
+        assertThat(dexLoadResult.getClassForMethodAtIndex(1)).isEqualTo("class2");
+    }
+
+    @Test
+    public void testDexLoadResult_hasReferencedMethod() throws Exception {
+        DexSymbols dexLoadResult = new DexSymbols();
+        dexLoadResult.addReferencedMethod("class1", "method1");
+        dexLoadResult.addReferencedMethod("class1", "method2");
+
+        assertThat(dexLoadResult.hasReferencedMethod("class1", "method1")).isTrue();
+        assertThat(dexLoadResult.hasReferencedMethod("class1", "method2")).isTrue();
+        assertThat(dexLoadResult.hasReferencedMethod("class1", "method3")).isFalse();
+        assertThat(dexLoadResult.hasReferencedMethod("class2", "method1")).isFalse();
+    }
+
     private static class FakeDexParser implements DexParser {
         Map<File, List<String>> mFakeDexList;
         IOException mExceptionOnGetDexList;
@@ -151,7 +235,7 @@ public class SerialDexLoaderUnitTest {
         }
 
         @Override
-        public void loadDexSymbols(File apkFile, String dexEntry, DexLoadResult dexLoadResult)
+        public void loadDexSymbols(File apkFile, String dexEntry, DexSymbols dexLoadResult)
                 throws IOException {
             if (mExceptionOnLoadDexSymbols != null) {
                 throw mExceptionOnLoadDexSymbols;
@@ -186,7 +270,7 @@ public class SerialDexLoaderUnitTest {
         }
 
         @Override
-        public boolean verify(DexLoadResult result) {
+        public boolean verify(DexSymbols result) {
             mLoadedDexCount++;
             return mShouldPass;
         }

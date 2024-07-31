@@ -18,8 +18,6 @@ package com.android.adservices.service.measurement.registration;
 
 import android.net.Uri;
 
-import com.android.adservices.service.Flags;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,8 +58,7 @@ public class AsyncRedirects {
     }
 
     /** Process redirects based on the given headers */
-    public void configure(
-            Map<String, List<String>> headers, Flags flags, AsyncRegistration parentRegistration) {
+    public void configure(Map<String, List<String>> headers, AsyncRegistration parentRegistration) {
         if (!parentRegistration.shouldProcessRedirects()) {
             return;
         }
@@ -70,7 +67,7 @@ public class AsyncRedirects {
                 FetcherUtil.parseRedirects(headers);
 
         for (Uri locationRedirectUri : urisByType.get(AsyncRegistration.RedirectType.LOCATION)) {
-            if (shouldRedirect302ToWellKnown(headers, flags, parentRegistration)) {
+            if (shouldRedirect302ToWellKnown(headers, parentRegistration)) {
                 mLocationRedirects.add(
                         new AsyncRedirect(
                                 getLocationRedirectToWellKnownUri(locationRedirectUri),
@@ -89,14 +86,12 @@ public class AsyncRedirects {
     }
 
     private static boolean shouldRedirect302ToWellKnown(
-            Map<String, List<String>> headers, Flags flags, AsyncRegistration parentRegistration) {
+            Map<String, List<String>> headers, AsyncRegistration parentRegistration) {
         boolean isParentRegistrationRedirectsToWellKnown =
                 AsyncRedirect.RedirectBehavior.LOCATION_TO_WELL_KNOWN.equals(
                         parentRegistration.getRedirectBehavior());
 
-        return flags.getMeasurementEnableRedirectToWellKnownPath()
-                && (isParentRegistrationRedirectsToWellKnown
-                        || isRedirect302ToWellKnownPath(headers));
+        return isParentRegistrationRedirectsToWellKnown || isRedirect302ToWellKnownPath(headers);
     }
 
     /**

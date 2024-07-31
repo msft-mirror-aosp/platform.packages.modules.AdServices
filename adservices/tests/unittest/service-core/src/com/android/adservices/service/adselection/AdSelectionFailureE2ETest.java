@@ -63,9 +63,9 @@ import androidx.room.Room;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase;
@@ -650,11 +650,6 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
 
         AdSelectionFailureE2ETestFlags(long biddingLogicVersion) {
             mBiddingLogicVersion = biddingLogicVersion;
-        }
-
-        @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return true;
         }
 
         @Override

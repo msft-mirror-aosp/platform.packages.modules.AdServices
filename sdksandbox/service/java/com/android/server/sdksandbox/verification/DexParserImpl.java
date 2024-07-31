@@ -16,7 +16,7 @@
 
 package com.android.server.sdksandbox.verifier;
 
-import com.android.server.sdksandbox.verifier.SerialDexLoader.DexLoadResult;
+import com.android.server.sdksandbox.verifier.SerialDexLoader.DexSymbols;
 import com.android.tools.smali.dexlib2.DexFileFactory;
 import com.android.tools.smali.dexlib2.DexFileFactory.DexFileNotFoundException;
 import com.android.tools.smali.dexlib2.Opcodes;
@@ -79,7 +79,7 @@ public class DexParserImpl implements DexParser {
     }
 
     @Override
-    public void loadDexSymbols(File apkFile, String dexName, DexLoadResult dexLoadResult)
+    public void loadDexSymbols(File apkFile, String dexName, DexSymbols dexSymbols)
             throws IOException {
         MultiDexContainer.DexEntry<? extends DexBackedDexFile> dexEntry;
         try {
@@ -89,17 +89,20 @@ public class DexParserImpl implements DexParser {
         } catch (DexFileNotFoundException e) {
             throw new IOException(e);
         }
-        dexLoadResult.clear();
+        dexSymbols.clearAndSetDexEntry(apkFile + "/" + dexName);
 
         DexBackedDexFile dexFile = dexEntry.getDexFile();
 
         for (DexBackedMethodReference method : dexFile.getMethodSection()) {
-            String methodString = method.getDefiningClass() + method.getName() + ";";
+            String classname = method.getDefiningClass();
+            String methodString = method.getName() + ";";
             for (String param : method.getParameterTypes()) {
                 methodString = methodString + param;
             }
             methodString = methodString + method.getReturnType();
-            dexLoadResult.addReferencedMethod(methodString);
+            // remove the ; suffix in the classname before adding it
+            dexSymbols.addReferencedMethod(
+                    classname.substring(0, classname.length() - 1), methodString);
         }
     }
 }

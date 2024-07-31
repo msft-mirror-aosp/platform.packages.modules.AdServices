@@ -136,15 +136,9 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
                 .setLogcatTag("adservices", LogLevel.VERBOSE)
                 .setLogcatTag("AppSearchWriterActivity", LogLevel.VERBOSE);
 
-        String msmtSuccessMsg = "AppSearchWriterActivity: GetMeasurementStatus API call succeeded";
-        String msmtFailureMsg = "AppSearchWriterActivity: GetMeasurementStatus API call failed";
+        String migrationMsg = "Finished migrating Consent from AppSearch to PPAPI + System Service";
         Predicate<String[]> apiCompletedLogPresentPredicate =
-                s ->
-                        Arrays.stream(s)
-                                .anyMatch(
-                                        t ->
-                                                t.contains(msmtSuccessMsg)
-                                                        || t.contains(msmtFailureMsg));
+                s -> Arrays.stream(s).anyMatch(t -> t.contains(migrationMsg));
 
         // Instantiate and start background log collection
         BackgroundLogReceiver receiver =
@@ -171,12 +165,8 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
         CLog.d("Collected logs: %s", logs);
 
         // Verify that the logs contain the appropriate success messages
-        String migrationMsg = "Finished migrating Consent from AppSearch to PPAPI + System Service";
         expect.withMessage("Migration completed")
                 .that(logs.stream().anyMatch(s -> s.contains(migrationMsg)))
-                .isTrue();
-        expect.withMessage("GetMeasurementStatus API succeeded")
-                .that(logs.stream().anyMatch(s -> s.contains(msmtSuccessMsg)))
                 .isTrue();
 
         // Validate that the Consent xml file in system server contains the migrated values

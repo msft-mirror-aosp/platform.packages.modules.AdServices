@@ -24,7 +24,6 @@ import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Bundle;
@@ -36,6 +35,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.sdksandbox.cts.provider.mediationtest.IMediationTestSdkApi;
+import com.android.server.sdksandbox.SandboxKillerBeforeTest;
 
 import com.google.common.truth.Expect;
 
@@ -64,13 +64,10 @@ public class SdkSandboxMediationTest extends SandboxKillerBeforeTest {
             "com.android.ctsappownedsdksandboxinterface2";
 
     @Rule(order = 0)
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
-    @Rule(order = 1)
     public final ActivityScenarioRule activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
 
-    @Rule(order = 2)
+    @Rule(order = 1)
     public final Expect mExpect = Expect.create();
 
     private Context mContext;

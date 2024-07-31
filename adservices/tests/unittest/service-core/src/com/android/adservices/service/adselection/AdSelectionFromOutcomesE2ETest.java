@@ -68,9 +68,9 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -1075,11 +1075,6 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     private static class TestFlags implements Flags {
-        @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
-        }
-
         @Override
         public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
             return true;

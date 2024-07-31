@@ -68,6 +68,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
 import com.android.adservices.service.stats.MeasurementDelayedSourceRegistrationStats;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
@@ -108,6 +109,12 @@ class AttributionJobHandler {
     private enum TriggeringStatus {
         DROPPED,
         ATTRIBUTED
+    }
+
+    private enum ProvisionEventReportQuotaResult {
+        ADD,
+        REPLACE,
+        DENIED
     }
 
     enum ProcessingResult {
@@ -295,42 +302,24 @@ class AttributionJobHandler {
                                 trigger.getEnrollmentId());
                     }
 
-                    // For flex event attribution, we delete attribution records of pending reports
-                    // and process a new attribution state. The count of attributions affects the
-                    // alloted report quota, as well as limits calculated in different code paths
-                    // from here so we retrieve it once and pass as needed.
-                    long eventAttributionCount =
-                            measurementDao.getAttributionsPerRateLimitWindow(
-                                    Attribution.Scope.EVENT, source, trigger);
-
-                    long aggregateAttributionCount =
-                            measurementDao.getAttributionsPerRateLimitWindow(
-                                    Attribution.Scope.AGGREGATE, source, trigger);
-
                     if (shouldAttributionBeBlockedByRateLimits(source, trigger, measurementDao)) {
                         attributionStatus.setAttributionResult(
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.RATE_LIMIT_EXCEEDED);
+                        generateNullAggregateReportForNonAttributedTrigger(
+                                measurementDao, trigger, attributionStatus);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
 
                     TriggeringStatus aggregateTriggeringStatus =
                             maybeGenerateAggregateReport(
-                                    source,
-                                    trigger,
-                                    aggregateAttributionCount,
-                                    measurementDao,
-                                    attributionStatus);
+                                    source, trigger, measurementDao, attributionStatus);
 
                     TriggeringStatus eventTriggeringStatus =
                             maybeGenerateEventReport(
-                                    source,
-                                    trigger,
-                                    eventAttributionCount,
-                                    measurementDao,
-                                    attributionStatus);
+                                    source, trigger, measurementDao, attributionStatus);
 
                     if (aggregateTriggeringStatus == TriggeringStatus.DROPPED) {
                         generateNullAggregateReportForNonAttributedTrigger(
@@ -395,10 +384,12 @@ class AttributionJobHandler {
     private TriggeringStatus maybeGenerateAggregateReport(
             Source source,
             Trigger trigger,
-            long attributionCount,
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus)
             throws DatastoreException {
+        long attributionCount =
+                measurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.AGGREGATE, source, trigger);
         if (!hasAttributionQuota(
                 attributionCount,
                 Attribution.Scope.AGGREGATE,
@@ -598,15 +589,14 @@ class AttributionJobHandler {
 
     @Nullable
     private Long getSourceRegistrationTime(Source source, Trigger trigger) {
-        Long sourceRegistrationTime = roundDownToDay(source.getEventTime());
         if (mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()
                 && Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
                         trigger.getAggregatableSourceRegistrationTimeConfig())) {
             // A null source registration time implies source registration time should be excluded
             // from the report.
-            sourceRegistrationTime = null;
+            return null;
         }
-        return sourceRegistrationTime;
+        return source.getEventTime();
     }
 
     private void generateNullAggregateReportForNonAttributedTrigger(
@@ -617,7 +607,6 @@ class AttributionJobHandler {
                     || !getTriggerHasAggregatableData(trigger)) {
                 return;
             }
-
             if (Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
                     trigger.getAggregatableSourceRegistrationTimeConfig())) {
                 generateNullAggregateReportExcludingSourceRegistrationTime(
@@ -636,15 +625,19 @@ class AttributionJobHandler {
         }
     }
 
+    @VisibleForTesting
+    public double getRandom() {
+        return Math.random();
+    }
+
     private void generateNullAggregateReportExcludingSourceRegistrationTime(
             IMeasurementDao measurementDao, Trigger trigger, AttributionStatus attributionStatus)
             throws DatastoreException, JSONException {
         float nullRate =
                 trigger.getTriggerContextId() == null
                         ? mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime()
-                        : 1;
-
-        if (Math.random() < nullRate) {
+                        : 1.0F;
+        if (getRandom() < nullRate) {
                 AggregateReport nullReport =
                         // Although the WICG spec states the trigger time should be used here, we
                         // pass null because the source_registration_time is intended for exclusion
@@ -655,28 +648,39 @@ class AttributionJobHandler {
         }
     }
 
+    @VisibleForTesting
+    public List<Long> getNullAggregatableReportsDays(long maxSourceExpiry, float nullRate) {
+        List<Long> nullAggregatableReportsDays = new ArrayList<>();
+        long totalDays = TimeUnit.MILLISECONDS.toDays(maxSourceExpiry);
+        for (long dayCount = 0L; dayCount <= totalDays; dayCount += 1L) {
+            if (Math.random() < nullRate) {
+                nullAggregatableReportsDays.add(dayCount);
+            }
+        }
+        return nullAggregatableReportsDays;
+    }
+
     private void generateNullAggregateReportsIncludingSourceRegistrationTime(
             Trigger trigger,
             @Nullable AggregateReport aggregateReport,
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus)
             throws DatastoreException, JSONException {
-        long maxSourceExpiry = getRoundedMaxSourceExpiry();
+        List<Long> nullAggregatableReportsDays = getNullAggregatableReportsDays(
+                getRoundedMaxSourceExpiry(),
+                mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime());
         Long roundedAttributedSourceTime =
-                aggregateReport == null ? null : aggregateReport.getSourceRegistrationTime();
-        float nullRate = mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime();
-        for (long daysInMillis = 0L;
-                daysInMillis <= maxSourceExpiry;
-                daysInMillis += TimeUnit.DAYS.toMillis(1)) {
-            long fakeSourceTime = trigger.getTriggerTime() - daysInMillis;
+                aggregateReport == null
+                        ? null
+                        : roundDownToDay(aggregateReport.getSourceRegistrationTime());
+        for (Long dayCount : nullAggregatableReportsDays) {
+            long fakeSourceTime = trigger.getTriggerTime() - TimeUnit.DAYS.toMillis(dayCount);
             if (Objects.equals(roundDownToDay(fakeSourceTime), roundedAttributedSourceTime)) {
                 continue;
             }
-            if (Math.random() < nullRate) {
-                AggregateReport nullReport = getNullAggregateReport(trigger, fakeSourceTime);
-                measurementDao.insertAggregateReport(nullReport);
-                incrementNullAggregateReportCountBy(attributionStatus, 1);
-            }
+            AggregateReport nullReport = getNullAggregateReport(trigger, fakeSourceTime);
+            measurementDao.insertAggregateReport(nullReport);
+            incrementNullAggregateReportCountBy(attributionStatus, 1);
         }
     }
 
@@ -865,28 +869,12 @@ class AttributionJobHandler {
     private TriggeringStatus maybeGenerateEventReport(
             Source source,
             Trigger trigger,
-            long attributionCount,
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus)
             throws DatastoreException {
         if (source.getParentId() != null) {
             LoggerFactory.getMeasurementLogger()
                     .d("Event report generation skipped because it's a derived source.");
-            return TriggeringStatus.DROPPED;
-        }
-
-        // Non-flex source can determine attribution limit here. For flex sources, attribution count
-        // can limit report quota rather than prevent reporting altogether.
-        if (source.getTriggerSpecs() == null
-                && !hasAttributionQuota(
-                        attributionCount,
-                        Attribution.Scope.EVENT,
-                        source,
-                        trigger,
-                        measurementDao)) {
-            LoggerFactory.getMeasurementLogger()
-                    .d("Attribution blocked by event rate limits. Source ID: %s ; "
-                            + "Trigger ID: %s ", source.getId(), trigger.getId());
             return TriggeringStatus.DROPPED;
         }
 
@@ -949,28 +937,6 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        int numReports =
-                measurementDao.getNumEventReportsPerDestination(
-                        trigger.getAttributionDestination(), trigger.getDestinationType());
-
-        if (numReports >= mFlags.getMeasurementMaxEventReportsPerDestination()) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(
-                            String.format(
-                                    Locale.ENGLISH,
-                                    "Event reports for destination %1$s exceeds system health limit"
-                                            + " of %2$d.",
-                                    trigger.getAttributionDestination(),
-                                    mFlags.getMeasurementMaxEventReportsPerDestination()));
-            mDebugReportApi.scheduleTriggerDebugReport(
-                    source,
-                    trigger,
-                    String.valueOf(mFlags.getMeasurementMaxEventReportsPerDestination()),
-                    measurementDao,
-                    Type.TRIGGER_EVENT_STORAGE_LIMIT);
-            return TriggeringStatus.DROPPED;
-        }
-
         Pair<List<Uri>, List<Uri>> destinations =
                 measurementDao.getSourceDestinations(source.getId());
         source.setAppDestinations(destinations.first);
@@ -985,6 +951,7 @@ class AttributionJobHandler {
                             .populateFromSourceAndTrigger(
                                     source,
                                     trigger,
+                                    maybeEffectiveTriggerData.get(),
                                     eventTrigger,
                                     debugKeyPair,
                                     mEventReportWindowCalcDelegate,
@@ -992,7 +959,45 @@ class AttributionJobHandler {
                                     getEventReportDestinations(
                                             source, trigger.getDestinationType()))
                             .build();
-            if (!provisionEventReportQuota(source, trigger, newEventReport, measurementDao)) {
+            ProvisionEventReportQuotaResult provisionEventReportQuota =
+                    provisionEventReportQuota(source, trigger, newEventReport, measurementDao);
+            if (provisionEventReportQuota == ProvisionEventReportQuotaResult.DENIED) {
+                return TriggeringStatus.DROPPED;
+            }
+            if (provisionEventReportQuota == ProvisionEventReportQuotaResult.ADD) {
+                long attributionCount =
+                        measurementDao.getAttributionsPerRateLimitWindow(
+                                Attribution.Scope.EVENT, source, trigger);
+                if (!hasAttributionQuota(
+                        attributionCount,
+                        Attribution.Scope.EVENT,
+                        source,
+                        trigger,
+                        measurementDao)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d("Attribution blocked by event rate limits. Source ID: %s ; "
+                                    + "Trigger ID: %s ", source.getId(), trigger.getId());
+                    return TriggeringStatus.DROPPED;
+                }
+            }
+            int numReports =
+                    measurementDao.getNumEventReportsPerDestination(
+                            trigger.getAttributionDestination(), trigger.getDestinationType());
+            if (numReports >= mFlags.getMeasurementMaxEventReportsPerDestination()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                String.format(
+                                        Locale.ENGLISH,
+                                        "Event reports for destination %1$s exceeds system health"
+                                                + " limit of %2$d.",
+                                        trigger.getAttributionDestination(),
+                                        mFlags.getMeasurementMaxEventReportsPerDestination()));
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        String.valueOf(mFlags.getMeasurementMaxEventReportsPerDestination()),
+                        measurementDao,
+                        Type.TRIGGER_EVENT_STORAGE_LIMIT);
                 return TriggeringStatus.DROPPED;
             }
             if (mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()) {
@@ -1017,7 +1022,6 @@ class AttributionJobHandler {
                 trigger,
                 eventTrigger,
                 maybeEffectiveTriggerData.get(),
-                attributionCount,
                 debugKeyPair,
                 measurementDao)) {
             return TriggeringStatus.DROPPED;
@@ -1071,7 +1075,6 @@ class AttributionJobHandler {
             Trigger trigger,
             EventTrigger eventTrigger,
             UnsignedLong effectiveTriggerData,
-            long attributionCount,
             Pair<UnsignedLong, UnsignedLong> debugKeyPair,
             IMeasurementDao measurementDao) throws DatastoreException {
         if (source.getTriggerDataCardinality() == 0) {
@@ -1082,6 +1085,10 @@ class AttributionJobHandler {
 
         // Store the current bucket index for each trigger data
         Map<UnsignedLong, Integer> triggerDataToBucketIndexMap = new HashMap<>();
+
+        long attributionCount =
+                measurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.EVENT, source, trigger);
 
         long remainingReportQuota =
                 restoreTriggerContributionsAndProvisionFlexEventReportQuota(
@@ -1243,7 +1250,7 @@ class AttributionJobHandler {
         return destinations.build();
     }
 
-    private boolean provisionEventReportQuota(
+    private ProvisionEventReportQuotaResult provisionEventReportQuota(
             Source source,
             Trigger trigger,
             EventReport newEventReport,
@@ -1252,7 +1259,7 @@ class AttributionJobHandler {
         List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
 
         if (isWithinReportLimit(source, sourceEventReports.size(), trigger.getDestinationType())) {
-            return true;
+            return ProvisionEventReportQuotaResult.ADD;
         }
 
         List<EventReport> relevantEventReports =
@@ -1277,7 +1284,7 @@ class AttributionJobHandler {
                     triggerData,
                     measurementDao,
                     Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
-            return false;
+            return ProvisionEventReportQuotaResult.DENIED;
         }
 
         EventReport lowestPriorityEventReport = relevantEventReports.get(0);
@@ -1285,7 +1292,7 @@ class AttributionJobHandler {
             UnsignedLong triggerData = newEventReport.getTriggerData();
             mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                     source, trigger, triggerData, measurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
-            return false;
+            return ProvisionEventReportQuotaResult.DENIED;
         }
 
         if (lowestPriorityEventReport.getTriggerDedupKey() != null
@@ -1294,7 +1301,7 @@ class AttributionJobHandler {
         }
 
         measurementDao.deleteEventReportAndAttribution(lowestPriorityEventReport);
-        return true;
+        return ProvisionEventReportQuotaResult.REPLACE;
     }
 
     private static void finalizeEventReportCreation(
@@ -1428,22 +1435,6 @@ class AttributionJobHandler {
     }
 
     private boolean hasAttributionQuota(
-            long attributionCount, Source source, Trigger trigger, IMeasurementDao measurementDao)
-            throws DatastoreException {
-        int maxAttributionPerRateLimitWindow =
-                mFlags.getMeasurementMaxAttributionPerRateLimitWindow();
-        if (attributionCount >= maxAttributionPerRateLimitWindow) {
-            mDebugReportApi.scheduleTriggerDebugReport(
-                    source,
-                    trigger,
-                    String.valueOf(maxAttributionPerRateLimitWindow),
-                    measurementDao,
-                    Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
-        }
-        return attributionCount < maxAttributionPerRateLimitWindow;
-    }
-
-    private boolean hasAttributionQuota(
             long attributionCount,
             @Attribution.Scope int scope,
             Source source,
@@ -1463,7 +1454,7 @@ class AttributionJobHandler {
                     trigger,
                     String.valueOf(limit),
                     measurementDao,
-                    mFlags.getMeasurementEnableSeparateReportTypesForAttributionRateLimit()
+                    mFlags.getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit()
                             ? reportType
                             : Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         }
@@ -1663,7 +1654,7 @@ class AttributionJobHandler {
         } else {
             LoggerFactory.getMeasurementLogger()
                     .d(
-                            "isEnrollmentWithinPrivacyBounds:"
+                            "isReportingOriginWithinPrivacyBounds:"
                                     + " getPublisherAndDestinationTopPrivateDomains failed. %s %s",
                             source.getPublisher(), trigger.getAttributionDestination());
             return true;
@@ -1688,19 +1679,30 @@ class AttributionJobHandler {
                 return Optional.empty();
             }
             return Optional.of(triggerData);
-        // V1 source
-        } else if (!mFlags.getMeasurementEnableTriggerDataMatching()) {
-            return Optional.of(triggerData);
         }
 
-        if (source.getTriggerDataMatching() == Source.TriggerDataMatching.EXACT) {
-            UnsignedLong triggerDataCardinalityBound = new UnsignedLong(
-                    ((long) source.getTriggerDataCardinality()) - 1L);
-            if (eventTrigger.getTriggerData().compareTo(triggerDataCardinalityBound) > 0) {
-                return Optional.empty();
+        // V1 source
+        if (mFlags.getMeasurementEnableTriggerDataMatching()
+                && source.getTriggerDataMatching() == Source.TriggerDataMatching.EXACT) {
+            if (source.getTriggerData() != null) {
+                return source.getTriggerData().contains(triggerData)
+                        ? Optional.of(triggerData)
+                        : Optional.empty();
+            } else {
+                UnsignedLong triggerDataCardinalityBound = new UnsignedLong(
+                        ((long) source.getTriggerDataCardinality()) - 1L);
+                if (triggerData.compareTo(triggerDataCardinalityBound) > 0) {
+                    return Optional.empty();
+                }
             }
         }
-        return Optional.of(triggerData);
+
+        // V1 source with trigger data matching type modulus (default)
+        if (source.getTriggerDataCardinality() == 0) {
+            return Optional.empty();
+        }
+
+        return Optional.of(triggerData.mod(source.getTriggerDataCardinality()));
     }
 
     private static Optional<Pair<Uri, Uri>> getPublisherAndDestinationTopPrivateDomains(

@@ -15,7 +15,7 @@
  */
 package com.android.adservices.data.measurement.migration;
 
-import static com.android.adservices.data.DbTestUtil.getDbHelperForTest;
+import static com.android.adservices.common.DbTestUtil.getDbHelperForTest;
 import static com.android.adservices.data.measurement.migration.MigrationTestHelper.populateDb;
 
 import static org.junit.Assert.assertEquals;
@@ -84,7 +84,9 @@ public class MeasurementDbMigratorV38Test extends MeasurementDbMigratorTestBase 
         source.put(MeasurementTables.SourceContract.ID, sourceId);
         tableRowsMap.put(
                 MeasurementTables.SourceContract.TABLE,
-                List.of(source, ContentValueFixtures.generateSourceContentValuesV36()));
+                List.of(
+                        source,
+                        ContentValueFixtures.generateSourceContentValuesV36()));
         return tableRowsMap;
     }
 

@@ -122,18 +122,12 @@ public class AsyncRegistrationFallbackJobService extends JobService {
 
     @VisibleForTesting
     void processAsyncRecords() {
-        final JobLockHolder lock = JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING);
-        if (lock.tryLock()) {
-            try {
-                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
-                        .runAsyncRegistrationQueueWorker();
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger()
-                .d("AsyncRegistrationFallbackQueueJobService did not acquire the lock");
+        JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING)
+                .runWithLock(
+                        "AsyncRegistrationFallbackQueueJobService",
+                        () ->
+                                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
+                                        .runAsyncRegistrationQueueWorker());
     }
 
     @Override
