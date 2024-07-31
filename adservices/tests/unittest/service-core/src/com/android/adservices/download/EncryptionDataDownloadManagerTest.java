@@ -16,13 +16,10 @@
 
 package com.android.adservices.download;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.download.EncryptionDataDownloadManager.DownloadStatus.FAILURE;
 import static com.android.adservices.download.EncryptionDataDownloadManager.DownloadStatus.NO_FILE_AVAILABLE;
 import static com.android.adservices.download.EncryptionDataDownloadManager.DownloadStatus.SUCCESS;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_FAILED_MDD_FILEGROUP;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
@@ -32,7 +29,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.shared.SharedDbHelper;
@@ -52,6 +53,7 @@ import com.google.mobiledatadownload.ClientConfigProto;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -61,9 +63,12 @@ import java.util.List;
 
 /** Tests for {@link EncryptionDataDownloadManager}. */
 @SpyStatic(FlagsFactory.class)
-@MockStatic(ErrorLogUtil.class)
+@SpyStatic(ErrorLogUtil.class)
 @MockStatic(MobileDataDownloadFactory.class)
 @RequiresSdkLevelAtLeastS
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
 public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_ENCRYPTION_DATA_FILE_DIR = "encryption_keys";
     private static final String DAY_0_JSON_KEY_FILE_NAME = "DAY_0.json";
@@ -81,12 +86,15 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
     @Mock private Flags mMockFlags;
     @Mock private Clock mMockClock;
 
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
+
     @Before
     public void setup() {
         mDbHelper = DbTestUtil.getSharedDbHelperForTest();
         mEncryptionKeyDao = new EncryptionKeyDao(mDbHelper);
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
-        doNothingOnErrorLogUtilError();
     }
 
     @After
@@ -214,6 +222,9 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE)
     public void testReadFileAndInsertIntoDatabaseFailure_missingFileGroup() throws Exception {
         when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(null));
 
@@ -226,6 +237,9 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE)
     public void testReadFileAndInsertIntoDatabaseFailure_emptyFileList() throws Exception {
         when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
         when(mMockFileGroup.getFileList()).thenReturn(/* Empty list */ List.of());
@@ -236,12 +250,12 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
         expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
                 .isEqualTo(NO_FILE_AVAILABLE);
         expect.that(mEncryptionKeyDao.getAllEncryptionKeys()).isEmpty();
-        verifyErrorLogUtilError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_FAILED_MDD_FILEGROUP)
     public void testReadFileAndInsertIntoDatabaseFailure_fileStorageIOException() throws Exception {
         doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
         when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
@@ -256,12 +270,12 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
         expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
                 .isEqualTo(FAILURE);
         expect.that(mEncryptionKeyDao.getAllEncryptionKeys()).isEmpty();
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_FAILED_MDD_FILEGROUP,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE)
     public void testReadFileAndInsertIntoDatabaseFailure_fileGroupFutureInterruptedException()
             throws Exception {
         doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
@@ -274,8 +288,5 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
         expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
                 .isEqualTo(NO_FILE_AVAILABLE);
         expect.that(mEncryptionKeyDao.getAllEncryptionKeys()).isEmpty();
-        verifyErrorLogUtilError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 }

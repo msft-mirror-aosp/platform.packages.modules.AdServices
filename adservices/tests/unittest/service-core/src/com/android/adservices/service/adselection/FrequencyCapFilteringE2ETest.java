@@ -49,9 +49,10 @@ import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -91,7 +92,6 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -583,10 +583,10 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testAdSelectionPersistsAdCounterKeys() throws InterruptedException {
+    public void testAdSelectionPersistsAdCounterKeys() throws Exception {
         // The JS Sandbox availability depends on an external component (the system webview) being
         // higher than a certain minimum version.
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
@@ -617,10 +617,10 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testEmptyHistogramDoesNotFilterAds() throws InterruptedException {
+    public void testEmptyHistogramDoesNotFilterAds() throws Exception {
         // The JS Sandbox availability depends on an external component (the system webview) being
         // higher than a certain minimum version.
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
@@ -640,10 +640,10 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testUpdatedHistogramFiltersAdsForBuyerWithinInterval() throws InterruptedException {
+    public void testUpdatedHistogramFiltersAdsForBuyerWithinInterval() throws Exception {
         // The JS Sandbox availability depends on an external component (the system webview) being
         // higher than a certain minimum version.
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         // Persist histogram events
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -681,11 +681,10 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testUpdatedHistogramDoesNotFilterAdsForBuyerOutsideInterval()
-            throws InterruptedException {
+    public void testUpdatedHistogramDoesNotFilterAdsForBuyerOutsideInterval() throws Exception {
         // The JS Sandbox availability depends on an external component (the system webview) being
         // higher than a certain minimum version.
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         // Persist histogram events
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -722,10 +721,10 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testUpdatedHistogramDoesNotFilterAdsForOtherBuyer() throws InterruptedException {
+    public void testUpdatedHistogramDoesNotFilterAdsForOtherBuyer() throws Exception {
         // The JS Sandbox availability depends on an external component (the system webview) being
         // higher than a certain minimum version.
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         // Persist histogram events for BUYER_1
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
@@ -758,18 +757,12 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testUpdateHistogramBeyondMaxTotalEventCountDoesNotFilterAds()
-            throws InterruptedException {
+    public void testUpdateHistogramBeyondMaxTotalEventCountDoesNotFilterAds() throws Exception {
         // The JS Sandbox availability depends on an external component (the system webview) being
         // higher than a certain minimum version.
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         class FlagsWithLowEventCounts extends FlagsOverridingAdFiltering implements Flags {
-            @Override
-            public boolean getEnforceIsolateMaxHeapSize() {
-                return false;
-            }
-
             @Override
             public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;
@@ -881,16 +874,10 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
         // The JS Sandbox availability depends on an external component (the system webview) being
         // higher than a certain minimum version.
         Assume.assumeTrue(
-                "JS Sandbox is not available",
-                JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+                "JS Sandbox is not available", WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         final class FlagsWithLowPerBuyerEventCounts extends FlagsOverridingAdFiltering
                 implements Flags {
-            @Override
-            public boolean getEnforceIsolateMaxHeapSize() {
-                return false;
-            }
-
             @Override
             public boolean getFledgeFrequencyCapFilteringEnabled() {
                 return true;

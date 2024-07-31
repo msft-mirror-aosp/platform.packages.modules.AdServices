@@ -15,14 +15,13 @@
  */
 package com.android.adservices.data.measurement.migration;
 
-import static com.android.adservices.data.DbTestUtil.getDbHelperForTest;
+import static com.android.adservices.common.DbTestUtil.getDbHelperForTest;
 import static com.android.adservices.data.measurement.migration.MigrationTestHelper.populateDb;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -45,9 +44,6 @@ import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MeasurementDbMigratorV20Test extends MeasurementDbMigratorTestBase {
-    private static String sDefaultCoordinatorOrigin =
-            Flags.MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN;
-
     @Test
     public void performMigration_v19ToV20WithData_maintainsDataIntegrity() {
         // Setup
@@ -99,7 +95,9 @@ public class MeasurementDbMigratorV20Test extends MeasurementDbMigratorTestBase 
                             String cloudProvider =
                                     cursor.getString(cursor.getColumnIndex(pair.second));
                             assertNotNull(cloudProvider);
-                            assertTrue(cloudProvider.equals(sDefaultCoordinatorOrigin));
+                            assertEquals(
+                                    Flags.MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                                    cloudProvider);
                         }
                     }
                 });

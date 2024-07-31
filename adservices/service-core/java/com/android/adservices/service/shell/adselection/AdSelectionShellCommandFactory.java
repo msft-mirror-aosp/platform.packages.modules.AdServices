@@ -38,6 +38,7 @@ import com.android.adservices.service.adselection.AuctionServerPayloadMetricsStr
 import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFactory;
 import com.android.adservices.service.adselection.CompressedBuyerInputCreatorHelper;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorNoOptimizations;
 import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
@@ -47,6 +48,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -108,11 +110,13 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         dataCompressor,
                         flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
                         CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                        ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao());
+                        ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION,
+                        flags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
+                        flags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
+                        Clock.systemUTC());
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
-                        CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                        ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                         new FrequencyCapAdFiltererNoOpImpl(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getBackgroundExecutor(),

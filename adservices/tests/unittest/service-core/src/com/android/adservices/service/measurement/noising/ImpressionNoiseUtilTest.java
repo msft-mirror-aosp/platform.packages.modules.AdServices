@@ -56,6 +56,8 @@ public class ImpressionNoiseUtilTest {
                     .setStrictness(Strictness.LENIENT)
                     .build();
 
+    private final ImpressionNoiseUtil mImpressionNoiseUtil = new ImpressionNoiseUtil();
+
     @FunctionalInterface
     public interface ThreeArgumentConsumer<T1, T2, T3> {
         void apply(T1 t1, T2 t2, T3 t3);
@@ -65,7 +67,7 @@ public class ImpressionNoiseUtilTest {
             mGenerateReportConfigTester =
                     (noiseParams, expectedReports, sequenceIndex) -> {
                         List<int[]> actualReports =
-                                ImpressionNoiseUtil.getReportConfigsForSequenceIndex(
+                                mImpressionNoiseUtil.getReportConfigsForSequenceIndex(
                                         noiseParams, sequenceIndex);
                         assertReportEquality(expectedReports, actualReports);
                     };
@@ -74,7 +76,7 @@ public class ImpressionNoiseUtilTest {
             mStateSelectionTester =
                     (noiseParams, expectedReports, rand) -> {
                         List<int[]> actualReports =
-                                ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(
+                                mImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(
                                         noiseParams, rand);
                         assertReportEquality(expectedReports, actualReports);
                     };
@@ -87,7 +89,7 @@ public class ImpressionNoiseUtilTest {
             mStateSelectionTesterFlexEvent =
                     (triggerSpecs, destinationMultiplier, expectedReports, rand) -> {
                         List<int[]> actualReports =
-                                ImpressionNoiseUtil
+                                mImpressionNoiseUtil
                                         .selectFlexEventReportRandomStateAndGenerateReportConfigs(
                                                 triggerSpecs, destinationMultiplier, rand);
                         assertReportEquality(expectedReports, actualReports);

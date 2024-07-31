@@ -45,7 +45,7 @@
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
-        <option name="test-file-name" value="CtsSdkSandboxInprocessTests.apk" />
+        <option name="test-file-name" value="SdkSandboxMultiUserInprocessTests.apk" />
         <option name="test-file-name" value="SocketSdkProvider.apk" />
         <option name="test-file-name" value="SocketApp.apk" />
     </target_preparer>
