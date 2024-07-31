@@ -16,18 +16,18 @@
 
 package com.android.adservices.service.measurement.actions;
 
-import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
-import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
-import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
-import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
-import static com.android.adservices.service.measurement.E2ETest.hasTriggerDebugReportingPermission;
+import static com.android.adservices.service.measurement.E2EAbstractTest.getUriConfigsMap;
+import static com.android.adservices.service.measurement.E2EAbstractTest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2EAbstractTest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2EAbstractTest.hasArDebugPermission;
+import static com.android.adservices.service.measurement.E2EAbstractTest.hasTriggerDebugReportingPermission;
 
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.E2ETest.TestFormatJsonMapping;
+import com.android.adservices.service.measurement.E2EAbstractTest.TestFormatJsonMapping;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,7 +40,7 @@ import java.util.Map;
 public final class RegisterWebTrigger implements Action {
     public final WebTriggerRegistrationRequestInternal mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
-    public final Map<String, UriConfig> mUriConfigMap;
+    public final Map<String, List<UriConfig>> mUriConfigsMap;
     public final long mTimestamp;
     public final boolean mDebugReporting;
     public final boolean mAdIdPermission;
@@ -73,7 +73,7 @@ public final class RegisterWebTrigger implements Action {
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
         mDebugReporting = hasTriggerDebugReportingPermission(obj);
         mAdIdPermission = hasAdIdPermission(obj);
-        mUriConfigMap = getUriConfigMap(obj);
+        mUriConfigsMap = getUriConfigsMap(obj);
     }
 
     @Override

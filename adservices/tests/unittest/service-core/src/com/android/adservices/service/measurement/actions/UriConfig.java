@@ -16,20 +16,37 @@
 
 package com.android.adservices.service.measurement.actions;
 
-import com.android.adservices.service.measurement.E2ETest;
+import com.android.adservices.service.measurement.E2EAbstractTest;
 
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.List;
 
 /** Config used to specify configuration for URLs in registration list. */
 public class UriConfig {
     private final boolean mShouldEnroll;
+    private final List<int[]> mFakeReportConfigs;
+    private final List<Long> mNullAggregatableReportsDays;
 
-    public UriConfig(JSONObject uriObj) {
-        mShouldEnroll = uriObj.optBoolean(E2ETest.TestFormatJsonMapping.ENROLL, true);
+    public UriConfig(JSONObject configObj) throws JSONException {
+        mShouldEnroll = configObj.optBoolean(E2EAbstractTest.TestFormatJsonMapping.ENROLL, true);
+        mFakeReportConfigs = E2EAbstractTest.getFakeReportConfigs(configObj);
+        mNullAggregatableReportsDays = E2EAbstractTest.getNullAggregatableReportsDays(configObj);
     }
 
     /** Should the URL be enrolled before the request. */
     public boolean shouldEnroll() {
         return mShouldEnroll;
+    }
+
+    /** Returns noised report configs. */
+    public List<int[]> getFakeReportConfigs() {
+        return mFakeReportConfigs;
+    }
+
+    /** Returns null aggregatable reports days. */
+    public List<Long> getNullAggregatableReportsDays() {
+        return mNullAggregatableReportsDays;
     }
 }

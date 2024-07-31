@@ -155,6 +155,12 @@ public class ContentValueFixtures {
 
         // Added in V38
         public static final long DESTINATION_LIMIT_PRIORITY = 10L;
+
+        // Added in V39
+        public static final String TRIGGER_DATA = "24,1";
+
+        // Added in V40
+        public static final Double EVENT_LEVEL_EPSILON = 14D;
     }
 
     public static class SourceDestinationValues {
@@ -834,6 +840,24 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.SourceContract.DESTINATION_LIMIT_PRIORITY,
                 SourceValues.DESTINATION_LIMIT_PRIORITY);
+        return values;
+    }
+
+    /** Returns content values for source version 39 */
+    public static ContentValues generateSourceContentValuesV39() {
+        ContentValues values = generateSourceContentValuesV38();
+        values.put(
+                MeasurementTables.SourceContract.TRIGGER_DATA,
+                SourceValues.TRIGGER_DATA);
+        return values;
+    }
+
+    /** Returns content values for source version 40 */
+    public static ContentValues generateSourceContentValuesV40() {
+        ContentValues values = generateSourceContentValuesV39();
+        values.put(
+                MeasurementTables.SourceContract.EVENT_LEVEL_EPSILON,
+                SourceValues.EVENT_LEVEL_EPSILON);
         return values;
     }
 

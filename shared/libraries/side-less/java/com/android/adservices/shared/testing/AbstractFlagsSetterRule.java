@@ -562,6 +562,11 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return setDebugFlag(name, Boolean.toString(value));
     }
 
+    /** Sets the value of the given {@link com.android.adservices.service.DebugFlag}. */
+    public final T setDebugFlag(String name, int value) {
+        return setDebugFlag(name, Integer.toString(value));
+    }
+
     private T setOrCacheLogtagSystemProperty(String name, String value) {
         return setOrCacheSystemProperty(SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + name, value);
     }
@@ -710,18 +715,30 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         // Get all the flag based annotations from test class and super classes
         Class<?> clazz = description.getTestClass();
         do {
-            Annotation[] classAnnotations = clazz.getAnnotations();
-            if (classAnnotations != null) {
-                for (Annotation annotation : classAnnotations) {
-                    if (isFlagAnnotationPresent(annotation)) {
-                        result.add(annotation);
-                    }
-                }
+            addFlagAnnotations(result, clazz);
+            for (Class<?> classInterface : clazz.getInterfaces()) {
+                // TODO(b/340882758): add unit test for this as well. Also, unit test need to make
+                // sure class prevails - for example, if interface has SetFlag(x, true) and test
+                // have SetFlag(x, false), the interface annotation should be applied before the
+                // class one.
+                addFlagAnnotations(result, classInterface);
             }
             clazz = clazz.getSuperclass();
         } while (clazz != null);
 
         return result;
+    }
+
+    private void addFlagAnnotations(List<Annotation> annotations, Class<?> clazz) {
+        Annotation[] classAnnotations = clazz.getAnnotations();
+        if (classAnnotations == null) {
+            return;
+        }
+        for (Annotation annotation : classAnnotations) {
+            if (isFlagAnnotationPresent(annotation)) {
+                annotations.add(annotation);
+            }
+        }
     }
 
     // Single SetFlagEnabled annotations present

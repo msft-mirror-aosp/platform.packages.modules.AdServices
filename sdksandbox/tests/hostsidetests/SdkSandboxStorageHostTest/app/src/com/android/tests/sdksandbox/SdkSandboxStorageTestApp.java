@@ -66,7 +66,8 @@ public class SdkSandboxStorageTestApp {
     private static final String JAVA_FILE_NOT_FOUND_MSG =
             "open failed: ENOENT (No such file or directory)";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
+    @Rule(order = 0)
+    public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final SdkLifecycleHelper mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);

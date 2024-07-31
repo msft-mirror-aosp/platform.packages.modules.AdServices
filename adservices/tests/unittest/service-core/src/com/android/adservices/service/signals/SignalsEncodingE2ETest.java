@@ -44,9 +44,9 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBProtectedSignal;
@@ -113,8 +113,8 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private static final String SIGNALS_PATH = "/signals";
     private static final String ENCODER_PATH = "/encoder";
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
-    private static final IsolateSettings ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED =
-            IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+    private static final IsolateSettings ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_ENABLED =
+            IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                     ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
@@ -275,11 +275,9 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
         mScriptEngine =
                 new SignalsScriptEngine(
-                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED
-                                ::getEnforceMaxHeapSizeFeature,
-                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED::getMaxHeapSizeBytes,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_ENABLED::getMaxHeapSizeBytes,
                         retryStrategy,
-                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_ENABLED
                                 ::getIsolateConsoleMessageInLogsEnabled);
         mClock = Clock.getInstance();
         mPeriodicEncodingJobWorker =

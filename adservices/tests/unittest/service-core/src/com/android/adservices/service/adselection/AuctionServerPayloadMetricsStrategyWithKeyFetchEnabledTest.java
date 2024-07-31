@@ -40,7 +40,8 @@ public class AuctionServerPayloadMetricsStrategyWithKeyFetchEnabledTest {
         MockitoAnnotations.initMocks(this);
         mBuilder = Mockito.spy(GetAdSelectionDataApiCalledStats.builder());
         mAuctionServerPayloadMetricsStrategy =
-                new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(mAdServicesLoggerMock);
+                new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
+                        mAdServicesLoggerMock, new SellerConfigurationMetricsStrategyDisabled());
     }
 
     @Test
