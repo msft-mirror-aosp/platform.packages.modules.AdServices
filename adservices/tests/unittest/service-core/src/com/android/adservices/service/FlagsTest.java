@@ -913,6 +913,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions);
     }
 
+    @Test
+    public void testGetPasEncodingJobImprovementsEnabled() {
+        testFeatureFlag(
+                "PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED",
+                Flags::getPasEncodingJobImprovementsEnabled);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal helpers and tests - do not add new tests for flags following this point.          //
     ////////////////////////////////////////////////////////////////////////////////////////////////
