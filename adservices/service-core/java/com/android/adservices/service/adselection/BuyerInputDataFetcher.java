@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.common.AdTechIdentifier;
+import android.adservices.adselection.PerBuyerConfiguration;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
@@ -27,8 +27,11 @@ import java.util.List;
 public interface BuyerInputDataFetcher {
     /** Fetches the active custom audiences from the database. */
     List<DBCustomAudience> getActiveCustomAudiences(
-            List<AdTechIdentifier> buyers, Instant currentTime, long activeWindowTimeMs);
+            List<PerBuyerConfiguration> perBuyerConfigurations,
+            Instant currentTime,
+            long activeWindowTimeMs);
 
     /** Fetches the protected audience signals from the database. */
-    List<DBEncodedPayload> getProtectedAudienceSignals(List<AdTechIdentifier> buyers);
+    List<DBEncodedPayload> getProtectedAudienceSignals(
+            List<PerBuyerConfiguration> perBuyerConfigurations);
 }

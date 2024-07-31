@@ -48,6 +48,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
@@ -59,10 +60,10 @@ import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
@@ -72,8 +73,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.json.JSONObject;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -200,6 +201,15 @@ public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
     private static final IsolateSettings ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_ENABLED =
             IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                     ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+
+    // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+    // availability depends on an external component (the system webview) being higher than a
+    // certain minimum version.
+    @Rule(order = 11)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule(
+                    ApplicationProvider.getApplicationContext());
+
     private AdSelectionScriptEngine mAdSelectionScriptEngine;
 
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLoggerMock;
@@ -210,7 +220,6 @@ public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
 
     @Before
     public void setUp() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         mRetryStrategy = new NoOpRetryStrategyImpl();
         mAdSelectionScriptEngine =
                 createAdSelectionScriptEngine(
@@ -644,7 +653,8 @@ public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
                                 false,
-                                /* auctionServerRequestFlags = */ false),
+                                /* auctionServerRequestFlags */ false,
+                                /* sellerConfigurationFlag */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -705,7 +715,8 @@ public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
                                 false,
-                                /* auctionServerRequestFlags = */ false),
+                                /* auctionServerRequestFlags */ false,
+                                /* sellerConfigurationFlag */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -749,6 +760,7 @@ public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                         AD_DATA_CONVERSION_STRATEGY,
+                        false,
                         false,
                         false);
         final List<GenerateBidResult> results =
@@ -1084,7 +1096,8 @@ public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
                                 false,
-                                /* auctionServerRequestFlags = */ false),
+                                /* auctionServerRequestFlags */ false,
+                                /* sellerConfigurationFlag */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -1149,7 +1162,8 @@ public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
                                 false,
-                                /* auctionServerRequestFlags = */ false),
+                                /* auctionServerRequestFlags */ false,
+                                /* sellerConfigurationFlag */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
@@ -1212,7 +1226,8 @@ public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
                                 CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
                                 AD_DATA_CONVERSION_STRATEGY,
                                 false,
-                                /* auctionServerRequestFlags = */ false),
+                                /* auctionServerRequestFlags */ false,
+                                /* sellerConfigurationFlag */ false),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,

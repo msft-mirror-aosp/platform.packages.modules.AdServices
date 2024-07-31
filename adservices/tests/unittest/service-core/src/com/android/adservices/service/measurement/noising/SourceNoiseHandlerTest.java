@@ -68,10 +68,12 @@ public class SourceNoiseHandlerTest {
         doReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)
                 .when(mFlags)
                 .getMeasurementPrivacyEpsilon();
-        mSourceNoiseHandler =
-                spy(new SourceNoiseHandler(mFlags, new EventReportWindowCalcDelegate(mFlags)));
         mEventReportWindowCalcDelegate = new EventReportWindowCalcDelegate(mFlags);
-        mSourceNoiseHandler = spy(new SourceNoiseHandler(mFlags, mEventReportWindowCalcDelegate));
+        mSourceNoiseHandler = spy(
+                new SourceNoiseHandler(
+                        mFlags,
+                        mEventReportWindowCalcDelegate,
+                        new ImpressionNoiseUtil()));
     }
 
     @Test
@@ -109,7 +111,7 @@ public class SourceNoiseHandlerTest {
 
     @Test
     public void fakeReports_flexEventReport_setsTriggerTime() throws JSONException {
-        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
+        doReturn(true).when(mFlags).getMeasurementEnableFakeReportTriggerTime();
         TriggerSpecs triggerSpecs =
                 SourceFixture.getValidTriggerSpecsValueSumWithStartTime(TimeUnit.HOURS.toMillis(5));
         long baseTime = System.currentTimeMillis();
@@ -152,7 +154,7 @@ public class SourceNoiseHandlerTest {
     @Test
     public void fakeReports_flexEventReport_correctlyOrdersTriggerSummaryBucket()
             throws JSONException {
-        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
+        doReturn(true).when(mFlags).getMeasurementEnableFakeReportTriggerTime();
         TriggerSpecs triggerSpecs =
                 SourceFixture.getValidTriggerSpecsValueSumWithStartTime(TimeUnit.HOURS.toMillis(5));
         long baseTime = System.currentTimeMillis();
@@ -199,7 +201,7 @@ public class SourceNoiseHandlerTest {
     @Test
     public void fakeReports_flexEventReport_ordersTriggerSummaryBucket_attributionScopeOff()
             throws JSONException {
-        doReturn(false).when(mFlags).getMeasurementEnableAttributionScope();
+        doReturn(false).when(mFlags).getMeasurementEnableFakeReportTriggerTime();
         TriggerSpecs triggerSpecs =
                 SourceFixture.getValidTriggerSpecsValueSumWithStartTime(TimeUnit.HOURS.toMillis(5));
         long baseTime = System.currentTimeMillis();
@@ -245,7 +247,7 @@ public class SourceNoiseHandlerTest {
 
     @Test
     public void fakeReports_flexLiteEventReport_setsTriggerTime() {
-        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
+        doReturn(true).when(mFlags).getMeasurementEnableFakeReportTriggerTime();
         long baseTime = System.currentTimeMillis();
         Source source =
                 SourceFixture.getMinimalValidSourceWithAttributionScope()

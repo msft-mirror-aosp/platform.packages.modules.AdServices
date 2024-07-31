@@ -20,13 +20,15 @@ import static com.android.server.sdksandbox.SandboxesStorageMetrics.StorageStats
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class SandboxesStorageMetricsUnitTest {
+public class SandboxesStorageMetricsUnitTest extends DeviceSupportedBaseTest {
 
     @Test
     public void testStorageStatsEvents_noLog() {
