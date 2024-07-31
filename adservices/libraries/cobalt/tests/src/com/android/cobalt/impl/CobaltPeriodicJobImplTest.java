@@ -47,7 +47,6 @@ import com.android.cobalt.testing.system.FakeSystemClock;
 import com.android.cobalt.testing.upload.NoOpUploader;
 
 import com.google.cobalt.Envelope;
-import com.google.cobalt.IndexHistogram;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.Metadata;
 import com.google.cobalt.MetricDefinition.MetricDimension;
@@ -68,6 +67,7 @@ import com.google.cobalt.SystemProfileField;
 import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -1144,35 +1144,30 @@ public class CobaltPeriodicJobImplTest {
                         .setDayIndex(LOG_TIME_DAY)
                         .build();
 
-        ByteString stringAHash =
-                ByteString.copyFrom(
-                        Hashing.farmHashFingerprint64().hashBytes("STRING_A".getBytes()).asBytes());
-        ByteString stringBHash =
-                ByteString.copyFrom(
-                        Hashing.farmHashFingerprint64().hashBytes("STRING_B".getBytes()).asBytes());
+        HashCode stringAHash = Hashing.farmHashFingerprint64().hashBytes("STRING_A".getBytes());
+        HashCode stringBHash = Hashing.farmHashFingerprint64().hashBytes("STRING_B".getBytes());
 
         // Both reports send the same histograms. The only difference is how system profiles are
         // reported.
         StringHistogramObservation stringHistogram =
-                StringHistogramObservation.newBuilder()
-                        .addStringHashesFf64(stringAHash)
-                        .addStringHashesFf64(stringBHash)
-                        .addStringHistograms(
-                                IndexHistogram.newBuilder()
-                                        .addAllEventCodes(EVENT_VECTOR_1.eventCodes())
-                                        // "STRING_A" was logged once.
-                                        .addBucketIndices(0)
-                                        .addBucketCounts(1)
-                                        // "STRING_B" was logged twice.
-                                        .addBucketIndices(1)
-                                        .addBucketCounts(2))
-                        .addStringHistograms(
-                                IndexHistogram.newBuilder()
-                                        .addAllEventCodes(EVENT_VECTOR_2.eventCodes())
-                                        // "STRING_A" was logged once.
-                                        .addBucketIndices(0)
-                                        .addBucketCounts(1))
-                        .build();
+                StringHistogramObservation.getDefaultInstance();
+        stringHistogram =
+                ObservationFactory.copyWithStringHashesFf64(
+                        stringHistogram, stringAHash, stringBHash);
+        stringHistogram =
+                ObservationFactory.copyWithStringHistograms(
+                        stringHistogram,
+                        // "STRING_A" was logged once and "STRING_B" was logged twice for
+                        // EVENT_VECTOR_1.
+                        ObservationFactory.createIndexHistogram(
+                                EVENT_VECTOR_1,
+                                /* index1= */ 0,
+                                /* count1= */ 1L,
+                                /* index2= */ 1,
+                                /* count2= */ 2L),
+                        // "STRING_A" was logged once for EVENT_VECTOR_2.
+                        ObservationFactory.createIndexHistogram(
+                                EVENT_VECTOR_2, /* index= */ 0, /* count= */ 1L));
 
         assertThat(getObservationsIn(sentEnvelopes.get(0)))
                 .containsExactly(
@@ -1183,9 +1178,8 @@ public class CobaltPeriodicJobImplTest {
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setStringHistogram(stringHistogram)
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory.createStringHistogramObservation(
+                                                        stringHistogram, RANDOM_BYTES))
                                         .setContributionId(RANDOM_BYTES)
                                         .build()),
                         baseMetadata.toBuilder()
@@ -1196,9 +1190,8 @@ public class CobaltPeriodicJobImplTest {
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setStringHistogram(stringHistogram)
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory.createStringHistogramObservation(
+                                                        stringHistogram, RANDOM_BYTES))
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
     }
@@ -1330,22 +1323,19 @@ public class CobaltPeriodicJobImplTest {
                         .setDayIndex(LOG_TIME_DAY)
                         .build();
 
-        ByteString stringAHash =
-                ByteString.copyFrom(
-                        Hashing.farmHashFingerprint64().hashBytes("STRING_A".getBytes()).asBytes());
+        HashCode stringAHash = Hashing.farmHashFingerprint64().hashBytes("STRING_A".getBytes());
 
         // Both reports send the same histograms. The only difference is how system profiles are
         // reported.
         StringHistogramObservation stringHistogram =
-                StringHistogramObservation.newBuilder()
-                        .addStringHashesFf64(stringAHash)
-                        .addStringHistograms(
-                                IndexHistogram.newBuilder()
-                                        .addAllEventCodes(EVENT_VECTOR_2.eventCodes())
-                                        // "STRING_A" was logged once.
-                                        .addBucketIndices(0)
-                                        .addBucketCounts(1))
-                        .build();
+                StringHistogramObservation.getDefaultInstance();
+        stringHistogram = ObservationFactory.copyWithStringHashesFf64(stringHistogram, stringAHash);
+        stringHistogram =
+                ObservationFactory.copyWithStringHistograms(
+                        stringHistogram,
+                        // "STRING_A" was logged once for EVENT_VECTOR_2.
+                        ObservationFactory.createIndexHistogram(
+                                EVENT_VECTOR_2, /* index= */ 0, /* count= */ 1L));
 
         assertThat(getObservationsIn(sentEnvelopes.get(0)))
                 .containsExactly(
@@ -1384,9 +1374,8 @@ public class CobaltPeriodicJobImplTest {
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setStringHistogram(stringHistogram)
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory.createStringHistogramObservation(
+                                                        stringHistogram, RANDOM_BYTES))
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
     }
