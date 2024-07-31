@@ -17,6 +17,7 @@
 package com.android.adservices.common.logging;
 
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.shared.testing.LogVerifier;
 
 import com.google.common.collect.ImmutableList;
@@ -29,8 +30,9 @@ public final class AdServicesLogVerifierFactory {
     /** Supported log types. */
     enum LogType {
         /**
-         * Verify ErrorLogUtil.e(Throwable, int, int) and ErrorLogUtil.e(int, int) calls. Use {@link
-         * ExpectErrorLogUtilCall} annotation to denote expected logging calls.
+         * Enum for scanning the usage of {@code ErrorLogUtil.e(Throwable, int, int)} and {@code
+         * ErrorLogUtil.e(int, int)} calls. Use {@link ExpectErrorLogUtilCall} and/or {@link
+         * ExpectErrorLogUtilWithExceptionCall} to denote expected logging calls.
          */
         ERROR_LOG_UTIL;
     }

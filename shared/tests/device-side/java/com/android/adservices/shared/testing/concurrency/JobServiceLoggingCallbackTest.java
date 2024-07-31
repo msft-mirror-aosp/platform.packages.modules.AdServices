@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.getConcurrencyHelper;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.runAsync;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
@@ -38,9 +38,5 @@ public final class JobServiceLoggingCallbackTest extends SharedMockitoTestCase {
         runAsync(INJECTION_TIMEOUT_MS, () -> callback.onLoggingMethodCalled());
 
         callback.assertLoggingFinished();
-    }
-
-    private Thread runAsync(long timeoutMs, Runnable r) {
-        return getConcurrencyHelper().runAsync(timeoutMs, r);
     }
 }

@@ -157,7 +157,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
                         new ComponentName(context, AsyncRegistrationQueueJobService.class))
                 .addTriggerContentUri(
                         new JobInfo.TriggerContentUri(
-                                AsyncRegistrationContentProvider.TRIGGER_URI,
+                                AsyncRegistrationContentProvider.getTriggerUri(),
                                 JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
                 .setTriggerContentUpdateDelay(
                         flags.getMeasurementAsyncRegistrationJobTriggerMinDelayMs())

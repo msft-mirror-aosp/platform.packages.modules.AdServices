@@ -177,7 +177,7 @@ public final class AttributionJobService extends JobService {
                         new ComponentName(context, AttributionJobService.class))
                 .addTriggerContentUri(
                         new JobInfo.TriggerContentUri(
-                                TriggerContentProvider.TRIGGER_URI,
+                                TriggerContentProvider.getTriggerUri(),
                                 JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
                 .setTriggerContentUpdateDelay(flags.getMeasurementAttributionJobTriggeringDelayMs())
                 // Can't call addTriggerContentUri() on a persisted job

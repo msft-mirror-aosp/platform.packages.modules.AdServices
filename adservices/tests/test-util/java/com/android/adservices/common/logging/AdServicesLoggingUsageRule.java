@@ -19,7 +19,8 @@ package com.android.adservices.common.logging;
 import static com.android.adservices.common.logging.AdServicesLogVerifierFactory.LogType;
 import static com.android.adservices.common.logging.AdServicesLogVerifierFactory.LogType.ERROR_LOG_UTIL;
 
-import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.shared.testing.AbstractLoggingUsageRule;
 import com.android.adservices.shared.testing.LogVerifier;
 
@@ -41,7 +42,12 @@ public final class AdServicesLoggingUsageRule extends AbstractLoggingUsageRule {
         mLogVerifiers = mapToLogVerifiers(enabledLogTypes);
     }
 
-    /** Rule that scans and verifies usage of {@link ErrorLogUtil} calls. */
+    /**
+     * Rule that scans for usage of {@code ErrorLogUtil.e(int, int)} and {@code
+     * ErrorLogUtil.e(Throwable, int, int)} invocations. Fails the test if calls haven't been
+     * verified using {@link ExpectErrorLogUtilCall} and/or {@link
+     * ExpectErrorLogUtilWithExceptionCall}.
+     */
     public static AdServicesLoggingUsageRule errorLogUtilUsageRule() {
         return new AdServicesLoggingUsageRule(ImmutableSet.of(ERROR_LOG_UTIL));
     }

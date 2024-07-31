@@ -263,11 +263,11 @@ public class EnqueueAsyncRegistration {
     }
 
     private static void notifyContentProvider(ContentResolver contentResolver) {
+        Uri triggerUri = AsyncRegistrationContentProvider.getTriggerUri();
         try (ContentProviderClient contentProviderClient =
-                contentResolver.acquireContentProviderClient(
-                        AsyncRegistrationContentProvider.TRIGGER_URI)) {
+                contentResolver.acquireContentProviderClient(triggerUri)) {
             if (contentProviderClient != null) {
-                contentProviderClient.insert(AsyncRegistrationContentProvider.TRIGGER_URI, null);
+                contentProviderClient.insert(triggerUri, null);
             }
         } catch (RemoteException e) {
             LoggerFactory.getMeasurementLogger()

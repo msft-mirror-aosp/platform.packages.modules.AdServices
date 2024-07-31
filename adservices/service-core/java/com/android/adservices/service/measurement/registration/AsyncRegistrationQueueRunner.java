@@ -1139,10 +1139,11 @@ public class AsyncRegistrationQueueRunner {
     }
 
     private void notifyTriggerContentProvider() {
+        Uri triggerUri = TriggerContentProvider.getTriggerUri();
         try (ContentProviderClient contentProviderClient =
-                mContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI)) {
+                mContentResolver.acquireContentProviderClient(triggerUri)) {
             if (contentProviderClient != null) {
-                contentProviderClient.insert(TriggerContentProvider.TRIGGER_URI, null);
+                contentProviderClient.insert(triggerUri, null);
             }
         } catch (RemoteException e) {
             LoggerFactory.getMeasurementLogger()
