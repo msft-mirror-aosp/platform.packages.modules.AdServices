@@ -15,7 +15,6 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.getConcurrencyHelper;
 import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
 import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
 
@@ -530,11 +529,11 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     }
 
     protected final Thread runAsync(long timeoutMs, Runnable r) {
-        return getConcurrencyHelper().runAsync(timeoutMs, r);
+        return DeviceSideConcurrencyHelper.runAsync(timeoutMs, r);
     }
 
     protected final Thread startNewThread(Runnable r) {
-        return getConcurrencyHelper().startNewThread(r);
+        return DeviceSideConcurrencyHelper.startNewThread(r);
     }
 
     private void assumeCannotFailIfCalledOnMainThread() {

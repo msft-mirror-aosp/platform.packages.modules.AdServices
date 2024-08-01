@@ -15,7 +15,6 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.ATTRIBUTION_FAKE_REPORT_ID;
 import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.InsertSourcePermission;
 import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.isTriggerAllowedToInsert;
@@ -84,6 +83,7 @@ import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.TriggerSpecsUtil;
+import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.ProcessingResult;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
@@ -264,9 +264,11 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(getEnrollment(DEFAULT_ENROLLMENT_ID));
-        when(mContentResolver.acquireContentProviderClient(TRIGGER_URI))
+
+        Uri triggerUri = TriggerContentProvider.getTriggerUri();
+        when(mContentResolver.acquireContentProviderClient(triggerUri))
                 .thenReturn(mMockContentProviderClient);
-        when(mMockContentProviderClient.insert(any(), any())).thenReturn(TRIGGER_URI);
+        when(mMockContentProviderClient.insert(any(), any())).thenReturn(triggerUri);
         when(mFlags.getMeasurementMaxRegistrationRedirects()).thenReturn(20);
         when(mFlags.getMeasurementMaxRegistrationsPerJobInvocation()).thenReturn(1);
         when(mFlags.getMeasurementMaxRetriesPerRegistrationRequest()).thenReturn(5);
