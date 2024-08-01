@@ -482,7 +482,7 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
                                                     mockContext, AttributionJobService.class))
                                     .addTriggerContentUri(
                                             new JobInfo.TriggerContentUri(
-                                                    TriggerContentProvider.TRIGGER_URI,
+                                                    TriggerContentProvider.getTriggerUri(),
                                                     JobInfo.TriggerContentUri
                                                             .FLAG_NOTIFY_FOR_DESCENDANTS))
                                     .setTriggerContentUpdateDelay(JOB_DELAY_MS)
@@ -522,7 +522,7 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
                                                     mockContext, AttributionJobService.class))
                                     .addTriggerContentUri(
                                             new JobInfo.TriggerContentUri(
-                                                    TriggerContentProvider.TRIGGER_URI,
+                                                    TriggerContentProvider.getTriggerUri(),
                                                     JobInfo.TriggerContentUri
                                                             .FLAG_NOTIFY_FOR_DESCENDANTS))
                                     // Difference
