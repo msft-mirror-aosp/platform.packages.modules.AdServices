@@ -72,9 +72,9 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+/** Unit Test for {@link PolicyJobScheduler}. */
 // TODO(b/335935200): Service class android.app.job.JobScheduler not yet supported under Ravenwood
 @DisabledOnRavenwood(blockedBy = JobScheduler.class)
-/** Unit Test for {@link PolicyJobScheduler}. */
 public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
     // Since this unit test is to test scheduling behavior, it doesn't need to actually execute the
     // job. Set this unreachable latency to prevent the job to execute.
