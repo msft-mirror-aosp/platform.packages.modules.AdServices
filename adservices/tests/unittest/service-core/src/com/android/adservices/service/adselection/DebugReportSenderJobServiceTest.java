@@ -132,7 +132,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
                         return true;
                     }
                 };
-        doReturn(mFlagsWithDisabledBgFWithoutLogging).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithDisabledBgFWithoutLogging);
         AdServicesJobServiceLogger logger =
                 mockAdServicesJobServiceLogger(sContext, mFlagsWithDisabledBgFWithoutLogging);
 
@@ -142,7 +142,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testOnStartJobFlagDisabledWithLogging() throws InterruptedException {
+    public void testOnStartJobFlagDisabledWithLogging() throws Exception {
         Flags mFlagsWithDisabledBgFWithLogging =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithAdSelectionDisabled() {
                     @Override
@@ -150,7 +150,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
                         return false;
                     }
                 };
-        doReturn(mFlagsWithDisabledBgFWithLogging).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithDisabledBgFWithLogging);
         AdServicesJobServiceLogger logger =
                 mockAdServicesJobServiceLogger(sContext, mFlagsWithDisabledBgFWithLogging);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
@@ -162,7 +162,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
 
     @Test
     public void testOnStartJobAdSelectionKillSwitchFlagEnabled() {
-        doReturn(mFlagsWithAdSelectionDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithAdSelectionDisabled);
         doReturn(JOB_SCHEDULER)
                 .when(mDebugReportSenderJobService)
                 .getSystemService(JobScheduler.class);
@@ -360,7 +360,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testOnStartJobUpdateTimeoutHandledWithoutLogging() throws InterruptedException {
+    public void testOnStartJobUpdateTimeoutHandledWithoutLogging() throws Exception {
         Flags flagsWithGaUxDisabledLoggingDisabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
 
@@ -374,7 +374,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testOnStartJobUpdateTimeoutHandledWithLogging() throws InterruptedException {
+    public void testOnStartJobUpdateTimeoutHandledWithLogging() throws Exception {
         Flags flagsWithGaUxDisabledLoggingEnabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
         doReturn(flagsWithGaUxDisabledLoggingEnabled).when(FlagsFactory::getFlags);
@@ -390,7 +390,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testOnStartJobUpdateInterruptedHandled() throws InterruptedException {
+    public void testOnStartJobUpdateInterruptedHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
@@ -398,7 +398,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mDebugReportSenderWorker).when(() -> DebugReportSenderWorker.getInstance(any()));
+        doReturn(mDebugReportSenderWorker).when(DebugReportSenderWorker::getInstance);
         doReturn(
                         FluentFuture.from(
                                 immediateFailedFuture(new InterruptedException("testing timeout"))))
@@ -415,15 +415,14 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         assertTrue(mDebugReportSenderJobService.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> DebugReportSenderWorker.getInstance(mDebugReportSenderJobService));
+        ExtendedMockito.verify(DebugReportSenderWorker::getInstance);
         verify(mDebugReportSenderWorker).runDebugReportSender();
         verify(mDebugReportSenderJobService).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(DebugReportSenderWorker.class));
     }
 
     @Test
-    public void testOnStartJobUpdateExecutionExceptionHandled() throws InterruptedException {
+    public void testOnStartJobUpdateExecutionExceptionHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
@@ -431,7 +430,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mDebugReportSenderWorker).when(() -> DebugReportSenderWorker.getInstance(any()));
+        doReturn(mDebugReportSenderWorker).when(DebugReportSenderWorker::getInstance);
         doReturn(
                         FluentFuture.from(
                                 immediateFailedFuture(
@@ -449,8 +448,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         assertTrue(mDebugReportSenderJobService.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> DebugReportSenderWorker.getInstance(mDebugReportSenderJobService));
+        ExtendedMockito.verify(DebugReportSenderWorker::getInstance);
         verify(mDebugReportSenderWorker).runDebugReportSender();
         verify(mDebugReportSenderJobService).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(DebugReportSenderWorker.class));
@@ -484,7 +482,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testOnStopJobWithLogging() throws InterruptedException {
+    public void testOnStopJobWithLogging() throws Exception {
         Flags mockFlag =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
         mocker.mockGetFlags(mockFlag);
@@ -509,7 +507,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testOnStartJobConsentRevokedGaUxEnabledWithLogging() throws InterruptedException {
+    public void testOnStartJobConsentRevokedGaUxEnabledWithLogging() throws Exception {
         Flags flags = new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxEnabledLoggingEnabled();
         mocker.mockGetFlags(flags);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, flags);
@@ -524,7 +522,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testOnStartJobUpdateSuccessWithoutLogging() throws InterruptedException {
+    public void testOnStartJobUpdateSuccessWithoutLogging() throws Exception {
         Flags flagsWithGaUxDisabledLoggingDisabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
         doReturn(flagsWithGaUxDisabledLoggingDisabled).when(FlagsFactory::getFlags);
@@ -537,7 +535,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testOnStartJobUpdateSuccessWithLogging() throws InterruptedException {
+    public void testOnStartJobUpdateSuccessWithLogging() throws Exception {
         Flags flagsWithGaUxDisabledLoggingEnabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
         doReturn(flagsWithGaUxDisabledLoggingEnabled).when(FlagsFactory::getFlags);
@@ -551,14 +549,14 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         verifyJobFinishedLogged(logger, onStartJobCallback, onJobDoneCallback);
     }
 
-    private void testOnStartJobUpdateSuccess() throws InterruptedException {
+    private void testOnStartJobUpdateSuccess() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mDebugReportSenderWorker).when(() -> DebugReportSenderWorker.getInstance(any()));
+        doReturn(mDebugReportSenderWorker).when(DebugReportSenderWorker::getInstance);
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mDebugReportSenderWorker)
                 .runDebugReportSender();
@@ -573,8 +571,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         assertTrue(mDebugReportSenderJobService.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> DebugReportSenderWorker.getInstance(mDebugReportSenderJobService));
+        ExtendedMockito.verify(DebugReportSenderWorker::getInstance);
         verify(mDebugReportSenderWorker).runDebugReportSender();
         verify(mDebugReportSenderJobService).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(DebugReportSenderWorker.class));
@@ -608,14 +605,14 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         verifyNoMoreInteractions(staticMockMarker(DebugReportSenderWorker.class));
     }
 
-    private void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {
+    private void testOnStartJobUpdateTimeoutHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mDebugReportSenderWorker).when(() -> DebugReportSenderWorker.getInstance(any()));
+        doReturn(mDebugReportSenderWorker).when(DebugReportSenderWorker::getInstance);
         doReturn(FluentFuture.from(immediateFailedFuture(new TimeoutException("testing timeout"))))
                 .when(mDebugReportSenderWorker)
                 .runDebugReportSender();
@@ -630,15 +627,14 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
         assertTrue(mDebugReportSenderJobService.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> DebugReportSenderWorker.getInstance(mDebugReportSenderJobService));
+        ExtendedMockito.verify(DebugReportSenderWorker::getInstance);
         verify(mDebugReportSenderWorker).runDebugReportSender();
         verify(mDebugReportSenderJobService).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(DebugReportSenderWorker.class));
     }
 
     private void testOnStopJobCallsStopWork() {
-        doReturn(mDebugReportSenderWorker).when(() -> DebugReportSenderWorker.getInstance(any()));
+        doReturn(mDebugReportSenderWorker).when(DebugReportSenderWorker::getInstance);
         doNothing().when(mDebugReportSenderWorker).stopWork();
 
         assertTrue(mDebugReportSenderJobService.onStopJob(mJobParametersMock));
