@@ -16,17 +16,11 @@
 package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.AndroidLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 abstract class IBinderSyncCallbackTestCase<CB extends AbstractSyncCallback & IBinderSyncCallback>
         extends SyncCallbackTestCase<CB> {
-
-    // TODO(b/342639109): make sure it's the right order and/or move to superclass
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAnyLevel();
 
     protected IBinderSyncCallbackTestCase() {
         super(AndroidLogger.getInstance());

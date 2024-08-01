@@ -112,6 +112,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -1219,6 +1220,33 @@ public class AdServicesHttpsClientTest {
 
         // Verify the logging of SelectAdsFromOutcomesApiCalledStats
         verifySelectAdsFromOutcomesApiCalledStatsLogging(executionLogger, 200);
+    }
+
+    @Test
+    public void testPickRequiredHeaderFields() throws Exception {
+        ImmutableMap<String, List<String>> allHeaders =
+                ImmutableMap.of(
+                        "key1", ImmutableList.of("value1"), "key2", ImmutableList.of("value2"));
+        ImmutableSet<String> requiredHeaderKeys = ImmutableSet.of("key1");
+
+        Map<String, List<String>> result =
+                mClient.pickRequiredHeaderFields(allHeaders, requiredHeaderKeys);
+        assertEquals(result, ImmutableMap.of("key1", ImmutableList.of("value1")));
+    }
+
+    @Test
+    public void testPickRequiredHeaderFieldsCaseInsensitive() throws Exception {
+        ImmutableMap<String, List<String>> allHeaders =
+                ImmutableMap.of(
+                        "KEY1", ImmutableList.of("value1"), "KEY2", ImmutableList.of("value2"));
+        ImmutableSet<String> requiredHeaderKeys = ImmutableSet.of("key1", "key2");
+
+        Map<String, List<String>> result =
+                mClient.pickRequiredHeaderFields(allHeaders, requiredHeaderKeys);
+        assertEquals(
+                result,
+                ImmutableMap.of(
+                        "key1", ImmutableList.of("value1"), "key2", ImmutableList.of("value2")));
     }
 
     private AdServicesHttpClientResponse fetchPayload(Uri uri, DevContext devContext)

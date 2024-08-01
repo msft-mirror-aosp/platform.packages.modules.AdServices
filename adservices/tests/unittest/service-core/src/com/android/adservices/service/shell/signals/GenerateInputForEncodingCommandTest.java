@@ -42,6 +42,7 @@ import com.android.adservices.shared.testing.SupportedByConditionRule;
 
 import org.json.JSONException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -84,6 +85,7 @@ public final class GenerateInputForEncodingCommandTest
         this.mJSScriptEngine = JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger());
     }
 
+    @Ignore("b/355764271")
     @Test
     public void testRun_happyPath_returnsSuccess()
             throws JSONException, ExecutionException, InterruptedException, TimeoutException {

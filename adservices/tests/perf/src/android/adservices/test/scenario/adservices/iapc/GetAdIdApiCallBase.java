@@ -19,6 +19,7 @@ package android.adservices.test.scenario.adservices.iapc;
 import static com.android.adservices.helpers.AdIdLatencyHelper.AD_ID_COLD_START_LATENCY_METRIC;
 import static com.android.adservices.helpers.AdIdLatencyHelper.AD_ID_HOT_START_LATENCY_METRIC;
 import static com.android.adservices.helpers.AdIdLatencyHelper.TAG;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.sleep;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
@@ -52,7 +53,7 @@ abstract class GetAdIdApiCallBase extends AdServicesUnitTestCase {
     protected void measureGetAdIdCall() throws Exception {
         callGetAdId(AD_ID_COLD_START_LATENCY_METRIC);
 
-        super.sleep(1000, "Need to sleep here to prevent going above the Rate Limit");
+        sleep(1000, "Need to sleep here to prevent going above the Rate Limit");
 
         callGetAdId(AD_ID_HOT_START_LATENCY_METRIC);
     }

@@ -136,7 +136,7 @@ import java.util.stream.Collectors;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AppManifestConfigMetricsLogger.class)
 public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCase {
-    private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
+    private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecore.topics.unittest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 10_000;

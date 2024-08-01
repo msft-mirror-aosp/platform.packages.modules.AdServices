@@ -27,12 +27,13 @@ import java.lang.annotation.RetentionPolicy;
  * @hide
  */
 public class Module {
-    public static final int ADID = 0;
+    public static final int UNKNOWN = 0;
     public static final int MEASUREMENT = 1;
     public static final int PA = 2;
     public static final int PAS = 3;
     public static final int TOPIC = 4;
     public static final int ODP = 5;
+    public static final int ADID = 6;
 
     /**
      * Result codes that are common across various modules.
@@ -41,7 +42,7 @@ public class Module {
      */
     @IntDef(
             prefix = {""},
-            value = {ADID, MEASUREMENT, PA, PAS, TOPIC, ODP})
+            value = {UNKNOWN, MEASUREMENT, PA, PAS, TOPIC, ODP, ADID})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ModuleCode {}
 }

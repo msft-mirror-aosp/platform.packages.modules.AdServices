@@ -45,6 +45,10 @@ java_library {
         "com.android.extservices",
         "com.android.ondevicepersonalization",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+        baseline_filename: "lint-baseline-adservices-shared-storage.xml", // TODO(b/356688417): Clean up baseline file.
+    },
 }
 
 java_library {
@@ -82,6 +86,9 @@ java_library {
         "com.android.extservices",
         "com.android.ondevicepersonalization",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
 }
 
 java_library {
@@ -118,6 +125,10 @@ java_library {
         "com.android.extservices",
         "com.android.ondevicepersonalization",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+        baseline_filename: "lint-baseline-adservices-shared-spe.xml", // TODO(b/356688417): Clean up baseline file.
+    },
 }
 
 // NOTE: currently there's just one library for everything (which for
@@ -147,6 +158,9 @@ java_library {
         "com.android.extservices",
         "com.android.ondevicepersonalization",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
 }
 
 java_library {
@@ -161,6 +175,9 @@ java_library {
         "com.android.extservices",
         "com.android.ondevicepersonalization",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
 }
 
 filegroup {
@@ -195,6 +212,9 @@ java_library {
         "com.android.extservices",
         "com.android.ondevicepersonalization",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
 }
 
 java_library {
@@ -229,6 +249,9 @@ java_library {
         "com.android.extservices",
         "com.android.ondevicepersonalization",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
 }
 
 java_library {
@@ -247,6 +270,9 @@ java_library {
         "//packages/modules/ExtServices:__subpackages__",
         "//packages/modules/OnDevicePersonalization:__subpackages__",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
 }
 
 java_library {
@@ -300,6 +326,9 @@ java_library {
         "com.android.extservices",
         "com.android.ondevicepersonalization",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
 }
 
 filegroup {
@@ -358,4 +387,7 @@ java_library {
         "com.android.extservices",
         "com.android.ondevicepersonalization",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
 }

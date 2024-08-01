@@ -107,7 +107,7 @@ package android.adservices.common {
     method public int getUserChoice();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdServicesModuleUserChoice> CREATOR;
-    field public static final int USER_CHOICE_OPTED_ID = 1; // 0x1
+    field public static final int USER_CHOICE_OPTED_IN = 1; // 0x1
     field public static final int USER_CHOICE_OPTED_OUT = 2; // 0x2
     field public static final int USER_CHOICE_UNKNOWN = 0; // 0x0
   }

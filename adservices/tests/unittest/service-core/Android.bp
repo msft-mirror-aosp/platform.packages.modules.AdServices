@@ -102,9 +102,6 @@ android_test {
         // Measurement unit tests will be covered by AdServicesServiceCoreMeasurementUnitTests.
         "src/com/android/adservices/service/measurement/**/*.java",
         "src/com/android/adservices/data/measurement/**/*Test.java",
-        // Topics unit tests will be covered by AdServicesServiceCoreTopicsUnitTests.
-        "src/com/android/adservices/service/topics/**/*.java",
-        "src/com/android/adservices/data/topics/**/*Test.java",
     ],
     defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
 }
@@ -270,9 +267,6 @@ android_test {
         // Measurement unit tests will be covered by AdExtServicesServiceCoreMeasurementUnitTests.
         "src/com/android/adservices/service/measurement/**/*.java",
         "src/com/android/adservices/data/measurement/**/*Test.java",
-        // Topics unit tests will be covered by AdServicesServiceCoreTopicsUnitTests.
-        "src/com/android/adservices/service/topics/**/*.java",
-        "src/com/android/adservices/data/topics/**/*Test.java",
     ],
     test_config: "AndroidTest.ExtServices.xml",
 }
@@ -297,26 +291,6 @@ android_test {
     ],
     defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
     test_config: "AndroidTest.Measurement.ExtServices.xml",
-}
-
-android_test {
-    name: "AdServicesServiceCoreTopicsUnitTests",
-    defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
-    srcs: [
-        "src/com/android/adservices/service/topics/**/*.java",
-        "src/com/android/adservices/data/topics/**/*.java",
-    ],
-    test_config: "AndroidTest.Topics.xml",
-}
-
-android_test {
-    name: "AdExtServicesServiceCoreTopicsUnitTests",
-    srcs: [
-        "src/com/android/adservices/service/topics/**/*.java",
-        "src/com/android/adservices/data/topics/**/*.java",
-    ],
-    defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
-    test_config: "AndroidTest.Topics.ExtServices.xml",
 }
 
 android_test {

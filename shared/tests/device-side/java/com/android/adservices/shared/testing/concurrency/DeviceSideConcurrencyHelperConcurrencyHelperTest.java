@@ -17,6 +17,7 @@ package com.android.adservices.shared.testing.concurrency;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
@@ -63,5 +64,13 @@ public final class DeviceSideConcurrencyHelperConcurrencyHelperTest
         expect.withMessage("startNewThread()")
                 .that(DeviceSideConcurrencyHelper.startNewThread(mMockRunnable))
                 .isSameInstanceAs(mMockThread);
+    }
+
+    @Test
+    public void testSleep() {
+        DeviceSideConcurrencyHelper.sleep(108, "Numbers: %s %s %s %s %s %s", 4, 8, 15, 16, 23, 42);
+
+        verify(mMockConcurrencyHelper)
+                .sleep(108, "Numbers: %s %s %s %s %s %s", 4, 8, 15, 16, 23, 42);
     }
 }
