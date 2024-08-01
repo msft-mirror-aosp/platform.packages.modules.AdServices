@@ -225,21 +225,6 @@
         "report_time": "2700000",
         "payload": [
           {
-            "type": "source-success",
-            "body": {
-              "source_event_id": "3",
-              "attribution_destination": "android-app://test.destination3",
-              "source_site": "android-app://test.publisher1",
-              "source_destination_limit": "1"
-            }
-          }
-        ],
-        "report_url": "https://reporter1.test/.well-known/attribution-reporting/debug/verbose"
-      },
-      {
-        "report_time": "2700000",
-        "payload": [
-          {
             "type": "source-noised",
             "body": {
               "source_event_id": "3",
