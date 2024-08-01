@@ -17,6 +17,11 @@ package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.Nullable;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,37 +37,63 @@ final class ConcurrencyHelper {
     private static final AtomicInteger sThreadId = new AtomicInteger();
 
     private final Logger mLogger;
+    private final Sleeper mSleeper;
 
     ConcurrencyHelper(RealLogger realLogger) {
+        this(realLogger, napTimeMs -> Thread.sleep(napTimeMs));
+    }
+
+    @VisibleForTesting
+    ConcurrencyHelper(RealLogger realLogger, Sleeper sleeper) {
         mLogger = new Logger(realLogger, ConcurrencyHelper.class);
+        mSleeper = sleeper;
     }
 
     Thread runAsync(long timeoutMs, Runnable r) {
-        Objects.requireNonNull(r);
-        Runnable sleepingBeauty =
-                () -> {
-                    String threadName = Thread.currentThread().getName();
-                    mLogger.v("Sleeping %d ms on %s", timeoutMs, threadName);
-                    try {
-                        Thread.sleep(timeoutMs);
-                        mLogger.v("Woke up. Running %s", r);
-                        r.run();
-                        mLogger.v("Done");
-                    } catch (InterruptedException e) {
-                        mLogger.e(
-                                e, "%s interrupted while sleeping - NOT running %s", threadName, r);
-                        return;
-                    }
-                };
-        return startNewThread(sleepingBeauty);
+        Objects.requireNonNull(r, "Runnable cannot be null");
+        return startNewThread(() -> sleep(timeoutMs, r, "runAsync() call"));
     }
 
     Thread startNewThread(Runnable r) {
-        Objects.requireNonNull(r);
+        Objects.requireNonNull(r, "Runnable cannot be null");
         String threadName = "ConcurrencyHelper-runLaterThread-" + sThreadId.incrementAndGet();
         Thread thread = new Thread(r, threadName);
         mLogger.v("Starting new thread (%s) to run %s", threadName, r);
         thread.start();
         return thread;
+    }
+
+    @FormatMethod
+    void sleep(long timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs) {
+        sleep(timeMs, /* postSleepRunnable= */ null, reasonFmt, reasonArgs);
+    }
+
+    @FormatMethod
+    private void sleep(
+            long timeMs,
+            @Nullable Runnable postSleepRunnable,
+            @FormatString String reasonFmt,
+            @Nullable Object... reasonArgs) {
+        String reason =
+                String.format(
+                        Objects.requireNonNull(reasonFmt, "reasonFmt cannot be null"), reasonArgs);
+
+        String threadName = Thread.currentThread().toString();
+        mLogger.i("Napping %dms on thread %s. Reason: %s", timeMs, threadName, reason);
+        try {
+            mSleeper.sleep(timeMs);
+            mLogger.i("Little Suzie woke up!");
+            if (postSleepRunnable != null) {
+                postSleepRunnable.run();
+            }
+        } catch (InterruptedException e) {
+            mLogger.e(e, "Thread %s interrupted while sleeping", threadName);
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /** Abstraction used to test runAsync() when interrupted */
+    interface Sleeper {
+        void sleep(long napTimeMs) throws InterruptedException;
     }
 }

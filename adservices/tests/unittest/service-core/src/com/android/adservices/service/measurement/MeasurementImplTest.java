@@ -212,16 +212,15 @@ public final class MeasurementImplTest {
     @Before
     public void before() throws RemoteException {
         MockitoAnnotations.initMocks(this);
-        when(mContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI))
+        Uri triggerUri = TriggerContentProvider.getTriggerUri();
+        Uri asyncRegistrationTriggerUri = AsyncRegistrationContentProvider.getTriggerUri();
+        when(mContentResolver.acquireContentProviderClient(triggerUri))
                 .thenReturn(mMockContentProviderClient);
-        when(mContentResolver.acquireContentProviderClient(
-                        AsyncRegistrationContentProvider.TRIGGER_URI))
+        when(mContentResolver.acquireContentProviderClient(asyncRegistrationTriggerUri))
                 .thenReturn(mMockContentProviderClient);
-        when(mMockContentProviderClient.insert(eq(TriggerContentProvider.TRIGGER_URI), any()))
-                .thenReturn(TriggerContentProvider.TRIGGER_URI);
-        when(mMockContentProviderClient.insert(
-                        eq(AsyncRegistrationContentProvider.TRIGGER_URI), any()))
-                .thenReturn(AsyncRegistrationContentProvider.TRIGGER_URI);
+        when(mMockContentProviderClient.insert(eq(triggerUri), any())).thenReturn(triggerUri);
+        when(mMockContentProviderClient.insert(eq(asyncRegistrationTriggerUri), any()))
+                .thenReturn(asyncRegistrationTriggerUri);
         mMeasurementImpl =
                 spy(
                         new MeasurementImpl(

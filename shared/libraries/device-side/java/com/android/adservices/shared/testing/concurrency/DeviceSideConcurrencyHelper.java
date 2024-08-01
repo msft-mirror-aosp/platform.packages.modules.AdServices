@@ -19,9 +19,12 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.util.Preconditions;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 import java.util.Objects;
 
@@ -47,6 +50,13 @@ public final class DeviceSideConcurrencyHelper {
      */
     public static Thread runAsync(long timeoutMs, Runnable r) {
         return getConcurrencyHelper().runAsync(timeoutMs, r);
+    }
+
+    /** Sleeps for the given amount of time, logging the reason. */
+    @FormatMethod
+    public static void sleep(
+            long timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs) {
+        getConcurrencyHelper().sleep(timeMs, reasonFmt, reasonArgs);
     }
 
     /** Runs the given runnable in the main thread. */

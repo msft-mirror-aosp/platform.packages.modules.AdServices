@@ -28,11 +28,18 @@ import com.android.modules.utils.build.SdkLevel;
  * ContentProvider for monitoring changes to {@link Trigger}.
  */
 public class TriggerContentProvider extends ContentProvider {
-    public static final String AUTHORITY =
-            SdkLevel.isAtLeastT()
-                    ? "com.android.adservices.provider.trigger"
-                    : "com.android.ext.adservices.provider.trigger";
-    public static final Uri TRIGGER_URI = Uri.parse("content://" + AUTHORITY);
+    /**
+     * Gets the Trigger URI of this content provider
+     *
+     * @return the trigger uri, which can be different based on the Android version (S- vs. T+)
+     */
+    public static Uri getTriggerUri() {
+        String authority =
+                SdkLevel.isAtLeastT()
+                        ? "com.android.adservices.provider.trigger"
+                        : "com.android.ext.adservices.provider.trigger";
+        return Uri.parse("content://" + authority);
+    }
 
     @Override
     public boolean onCreate() {
@@ -55,14 +62,16 @@ public class TriggerContentProvider extends ContentProvider {
         // TODO: Choose an integration option after Trigger datastore changes are available.
         // 1) Call ContentProvider after insert in DAO
         // Sample Code:
+        // Uri triggerUri = TriggerContentProvider.getTriggerUri();
         // ContentProviderClient contentProviderClient = ctx.getContentResolver()
-        //        .acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI)
-        //        .insert(TRIGGER_URI, null);
+        //        .acquireContentProviderClient(triggerUri)
+        //        .insert(triggerUri, null);
         // 2) Call ContentProvider for inserting during registration and call DAO from here.
         // Sample Code:
         // MeasurementDAO.getInstance(getContext()).insertTrigger(triggerObject);
-        getContext().getContentResolver().notifyChange(TRIGGER_URI, null);
-        return TRIGGER_URI;
+        Uri triggerUri = getTriggerUri();
+        getContext().getContentResolver().notifyChange(triggerUri, null);
+        return triggerUri;
     }
 
     @Override
