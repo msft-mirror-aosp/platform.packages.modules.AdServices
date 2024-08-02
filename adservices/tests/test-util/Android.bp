@@ -144,6 +144,10 @@ java_library_host {
 filegroup {
     name: "adservices-extended-mockito-rule-sources",
     srcs: [
+        // Non-static interface and implementation
+        "java/com/android/adservices/mockito/AdServicesPragmaticMocker.java",
+        "java/com/android/adservices/mockito/AdServicesMockitoMocker.java",
+        // Static interface and implementation
         "java/com/android/adservices/mockito/AdServicesStaticMockitoMocker.java",
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java",
     ],
