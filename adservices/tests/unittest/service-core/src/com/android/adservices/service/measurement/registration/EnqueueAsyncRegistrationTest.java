@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -42,7 +40,7 @@ import android.view.InputEvent;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
@@ -51,6 +49,7 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -149,9 +148,10 @@ public class EnqueueAsyncRegistrationTest {
     public void before() throws RemoteException {
         ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         MockitoAnnotations.initMocks(this);
-        when(mContentResolver.acquireContentProviderClient(TRIGGER_URI))
+        Uri triggerUri = TriggerContentProvider.getTriggerUri();
+        when(mContentResolver.acquireContentProviderClient(triggerUri))
                 .thenReturn(mMockContentProviderClient);
-        when(mMockContentProviderClient.insert(any(), any())).thenReturn(TRIGGER_URI);
+        when(mMockContentProviderClient.insert(any(), any())).thenReturn(triggerUri);
     }
 
     @Test

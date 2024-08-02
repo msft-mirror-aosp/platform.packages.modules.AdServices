@@ -18,6 +18,7 @@ package com.android.adservices.service.devapi;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,57 +33,37 @@ import android.provider.Settings;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.common.compat.BuildCompatUtils;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 
-public class DevContextFilterTest {
+@MockStatic(Settings.Global.class)
+@MockStatic(BuildCompatUtils.class)
+public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCase {
     private static final int APP_UID = 100;
     private static final String APP_PACKAGE = "com.test.myapp";
-    private MockitoSession mStaticMockSession = null;
 
-    @Mock private PackageManager mPackageManager;
-    @Mock private AppPackageNameRetriever mAppPackageNameRetriever;
-    @Mock private ContentResolver mContentResolver;
+    @Mock private PackageManager mMockPackageManager;
+    @Mock private AppPackageNameRetriever mMockAppPackageNameRetriever;
+    @Mock private ContentResolver mMockContentResolver;
 
     private DevContextFilter mDevContextFilter;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(Settings.Global.class)
-                        .mockStatic(BuildCompatUtils.class)
-                        .startMocking();
-        MockitoAnnotations.initMocks(this);
-
         mDevContextFilter =
-                new DevContextFilter(mContentResolver, mPackageManager, mAppPackageNameRetriever);
-    }
-
-    @After
-    public void tearDown() {
-        mStaticMockSession.finishMocking();
+                new DevContextFilter(
+                        mMockContentResolver, mMockPackageManager, mMockAppPackageNameRetriever);
     }
 
     @Test
-    public void testCreateDevContextReturnsDevContextWithAppInfo()
-            throws PackageManager.NameNotFoundException {
+    public void testCreateDevContextReturnsDevContextWithAppInfo() throws Exception {
         enableDeveloperOptions();
-        when(mAppPackageNameRetriever.getAppPackageNameForUid(APP_UID)).thenReturn(APP_PACKAGE);
+        when(mMockAppPackageNameRetriever.getAppPackageNameForUid(APP_UID)).thenReturn(APP_PACKAGE);
         mockInstalledApplications(aDebuggableAppInfo());
 
         assertThat(mDevContextFilter.createDevContext(APP_UID))
@@ -102,13 +83,13 @@ public class DevContextFilterTest {
 
     @Test
     public void testCreateDevContextReturnsDevEnabledInstanceIfNotInDeveloperModeDebuggableBuild()
-            throws PackageManager.NameNotFoundException {
+            throws Exception {
         // No need to call disableDeveloperOptions since they wouldn't be checked because we are
         // in a debuggable build and Mockito would complain of the not necesasry mock.
         // Not preparing the mock would anyway cause the check method to return false.
         when(BuildCompatUtils.isDebuggable()).thenReturn(true);
 
-        when(mAppPackageNameRetriever.getAppPackageNameForUid(APP_UID)).thenReturn(APP_PACKAGE);
+        when(mMockAppPackageNameRetriever.getAppPackageNameForUid(APP_UID)).thenReturn(APP_PACKAGE);
         mockInstalledApplications(aDebuggableAppInfo());
 
         assertThat(mDevContextFilter.createDevContext(APP_UID))
@@ -121,9 +102,9 @@ public class DevContextFilterTest {
 
     @Test
     public void testCreateDevContextReturnsDevDisabledInstanceIfAppIsNotDebuggable()
-            throws PackageManager.NameNotFoundException {
+            throws Exception {
         enableDeveloperOptions();
-        when(mAppPackageNameRetriever.getAppPackageNameForUid(APP_UID)).thenReturn(APP_PACKAGE);
+        when(mMockAppPackageNameRetriever.getAppPackageNameForUid(APP_UID)).thenReturn(APP_PACKAGE);
         mockInstalledApplications(aNonDebuggableAppInfo());
         assertThat(mDevContextFilter.createDevContext(APP_UID).getDevOptionsEnabled()).isFalse();
     }
@@ -149,21 +130,21 @@ public class DevContextFilterTest {
 
     @Test
     public void testNoArgCallFailsIfCalledFromNonBinderThread() {
-        Context applicationContext = ApplicationProvider.getApplicationContext();
-        DevContextFilter nonMockedFilter = DevContextFilter.create(applicationContext);
+        DevContextFilter nonMockedFilter =
+                DevContextFilter.create(mContext.getApplicationContext());
 
-        Assert.assertThrows(IllegalStateException.class, nonMockedFilter::createDevContext);
+        assertThrows(IllegalStateException.class, nonMockedFilter::createDevContext);
     }
 
     private void enableDeveloperOptions() {
         when(Settings.Global.getInt(
-                        mContentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0))
+                        mMockContentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0))
                 .thenReturn(1);
     }
 
     private void disableDeveloperOptions() {
         when(Settings.Global.getInt(
-                        mContentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0))
+                        mMockContentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0))
                 .thenReturn(0);
     }
 
@@ -180,12 +161,12 @@ public class DevContextFilterTest {
 
     private void mockInstalledApplications(ApplicationInfo applicationInfo)
             throws PackageManager.NameNotFoundException {
-        if (SdkLevel.isAtLeastT()) {
-            when(mPackageManager.getApplicationInfo(
+        if (sdkLevel.isAtLeastT()) {
+            when(mMockPackageManager.getApplicationInfo(
                             eq(APP_PACKAGE), any(PackageManager.ApplicationInfoFlags.class)))
                     .thenReturn(applicationInfo);
         } else {
-            when(mPackageManager.getApplicationInfo(eq(APP_PACKAGE), anyInt()))
+            when(mMockPackageManager.getApplicationInfo(eq(APP_PACKAGE), anyInt()))
                     .thenReturn(applicationInfo);
         }
     }

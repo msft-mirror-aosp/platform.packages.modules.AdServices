@@ -55,6 +55,7 @@ import android.os.PersistableBundle;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -123,6 +124,7 @@ public class ConsentNotificationJobServiceTest {
                         .spyStatic(AdServicesJobServiceLogger.class)
                         .spyStatic(UxStatesManager.class)
                         .mockStatic(ServiceCompatUtils.class)
+                        .mockStatic(ErrorLogUtil.class)
                         .strictness(Strictness.WARN)
                         .initMocks(this)
                         .startMocking();
@@ -460,6 +462,7 @@ public class ConsentNotificationJobServiceTest {
     public void testRecordDefaultConsent_NotRVC_onRFixEnabled_RecordMsmtDefaultConsentIsCalled()
             throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastS());
+        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         when(mFlags.getRNotificationDefaultConsentFixEnabled()).thenReturn(true);
         when(mConsentManager.getUx()).thenReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX);
         mockRecordDefaultConsent();

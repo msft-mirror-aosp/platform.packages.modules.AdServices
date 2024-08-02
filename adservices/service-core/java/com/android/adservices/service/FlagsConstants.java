@@ -93,6 +93,10 @@ public final class FlagsConstants {
             "topics_number_of_lookback_epochs";
     public static final String KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION =
             "topics_privacy_budget_for_topic_ids_distribution";
+    public static final String KEY_TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED =
+            "topics_job_scheduler_reschedule_enabled";
+    public static final String KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING =
+            "topics_epoch_job_battery_not_low_instead_of_charging";
     public static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
     public static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";

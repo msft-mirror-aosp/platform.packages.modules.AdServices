@@ -58,8 +58,8 @@ import android.view.MotionEvent;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
@@ -212,16 +212,15 @@ public final class MeasurementImplTest {
     @Before
     public void before() throws RemoteException {
         MockitoAnnotations.initMocks(this);
-        when(mContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI))
+        Uri triggerUri = TriggerContentProvider.getTriggerUri();
+        Uri asyncRegistrationTriggerUri = AsyncRegistrationContentProvider.getTriggerUri();
+        when(mContentResolver.acquireContentProviderClient(triggerUri))
                 .thenReturn(mMockContentProviderClient);
-        when(mContentResolver.acquireContentProviderClient(
-                        AsyncRegistrationContentProvider.TRIGGER_URI))
+        when(mContentResolver.acquireContentProviderClient(asyncRegistrationTriggerUri))
                 .thenReturn(mMockContentProviderClient);
-        when(mMockContentProviderClient.insert(eq(TriggerContentProvider.TRIGGER_URI), any()))
-                .thenReturn(TriggerContentProvider.TRIGGER_URI);
-        when(mMockContentProviderClient.insert(
-                        eq(AsyncRegistrationContentProvider.TRIGGER_URI), any()))
-                .thenReturn(AsyncRegistrationContentProvider.TRIGGER_URI);
+        when(mMockContentProviderClient.insert(eq(triggerUri), any())).thenReturn(triggerUri);
+        when(mMockContentProviderClient.insert(eq(asyncRegistrationTriggerUri), any()))
+                .thenReturn(asyncRegistrationTriggerUri);
         mMeasurementImpl =
                 spy(
                         new MeasurementImpl(
