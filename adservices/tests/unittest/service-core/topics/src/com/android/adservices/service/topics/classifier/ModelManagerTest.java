@@ -37,11 +37,9 @@ import android.content.Context;
 import android.content.res.AssetManager;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -55,7 +53,6 @@ import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -74,7 +71,6 @@ import java.util.Map;
 /** Model Manager Test {@link ModelManager}. */
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(ModelManager.class)
-@SpyStatic(ErrorLogUtil.class)
 @RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
@@ -110,10 +106,6 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private SynchronousFileStorage mMockFileStorage;
     @Mock private Map<String, ClientFile> mMockDownloadedFiles;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setUp() {

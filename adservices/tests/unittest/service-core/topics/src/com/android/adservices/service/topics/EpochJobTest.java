@@ -20,6 +20,7 @@ import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockJob
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
+import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_NOT_LOW;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
@@ -130,13 +131,36 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testCreateDefaultJobSpec() {
+    public void testCreateDefaultJobSpec_schedulerRequiresChargingEnabled() {
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(false);
         JobSpec jobSpec = EpochJob.createDefaultJobSpec();
 
         JobPolicy expectedJobPolicy =
                 JobPolicy.newBuilder()
                         .setJobId(TOPICS_EPOCH_JOB.getJobId())
                         .setBatteryType(BATTERY_TYPE_REQUIRE_CHARGING)
+                        .setIsPersisted(true)
+                        .setPeriodicJobParams(
+                                JobPolicy.PeriodicJobParams.newBuilder()
+                                        .setPeriodicIntervalMs(TOPICS_EPOCH_JOB_PERIOD_MS)
+                                        .setFlexInternalMs(TOPICS_EPOCH_JOB_FLEX_MS)
+                                        .build())
+                        .build();
+
+        assertWithMessage("createJobSpec() for EpochJob")
+                .that(jobSpec.getJobPolicy())
+                .isEqualTo(expectedJobPolicy);
+    }
+
+    @Test
+    public void testCreateDefaultJobSpec_schedulerRequiresChargingDisabled() {
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+        JobSpec jobSpec = EpochJob.createDefaultJobSpec();
+
+        JobPolicy expectedJobPolicy =
+                JobPolicy.newBuilder()
+                        .setJobId(TOPICS_EPOCH_JOB.getJobId())
+                        .setBatteryType(BATTERY_TYPE_REQUIRE_NOT_LOW)
                         .setIsPersisted(true)
                         .setPeriodicJobParams(
                                 JobPolicy.PeriodicJobParams.newBuilder()

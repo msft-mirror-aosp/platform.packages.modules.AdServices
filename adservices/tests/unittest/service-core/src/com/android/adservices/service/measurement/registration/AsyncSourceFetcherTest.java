@@ -59,12 +59,10 @@ import android.view.MotionEvent.PointerProperties;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -87,7 +85,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -111,7 +108,6 @@ import javax.net.ssl.HttpsURLConnection;
 /** Unit tests for {@link AsyncSourceFetcher} */
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(Enrollment.class)
-@SpyStatic(ErrorLogUtil.class)
 public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String ANDROID_APP_SCHEME = "android-app";
@@ -183,10 +179,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private Flags mFlags;
     @Mock private AdServicesLogger mLogger;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() {
