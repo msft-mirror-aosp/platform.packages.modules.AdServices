@@ -46,11 +46,9 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -60,13 +58,11 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.List;
 
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(SdkLevel.class)
 @SpyStatic(PackageChangedReceiver.class)
@@ -101,10 +97,6 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
     @Mock private Flags mMockFlags;
     @Mock private PackageManager mPackageManager;
     @Mock private JobScheduler mJobScheduler;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     private AdServicesBackCompatInit mSpyCompatInit;
 

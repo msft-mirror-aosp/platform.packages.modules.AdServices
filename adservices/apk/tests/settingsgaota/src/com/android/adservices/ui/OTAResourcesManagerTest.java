@@ -33,12 +33,10 @@ import android.content.res.loader.ResourcesProvider;
 import android.os.ParcelFileDescriptor;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.download.MobileDataDownloadFactory;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.util.ApkTestUtil;
@@ -53,14 +51,12 @@ import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(MobileDataDownloadFactory.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(ParcelFileDescriptor.class)
@@ -75,10 +71,6 @@ public final class OTAResourcesManagerTest extends AdServicesExtendedMockitoTest
     Flags mMockFlags;
     @Mock
     ParcelFileDescriptor mMockParcelFileDescriptor;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setUp() {
