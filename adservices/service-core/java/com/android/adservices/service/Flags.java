@@ -19,7 +19,6 @@ package com.android.adservices.service;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 import static android.os.Build.VERSION.SDK_INT;
 
-import static com.android.adservices.shared.common.flags.FeatureFlag.Type.DEBUG;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
@@ -2060,39 +2059,23 @@ public interface Flags extends ModuleSharedFlags {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
-
     default boolean getConsentNotificationDebugMode() {
         return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
-
-    /** The consent notification activity debug mode is off by default. */
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
 
     /** Returns the consent notification activity debug mode. */
     default boolean getConsentNotificationActivityDebugMode() {
         return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFIED_DEBUG_MODE = false;
-
     /** Returns whether to suppress consent notified state. */
     default boolean getConsentNotifiedDebugMode() {
         return DebugFlags.getInstance().getConsentNotifiedDebugMode();
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_MANAGER_DEBUG_MODE = false;
-
     default boolean getConsentManagerDebugMode() {
         return DebugFlags.getInstance().getConsentManagerDebugMode();
     }
-
-    @FeatureFlag(DEBUG)
-    boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
 
     /** When enabled, the device is treated as OTA device. */
     default boolean getConsentManagerOTADebugMode() {

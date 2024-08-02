@@ -28,11 +28,6 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_C
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
-import static com.android.adservices.service.Flags.CONSENT_MANAGER_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
-import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
 
 import androidx.annotation.VisibleForTesting;
 
@@ -72,6 +67,12 @@ public final class DebugFlags extends CommonDebugFlags {
     /** Default value for sending a broadcast when record topics is completed. */
     @VisibleForTesting
     static final boolean DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED = false;
+
+    static final boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
+    static final boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
+    static final boolean CONSENT_NOTIFIED_DEBUG_MODE = false;
+    static final boolean CONSENT_MANAGER_DEBUG_MODE = false;
+    static final boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
 
     public static DebugFlags getInstance() {
         return sInstance;
