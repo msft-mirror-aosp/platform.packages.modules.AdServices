@@ -27,6 +27,8 @@ import java.util.Map;
 /**
  * Handles the loading of dex files for multiple apks to be verified, ensures that a single dex file
  * is loaded at any time.
+ *
+ * @hide
  */
 public class SerialDexLoader {
     private static final String TAG = "SdkSandboxVerifier";
