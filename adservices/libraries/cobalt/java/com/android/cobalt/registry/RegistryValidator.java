@@ -41,6 +41,7 @@ import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ReportingInterval;
+import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig;
 import com.google.cobalt.StringSketchParameters;
 import com.google.cobalt.SystemProfileField;
 import com.google.cobalt.SystemProfileSelectionPolicy;
@@ -203,11 +204,14 @@ public final class RegistryValidator {
             return false;
         }
 
+        if (!validateShuffledDp(report.getPrivacyMechanism(), report.getShuffledDp())) {
+            logValidationFailure("Shuffled differential privacy config failed validation");
+            return false;
+        }
+
         // TODO(b/343722587): Add remaining validations:
         // * that private reports can't be added if the new and old metrics don't have the same
         //   dimensions
-        // * the fields used for privacy are known to the client.
-
         return true;
     }
 
@@ -402,6 +406,19 @@ public final class RegistryValidator {
         }
 
         return reportMaxReleaseStage.getNumber() <= metricMaxReleaseStage.getNumber();
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateShuffledDp(
+            PrivacyMechanism privacyMechanism, ShuffledDifferentialPrivacyConfig shuffledDpConfig) {
+        if (!privacyMechanism.equals(SHUFFLED_DIFFERENTIAL_PRIVACY)) {
+            return true;
+        }
+
+        return shuffledDpConfig.getPoissonMean() > 0
+                && shuffledDpConfig
+                        .getDevicePrivacyDependencySet()
+                        .equals(ShuffledDifferentialPrivacyConfig.DevicePrivacyDependencySet.V1);
     }
 
     private static void logValidationFailure(String format, Object... params) {
