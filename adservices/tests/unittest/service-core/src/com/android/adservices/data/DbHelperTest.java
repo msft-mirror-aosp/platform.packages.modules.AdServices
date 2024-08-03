@@ -45,7 +45,6 @@ import android.database.sqlite.SQLiteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.measurement.DbHelperV1;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.topics.migration.TopicsDbMigratorV7;
 import com.android.adservices.data.topics.migration.TopicsDbMigratorV8;
