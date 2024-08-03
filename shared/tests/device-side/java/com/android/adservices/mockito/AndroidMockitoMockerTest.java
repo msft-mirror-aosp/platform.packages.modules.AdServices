@@ -15,105 +15,12 @@
  */
 package com.android.adservices.mockito;
 
-import static org.junit.Assert.assertThrows;
+import com.android.adservices.shared.meta_testing.AndroidMockerTestCase;
 
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.ResolveInfoFlags;
-import android.content.pm.ResolveInfo;
+public final class AndroidMockitoMockerTest extends AndroidMockerTestCase<AndroidMockitoMocker> {
 
-import com.android.adservices.shared.SharedMockitoTestCase;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-
-// ErrorProne complains that mock objects should not be called directly, but in this test
-// they need to, as the test verifies that they would return what is set by the mock
-// expectaction methods.
-@SuppressWarnings("DirectInvocationOnMock")
-public final class AndroidMockitoMockerTest extends SharedMockitoTestCase {
-
-    private static final int FLAG = 42;
-    // Cannot initialize right away is it's only available on T+
-    private ResolveInfoFlags mResolveInfoFlags;
-
-    private final AndroidMockitoMocker mMocker = new AndroidMockitoMocker();
-
-    private final Intent mIntent = new Intent();
-    @Mock private PackageManager mMockPm;
-
-    @Before
-    public void setFixtures() {
-        if (sdkLevel.isAtLeastT()) {
-            mResolveInfoFlags = ResolveInfoFlags.of(FLAG);
-        }
-    }
-
-    @Test
-    public void testQueryIntentService_nullArgs() {
-        assertThrows(NullPointerException.class, () -> mMocker.mockQueryIntentService(null));
-        assertThrows(
-                NullPointerException.class,
-                () -> mMocker.mockQueryIntentService(mMockPm, (ResolveInfo[]) null));
-    }
-
-    @Test
-    public void testQueryIntentService_nullResolveInfo() {
-        // queryIntentServices() Javadoc doesn't mention not returning null ResolveInfo objects in
-        // the returned list, so it's not our business to care about that...
-        mMocker.mockQueryIntentService(mMockPm, new ResolveInfo[] {null});
-
-        var byIntFlag = mMockPm.queryIntentServices(mIntent, FLAG);
-        expect.withMessage("queryIntentServices(intFlags)").that(byIntFlag).isNotNull();
-        expect.withMessage("queryIntentServices(intFlags)")
-                .that(byIntFlag)
-                .containsExactly((ResolveInfo) null);
-        if (sdkLevel.isAtLeastT()) {
-            var byResolveInfoFlags = mMockPm.queryIntentServices(mIntent, mResolveInfoFlags);
-            expect.withMessage("queryIntentServices(ResolveInfoFlags)")
-                    .that(byResolveInfoFlags)
-                    .isNotNull();
-            expect.withMessage("queryIntentServices(ResolveInfoFlags)")
-                    .that(byResolveInfoFlags)
-                    .containsExactly((ResolveInfo) null);
-        }
-    }
-
-    @Test
-    public void testQueryIntentService_noArgs() {
-        mMocker.mockQueryIntentService(mMockPm);
-
-        var byIntFlag = mMockPm.queryIntentServices(mIntent, FLAG);
-        expect.withMessage("queryIntentServices(intFlags)").that(byIntFlag).isEmpty();
-        if (sdkLevel.isAtLeastT()) {
-            var byResolveInfoFlags = mMockPm.queryIntentServices(mIntent, mResolveInfoFlags);
-            expect.withMessage("queryIntentServices(ResolveInfoFlags)")
-                    .that(byResolveInfoFlags)
-                    .isEmpty();
-        }
-    }
-
-    @Test
-    public void testQueryIntentService_multipleArgs() {
-        ResolveInfo info1 = new ResolveInfo();
-        info1.priority = 1;
-        ResolveInfo info2 = new ResolveInfo();
-        info2.priority = 2;
-
-        mMocker.mockQueryIntentService(mMockPm, info1, info2);
-
-        var byIntFlag = mMockPm.queryIntentServices(mIntent, FLAG);
-        expect.withMessage("queryIntentServices(intFlags)")
-                .that(byIntFlag)
-                .containsExactly(info1, info2)
-                .inOrder();
-        if (sdkLevel.isAtLeastT()) {
-            var byResolveInfoFlags = mMockPm.queryIntentServices(mIntent, mResolveInfoFlags);
-            expect.withMessage("queryIntentServices(ResolveInfoFlags)")
-                    .that(byResolveInfoFlags)
-                    .containsExactly(info1, info2)
-                    .inOrder();
-        }
+    @Override
+    protected AndroidMockitoMocker getMocker() {
+        return new AndroidMockitoMocker();
     }
 }
