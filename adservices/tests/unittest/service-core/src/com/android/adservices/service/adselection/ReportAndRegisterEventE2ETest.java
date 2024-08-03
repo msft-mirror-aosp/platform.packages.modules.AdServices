@@ -61,8 +61,8 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;

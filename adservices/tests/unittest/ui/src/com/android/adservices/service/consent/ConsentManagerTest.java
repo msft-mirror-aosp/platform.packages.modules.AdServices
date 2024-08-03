@@ -111,12 +111,11 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.cobalt.CobaltJobService;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.AtomicFileDatastore;
@@ -128,7 +127,6 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.download.MddJob;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
@@ -176,7 +174,6 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
@@ -206,7 +203,6 @@ import java.util.stream.Collectors;
 @SpyStatic(DeleteUninstalledJobService.class)
 @SpyStatic(DeviceRegionProvider.class)
 @SpyStatic(EpochJob.class)
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(EventFallbackReportingJobService.class)
 @SpyStatic(EventReportingJobService.class)
 @SpyStatic(DebugReportingFallbackJobService.class)
@@ -255,10 +251,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private UserProfileIdManager mUserProfileIdManagerMock;
     @Mock private UxStatesDao mUxStatesDaoMock;
     @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() throws IOException {

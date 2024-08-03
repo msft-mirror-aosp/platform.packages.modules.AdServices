@@ -428,7 +428,8 @@ public class AsyncRegistrationQueueJobServiceTest {
                                                     AsyncRegistrationQueueJobService.class))
                                     .addTriggerContentUri(
                                             new JobInfo.TriggerContentUri(
-                                                    AsyncRegistrationContentProvider.TRIGGER_URI,
+                                                    AsyncRegistrationContentProvider
+                                                            .getTriggerUri(),
                                                     JobInfo.TriggerContentUri
                                                             .FLAG_NOTIFY_FOR_DESCENDANTS))
                                     .setTriggerContentUpdateDelay(JOB_TRIGGER_MIN_DELAY_MS)
@@ -470,7 +471,8 @@ public class AsyncRegistrationQueueJobServiceTest {
                                                     AsyncRegistrationQueueJobService.class))
                                     .addTriggerContentUri(
                                             new JobInfo.TriggerContentUri(
-                                                    AsyncRegistrationContentProvider.TRIGGER_URI,
+                                                    AsyncRegistrationContentProvider
+                                                            .getTriggerUri(),
                                                     JobInfo.TriggerContentUri
                                                             .FLAG_NOTIFY_FOR_DESCENDANTS))
                                     // different

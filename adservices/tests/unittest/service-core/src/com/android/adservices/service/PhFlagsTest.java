@@ -522,6 +522,8 @@ import static com.android.adservices.service.Flags.TOPICS_DISABLE_PLAINTEXT_RESP
 import static com.android.adservices.service.Flags.TOPICS_ENCRYPTION_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_ENCRYPTION_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
+import static com.android.adservices.service.Flags.TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_RANDOM_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_TOP_TOPICS;
@@ -1037,6 +1039,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_P
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENCRYPTION_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_NUMBER_OF_TOP_TOPICS;
@@ -1214,6 +1218,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_TOPICS_COBALT_LOGGING_ENABLED,
                 TOPICS_COBALT_LOGGING_ENABLED,
                 Flags::getTopicsCobaltLoggingEnabled);
+    }
+
+    @Test
+    public void testTopicsJobSchedulerRescheduleEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED,
+                TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED,
+                Flags::getTopicsJobSchedulerRescheduleEnabled);
+    }
+
+    @Test
+    public void testTopicsEpochJobBatteryNotLowInsteadOfCharging() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING,
+                TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING,
+                Flags::getTopicsEpochJobBatteryNotLowInsteadOfCharging);
     }
 
     @Test

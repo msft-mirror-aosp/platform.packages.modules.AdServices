@@ -57,14 +57,12 @@ import android.view.MotionEvent.PointerCoords;
 import android.view.MotionEvent.PointerProperties;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -87,7 +85,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -111,7 +108,6 @@ import javax.net.ssl.HttpsURLConnection;
 /** Unit tests for {@link AsyncSourceFetcher} */
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(Enrollment.class)
-@SpyStatic(ErrorLogUtil.class)
 public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String ANDROID_APP_SCHEME = "android-app";
@@ -183,10 +179,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private Flags mFlags;
     @Mock private AdServicesLogger mLogger;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() {
@@ -636,7 +628,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertEquals(
-                AsyncFetchStatus.EntityStatus.PARSING_ERROR, asyncFetchStatus.getEntityStatus());
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -666,7 +658,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertEquals(
-                AsyncFetchStatus.EntityStatus.PARSING_ERROR, asyncFetchStatus.getEntityStatus());
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -925,9 +917,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 .scheduleHeaderErrorReport(
                         any(),
                         any(),
+                        any(),
                         eq(headerName),
                         eq(ENROLLMENT_ID),
-                        eq("Source JSON parsing failed"),
                         eq(headerWithJsonError),
                         any());
     }
@@ -1015,6 +1007,31 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         // Assertion
         assertEquals(
                 AsyncFetchStatus.EntityStatus.PARSING_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mDebugReportApi, never())
+                .scheduleHeaderErrorReport(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    public void testAttributionInfoHeaderOnly_doNotSendHeaderErrorDebugReport() throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        // The header fields have only attribution reporting info header and have no registration
+        // header or redirect header.
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Info", List.of("report-header-errors")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.HEADER_MISSING, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mDebugReportApi, never())
                 .scheduleHeaderErrorReport(any(), any(), any(), any(), any(), any(), any());
@@ -2605,12 +2622,16 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void testFailedParsingButValidRedirect_returnFailureWithRedirect() throws Exception {
+    public void testFailedParsingButValidRedirect_returnFailureWithRedirectAndSendDebugReport()
+            throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
         headersFirstRequest.put("Attribution-Reporting-Register-Source", List.of("{}"));
+        headersFirstRequest.put("Attribution-Reporting-Info", List.of("report-header-errors"));
         headersFirstRequest.put(
                 AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(LIST_TYPE_REDIRECT_URI));
         Map<String, List<String>> headersSecondRequest = new HashMap<>();
@@ -2643,9 +2664,68 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(
                 LIST_TYPE_REDIRECT_URI, asyncRedirects.getRedirects().get(0).getUri().toString());
         assertEquals(
-                AsyncFetchStatus.EntityStatus.PARSING_ERROR, asyncFetchStatus.getEntityStatus());
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mDebugReportApi, times(1))
+                .scheduleHeaderErrorReport(
+                        any(),
+                        any(),
+                        any(),
+                        eq("Attribution-Reporting-Register-Source"),
+                        eq(ENROLLMENT_ID),
+                        eq("{}"),
+                        any());
+    }
+
+    @Test
+    public void testMissingRegistrationHeaderButValidRedirect_noHeaderErrorDebugReport()
+            throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        // Registration header is missing on first request.
+        Map<String, List<String>> headersFirstRequest = new HashMap<>();
+        headersFirstRequest.put("Attribution-Reporting-Info", List.of("report-header-errors"));
+        headersFirstRequest.put(
+                AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(LIST_TYPE_REDIRECT_URI));
+        Map<String, List<String>> headersSecondRequest = new HashMap<>();
+        headersSecondRequest.put(
+                "Attribution-Reporting-Register-Source",
+                List.of(
+                        "{\n"
+                                + "\"destination\": \""
+                                + DEFAULT_DESTINATION
+                                + "\",\n"
+                                + "\"source_event_id\": \""
+                                + ALT_EVENT_ID
+                                + "\",\n"
+                                + "\"expiry\": "
+                                + ALT_EXPIRY
+                                + ""
+                                + "}\n"));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(headersFirstRequest)
+                .thenReturn(headersSecondRequest);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertEquals(1, asyncRedirects.getRedirects().size());
+        assertEquals(
+                LIST_TYPE_REDIRECT_URI, asyncRedirects.getRedirects().get(0).getUri().toString());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.HEADER_MISSING, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mDebugReportApi, never())
+                .scheduleHeaderErrorReport(any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -5229,7 +5309,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         asyncRedirects);
         // Assertion
         assertEquals(
-                AsyncFetchStatus.EntityStatus.PARSING_ERROR, asyncFetchStatus.getEntityStatus());
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
