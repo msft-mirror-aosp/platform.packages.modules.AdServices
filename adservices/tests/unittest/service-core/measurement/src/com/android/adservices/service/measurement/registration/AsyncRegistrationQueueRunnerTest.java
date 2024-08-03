@@ -18,7 +18,6 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.ATTRIBUTION_FAKE_REPORT_ID;
 import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.InsertSourcePermission;
 import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.isTriggerAllowedToInsert;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -57,7 +56,6 @@ import android.util.Pair;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
@@ -3631,7 +3629,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
-    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID)
     public void testRegisterWebSource_failsWebAndOsDestinationVerification()
             throws DatastoreException, IOException {
         // Setup
@@ -3649,6 +3646,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         WEB_TOP_ORIGIN.toString(),
                         DEFAULT_OS_DESTINATION,
                         DEFAULT_WEB_DESTINATION);
+        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())

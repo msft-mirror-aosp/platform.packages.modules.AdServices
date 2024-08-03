@@ -16,9 +16,9 @@
 
 package com.android.adservices.data.shared;
 
-import static com.android.adservices.data.measurement.migration.MigrationTestHelper.populateDb;
-import static com.android.adservices.data.measurement.migration.MigrationTestHelper.verifyDataInDb;
 import static com.android.adservices.data.shared.migration.MigrationTestHelper.createReferenceDbAtVersion;
+import static com.android.adservices.data.shared.migration.MigrationTestHelper.populateDb;
+import static com.android.adservices.data.shared.migration.MigrationTestHelper.verifyDataInDb;
 
 import static com.google.common.truth.Truth.assertThat;
 
