@@ -28,7 +28,7 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
-import com.android.adservices.data.measurement.DbHelperV1;
+import com.android.adservices.data.DbHelperV1;
 
 import org.junit.Before;
 import org.junit.Test;
