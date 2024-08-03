@@ -19,6 +19,11 @@ import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mo
 
 import android.content.Context;
 
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AdServicesStaticMockitoMocker;
@@ -35,6 +40,7 @@ import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -50,8 +56,14 @@ import org.mockito.quality.Strictness;
  * com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic} and/or {@link
  * com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic} to set which static classes are
  * mocked ad/or spied.
+ *
+ * <p>TODO(b/355699778) - Add linter to ensure ErrorLogUtil invocation is not mocked in subclasses.
+ * {@link ErrorLogUtil} is automatically spied for all subclasses to ensure {@link
+ * AdServicesLoggingUsageRule} is enforced for logging verification. Subclasses should not mock
+ * {@link ErrorLogUtil} to avoid interference with mocking behavior needed for the rule.
  */
 @ClearInlineMocksMode(CLEAR_AFTER_TEST_CLASS)
+@SpyStatic(ErrorLogUtil.class)
 public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTestCase {
 
     @Mock protected Context mMockContext;
@@ -70,6 +82,18 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
 
     @Rule(order = 10)
     public final AdServicesExtendedMockitoRule extendedMockito = getAdServicesExtendedMockitoRule();
+
+    /**
+     * Scans for usage of {@code ErrorLogUtil.e(int, int)} and {@code ErrorLogUtil.e(Throwable, int
+     * int)} invocations. Fails the test if calls haven't been verified using {@link
+     * ExpectErrorLogUtilCall} and/or {@link ExpectErrorLogUtilWithExceptionCall}.
+     *
+     * <p>Also see {@link SetErrorLogUtilDefaultParams} to set common default logging params.
+     */
+    // TODO(b/342639109): Fix the order of the rules.
+    @Rule(order = 11)
+    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
+            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     /** Provides common expectations. */
     public final Mocker mocker = new Mocker(extendedMockito);

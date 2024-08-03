@@ -133,6 +133,11 @@ public final class EpochJobService extends JobService {
                 },
                 directExecutor());
 
+        if (FlagsFactory.getFlags().getTopicsJobSchedulerRescheduleEnabled()) {
+            // Reschedule Topics Epoch job if the charging setting of previous epoch job is changed.
+            rescheduleEpochJob(params);
+        }
+
         // Reschedule jobs with SPE if it's enabled. Note scheduled jobs by this EpochJobService
         // will be cancelled for the same job ID.
         //
@@ -166,15 +171,30 @@ public final class EpochJobService extends JobService {
             Context context,
             @NonNull JobScheduler jobScheduler,
             long epochJobPeriodMs,
-            long epochJobFlexMs) {
-        final JobInfo job =
+            long epochJobFlexMs,
+            boolean topicsEpochJobBatteryNotLowInsteadOfCharging) {
+        final JobInfo.Builder jobBuilder =
                 new JobInfo.Builder(
-                                TOPICS_EPOCH_JOB_ID,
-                                new ComponentName(context, EpochJobService.class))
-                        .setRequiresCharging(true)
-                        .setPersisted(true)
-                        .setPeriodic(epochJobPeriodMs, epochJobFlexMs)
-                        .build();
+                        TOPICS_EPOCH_JOB_ID,
+                        new ComponentName(context, EpochJobService.class))
+                            .setPersisted(true)
+                            .setPeriodic(epochJobPeriodMs, epochJobFlexMs);
+
+        if (topicsEpochJobBatteryNotLowInsteadOfCharging) {
+            jobBuilder
+                    .setRequiresCharging(false)
+                    .setRequiresBatteryNotLow(true);
+        } else {
+            jobBuilder
+                    .setRequiresCharging(true)
+                    .setRequiresBatteryNotLow(false);
+        }
+
+        final JobInfo job = jobBuilder.build();
+        LoggerFactory.getTopicsLogger().d(
+                "EpochJobService requires charging: " + job.isRequireCharging());
+        LoggerFactory.getTopicsLogger().d(
+                "EpochJobService requires battery not low: " + job.isRequireBatteryNotLow());
 
         jobScheduler.schedule(job);
         LoggerFactory.getTopicsLogger().d("Scheduling Epoch job ...");
@@ -210,15 +230,20 @@ public final class EpochJobService extends JobService {
 
         long flagsEpochJobPeriodMs = FlagsFactory.getFlags().getTopicsEpochJobPeriodMs();
         long flagsEpochJobFlexMs = FlagsFactory.getFlags().getTopicsEpochJobFlexMs();
+        boolean flagsTopicsEpochJobBatteryNotLowInsteadOfCharging =
+                FlagsFactory.getFlags().getTopicsEpochJobBatteryNotLowInsteadOfCharging();
 
         JobInfo job = jobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
         // Skip to reschedule the job if there is same scheduled job with same parameters.
         if (job != null && !forceSchedule) {
             long epochJobPeriodMs = job.getIntervalMillis();
             long epochJobFlexMs = job.getFlexMillis();
+            boolean topicsEpochJobRequiresBatteryNotLow = job.isRequireBatteryNotLow();
 
             if (flagsEpochJobPeriodMs == epochJobPeriodMs
-                    && flagsEpochJobFlexMs == epochJobFlexMs) {
+                    && flagsEpochJobFlexMs == epochJobFlexMs
+                    && flagsTopicsEpochJobBatteryNotLowInsteadOfCharging
+                        == topicsEpochJobRequiresBatteryNotLow) {
                 LoggerFactory.getTopicsLogger()
                         .i(
                                 "Epoch Job Service has been scheduled with same parameters, skip"
@@ -227,7 +252,12 @@ public final class EpochJobService extends JobService {
             }
         }
 
-        schedule(context, jobScheduler, flagsEpochJobPeriodMs, flagsEpochJobFlexMs);
+        schedule(
+                context,
+                jobScheduler,
+                flagsEpochJobPeriodMs,
+                flagsEpochJobFlexMs,
+                flagsTopicsEpochJobBatteryNotLowInsteadOfCharging);
         return SCHEDULING_RESULT_CODE_SUCCESSFUL;
     }
 
@@ -249,5 +279,40 @@ public final class EpochJobService extends JobService {
 
         // Returning false means that this job has completed its work.
         return false;
+    }
+
+    private void rescheduleEpochJob(final JobParameters params) {
+        JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
+        JobInfo previousEpochJobInfo = null;
+        // The default EpochJob doesn't require battery not low, but requires charging.
+        boolean isScheduledEpochJobRequireBatteryNotLow = false;
+
+        if (jobScheduler != null) {
+            previousEpochJobInfo = jobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
+        } else {
+            LoggerFactory.getTopicsLogger().d(
+                    "There is no existing JobScheduler, skip rescheduleEpochJob.");
+            return;
+        }
+
+        boolean flagTopicsEpochJobBatteryNotLowInsteadOfCharging =
+                FlagsFactory.getFlags().getTopicsEpochJobBatteryNotLowInsteadOfCharging();
+        if (previousEpochJobInfo != null) {
+            isScheduledEpochJobRequireBatteryNotLow = previousEpochJobInfo.isRequireBatteryNotLow();
+            // If the battery not low setting of an EpochJob is changed,
+            // the EpochJob should be rescheduled.
+            if (isScheduledEpochJobRequireBatteryNotLow
+                    != flagTopicsEpochJobBatteryNotLowInsteadOfCharging) {
+                scheduleIfNeeded(true);
+                LoggerFactory.getTopicsLogger().d(
+                        "Rescheduled EpochJobService because requires "
+                                + "battery not low is changed to: "
+                                + flagTopicsEpochJobBatteryNotLowInsteadOfCharging);
+            }
+        } else {
+            LoggerFactory.getTopicsLogger().d(
+                    "There is no existing pending epoch job, skip rescheduleEpochJob.");
+            return;
+        }
     }
 }

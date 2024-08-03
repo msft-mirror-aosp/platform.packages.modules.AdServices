@@ -27,32 +27,22 @@ import static java.util.Map.entry;
 import android.net.Uri;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
 import java.util.Optional;
 
 /** Tests for {@link EncryptionKeyConverterUtil}. */
-@SpyStatic(ErrorLogUtil.class)
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
 public final class EncryptionKeyConverterUtilTest extends AdServicesExtendedMockitoTestCase {
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
-
     private static final Map SIGNING_V3_DEFAULT_VALUES =
             Map.ofEntries(
                     entry("keyType", "Signing"),

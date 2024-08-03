@@ -19,6 +19,8 @@ package com.android.adservices.service.topics;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
+import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_NOT_LOW;
+import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_UNKNOWN;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.framework.ExecutionResult.SUCCESS;
@@ -88,10 +90,16 @@ public final class EpochJob implements JobWorker {
 
     @VisibleForTesting
     static JobSpec createDefaultJobSpec() {
+        JobPolicy.BatteryType batteryType = BATTERY_TYPE_UNKNOWN;
+        if (FlagsFactory.getFlags().getTopicsEpochJobBatteryNotLowInsteadOfCharging()) {
+            batteryType = BATTERY_TYPE_REQUIRE_NOT_LOW;
+        } else {
+            batteryType = BATTERY_TYPE_REQUIRE_CHARGING;
+        }
         JobPolicy jobPolicy =
                 JobPolicy.newBuilder()
                         .setJobId(TOPICS_EPOCH_JOB.getJobId())
-                        .setBatteryType(BATTERY_TYPE_REQUIRE_CHARGING)
+                        .setBatteryType(batteryType)
                         .setIsPersisted(true)
                         .setPeriodicJobParams(
                                 JobPolicy.PeriodicJobParams.newBuilder()
@@ -99,6 +107,8 @@ public final class EpochJob implements JobWorker {
                                         .setFlexInternalMs(TOPICS_EPOCH_JOB_FLEX_MS)
                                         .build())
                         .build();
+        LoggerFactory.getTopicsLogger().d(
+                "SPE is enabled. Battery type of EpochJob: " + jobPolicy.getBatteryType());
 
         return new JobSpec.Builder(jobPolicy).build();
     }

@@ -40,22 +40,17 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-@SpyStatic(ErrorLogUtil.class)
 public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMockitoTestCase {
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";
     private static final String EXTSERVICES_PACKAGE_NAME = "com.android.ext.services";
@@ -63,10 +58,6 @@ public final class PackageManagerCompatUtilsTest extends AdServicesExtendedMocki
     @Mock private PackageManager mPackageManagerMock;
     @Mock private PackageInfo mPackageInfo;
     @Mock private ApplicationInfo mApplicationInfo;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Test
     public void testPackageManagerCompatUtilsValidatesArguments() {

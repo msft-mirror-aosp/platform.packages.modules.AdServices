@@ -66,9 +66,7 @@ import android.telephony.TelephonyManager;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
@@ -89,7 +87,6 @@ import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -104,7 +101,6 @@ import org.mockito.Mockito;
 @SpyStatic(PermissionHelper.class)
 @SpyStatic(UxStatesManager.class)
 @SpyStatic(PackageManagerCompatUtils.class)
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(SdkLevel.class)
 public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTestCase {
     private static final String UNUSED_AD_ID = "unused_ad_id";
@@ -123,10 +119,6 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     @Mock private Clock mClock;
     @Captor ArgumentCaptor<String> mStringArgumentCaptor;
     @Captor ArgumentCaptor<Integer> mIntegerArgumentCaptor;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";

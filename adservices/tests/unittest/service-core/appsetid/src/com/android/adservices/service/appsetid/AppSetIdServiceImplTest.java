@@ -57,10 +57,8 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.NoOpServiceBinder;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -75,7 +73,6 @@ import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -86,7 +83,6 @@ import java.util.concurrent.CountDownLatch;
 /** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdServiceImpl}. */
 @MockStatic(Binder.class)
 @SpyStatic(FlagsFactory.class)
-@SpyStatic(ErrorLogUtil.class)
 @SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__APP_SET_ID)
 public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
@@ -112,10 +108,6 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
     @Mock private Throttler mMockThrottler;
     @Mock private AppSetIdServiceImpl mAppSetIdServiceImpl;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() throws Exception {

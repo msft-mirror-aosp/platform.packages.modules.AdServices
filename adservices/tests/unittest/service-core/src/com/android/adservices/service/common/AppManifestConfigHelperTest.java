@@ -51,10 +51,8 @@ import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
@@ -63,7 +61,6 @@ import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.verification.VerificationMode;
@@ -73,7 +70,6 @@ import org.mockito.verification.VerificationMode;
 @SpyStatic(AndroidManifestConfigParser.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(SdkLevel.class)
-@SpyStatic(ErrorLogUtil.class)
 @SetErrorLogUtilDefaultParams(
         throwable = XmlParseException.class,
         errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
@@ -110,10 +106,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     @Mock private Resources mMockResources;
     @Mock private XmlResourceParser mMockParser;
     @Mock private Flags mMockFlags;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setCommonExpectations() {

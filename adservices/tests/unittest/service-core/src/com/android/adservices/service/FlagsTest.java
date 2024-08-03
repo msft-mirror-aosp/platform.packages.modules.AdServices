@@ -594,6 +594,21 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getRNotificationDefaultConsentFixEnabled);
     }
 
+    @Test
+    public void testTopicsJobSchedulerRescheduleEnabled() {
+        testFeatureFlag(
+                "TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED",
+                Flags::getTopicsJobSchedulerRescheduleEnabled);
+    }
+
+    @Test
+    public void testTopicsEpochJobBatteryNotLowInsteadOfCharging() {
+        testFlag(
+                "TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING",
+                /* defaultValue */ false,
+                Flags::getTopicsEpochJobBatteryNotLowInsteadOfCharging);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //

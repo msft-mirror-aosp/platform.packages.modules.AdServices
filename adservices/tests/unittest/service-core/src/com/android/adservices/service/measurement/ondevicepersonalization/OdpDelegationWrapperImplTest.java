@@ -39,21 +39,17 @@ import android.adservices.ondevicepersonalization.OnDevicePersonalizationSystemE
 import android.net.Uri;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementOdpRegistrationStats;
 import com.android.modules.utils.build.SdkLevel;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -64,7 +60,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@SpyStatic(ErrorLogUtil.class)
 @SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
 public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestCase {
     private static final String ODP_PACKAGE_NAME = "com.adtech1";
@@ -79,10 +74,6 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
     @Mock private AdServicesLogger mLogger;
     @Mock private OnDevicePersonalizationSystemEventManager mOdpSystemEventManager;
     @Mock private Flags mFlags;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() {
