@@ -28,8 +28,9 @@ import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.DbHelper;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.DbHelperV1;
 import com.android.adservices.data.measurement.migration.ContentValueFixtures;
 
 import org.junit.Before;

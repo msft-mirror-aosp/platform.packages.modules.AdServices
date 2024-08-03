@@ -196,7 +196,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     }
 
     @Test
-    public void testPutGetUpdateRemove() throws IOException {
+    public void testPutGetUpdateRemoveBoolean() throws IOException {
         // Should not exist yet
         assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.getBoolean(TEST_KEY)).isNull();
 
@@ -209,7 +209,13 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
 
-        // Update
+        // Update incorrect type
+        mDatastore.putInt(TEST_KEY, 7);
+        assertThrows(IllegalStateException.class, () -> mDatastore.getBoolean(TEST_KEY));
+        mDatastore.putString(TEST_KEY, "testVal");
+        assertThrows(IllegalStateException.class, () -> mDatastore.getBoolean(TEST_KEY));
+
+        // Update correct type
         insertedValue = true;
         mDatastore.putBoolean(TEST_KEY, insertedValue);
         readValue = mDatastore.getBoolean(TEST_KEY);
@@ -228,7 +234,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     }
 
     @Test
-    public void testPutIfNew() throws IOException {
+    public void testPutBooleanIfNew() throws IOException {
         // Should not exist yet
         assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.getBoolean(TEST_KEY)).isNull();
 
@@ -247,12 +253,17 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isTrue();
 
         // Put should read the existing value
-        assertWithMessage("putIfNew(%s, false)", TEST_KEY)
+        assertWithMessage("putBooleanIfNew(%s, false)", TEST_KEY)
                 .that(mDatastore.putBooleanIfNew(TEST_KEY, false))
                 .isTrue();
         readValue = mDatastore.getBoolean(TEST_KEY);
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
         assertWithMessage("get(%s)", TEST_KEY).that(readValue).isTrue();
+
+        // Overwrite with incorrect data type
+        mDatastore.putInt(TEST_KEY, 4);
+        assertThrows(
+                IllegalStateException.class, () -> mDatastore.putBooleanIfNew(TEST_KEY, false));
     }
 
     @Test

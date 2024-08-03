@@ -357,6 +357,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsJobSchedulerRescheduleEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED,
+                TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED);
+    }
+
+    @Override
+    public boolean getTopicsEpochJobBatteryNotLowInsteadOfCharging() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING,
+                TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING);
+    }
+
+    @Override
     public boolean getMsmtRegistrationCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled()
                 && getDeviceConfigFlag(

@@ -52,24 +52,20 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.proto.PrivacySandboxApi;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -78,7 +74,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-@SpyStatic(ErrorLogUtil.class)
 public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -89,10 +84,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     @Mock private AdServicesLogger mLogger;
     @Mock private EnrollmentUtil mEnrollmentUtil;
     @Mock private SharedDbHelper mMockDbHelper;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     public static final EnrollmentData ENROLLMENT_DATA1 =
             new EnrollmentData.Builder()
