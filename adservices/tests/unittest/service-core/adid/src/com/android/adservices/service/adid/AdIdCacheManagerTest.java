@@ -44,17 +44,14 @@ import android.adservices.common.UpdateAdIdRequest;
 import android.os.RemoteException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -62,7 +59,6 @@ import java.util.concurrent.CompletableFuture;
 
 /** Unit test for {@link AdIdCacheManager}. */
 @SpyStatic(FlagsFactory.class)
-@SpyStatic(ErrorLogUtil.class)
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID)
@@ -81,10 +77,6 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
     private AdIdCacheManager mAdIdCacheManager;
 
     @Mock private Flags mMockFlags;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() {
