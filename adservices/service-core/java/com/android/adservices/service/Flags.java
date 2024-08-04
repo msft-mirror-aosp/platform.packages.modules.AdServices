@@ -166,6 +166,32 @@ public interface Flags extends ModuleSharedFlags {
         return TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
     }
 
+    /**
+     * Flag to enable rescheduling of Topics job scheduler tasks when modifications are made
+     * to the configuration of the background job.
+     */
+    @FeatureFlag boolean TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED = false;
+
+    /** Returns the feature flag to enable rescheduling of Topics job scheduler. */
+    default boolean getTopicsJobSchedulerRescheduleEnabled() {
+        return TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED;
+    }
+
+    /**
+     * This flag allows you to execute the job regardless of the device's charging status.
+     * By default, the Topics API background job scheduler requires the device to be in charging
+     * mode for job execution. The default value for this flag is false, indicating that the job
+     * should only be executed when the device is charging. By enabling this flag, the job can be
+     * executed when the battery level is not low.
+     */
+    @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING = false;
+
+    /** Returns the feature flag to enable the device to be in batter not low mode for
+     * Topics API job execution.  */
+    default boolean getTopicsEpochJobBatteryNotLowInsteadOfCharging() {
+        return TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
+    }
+
     /** Available types of classifier behaviours for the Topics API. */
     @IntDef(
             flag = true,
@@ -5719,7 +5745,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /** Enrollment Manifest File URL, used to provide proto file for MDD download. */
-    String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
+    @ConfigFlag String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
 
     /**
      * @return default Enrollment Manifest File URL
@@ -5738,6 +5764,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
     /** Dump some debug info for the flags */
     default void dump(PrintWriter writer, @Nullable String[] args) {}
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: do NOT add new getters down here                                                     //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 }

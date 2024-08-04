@@ -16,9 +16,9 @@
 
 package com.android.adservices.data.shared;
 
-import static com.android.adservices.data.measurement.migration.MigrationTestHelper.populateDb;
-import static com.android.adservices.data.measurement.migration.MigrationTestHelper.verifyDataInDb;
 import static com.android.adservices.data.shared.migration.MigrationTestHelper.createReferenceDbAtVersion;
+import static com.android.adservices.data.shared.migration.MigrationTestHelper.populateDb;
+import static com.android.adservices.data.shared.migration.MigrationTestHelper.verifyDataInDb;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -33,11 +33,11 @@ import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbHelperTest;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.DbHelperV1;
 import com.android.adservices.data.enrollment.EnrollmentTables;
-import com.android.adservices.data.measurement.DbHelperV1;
 import com.android.adservices.data.shared.migration.ContentValueFixtures;
 import com.android.adservices.data.shared.migration.SharedDbMigratorV2;
 import com.android.adservices.data.shared.migration.SharedDbMigratorV3;
