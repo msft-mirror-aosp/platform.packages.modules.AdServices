@@ -19,14 +19,45 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.util.Preconditions;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 import java.util.Objects;
 
+/** Helper class for concurrency-related needs. */
 public final class DeviceSideConcurrencyHelper {
 
     private static final ConcurrencyHelper sConcurrencyHelper =
             new ConcurrencyHelper(AndroidLogger.getInstance());
+
+    /**
+     * Starts a new thread and runs {@code r} on it after {@code timeoutMs} ms.
+     *
+     * @return the new thread.
+     */
+    public static Thread startNewThread(Runnable r) {
+        return getConcurrencyHelper().startNewThread(r);
+    }
+
+    /**
+     * Starts a new thread and runs {@code r} on it after {@code timeoutMs} ms.
+     *
+     * @return the new thread.
+     */
+    public static Thread runAsync(long timeoutMs, Runnable r) {
+        return getConcurrencyHelper().runAsync(timeoutMs, r);
+    }
+
+    /** Sleeps for the given amount of time, logging the reason. */
+    @FormatMethod
+    public static void sleep(
+            long timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs) {
+        getConcurrencyHelper().sleep(timeMs, reasonFmt, reasonArgs);
+    }
 
     /** Runs the given runnable in the main thread. */
     public static void runOnMainThread(Runnable r) {
@@ -36,8 +67,8 @@ public final class DeviceSideConcurrencyHelper {
         new Handler(looper).post(r);
     }
 
-    /** Gets the device-side {@link ConcurrencyHelper}. */
-    public static ConcurrencyHelper getConcurrencyHelper() {
+    @VisibleForTesting
+    static ConcurrencyHelper getConcurrencyHelper() {
         return sConcurrencyHelper;
     }
 

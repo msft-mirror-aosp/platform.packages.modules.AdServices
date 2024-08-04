@@ -38,7 +38,7 @@ import android.os.LimitExceededException;
 import android.os.Process;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;

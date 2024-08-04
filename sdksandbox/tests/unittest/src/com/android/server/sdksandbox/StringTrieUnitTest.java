@@ -18,6 +18,7 @@ package com.android.server.sdksandbox.verifier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
@@ -44,6 +45,13 @@ public class StringTrieUnitTest extends DeviceSupportedBaseTest {
         mTrie.put(STORED_VAL_A, "Landroid", "app", "sdksandbox");
 
         assertEquals(STORED_VAL_A, mTrie.retrieve("Landroid", "app", "sdksandbox"));
+    }
+
+    @Test
+    public void testEmptyString_null() {
+        mTrie.put(STORED_VAL_A, "Landroid", "app", "sdksandbox");
+
+        assertThrows(IllegalArgumentException.class, () -> mTrie.retrieve(new String[0]));
     }
 
     @Test
