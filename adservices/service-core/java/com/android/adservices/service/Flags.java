@@ -5745,7 +5745,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /** Enrollment Manifest File URL, used to provide proto file for MDD download. */
-    String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
+    @ConfigFlag String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
 
     /**
      * @return default Enrollment Manifest File URL
@@ -5764,6 +5764,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
     /** Dump some debug info for the flags */
     default void dump(PrintWriter writer, @Nullable String[] args) {}
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: do NOT add new getters down here                                                     //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 }
