@@ -1475,5 +1475,26 @@
         }
       ]
     }
+  ],
+
+  // Test group for flag ramp testing. Currently, under development. Do not alter this list.
+  // TODO (b/356893907): Add remaining tests
+  "adservices-flag-ramp-testing": [
+    {
+      "name": "CtsAdIdEndToEndTest",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAppSetIdEndToEndTest",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    }
   ]
 }
