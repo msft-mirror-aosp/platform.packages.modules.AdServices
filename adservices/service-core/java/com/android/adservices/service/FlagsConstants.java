@@ -1614,4 +1614,7 @@ public final class FlagsConstants {
     /** Key for the PAS encoding job performance improvements. */
     public static final String KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED =
             "pas_encoding_job_improvements_enabled";
+
+    /** Key for ad id cache ttl. */
+    public static final String KEY_AD_ID_CACHE_TTL_MS = "ad_id_cache_ttl_ms";
 }

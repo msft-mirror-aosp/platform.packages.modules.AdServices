@@ -5732,6 +5732,28 @@ public interface Flags extends ModuleSharedFlags {
         return PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
     }
 
+    /**
+     * Default value to determine whether {@link
+     * com.android.adservices.service.adid.AdIdCacheManager} cache is timeout.
+     */
+    @ConfigFlag long DEFAULT_ADID_CACHE_TTL_MS = 0;
+
+    /**
+     * Returns {@link com.android.adservices.service.adid.AdIdCacheManager} ttl(time to live) time.
+     * It will be used to expire the cached adid.
+     *
+     * <ul>
+     *   <li>if value is 0, the cache has no ttl.
+     *   <li>otherwise, check the stored time and current time inverval, if larger than the ttl,
+     *       refetch the adid.
+     * </ul>
+     *
+     * Returns ttl of {@link com.android.adservices.service.adid.AdIdCacheManager}.
+     */
+    default long getAdIdCacheTtlMs() {
+        return DEFAULT_ADID_CACHE_TTL_MS;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////
