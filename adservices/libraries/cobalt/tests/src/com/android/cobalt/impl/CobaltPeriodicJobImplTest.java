@@ -38,9 +38,11 @@ import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.SystemData;
 import com.android.cobalt.testing.crypto.NoOpEncrypter;
+import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
 import com.android.cobalt.testing.observations.ConstantFakeSecureRandom;
 import com.android.cobalt.testing.observations.ObservationFactory;
 import com.android.cobalt.testing.system.FakeSystemClock;
@@ -246,6 +248,7 @@ public class CobaltPeriodicJobImplTest {
     private NoOpUploader mUploader;
     private Encrypter mEncrypter;
     private CobaltPeriodicJob mPeriodicJob;
+    private CobaltOperationLogger mOperationLogger;
     private boolean mEnabled = true;
 
     private static ImmutableList<String> apiKeysOf(ImmutableList<Envelope> envelopes) {
@@ -305,6 +308,7 @@ public class CobaltPeriodicJobImplTest {
                         ByteString.copyFrom(API_KEY.getBytes(UTF_8)),
                         UPLOAD_DONE_DELAY,
                         mEnabled);
+        mOperationLogger = new FakeCobaltOperationLogger();
 
         mClock.set(LOG_TIME);
         mDataService.loggerEnabled(ENABLED_TIME).get();
@@ -1035,7 +1039,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A")
+                            "STRING_A",
+                            mOperationLogger)
                     .get();
             mDataService
                     .aggregateString(
@@ -1045,7 +1050,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A")
+                            "STRING_A",
+                            mOperationLogger)
                     .get();
         }
 
@@ -1059,7 +1065,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_2,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A")
+                            "STRING_A",
+                            mOperationLogger)
                     .get();
             mDataService
                     .aggregateString(
@@ -1069,7 +1076,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_2,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A")
+                            "STRING_A",
+                            mOperationLogger)
                     .get();
         }
 
@@ -1083,7 +1091,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B")
+                            "STRING_B",
+                            mOperationLogger)
                     .get();
             mDataService
                     .aggregateString(
@@ -1093,7 +1102,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B")
+                            "STRING_B",
+                            mOperationLogger)
                     .get();
 
             mDataService
@@ -1104,7 +1114,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B")
+                            "STRING_B",
+                            mOperationLogger)
                     .get();
             mDataService
                     .aggregateString(
@@ -1114,7 +1125,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B")
+                            "STRING_B",
+                            mOperationLogger)
                     .get();
         }
 
@@ -1294,7 +1306,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_2,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A")
+                            "STRING_A",
+                            mOperationLogger)
                     .get();
         }
 

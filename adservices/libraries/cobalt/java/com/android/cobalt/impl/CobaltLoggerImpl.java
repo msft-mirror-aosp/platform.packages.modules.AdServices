@@ -256,7 +256,8 @@ public final class CobaltLoggerImpl implements CobaltLogger {
                                 eventVector,
                                 report.getEventVectorBufferMax(),
                                 report.getStringBufferMax(),
-                                stringValue));
+                                stringValue,
+                                mOperationLogger));
             }
         }
 
