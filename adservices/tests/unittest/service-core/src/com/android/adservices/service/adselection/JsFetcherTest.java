@@ -107,10 +107,7 @@ public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
                     .setTrustedBiddingData(TRUSTED_BIDDING_OVERRIDE_DATA)
                     .build();
     private DevContext mDevContext =
-            DevContext.builder()
-                    .setDevOptionsEnabled(false)
-                    .setCallingAppPackageName(APP_PACKAGE_NAME)
-                    .build();
+            DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(false).build();
 
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -187,11 +184,7 @@ public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testSuccessfulGetBuyerLogicWithOverride() throws Exception {
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(APP_PACKAGE_NAME)
-                        .build();
+        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
@@ -207,11 +200,7 @@ public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testSuccessfulGetBuyerLogicWithOverrideWithLogger() throws Exception {
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(APP_PACKAGE_NAME)
-                        .build();
+        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);

@@ -71,7 +71,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
 import java.util.concurrent.ExecutorService;
 
@@ -85,7 +84,6 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     private static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
     private static final String EXCEPTION_MESSAGE = "message";
 
-    private MockitoSession mStaticMockSession = null;
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
     @Mock private UpdateSignalsOrchestrator mUpdateSignalsOrchestratorMock;
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
@@ -125,11 +123,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock);
 
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(false)
-                        .setCallingAppPackageName(PACKAGE)
-                        .build();
+        mDevContext = DevContext.builder(PACKAGE).setDevOptionsEnabled(false).build();
         mInput = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
 
         // Set up the mocks for a success flow -- indivual tests that want a failure can overwrite

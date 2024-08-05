@@ -110,7 +110,6 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
     private ProtectedServersEncryptionConfigManager mKeyManager;
     private DevContext mDevContext;
 
-
     @Before
     public void setUp() {
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();
@@ -128,11 +127,7 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
                         mMockHttpClient,
                         mLightweightExecutor,
                         mAdServicesLoggerSpy);
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(mPackageName)
-                        .build();
+        mDevContext = DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
     }
 
     @Test

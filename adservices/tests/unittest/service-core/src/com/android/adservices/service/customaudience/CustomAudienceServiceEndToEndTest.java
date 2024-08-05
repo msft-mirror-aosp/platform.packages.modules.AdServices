@@ -2751,10 +2751,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     public void testOverrideCustomAudienceRemoteInfoSuccess() throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
-                                .build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         CustomAudienceOverrideTestCallback callback =
@@ -2778,10 +2775,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
-                                .build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
         doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         CustomAudienceOverrideTestCallback callback =
@@ -2805,10 +2799,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
-                                .build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
@@ -2870,10 +2861,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     public void testRemoveCustomAudienceRemoteInfoOverrideSuccess() throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
-                                .build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride =
@@ -2905,10 +2893,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
-                                .build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
         doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride =
@@ -2942,9 +2927,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(incorrectPackageName)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(incorrectPackageName)
                                 .build());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         // Bypass the permission check since it's enforced before the package name check
@@ -3020,10 +3004,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     public void testResetAllCustomAudienceRemoteOverridesSuccess() throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
-                                .build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
@@ -3072,10 +3053,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
-                                .build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
         doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
@@ -3126,9 +3104,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(incorrectPackageName)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(incorrectPackageName)
                                 .build());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         // Bypass the permission check since it's enforced before the package name check

@@ -126,7 +126,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
     private static final long MAX_ENTRIES = 20;
     private static final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
     private static final DevContext DEV_CONTEXT_ENABLED =
-            DevContext.builder().setDevOptionsEnabled(true).build();
+            DevContext.builder(sPackageName).setDevOptionsEnabled(true).build();
 
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
     private final String mJsScript = "function test() { return \"hello world\"; }";

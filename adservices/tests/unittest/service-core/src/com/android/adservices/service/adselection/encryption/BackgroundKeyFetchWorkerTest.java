@@ -133,11 +133,7 @@ public final class BackgroundKeyFetchWorkerTest extends AdServicesMockitoTestCas
                                 mExecutorService,
                                 mAdServicesLoggerMock));
 
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(mPackageName)
-                        .build();
+        mDevContext = DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
 
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(

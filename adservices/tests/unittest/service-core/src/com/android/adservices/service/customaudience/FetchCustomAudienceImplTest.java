@@ -235,7 +235,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
-                        DevContext.builder().setDevOptionsEnabled(true).build());
+                        DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
         doReturn(
                         CustomAudienceStats.builder()
                                 .setTotalCustomAudienceCount(1)
@@ -1059,7 +1059,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
         mFetchCustomAudienceImpl.doFetchCustomAudience(
                 mInputBuilder.build(),
                 callback,
-                DevContext.builder().setDevOptionsEnabled(true).build());
+                DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
         resultLatch.await();
 
         assertEquals(1, mockWebServer.getRequestCount());
