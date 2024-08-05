@@ -16,7 +16,12 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.DebugFlags.CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlags.DEFAULT_AD_SELECTION_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlags.DEFAULT_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_FLEDGE_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_FLEDGE_CUSTOM_AUDIENCE_CLI_ENABLED;
@@ -35,11 +40,6 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_C
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
-import static com.android.adservices.service.Flags.CONSENT_MANAGER_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
-import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
 
 import static com.google.common.truth.Truth.assertThat;
 

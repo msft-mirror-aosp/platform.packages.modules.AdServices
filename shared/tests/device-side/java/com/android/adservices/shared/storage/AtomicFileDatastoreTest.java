@@ -48,6 +48,8 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     private static final String FILENAME = "AtomicFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
     private static final String TEST_KEY = "key";
+    private static final String TEST_KEY_1 = "key1";
+    private static final String TEST_KEY_2 = "key2";
     private static final String TEST_VERSION_KEY = "version_key";
 
     private final AtomicFileDatastore mDatastore =
@@ -146,25 +148,49 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
 
     @Test
     public void testNullOrEmptyKeyFails() {
-        assertThrows(NullPointerException.class, () -> mDatastore.putBoolean(null, true));
+        testKeyFails(NullPointerException.class, null);
+        testKeyFails(IllegalArgumentException.class, "");
+    }
 
-        assertThrows(IllegalArgumentException.class, () -> mDatastore.putBoolean("", true));
+    private void testKeyFails(Class<? extends Exception> exceptionClass, String key) {
+        assertThrows(exceptionClass, () -> mDatastore.putBoolean(key, true));
+        assertThrows(exceptionClass, () -> mDatastore.putInt(key, 7));
+        assertThrows(exceptionClass, () -> mDatastore.putString(key, "foo"));
 
-        assertThrows(NullPointerException.class, () -> mDatastore.putBooleanIfNew(null, true));
+        assertThrows(exceptionClass, () -> mDatastore.putBooleanIfNew(key, true));
+        assertThrows(exceptionClass, () -> mDatastore.putIntIfNew(key, 7));
+        assertThrows(exceptionClass, () -> mDatastore.putStringIfNew(key, "foo"));
 
-        assertThrows(IllegalArgumentException.class, () -> mDatastore.putBooleanIfNew("", true));
+        assertThrows(exceptionClass, () -> mDatastore.getBoolean(key));
+        assertThrows(exceptionClass, () -> mDatastore.getInt(key));
+        assertThrows(exceptionClass, () -> mDatastore.getString(key));
 
-        assertThrows(NullPointerException.class, () -> mDatastore.getBoolean(null));
+        assertThrows(exceptionClass, () -> mDatastore.remove(key));
 
-        assertThrows(IllegalArgumentException.class, () -> mDatastore.getBoolean(""));
+        assertThrows(exceptionClass, () -> mDatastore.removeByPrefix(key));
+    }
 
-        assertThrows(NullPointerException.class, () -> mDatastore.remove(null));
+    @Test
+    public void testNullValueFails() {
+        Boolean nullBoolean = null;
+        Integer nullInt = null;
+        String nullString = null;
+        assertThrows(
+                NullPointerException.class, () -> mDatastore.putBoolean(TEST_KEY, nullBoolean));
+        assertThrows(NullPointerException.class, () -> mDatastore.putInt(TEST_KEY, nullInt));
+        assertThrows(NullPointerException.class, () -> mDatastore.putString(TEST_KEY, nullString));
 
-        assertThrows(IllegalArgumentException.class, () -> mDatastore.remove(""));
+        assertThrows(
+                NullPointerException.class,
+                () -> mDatastore.putBooleanIfNew(TEST_KEY, nullBoolean));
+        assertThrows(NullPointerException.class, () -> mDatastore.putIntIfNew(TEST_KEY, nullInt));
+        assertThrows(
+                NullPointerException.class, () -> mDatastore.putStringIfNew(TEST_KEY, nullString));
 
-        assertThrows(NullPointerException.class, () -> mDatastore.removeByPrefix(null));
-
-        assertThrows(IllegalArgumentException.class, () -> mDatastore.removeByPrefix(""));
+        assertThrows(
+                NullPointerException.class, () -> mDatastore.getBoolean(TEST_KEY, nullBoolean));
+        assertThrows(NullPointerException.class, () -> mDatastore.getInt(TEST_KEY, nullInt));
+        assertThrows(NullPointerException.class, () -> mDatastore.getString(TEST_KEY, nullString));
     }
 
     @Test
@@ -176,9 +202,10 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
 
     @Test
     public void testWriteAndGetVersion() throws IOException {
-        // Write value
-        boolean insertedValue = false;
-        mDatastore.putBoolean(TEST_KEY, insertedValue);
+        // Write values
+        mDatastore.putBoolean(TEST_KEY, false);
+        mDatastore.putInt(TEST_KEY_1, 3);
+        mDatastore.putString(TEST_KEY_2, "bar");
 
         // Re-initialize datastore (reads from the file again)
         mDatastore.initialize();
@@ -198,7 +225,9 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     @Test
     public void testPutGetUpdateRemoveBoolean() throws IOException {
         // Should not exist yet
-        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.getBoolean(TEST_KEY)).isNull();
+        assertWithMessage("getBoolean(%s)", TEST_KEY)
+                .that(mDatastore.getBoolean(TEST_KEY))
+                .isNull();
 
         // Create
         boolean insertedValue = false;
@@ -206,8 +235,8 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
 
         // Read
         Boolean readValue = mDatastore.getBoolean(TEST_KEY);
-        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
-        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
+        assertWithMessage("getBoolean(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getBoolean(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
 
         // Update incorrect type
         mDatastore.putInt(TEST_KEY, 7);
@@ -219,14 +248,92 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         insertedValue = true;
         mDatastore.putBoolean(TEST_KEY, insertedValue);
         readValue = mDatastore.getBoolean(TEST_KEY);
-        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
-        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
+        assertWithMessage("getBoolean(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getBoolean(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
 
         assertWithMessage("keys").that(mDatastore.keySet()).containsExactly(TEST_KEY);
 
         // Delete
         mDatastore.remove(TEST_KEY);
-        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.getBoolean(TEST_KEY)).isNull();
+        assertWithMessage("getBoolean(%s)", TEST_KEY)
+                .that(mDatastore.getBoolean(TEST_KEY))
+                .isNull();
+        assertWithMessage("keys").that(mDatastore.keySet()).isEmpty();
+
+        // Should not throw when removing a nonexistent key
+        mDatastore.remove(TEST_KEY);
+    }
+
+    @Test
+    public void testPutGetUpdateRemoveInt() throws IOException {
+        // Should not exist yet
+        assertWithMessage("getInt(%s)", TEST_KEY).that(mDatastore.getInt(TEST_KEY)).isNull();
+
+        // Create
+        int insertedValue = 5;
+        mDatastore.putInt(TEST_KEY, insertedValue);
+
+        // Read
+        Integer readValue = mDatastore.getInt(TEST_KEY);
+        assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
+
+        // Update incorrect type
+        mDatastore.putBoolean(TEST_KEY, true);
+        assertThrows(IllegalStateException.class, () -> mDatastore.getInt(TEST_KEY));
+        mDatastore.putString(TEST_KEY, "testVal");
+        assertThrows(IllegalStateException.class, () -> mDatastore.getInt(TEST_KEY));
+
+        // Update correct type
+        insertedValue = 4;
+        mDatastore.putInt(TEST_KEY, insertedValue);
+        readValue = mDatastore.getInt(TEST_KEY);
+        assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
+
+        assertWithMessage("keys").that(mDatastore.keySet()).containsExactly(TEST_KEY);
+
+        // Delete
+        mDatastore.remove(TEST_KEY);
+        assertWithMessage("getInt(%s)", TEST_KEY).that(mDatastore.getInt(TEST_KEY)).isNull();
+        assertWithMessage("keys").that(mDatastore.keySet()).isEmpty();
+
+        // Should not throw when removing a nonexistent key
+        mDatastore.remove(TEST_KEY);
+    }
+
+    @Test
+    public void testPutGetUpdateRemoveString() throws IOException {
+        // Should not exist yet
+        assertWithMessage("getString(%s)", TEST_KEY).that(mDatastore.getString(TEST_KEY)).isNull();
+
+        // Create
+        String insertedValue = "foo";
+        mDatastore.putString(TEST_KEY, insertedValue);
+
+        // Read
+        String readValue = mDatastore.getString(TEST_KEY);
+        assertWithMessage("getString(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getString(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
+
+        // Update incorrect type
+        mDatastore.putInt(TEST_KEY, 7);
+        assertThrows(IllegalStateException.class, () -> mDatastore.getString(TEST_KEY));
+        mDatastore.putBoolean(TEST_KEY, false);
+        assertThrows(IllegalStateException.class, () -> mDatastore.getString(TEST_KEY));
+
+        // Update correct type
+        insertedValue = "bar";
+        mDatastore.putString(TEST_KEY, insertedValue);
+        readValue = mDatastore.getString(TEST_KEY);
+        assertWithMessage("getString(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getString(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
+
+        assertWithMessage("keys").that(mDatastore.keySet()).containsExactly(TEST_KEY);
+
+        // Delete
+        mDatastore.remove(TEST_KEY);
+        assertWithMessage("getString(%s)", TEST_KEY).that(mDatastore.getString(TEST_KEY)).isNull();
         assertWithMessage("keys").that(mDatastore.keySet()).isEmpty();
 
         // Should not throw when removing a nonexistent key
@@ -236,34 +343,105 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     @Test
     public void testPutBooleanIfNew() throws IOException {
         // Should not exist yet
-        assertWithMessage("get(%s)", TEST_KEY).that(mDatastore.getBoolean(TEST_KEY)).isNull();
+        assertWithMessage("getBoolean(%s)", TEST_KEY)
+                .that(mDatastore.getBoolean(TEST_KEY))
+                .isNull();
 
         // Create because it's new
-        assertWithMessage("putIfNew(%s, false)", TEST_KEY)
+        assertWithMessage("putBooleanIfNew(%s, false)", TEST_KEY)
                 .that(mDatastore.putBooleanIfNew(TEST_KEY, false))
                 .isFalse();
         Boolean readValue = mDatastore.getBoolean(TEST_KEY);
-        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
-        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isFalse();
+        assertWithMessage("getBoolean(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getBoolean(%s)", TEST_KEY).that(readValue).isFalse();
 
         // Force overwrite
         mDatastore.putBoolean(TEST_KEY, true);
         readValue = mDatastore.getBoolean(TEST_KEY);
-        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
-        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isTrue();
+        assertWithMessage("getBoolean(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getBoolean(%s)", TEST_KEY).that(readValue).isTrue();
 
         // Put should read the existing value
         assertWithMessage("putBooleanIfNew(%s, false)", TEST_KEY)
                 .that(mDatastore.putBooleanIfNew(TEST_KEY, false))
                 .isTrue();
         readValue = mDatastore.getBoolean(TEST_KEY);
-        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isNotNull();
-        assertWithMessage("get(%s)", TEST_KEY).that(readValue).isTrue();
+        assertWithMessage("getBoolean(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getBoolean(%s)", TEST_KEY).that(readValue).isTrue();
 
         // Overwrite with incorrect data type
         mDatastore.putInt(TEST_KEY, 4);
         assertThrows(
                 IllegalStateException.class, () -> mDatastore.putBooleanIfNew(TEST_KEY, false));
+    }
+
+    @Test
+    public void testPutIntIfNew() throws IOException {
+        // Should not exist yet
+        assertWithMessage("getInt(%s)", TEST_KEY).that(mDatastore.getInt(TEST_KEY)).isNull();
+
+        // Create because it's new
+        int insertedValue = 5;
+        assertWithMessage(String.format("putIntIfNew(%s, %d)", TEST_KEY, insertedValue))
+                .that(mDatastore.putIntIfNew(TEST_KEY, insertedValue))
+                .isEqualTo(insertedValue);
+        int readValue = mDatastore.getInt(TEST_KEY);
+        assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
+
+        // Force overwrite
+        int overriddenValue = 7;
+        mDatastore.putInt(TEST_KEY, overriddenValue);
+        readValue = mDatastore.getInt(TEST_KEY);
+        assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isEqualTo(overriddenValue);
+
+        // Put should read the existing value
+        assertWithMessage("putIntIfNew(%s, 2)", TEST_KEY)
+                .that(mDatastore.putIntIfNew(TEST_KEY, 2))
+                .isEqualTo(overriddenValue);
+        readValue = mDatastore.getInt(TEST_KEY);
+        assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isEqualTo(overriddenValue);
+
+        // Overwrite with incorrect data type
+        mDatastore.putString(TEST_KEY, "foo");
+        assertThrows(IllegalStateException.class, () -> mDatastore.putIntIfNew(TEST_KEY, 6));
+    }
+
+    @Test
+    public void testPutStringIfNew() throws IOException {
+        // Should not exist yet
+        assertWithMessage("getString(%s)", TEST_KEY).that(mDatastore.getString(TEST_KEY)).isNull();
+
+        // Create because it's new
+        String insertedValue = "foo";
+        assertWithMessage(String.format("putStringIfNew(%s, %s)", TEST_KEY, insertedValue))
+                .that(mDatastore.putStringIfNew(TEST_KEY, insertedValue))
+                .isEqualTo(insertedValue);
+        String readValue = mDatastore.getString(TEST_KEY);
+        assertWithMessage("getString(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getString(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
+
+        // Force overwrite
+        String overriddenValue = "bar";
+        mDatastore.putString(TEST_KEY, overriddenValue);
+        readValue = mDatastore.getString(TEST_KEY);
+        assertWithMessage("getString(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getString(%s)", TEST_KEY).that(readValue).isEqualTo(overriddenValue);
+
+        // Put should read the existing value
+        assertWithMessage("putStringIfNew(%s, let)", TEST_KEY)
+                .that(mDatastore.putStringIfNew(TEST_KEY, "let"))
+                .isEqualTo(overriddenValue);
+        readValue = mDatastore.getString(TEST_KEY);
+        assertWithMessage("getString(%s)", TEST_KEY).that(readValue).isNotNull();
+        assertWithMessage("getString(%s)", TEST_KEY).that(readValue).isEqualTo(overriddenValue);
+
+        // Overwrite with incorrect data type
+        mDatastore.putInt(TEST_KEY, 3);
+        assertThrows(
+                IllegalStateException.class, () -> mDatastore.putStringIfNew(TEST_KEY, "test"));
     }
 
     @Test
@@ -472,7 +650,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
 
         // Add to data store
         for (Pair<String, Boolean> entry : entriesToAdd) {
-            expect.withMessage("get(%s)", entry.first)
+            expect.withMessage("getBoolean(%s)", entry.first)
                     .that(mDatastore.getBoolean(entry.first))
                     .isNull(); // Should not exist yet
             mDatastore.putBoolean(entry.first, entry.second);

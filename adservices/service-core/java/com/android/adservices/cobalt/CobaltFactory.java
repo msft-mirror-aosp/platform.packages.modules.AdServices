@@ -92,6 +92,8 @@ public final class CobaltFactory {
                                 getSystemData(context),
                                 getExecutor(),
                                 new SystemClockImpl(),
+                                new CobaltOperationLoggerImpl(
+                                        flags.getCobaltOperationalLoggingEnabled()),
                                 flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltLogger;

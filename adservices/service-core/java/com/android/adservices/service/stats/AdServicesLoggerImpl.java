@@ -35,6 +35,7 @@ import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledSt
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -78,10 +79,15 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     public void logApiCallStats(ApiCallStats apiCallStats) {
         mStatsdAdServicesLogger.logApiCallStats(apiCallStats);
 
+        // Package name should never be null in "real life" (as ApiCallStats builder would prevent
+        // it), but it doesn't hurt to check - in particular, it could be null on unit tests if
+        // mocked.
+        String packageName = apiCallStats.getAppPackageName();
+        com.android.internal.util.Preconditions.checkArgument(
+                packageName != null, "ApiCallStats have null packageName: %s", apiCallStats);
+
         cobaltLogAppNameApiError(
-                apiCallStats.getAppPackageName(),
-                apiCallStats.getApiName(),
-                apiCallStats.getResultCode());
+                packageName, apiCallStats.getApiName(), apiCallStats.getResultCode());
     }
 
     @Override
@@ -97,6 +103,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logFledgeApiCallStats(
             int apiName, String appPackageName, int resultCode, int latencyMs) {
+        Objects.requireNonNull(appPackageName, "appPackageName cannot be null");
+
         mStatsdAdServicesLogger.logFledgeApiCallStats(
                 apiName, appPackageName, resultCode, latencyMs);
 
@@ -415,7 +423,13 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     /** Logs api call error status using {@code CobaltLogger}. */
-    private void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
+    @VisibleForTesting // used by testCobaltLogAppNameApiError_nullPackageName only
+    void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
+        // Callers should have checked for appPackageName already, but it doesn't hurt to double
+        // check (otherwise it would have been thrown on background
+        Objects.requireNonNull(
+                appPackageName, "INTERNAL ERROR: caller didn't check for null appPackageName");
+
         sBackgroundExecutor.execute(
                 () -> {
                     AppNameApiErrorLogger appNameApiErrorLogger =

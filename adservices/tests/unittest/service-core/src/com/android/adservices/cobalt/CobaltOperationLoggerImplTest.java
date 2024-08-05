@@ -24,6 +24,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -39,10 +40,12 @@ public final class CobaltOperationLoggerImplTest extends AdServicesExtendedMocki
     private static final int TEST_REPORT_ID = 2;
 
     private CobaltOperationLoggerImpl mLogger;
+    private CobaltOperationLoggerImpl mDisabledLogger;
 
     @Before
     public void setUp() {
-        mLogger = new CobaltOperationLoggerImpl();
+        mLogger = new CobaltOperationLoggerImpl(/* enabled= */ true);
+        mDisabledLogger = new CobaltOperationLoggerImpl(/* enabled= */ false);
     }
 
     @Test
@@ -65,5 +68,14 @@ public final class CobaltOperationLoggerImplTest extends AdServicesExtendedMocki
         verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogStringBufferMaxExceeded_noOp() {
+        // Invoke logging call
+        mDisabledLogger.logStringBufferMaxExceeded(TEST_METRIC_ID, TEST_REPORT_ID);
+
+        // Verify No Op
+        verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 }

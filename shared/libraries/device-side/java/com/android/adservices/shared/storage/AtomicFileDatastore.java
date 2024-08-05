@@ -190,8 +190,7 @@ public class AtomicFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    @VisibleForTesting
-    final void putInt(String key, int value) throws IOException {
+    public final void putInt(String key, int value) throws IOException {
         put(key, value);
     }
 
@@ -206,8 +205,7 @@ public class AtomicFileDatastore {
      * @throws IOException if file write fails
      * @throws NullPointerException if {@code key} is null
      */
-    @VisibleForTesting
-    final void putString(String key, String value) throws IOException {
+    public final void putString(String key, String value) throws IOException {
         put(key, value);
     }
 
@@ -237,6 +235,42 @@ public class AtomicFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     public final boolean putBooleanIfNew(String key, boolean value) throws IOException {
+        return putIfNew(key, value, Boolean.class);
+    }
+
+    /**
+     * Stores an integer value to the datastore file, but only if the key does not already exist.
+     *
+     * <p>If a change is made to the datastore, it is committed immediately to file.
+     *
+     * @param key A non-null, non-empty String key to store the {@code value} against
+     * @param value An integer to be stored
+     * @return the value that exists in the datastore after the operation completes
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws IOException if file write fails
+     * @throws NullPointerException if {@code key} is null
+     */
+    public final int putIntIfNew(String key, int value) throws IOException {
+        return putIfNew(key, value, Integer.class);
+    }
+
+    /**
+     * Stores a String value to the datastore file, but only if the key does not already exist.
+     *
+     * <p>If a change is made to the datastore, it is committed immediately to file.
+     *
+     * @param key A non-null, non-empty String key to store the {@code value} against
+     * @param value A String to be stored
+     * @return the value that exists in the datastore after the operation completes
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws IOException if file write fails
+     * @throws NullPointerException if {@code key} is null
+     */
+    public final String putStringIfNew(String key, String value) throws IOException {
+        return putIfNew(key, value, String.class);
+    }
+
+    private <T> T putIfNew(String key, T value, Class<T> valueType) throws IOException {
         Objects.requireNonNull(key);
         checkStringNotEmpty(key, "Key must not be empty");
 
@@ -245,7 +279,7 @@ public class AtomicFileDatastore {
         try {
             Object valueInLocalMap = mLocalMap.get(key);
             if (valueInLocalMap != null) {
-                return checkValueType(valueInLocalMap, Boolean.class);
+                return checkValueType(valueInLocalMap, valueType);
             }
 
         } finally {
@@ -257,7 +291,7 @@ public class AtomicFileDatastore {
         try {
             Object valueInLocalMap = mLocalMap.get(key);
             if (valueInLocalMap != null) {
-                return checkValueType(valueInLocalMap, Boolean.class);
+                return checkValueType(valueInLocalMap, valueType);
             } else {
                 mLocalMap.put(key, value);
                 writeToFile();
@@ -278,6 +312,37 @@ public class AtomicFileDatastore {
      */
     @Nullable
     public final Boolean getBoolean(String key) {
+        return get(key, Boolean.class);
+    }
+
+    /**
+     * Retrieves an integer value from the loaded datastore file.
+     *
+     * @param key A non-null, non-empty String key to fetch a value from
+     * @return The value stored against a {@code key}, or null if it doesn't exist
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws NullPointerException if {@code key} is null
+     */
+    @Nullable
+    public final Integer getInt(String key) {
+        return get(key, Integer.class);
+    }
+
+    /**
+     * Retrieves a String value from the loaded datastore file.
+     *
+     * @param key A non-null, non-empty String key to fetch a value from
+     * @return The value stored against a {@code key}, or null if it doesn't exist
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws NullPointerException if {@code key} is null
+     */
+    @Nullable
+    public final String getString(String key) {
+        return get(key, String.class);
+    }
+
+    @Nullable
+    private <T> T get(String key, Class<T> valueType) {
         Objects.requireNonNull(key);
         checkStringNotEmpty(key, "Key must not be empty");
 
@@ -285,7 +350,7 @@ public class AtomicFileDatastore {
         try {
             if (mLocalMap.containsKey(key)) {
                 Object valueInLocalMap = mLocalMap.get(key);
-                return checkValueType(valueInLocalMap, Boolean.class);
+                return checkValueType(valueInLocalMap, valueType);
             }
             return null;
         } finally {
@@ -298,19 +363,50 @@ public class AtomicFileDatastore {
      *
      * @param key A non-null, non-empty String key to fetch a value from
      * @param defaultValue Value to return if this key does not exist.
+     * @return The value stored against a {@code key}, or {@code defaultValue} if it doesn't exist
      * @throws IllegalArgumentException if {@code key} is an empty string
      * @throws NullPointerException if {@code key} is null
      */
-    @Nullable
-    public final Boolean getBoolean(String key, boolean defaultValue) {
+    public final boolean getBoolean(String key, boolean defaultValue) {
+        return get(key, defaultValue, Boolean.class);
+    }
+
+    /**
+     * Retrieves an integer value from the loaded datastore file.
+     *
+     * @param key A non-null, non-empty String key to fetch a value from
+     * @param defaultValue Value to return if this key does not exist.
+     * @return The value stored against a {@code key}, or {@code defaultValue} if it doesn't exist
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws NullPointerException if {@code key} is null
+     */
+    public final int getInt(String key, int defaultValue) {
+        return get(key, defaultValue, Integer.class);
+    }
+
+    /**
+     * Retrieves a String value from the loaded datastore file.
+     *
+     * @param key A non-null, non-empty String key to fetch a value from
+     * @param defaultValue Value to return if this key does not exist.
+     * @return The value stored against a {@code key}, or {@code defaultValue} if it doesn't exist
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws NullPointerException if {@code key} is null
+     */
+    public final String getString(String key, String defaultValue) {
+        return get(key, defaultValue, String.class);
+    }
+
+    private <T> T get(String key, T defaultValue, Class<T> valueType) {
         Objects.requireNonNull(key);
         checkStringNotEmpty(key, "Key must not be empty");
+        Objects.requireNonNull(defaultValue, "Default value must not be null");
 
         mReadLock.lock();
         try {
             if (mLocalMap.containsKey(key)) {
                 Object valueInLocalMap = mLocalMap.get(key);
-                return checkValueType(valueInLocalMap, Boolean.class);
+                return checkValueType(valueInLocalMap, valueType);
             }
             return defaultValue;
         } finally {

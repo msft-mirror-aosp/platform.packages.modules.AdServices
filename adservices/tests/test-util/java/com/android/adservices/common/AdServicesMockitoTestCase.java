@@ -16,6 +16,11 @@
 package com.android.adservices.common;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+
+import com.android.adservices.mockito.AndroidMocker;
+import com.android.adservices.mockito.AndroidMockitoMocker;
 
 import org.junit.Rule;
 import org.mockito.Mock;
@@ -38,6 +43,17 @@ public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
     @Rule(order = 10)
     public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
 
-    // TODO(b/314969513): add Mocker that implements mocker interfaces needed by subclasses so we
-    // can deprecate MockitoExpectations - see example on AdServicesExtendedMockitoTestCase
+    /** Provides common expectations. */
+    public final Mocker mocker = new Mocker();
+
+    /** Provides common expectations. */
+    public static final class Mocker implements AndroidMocker {
+
+        private final AndroidMocker mAndroidMocker = new AndroidMockitoMocker();
+
+        @Override
+        public void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos) {
+            mAndroidMocker.mockQueryIntentService(pm, resolveInfos);
+        }
+    }
 }

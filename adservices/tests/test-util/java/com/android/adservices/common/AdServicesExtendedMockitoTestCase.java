@@ -18,6 +18,8 @@ package com.android.adservices.common;
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mode.CLEAR_AFTER_TEST_CLASS;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 
 import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
@@ -28,6 +30,8 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AdServicesStaticMockitoMocker;
 import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
+import com.android.adservices.mockito.AndroidMocker;
+import com.android.adservices.mockito.AndroidMockitoMocker;
 import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
@@ -128,67 +132,78 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
     }
 
     public static final class Mocker
-            implements AndroidStaticMocker, AdServicesStaticMockitoMocker, SharedMocker {
+            implements AndroidMocker,
+                    AndroidStaticMocker,
+                    AdServicesStaticMockitoMocker,
+                    SharedMocker {
 
-        private final AndroidStaticMocker mAndroidMocker;
+        private final AndroidMocker mAndroidMocker = new AndroidMockitoMocker();
+        private final AndroidStaticMocker mAndroidStaticMocker;
         private final AdServicesStaticMockitoMocker mAdServicesMocker;
         private final SharedMocker mSharedMocker = new SharedMockitoMocker();
 
         private Mocker(AdServicesExtendedMockitoRule rule) {
-            mAndroidMocker = new AndroidExtendedMockitoMocker(rule);
+            mAndroidStaticMocker = new AndroidExtendedMockitoMocker(rule);
             mAdServicesMocker = new AdServicesExtendedMockitoMocker(rule);
+        }
+
+        // AndroidMocker methods
+
+        @Override
+        public void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos) {
+            mAndroidMocker.mockQueryIntentService(pm, resolveInfos);
         }
 
         // AndroidStaticMocker methods
 
         @Override
         public void mockGetCallingUidOrThrow(int uid) {
-            mAndroidMocker.mockGetCallingUidOrThrow(uid);
+            mAndroidStaticMocker.mockGetCallingUidOrThrow(uid);
         }
 
         @Override
         public void mockGetCallingUidOrThrow() {
-            mAndroidMocker.mockGetCallingUidOrThrow();
+            mAndroidStaticMocker.mockGetCallingUidOrThrow();
         }
 
         @Override
         public void mockIsAtLeastR(boolean isIt) {
-            mAndroidMocker.mockIsAtLeastR(isIt);
+            mAndroidStaticMocker.mockIsAtLeastR(isIt);
         }
 
         @Override
         public void mockIsAtLeastS(boolean isIt) {
-            mAndroidMocker.mockIsAtLeastS(isIt);
+            mAndroidStaticMocker.mockIsAtLeastS(isIt);
         }
 
         @Override
         public void mockIsAtLeastT(boolean isIt) {
-            mAndroidMocker.mockIsAtLeastT(isIt);
+            mAndroidStaticMocker.mockIsAtLeastT(isIt);
         }
 
         @Override
         public void mockSdkLevelR() {
-            mAndroidMocker.mockSdkLevelR();
+            mAndroidStaticMocker.mockSdkLevelR();
         }
 
         @Override
         public void mockGetCurrentUser(int user) {
-            mAndroidMocker.mockGetCurrentUser(user);
+            mAndroidStaticMocker.mockGetCurrentUser(user);
         }
 
         @Override
         public LogInterceptor interceptLogD(String tag) {
-            return mAndroidMocker.interceptLogD(tag);
+            return mAndroidStaticMocker.interceptLogD(tag);
         }
 
         @Override
         public LogInterceptor interceptLogV(String tag) {
-            return mAndroidMocker.interceptLogV(tag);
+            return mAndroidStaticMocker.interceptLogV(tag);
         }
 
         @Override
         public LogInterceptor interceptLogE(String tag) {
-            return mAndroidMocker.interceptLogE(tag);
+            return mAndroidStaticMocker.interceptLogE(tag);
         }
 
         // AdServicesExtendedMockitoMocker methods

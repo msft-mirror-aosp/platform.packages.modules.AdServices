@@ -287,6 +287,10 @@ java_library {
         "java/com/android/adservices/mockito/AbstractStaticMocker.java",
         "java/com/android/adservices/mockito/StaticClassChecker.java",
 
+        // AndroidMocker
+        "java/com/android/adservices/mockito/AndroidMocker.java",
+        "java/com/android/adservices/mockito/AndroidMockitoMocker.java",
+
         // AndroidStaticMocker
         "java/com/android/adservices/mockito/AndroidStaticMocker.java",
         "java/com/android/adservices/mockito/AndroidExtendedMockitoMocker.java",

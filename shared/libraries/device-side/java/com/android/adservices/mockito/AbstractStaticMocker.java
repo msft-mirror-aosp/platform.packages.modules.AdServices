@@ -38,14 +38,20 @@ public abstract class AbstractStaticMocker {
 
     @FormatMethod
     protected final void logV(@FormatString String fmt, Object... args) {
-        Log.v(
-                TAG,
-                "on "
-                        + mStaticClassChecker.getTestName()
-                        + " by "
-                        + mTag
-                        + ": "
-                        + String.format(fmt, args));
+        try {
+            Log.v(
+                    TAG,
+                    "on "
+                            + mStaticClassChecker.getTestName()
+                            + " by "
+                            + mTag
+                            + ": "
+                            + String.format(fmt, args));
+        } catch (Exception e) {
+            // Typically happens when the object being passed to a mock method is mal-formed; for
+            // example, a ResolveInfo without a component name
+            Log.w(TAG, mTag + ".logV(fmt=" + fmt + ", args=...): failed to generate string: " + e);
+        }
     }
 
     protected final void assertSpiedOrMocked(Class<?> clazz) {
