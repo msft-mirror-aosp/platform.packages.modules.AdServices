@@ -101,9 +101,8 @@ public final class DevContextTest extends AdServicesUnitTestCase {
         expect.withMessage("devContext.getDevOptionsEnabled()")
                 .that(devContext.getDevOptionsEnabled())
                 .isFalse();
-        // TODO(b/356709022): check it's not null
         expect.withMessage("devContext.getCallingAppPackageName()")
                 .that(devContext.getCallingAppPackageName())
-                .isNull();
+                .isEqualTo(DevContext.UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED);
     }
 }

@@ -40,6 +40,7 @@ import static com.android.adservices.service.adselection.AdSelectionScriptEngine
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.adselection.ReportEventDisabledImpl.API_DISABLED_MESSAGE;
+import static com.android.adservices.service.devapi.DevContext.UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -5936,7 +5937,10 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verifyLogFledgeApiCallStatsAnyLatency(SHORT_API_NAME_OVERRIDE, null, STATUS_INTERNAL_ERROR);
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_OVERRIDE,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -6147,7 +6151,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verifyLogFledgeApiCallStatsAnyLatency(
-                SHORT_API_NAME_REMOVE_OVERRIDE, null, STATUS_INTERNAL_ERROR);
+                SHORT_API_NAME_REMOVE_OVERRIDE,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -6676,7 +6682,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         verifyLogFledgeApiCallStatsAnyLatency(
-                SHORT_API_NAME_RESET_ALL_OVERRIDES, null, STATUS_INTERNAL_ERROR);
+                SHORT_API_NAME_RESET_ALL_OVERRIDES,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -8846,7 +8854,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         TEST_PACKAGE_NAME));
 
         verifyLogFledgeApiCallStatsAnyLatency(
-                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, null, STATUS_INTERNAL_ERROR);
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -9066,7 +9076,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verifyLogFledgeApiCallStatsAnyLatency(
-                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, null, STATUS_INTERNAL_ERROR);
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -9499,7 +9511,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         configId3, TEST_PACKAGE_NAME));
 
         verifyLogFledgeApiCallStatsAnyLatency(
-                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, null, STATUS_INTERNAL_ERROR);
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
