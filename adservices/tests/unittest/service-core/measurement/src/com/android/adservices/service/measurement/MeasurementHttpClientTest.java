@@ -35,7 +35,6 @@ import android.provider.DeviceConfig;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
@@ -326,7 +325,7 @@ public final class MeasurementHttpClientTest {
 
     @Test
     public void testSetup_headersLeakingInfoAreOverridden() throws Exception {
-        final MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+        final MockWebServerRule mMockWebServerRule = createForHttps();
         MockWebServer server = null;
         try {
             server =
@@ -458,6 +457,13 @@ public final class MeasurementHttpClientTest {
         return MockWebServerRule.forHttps(
                 ApplicationProvider.getApplicationContext(),
                 "adservices_untrusted_test_server.p12",
+                "adservices_test");
+    }
+
+    public static MockWebServerRule createForHttps() {
+        return MockWebServerRule.forHttps(
+                ApplicationProvider.getApplicationContext(),
+                "adservices_test_server.p12",
                 "adservices_test");
     }
 
