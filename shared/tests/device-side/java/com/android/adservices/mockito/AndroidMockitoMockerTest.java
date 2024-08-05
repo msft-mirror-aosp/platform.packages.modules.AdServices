@@ -51,21 +51,32 @@ public final class AndroidMockitoMockerTest extends SharedMockitoTestCase {
     }
 
     @Test
-    public void testQueryIntentService_nullPm() {
+    public void testQueryIntentService_nullArgs() {
         assertThrows(NullPointerException.class, () -> mMocker.mockQueryIntentService(null));
+        assertThrows(
+                NullPointerException.class,
+                () -> mMocker.mockQueryIntentService(mMockPm, (ResolveInfo[]) null));
     }
 
     @Test
-    public void testQueryIntentService_nullArgs() {
-        mMocker.mockQueryIntentService(mMockPm, (ResolveInfo[]) null);
+    public void testQueryIntentService_nullResolveInfo() {
+        // queryIntentServices() Javadoc doesn't mention not returning null ResolveInfo objects in
+        // the returned list, so it's not our business to care about that...
+        mMocker.mockQueryIntentService(mMockPm, new ResolveInfo[] {null});
 
         var byIntFlag = mMockPm.queryIntentServices(mIntent, FLAG);
-        expect.withMessage("queryIntentServices(intFlags)").that(byIntFlag).isNull();
+        expect.withMessage("queryIntentServices(intFlags)").that(byIntFlag).isNotNull();
+        expect.withMessage("queryIntentServices(intFlags)")
+                .that(byIntFlag)
+                .containsExactly((ResolveInfo) null);
         if (sdkLevel.isAtLeastT()) {
             var byResolveInfoFlags = mMockPm.queryIntentServices(mIntent, mResolveInfoFlags);
             expect.withMessage("queryIntentServices(ResolveInfoFlags)")
                     .that(byResolveInfoFlags)
-                    .isNull();
+                    .isNotNull();
+            expect.withMessage("queryIntentServices(ResolveInfoFlags)")
+                    .that(byResolveInfoFlags)
+                    .containsExactly((ResolveInfo) null);
         }
     }
 
