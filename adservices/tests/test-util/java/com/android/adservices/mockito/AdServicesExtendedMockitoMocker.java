@@ -24,6 +24,8 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
+import java.util.Objects;
+
 /**
  * {@link AdServicesStaticMocker} implementation that uses {@code ExtendedMockito}.
  *
@@ -40,7 +42,7 @@ public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
 
     @Override
     public void mockGetFlags(Flags mockedFlags) {
-        logV("mockGetFlags(%s)", mockedFlags);
+        logV("mockGetFlags(%s)", Objects.requireNonNull(mockedFlags, "Flags cannot be null"));
         assertSpiedOrMocked(FlagsFactory.class);
         doReturn(mockedFlags).when(FlagsFactory::getFlags);
     }
@@ -52,7 +54,10 @@ public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
 
     @Override
     public void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler) {
-        logV("mockSpeJobScheduler(%s)", mockedAdServicesJobScheduler);
+        logV(
+                "mockSpeJobScheduler(%s)",
+                Objects.requireNonNull(
+                        mockedAdServicesJobScheduler, "AdServicesJobScheduler cannot be null"));
         assertSpiedOrMocked(AdServicesJobScheduler.class);
         doReturn(mockedAdServicesJobScheduler).when(AdServicesJobScheduler::getInstance);
     }
@@ -60,14 +65,21 @@ public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
     @Override
     public void mockAdServicesJobServiceFactory(
             AdServicesJobServiceFactory mockedAdServicesJobServiceFactory) {
-        logV("mockAdServicesJobServiceFactory(%s)", mockedAdServicesJobServiceFactory);
+        logV(
+                "mockAdServicesJobServiceFactory(%s)",
+                Objects.requireNonNull(
+                        mockedAdServicesJobServiceFactory,
+                        "AdServicesJobServiceFactory cannot be null"));
         assertSpiedOrMocked(AdServicesJobServiceFactory.class);
         doReturn(mockedAdServicesJobServiceFactory).when(AdServicesJobServiceFactory::getInstance);
     }
 
     @Override
     public void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl) {
-        logV("mockAdServicesLoggerImpl(%s)", mockedAdServicesLoggerImpl);
+        logV(
+                "mockAdServicesLoggerImpl(%s)",
+                Objects.requireNonNull(
+                        mockedAdServicesLoggerImpl, "AdServicesLoggerImpl cannot be null"));
         assertSpiedOrMocked(AdServicesLoggerImpl.class);
         doReturn(mockedAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
     }
