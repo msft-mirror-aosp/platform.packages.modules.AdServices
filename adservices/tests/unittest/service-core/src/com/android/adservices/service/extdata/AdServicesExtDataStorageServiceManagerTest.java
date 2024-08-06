@@ -32,8 +32,6 @@ import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_M
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
-import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
 import static com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager.UNKNOWN_PACKAGE_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADEXT_DATA_SERVICE;
@@ -49,28 +47,29 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.extdata.AdServicesExtDataParams;
-import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
-
-import com.google.common.truth.Expect;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 
-public class AdServicesExtDataStorageServiceManagerTest {
+@SpyStatic(AdServicesExtDataStorageServiceWorker.class)
+@SpyStatic(AdServicesLoggerImpl.class)
+@SpyStatic(ErrorLogUtil.class)
+@SpyStatic(FlagsFactory.class)
+public final class AdServicesExtDataStorageServiceManagerTest
+        extends AdServicesExtendedMockitoTestCase {
+
     private static final long SLEEP_MS = 2_000L;
     private static final int INVOCATION_TIMEOUT = 500;
     private static final long NO_APEX_VALUE = -1L;
@@ -87,18 +86,6 @@ public class AdServicesExtDataStorageServiceManagerTest {
         FIELD_IS_MEASUREMENT_CONSENTED, FIELD_IS_NOTIFICATION_DISPLAYED
     };
 
-    @Rule
-    public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(AdServicesExtDataStorageServiceWorker.class)
-                    .spyStatic(AdServicesLoggerImpl.class)
-                    .spyStatic(ErrorLogUtil.class)
-                    .spyStatic(FlagsFactory.class)
-                    .build();
-
-    @Rule public final Expect expect = Expect.create();
-
-    private final Context mContext = ApplicationProvider.getApplicationContext();
     private final AdServicesLogger mAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
 
     @Mock private AdServicesExtDataStorageServiceWorker mMockWorker;
@@ -126,7 +113,7 @@ public class AdServicesExtDataStorageServiceManagerTest {
         doReturn(mAdServicesLogger).when(AdServicesLoggerImpl::getInstance);
         mManager = AdServicesExtDataStorageServiceManager.getInstance(mContext);
 
-        mockCobaltLoggingFlags(mFlags, false);
+        mocker.mockAllCobaltLoggingFlags(mFlags, false);
     }
 
     @Test

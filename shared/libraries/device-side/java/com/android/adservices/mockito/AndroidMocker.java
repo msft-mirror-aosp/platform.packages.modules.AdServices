@@ -16,7 +16,6 @@
 
 package com.android.adservices.mockito;
 
-import android.annotation.Nullable;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
@@ -26,14 +25,11 @@ import android.content.pm.ResolveInfo;
  */
 public interface AndroidMocker {
 
-    // TODO(b/314969513): resolveInfos shouldn't be null because  it's @NonNUll on
-    // queryIntentServices(), but that would break AdServicesSupportHelperTest - we'll change it
-    // in a follow-up CL, so this one is just a "pure refactoring"
     /**
      * Mocks the result to calls to {@link
      * PackageManager#queryIntentServices(android.content.Intent, int)} or {@link
      * PackageManager#queryIntentServices(android.content.Intent,
      * android.content.pm.PackageManager.ResolveInfoFlags)}, passing any argument.
      */
-    void mockQueryIntentService(PackageManager pm, @Nullable ResolveInfo... resolveInfos);
+    void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos);
 }

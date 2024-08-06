@@ -34,6 +34,7 @@ public final class AndroidMockitoMocker extends AbstractMocker implements Androi
     @Override
     public void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos) {
         Objects.requireNonNull(pm, "PackageManager cannot be null");
+        Objects.requireNonNull(resolveInfos, "ResolveInfo... cannot be null");
 
         List<ResolveInfo> list = resolveInfos == null ? null : Arrays.asList(resolveInfos);
         logV("mockQueryIntentService(%s, %s): returning %s", pm, resolveInfos, list);

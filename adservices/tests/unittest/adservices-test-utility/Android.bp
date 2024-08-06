@@ -23,6 +23,7 @@ android_test {
     srcs: [
         "src/**/*.java",
         "side-less/**/*.java",
+        ":adservices-shared-device-side-meta-testing-sources",
         ":adservices-shared-sideless-meta-testing-sources",
     ],
     libs: [

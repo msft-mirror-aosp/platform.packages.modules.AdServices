@@ -13,11 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adservices.common;
 
-package com.android.adservices.service.shell.signals;
+import com.android.adservices.shared.meta_testing.SharedMockerTestCase;
 
-public class GenerateInputForEncodingArgs {
-    static final int ARG_PARSE_START_INDEX = 2;
+public final class AdServicesExtendedMockitoTestCaseSharedMockerTest
+        extends SharedMockerTestCase<AdServicesExtendedMockitoTestCase.Mocker> {
 
-    public static final String BUYER = "--buyer";
+    @Override
+    protected AdServicesExtendedMockitoTestCase.Mocker getMocker() {
+        return new AdServicesExtendedMockitoTestCase.Mocker();
+    }
 }

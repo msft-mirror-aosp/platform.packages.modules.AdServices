@@ -15,13 +15,11 @@
  */
 package com.android.adservices.mockito;
 
-import com.android.adservices.shared.meta_testing.AndroidStaticMockerTestCase;
-
-public final class AndroidExtendedMockitoMockerTest
-        extends AndroidStaticMockerTestCase<AndroidExtendedMockitoMocker> {
+public final class AdServicesMockitoMockerTest
+        extends AdServicesPragmaticMockerTestCase<AdServicesMockitoMocker> {
 
     @Override
-    protected AndroidExtendedMockitoMocker getMocker(StaticClassChecker checker) {
-        return new AndroidExtendedMockitoMocker(checker);
+    protected AdServicesMockitoMocker getMocker() {
+        return new AdServicesMockitoMocker();
     }
 }

@@ -225,7 +225,7 @@ public final class PeriodicEncodingJobWorker {
                     encodingJobRunStatsLogger.logEncodingJobRunStats();
 
                     return buyersWithEncodersReadyForRefresh.transformAsync(
-                            b -> doUpdateEncodersForBuyers(b), mBackgroundExecutor);
+                            this::doUpdateEncodersForBuyers, mBackgroundExecutor);
                 },
                 mLightWeightExecutor);
     }
@@ -274,7 +274,7 @@ public final class PeriodicEncodingJobWorker {
     }
 
     // TODO(b/294900119) We should do the update of encoding logic in a separate job, & remove this
-    private FluentFuture<Void> doUpdateEncodersForBuyers(List<AdTechIdentifier> buyers) {
+    FluentFuture<Void> doUpdateEncodersForBuyers(List<AdTechIdentifier> buyers) {
         List<ListenableFuture<Boolean>> encoderUpdates =
                 buyers.stream()
                         .map(
@@ -284,16 +284,6 @@ public final class PeriodicEncodingJobWorker {
                         .collect(Collectors.toList());
         return FluentFuture.from(Futures.successfulAsList(encoderUpdates))
                 .transform(ignored -> null, mLightWeightExecutor);
-    }
-
-    @VisibleForTesting
-    FluentFuture<Void> runEncodingPerBuyer(
-            DBEncoderLogicMetadata encoderLogicMetadata,
-            int timeout,
-            EncodingExecutionLogHelper logHelper,
-            EncodingJobRunStatsLogger encodingJobRunStatsLogger) {
-        return mPeriodicEncodingJobRunner.runEncodingPerBuyer(
-                encoderLogicMetadata, timeout, logHelper, encodingJobRunStatsLogger);
     }
 
     private void handleFailedPerBuyerEncoding(DBEncoderLogicMetadata logic) {

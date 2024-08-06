@@ -17,7 +17,6 @@
 package com.android.adservices.service.adselection;
 
 import android.annotation.NonNull;
-import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -47,33 +46,32 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Worker class to send and clean debug reports generated for ad selection. */
-public class DebugReportSenderWorker {
+public final class DebugReportSenderWorker {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String JOB_DESCRIPTION = "Ad selection debug report sender job";
     private static final Object SINGLETON_LOCK = new Object();
     private static volatile DebugReportSenderWorker sDebugReportSenderWorker;
-    @NonNull private final AdSelectionDebugReportDao mAdSelectionDebugReportDao;
-    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
-    @NonNull private final Flags mFlags;
-    @NonNull private final Clock mClock;
+    private final AdSelectionDebugReportDao mAdSelectionDebugReportDao;
+    private final AdServicesHttpsClient mAdServicesHttpsClient;
+    private final Flags mFlags;
+    private final Clock mClock;
     private final SingletonRunner<Void> mSingletonRunner =
             new SingletonRunner<>(JOB_DESCRIPTION, this::doRun);
 
     @VisibleForTesting
     protected DebugReportSenderWorker(
-            @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
-            @NonNull AdServicesHttpsClient adServicesHttpsClient,
-            @NonNull Flags flags,
-            @NonNull Clock clock) {
-        Objects.requireNonNull(adSelectionDebugReportDao);
-        Objects.requireNonNull(adServicesHttpsClient);
-        Objects.requireNonNull(flags);
-        Objects.requireNonNull(clock);
-
-        mAdSelectionDebugReportDao = adSelectionDebugReportDao;
-        mAdServicesHttpsClient = adServicesHttpsClient;
-        mClock = clock;
-        mFlags = flags;
+            AdSelectionDebugReportDao adSelectionDebugReportDao,
+            AdServicesHttpsClient adServicesHttpsClient,
+            Flags flags,
+            Clock clock) {
+        mAdSelectionDebugReportDao =
+                Objects.requireNonNull(
+                        adSelectionDebugReportDao, "adSelectionDebugReportDao cannot be null");
+        mAdServicesHttpsClient =
+                Objects.requireNonNull(
+                        adServicesHttpsClient, "adServicesHttpsClient cannot be null");
+        mFlags = Objects.requireNonNull(flags, "flags cannot be null");
+        mClock = Objects.requireNonNull(clock, "clock cannot be null");
     }
 
     /**
@@ -81,14 +79,12 @@ public class DebugReportSenderWorker {
      * initialized, a new singleton will be created and returned.
      */
     @NonNull
-    public static DebugReportSenderWorker getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
-
+    public static DebugReportSenderWorker getInstance() {
         if (sDebugReportSenderWorker == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sDebugReportSenderWorker == null) {
                     AdSelectionDebugReportDao adSelectionDebugReportDao =
-                            AdSelectionDebugReportingDatabase.getInstance(context)
+                            AdSelectionDebugReportingDatabase.getInstance()
                                     .getAdSelectionDebugReportDao();
                     Flags flags = FlagsFactory.getFlags();
                     AdServicesHttpsClient adServicesHttpsClient =
@@ -125,7 +121,7 @@ public class DebugReportSenderWorker {
     }
 
     private FluentFuture<List<DBAdSelectionDebugReport>> getDebugReports(
-            @NonNull Supplier<Boolean> shouldStop, @NonNull Instant jobStartTime) {
+            Supplier<Boolean> shouldStop, Instant jobStartTime) {
         if (shouldStop.get()) {
             sLogger.d("Stopping " + JOB_DESCRIPTION);
             return FluentFuture.from(Futures.immediateFuture(ImmutableList.of()));
@@ -151,9 +147,7 @@ public class DebugReportSenderWorker {
     }
 
     private FluentFuture<Void> cleanupDebugReportsData(Instant jobStartTime) {
-        sLogger.v(
-                "cleaning up old debug reports from the database at time %s",
-                jobStartTime.toString());
+        sLogger.v("cleaning up old debug reports from the database at time %s", jobStartTime);
         return FluentFuture.from(
                 AdServicesExecutors.getBackgroundExecutor()
                         .submit(
@@ -165,7 +159,7 @@ public class DebugReportSenderWorker {
     }
 
     private ListenableFuture<Void> sendDebugReports(
-            @NonNull List<DBAdSelectionDebugReport> dbAdSelectionDebugReports) {
+            List<DBAdSelectionDebugReport> dbAdSelectionDebugReports) {
 
         if (dbAdSelectionDebugReports.isEmpty()) {
             sLogger.d("No debug reports found to send");
@@ -188,16 +182,16 @@ public class DebugReportSenderWorker {
                 DevContext.builder()
                         .setDevOptionsEnabled(dbAdSelectionDebugReport.getDevOptionsEnabled())
                         .build();
-        sLogger.v("Sending debug report %s", debugReportUri.toString());
+        sLogger.v("Sending debug report %s", debugReportUri);
         try {
             return mAdServicesHttpsClient.getAndReadNothing(debugReportUri, devContext);
         } catch (Exception ignored) {
-            sLogger.v("Failed to send debug report %s", debugReportUri.toString());
+            sLogger.v("Failed to send debug report %s", debugReportUri);
             return Futures.immediateVoidFuture();
         }
     }
 
-    private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
+    private FluentFuture<Void> doRun(Supplier<Boolean> shouldStop) {
         Instant jobStartTime = mClock.instant();
         return getDebugReports(shouldStop, jobStartTime)
                 .transform(this::sendDebugReports, AdServicesExecutors.getBackgroundExecutor())

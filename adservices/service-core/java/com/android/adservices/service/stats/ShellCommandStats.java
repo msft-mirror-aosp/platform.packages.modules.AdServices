@@ -77,6 +77,9 @@ public final class ShellCommandStats {
     public static final int COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
+    public static final int COMMAND_APP_SIGNALS_TRIGGER_ENCODING =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_APP_SIGNALS_TRIGGER_ENCODING;
 
     @IntDef({
         COMMAND_UNKNOWN,
@@ -102,7 +105,8 @@ public final class ShellCommandStats {
         COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA,
 
         // Protected App Signals commands
-        COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING
+        COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING,
+        COMMAND_APP_SIGNALS_TRIGGER_ENCODING
     })
     @Retention(SOURCE)
     public @interface Command {}

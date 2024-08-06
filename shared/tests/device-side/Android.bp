@@ -50,6 +50,7 @@ java_defaults {
     name: "AdServicesSharedLibrariesUnitTests-defaults",
     srcs: [
         "java/**/*.java",
+        ":adservices-shared-device-side-meta-testing-sources",
         ":adservices-shared-sideless-meta-testing-sources",
         ":adservices-shared-sideless-tests-sources",
     ],

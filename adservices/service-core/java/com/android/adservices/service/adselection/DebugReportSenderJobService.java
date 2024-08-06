@@ -117,7 +117,7 @@ public class DebugReportSenderJobService extends JobService {
                         "Starting FLEDGE DebugReportSenderJobService job at %s",
                         jobStartTime.toString());
 
-        DebugReportSenderWorker.getInstance(this)
+        DebugReportSenderWorker.getInstance()
                 .runDebugReportSender()
                 .addCallback(
                         new FutureCallback<Void>() {
@@ -184,7 +184,7 @@ public class DebugReportSenderJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("DebugReportSenderJobService.onStopJob");
-        DebugReportSenderWorker.getInstance(this).stopWork();
+        DebugReportSenderWorker.getInstance().stopWork();
 
         boolean shouldRetry = true;
 

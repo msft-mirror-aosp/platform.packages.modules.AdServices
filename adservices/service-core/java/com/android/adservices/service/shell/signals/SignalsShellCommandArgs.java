@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.mockito;
 
-import com.android.adservices.shared.meta_testing.AndroidStaticMockerTestCase;
+package com.android.adservices.service.shell.signals;
 
-public final class AndroidExtendedMockitoMockerTest
-        extends AndroidStaticMockerTestCase<AndroidExtendedMockitoMocker> {
+public class SignalsShellCommandArgs {
+    static final int ARG_PARSE_START_INDEX = 2;
 
-    @Override
-    protected AndroidExtendedMockitoMocker getMocker(StaticClassChecker checker) {
-        return new AndroidExtendedMockitoMocker(checker);
-    }
+    public static final String BUYER = "--buyer";
 }
