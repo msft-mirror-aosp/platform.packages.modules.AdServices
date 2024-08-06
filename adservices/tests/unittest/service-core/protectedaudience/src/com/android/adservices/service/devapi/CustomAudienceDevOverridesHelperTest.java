@@ -24,21 +24,20 @@ import android.adservices.common.AdTechIdentifier;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.service.adselection.JsVersionHelper;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
-public class CustomAudienceDevOverridesHelperTest {
+public final class CustomAudienceDevOverridesHelperTest extends AdServicesUnitTestCase {
     private CustomAudienceDao mCustomAudienceDao;
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
@@ -46,9 +45,6 @@ public class CustomAudienceDevOverridesHelperTest {
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final Long BIDDING_LOGIC_JS_VERSION = 2L;
     private static final String TRUSTED_BIDDING_DATA = "{\"trusted_bidding_data\":1}";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
