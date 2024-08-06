@@ -23,6 +23,10 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
+// TODO(b/314969513): need to add unit test (AdServicesStaticMockitoMockerTestCase + 2 subclasses:
+// AdServicesExtendedMockitoMockerTest and
+// AdServicesExtendedMockitoTestCaseAdServicesStaticMockitoMockerTest)
+
 /** Helper interface providing common expectations for static methods on AdServices APIs. */
 public interface AdServicesStaticMockitoMocker {
 
