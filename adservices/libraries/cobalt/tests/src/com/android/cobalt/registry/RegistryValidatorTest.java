@@ -50,6 +50,8 @@ import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ReportingInterval;
+import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig;
+import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig.DevicePrivacyDependencySet;
 import com.google.cobalt.StringSketchParameters;
 import com.google.cobalt.SystemProfileField;
 import com.google.cobalt.SystemProfileSelectionPolicy;
@@ -644,6 +646,65 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testValidateShuffledDp_deIdentifiedReport() {
+        assertThat(
+                        RegistryValidator.validateShuffledDp(
+                                DE_IDENTIFICATION,
+                                ShuffledDifferentialPrivacyConfig.getDefaultInstance()))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateShuffledDp() {
+        assertThat(
+                        RegistryValidator.validateShuffledDp(
+                                DE_IDENTIFICATION,
+                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                        .setPoissonMean(0.1)
+                                        .setDevicePrivacyDependencySet(
+                                                DevicePrivacyDependencySet.V1)
+                                        .build()))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateShuffledDp_negativePoissonMeanFails() {
+        assertThat(
+                        RegistryValidator.validateShuffledDp(
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                        .setPoissonMean(-0.1)
+                                        .setDevicePrivacyDependencySet(
+                                                DevicePrivacyDependencySet.V1)
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidateShuffledDp_zeroPoissonMeanFails() {
+        assertThat(
+                        RegistryValidator.validateShuffledDp(
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                        .setPoissonMean(0.0)
+                                        .setDevicePrivacyDependencySet(
+                                                DevicePrivacyDependencySet.V1)
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidateShuffledDp_unsetPrivacyDependencySetFails() {
+        assertThat(
+                        RegistryValidator.validateShuffledDp(
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                        .setPoissonMean(0.1)
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
     public void testIsValidReportTypeAndPrivacyMechanism_privateFleetwideOccurrenceCounts() {
         MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
@@ -1078,6 +1139,24 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 .isFalse();
     }
 
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_invalidShuffledDpConfigFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE).toBuilder().build();
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setShuffledDp(
+                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                        .setPoissonMean(-0.1)
+                                        .setDevicePrivacyDependencySet(
+                                                DevicePrivacyDependencySet.V1)
+                                        .build())
+                        .build();
+
+        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
+                .isFalse();
+    }
+
     private static MetricDefinition getMetricDefinition(MetricType metricType) {
         return MetricDefinition.newBuilder()
                 .setMetricType(metricType)
@@ -1087,13 +1166,20 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
 
     private static ReportDefinition getReportDefinition(
             ReportType reportType, PrivacyMechanism privacyMechanism) {
-        return ReportDefinition.newBuilder()
-                .setReportType(reportType)
-                .setPrivacyMechanism(privacyMechanism)
-                .setReportingInterval(DAYS_1)
-                .setSystemProfileSelection(REPORT_ALL)
-                .setMaxReleaseStage(ReleaseStage.DEBUG)
-                .build();
+        ReportDefinition.Builder report =
+                ReportDefinition.newBuilder()
+                        .setReportType(reportType)
+                        .setPrivacyMechanism(privacyMechanism)
+                        .setReportingInterval(DAYS_1)
+                        .setSystemProfileSelection(REPORT_ALL)
+                        .setMaxReleaseStage(ReleaseStage.DEBUG);
+        if (privacyMechanism.equals(SHUFFLED_DIFFERENTIAL_PRIVACY)) {
+            report.setShuffledDp(
+                    ShuffledDifferentialPrivacyConfig.newBuilder()
+                            .setPoissonMean(0.1)
+                            .setDevicePrivacyDependencySet(DevicePrivacyDependencySet.V1));
+        }
+        return report.build();
     }
 
     private static MetricDimension getMetricDimension(int maxEventCode) {

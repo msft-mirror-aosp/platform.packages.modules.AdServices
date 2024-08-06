@@ -132,23 +132,13 @@ public final class MockitoExpectations {
     }
 
     /**
-     * Mocks a call to {@link Flags#getBackgroundJobsLoggingKillSwitch()}, returning overrideValue.
+     * Mocks a call to {@link Flags#getBackgroundJobsLoggingKillSwitch()}, returning {@code value}.
+     *
+     * @deprecated use {@code mocker.mockGetBackgroundJobsLoggingKillSwitch()} instead.
      */
-    public static void mockBackgroundJobsLoggingKillSwitch(Flags flag, boolean overrideValue) {
-        when(flag.getBackgroundJobsLoggingKillSwitch()).thenReturn(overrideValue);
-    }
-
-    /** Mocks a call to {@link Flags#getCobaltLoggingEnabled()}, returning overrideValue. */
-    public static void mockCobaltLoggingEnabled(Flags flags, boolean enabled) {
-        when(flags.getCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    /**
-     * Mocks a call to {@link Flags#getAppNameApiErrorCobaltLoggingEnabled()}, returning
-     * overrideValue.
-     */
-    public static void mockAppNameApiErrorCobaltLoggingEnabled(Flags flags, boolean enabled) {
-        when(flags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(enabled);
+    @Deprecated
+    public static void mockBackgroundJobsLoggingKillSwitch(Flags flag, boolean value) {
+        when(flag.getBackgroundJobsLoggingKillSwitch()).thenReturn(value);
     }
 
     /**
@@ -173,21 +163,6 @@ public final class MockitoExpectations {
      */
     public static void mockMsmtReportingCobaltLoggingEnabled(Flags flags, boolean enabled) {
         when(flags.getMsmtReportingCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    /**
-     * Mocks a call to {@link Flags#getAdservicesReleaseStageForCobalt()}, returning {@code DEBUG}
-     * as the testing release stage.
-     */
-    public static void mockAdservicesReleaseStageForCobalt(Flags flags) {
-        when(flags.getAdservicesReleaseStageForCobalt()).thenReturn("DEBUG");
-    }
-
-    /** Mocks calls to override Cobalt app name api error logging related flags. */
-    public static void mockCobaltLoggingFlags(Flags flags, boolean override) {
-        mockCobaltLoggingEnabled(flags, override);
-        mockAppNameApiErrorCobaltLoggingEnabled(flags, override);
-        mockAdservicesReleaseStageForCobalt(flags);
     }
 
     /**
