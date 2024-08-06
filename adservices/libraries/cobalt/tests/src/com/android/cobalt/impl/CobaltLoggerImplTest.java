@@ -35,7 +35,9 @@ import com.android.cobalt.data.StringHashEntity;
 import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.data.TestOnlyDao.AggregateStoreTableRow;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.system.SystemData;
+import com.android.cobalt.testing.logging.NoOpCobaltOperationLogger;
 import com.android.cobalt.testing.system.FakeSystemClock;
 
 import com.google.cobalt.AggregateValue;
@@ -169,6 +171,7 @@ public class CobaltLoggerImplTest {
     private DataService mDataService;
     private SystemData mSystemData;
     private FakeSystemClock mClock;
+    private CobaltOperationLogger mOperationLogger;
     private CobaltLogger mLogger;
 
     @Before
@@ -179,6 +182,7 @@ public class CobaltLoggerImplTest {
         mSystemData = new SystemData(APP_VERSION);
         mClock = new FakeSystemClock();
         mClock.set(WORKER_TIME);
+        mOperationLogger = new NoOpCobaltOperationLogger();
         mLogger =
                 new CobaltLoggerImpl(
                         COBALT_REGISTRY,
@@ -187,6 +191,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ true);
     }
 
@@ -448,6 +453,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ false);
 
         // Log some data.
@@ -490,6 +496,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ true);
 
         // Log some data.
@@ -531,6 +538,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ true);
 
         // Log some data.
@@ -808,6 +816,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ false);
 
         // Log some data.
@@ -850,6 +859,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ true);
 
         // Log some data.
@@ -892,6 +902,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ true);
 
         // Log some data.
