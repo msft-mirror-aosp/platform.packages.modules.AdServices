@@ -40,7 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-class PeriodicEncodingJobRunner {
+/** Encapsulate the business logic of executing an encoding update. */
+public class PeriodicEncodingJobRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     private final SignalsProvider mSignalsProvider;
@@ -74,7 +75,17 @@ class PeriodicEncodingJobRunner {
         mLightWeightExecutor = lightWeightExecutor;
     }
 
-    FluentFuture<Void> runEncodingPerBuyer(
+    /**
+     * Run encoding for a given buyer.
+     *
+     * @param encoderLogicMetadata Metadata for the encoding logic. The buyer field is used to
+     *     select the correct ad tech.
+     * @param timeout Timeout in seconds.
+     * @param logHelper Logger utility for execution.
+     * @param encodingJobRunStatsLogger Stats utility for execution.
+     * @return future for completion.
+     */
+    public FluentFuture<Void> runEncodingPerBuyer(
             DBEncoderLogicMetadata encoderLogicMetadata,
             int timeout,
             EncodingExecutionLogHelper logHelper,

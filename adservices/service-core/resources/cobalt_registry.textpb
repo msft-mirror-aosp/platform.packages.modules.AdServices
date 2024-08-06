@@ -70,6 +70,8 @@ customers {
           delta: 0.9
           reporting_threshold: 1
           poisson_mean: 0.1
+          skip_poisson_mean_validation_test_only: true
+          device_privacy_dependency_set: V1
         }
       }
       reports {
@@ -89,6 +91,7 @@ customers {
           delta: 1e-10
           reporting_threshold: 1000000
           poisson_mean: 0.00124512
+          device_privacy_dependency_set: V1
         }
       }
       reports {
@@ -108,6 +111,7 @@ customers {
           delta: 1e-10
           reporting_threshold: 10000000
           poisson_mean: 0.000124512
+          device_privacy_dependency_set: V1
         }
       }
       reports {
@@ -128,6 +132,8 @@ customers {
           delta: 0.8187
           reporting_threshold: 2
           poisson_mean: 0.002
+          skip_poisson_mean_validation_test_only: true
+          device_privacy_dependency_set: V1
         }
       }
       metric_dimensions {
