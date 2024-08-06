@@ -18,10 +18,13 @@ package com.android.cobalt.testing.observations;
 
 import com.android.cobalt.data.EventVector;
 
+import com.google.cobalt.IndexHistogram;
 import com.google.cobalt.IntegerObservation;
 import com.google.cobalt.Observation;
 import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReportParticipationObservation;
+import com.google.cobalt.StringHistogramObservation;
+import com.google.common.hash.HashCode;
 import com.google.protobuf.ByteString;
 
 public final class ObservationFactory {
@@ -75,6 +78,58 @@ public final class ObservationFactory {
         return Observation.newBuilder()
                 .setRandomId(randomId)
                 .setReportParticipation(ReportParticipationObservation.getDefaultInstance())
+                .build();
+    }
+
+    /** Creates an IndexHistogram for eventVector with index and count pair. */
+    public static IndexHistogram createIndexHistogram(
+            EventVector eventVector, int index, long count) {
+        return IndexHistogram.newBuilder()
+                .addAllEventCodes(eventVector.eventCodes())
+                .addBucketIndices(index)
+                .addBucketCounts(count)
+                .build();
+    }
+
+    /** Creates an IndexHistogram for eventVector containing 2 index and count pairs. */
+    public static IndexHistogram createIndexHistogram(
+            EventVector eventVector, int index1, long count1, int index2, long count2) {
+        return IndexHistogram.newBuilder()
+                .addAllEventCodes(eventVector.eventCodes())
+                .addBucketIndices(index1)
+                .addBucketCounts(count1)
+                .addBucketIndices(index2)
+                .addBucketCounts(count2)
+                .build();
+    }
+
+    /** Copy stringHistogramObservation with hashCodes. */
+    public static StringHistogramObservation copyWithStringHashesFf64(
+            StringHistogramObservation stringHistogramObservation, HashCode... hashCodes) {
+        StringHistogramObservation.Builder builder = stringHistogramObservation.toBuilder();
+        for (int i = 0; i < hashCodes.length; ++i) {
+            builder.addStringHashesFf64(ByteString.copyFrom(hashCodes[i].asBytes()));
+        }
+        return builder.build();
+    }
+
+    /** Copy stringHistogramObservation with indexHistograms. */
+    public static StringHistogramObservation copyWithStringHistograms(
+            StringHistogramObservation stringHistogramObservation,
+            IndexHistogram... indexHistograms) {
+        StringHistogramObservation.Builder builder = stringHistogramObservation.toBuilder();
+        for (int i = 0; i < indexHistograms.length; ++i) {
+            builder.addStringHistograms(indexHistograms[i]);
+        }
+        return builder.build();
+    }
+
+    /** Creates a StringHistogramObservation for the stringHistogramObservation. */
+    public static Observation createStringHistogramObservation(
+            StringHistogramObservation stringHistogramObservation, ByteString randomId) {
+        return Observation.newBuilder()
+                .setStringHistogram(stringHistogramObservation)
+                .setRandomId(randomId)
                 .build();
     }
 }

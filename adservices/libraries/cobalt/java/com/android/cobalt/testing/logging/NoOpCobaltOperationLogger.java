@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell.signals;
+package com.android.cobalt.testing.logging;
 
-public class GenerateInputForEncodingArgs {
-    static final int ARG_PARSE_START_INDEX = 2;
+import androidx.annotation.VisibleForTesting;
 
-    public static final String BUYER = "--buyer";
+import com.android.cobalt.logging.CobaltOperationLogger;
+
+/** An operation logger that doesn't log. */
+public final class NoOpCobaltOperationLogger implements CobaltOperationLogger {
+    /** NoOp log that a Cobalt logging event exceeds the string buffer max. */
+    @VisibleForTesting
+    public void logStringBufferMaxExceeded(int metricId, int reportId) {}
 }

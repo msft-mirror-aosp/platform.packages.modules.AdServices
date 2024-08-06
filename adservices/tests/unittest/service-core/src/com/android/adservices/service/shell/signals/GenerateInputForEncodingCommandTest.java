@@ -41,13 +41,12 @@ import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 
 import org.json.JSONException;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -56,6 +55,7 @@ import java.util.concurrent.TimeoutException;
 
 public final class GenerateInputForEncodingCommandTest
         extends ShellCommandTestCase<GenerateInputForEncodingCommand> {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
 
     @ShellCommandStats.Command
@@ -81,11 +81,22 @@ public final class GenerateInputForEncodingCommandTest
             WebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 
     @Before
-    public void setUp() {
-        this.mJSScriptEngine = JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger());
+    public void killAndRecreateJavascriptSandboxIsolate()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        if (mJSScriptEngine == null) {
+            mJSScriptEngine = JSScriptEngine.getInstance(sContext, sLogger);
+        }
+        // Kill the JSScriptEngine to ensure it re-creates the JavascriptEngine isolate.
+        mJSScriptEngine.shutdown().get(JS_SCRIPT_ENGINE_TIMEOUT_SEC, TimeUnit.SECONDS);
     }
 
-    @Ignore("b/355764271")
+    @After
+    public void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
+        if (mJSScriptEngine != null) {
+            mJSScriptEngine.shutdown().get(JS_SCRIPT_ENGINE_TIMEOUT_SEC, TimeUnit.SECONDS);
+        }
+    }
+
     @Test
     public void testRun_happyPath_returnsSuccess()
             throws JSONException, ExecutionException, InterruptedException, TimeoutException {
@@ -112,12 +123,10 @@ public final class GenerateInputForEncodingCommandTest
                                         .get(JS_SCRIPT_ENGINE_TIMEOUT_SEC, TimeUnit.SECONDS));
 
         // We expect that ad techs need to define the encodeSignals() logic for this to
-        // execute, but
-        // there should be no parsing errors.
+        // execute, but there should be no parsing errors.
         assertThat(exception.getMessage())
                 .contains("Uncaught ReferenceError: encodeSignals is not defined");
         assertThat(jsScript).contains(ProtectedSignalsFixture.PACKAGE_NAME_PREFIX);
-        Base64.Encoder encoder = Base64.getEncoder();
         assertThat(jsScript)
                 .contains(validateAndSerializeBase64(signals.get(0).getBase64EncodedValue()));
         assertThat(jsScript)
