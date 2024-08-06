@@ -151,18 +151,15 @@ public final class MeasurementServiceImplTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        mKillSwitchSnapshot =
-                new HashMap<>() {
-                    {
-                        put(AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCE, false);
-                        put(AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCES, false);
-                        put(AD_SERVICES_API_CALLED__API_NAME__REGISTER_TRIGGER, false);
-                        put(AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE, false);
-                        put(AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER, false);
-                        put(AD_SERVICES_API_CALLED__API_NAME__DELETE_REGISTRATIONS, false);
-                        put(AD_SERVICES_API_CALLED__API_NAME__GET_MEASUREMENT_API_STATUS, false);
-                    }
-                };
+        mKillSwitchSnapshot = new HashMap<>();
+        mKillSwitchSnapshot.put(AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCE, false);
+        mKillSwitchSnapshot.put(AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCES, false);
+        mKillSwitchSnapshot.put(AD_SERVICES_API_CALLED__API_NAME__REGISTER_TRIGGER, false);
+        mKillSwitchSnapshot.put(AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE, false);
+        mKillSwitchSnapshot.put(AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER, false);
+        mKillSwitchSnapshot.put(AD_SERVICES_API_CALLED__API_NAME__DELETE_REGISTRATIONS, false);
+        mKillSwitchSnapshot.put(
+                AD_SERVICES_API_CALLED__API_NAME__GET_MEASUREMENT_API_STATUS, false);
     }
 
     @Test
