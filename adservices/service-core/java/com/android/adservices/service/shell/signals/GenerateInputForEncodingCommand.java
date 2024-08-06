@@ -17,8 +17,8 @@
 package com.android.adservices.service.shell.signals;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
-import static com.android.adservices.service.shell.signals.GenerateInputForEncodingArgs.ARG_PARSE_START_INDEX;
-import static com.android.adservices.service.shell.signals.GenerateInputForEncodingArgs.BUYER;
+import static com.android.adservices.service.shell.signals.SignalsShellCommandArgs.ARG_PARSE_START_INDEX;
+import static com.android.adservices.service.shell.signals.SignalsShellCommandArgs.BUYER;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
 
 import android.adservices.common.AdTechIdentifier;

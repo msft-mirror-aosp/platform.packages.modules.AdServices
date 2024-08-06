@@ -26,6 +26,7 @@ import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.system.CobaltClock;
 import com.android.cobalt.system.SystemClock;
 import com.android.cobalt.system.SystemData;
@@ -57,6 +58,7 @@ public final class CobaltLoggerImpl implements CobaltLogger {
     private final ExecutorService mExecutor;
     private final SystemClock mSystemClock;
     private final boolean mEnabled;
+    private final CobaltOperationLogger mOperationLogger;
 
     public CobaltLoggerImpl(
             @NonNull Project project,
@@ -65,6 +67,7 @@ public final class CobaltLoggerImpl implements CobaltLogger {
             @NonNull SystemData systemData,
             @NonNull ExecutorService executor,
             @NonNull SystemClock systemClock,
+            @NonNull CobaltOperationLogger operationLogger,
             boolean enabled) {
         mProject = Objects.requireNonNull(project);
         mReleaseStage = Objects.requireNonNull(releaseStage);
@@ -72,6 +75,7 @@ public final class CobaltLoggerImpl implements CobaltLogger {
         mSystemData = Objects.requireNonNull(systemData);
         mExecutor = Objects.requireNonNull(executor);
         mSystemClock = Objects.requireNonNull(systemClock);
+        mOperationLogger = Objects.requireNonNull(operationLogger);
         mEnabled = enabled;
     }
 
