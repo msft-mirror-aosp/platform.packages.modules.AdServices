@@ -99,7 +99,6 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCapFixture;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.Process;
@@ -110,6 +109,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -161,11 +161,10 @@ import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.FetchProcessLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -176,7 +175,6 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -184,9 +182,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.time.Clock;
@@ -205,10 +201,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class AdSelectionServiceImplTest {
+@SpyStatic(JSScriptEngine.class)
+@MockStatic(ConsentManager.class)
+@MockStatic(FlagsFactory.class)
+@MockStatic(MeasurementImpl.class)
+@MockStatic(AppImportanceFilter.class)
+public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoTestCase {
+
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final int CALLER_UID = Process.myUid();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
     private static final Uri RENDER_URI = Uri.parse("https://test.com/advert/");
     private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
@@ -265,6 +266,8 @@ public class AdSelectionServiceImplTest {
 
     private static final String INTERACTION_DATA = "{\"key\":\"value\"}";
 
+    private static final boolean CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
+
     private final ExecutorService mLightweightExecutorService =
             AdServicesExecutors.getLightWeightExecutor();
     private final ExecutorService mBackgroundExecutorService =
@@ -281,7 +284,6 @@ public class AdSelectionServiceImplTest {
     private final int mBytesPerPeriod = 1;
 
     private final DevContext mDevContext = DevContext.createForDevOptionsDisabled();
-    private static final boolean CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
 
     @Spy
     private final AdServicesHttpsClient mClientSpy =
@@ -289,18 +291,14 @@ public class AdSelectionServiceImplTest {
                     AdServicesExecutors.getBlockingExecutor(),
                     CacheProviderFactory.createNoOpCache());
 
-    private final AdServicesLogger mAdServicesLoggerMock =
-            ExtendedMockito.mock(AdServicesLoggerImpl.class);
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-    // This object access some system APIs
-    @Mock public DevContextFilter mDevContextFilterMock;
-    @Mock public AppImportanceFilter mAppImportanceFilterMock;
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
+    @Mock private DevContextFilter mDevContextFilterMock;
+    @Mock private AppImportanceFilter mAppImportanceFilterMock;
 
     private Flags mFlags;
 
-    @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
+    @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
 
-    private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
@@ -329,33 +327,19 @@ public class AdSelectionServiceImplTest {
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
     @Mock private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
-    public AdSelectionServiceImplTest() {}
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     @Before
     public void setUp() {
         mFlags = new AdSelectionServicesTestsFlags(false);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(JSScriptEngine.class)
-                        .mockStatic(ConsentManager.class)
-                        .mockStatic(FlagsFactory.class)
-                        .mockStatic(MeasurementImpl.class)
-                        .mockStatic(AppImportanceFilter.class)
-                        // mAdServicesLoggerMock is not referenced in many tests
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlags);
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncodedPayloadDao();
 
@@ -436,16 +420,9 @@ public class AdSelectionServiceImplTest {
                         false, mConsentedDebugConfigurationDao);
     }
 
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
-    }
-
     @Test
     public void testReportImpressionSuccessWithRegisterAdBeaconDisabled() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         // Re init flags with registerAdBeaconDisabled
         boolean enrollmentCheckDisabled = false;
         mFlags =
@@ -524,7 +501,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -573,7 +550,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessCallbackThrowsErrorAuctionServerEnabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -652,7 +629,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -701,7 +678,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionFailureCallbackThrowsErrorAuctionServerEnabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -780,7 +757,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -822,7 +799,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessCallbackThrowsErrorAuctionServerDisabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -901,7 +878,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -950,7 +927,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionFailureCallbackThrowsErrorAuctionServerDisabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -1029,7 +1006,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1070,7 +1047,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessfullyReportsAdCost() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1149,7 +1126,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1201,7 +1178,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessfullyReportsDataVersionHeader() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1285,7 +1262,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1345,7 +1322,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessfullyReportsSellerDataVersionHeader() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1422,7 +1399,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1476,7 +1453,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1547,7 +1524,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1596,7 +1573,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerDisabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -1690,7 +1667,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1739,7 +1716,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerEnabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -1833,7 +1810,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1883,7 +1860,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -1977,7 +1954,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2021,7 +1998,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2115,7 +2092,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2159,7 +2136,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
 
         Flags auctionServerReportingDisabledFlags =
@@ -2245,7 +2222,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2281,7 +2258,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
 
         Flags auctionServerReportingEnabledFlags =
@@ -2367,7 +2344,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2403,7 +2380,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2487,7 +2464,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2527,7 +2504,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2611,7 +2588,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2649,7 +2626,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessWithEmptyBuyerSignals() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2724,7 +2701,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2773,7 +2750,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessAndDoesNotCrashAfterSellerThrowsAnException()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -2853,7 +2830,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2899,7 +2876,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessAndDoesNotCrashAfterBuyerReportThrowsAnException()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -2979,7 +2956,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3024,7 +3001,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessfullyRegistersEventUris() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3111,7 +3088,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3194,7 +3171,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithRegisterAdBeaconDisabled() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         // Re init flags with registerAdBeaconDisabled
         boolean enrollmentCheckDisabled = false;
         mFlags =
@@ -3291,7 +3268,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3349,7 +3326,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterUrisThatFailDomainValidation()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3441,7 +3418,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3518,7 +3495,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSucceedsAndRegistersUrisWithSubdomains() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3609,7 +3586,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3692,7 +3669,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterMalformedUris() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -3783,7 +3760,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3860,7 +3837,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionOnlyRegisterSellerUrisWhenBuyerJSFails() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -3948,7 +3925,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4014,7 +3991,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionDoesNotRegisterUrisWhenSellerJSFails() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4102,7 +4079,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4160,7 +4137,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionDoesNotRegisterMoreThanMaxInteractionUrisFromPhFlag()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4260,7 +4237,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxEventUris,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4327,7 +4304,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionSucceedsButDesNotRegisterUrisWithInteractionKeySizeThatExceedsMax()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4433,7 +4410,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxInteractionKeySize,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4512,7 +4489,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterUrisWithUriSizeThatExceedsMax()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4614,7 +4591,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxInteractionReportingUriSize,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4690,7 +4667,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionWithRevokedUserConsentSuccess() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4764,7 +4741,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4805,7 +4782,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenReportResultTakesTooLong() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4877,7 +4854,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4917,7 +4894,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenReportWinTakesTooLong() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4989,7 +4966,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5029,7 +5006,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenOverallJSTimesOut() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5107,7 +5084,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5147,7 +5124,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenJSFetchTakesTooLong() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5220,7 +5197,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5260,7 +5237,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithInvalidAdSelectionId() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5328,7 +5305,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5368,7 +5345,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionBadSellerJavascriptFailsWithInternalError() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5435,7 +5412,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5475,7 +5452,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionBadBuyerJavascriptFailsWithInternalError() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5543,7 +5520,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5583,7 +5560,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionUseDevOverrideForSellerJS() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5671,7 +5648,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5716,7 +5693,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionUseDevOverrideForSellerJSSuccessfullyRegistersEventUris()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -5824,7 +5801,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5927,7 +5904,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5998,7 +5975,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6063,7 +6040,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6133,7 +6110,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6214,7 +6191,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6289,7 +6266,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6370,7 +6347,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6452,7 +6429,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6575,7 +6552,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6700,7 +6677,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6819,7 +6796,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6933,7 +6910,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6975,7 +6952,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6999,7 +6976,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionForegroundCheckEnabledFails_throwsException() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -7031,7 +7008,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7103,7 +7080,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7176,7 +7153,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7240,7 +7217,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7306,7 +7283,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7366,7 +7343,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7430,7 +7407,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7455,7 +7432,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithInvalidPackageName() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -7535,7 +7512,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7572,7 +7549,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenAppCannotUsePPApi() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -7656,7 +7633,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7700,7 +7677,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenSellerFailsEnrollmentCheck() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -7780,7 +7757,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7824,7 +7801,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         // Reset flags to perform enrollment check
         boolean enrollmentCheckEnabled = true;
@@ -7909,7 +7886,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7957,7 +7934,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testAdSelectionConfigInvalidSellerAndSellerUris() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8020,7 +7997,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8062,7 +8039,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessThrottledSubsequentCallFailure() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8131,7 +8108,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8200,7 +8177,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         // Instantiate a server with different domain from buyer and seller for reporting
         MockWebServer reportingServer = new MockWebServer();
         reportingServer.play();
@@ -8270,7 +8247,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8316,7 +8293,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionOnlyReportsBuyerWhenSellerReportingUriDoesNotMatchDomain()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8390,7 +8367,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8438,7 +8415,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriDoesNotMatchDomain()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
 
@@ -8512,7 +8489,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8560,7 +8537,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccessWithValidImpressionReportingSubdomains()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUriWithSubdomain =
                 CommonFixture.getUriWithValidSubdomain(
@@ -8656,7 +8633,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8706,7 +8683,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriIsNotEnrolled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -8795,7 +8772,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         flagsWithEnrollment,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8840,7 +8817,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionReportsToBothWithEnrollmentCheckDisabledBuyerNotEnrolled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -8917,7 +8894,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8989,7 +8966,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9060,7 +9037,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9125,7 +9102,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9196,7 +9173,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9279,7 +9256,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9356,7 +9333,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9437,7 +9414,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9517,7 +9494,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9646,7 +9623,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9769,7 +9746,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9897,7 +9874,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9999,7 +9976,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testOverrideAdSelectionConfigRemoteOverridesSuccess() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -10043,7 +10020,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -10703,7 +10680,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOff()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         boolean enrollmentCheck = false;
         Flags unifiedFlowReportingDisabled =
@@ -10733,7 +10710,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         unifiedFlowReportingDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -10770,7 +10747,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOn()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
 
         boolean enrollmentCheck = false;
         Flags unifiedFlowReportingEnabled =
@@ -10800,7 +10777,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         unifiedFlowReportingEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -10848,7 +10825,7 @@ public class AdSelectionServiceImplTest {
                 mLightweightExecutorService,
                 mBackgroundExecutorService,
                 mScheduledExecutor,
-                CONTEXT,
+                mContext,
                 mAdServicesLoggerMock,
                 mFlags,
                 CallingAppUidSupplierProcessImpl.create(),
@@ -11294,7 +11271,7 @@ public class AdSelectionServiceImplTest {
                 + String.format(Locale.ENGLISH, "    wait(\"%d\");\n", waitTime);
     }
 
-    String getSaltString(int length) {
+    private String getSaltString(int length) {
         String chars = "abcdefghijklmnopqrstuvwxyz";
         StringBuilder salt = new StringBuilder();
         Random rnd = new Random();
@@ -11327,7 +11304,7 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    public static class AdSelectionOverrideTestCallback extends AdSelectionOverrideCallback.Stub {
+    private static class AdSelectionOverrideTestCallback extends AdSelectionOverrideCallback.Stub {
         protected final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
@@ -11349,10 +11326,10 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    static class AdSelectionFromOutcomesTestCallback extends AdSelectionCallback.Stub {
+    private static class AdSelectionFromOutcomesTestCallback extends AdSelectionCallback.Stub {
 
         final CountDownLatch mCountDownLatch;
-        boolean mIsSuccess = false;
+        boolean mIsSuccess;
         AdSelectionResponse mAdSelectionResponse;
         FledgeErrorResponse mFledgeErrorResponse;
 
@@ -11377,9 +11354,9 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    static class ReportInteractionTestCallback extends ReportInteractionCallback.Stub {
+    private static class ReportInteractionTestCallback extends ReportInteractionCallback.Stub {
         protected final CountDownLatch mCountDownLatch;
-        boolean mIsSuccess = false;
+        boolean mIsSuccess;
         FledgeErrorResponse mFledgeErrorResponse;
 
         ReportInteractionTestCallback(CountDownLatch countDownLatch) {
@@ -11399,7 +11376,7 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    public static class ReportInteractionTestErrorCallback extends ReportInteractionTestCallback {
+    private static class ReportInteractionTestErrorCallback extends ReportInteractionTestCallback {
         public ReportInteractionTestErrorCallback(CountDownLatch countDownLatch) {
             super(countDownLatch);
         }
@@ -11412,7 +11389,7 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    public static class ReportImpressionTestThrowingCallback extends ReportImpressionTestCallback {
+    private static class ReportImpressionTestThrowingCallback extends ReportImpressionTestCallback {
         public ReportImpressionTestThrowingCallback(CountDownLatch countDownLatch) {
             super(countDownLatch);
         }
@@ -11432,7 +11409,7 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    public static class AdSelectionOverrideTestErrorCallback
+    private static class AdSelectionOverrideTestErrorCallback
             extends AdSelectionOverrideTestCallback {
         public AdSelectionOverrideTestErrorCallback(CountDownLatch countDownLatch) {
             super(countDownLatch);
