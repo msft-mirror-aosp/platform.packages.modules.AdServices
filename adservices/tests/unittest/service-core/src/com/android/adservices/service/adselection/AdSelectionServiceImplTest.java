@@ -66,6 +66,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -99,7 +100,6 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCapFixture;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.Process;
@@ -110,6 +110,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -161,11 +162,10 @@ import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.FetchProcessLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -176,18 +176,14 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
-import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
+import org.mockito.verification.VerificationMode;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -201,14 +197,21 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-public class AdSelectionServiceImplTest {
+@SpyStatic(JSScriptEngine.class)
+@MockStatic(ConsentManager.class)
+@MockStatic(FlagsFactory.class)
+@MockStatic(MeasurementImpl.class)
+@MockStatic(AppImportanceFilter.class)
+public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoTestCase {
+
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final int CALLER_UID = Process.myUid();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
     private static final Uri RENDER_URI = Uri.parse("https://test.com/advert/");
     private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
@@ -265,6 +268,10 @@ public class AdSelectionServiceImplTest {
 
     private static final String INTERACTION_DATA = "{\"key\":\"value\"}";
 
+    private static final boolean CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
+
+    private static final String INCORRECT_PKG_NAME = CommonFixture.TEST_PACKAGE_NAME + ".incorrect";
+
     private final ExecutorService mLightweightExecutorService =
             AdServicesExecutors.getLightWeightExecutor();
     private final ExecutorService mBackgroundExecutorService =
@@ -281,7 +288,6 @@ public class AdSelectionServiceImplTest {
     private final int mBytesPerPeriod = 1;
 
     private final DevContext mDevContext = DevContext.createForDevOptionsDisabled();
-    private static final boolean CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
 
     @Spy
     private final AdServicesHttpsClient mClientSpy =
@@ -289,18 +295,14 @@ public class AdSelectionServiceImplTest {
                     AdServicesExecutors.getBlockingExecutor(),
                     CacheProviderFactory.createNoOpCache());
 
-    private final AdServicesLogger mAdServicesLoggerMock =
-            ExtendedMockito.mock(AdServicesLoggerImpl.class);
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-    // This object access some system APIs
-    @Mock public DevContextFilter mDevContextFilterMock;
-    @Mock public AppImportanceFilter mAppImportanceFilterMock;
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
+    @Mock private DevContextFilter mDevContextFilterMock;
+    @Mock private AppImportanceFilter mAppImportanceFilterMock;
 
     private Flags mFlags;
 
-    @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
+    @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
 
-    private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
@@ -329,33 +331,19 @@ public class AdSelectionServiceImplTest {
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
     @Mock private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
-    public AdSelectionServiceImplTest() {}
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     @Before
     public void setUp() {
         mFlags = new AdSelectionServicesTestsFlags(false);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(JSScriptEngine.class)
-                        .mockStatic(ConsentManager.class)
-                        .mockStatic(FlagsFactory.class)
-                        .mockStatic(MeasurementImpl.class)
-                        .mockStatic(AppImportanceFilter.class)
-                        // mAdServicesLoggerMock is not referenced in many tests
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlags);
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncodedPayloadDao();
 
@@ -426,8 +414,7 @@ public class AdSelectionServiceImplTest {
         doNothing()
                 .when(mAppImportanceFilterMock)
                 .assertCallerIsInForeground(anyInt(), anyInt(), any());
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
@@ -436,16 +423,9 @@ public class AdSelectionServiceImplTest {
                         false, mConsentedDebugConfigurationDao);
     }
 
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
-    }
-
     @Test
     public void testReportImpressionSuccessWithRegisterAdBeaconDisabled() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         // Re init flags with registerAdBeaconDisabled
         boolean enrollmentCheckDisabled = false;
         mFlags =
@@ -507,8 +487,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -524,7 +503,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -562,18 +541,16 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSuccessCallbackThrowsErrorAuctionServerEnabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -635,8 +612,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -652,7 +628,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -690,18 +666,16 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_CALLBACK_SHUTDOWN),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_CALLBACK_SHUTDOWN);
     }
 
     @Test
     public void testReportImpressionFailureCallbackThrowsErrorAuctionServerEnabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -763,8 +737,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -780,7 +753,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -811,18 +784,16 @@ public class AdSelectionServiceImplTest {
 
         assertFalse(callback.mIsSuccess);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_CALLBACK_SHUTDOWN),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_CALLBACK_SHUTDOWN);
     }
 
     @Test
     public void testReportImpressionSuccessCallbackThrowsErrorAuctionServerDisabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -884,8 +855,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -901,7 +871,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -939,18 +909,16 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_CALLBACK_SHUTDOWN),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_CALLBACK_SHUTDOWN);
     }
 
     @Test
     public void testReportImpressionFailureCallbackThrowsErrorAuctionServerDisabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -1012,8 +980,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -1029,7 +996,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1060,17 +1027,15 @@ public class AdSelectionServiceImplTest {
 
         assertFalse(callback.mIsSuccess);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_CALLBACK_SHUTDOWN),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_CALLBACK_SHUTDOWN);
     }
 
     @Test
     public void testReportImpressionSuccessfullyReportsAdCost() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1132,8 +1097,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -1149,7 +1113,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1191,17 +1155,15 @@ public class AdSelectionServiceImplTest {
         assertThat(notifications)
                 .containsExactly(mSellerReportingPath, buyerReportingPathWithAdCost);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSuccessfullyReportsDataVersionHeader() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1268,8 +1230,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -1285,7 +1246,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1335,17 +1296,15 @@ public class AdSelectionServiceImplTest {
                 .containsExactly(
                         sellerReportingPathWithDataVersion, buyerReportingPathWithDataVersion);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSuccessfullyReportsSellerDataVersionHeader() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1405,8 +1364,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -1422,7 +1380,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1466,17 +1424,15 @@ public class AdSelectionServiceImplTest {
         assertThat(notifications)
                 .containsExactly(mBuyerReportingPath, sellerReportingPathWithDataVersion);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1530,8 +1486,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -1547,7 +1502,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1585,18 +1540,16 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerDisabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -1672,8 +1625,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         // Init client with new flags and true for shouldUseUnifiedTables
         AdSelectionServiceImpl adSelectionService =
@@ -1690,7 +1642,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1728,18 +1680,16 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerEnabled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -1815,8 +1765,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         // Init client with new flags and true for shouldUseUnifiedTables
         AdSelectionServiceImpl adSelectionService =
@@ -1833,7 +1782,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -1871,19 +1820,17 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void
             testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -1959,8 +1906,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         // Init client with new flags and true for shouldUseUnifiedTables
         AdSelectionServiceImpl adSelectionService =
@@ -1977,7 +1923,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2009,19 +1955,17 @@ public class AdSelectionServiceImplTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void
             testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2097,8 +2041,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         // Init client with new flags and true for shouldUseUnifiedTables
         AdSelectionServiceImpl adSelectionService =
@@ -2115,7 +2058,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2147,20 +2090,17 @@ public class AdSelectionServiceImplTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void
             testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
-        String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
+        requiresJSSandbox();
 
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2227,8 +2167,7 @@ public class AdSelectionServiceImplTest {
 
         mAdSelectionEntryDao.insertDBReportingComputationInfo(dbReportingComputationInfo);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         // Init client with new flags and true for shouldUseUnifiedTables
         AdSelectionServiceImpl adSelectionService =
@@ -2245,7 +2184,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2267,7 +2206,7 @@ public class AdSelectionServiceImplTest {
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
-                        .setCallerPackageName(otherPackageName)
+                        .setCallerPackageName(INCORRECT_PKG_NAME)
                         .build();
 
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
@@ -2281,8 +2220,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
-        String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
+        requiresJSSandbox();
 
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2349,8 +2287,7 @@ public class AdSelectionServiceImplTest {
 
         mAdSelectionEntryDao.insertDBReportingComputationInfo(dbReportingComputationInfo);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         // Init client with new flags and true for shouldUseUnifiedTables
         AdSelectionServiceImpl adSelectionService =
@@ -2367,7 +2304,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2389,7 +2326,7 @@ public class AdSelectionServiceImplTest {
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
-                        .setCallerPackageName(otherPackageName)
+                        .setCallerPackageName(INCORRECT_PKG_NAME)
                         .build();
 
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
@@ -2403,7 +2340,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2469,8 +2406,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         // Init client with new flags and true for shouldUseUnifiedTables
         AdSelectionServiceImpl adSelectionService =
@@ -2487,7 +2423,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2527,7 +2463,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
@@ -2593,8 +2529,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         // Init client with new flags and true for shouldUseUnifiedTables
         AdSelectionServiceImpl adSelectionService =
@@ -2611,7 +2546,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2649,7 +2584,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessWithEmptyBuyerSignals() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2707,8 +2642,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder.setPerBuyerSignals(emptyPerBuyerSignals).build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -2724,7 +2658,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2762,18 +2696,16 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSuccessAndDoesNotCrashAfterSellerThrowsAnException()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -2836,8 +2768,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -2853,7 +2784,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -2888,18 +2819,16 @@ public class AdSelectionServiceImplTest {
 
         assertEquals(server.takeRequest().getPath(), mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSuccessAndDoesNotCrashAfterBuyerReportThrowsAnException()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -2962,8 +2891,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -2979,7 +2907,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3014,17 +2942,15 @@ public class AdSelectionServiceImplTest {
 
         assertEquals(server.takeRequest().getPath(), mSellerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSuccessfullyRegistersEventUris() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3094,8 +3020,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -3111,7 +3036,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3184,17 +3109,15 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionFailsWithRegisterAdBeaconDisabled() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         // Re init flags with registerAdBeaconDisabled
         boolean enrollmentCheckDisabled = false;
         mFlags =
@@ -3274,8 +3197,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -3291,7 +3213,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3338,18 +3260,16 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID, HOVER_EVENT_BUYER, FLAG_REPORTING_DESTINATION_BUYER));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterUrisThatFailDomainValidation()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3424,8 +3344,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -3441,7 +3360,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3508,17 +3427,15 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSucceedsAndRegistersUrisWithSubdomains() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3592,8 +3509,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -3609,7 +3525,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3682,17 +3598,15 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterMalformedUris() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -3766,8 +3680,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -3783,7 +3696,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -3850,17 +3763,15 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionOnlyRegisterSellerUrisWhenBuyerJSFails() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -3931,8 +3842,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -3948,7 +3858,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4004,17 +3914,15 @@ public class AdSelectionServiceImplTest {
 
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testReportImpressionDoesNotRegisterUrisWhenSellerJSFails() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4085,8 +3993,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -4102,7 +4009,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4149,18 +4056,16 @@ public class AdSelectionServiceImplTest {
 
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testReportImpressionDoesNotRegisterMoreThanMaxInteractionUrisFromPhFlag()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4231,8 +4136,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         long maxRegisteredAdBeacons = 3;
 
@@ -4260,7 +4164,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxEventUris,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4315,19 +4219,17 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void
             testReportImpressionSucceedsButDesNotRegisterUrisWithInteractionKeySizeThatExceedsMax()
                     throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4416,8 +4318,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -4433,7 +4334,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxInteractionKeySize,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4501,18 +4402,16 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterUrisWithUriSizeThatExceedsMax()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4597,8 +4496,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -4614,7 +4512,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxInteractionReportingUriSize,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4680,17 +4578,15 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionWithRevokedUserConsentSuccess() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4747,8 +4643,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -4764,7 +4659,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4795,17 +4690,15 @@ public class AdSelectionServiceImplTest {
 
         // Confirm a duplicate log entry does not exist.
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
-        verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_USER_CONSENT_REVOKED),
-                        anyInt());
+        verifyLogFledgeApiCallStatsNeverCalled(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_USER_CONSENT_REVOKED);
     }
 
     @Test
     public void testReportImpressionFailsWhenReportResultTakesTooLong() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4860,8 +4753,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -4877,7 +4769,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -4907,17 +4799,15 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testReportImpressionFailsWhenReportWinTakesTooLong() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4972,8 +4862,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -4989,7 +4878,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5019,17 +4908,15 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testReportImpressionFailsWhenOverallJSTimesOut() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5090,8 +4977,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -5107,7 +4993,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5137,17 +5023,15 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testReportImpressionFailsWhenJSFetchTakesTooLong() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5203,8 +5087,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -5220,7 +5103,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5250,17 +5133,15 @@ public class AdSelectionServiceImplTest {
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
         assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testReportImpressionFailsWithInvalidAdSelectionId() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5309,8 +5190,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5328,7 +5208,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5358,17 +5238,15 @@ public class AdSelectionServiceImplTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testReportImpressionBadSellerJavascriptFailsWithInternalError() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5417,8 +5295,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         AdSelectionServiceImpl adSelectionService =
@@ -5435,7 +5312,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5465,17 +5342,15 @@ public class AdSelectionServiceImplTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testReportImpressionBadBuyerJavascriptFailsWithInternalError() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5524,8 +5399,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5543,7 +5417,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5573,17 +5447,15 @@ public class AdSelectionServiceImplTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testReportImpressionUseDevOverrideForSellerJS() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -5634,8 +5506,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         // Set dev override for this AdSelection
 
@@ -5650,12 +5521,7 @@ public class AdSelectionServiceImplTest {
                         .build();
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -5671,7 +5537,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5705,18 +5571,16 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionUseDevOverrideForSellerJSSuccessfullyRegistersEventUris()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -5787,8 +5651,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         // Set dev override for this AdSelection
 
@@ -5803,12 +5666,7 @@ public class AdSelectionServiceImplTest {
                         .build();
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -5824,7 +5682,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5893,12 +5751,10 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
@@ -5906,12 +5762,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -5927,7 +5778,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -5962,12 +5813,8 @@ public class AdSelectionServiceImplTest {
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_OVERRIDE),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_OVERRIDE, TEST_PACKAGE_NAME, STATUS_SUCCESS);
     }
 
     @Test
@@ -5977,12 +5824,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -5998,7 +5840,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6033,12 +5875,8 @@ public class AdSelectionServiceImplTest {
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_OVERRIDE),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_USER_CONSENT_REVOKED),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_OVERRIDE, TEST_PACKAGE_NAME, STATUS_USER_CONSENT_REVOKED);
     }
 
     @Test
@@ -6046,8 +5884,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6063,7 +5900,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6099,12 +5936,7 @@ public class AdSelectionServiceImplTest {
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_OVERRIDE),
-                        eq(null), // Actually logged as ""
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(SHORT_API_NAME_OVERRIDE, null, STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -6112,12 +5944,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6133,7 +5960,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6178,12 +6005,8 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_REMOVE_OVERRIDE, TEST_PACKAGE_NAME, STATUS_SUCCESS);
     }
 
     @Test
@@ -6193,12 +6016,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6214,7 +6032,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6259,12 +6077,8 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_USER_CONSENT_REVOKED),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_REMOVE_OVERRIDE, TEST_PACKAGE_NAME, STATUS_USER_CONSENT_REVOKED);
     }
 
     @Test
@@ -6272,8 +6086,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6289,7 +6102,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6333,12 +6146,8 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
-                        eq(null), // Actually logged as ""
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_REMOVE_OVERRIDE, null, STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -6347,14 +6156,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        String incorrectPackageName = "com.google.ppapi.test.incorrect";
-
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(incorrectPackageName)
-                                .build());
+        mockCreateDevContext(INCORRECT_PKG_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6370,7 +6172,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6415,12 +6217,8 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_REMOVE_OVERRIDE),
-                        eq(incorrectPackageName),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_REMOVE_OVERRIDE, INCORRECT_PKG_NAME, STATUS_SUCCESS);
     }
 
     @Test
@@ -6429,14 +6227,8 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(incorrectPackageName)
-                                .build());
+        mockCreateDevContext(INCORRECT_PKG_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6452,7 +6244,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6541,12 +6333,8 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
-                        eq(incorrectPackageName),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_RESET_ALL_OVERRIDES, INCORRECT_PKG_NAME, STATUS_SUCCESS);
     }
 
     @Test
@@ -6554,12 +6342,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6575,7 +6358,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6664,12 +6447,8 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_RESET_ALL_OVERRIDES, TEST_PACKAGE_NAME, STATUS_SUCCESS);
     }
 
     @Test
@@ -6679,12 +6458,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6700,7 +6474,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6789,12 +6563,8 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_USER_CONSENT_REVOKED),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_RESET_ALL_OVERRIDES, TEST_PACKAGE_NAME, STATUS_USER_CONSENT_REVOKED);
     }
 
     @Test
@@ -6802,8 +6572,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6819,7 +6588,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6906,12 +6675,8 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
-                        eq(null), // Actually logged as ""
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_RESET_ALL_OVERRIDES, null, STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -6933,7 +6698,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6975,7 +6740,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -6999,9 +6764,8 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionForegroundCheckEnabledFails_throwsException() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        requiresJSSandbox();
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -7031,7 +6795,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7075,12 +6839,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         doThrow(new WrongCallingApplicationStateException())
                 .when(mAppImportanceFilterMock)
@@ -7103,7 +6862,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7148,12 +6907,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         doThrow(new WrongCallingApplicationStateException())
                 .when(mAppImportanceFilterMock)
@@ -7176,7 +6930,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7213,12 +6967,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         int apiName =
                 AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -7240,7 +6989,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7279,12 +7028,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         int apiName =
                 AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -7306,7 +7050,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7339,12 +7083,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         int apiName =
                 AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
@@ -7366,7 +7105,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7403,12 +7142,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         int apiName =
                 AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
@@ -7430,7 +7164,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7455,8 +7189,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithInvalidPackageName() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
-        String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
+        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -7466,7 +7199,7 @@ public class AdSelectionServiceImplTest {
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         mSeller,
-                        otherPackageName,
+                        INCORRECT_PKG_NAME,
                         true,
                         true,
                         CALLER_UID,
@@ -7518,8 +7251,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -7535,7 +7267,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7557,7 +7289,7 @@ public class AdSelectionServiceImplTest {
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
-                        .setCallerPackageName(otherPackageName)
+                        .setCallerPackageName(INCORRECT_PKG_NAME)
                         .build();
 
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
@@ -7572,7 +7304,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenAppCannotUsePPApi() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -7639,8 +7371,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -7656,7 +7387,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7690,17 +7421,15 @@ public class AdSelectionServiceImplTest {
 
         // Confirm a duplicate log entry does not exist.
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
-        verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
-                        anyInt());
+        verifyLogFledgeApiCallStatsNeverCalled(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_CALLER_NOT_ALLOWED);
     }
 
     @Test
     public void testReportImpressionFailsWhenSellerFailsEnrollmentCheck() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -7763,8 +7492,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -7780,7 +7508,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7814,17 +7542,15 @@ public class AdSelectionServiceImplTest {
 
         // Confirm a duplicate log entry does not exist.
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
-        Mockito.verify(mAdServicesLoggerMock, never())
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
-                        anyInt());
+        verifyLogFledgeApiCallStatsNeverCalled(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_CALLER_NOT_ALLOWED);
     }
 
     @Test
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         // Reset flags to perform enrollment check
         boolean enrollmentCheckEnabled = true;
@@ -7892,8 +7618,7 @@ public class AdSelectionServiceImplTest {
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
                         DevContext.createForDevOptionsDisabled());
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -7909,7 +7634,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -7947,17 +7672,15 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testAdSelectionConfigInvalidSellerAndSellerUris() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8003,8 +7726,7 @@ public class AdSelectionServiceImplTest {
                         .setSeller(SELLER_VALID)
                         .setDecisionLogicUri(DECISION_LOGIC_URI_INCONSISTENT)
                         .build();
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -8020,7 +7742,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8052,17 +7774,15 @@ public class AdSelectionServiceImplTest {
         assertEquals(
                 "Error response code mismatch", STATUS_INVALID_ARGUMENT, response.getStatusCode());
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testReportImpressionSuccessThrottledSubsequentCallFailure() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8113,8 +7833,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         Throttler.destroyExistingThrottler();
         AdSelectionServiceImpl adSelectionService =
@@ -8131,7 +7850,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8181,12 +7900,10 @@ public class AdSelectionServiceImplTest {
         RecordedRequest fetchRequest = server.takeRequest();
         assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
 
         assertFalse(callbackSubsequentCall.mIsSuccess);
         assertEquals(
@@ -8200,7 +7917,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         // Instantiate a server with different domain from buyer and seller for reporting
         MockWebServer reportingServer = new MockWebServer();
         reportingServer.play();
@@ -8253,8 +7970,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -8270,7 +7986,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8305,18 +8021,16 @@ public class AdSelectionServiceImplTest {
         // Assert that reporting didn't happen
         assertEquals(reportingServer.getRequestCount(), 0);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionOnlyReportsBuyerWhenSellerReportingUriDoesNotMatchDomain()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8373,8 +8087,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -8390,7 +8103,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8427,18 +8140,16 @@ public class AdSelectionServiceImplTest {
         // Assert that buyer reporting didn't happen
         assertEquals(sellerServer.getRequestCount(), 0);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriDoesNotMatchDomain()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
 
@@ -8495,8 +8206,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -8512,7 +8222,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8549,18 +8259,16 @@ public class AdSelectionServiceImplTest {
         // Assert that buyer reporting didn't happen
         assertEquals(buyerServer.getRequestCount(), 0);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSuccessWithValidImpressionReportingSubdomains()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUriWithSubdomain =
                 CommonFixture.getUriWithValidSubdomain(
@@ -8639,8 +8347,7 @@ public class AdSelectionServiceImplTest {
                         .setCustomAudienceBuyers(Arrays.asList(AdSelectionConfigFixture.BUYER))
                         .build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -8656,7 +8363,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8695,18 +8402,16 @@ public class AdSelectionServiceImplTest {
         verify(mClientSpy).getAndReadNothing(eq(buyerReportingUriWithSubdomain), eq(mDevContext));
         verify(mClientSpy).getAndReadNothing(eq(sellerReportingUriWithSubdomain), eq(mDevContext));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriIsNotEnrolled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -8778,8 +8483,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -8795,7 +8499,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         flagsWithEnrollment,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8829,18 +8533,16 @@ public class AdSelectionServiceImplTest {
 
         assertEquals(mSellerReportingPath, server.takeRequest().getPath());
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionReportsToBothWithEnrollmentCheckDisabledBuyerNotEnrolled()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -8900,8 +8602,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -8917,7 +8618,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -8955,12 +8656,10 @@ public class AdSelectionServiceImplTest {
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
@@ -8968,12 +8667,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -8989,7 +8683,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9024,12 +8718,10 @@ public class AdSelectionServiceImplTest {
                                 config),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
@@ -9039,12 +8731,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -9060,7 +8747,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9095,12 +8782,10 @@ public class AdSelectionServiceImplTest {
                                 config),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_USER_CONSENT_REVOKED),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_USER_CONSENT_REVOKED);
     }
 
     @Test
@@ -9108,8 +8793,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -9125,7 +8809,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9161,12 +8845,8 @@ public class AdSelectionServiceImplTest {
                                 config),
                         TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(null), // Actually logged as ""
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, null, STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -9175,12 +8855,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -9196,7 +8871,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9242,12 +8917,10 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         configId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
@@ -9258,12 +8931,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -9279,7 +8947,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9325,12 +8993,10 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_USER_CONSENT_REVOKED),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_USER_CONSENT_REVOKED);
     }
 
     @Test
@@ -9339,8 +9005,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -9356,7 +9021,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9400,12 +9065,8 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(null), // Actually logged as ""
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, null, STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -9414,14 +9075,8 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(incorrectPackageName)
-                                .build());
+        mockCreateDevContext(INCORRECT_PKG_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -9437,7 +9092,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9483,12 +9138,10 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(incorrectPackageName),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                INCORRECT_PKG_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
@@ -9496,12 +9149,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -9517,7 +9165,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9609,12 +9257,10 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         configId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
@@ -9625,12 +9271,7 @@ public class AdSelectionServiceImplTest {
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -9646,7 +9287,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9738,12 +9379,10 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         configId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_USER_CONSENT_REVOKED),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_USER_CONSENT_REVOKED);
     }
 
     @Test
@@ -9752,8 +9391,7 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -9769,7 +9407,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9860,12 +9498,8 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         configId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(null), // Actually logged as ""
-                        eq(STATUS_INTERNAL_ERROR),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, null, STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -9874,14 +9508,8 @@ public class AdSelectionServiceImplTest {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(incorrectPackageName)
-                                .build());
+        mockCreateDevContext(INCORRECT_PKG_NAME);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -9897,7 +9525,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -9989,26 +9617,19 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         configId3, TEST_PACKAGE_NAME));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(incorrectPackageName),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                INCORRECT_PKG_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testOverrideAdSelectionConfigRemoteOverridesSuccess() throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
 
         Map<Long, Double> adSelectionIdToBidMap =
                 Map.of(
@@ -10043,7 +9664,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -10074,12 +9695,10 @@ public class AdSelectionServiceImplTest {
                         AdSelectionDevOverridesHelper.calculateAdSelectionFromOutcomesConfigId(
                                 config),
                         TEST_PACKAGE_NAME));
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
 
         AdSelectionFromOutcomesTestCallback selectionCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, TEST_PACKAGE_NAME);
@@ -10102,12 +9721,10 @@ public class AdSelectionServiceImplTest {
         SetAppInstallAdvertisersTestCallback callback =
                 callSetAppInstallAdvertisers(generateAdSelectionServiceImpl(), input);
         assertTrue(callback.mIsSuccess);
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
@@ -10115,11 +9732,9 @@ public class AdSelectionServiceImplTest {
         assertThrows(
                 NullPointerException.class,
                 () -> callSetAppInstallAdvertisers(generateAdSelectionServiceImpl(), null));
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -10127,11 +9742,9 @@ public class AdSelectionServiceImplTest {
         assertThrows(
                 NullPointerException.class,
                 () -> callUpdateAdCounterHistogram(generateAdSelectionServiceImpl(), null));
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -10163,11 +9776,9 @@ public class AdSelectionServiceImplTest {
                 "Timed out waiting for updateAdCounterHistogram call to complete",
                 resultLatch.await(5, TimeUnit.SECONDS));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM,
+                STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -10175,11 +9786,8 @@ public class AdSelectionServiceImplTest {
         assertThrows(
                 NullPointerException.class,
                 () -> callReportInteraction(generateAdSelectionServiceImpl(), null));
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION, STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -10213,11 +9821,8 @@ public class AdSelectionServiceImplTest {
                 "Timed out waiting for reportInteraction call to complete",
                 resultLatch.await(5, TimeUnit.SECONDS));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION, STATUS_INVALID_ARGUMENT);
     }
 
     // TODO(b/271652362): Investigate logging and testing of failures during callback reporting
@@ -10273,12 +9878,10 @@ public class AdSelectionServiceImplTest {
                 "Timed out waiting for reportInteraction call to complete",
                 resultLatch.await(5, TimeUnit.SECONDS));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -10310,12 +9913,10 @@ public class AdSelectionServiceImplTest {
         assertFalse("reportInteraction() callback was unsuccessful", callback.mIsSuccess);
         assertEquals(STATUS_INTERNAL_ERROR, callback.mFledgeErrorResponse.getStatusCode());
         assertEquals(API_DISABLED_MESSAGE, callback.mFledgeErrorResponse.getErrorMessage());
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -10352,12 +9953,10 @@ public class AdSelectionServiceImplTest {
                 callReportInteraction(generateAdSelectionServiceImpl(), inputParams, true);
         assertTrue("reportInteraction() callback was unsuccessful", callback.mIsSuccess);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
@@ -10365,11 +9964,8 @@ public class AdSelectionServiceImplTest {
         assertThrows(
                 NullPointerException.class,
                 () -> callSetAdCounterHistogramOverride(generateAdSelectionServiceImpl(), null));
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -10402,22 +9998,14 @@ public class AdSelectionServiceImplTest {
                 "Timed out waiting for setAdCounterHistogramOverride call to complete",
                 resultLatch.await(5, TimeUnit.SECONDS));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testSetAdCounterHistogramOverrideCallbackErrorReported()
             throws InterruptedException {
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
         AdSelectionServiceImpl adSelectionService = generateAdSelectionServiceImpl();
         SetAdCounterHistogramOverrideInput inputParams =
                 new SetAdCounterHistogramOverrideInput.Builder()
@@ -10448,22 +10036,15 @@ public class AdSelectionServiceImplTest {
                 "Timed out waiting for setAdCounterHistogramOverride call to complete",
                 resultLatch.await(5, TimeUnit.SECONDS));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testSetAdCounterHistogramOverrideSuccess() throws InterruptedException {
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
         SetAdCounterHistogramOverrideInput inputParams =
                 new SetAdCounterHistogramOverrideInput.Builder()
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
@@ -10479,12 +10060,10 @@ public class AdSelectionServiceImplTest {
                 "setAdCounterHistogramOverride() callback should have been successful",
                 callback.mIsSuccess);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
@@ -10492,11 +10071,8 @@ public class AdSelectionServiceImplTest {
         assertThrows(
                 NullPointerException.class,
                 () -> callRemoveAdCounterHistogramOverride(generateAdSelectionServiceImpl(), null));
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -10528,22 +10104,14 @@ public class AdSelectionServiceImplTest {
                 "Timed out waiting for removeAdCounterHistogramOverride call to complete",
                 resultLatch.await(5, TimeUnit.SECONDS));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testRemoveAdCounterHistogramOverrideCallbackErrorReported()
             throws InterruptedException {
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
         AdSelectionServiceImpl adSelectionService = generateAdSelectionServiceImpl();
         RemoveAdCounterHistogramOverrideInput inputParams =
                 new RemoveAdCounterHistogramOverrideInput.Builder()
@@ -10572,22 +10140,15 @@ public class AdSelectionServiceImplTest {
                 "Timed out waiting for removeAdCounterHistogramOverride call to complete",
                 resultLatch.await(5, TimeUnit.SECONDS));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testRemoveAdCounterHistogramOverrideSuccess() throws InterruptedException {
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
         RemoveAdCounterHistogramOverrideInput inputParams =
                 new RemoveAdCounterHistogramOverrideInput.Builder()
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
@@ -10601,12 +10162,10 @@ public class AdSelectionServiceImplTest {
                 "removeAdCounterHistogramOverride() callback should have been successful",
                 callback.mIsSuccess);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
@@ -10632,22 +10191,14 @@ public class AdSelectionServiceImplTest {
                 "Timed out waiting for resetAllAdCounterHistogramOverrides call to complete",
                 resultLatch.await(5, TimeUnit.SECONDS));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_INVALID_ARGUMENT),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, STATUS_INVALID_ARGUMENT);
     }
 
     @Test
     public void testResetAllAdCounterHistogramOverridesCallbackErrorReported()
             throws InterruptedException {
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
         AdSelectionServiceImpl adSelectionService = generateAdSelectionServiceImpl();
 
         // Counted down in 1) callback and 2) logApiCall
@@ -10670,40 +10221,31 @@ public class AdSelectionServiceImplTest {
                 "Timed out waiting for resetAllAdCounterHistogramOverrides call to complete",
                 resultLatch.await(5, TimeUnit.SECONDS));
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
-                        eq(0));
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testResetAllAdCounterHistogramOverridesSuccess() throws InterruptedException {
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(TEST_PACKAGE_NAME)
-                                .build());
+        mockCreateDevContext(TEST_PACKAGE_NAME);
         AdSelectionOverrideTestCallback callback =
                 callResetAllAdCounterHistogramOverrides(generateAdSelectionServiceImpl());
         assertTrue(
                 "resetAllAdCounterHistogramOverrides() callback should have been successful",
                 callback.mIsSuccess);
 
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
     }
 
     @Test
     public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOff()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         boolean enrollmentCheck = false;
         Flags unifiedFlowReportingDisabled =
@@ -10716,8 +10258,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
         AdSelectionEntryDao adSelectionEntryDaoSpy = spy(mAdSelectionEntryDao);
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -10733,7 +10274,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         unifiedFlowReportingDisabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -10770,7 +10311,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOn()
             throws Exception {
-        Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(CONTEXT));
+        requiresJSSandbox();
 
         boolean enrollmentCheck = false;
         Flags unifiedFlowReportingEnabled =
@@ -10783,8 +10324,7 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
+        mockCreateDevContextForDevOptionsDisabled();
         AdSelectionEntryDao adSelectionEntryDaoSpy = spy(mAdSelectionEntryDao);
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -10800,7 +10340,7 @@ public class AdSelectionServiceImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        CONTEXT,
+                        mContext,
                         mAdServicesLoggerMock,
                         unifiedFlowReportingEnabled,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -10848,7 +10388,7 @@ public class AdSelectionServiceImplTest {
                 mLightweightExecutorService,
                 mBackgroundExecutorService,
                 mScheduledExecutor,
-                CONTEXT,
+                mContext,
                 mAdServicesLoggerMock,
                 mFlags,
                 CallingAppUidSupplierProcessImpl.create(),
@@ -11294,7 +10834,7 @@ public class AdSelectionServiceImplTest {
                 + String.format(Locale.ENGLISH, "    wait(\"%d\");\n", waitTime);
     }
 
-    String getSaltString(int length) {
+    private String getSaltString(int length) {
         String chars = "abcdefghijklmnopqrstuvwxyz";
         StringBuilder salt = new StringBuilder();
         Random rnd = new Random();
@@ -11305,7 +10845,81 @@ public class AdSelectionServiceImplTest {
         return salt.toString();
     }
 
-    public static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
+    private void requiresJSSandbox()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        assumeTrue("JSSandbox not available", WebViewSupportUtil.isJSSandboxAvailable(mContext));
+    }
+
+    private void mockCreateDevContextForDevOptionsDisabled() {
+        mockCreateDevContext(mDevContextFilterMock, DevContext.createForDevOptionsDisabled());
+    }
+
+    private void mockCreateDevContext(String callingAppPackageName) {
+        mockCreateDevContext(mDevContextFilterMock, callingAppPackageName);
+    }
+
+    private void verifyLogFledgeApiCallStatsAnyLatency(int apiName, int resultCode) {
+        verifyLogFledgeApiCallStatsAnyLatency(mAdServicesLoggerMock, apiName, resultCode);
+    }
+
+    private void verifyLogFledgeApiCallStatsAnyLatency(
+            int apiName, String appPackageName, int resultCode) {
+        verifyLogFledgeApiCallStatsAnyLatency(
+                mAdServicesLoggerMock, apiName, appPackageName, resultCode);
+    }
+
+    private void verifyLogFledgeApiCallStatsNeverCalled(
+            int apiName, String appPackageName, int resultCode) {
+        verifyLogFledgeApiCallStatsAnyLatency(
+                mAdServicesLoggerMock, never(), apiName, appPackageName, resultCode);
+    }
+
+    // TODO(b/314969513): move mockCreateDevContext() methods below to AdServicesMocker
+
+    private void mockCreateDevContext(DevContextFilter mockFilter, String callingAppPackageName) {
+        mockCreateDevContext(
+                mockFilter,
+                DevContext.builder()
+                        .setDevOptionsEnabled(true)
+                        .setCallingAppPackageName(callingAppPackageName)
+                        .build());
+    }
+
+    private void mockCreateDevContext(DevContextFilter mockFilter, DevContext devContext) {
+        when(mockFilter.createDevContext()).thenReturn(devContext);
+    }
+
+    // TODO(b/314969513, 323000746): move verifyLogFledgeApiCallStatsAnyLatency() methods below to
+    // AdServicesMocker or new logging rule / infra
+
+    private void verifyLogFledgeApiCallStatsAnyLatency(
+            AdServicesLogger mockLogger, int apiName, int resultCode) {
+        verifyLogFledgeApiCallStatsAnyLatency(mockLogger, times(1), apiName, resultCode);
+    }
+
+    private void verifyLogFledgeApiCallStatsAnyLatency(
+            AdServicesLogger mockLogger,
+            VerificationMode mode,
+            int apiName,
+            String appPackageName,
+            int resultCode) {
+        verify(mockLogger, mode)
+                .logFledgeApiCallStats(eq(apiName), eq(appPackageName), eq(resultCode), anyInt());
+    }
+
+    private void verifyLogFledgeApiCallStatsAnyLatency(
+            AdServicesLogger mockLogger, int apiName, String appPackageName, int resultCode) {
+        verifyLogFledgeApiCallStatsAnyLatency(
+                mockLogger, times(1), apiName, appPackageName, resultCode);
+    }
+
+    private void verifyLogFledgeApiCallStatsAnyLatency(
+            AdServicesLogger mockLogger, VerificationMode mode, int apiName, int resultCode) {
+        verify(mockLogger, mode)
+                .logFledgeApiCallStats(eq(apiName), eq(resultCode), /* latencyMs= */ anyInt());
+    }
+
+    private static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
         protected final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
@@ -11327,7 +10941,7 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    public static class AdSelectionOverrideTestCallback extends AdSelectionOverrideCallback.Stub {
+    private static class AdSelectionOverrideTestCallback extends AdSelectionOverrideCallback.Stub {
         protected final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
@@ -11349,10 +10963,10 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    static class AdSelectionFromOutcomesTestCallback extends AdSelectionCallback.Stub {
+    private static class AdSelectionFromOutcomesTestCallback extends AdSelectionCallback.Stub {
 
         final CountDownLatch mCountDownLatch;
-        boolean mIsSuccess = false;
+        boolean mIsSuccess;
         AdSelectionResponse mAdSelectionResponse;
         FledgeErrorResponse mFledgeErrorResponse;
 
@@ -11377,9 +10991,9 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    static class ReportInteractionTestCallback extends ReportInteractionCallback.Stub {
+    private static class ReportInteractionTestCallback extends ReportInteractionCallback.Stub {
         protected final CountDownLatch mCountDownLatch;
-        boolean mIsSuccess = false;
+        boolean mIsSuccess;
         FledgeErrorResponse mFledgeErrorResponse;
 
         ReportInteractionTestCallback(CountDownLatch countDownLatch) {
@@ -11399,7 +11013,7 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    public static class ReportInteractionTestErrorCallback extends ReportInteractionTestCallback {
+    private static class ReportInteractionTestErrorCallback extends ReportInteractionTestCallback {
         public ReportInteractionTestErrorCallback(CountDownLatch countDownLatch) {
             super(countDownLatch);
         }
@@ -11412,7 +11026,7 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    public static class ReportImpressionTestThrowingCallback extends ReportImpressionTestCallback {
+    private static class ReportImpressionTestThrowingCallback extends ReportImpressionTestCallback {
         public ReportImpressionTestThrowingCallback(CountDownLatch countDownLatch) {
             super(countDownLatch);
         }
@@ -11432,7 +11046,7 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    public static class AdSelectionOverrideTestErrorCallback
+    private static class AdSelectionOverrideTestErrorCallback
             extends AdSelectionOverrideTestCallback {
         public AdSelectionOverrideTestErrorCallback(CountDownLatch countDownLatch) {
             super(countDownLatch);

@@ -40,6 +40,7 @@ import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInli
 import com.android.adservices.mockito.LogInterceptor;
 import com.android.adservices.mockito.SharedMocker;
 import com.android.adservices.mockito.SharedMockitoMocker;
+import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
@@ -146,9 +147,19 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         private final AndroidStaticMocker mAndroidStaticMocker;
         private final AdServicesStaticMockitoMocker mAdServicesStaticMocker;
 
-        private Mocker(AdServicesExtendedMockitoRule rule) {
-            mAndroidStaticMocker = new AndroidExtendedMockitoMocker(rule);
-            mAdServicesStaticMocker = new AdServicesExtendedMockitoMocker(rule);
+        // NOTE: should only be used by unit tests of the Mocker interfaces themselves (there's no
+        // point of annotation with @VisibleForTesting because this is already a test!
+        Mocker(StaticClassChecker checker) {
+            mAndroidStaticMocker = new AndroidExtendedMockitoMocker(checker);
+            mAdServicesStaticMocker = new AdServicesExtendedMockitoMocker(checker);
+        }
+
+        // NOTE: should only be used by unit tests of the Mocker interfaces themselves (there's no
+        // point of annotation with @VisibleForTesting because this is already a test!
+        Mocker() {
+            // Static mockers are null because its only used to test non-static methods
+            mAndroidStaticMocker = null;
+            mAdServicesStaticMocker = null;
         }
 
         // AndroidMocker methods
