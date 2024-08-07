@@ -23,8 +23,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
 
-import android.content.Context;
-
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
@@ -51,7 +49,6 @@ import org.mockito.quality.Strictness;
 public abstract class AdServicesJobMockerTestCase<T extends AdServicesJobMocker>
         extends AdServicesUnitTestCase {
 
-    @Mock private Context mMockContext;
     @Mock private Flags mMockFlags;
     @Mock private AdServicesJobServiceFactory mMockFactory;
 
@@ -72,13 +69,13 @@ public abstract class AdServicesJobMockerTestCase<T extends AdServicesJobMocker>
                 () -> mocker.getSpiedAdServicesJobServiceLogger(/* context= */ null, mMockFlags));
         assertThrows(
                 NullPointerException.class,
-                () -> mocker.getSpiedAdServicesJobServiceLogger(mMockContext, /* flags= */ null));
+                () -> mocker.getSpiedAdServicesJobServiceLogger(mContext, /* flags= */ null));
     }
 
     @Test
     public final void testGetSpiedAdServicesJobServiceLogger() {
         AdServicesJobServiceLogger spy =
-                getMocker().getSpiedAdServicesJobServiceLogger(mMockContext, mMockFlags);
+                getMocker().getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         expect.withMessage("getSpiedAdServicesJobServiceLogger()").that(spy).isNotNull();
         expect.withMessage("getSpiedAdServicesJobServiceLogger() is a spy")
                 .that(isSpy(spy))
