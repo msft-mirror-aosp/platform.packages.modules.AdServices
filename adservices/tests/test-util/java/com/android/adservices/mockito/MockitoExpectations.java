@@ -252,7 +252,12 @@ public final class MockitoExpectations {
         verify(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
     }
 
-    /** Get a spied instance of {@link AdServicesJobServiceLogger}. */
+    /**
+     * Gets a spied instance of {@link AdServicesJobServiceLogger}.
+     *
+     * @deprecated use {@code mocker.mockGetBackgroundJobsLoggingKillSwitch()} instead.
+     */
+    @Deprecated
     public static AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
             Context context, Flags flags) {
         Objects.requireNonNull(context, "context cannot be null");
