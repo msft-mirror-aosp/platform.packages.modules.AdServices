@@ -171,6 +171,7 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
     }
 
     interface AggregateHistogramKeys {
+        String ID = "id";
         String BUCKET = "key";
         String VALUE = "value";
     }
@@ -817,9 +818,10 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
         try {
             List<String> tempList = new ArrayList<>();
             for (int i = 0; i < arr.length(); i++) {
-                JSONObject pair = arr.getJSONObject(i);
-                tempList.add(pair.getString(AggregateHistogramKeys.BUCKET) + ","
-                        + pair.getString(AggregateHistogramKeys.VALUE));
+                JSONObject obj = arr.getJSONObject(i);
+                tempList.add(obj.optString(AggregateHistogramKeys.ID, "") + ","
+                        + obj.optString(AggregateHistogramKeys.BUCKET, "") + ","
+                        + obj.optString(AggregateHistogramKeys.VALUE, ""));
             }
             Collections.sort(tempList);
             return String.join(";", tempList);
