@@ -40,13 +40,12 @@ import android.adservices.adselection.AuctionEncryptionKeyFixture;
 import android.adservices.adselection.DBEncryptionKeyFixture;
 import android.adservices.common.CommonFixture;
 import android.annotation.NonNull;
-import android.content.Context;
 import android.net.Uri;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionKey;
@@ -60,7 +59,6 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.ServerAuctionBackgroundKeyFetchScheduledStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -68,14 +66,11 @@ import com.google.common.util.concurrent.Futures;
 
 import org.json.JSONException;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -91,14 +86,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class BackgroundKeyFetchWorkerTest {
+public final class BackgroundKeyFetchWorkerTest extends AdServicesMockitoTestCase {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private final Flags mFlags =
             new BackgroundKeyFetchWorkerTest.BackgroundKeyFetchWorkerTestFlags();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
 
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
     @Mock private Clock mClockMock;
 
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
@@ -119,18 +112,15 @@ public class BackgroundKeyFetchWorkerTest {
 
     private BackgroundKeyFetchWorker mBackgroundKeyFetchWorker;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() throws Exception {
         mEncryptionKeyDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionKeyDao();
 
         mProtectedServersEncryptionConfigDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
                         .build()
                         .protectedServersEncryptionConfigDao();
 
@@ -146,8 +136,7 @@ public class BackgroundKeyFetchWorkerTest {
         mDevContext =
                 DevContext.builder()
                         .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(
-                                ApplicationProvider.getApplicationContext().getPackageName())
+                        .setCallingAppPackageName(mPackageName)
                         .build();
 
         mBackgroundKeyFetchWorker =
@@ -278,8 +267,7 @@ public class BackgroundKeyFetchWorkerTest {
     }
 
     @Test
-    public void testRunBackgroundFetch_noExpiredKeys_nothingToFetch()
-            throws ExecutionException, InterruptedException {
+    public void testRunBackgroundFetch_noExpiredKeys_nothingToFetch() throws Exception {
         mEncryptionKeyDao.deleteAllEncryptionKeys();
 
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW);
@@ -301,8 +289,7 @@ public class BackgroundKeyFetchWorkerTest {
     }
 
     @Test
-    public void testRunBackgroundKeyFetch_keyFetchJobDisabled_nothingToFetch()
-            throws ExecutionException, InterruptedException {
+    public void testRunBackgroundKeyFetch_keyFetchJobDisabled_nothingToFetch() throws Exception {
         class FlagsWithKeyFetchDisabled extends BackgroundKeyFetchWorkerTestFlags {
             FlagsWithKeyFetchDisabled() {}
 
@@ -361,7 +348,7 @@ public class BackgroundKeyFetchWorkerTest {
 
     @Test
     public void testRunBackgroundKeyFetch_auctionKeyFetchJobDisabled_joinKeysFetched()
-            throws ExecutionException, InterruptedException {
+            throws Exception {
         class FlagsWithAuctionKeyFetchDisabled extends BackgroundKeyFetchWorkerTestFlags {
             @Override
             public boolean getFledgeAuctionServerBackgroundAuctionKeyFetchEnabled() {
