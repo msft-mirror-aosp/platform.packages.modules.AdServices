@@ -47,6 +47,7 @@ import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.adservices.spe.AdServicesStatsdJobServiceLogger;
 
+import java.util.Objects;
 import java.util.concurrent.Executors;
 
 /** Provides Mockito expectation for common calls. */
@@ -174,6 +175,7 @@ public final class MockitoExpectations {
         JobServiceLoggingCallback callback = new JobServiceLoggingCallback();
         doAnswer(
                         invocation -> {
+                            Log.v(TAG, invocation.toString());
                             invocation.callRealMethod();
                             callback.onLoggingMethodCalled();
                             return null;
@@ -253,6 +255,8 @@ public final class MockitoExpectations {
     /** Get a spied instance of {@link AdServicesJobServiceLogger}. */
     public static AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
             Context context, Flags flags) {
+        Objects.requireNonNull(context, "context cannot be null");
+        Objects.requireNonNull(flags, "flags cannot be null");
         return spy(
                 new AdServicesJobServiceLogger(
                         context,
