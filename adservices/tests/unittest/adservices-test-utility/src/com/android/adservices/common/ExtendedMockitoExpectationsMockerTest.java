@@ -15,7 +15,6 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
 import com.android.adservices.mockito.AdServicesStaticMockerTestCase;
 import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.mockito.StaticClassChecker;
@@ -25,10 +24,10 @@ import com.android.adservices.mockito.StaticClassChecker;
  * com.android.adservices.mockito.AdServicesStaticMocker}.
  */
 public final class ExtendedMockitoExpectationsMockerTest
-        extends AdServicesStaticMockerTestCase<AdServicesExtendedMockitoMocker> {
+        extends AdServicesStaticMockerTestCase<AdServicesExtendedMockitoTestCase.Mocker> {
 
     @Override
-    protected AdServicesExtendedMockitoMocker getMocker(StaticClassChecker checker) {
+    protected AdServicesExtendedMockitoTestCase.Mocker getMocker(StaticClassChecker checker) {
         return ExtendedMockitoExpectations.mocker;
     }
 }
