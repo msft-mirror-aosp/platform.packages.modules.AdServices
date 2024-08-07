@@ -10805,10 +10805,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     private void mockCreateDevContext(DevContextFilter mockFilter, String callingAppPackageName) {
         mockCreateDevContext(
                 mockFilter,
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(callingAppPackageName)
-                        .build());
+                DevContext.builder(callingAppPackageName).setDevOptionsEnabled(true).build());
     }
 
     private void mockCreateDevContext(DevContextFilter mockFilter, DevContext devContext) {

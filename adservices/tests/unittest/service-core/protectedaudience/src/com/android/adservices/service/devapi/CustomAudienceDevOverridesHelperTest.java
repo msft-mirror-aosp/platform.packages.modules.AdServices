@@ -71,10 +71,7 @@ public final class CustomAudienceDevOverridesHelperTest extends AdServicesUnitTe
                         .build());
 
         DevContext devContext =
-                DevContext.builder()
-                        .setCallingAppPackageName(APP_PACKAGE_NAME)
-                        .setDevOptionsEnabled(true)
-                        .build();
+                DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
 
         CustomAudienceDevOverridesHelper helper =
                 new CustomAudienceDevOverridesHelper(devContext, mCustomAudienceDao);
@@ -103,10 +100,7 @@ public final class CustomAudienceDevOverridesHelperTest extends AdServicesUnitTe
                         .build());
 
         DevContext devContext =
-                DevContext.builder()
-                        .setCallingAppPackageName(APP_PACKAGE_NAME)
-                        .setDevOptionsEnabled(true)
-                        .build();
+                DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
 
         CustomAudienceDevOverridesHelper helper =
                 new CustomAudienceDevOverridesHelper(devContext, mCustomAudienceDao);
@@ -151,8 +145,7 @@ public final class CustomAudienceDevOverridesHelperTest extends AdServicesUnitTe
                         .build());
 
         DevContext devContext =
-                DevContext.builder()
-                        .setCallingAppPackageName(APP_PACKAGE_NAME + ".different")
+                DevContext.builder(APP_PACKAGE_NAME + ".different")
                         .setDevOptionsEnabled(true)
                         .build();
 

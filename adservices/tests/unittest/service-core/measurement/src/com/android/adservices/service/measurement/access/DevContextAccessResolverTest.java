@@ -378,10 +378,8 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
         assertEquals(ERROR_MESSAGE, mClassUnderTest.getErrorMessage());
     }
 
-    private static DevContext getDevContextEnabled() {
-        return DevContext.builder()
-                .setDevOptionsEnabled(true)
-                .build();
+    private DevContext getDevContextEnabled() {
+        return DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
     }
 
     private static DevContext getDevContextDisabled() {
