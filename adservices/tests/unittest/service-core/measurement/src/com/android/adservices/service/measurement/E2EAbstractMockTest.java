@@ -364,9 +364,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         sourceRegistration.mAdIdPermission,
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
-        if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
-        }
+        processActualDebugReportApiJob(sourceRegistration.mTimestamp);
     }
 
     @Override
@@ -380,9 +378,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         sourceRegistration.mAdIdPermission,
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
-        if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
-        }
+        processActualDebugReportApiJob(sourceRegistration.mTimestamp);
     }
 
     @Override
@@ -394,9 +390,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                 mMeasurementImpl.registerSources(
                         sourceRegistration.mRegistrationRequest, sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
-        if (sourceRegistration.mDebugReporting) {
-            processActualDebugReportApiJob(sourceRegistration.mTimestamp);
-        }
+        processActualDebugReportApiJob(sourceRegistration.mTimestamp);
     }
 
     @Override
@@ -424,9 +418,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                 mAttributionHelper.performPendingAttributions());
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
-        if (triggerRegistration.mDebugReporting) {
-            processActualDebugReportApiJob(triggerRegistration.mTimestamp);
-        }
+        processActualDebugReportApiJob(triggerRegistration.mTimestamp);
     }
 
     @Override
@@ -445,9 +437,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                 mAttributionHelper.performPendingAttributions());
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
-        if (triggerRegistration.mDebugReporting) {
-            processActualDebugReportApiJob(triggerRegistration.mTimestamp);
-        }
+        processActualDebugReportApiJob(triggerRegistration.mTimestamp);
     }
 
     // Triggers debug reports to be sent

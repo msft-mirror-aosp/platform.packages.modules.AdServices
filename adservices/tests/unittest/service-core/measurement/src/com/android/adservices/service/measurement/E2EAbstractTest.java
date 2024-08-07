@@ -329,42 +329,6 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
         return urlToResponse.optBoolean(TestFormatJsonMapping.HAS_AD_ID_PERMISSION, false);
     }
 
-    /** Does the source registration have debug reporting permission */
-    public static boolean hasSourceDebugReportingPermission(JSONObject obj) throws JSONException {
-        JSONObject headersMapJson =
-                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
-                        .getJSONObject(0)
-                        .getJSONObject(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_RESPONSE_KEY);
-        if (headersMapJson.isNull(TestFormatJsonMapping.SOURCE_REGISTRATION_HEADER)) {
-            return false;
-        }
-        Object registerSourceObj =
-                headersMapJson.get(TestFormatJsonMapping.SOURCE_REGISTRATION_HEADER);
-        if (!(registerSourceObj instanceof JSONObject)) {
-            return false;
-        }
-        return ((JSONObject) registerSourceObj).optBoolean(
-                TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
-    }
-
-    /** Does the trigger registration have debug reporting permission */
-    public static boolean hasTriggerDebugReportingPermission(JSONObject obj) throws JSONException {
-        JSONObject headersMapJson =
-                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
-                        .getJSONObject(0)
-                        .getJSONObject(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_RESPONSE_KEY);
-        if (headersMapJson.isNull(TestFormatJsonMapping.TRIGGER_REGISTRATION_HEADER)) {
-            return false;
-        }
-        Object registerTriggerObj =
-                headersMapJson.get(TestFormatJsonMapping.TRIGGER_REGISTRATION_HEADER);
-        if (!(registerTriggerObj instanceof JSONObject)) {
-            return false;
-        }
-        return ((JSONObject)  registerTriggerObj).optBoolean(
-                TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
-    }
-
     /** Map of URI to registration headers */
     public static Map<String, List<Map<String, List<String>>>> getUriToResponseHeadersMap(
             JSONObject obj) throws JSONException {
