@@ -17,6 +17,7 @@ package com.android.adservices.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mode.CLEAR_AFTER_TEST_CLASS;
 
+import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -54,6 +55,8 @@ import org.junit.Rule;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
+
+import java.util.Objects;
 
 /**
  * Base class for all unit tests that use {@code ExtendedMockito} - for "regular Mockito" use {@link
@@ -144,12 +147,14 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         private final AndroidMocker mAndroidMocker = new AndroidMockitoMocker();
         private final SharedMocker mSharedMocker = new SharedMockitoMocker();
         private final AdServicesPragmaticMocker mAdServicesMocker = new AdServicesMockitoMocker();
-        private final AndroidStaticMocker mAndroidStaticMocker;
-        private final AdServicesStaticMocker mAdServicesStaticMocker;
+        @Nullable private final AndroidStaticMocker mAndroidStaticMocker;
+        @Nullable private final AdServicesStaticMocker mAdServicesStaticMocker;
+        @Nullable private final StaticClassChecker mChecker;
 
         // NOTE: should only be used by unit tests of the Mocker interfaces themselves (there's no
         // point of annotation with @VisibleForTesting because this is already a test!
         Mocker(StaticClassChecker checker) {
+            mChecker = Objects.requireNonNull(checker, "StaticClassChecker cannot be null");
             mAndroidStaticMocker = new AndroidExtendedMockitoMocker(checker);
             mAdServicesStaticMocker = new AdServicesExtendedMockitoMocker(checker);
         }
@@ -158,6 +163,7 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         // point of annotation with @VisibleForTesting because this is already a test!
         Mocker() {
             // Static mockers are null because its only used to test non-static methods
+            mChecker = null;
             mAndroidStaticMocker = null;
             mAdServicesStaticMocker = null;
         }
@@ -248,7 +254,7 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
             mAdServicesMocker.mockAllCobaltLoggingFlags(flags, enabled);
         }
 
-        // AdServicesExtendedMockitoMocker methods
+        // AdServicesStaticMocker methods
 
         @Override
         public void mockGetFlags(Flags mockedFlags) {
@@ -275,6 +281,11 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         @Override
         public void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl) {
             mAdServicesStaticMocker.mockAdServicesLoggerImpl(mockedAdServicesLoggerImpl);
+        }
+
+        @Override
+        public StaticClassChecker getStaticClassChecker() {
+            return mChecker;
         }
 
         // SharedMocker methods

@@ -79,7 +79,7 @@ public final class ExtendedMockitoExpectations {
     // to use the superclasses, they wouldn't need to change the variable name.
 
     // CHECKSTYLE:OFF Generated code
-    public static final AdServicesStaticMocker mocker =
+    public static final AdServicesExtendedMockitoMocker mocker =
             new AdServicesExtendedMockitoMocker(new StaticClassChecker() {});
 
     // CHECKSTYLE:ON
