@@ -18,7 +18,6 @@ package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
@@ -742,7 +741,6 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     public void testUpdateAdIdChange() throws InterruptedException {
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
-        doReturn(true).when(mFlags).getAdIdCacheEnabled();
 
         UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(UNUSED_AD_ID).build();
         doNothing().when(mMockAdIdWorker).updateAdId(request);
@@ -751,7 +749,6 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         callback.assertResultReceived();
 
         ExtendedMockito.verify(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
-        verify(mFlags).getAdIdCacheEnabled();
         verify(mMockAdIdWorker).updateAdId(request);
     }
 
@@ -759,7 +756,6 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     public void testUpdateAdIdChange_unauthorizedCaller() throws InterruptedException {
         ExtendedMockito.doReturn(false)
                 .when(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
-        doReturn(true).when(mFlags).getAdIdCacheEnabled();
 
         UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(UNUSED_AD_ID).build();
         doNothing().when(mMockAdIdWorker).updateAdId(request);
@@ -768,24 +764,6 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         callback.assertFailed(STATUS_UNAUTHORIZED);
 
         ExtendedMockito.verify(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
-        verify(mFlags).getAdIdCacheEnabled();
-        verify(mMockAdIdWorker, never()).updateAdId(request);
-    }
-
-    @Test
-    public void testUpdateAdIdChange_disabled() throws InterruptedException {
-        ExtendedMockito.doReturn(true)
-                .when(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
-        doReturn(false).when(mFlags).getAdIdCacheEnabled();
-
-        UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(UNUSED_AD_ID).build();
-        doNothing().when(mMockAdIdWorker).updateAdId(request);
-
-        SyncIUpdateAdIdCallback callback = callUpdateAdIdCache(request);
-        callback.assertFailed(STATUS_KILLSWITCH_ENABLED);
-
-        ExtendedMockito.verify(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
-        verify(mFlags).getAdIdCacheEnabled();
         verify(mMockAdIdWorker, never()).updateAdId(request);
     }
 
@@ -797,7 +775,6 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     public void testUpdateAdIdChange_throwsException() throws InterruptedException {
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
-        doReturn(true).when(mFlags).getAdIdCacheEnabled();
 
         RuntimeException exception = new RuntimeException("Update AdId Error.");
         UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(UNUSED_AD_ID).build();
@@ -807,7 +784,6 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         callback.assertFailureReceived();
 
         ExtendedMockito.verify(() -> PermissionHelper.hasUpdateAdIdCachePermission(any()));
-        verify(mFlags).getAdIdCacheEnabled();
         verify(mMockAdIdWorker).updateAdId(request);
     }
 
