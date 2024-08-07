@@ -24,9 +24,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,17 +36,10 @@ import android.util.Log;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
-import com.android.adservices.shared.util.Clock;
-import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
-import com.android.adservices.spe.AdServicesStatsdJobServiceLogger;
-
-import java.util.Objects;
-import java.util.concurrent.Executors;
 
 /** Provides Mockito expectation for common calls. */
 public final class MockitoExpectations {
@@ -139,7 +130,7 @@ public final class MockitoExpectations {
      */
     @Deprecated
     public static void mockBackgroundJobsLoggingKillSwitch(Flags flag, boolean value) {
-        when(flag.getBackgroundJobsLoggingKillSwitch()).thenReturn(value);
+        ExtendedMockitoExpectations.mocker.mockGetBackgroundJobsLoggingKillSwitch(flag, value);
     }
 
     /**
@@ -255,22 +246,13 @@ public final class MockitoExpectations {
     /**
      * Gets a spied instance of {@link AdServicesJobServiceLogger}.
      *
-     * @deprecated use {@code mocker.mockGetBackgroundJobsLoggingKillSwitch()} instead.
+     * @deprecated use {@code mocker.getSpiedAdServicesJobServiceLogger()} instead.
      */
     @Deprecated
     public static AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
             Context context, Flags flags) {
-        Objects.requireNonNull(context, "context cannot be null");
-        Objects.requireNonNull(flags, "flags cannot be null");
-        return spy(
-                new AdServicesJobServiceLogger(
-                        context,
-                        Clock.getInstance(),
-                        mock(AdServicesStatsdJobServiceLogger.class),
-                        mock(AdServicesErrorLogger.class),
-                        Executors.newCachedThreadPool(),
-                        AdServicesJobInfo.getJobIdToJobNameMap(),
-                        flags));
+        return ExtendedMockitoExpectations.mocker.getSpiedAdServicesJobServiceLogger(
+                context, flags);
     }
 
     private MockitoExpectations() {

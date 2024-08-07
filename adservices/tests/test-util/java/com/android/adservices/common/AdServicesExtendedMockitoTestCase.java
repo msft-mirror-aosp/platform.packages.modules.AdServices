@@ -152,9 +152,11 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         @Nullable private final AdServicesStaticMocker mAdServicesStaticMocker;
         @Nullable private final StaticClassChecker mChecker;
 
+        // TODO(b/314969513): make it package protected once ExtendedMockitoExpectations.mocker is
+        // gone.
         // NOTE: should only be used by unit tests of the Mocker interfaces themselves (there's no
         // point of annotation with @VisibleForTesting because this is already a test!
-        Mocker(StaticClassChecker checker) {
+        public Mocker(StaticClassChecker checker) {
             mChecker = Objects.requireNonNull(checker, "StaticClassChecker cannot be null");
             mAndroidStaticMocker = new AndroidExtendedMockitoMocker(checker);
             mAdServicesStaticMocker = new AdServicesExtendedMockitoMocker(checker);
