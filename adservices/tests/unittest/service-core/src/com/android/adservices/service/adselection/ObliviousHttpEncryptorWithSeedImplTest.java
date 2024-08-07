@@ -79,11 +79,7 @@ public class ObliviousHttpEncryptorWithSeedImplTest extends AdServicesExtendedMo
                 Room.inMemoryDatabaseBuilder(context, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionContextDao();
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(context.getPackageName())
-                        .build();
+        mDevContext = DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
 
         mocker.mockGetFlags(mMockFlags);
     }

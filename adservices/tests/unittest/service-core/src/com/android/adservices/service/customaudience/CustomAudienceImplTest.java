@@ -149,7 +149,7 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
         mImpl.joinCustomAudience(
                 VALID_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
-                DevContext.builder().setDevOptionsEnabled(true).build());
+                DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
 
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
