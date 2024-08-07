@@ -25,14 +25,14 @@ import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
 /**
- * {@link AdServicesStaticMockitoMocker} implementation that uses {@code ExtendedMockito}.
+ * {@link AdServicesStaticMocker} implementation that uses {@code ExtendedMockito}.
  *
  * <p><b>NOTE: </b> most expectations require {@code spyStatic()} or {@code mockStatic()} in the
  * {@link com.android.dx.mockito.inline.extended.StaticMockitoSession session} ahead of time - this
  * helper doesn't check that such calls were made, it's up to the caller to do so.
  */
 public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
-        implements AdServicesStaticMockitoMocker {
+        implements AdServicesStaticMocker {
 
     public AdServicesExtendedMockitoMocker(StaticClassChecker staticClassChecker) {
         super(staticClassChecker);

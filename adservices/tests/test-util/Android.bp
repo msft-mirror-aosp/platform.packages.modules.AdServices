@@ -148,7 +148,7 @@ filegroup {
         "java/com/android/adservices/mockito/AdServicesPragmaticMocker.java",
         "java/com/android/adservices/mockito/AdServicesMockitoMocker.java",
         // Static interface and implementation
-        "java/com/android/adservices/mockito/AdServicesStaticMockitoMocker.java",
+        "java/com/android/adservices/mockito/AdServicesStaticMocker.java",
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java",
     ],
     path: "java",
