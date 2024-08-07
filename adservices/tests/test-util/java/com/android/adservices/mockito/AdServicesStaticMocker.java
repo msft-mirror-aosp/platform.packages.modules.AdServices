@@ -24,7 +24,7 @@ import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
 /** Helper interface providing common expectations for static methods on AdServices APIs. */
-public interface AdServicesStaticMockitoMocker {
+public interface AdServicesStaticMocker {
 
     /**
      * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}
@@ -68,4 +68,10 @@ public interface AdServicesStaticMockitoMocker {
      *     equivalent annotations) on {@link AdServicesLoggerImpl}.
      */
     void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl);
+
+    // TODO(b/314969513): workaround because ExtendedMockitoExpectationsMockerTest always returns
+    // the same mocker (ExtendedMockitoExpectations.mocker) - should be removed once that class is
+    // gone
+    /** Gets the {@link StaticClassChecker} associated with the mocker. */
+    StaticClassChecker getStaticClassChecker();
 }

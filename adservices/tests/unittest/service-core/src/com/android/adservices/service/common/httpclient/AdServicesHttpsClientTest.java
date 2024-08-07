@@ -54,14 +54,12 @@ import static org.mockito.Mockito.when;
 import android.adservices.exceptions.AdServicesNetworkException;
 import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
@@ -101,11 +99,8 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.Returns;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -119,9 +114,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 
-@SmallTest
-public class AdServicesHttpsClientTest {
-    @Spy private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
     private static final String CACHE_HEADER = "Cache-Control: max-age=60";
     private static final String NO_CACHE_HEADER = "Cache-Control: no-cache";
     private static final String RESPONSE_HEADER_KEY = "fake_response_header_key";
@@ -143,7 +136,6 @@ public class AdServicesHttpsClientTest {
     private final int mTimeoutDeltaMs = 1000;
     private final int mBytesPerPeriod = 1;
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-    @Rule public MockitoRule rule = MockitoJUnit.rule();
     private AdServicesHttpsClient mClient;
     @Mock private AdServicesHttpsClient.UriConverter mUriConverterMock;
     @Mock private URL mUrlMock;
@@ -165,7 +157,7 @@ public class AdServicesHttpsClientTest {
     @Before
     public void setup() throws Exception {
         mCacheEntryDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CacheDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, CacheDatabase.class)
                         .build()
                         .getCacheEntryDao();
 
@@ -693,7 +685,7 @@ public class AdServicesHttpsClientTest {
                         return false;
                     }
                 };
-        HttpCache cache = CacheProviderFactory.create(CONTEXT, disableCacheFlags);
+        HttpCache cache = CacheProviderFactory.create(mContext, disableCacheFlags);
         AdServicesHttpsClient client = new AdServicesHttpsClient(mExecutorService, cache);
 
         client.fetchPayload(

@@ -40,6 +40,7 @@ import static com.android.adservices.service.adselection.AdSelectionScriptEngine
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.adselection.ReportEventDisabledImpl.API_DISABLED_MESSAGE;
+import static com.android.adservices.service.devapi.DevContext.UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -66,7 +67,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -164,6 +164,7 @@ import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -197,11 +198,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @SpyStatic(JSScriptEngine.class)
 @MockStatic(ConsentManager.class)
@@ -331,7 +330,12 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
     @Mock private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    @Rule(order = 11)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule(mContext);
+
+    @Rule(order = 12)
+    public final MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     @Before
     public void setUp() {
@@ -425,7 +429,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessWithRegisterAdBeaconDisabled() throws Exception {
-        requiresJSSandbox();
         // Re init flags with registerAdBeaconDisabled
         boolean enrollmentCheckDisabled = false;
         mFlags =
@@ -550,7 +553,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSuccessCallbackThrowsErrorAuctionServerEnabled()
             throws Exception {
-        requiresJSSandbox();
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -675,7 +677,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionFailureCallbackThrowsErrorAuctionServerEnabled()
             throws Exception {
-        requiresJSSandbox();
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -793,7 +794,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSuccessCallbackThrowsErrorAuctionServerDisabled()
             throws Exception {
-        requiresJSSandbox();
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -918,7 +918,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionFailureCallbackThrowsErrorAuctionServerDisabled()
             throws Exception {
-        requiresJSSandbox();
         boolean enrollmentCheckDisabled = false;
 
         mFlags =
@@ -1035,8 +1034,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessfullyReportsAdCost() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -1163,8 +1160,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessfullyReportsDataVersionHeader() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -1304,8 +1299,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessfullyReportsSellerDataVersionHeader() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -1432,8 +1425,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -1549,8 +1540,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerDisabled()
             throws Exception {
-        requiresJSSandbox();
-
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
                     @Override
@@ -1689,8 +1678,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerEnabled()
             throws Exception {
-        requiresJSSandbox();
-
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
                     @Override
@@ -1830,8 +1817,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        requiresJSSandbox();
-
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
                     @Override
@@ -1965,8 +1950,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        requiresJSSandbox();
-
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
                     @Override
@@ -2100,8 +2083,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        requiresJSSandbox();
-
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
                     @Override
@@ -2220,8 +2201,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        requiresJSSandbox();
-
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
                     @Override
@@ -2340,8 +2319,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        requiresJSSandbox();
-
         Flags auctionServerReportingDisabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
                     @Override
@@ -2463,8 +2440,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        requiresJSSandbox();
-
         Flags auctionServerReportingEnabledFlags =
                 new AdSelectionServicesTestsFlags(false) {
                     @Override
@@ -2584,8 +2559,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessWithEmptyBuyerSignals() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -2705,7 +2678,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSuccessAndDoesNotCrashAfterSellerThrowsAnException()
             throws Exception {
-        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -2828,7 +2800,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSuccessAndDoesNotCrashAfterBuyerReportThrowsAnException()
             throws Exception {
-        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -2950,7 +2921,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessfullyRegistersEventUris() throws Exception {
-        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3117,7 +3087,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionFailsWithRegisterAdBeaconDisabled() throws Exception {
-        requiresJSSandbox();
+
         // Re init flags with registerAdBeaconDisabled
         boolean enrollmentCheckDisabled = false;
         mFlags =
@@ -3269,7 +3239,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterUrisThatFailDomainValidation()
             throws Exception {
-        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3435,7 +3404,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSucceedsAndRegistersUrisWithSubdomains() throws Exception {
-        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3606,8 +3574,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterMalformedUris() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3771,8 +3737,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionOnlyRegisterSellerUrisWhenBuyerJSFails() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -3922,8 +3886,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionDoesNotRegisterUrisWhenSellerJSFails() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4065,8 +4027,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionDoesNotRegisterMoreThanMaxInteractionUrisFromPhFlag()
             throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4229,7 +4189,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionSucceedsButDesNotRegisterUrisWithInteractionKeySizeThatExceedsMax()
                     throws Exception {
-        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4411,7 +4370,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterUrisWithUriSizeThatExceedsMax()
             throws Exception {
-        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4586,8 +4544,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionWithRevokedUserConsentSuccess() throws Exception {
-        requiresJSSandbox();
-
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -4698,8 +4654,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionFailsWhenReportResultTakesTooLong() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4807,8 +4761,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionFailsWhenReportWinTakesTooLong() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4916,8 +4868,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionFailsWhenOverallJSTimesOut() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -5031,8 +4981,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionFailsWhenJSFetchTakesTooLong() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -5141,8 +5089,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionFailsWithInvalidAdSelectionId() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -5246,8 +5192,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionBadSellerJavascriptFailsWithInternalError() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -5350,8 +5294,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionBadBuyerJavascriptFailsWithInternalError() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -5455,8 +5397,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionUseDevOverrideForSellerJS() throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -5580,7 +5520,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionUseDevOverrideForSellerJSSuccessfullyRegistersEventUris()
             throws Exception {
-        requiresJSSandbox();
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -5936,7 +5875,10 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
 
-        verifyLogFledgeApiCallStatsAnyLatency(SHORT_API_NAME_OVERRIDE, null, STATUS_INTERNAL_ERROR);
+        verifyLogFledgeApiCallStatsAnyLatency(
+                SHORT_API_NAME_OVERRIDE,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -6147,7 +6089,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verifyLogFledgeApiCallStatsAnyLatency(
-                SHORT_API_NAME_REMOVE_OVERRIDE, null, STATUS_INTERNAL_ERROR);
+                SHORT_API_NAME_REMOVE_OVERRIDE,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -6676,7 +6620,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
 
         verifyLogFledgeApiCallStatsAnyLatency(
-                SHORT_API_NAME_RESET_ALL_OVERRIDES, null, STATUS_INTERNAL_ERROR);
+                SHORT_API_NAME_RESET_ALL_OVERRIDES,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -6764,7 +6710,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionForegroundCheckEnabledFails_throwsException() throws Exception {
-        requiresJSSandbox();
         mockCreateDevContextForDevOptionsDisabled();
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -7189,7 +7134,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionFailsWithInvalidPackageName() throws Exception {
-        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -7304,7 +7248,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionFailsWhenAppCannotUsePPApi() throws Exception {
-        requiresJSSandbox();
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -7429,7 +7372,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionFailsWhenSellerFailsEnrollmentCheck() throws Exception {
-        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -7550,7 +7492,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
-        requiresJSSandbox();
+
 
         // Reset flags to perform enrollment check
         boolean enrollmentCheckEnabled = true;
@@ -7680,7 +7622,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testAdSelectionConfigInvalidSellerAndSellerUris() throws Exception {
-        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -7782,7 +7723,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessThrottledSubsequentCallFailure() throws Exception {
-        requiresJSSandbox();
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -7917,7 +7857,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
-        requiresJSSandbox();
+
         // Instantiate a server with different domain from buyer and seller for reporting
         MockWebServer reportingServer = new MockWebServer();
         reportingServer.play();
@@ -8030,8 +7970,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionOnlyReportsBuyerWhenSellerReportingUriDoesNotMatchDomain()
             throws Exception {
-        requiresJSSandbox();
-
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         // Instantiate a server with a different domain than seller
@@ -8149,8 +8087,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriDoesNotMatchDomain()
             throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
 
         // Instantiate a server with a different domain than buyer
@@ -8268,8 +8204,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSuccessWithValidImpressionReportingSubdomains()
             throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUriWithSubdomain =
                 CommonFixture.getUriWithValidSubdomain(
                         AdSelectionConfigFixture.SELLER.toString(), mSellerReportingPath);
@@ -8411,8 +8345,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriIsNotEnrolled()
             throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8542,8 +8474,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionReportsToBothWithEnrollmentCheckDisabledBuyerNotEnrolled()
             throws Exception {
-        requiresJSSandbox();
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8846,7 +8776,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         TEST_PACKAGE_NAME));
 
         verifyLogFledgeApiCallStatsAnyLatency(
-                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, null, STATUS_INTERNAL_ERROR);
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -9066,7 +8998,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         adSelectionConfigId, TEST_PACKAGE_NAME));
 
         verifyLogFledgeApiCallStatsAnyLatency(
-                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, null, STATUS_INTERNAL_ERROR);
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -9499,7 +9433,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         configId3, TEST_PACKAGE_NAME));
 
         verifyLogFledgeApiCallStatsAnyLatency(
-                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, null, STATUS_INTERNAL_ERROR);
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                STATUS_INTERNAL_ERROR);
     }
 
     @Test
@@ -9625,7 +9561,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testOverrideAdSelectionConfigRemoteOverridesSuccess() throws Exception {
-        requiresJSSandbox();
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -10245,8 +10180,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOff()
             throws Exception {
-        requiresJSSandbox();
-
         boolean enrollmentCheck = false;
         Flags unifiedFlowReportingDisabled =
                 new AdSelectionServicesTestsFlags(enrollmentCheck) {
@@ -10311,8 +10244,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOn()
             throws Exception {
-        requiresJSSandbox();
-
         boolean enrollmentCheck = false;
         Flags unifiedFlowReportingEnabled =
                 new AdSelectionServicesTestsFlags(enrollmentCheck) {
@@ -10843,11 +10774,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
             salt.append(chars.charAt(index));
         }
         return salt.toString();
-    }
-
-    private void requiresJSSandbox()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        assumeTrue("JSSandbox not available", WebViewSupportUtil.isJSSandboxAvailable(mContext));
     }
 
     private void mockCreateDevContextForDevOptionsDisabled() {
