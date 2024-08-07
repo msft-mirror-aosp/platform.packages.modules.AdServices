@@ -142,30 +142,6 @@ public final class MockitoExpectations {
     }
 
     /**
-     * Mocks a call to {@link Flags#getMsmtRegistrationCobaltLoggingEnabled()} ()}, returning
-     * overrideValue.
-     */
-    public static void mockMsmtRegistrationCobaltLoggingEnabled(Flags flags, boolean enabled) {
-        when(flags.getMsmtRegistrationCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    /**
-     * Mocks a call to {@link Flags#getMsmtRegistrationCobaltLoggingEnabled()} ()}, returning
-     * overrideValue.
-     */
-    public static void mockMsmtAttributionCobaltLoggingEnabled(Flags flags, boolean enabled) {
-        when(flags.getMsmtAttributionCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    /**
-     * Mocks a call to {@link Flags#getMsmtRegistrationCobaltLoggingEnabled()} ()}, returning
-     * overrideValue.
-     */
-    public static void mockMsmtReportingCobaltLoggingEnabled(Flags flags, boolean enabled) {
-        when(flags.getMsmtReportingCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    /**
      * Mock {@link AdServicesJobServiceLogger#persistJobExecutionData(int, long)} to wait for it to
      * complete.
      */
