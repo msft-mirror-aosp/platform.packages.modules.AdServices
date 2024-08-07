@@ -23,12 +23,12 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
-// TODO(b/314969513): need to add unit test (AdServicesStaticMockitoMockerTestCase + 2 subclasses:
+// TODO(b/314969513): need to add unit test (AdServicesStaticMockerTestCase + 2 subclasses:
 // AdServicesExtendedMockitoMockerTest and
-// AdServicesExtendedMockitoTestCaseAdServicesStaticMockitoMockerTest)
+// AdServicesExtendedMockitoTestCaseAdServicesStaticMockerTest)
 
 /** Helper interface providing common expectations for static methods on AdServices APIs. */
-public interface AdServicesStaticMockitoMocker {
+public interface AdServicesStaticMocker {
 
     /**
      * Mocks a call of {@link FlagsFactory#getFlags()} to return the passed-in mocking {@link Flags}

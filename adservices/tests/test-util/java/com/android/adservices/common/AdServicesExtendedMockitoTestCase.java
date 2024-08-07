@@ -30,7 +30,7 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AdServicesMockitoMocker;
 import com.android.adservices.mockito.AdServicesPragmaticMocker;
-import com.android.adservices.mockito.AdServicesStaticMockitoMocker;
+import com.android.adservices.mockito.AdServicesStaticMocker;
 import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
 import com.android.adservices.mockito.AndroidMocker;
 import com.android.adservices.mockito.AndroidMockitoMocker;
@@ -138,14 +138,14 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
             implements AndroidMocker,
                     AndroidStaticMocker,
                     AdServicesPragmaticMocker,
-                    AdServicesStaticMockitoMocker,
+                    AdServicesStaticMocker,
                     SharedMocker {
 
         private final AndroidMocker mAndroidMocker = new AndroidMockitoMocker();
         private final SharedMocker mSharedMocker = new SharedMockitoMocker();
         private final AdServicesPragmaticMocker mAdServicesMocker = new AdServicesMockitoMocker();
         private final AndroidStaticMocker mAndroidStaticMocker;
-        private final AdServicesStaticMockitoMocker mAdServicesStaticMocker;
+        private final AdServicesStaticMocker mAdServicesStaticMocker;
 
         // NOTE: should only be used by unit tests of the Mocker interfaces themselves (there's no
         // point of annotation with @VisibleForTesting because this is already a test!
