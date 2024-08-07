@@ -195,4 +195,9 @@ public final class Filter {
         }
         return json.getJSONArray(key);
     }
+
+    public interface FilterContract {
+        String FILTERS = "filters";
+        String NOT_FILTERS = "not_filters";
+    }
 }
