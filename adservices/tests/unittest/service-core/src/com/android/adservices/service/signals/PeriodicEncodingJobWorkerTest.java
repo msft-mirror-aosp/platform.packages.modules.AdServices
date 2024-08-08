@@ -41,9 +41,7 @@ import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
-import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
@@ -118,8 +116,7 @@ public class PeriodicEncodingJobWorkerTest {
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private Clock mClock;
     @Mock private AdServicesLogger mAdServicesLogger;
-    @Mock private EncodingExecutionLogHelper mEncodingExecutionLoggerMock;
-    @Mock private EncodingJobRunStatsLogger mEncodingJobRunStatsLoggerMock;
+    @Mock private ProtectedSignalsArgument mProtectedSignalsArgument;
 
     @Captor private ArgumentCaptor<DBEncodedPayload> mEncodedPayloadCaptor;
 
@@ -156,7 +153,8 @@ public class PeriodicEncodingJobWorkerTest {
                         mFlags,
                         mEnrollmentDao,
                         mClock,
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        mProtectedSignalsArgument);
     }
 
     @Test
@@ -170,7 +168,8 @@ public class PeriodicEncodingJobWorkerTest {
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
         byte[] validResponse = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x0A};
         ListenableFuture<byte[]> successResponse = Futures.immediateFuture(validResponse);
-        when(mScriptEngine.encodeSignals(eq(encoderLogic1), any(), anyInt(), any()))
+        when(mScriptEngine.encodeSignals(
+                        eq(encoderLogic1), any(), anyInt(), any(), eq(mProtectedSignalsArgument)))
                 .thenReturn(successResponse);
 
         // Buyer 2 encoding would fail
@@ -179,7 +178,8 @@ public class PeriodicEncodingJobWorkerTest {
         when(mSignalStorageManager.getSignals(BUYER_2)).thenReturn(FAKE_SIGNALS);
         ListenableFuture<byte[]> failureResponse =
                 Futures.immediateFailedFuture(new RuntimeException("Random exception"));
-        when(mScriptEngine.encodeSignals(eq(encoderLogic2), any(), anyInt(), any()))
+        when(mScriptEngine.encodeSignals(
+                        eq(encoderLogic2), any(), anyInt(), any(), eq(mProtectedSignalsArgument)))
                 .thenReturn(failureResponse);
         when(mEncoderLogicHandler.getAllRegisteredEncoders())
                 .thenReturn(List.of(DB_ENCODER_LOGIC_BUYER_1, DB_ENCODER_LOGIC_BUYER_2));
@@ -258,7 +258,8 @@ public class PeriodicEncodingJobWorkerTest {
         // All the encodings are wired to fail with exceptions
         ListenableFuture<byte[]> failureResponse =
                 Futures.immediateFailedFuture(new RuntimeException("Random exception"));
-        when(mScriptEngine.encodeSignals(any(), any(), anyInt(), any()))
+        when(mScriptEngine.encodeSignals(
+                        any(), any(), anyInt(), any(), eq(mProtectedSignalsArgument)))
                 .thenReturn(failureResponse);
 
         when(mEncoderLogicMetadataDao.getBuyersWithEncodersBeforeTime(any()))

@@ -71,6 +71,8 @@ import com.android.adservices.service.shell.adselection.ConsentedDebugShellComma
 import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
+import com.android.adservices.service.signals.ProtectedSignalsArgumentFastImpl;
+import com.android.adservices.service.signals.ProtectedSignalsArgumentImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
@@ -199,7 +201,10 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         mEncodingExecutionLogHelper,
                         mEncodingJobRunStatsLogger,
                         mEncoderLogicMetadataDao,
-                        consentedDebugConfigurationGenerator);
+                        consentedDebugConfigurationGenerator,
+                        mFlags.getPasEncodingJobImprovementsEnabled()
+                                ? new ProtectedSignalsArgumentFastImpl()
+                                : new ProtectedSignalsArgumentImpl());
         mShellCommandService =
                 new ShellCommandServiceImpl(
                         adServicesShellCommandHandlerFactory,
