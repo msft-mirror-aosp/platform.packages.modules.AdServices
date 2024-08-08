@@ -23,10 +23,6 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 
-// TODO(b/314969513): need to add unit test (AdServicesStaticMockerTestCase + 2 subclasses:
-// AdServicesExtendedMockitoMockerTest and
-// AdServicesExtendedMockitoTestCaseAdServicesStaticMockerTest)
-
 /** Helper interface providing common expectations for static methods on AdServices APIs. */
 public interface AdServicesStaticMocker {
 
@@ -72,4 +68,10 @@ public interface AdServicesStaticMocker {
      *     equivalent annotations) on {@link AdServicesLoggerImpl}.
      */
     void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl);
+
+    // TODO(b/314969513): workaround because ExtendedMockitoExpectationsMockerTest always returns
+    // the same mocker (ExtendedMockitoExpectations.mocker) - should be removed once that class is
+    // gone
+    /** Gets the {@link StaticClassChecker} associated with the mocker. */
+    StaticClassChecker getStaticClassChecker();
 }

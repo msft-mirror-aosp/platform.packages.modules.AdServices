@@ -29,7 +29,7 @@ public final class DevContextTest extends AdServicesUnitTestCase {
 
     @Test
     public void testBuilder_legacy() {
-        DevContext.Builder builder = DevContext.builder();
+        DevContext.Builder builder = DevContext.builder(mPackageName);
         assertWithMessage("builder").that(builder).isNotNull();
 
         DevContext devContext =

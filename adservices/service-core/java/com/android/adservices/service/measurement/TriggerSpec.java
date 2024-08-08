@@ -111,7 +111,7 @@ public class TriggerSpec {
         windows.put("end_times", new JSONArray(mEventReportWindowsEnd));
         json.put("event_report_windows", windows);
         json.put(
-                "summary_window_operator",
+                "summary_operator",
                 mSummaryWindowOperator.name().toLowerCase(Locale.ENGLISH));
         json.put("summary_buckets", new JSONArray(mSummaryBuckets));
         return json;
@@ -206,13 +206,13 @@ public class TriggerSpec {
             }
 
             if (!jsonObject.isNull(
-                    TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
+                    TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_OPERATOR)) {
                 this.setSummaryWindowOperator(
                         SummaryOperatorType.valueOf(
                                 jsonObject
                                         .getString(
                                                 TriggerSpecs.FlexEventReportJsonKeys
-                                                        .SUMMARY_WINDOW_OPERATOR)
+                                                        .SUMMARY_OPERATOR)
                                         .toUpperCase(Locale.ROOT)));
             }
             if (!jsonObject.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
@@ -255,13 +255,13 @@ public class TriggerSpec {
             }
 
             if (!jsonObject.isNull(
-                    TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
+                    TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_OPERATOR)) {
                 this.setSummaryWindowOperator(
                         SummaryOperatorType.valueOf(
                                 jsonObject
                                         .getString(
                                                 TriggerSpecs.FlexEventReportJsonKeys
-                                                        .SUMMARY_WINDOW_OPERATOR)
+                                                        .SUMMARY_OPERATOR)
                                         .toUpperCase(Locale.ENGLISH)));
             }
             if (!jsonObject.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {

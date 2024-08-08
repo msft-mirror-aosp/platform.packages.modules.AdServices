@@ -26,7 +26,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,16 +34,14 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.List;
 
-public class AdSelectionDatabaseMigrationTest extends AdServicesUnitTestCase {
+@RequiresSdkLevelAtLeastS
+public final class AdSelectionDatabaseMigrationTest extends AdServicesUnitTestCase {
     private static final String QUERY_TABLES_FROM_SQL_MASTER =
             "SELECT * FROM sqlite_master WHERE type='table' AND name='%s';";
     private static final String COLUMN_NAME_NAME = "name";
     private static final String TEST_DB = "migration-test";
     private static final Instrumentation INSTRUMENTATION =
             InstrumentationRegistry.getInstrumentation();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Rule(order = 1)
     public MigrationTestHelper helper =

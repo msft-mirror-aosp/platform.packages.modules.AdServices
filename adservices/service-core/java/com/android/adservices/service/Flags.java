@@ -5037,29 +5037,6 @@ public interface Flags extends ModuleSharedFlags {
         return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
     }
 
-    /**
-     * Default value to determine whether {@link
-     * com.android.adservices.service.adid.AdIdCacheManager} is enabled to read AdId from and for
-     * AdIdProvider to update AdId to.
-     */
-    boolean DEFAULT_ADID_CACHE_ENABLED = false;
-
-    /**
-     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled to read
-     * AdId from and for AdIdProvider to update AdId to.
-     *
-     * <ul>
-     *   <li>When enabled, AdIdCacheManager will read AdId from the cache and AdIdProvider will
-     *       update the cache if AdId changes.
-     *   <li>When disabled, AdIdCacheManager will call AdIdProvider to get the AdId.
-     * </ul>
-     *
-     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled.
-     */
-    default boolean getAdIdCacheEnabled() {
-        return DEFAULT_ADID_CACHE_ENABLED;
-    }
-
     long DEFAULT_AD_ID_FETCHER_TIMEOUT_MS = 50;
 
     /**
