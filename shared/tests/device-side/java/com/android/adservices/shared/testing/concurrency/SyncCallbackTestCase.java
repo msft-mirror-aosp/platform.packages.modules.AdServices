@@ -19,6 +19,7 @@ import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG
 import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
@@ -39,6 +40,7 @@ import org.junit.Test;
 
 import java.lang.reflect.Constructor;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** Base class for all {@code SyncCallback} implementations. */
@@ -344,16 +346,29 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
         SyncCallbackSettings settings = mDefaultSettingsBuilder.setExpectedNumberCalls(2).build();
         CB callback = newFrozenCallback(settings);
 
+        // Must use something to block after the 1st call is made and before the number of calls is
+        // asserted - cannot use the callback itself because it won't block until the 2 calls are
+        // made, and it's better to not use another SyncCallback because that's what we're testing!
+        CountDownLatch firstCallLatch = new CountDownLatch(1);
+        long firstCallNapTimeoutMs = BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS;
+        long firstCallNotCalledTimeoutMs = firstCallNapTimeoutMs + NOT_CALLED_TIMEOUT_MS;
+        long firstCallMaxTimeoutMs = firstCallNapTimeoutMs + CALLBACK_DEFAULT_TIMEOUT_MS;
+
         // 1st call
-        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> call(callback));
+        runAsync(
+                firstCallNapTimeoutMs,
+                () -> {
+                    call(callback);
+                    firstCallLatch.countDown();
+                });
         // Use small timeout as it should block and fail (because it's not called yet)
         assertThrows(
                 SyncCallbackTimeoutException.class,
-                () ->
-                        assertCalled(
-                                callback,
-                                BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS + NOT_CALLED_TIMEOUT_MS));
+                () -> assertCalled(callback, firstCallNotCalledTimeoutMs));
 
+        if (!firstCallLatch.await(firstCallMaxTimeoutMs, MILLISECONDS)) {
+            fail("1st callback not called in " + firstCallMaxTimeoutMs + "ms");
+        }
         expectIsCalledAndNumberCalls(callback, "after 1st setCalled()", false, 1);
 
         // 2nd call
