@@ -25,7 +25,7 @@
                     "start_time": 0,
                     "end_times": [172800]
                   },
-                  "summary_window_operator": "count",
+                  "summary_operator": "count",
                   "summary_buckets":  [2]}
               ],
               "max_event_level_reports": 1,

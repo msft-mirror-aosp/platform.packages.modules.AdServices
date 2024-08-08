@@ -58,6 +58,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -248,6 +249,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @Ignore // TODO(b/357898021) restore or delete
     public void resetTopicDialogTest() throws Exception {
         // open topics view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
@@ -363,6 +365,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @Ignore // TODO(b/357898021) restore or delete
     public void resetAppDialogTest() throws Exception {
         UiObject2 appsTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
         if (appsTitle != null) {

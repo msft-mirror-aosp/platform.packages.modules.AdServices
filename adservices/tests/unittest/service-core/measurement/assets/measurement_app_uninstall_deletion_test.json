@@ -907,7 +907,7 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.registrant.deleteCandidate",
-            "triggerSpecs": "[{\"trigger_data\":[1, 2], \"event_report_windows\": {\"start_time\": 0,\"end_times\":[172800000, 604800000]}, \"summary_window_operator\":\"count\", \"summary_buckets\":[1, 2]}]",
+            "triggerSpecs": "[{\"trigger_data\":[1, 2], \"event_report_windows\": {\"start_time\": 0,\"end_times\":[172800000, 604800000]}, \"summary_operator\":\"count\", \"summary_buckets\":[1, 2]}]",
             "eventAttributionStatus": "[{\"trigger_id\":\"T1\", \"trigger_data\":\"2\", \"triggerTime\":1648665733601, \"value\":1, \"priority\":0}, {\"trigger_id\":\"T2\", \"trigger_data\":\"2\", \"triggerTime\":1648665733605, \"value\":1, \"priority\":0}, {\"trigger_id\":\"T3\", \"trigger_data\":\"2\", \"triggerTime\":1648665733601, \"value\":1, \"priority\":0}]"
           },
           {
@@ -1262,7 +1262,7 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.registrant.deleteCandidate",
-            "triggerSpecs": "[{\"trigger_data\":[1, 2], \"event_report_windows\": {\"start_time\": 0,\"end_times\":[172800000, 604800000]}, \"summary_window_operator\":\"count\", \"summary_buckets\":[1, 2]}]",
+            "triggerSpecs": "[{\"trigger_data\":[1, 2], \"event_report_windows\": {\"start_time\": 0,\"end_times\":[172800000, 604800000]}, \"summary_operator\":\"count\", \"summary_buckets\":[1, 2]}]",
             "eventAttributionStatus": "[]"
           },
           {

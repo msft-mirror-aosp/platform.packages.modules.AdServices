@@ -424,7 +424,7 @@ public class ImpressionNoiseUtilTest {
                 "end_times",
                 new JSONArray(new long[] {TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7)}));
         json.put("event_report_windows", windows);
-        json.put("summary_window_operator", TriggerSpec.SummaryOperatorType.COUNT);
+        json.put("summary_operator", TriggerSpec.SummaryOperatorType.COUNT);
         json.put("summary_buckets", new JSONArray(new int[] {1}));
 
         return TriggerSpecsUtil.triggerSpecArrayFrom(

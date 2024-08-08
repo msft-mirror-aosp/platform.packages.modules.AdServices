@@ -19,24 +19,21 @@ package com.android.adservices.data.adselection;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
-public class DBConsentedDebugConfigurationTest extends AdServicesUnitTestCase {
+@RequiresSdkLevelAtLeastS
+public final class DBConsentedDebugConfigurationTest extends AdServicesUnitTestCase {
     private static final boolean IS_CONSENTED = true;
     private static final Instant CREATION_TIMESTAMP = Instant.now();
     private static final Instant EXPIRY_TIMESTAMP = Instant.now().plus(Duration.ofDays(1));
     private static final String DEBUG_TOKEN = UUID.randomUUID().toString();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void test_create_success() {

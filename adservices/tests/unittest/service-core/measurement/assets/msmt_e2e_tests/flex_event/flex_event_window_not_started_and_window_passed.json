@@ -25,7 +25,7 @@
                   // Two and four days
                   "end_times": [172800, 345600]
                 },
-                "summary_window_operator": "value_sum",
+                "summary_operator": "value_sum",
                 "summary_buckets":  [10]
               }],
               "max_event_level_reports": 1,

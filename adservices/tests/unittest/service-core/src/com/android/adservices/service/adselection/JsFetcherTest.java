@@ -40,6 +40,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -59,8 +60,7 @@ import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLoggerNoLoggingImpl;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,17 +72,16 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 
-public class JsFetcherTest {
+@SpyStatic(FlagsFactory.class)
+public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
     private static final String BIDDING_LOGIC_OVERRIDE = "js_override.";
     private static final String BIDDING_LOGIC = "js";
     private static final String APP_PACKAGE_NAME = "com.google.ppapi.test";
@@ -108,10 +107,7 @@ public class JsFetcherTest {
                     .setTrustedBiddingData(TRUSTED_BIDDING_OVERRIDE_DATA)
                     .build();
     private DevContext mDevContext =
-            DevContext.builder()
-                    .setDevOptionsEnabled(false)
-                    .setCallingAppPackageName(APP_PACKAGE_NAME)
-                    .build();
+            DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(false).build();
 
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -120,7 +116,6 @@ public class JsFetcherTest {
     private AdServicesHttpsClient mWebClient;
     private Dispatcher mDefaultDispatcher;
     private MockWebServer mServer;
-    private MockitoSession mStaticMockSession = null;
     private CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     private AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @Mock private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLoggerMock;
@@ -129,16 +124,8 @@ public class JsFetcherTest {
     private Flags mFlags;
     private JsFetcher mJsFetcher;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() throws Exception {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .initMocks(this)
-                        .startMocking();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mFlags = new JsFetcherTestFlags(true);
@@ -195,20 +182,9 @@ public class JsFetcherTest {
                         mDevContext);
     }
 
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
-    }
-
     @Test
     public void testSuccessfulGetBuyerLogicWithOverride() throws Exception {
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(APP_PACKAGE_NAME)
-                        .build();
+        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
@@ -224,11 +200,7 @@ public class JsFetcherTest {
 
     @Test
     public void testSuccessfulGetBuyerLogicWithOverrideWithLogger() throws Exception {
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(APP_PACKAGE_NAME)
-                        .build();
+        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);

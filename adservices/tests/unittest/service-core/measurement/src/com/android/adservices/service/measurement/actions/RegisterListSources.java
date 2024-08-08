@@ -20,7 +20,6 @@ import static com.android.adservices.service.measurement.E2EAbstractTest.getInpu
 import static com.android.adservices.service.measurement.E2EAbstractTest.getUriConfigsMap;
 import static com.android.adservices.service.measurement.E2EAbstractTest.getUriToResponseHeadersMap;
 import static com.android.adservices.service.measurement.E2EAbstractTest.hasAdIdPermission;
-import static com.android.adservices.service.measurement.E2EAbstractTest.hasSourceDebugReportingPermission;
 
 import android.adservices.measurement.SourceRegistrationRequest;
 import android.adservices.measurement.SourceRegistrationRequestInternal;
@@ -43,7 +42,6 @@ public final class RegisterListSources implements Action {
     public final long mTimestamp;
     // Used in interop tests
     public final String mPublisher;
-    public final boolean mDebugReporting;
     public final boolean mAdIdPermission;
 
     public RegisterListSources(JSONObject obj) throws JSONException {
@@ -79,7 +77,6 @@ public final class RegisterListSources implements Action {
                         .build();
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
-        mDebugReporting = hasSourceDebugReportingPermission(obj);
         mAdIdPermission = hasAdIdPermission(obj);
         mUriConfigsMap = getUriConfigsMap(obj);
     }

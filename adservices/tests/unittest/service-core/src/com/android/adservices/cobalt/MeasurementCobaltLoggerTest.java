@@ -16,9 +16,6 @@
 
 package com.android.adservices.cobalt;
 
-import static com.android.adservices.mockito.MockitoExpectations.mockMsmtAttributionCobaltLoggingEnabled;
-import static com.android.adservices.mockito.MockitoExpectations.mockMsmtRegistrationCobaltLoggingEnabled;
-import static com.android.adservices.mockito.MockitoExpectations.mockMsmtReportingCobaltLoggingEnabled;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__UNKNOWN_ATTRIBUTION_SURFACE_COMBINATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__WEB_APP_ATTRIBUTION_SURFACE_COMBINATION;
@@ -61,6 +58,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
@@ -178,7 +176,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testIsEnabled_cobaltInitializationException() {
         mockCobaltLoggingEnabled(true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         mockThrowExceptionOnGetCobaltLogger();
 
         MeasurementCobaltLogger logger = MeasurementCobaltLogger.getInstance();
@@ -226,7 +224,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testIsEnabled_msmtRegistrationCobaltLoggingDisabled() {
         mockCobaltLoggingFlags(true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, false);
+        mockMsmtRegistrationCobaltLoggingEnabled(false);
 
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
@@ -251,7 +249,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogRegistrationStatus_nullAppPackageName() {
         mockCobaltLoggingFlags(true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         assertThrows(
@@ -270,7 +268,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogRegistrationStatus_negativeSourceTypeAndFailureType() {
         mockCobaltLoggingFlags(true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logRegistrationStatus(
@@ -294,7 +292,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogRegistrationStatus_webSourceRegistrationSuccessLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logRegistrationStatus(
@@ -318,7 +316,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogRegistrationStatus_appTriggerRegistrationParsingFailureLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logRegistrationStatus(
@@ -342,7 +340,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogRegistrationStatus_unknownSurfaceAndTypeLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logRegistrationStatus(
@@ -389,7 +387,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogRegistrationStatus_msmtRegistrationCobaltLogDisabled() {
         mockCobaltLoggingEnabled(true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, false);
+        mockMsmtRegistrationCobaltLoggingEnabled(false);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logRegistrationStatus(
@@ -427,7 +425,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogAttributionStatus_negativeErrorCode() {
         mockCobaltLoggingFlags(true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -450,7 +448,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogAttributionStatus_failureStatusLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -473,7 +471,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogAttributionStatus_successStatusLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -496,7 +494,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogAttributionStatus_successAggregateReportLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -519,7 +517,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogAttributionStatus_successEventReportLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -542,7 +540,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogAttributionStatus_successEventAndAggregateReportLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -565,7 +563,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogAttributionStatus_unknownSurfaceAndTypeLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -610,7 +608,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogAttributionStatus_msmtAttributionCobaltLogDisabled() {
         mockCobaltLoggingEnabled(true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, false);
+        mockMsmtAttributionCobaltLoggingEnabled(false);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -633,7 +631,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogReportingStatus_failureStatusLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtReportingCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtReportingCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logReportingStatusWithAppName(
@@ -656,7 +654,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogReportingStatus_successStatusLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtReportingCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtReportingCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logReportingStatusWithAppName(
@@ -679,7 +677,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogReportingStatus_unknownSurfaceAndTypeLogged() {
         mockCobaltLoggingFlags(true);
-        mockMsmtReportingCobaltLoggingEnabled(mMockFlags, true);
+        mockMsmtReportingCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logReportingStatusWithAppName(
@@ -724,7 +722,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     @Test
     public void testLogReportingStatus_msmtReportingCobaltLogDisabled() {
         mockCobaltLoggingEnabled(true);
-        mockMsmtReportingCobaltLoggingEnabled(mMockFlags, false);
+        mockMsmtReportingCobaltLoggingEnabled(false);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logReportingStatusWithAppName(
@@ -750,6 +748,18 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
 
     private void mockCobaltLoggingEnabled(boolean value) {
         mocker.mockGetCobaltLoggingEnabled(mMockFlags, value);
+    }
+
+    private void mockMsmtRegistrationCobaltLoggingEnabled(boolean value) {
+        when(mMockFlags.getMsmtRegistrationCobaltLoggingEnabled()).thenReturn(value);
+    }
+
+    private void mockMsmtAttributionCobaltLoggingEnabled(boolean value) {
+        when(mMockFlags.getMsmtAttributionCobaltLoggingEnabled()).thenReturn(value);
+    }
+
+    private void mockMsmtReportingCobaltLoggingEnabled(boolean value) {
+        when(mMockFlags.getMsmtReportingCobaltLoggingEnabled()).thenReturn(value);
     }
 
     private static void mockThrowExceptionOnGetCobaltLogger() {

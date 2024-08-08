@@ -201,7 +201,7 @@ public final class SourceFixture {
                         + String.format(
                                 "\"end_times\": [%s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2]}]";
         Source source =
                 getMinimalValidSourceBuilder()
@@ -221,7 +221,7 @@ public final class SourceFixture {
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         Source source = getMinimalValidSourceBuilder().build();
         TriggerSpecs triggerSpecs = new TriggerSpecs(
@@ -238,7 +238,7 @@ public final class SourceFixture {
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         Source source = getMinimalValidSourceBuilder().build();
         double mockFlipProbability = Combinatorics.getFlipProbability(5, 3);
@@ -362,7 +362,7 @@ public final class SourceFixture {
                         TimeUnit.DAYS.toMillis(2),
                         TimeUnit.DAYS.toMillis(7),
                         TimeUnit.DAYS.toMillis(30))
-                + "\"summary_window_operator\": \"count\", "
+                + "\"summary_operator\": \"count\", "
                 + "\"summary_buckets\": [1, 2, 3, 4]}]";
     }
 
@@ -382,7 +382,7 @@ public final class SourceFixture {
                 + String.format(
                         "\"end_times\": [%s, %s]}, ",
                         TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
-                + "\"summary_window_operator\": \"value_sum\", "
+                + "\"summary_operator\": \"value_sum\", "
                 + "\"summary_buckets\": [10, 100]}]";
     }
 
@@ -405,13 +405,13 @@ public final class SourceFixture {
                                 TimeUnit.DAYS.toMillis(2),
                                 TimeUnit.DAYS.toMillis(7),
                                 TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}, "
                         + "{\"trigger_data\": [4, 5, 6, 7],"
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(3))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1,5,7]} "
                         + "]");
     }

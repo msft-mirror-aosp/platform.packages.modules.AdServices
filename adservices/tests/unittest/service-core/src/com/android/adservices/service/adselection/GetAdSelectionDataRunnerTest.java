@@ -59,13 +59,11 @@ import android.adservices.adselection.GetAdSelectionDataResponse;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.AssetFileDescriptorUtil;
 import android.adservices.common.FledgeErrorResponse;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -100,7 +98,7 @@ import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -113,7 +111,6 @@ import com.google.protobuf.ByteString;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -140,7 +137,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
+@RequiresSdkLevelAtLeastS
+public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final int E2E_TRACE_COOKIE = 0;
     private static final String CALLER_PACKAGE_NAME = TEST_PACKAGE_NAME;
@@ -169,7 +167,6 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                     .setIsDebugInfoInResponse(false)
                     .build();
     private Flags mFlags;
-    private Context mContext;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -203,9 +200,6 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Mock private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
     @Mock private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
         mFlags = new GetAdSelectionDataRunnerTestFlags();
@@ -214,7 +208,6 @@ public class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         mMultiCloudSupportStrategyFlagOn =
                 MultiCloudTestStrategyFactory.getEnabledTestStrategy(
                         mObliviousHttpEncryptorMock, ALLOW_LIST_COORDINATORS);
-        mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();

@@ -3725,7 +3725,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 2;
@@ -3789,7 +3789,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
@@ -3846,7 +3846,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(11),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
                                 + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
@@ -3907,7 +3907,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                         TimeUnit.DAYS.toSeconds(7),
                                         TimeUnit.DAYS.toSeconds(11),
                                         TimeUnit.DAYS.toSeconds(30))
-                                + "\"summary_window_operator\": \"count\", "
+                                + "\"summary_operator\": \"count\", "
                                 + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
                                         + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]},"
                         + "{\"trigger_data\": [4, 5, 6, 7],"
@@ -3919,7 +3919,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                         TimeUnit.DAYS.toSeconds(7),
                                         TimeUnit.DAYS.toSeconds(11),
                                         TimeUnit.DAYS.toSeconds(30))
-                                + "\"summary_window_operator\": \"count\", "
+                                + "\"summary_operator\": \"count\", "
                                 + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
                                         + "11, 12, 13, 14, 15, 16, 17, 18, 19]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
@@ -3984,7 +3984,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                         TimeUnit.DAYS.toSeconds(7),
                                         TimeUnit.DAYS.toSeconds(11),
                                         TimeUnit.DAYS.toSeconds(30))
-                                + "\"summary_window_operator\": \"count\", "
+                                + "\"summary_operator\": \"count\", "
                                 + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
                                         + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]},"
                         + "{\"trigger_data\": [16, 17, 18, 19, 20, 21, 22, 23, "
@@ -3997,7 +3997,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                         TimeUnit.DAYS.toSeconds(7),
                                         TimeUnit.DAYS.toSeconds(11),
                                         TimeUnit.DAYS.toSeconds(30))
-                                + "\"summary_window_operator\": \"count\", "
+                                + "\"summary_operator\": \"count\", "
                                 + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
                                         + "11, 12, 13, 14, 15, 16, 17, 18, 19]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
@@ -4140,7 +4140,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(14),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 5]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 4;
@@ -4192,7 +4192,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
@@ -4245,7 +4245,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
@@ -4303,7 +4303,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         + "\"event_report_windows\": { "
                         + "\"start_time\": \"0\", "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toSeconds(7))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 1;

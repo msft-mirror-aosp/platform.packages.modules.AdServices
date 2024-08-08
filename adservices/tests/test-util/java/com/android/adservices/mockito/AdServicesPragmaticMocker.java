@@ -16,7 +16,10 @@
 
 package com.android.adservices.mockito;
 
+import android.content.Context;
+
 import com.android.adservices.service.Flags;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 /**
  * Helper interface providing common expectations for "regular" (non static or final) methods on
@@ -55,4 +58,7 @@ public interface AdServicesPragmaticMocker {
      * for the testing release stage.
      */
     void mockGetAdservicesReleaseStageForCobalt(Flags flags, String stage);
+
+    /** Gets a spied instance of {@link AdServicesJobServiceLogger}. */
+    AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(Context context, Flags flags);
 }

@@ -39,7 +39,7 @@
                         2592000
                       ]
                     },
-                    "summary_window_operator": "count",
+                    "summary_operator": "count",
                     "summary_buckets": [
                       1,
                       2,

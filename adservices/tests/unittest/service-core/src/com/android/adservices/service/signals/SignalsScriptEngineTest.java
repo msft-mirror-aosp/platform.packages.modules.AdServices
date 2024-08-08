@@ -28,14 +28,14 @@ import static org.mockito.Mockito.verify;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -44,7 +44,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.Base64;
 import java.util.Collections;
@@ -56,7 +55,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class SignalsScriptEngineTest extends AdServicesUnitTestCase {
+@RequiresSdkLevelAtLeastS
+public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
     private static final IsolateSettings ISOLATE_SETTINGS =
             IsolateSettings.forMaxHeapSizeEnforcementEnabled(
@@ -65,9 +65,6 @@ public class SignalsScriptEngineTest extends AdServicesUnitTestCase {
     private SignalsScriptEngine mSignalsScriptEngine;
 
     @Mock private EncodingExecutionLogHelper mEncodingExecutionLoggerMock;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
@@ -81,7 +78,6 @@ public class SignalsScriptEngineTest extends AdServicesUnitTestCase {
     public void setUp() {
         mSignalsScriptEngine =
                 createSignalsScriptEngine(ISOLATE_SETTINGS, new NoOpRetryStrategyImpl());
-        MockitoAnnotations.initMocks(this);
     }
 
     @Test

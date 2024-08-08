@@ -54,7 +54,7 @@ public class TriggerSpecTest {
             json.put("event_report_windows", windows);
         }
         if (summaryWindowOperator != null) {
-            json.put("summary_window_operator", summaryWindowOperator);
+            json.put("summary_operator", summaryWindowOperator);
         }
         if (summaryBucket != null) {
             json.put("summary_buckets", new JSONArray(summaryBucket));
@@ -74,7 +74,7 @@ public class TriggerSpecTest {
     public void testEqualsWithDefaultValuePass() throws JSONException {
         // Assertion
         JSONObject json = getValidBaselineTestCase();
-        json.remove("summary_window_operator");
+        json.remove("summary_operator");
         assertEquals(
                 new TriggerSpec.Builder(json).build(),
                 new TriggerSpec.Builder(getValidBaselineTestCase()).build());
@@ -97,7 +97,7 @@ public class TriggerSpecTest {
                 new TriggerSpec.Builder(
                                 getValidBaselineTestCase()
                                         .put(
-                                                "summary_window_operator",
+                                                "summary_operator",
                                                 TriggerSpec.SummaryOperatorType.VALUE_SUM))
                         .build(),
                 new TriggerSpec.Builder(getValidBaselineTestCase()).build());

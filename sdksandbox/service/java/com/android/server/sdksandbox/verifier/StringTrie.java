@@ -31,6 +31,7 @@ import java.util.Map;
  * will be added to the captures. This structure is not thread safe.
  *
  * @param <V> type of the values contained in the trie
+ * @hide
  */
 public class StringTrie<V> {
     private V mValue = null;

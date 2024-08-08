@@ -156,7 +156,7 @@ public class LoggerFactory {
             return 0;
         }
 
-        /** Log the message as ERROR. Return The number of bytes written */
+        /** Log the message as WARNING. Return The number of bytes written */
         public int w(String msg) {
             if (Log.isLoggable(mTag, Log.WARN)) {
                 return Log.w(mTag, msg);

@@ -52,4 +52,10 @@ public final class SidelessTestCaseTest {
         int id2 = newTestCase.getTestInvocationId();
         expect.withMessage("id of new test").that(id2).isEqualTo(id1 + 1);
     }
+
+    @Test
+    public void testLogerInstances() {
+        expect.withMessage("mLog").that(mTestCase.mLog).isNotNull();
+        expect.withMessage("mRealLogger").that(mTestCase.mRealLogger).isNotNull();
+    }
 }

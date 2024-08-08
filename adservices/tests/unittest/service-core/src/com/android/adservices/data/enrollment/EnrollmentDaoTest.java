@@ -41,15 +41,12 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.util.Pair;
-
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
@@ -76,7 +73,6 @@ import java.util.Set;
 
 public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private SharedDbHelper mDbHelper;
     private EnrollmentDao mEnrollmentDao;
 

@@ -29,30 +29,24 @@ import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
-import android.content.Context;
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.devapi.DevContext;
 
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.List;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DevContextAccessResolverTest {
+public final class DevContextAccessResolverTest extends AdServicesMockitoTestCase {
 
     private static final String ERROR_MESSAGE = "Localhost is only permitted on user-debug builds "
             + "or with developer options enabled.";
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://registration-uri.test");
     private static final Uri LOCALHOST = Uri.parse("https://localhost");
 
-    @Mock private Context mContext;
     @Mock private RegistrationRequest mRegistrationRequest;
     @Mock private WebSourceRegistrationRequest mWebSourceRegistrationRequest;
     @Mock private WebSourceParams mWebSourceParams;
@@ -63,11 +57,6 @@ public class DevContextAccessResolverTest {
     @Mock private SourceRegistrationRequest mSourceRegistrationRequest;
 
     private DevContextAccessResolver mClassUnderTest;
-
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     @Test
     public void isAllowed_register_nonLocalhost_devEnabled_returnsTrue() {
@@ -389,10 +378,8 @@ public class DevContextAccessResolverTest {
         assertEquals(ERROR_MESSAGE, mClassUnderTest.getErrorMessage());
     }
 
-    private static DevContext getDevContextEnabled() {
-        return DevContext.builder()
-                .setDevOptionsEnabled(true)
-                .build();
+    private DevContext getDevContextEnabled() {
+        return DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
     }
 
     private static DevContext getDevContextDisabled() {

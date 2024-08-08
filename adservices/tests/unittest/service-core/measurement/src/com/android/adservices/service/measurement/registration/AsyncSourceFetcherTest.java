@@ -6290,7 +6290,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -6359,7 +6359,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
             throws Exception {
         String triggerSpecsString =
                 "[{\"trigger_data\": [0, 1, 2],"
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, getInputEvent());
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -6426,7 +6426,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
             throws Exception {
         String triggerSpecsString =
                 "[{\"trigger_data\": [0, 1, 2],"
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, getInputEvent());
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -6494,7 +6494,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
             throws Exception {
         String triggerSpecsString =
                 "[{\"trigger_data\": [0, 1, 2],"
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, getInputEvent());
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -6564,7 +6564,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
             throws Exception {
         String triggerSpecsString =
                 "[{\"trigger_data\": [0, 1, 2],"
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -6629,7 +6629,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
             throws Exception {
         String triggerSpecsString =
                 "[{\"trigger_data\": [0, 1, 2],"
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -6696,7 +6696,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
             throws Exception {
         String triggerSpecsString =
                 "[{\"trigger_data\": [0, 1, 2],"
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -6973,7 +6973,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7106,7 +7106,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.MINUTES.toSeconds(38),
                                 TimeUnit.DAYS.toSeconds(7),
                                 expiry + TimeUnit.DAYS.toSeconds(10))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7168,7 +7168,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7219,7 +7219,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         + String.format(
                                 "\"end_times\": [%s]}, ",
                                 TimeUnit.MINUTES.toSeconds(38))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7278,7 +7278,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
@@ -7403,7 +7403,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7502,7 +7502,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7558,7 +7558,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 4294967296]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7611,7 +7611,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [-1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7667,7 +7667,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": []}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7721,7 +7721,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"invalid\", "
+                        + "\"summary_operator\": \"invalid\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7817,7 +7817,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7917,7 +7917,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -8033,7 +8033,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -8133,7 +8133,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -8247,7 +8247,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -8301,7 +8301,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
 
         WebSourceRegistrationRequest request =
@@ -8358,7 +8358,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 5, 4]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -8412,7 +8412,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 5, 4]}], \n";
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
@@ -8512,7 +8512,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1,2,3,4]}, "
                         + "{\"trigger_data\": [3,4,5],"
                         + "\"event_report_windows\": { "
@@ -8522,7 +8522,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}"
                         + "],";
         RegistrationRequest request =
@@ -8577,7 +8577,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1,2,3,4]}, "
                         + "{\"trigger_data\": [3,4,5],"
                         + "\"event_report_windows\": { "
@@ -8587,7 +8587,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}"
                         + "],";
 
@@ -8649,7 +8649,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(14),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
 
         RegistrationRequest request =
@@ -8732,7 +8732,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(14),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
@@ -8813,7 +8813,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -8866,7 +8866,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}], \n";
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
@@ -8923,7 +8923,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}, "
                         + "{\"trigger_data\": [3],"
                         + "\"event_report_windows\": { "
@@ -8933,7 +8933,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]} "
                         + "]";
 
@@ -8996,7 +8996,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}, "
                         + "{\"trigger_data\": [4, 5, 6, 7, 8, 9],"
                         + "\"event_report_windows\": { "
@@ -9006,7 +9006,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]} "
                         + "]";
 
@@ -9068,7 +9068,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}, "
                         + "{\"trigger_data\": [4],"
                         + "\"event_report_windows\": { "
@@ -9078,7 +9078,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]} "
                         + "]";
 
@@ -9572,7 +9572,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     public void fetchSource_missingSummaryBucketForValueSumOperator_singleTriggerData()
             throws Exception {
         String triggerSpecsString =
-                "[{\"trigger_data\": [1], \"summary_window_operator\": \"value_sum\"}]";
+                "[{\"trigger_data\": [1], \"summary_operator\": \"value_sum\"}]";
 
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -9611,7 +9611,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     @Test
     public void fetchSource_invalidSummaryOperator_singleTriggerData() throws Exception {
         String triggerSpecsString =
-                "[{\"trigger_data\": [1], \"summary_window_operator\": \"value_average\"}]";
+                "[{\"trigger_data\": [1], \"summary_operator\": \"value_average\"}]";
 
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -9736,7 +9736,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}],";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -9789,7 +9789,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                 TimeUnit.DAYS.toSeconds(2),
                                 TimeUnit.DAYS.toSeconds(7),
                                 TimeUnit.DAYS.toSeconds(20))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [\"1\", \"2\", \"3\"]}],";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();

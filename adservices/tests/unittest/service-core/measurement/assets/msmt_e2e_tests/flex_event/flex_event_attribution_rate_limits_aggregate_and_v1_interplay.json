@@ -85,7 +85,7 @@
                       "start_time": 0,
                       "end_times": [172800, 604800]
                     },
-                    "summary_window_operator": "value_sum",
+                    "summary_operator": "value_sum",
                     "summary_buckets": [10, 100]
                   }
                 ],

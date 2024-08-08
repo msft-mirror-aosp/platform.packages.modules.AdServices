@@ -776,7 +776,7 @@ public class AsyncSourceFetcher {
 
         TriggerSpec.SummaryOperatorType summaryWindowOperator =
                 TriggerSpec.SummaryOperatorType.COUNT;
-        if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
+        if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_OPERATOR)) {
             // If a summary window operator is not in the predefined list, it will throw
             // IllegalArgumentException that will be caught by the overall parser.
             summaryWindowOperator =
@@ -784,7 +784,7 @@ public class AsyncSourceFetcher {
                             triggerSpecJson
                                     .getString(
                                             TriggerSpecs.FlexEventReportJsonKeys
-                                                    .SUMMARY_WINDOW_OPERATOR)
+                                                    .SUMMARY_OPERATOR)
                                     .toUpperCase(Locale.ENGLISH));
         }
         List<Long> summaryBuckets = null;

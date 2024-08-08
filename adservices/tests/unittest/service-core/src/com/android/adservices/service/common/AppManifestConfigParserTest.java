@@ -16,10 +16,13 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_SPECIFIC_ID;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
 import static com.android.adservices.service.common.AppManifestConfigCall.resultToString;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -29,7 +32,8 @@ import android.content.res.XmlResourceParser;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.adservices.servicecoretest.R;
 
@@ -37,7 +41,7 @@ import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
 
 @SmallTest
-public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
+public final class AppManifestConfigParserTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testValidXml() throws Exception {
@@ -525,18 +529,67 @@ public final class AppManifestConfigParserTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testInvalidXml_incorrectTag() throws Exception {
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+    public void testInvalidXml_incorrectTagStart() throws Exception {
         XmlResourceParser parser =
                 mContext.getPackageManager()
                         .getResourcesForApplication(mPackageName)
-                        .getXml(R.xml.ad_services_config_incorrect_tag);
+                        .getXml(R.xml.ad_services_config_incorrect_tag_start);
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
 
-        Exception e =
-                assertThrows(
-                        XmlParseException.class, () -> AppManifestConfigParser.getConfig(parser));
-        expect.that(e)
-                .hasMessageThat()
-                .isEqualTo("Unknown tag: foobar [Tags and attributes are case sensitive]");
+        assertWithMessage("manifest for ad_services_config_incorrect_tag_start")
+                .that(appManifestConfig)
+                .isNotNull();
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
+
+        /* these are explicitly set in the config */
+        assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_ALLOWED_APP_ALLOWS_ALL);
+
+        /* these should all be set to the default */
+        assertProtectedSignalsConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAdSelectionConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAdIdConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAppSetIdConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+    public void testInvalidXml_incorrectTagEnd() throws Exception {
+        XmlResourceParser parser =
+                mContext.getPackageManager()
+                        .getResourcesForApplication(mPackageName)
+                        .getXml(R.xml.ad_services_config_incorrect_tag_end);
+        AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
+
+        assertWithMessage("manifest for ad_services_config_incorrect_tag_end")
+                .that(appManifestConfig)
+                .isNotNull();
+        assertSdkLibraryConfigIsEmpty(appManifestConfig);
+
+        /* these are explicitly set in the config */
+        assertAttributionConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertCustomAudienceConfigIsAllowed(appManifestConfig, RESULT_DISALLOWED_BY_APP);
+        assertTopicsConfigIsAllowed(appManifestConfig, RESULT_ALLOWED_APP_ALLOWS_ALL);
+
+        /* these should all be set to the default */
+        assertProtectedSignalsConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAdSelectionConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAdIdConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
+        assertAppSetIdConfigIsAllowed(
+                appManifestConfig, RESULT_ALLOWED_BY_DEFAULT_APP_HAS_CONFIG_WITHOUT_API_SECTION);
     }
 
     @Test

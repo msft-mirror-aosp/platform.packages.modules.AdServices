@@ -56,47 +56,59 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * 9307efde88ad78d22ea8321888f9fb20bee50bf6.
+ * be33435ba1f0ac5c6a1b9bd62f7cafb141e10b26.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EAbstractMockTest {
     static {
         sTestsToSkip = ImmutableSet.of(
-                "unsuitable_response_url.json",
+                "aggregatable_budget.json",
+                "aggregatable_contributions_creation.json",
+                "aggregatable_contributions_with_filtering_ids.json",
                 "aggregatable_debug_reports.json",
+                "aggregatable_debug_reports_limits.json",
+                "aggregatable_debug_reports_with_filtering_ids.json",
+                "aggregatable_dedup_key.json",
+                "aggregatable_large_key.json",
+                "aggregatable_report_source_registration_time.json",
                 "aggregatable_report_trigger_context_id.json",
+                "aggregatable_report_window.json",
                 "aggregatable_reports_fake_source.json",
+                "aggregatable_storage_limit.json",
                 "aggregatable_values_filtering.json",
+                "aggregatable_with_event_disabled.json",
                 "aggregation_coordinator_origin.json",
+                "basic_aggregatable.json",
                 "channel_capacity.json",
-                "custom_trigger_data.json",
                 "destination_limit.json",
                 "destination_rate_limit.json",
                 "destination_validation.json",
                 "event_level_epsilon.json",
                 "event_level_report_time.json",
-                "event_level_storage_limit_replacement.json",
+                "event_level_storage_limit.json",
                 "event_level_trigger_filter_data.json",
                 "event_report_window.json",
-                "event_source_rounds_expiry.json",
                 "fenced.json",
                 "filter_data_validation.json",
                 "header_presence.json",
                 "lookback_window_precision.json",
+                "max_aggregatable_reports_per_source.json",
                 "max_trigger_state_cardinality.json",
+                "multiple_destinations.json",
+                "null_aggregatable_report.json",
                 "os_debug_reports.json",
-                "parse_failures.json",
                 "preferred_platform.json",
                 "rate_limit_max_attributions.json",
                 "rate_limit_max_distinct_reporting_origins_per_source_reporting_site.json",
                 "rate_limit_max_reporting_origins_per_source_reporting_site.json",
                 "redirect_source_trigger.json",
-                "same_destination_site.json",
                 "source_destination_limit_fifo.json",
                 "source_destination_limit_fifo_rate_limits.json",
                 "source_registration_limits.json",
-                "source_storage_limit_and_destination_rate_limit.json",
                 "source_storage_limit_expiry.json",
+                "success_debug_aggregatable.json",
+                "top_level_filter_data.json",
+                "unsuitable_response_url.json",
                 "verbose_debug_report_multiple_data.json");
     }
 

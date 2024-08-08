@@ -22,7 +22,6 @@ import static com.android.adservices.service.measurement.E2EAbstractTest.getUriC
 import static com.android.adservices.service.measurement.E2EAbstractTest.getUriToResponseHeadersMap;
 import static com.android.adservices.service.measurement.E2EAbstractTest.hasAdIdPermission;
 import static com.android.adservices.service.measurement.E2EAbstractTest.hasArDebugPermission;
-import static com.android.adservices.service.measurement.E2EAbstractTest.hasSourceDebugReportingPermission;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
@@ -42,7 +41,6 @@ public final class RegisterSource implements Action {
     public final long mTimestamp;
     // Used in interop tests
     public final String mPublisher;
-    public final boolean mDebugReporting;
     public final boolean mAdIdPermission;
     public final boolean mArDebugPermission;
 
@@ -88,7 +86,6 @@ public final class RegisterSource implements Action {
         mRegistrationRequest = registrationRequestBuilder.build();
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
-        mDebugReporting = hasSourceDebugReportingPermission(obj);
         mAdIdPermission = hasAdIdPermission(obj);
         mArDebugPermission = hasArDebugPermission(obj);
         mUriConfigsMap = getUriConfigsMap(obj);

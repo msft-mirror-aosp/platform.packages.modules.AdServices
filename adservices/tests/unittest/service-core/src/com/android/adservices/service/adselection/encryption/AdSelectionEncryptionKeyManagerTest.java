@@ -38,12 +38,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AuctionEncryptionKeyFixture;
-import android.content.Context;
 import android.net.Uri;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionKey;
@@ -58,21 +57,17 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchCalledStats;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImpl;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.Futures;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -80,7 +75,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-public class AdSelectionEncryptionKeyManagerTest {
+public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockitoTestCase {
     private static final Long EXPIRY_TTL_1SEC = 1L;
 
     private static final int TIMEOUT_MS = 500;
@@ -88,7 +83,6 @@ public class AdSelectionEncryptionKeyManagerTest {
     private static final String AUCTION_KEY_FETCH_URI = "https://foo.bar/auctionkey";
     private static final String JOIN_KEY_FETCH_URI = "https://foo.bar/joinkey";
 
-    @Rule public final MockitoRule mockito = MockitoJUnit.rule();
     @Mock private AdServicesHttpsClient mMockHttpClient;
     @Spy private Clock mClock = Clock.systemUTC();
     private EncryptionKeyDao mEncryptionKeyDao;
@@ -108,16 +102,11 @@ public class AdSelectionEncryptionKeyManagerTest {
     private AdSelectionEncryptionKeyManager mKeyManager;
     private DevContext mDevContext;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() {
-        Context context = ApplicationProvider.getApplicationContext();
-
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();
         mEncryptionKeyDao =
-                Room.inMemoryDatabaseBuilder(context, AdSelectionServerDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionKeyDao();
         mKeyManager =
@@ -130,12 +119,7 @@ public class AdSelectionEncryptionKeyManagerTest {
                         mMockHttpClient,
                         mLightweightExecutor,
                         mAdServicesLoggerSpy);
-
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(context.getPackageName())
-                        .build();
+        mDevContext = DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
     }
 
     @Test

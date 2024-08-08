@@ -25,7 +25,6 @@ import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.ConsentStatus.SERVICE_NOT_ENABLED;
@@ -386,12 +385,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         sBackgroundExecutor.execute(
                 () -> {
                     try {
-                        if (!mFlags.getAdIdCacheEnabled()) {
-                            LogUtil.w("notifyAdIdChange() is disabled.");
-                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
-                            return;
-                        }
-
                         if (!authorizedCaller) {
                             LogUtil.w(
                                     "Caller %d is not authorized to update AdId Cache!", callerUid);

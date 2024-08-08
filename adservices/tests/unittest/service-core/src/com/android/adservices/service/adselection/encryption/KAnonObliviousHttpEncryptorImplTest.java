@@ -25,8 +25,6 @@ import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
@@ -67,12 +65,7 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
         mKAnonObliviousHttpEncryptor =
                 new KAnonObliviousHttpEncryptorImpl(
                         mEncryptionKeyManagerMock, mLightweightExecutor);
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(
-                                ApplicationProvider.getApplicationContext().getPackageName())
-                        .build();
+        mDevContext = DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
 
         mocker.mockGetFlags(mMockFlags);
     }

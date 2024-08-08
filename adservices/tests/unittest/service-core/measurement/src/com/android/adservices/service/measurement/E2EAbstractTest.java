@@ -171,6 +171,7 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
     }
 
     interface AggregateHistogramKeys {
+        String ID = "id";
         String BUCKET = "key";
         String VALUE = "value";
     }
@@ -327,42 +328,6 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
                 obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
                         .getJSONObject(0);
         return urlToResponse.optBoolean(TestFormatJsonMapping.HAS_AD_ID_PERMISSION, false);
-    }
-
-    /** Does the source registration have debug reporting permission */
-    public static boolean hasSourceDebugReportingPermission(JSONObject obj) throws JSONException {
-        JSONObject headersMapJson =
-                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
-                        .getJSONObject(0)
-                        .getJSONObject(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_RESPONSE_KEY);
-        if (headersMapJson.isNull(TestFormatJsonMapping.SOURCE_REGISTRATION_HEADER)) {
-            return false;
-        }
-        Object registerSourceObj =
-                headersMapJson.get(TestFormatJsonMapping.SOURCE_REGISTRATION_HEADER);
-        if (!(registerSourceObj instanceof JSONObject)) {
-            return false;
-        }
-        return ((JSONObject) registerSourceObj).optBoolean(
-                TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
-    }
-
-    /** Does the trigger registration have debug reporting permission */
-    public static boolean hasTriggerDebugReportingPermission(JSONObject obj) throws JSONException {
-        JSONObject headersMapJson =
-                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
-                        .getJSONObject(0)
-                        .getJSONObject(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_RESPONSE_KEY);
-        if (headersMapJson.isNull(TestFormatJsonMapping.TRIGGER_REGISTRATION_HEADER)) {
-            return false;
-        }
-        Object registerTriggerObj =
-                headersMapJson.get(TestFormatJsonMapping.TRIGGER_REGISTRATION_HEADER);
-        if (!(registerTriggerObj instanceof JSONObject)) {
-            return false;
-        }
-        return ((JSONObject)  registerTriggerObj).optBoolean(
-                TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
     }
 
     /** Map of URI to registration headers */
@@ -817,9 +782,10 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
         try {
             List<String> tempList = new ArrayList<>();
             for (int i = 0; i < arr.length(); i++) {
-                JSONObject pair = arr.getJSONObject(i);
-                tempList.add(pair.getString(AggregateHistogramKeys.BUCKET) + ","
-                        + pair.getString(AggregateHistogramKeys.VALUE));
+                JSONObject obj = arr.getJSONObject(i);
+                tempList.add(obj.optString(AggregateHistogramKeys.ID, "") + ","
+                        + obj.optString(AggregateHistogramKeys.BUCKET, "") + ","
+                        + obj.optString(AggregateHistogramKeys.VALUE, ""));
             }
             Collections.sort(tempList);
             return String.join(";", tempList);

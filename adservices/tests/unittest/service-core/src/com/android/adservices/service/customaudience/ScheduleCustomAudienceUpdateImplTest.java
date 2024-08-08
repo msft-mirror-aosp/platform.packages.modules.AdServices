@@ -37,11 +37,9 @@ import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateInput;
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
@@ -50,35 +48,32 @@ import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-public class ScheduleCustomAudienceUpdateImplTest {
+@MockStatic(ScheduleCustomAudienceUpdateJobService.class)
+@MockStatic(ConsentManager.class)
+public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtendedMockitoTestCase {
     private static final int API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 
     private static final Uri UPDATE_URI = Uri.parse("https://example.com");
     private static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
-    private final Context mContext = ApplicationProvider.getApplicationContext();
-    @Captor ArgumentCaptor<DBScheduledCustomAudienceUpdate> mUpdateCaptor;
-    @Captor ArgumentCaptor<List<PartialCustomAudience>> mListArgumentCaptor;
-    private MockitoSession mStaticMockSession = null;
+    @Captor private ArgumentCaptor<DBScheduledCustomAudienceUpdate> mUpdateCaptor;
+    @Captor private ArgumentCaptor<List<PartialCustomAudience>> mListArgumentCaptor;
     private ListeningExecutorService mBackgroundExecutorService;
     private int mCallingAppUid;
     @Mock private Flags mFlagsMock;
@@ -91,24 +86,12 @@ public class ScheduleCustomAudienceUpdateImplTest {
 
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(ScheduleCustomAudienceUpdateJobService.class)
-                        .mockStatic(ConsentManager.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mCallingAppUid = CallingAppUidSupplierProcessImpl.create().getCallingAppUid();
         when(mFlagsMock.getFledgeScheduleCustomAudienceUpdateEnabled()).thenReturn(true);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(false);
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(false)
-                        .setCallingAppPackageName(PACKAGE)
-                        .build();
+        mDevContext = DevContext.builder(PACKAGE).setDevOptionsEnabled(false).build();
         when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(UPDATE_URI),
                         eq(PACKAGE),
@@ -139,13 +122,6 @@ public class ScheduleCustomAudienceUpdateImplTest {
                         () ->
                                 ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
                                         any(), any(), anyBoolean()));
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test

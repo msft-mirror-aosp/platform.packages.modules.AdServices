@@ -1692,7 +1692,7 @@ public class SourceTest {
                         + "\"start_time\": \"0\", "
                         + String.format("\"end_times\": [%s]},",
                                 TimeUnit.DAYS.toMillis(7))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
@@ -1736,7 +1736,7 @@ public class SourceTest {
                                 TimeUnit.DAYS.toMillis(7),
                                 TimeUnit.DAYS.toMillis(11),
                                 TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
                                 + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
@@ -1782,7 +1782,7 @@ public class SourceTest {
                                         TimeUnit.DAYS.toMillis(7),
                                         TimeUnit.DAYS.toMillis(11),
                                         TimeUnit.DAYS.toMillis(30))
-                                + "\"summary_window_operator\": \"count\", "
+                                + "\"summary_operator\": \"count\", "
                                 + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
                                         + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}]"
                         + "{\"trigger_data\": [4, 5, 6, 7],"
@@ -1793,7 +1793,7 @@ public class SourceTest {
                                         TimeUnit.DAYS.toMillis(7),
                                         TimeUnit.DAYS.toMillis(11),
                                         TimeUnit.DAYS.toMillis(30))
-                                + "\"summary_window_operator\": \"count\", "
+                                + "\"summary_operator\": \"count\", "
                                 + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
                                         + "11, 12, 13, 14, 15, 16, 17, 18, 19]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
@@ -1834,7 +1834,7 @@ public class SourceTest {
                         + "\"event_report_windows\": { "
                         + "\"start_time\": \"0\", "
                         + String.format("\"end_times\": [%s]},", TimeUnit.DAYS.toMillis(7))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
@@ -1875,7 +1875,7 @@ public class SourceTest {
                         + "\"event_report_windows\": { "
                         + "\"start_time\": \"0\", "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(7))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
@@ -1969,7 +1969,7 @@ public class SourceTest {
                         + "\"event_report_windows\": { "
                         + "\"start_time\": \"0\", "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(7))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
@@ -2020,7 +2020,7 @@ public class SourceTest {
                                 TimeUnit.DAYS.toMillis(2),
                                 TimeUnit.DAYS.toMillis(7),
                                 TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
@@ -2066,7 +2066,7 @@ public class SourceTest {
                                 TimeUnit.DAYS.toMillis(2),
                                 TimeUnit.DAYS.toMillis(7),
                                 TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 3;
@@ -2099,7 +2099,7 @@ public class SourceTest {
                                 TimeUnit.DAYS.toMillis(2),
                                 TimeUnit.DAYS.toMillis(7),
                                 TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}]";
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -2125,7 +2125,7 @@ public class SourceTest {
                                 TimeUnit.DAYS.toMillis(2),
                                 TimeUnit.DAYS.toMillis(7),
                                 TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}]";
         Source testSource =
                 SourceFixture.getMinimalValidSourceBuilder()

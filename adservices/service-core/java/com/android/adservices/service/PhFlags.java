@@ -6491,12 +6491,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getAdIdCacheEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_AD_ID_CACHE_ENABLED, DEFAULT_ADID_CACHE_ENABLED);
-    }
-
-    @Override
     public long getAdIdFetcherTimeoutMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS, DEFAULT_AD_ID_FETCHER_TIMEOUT_MS);

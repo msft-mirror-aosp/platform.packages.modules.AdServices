@@ -150,10 +150,11 @@ public abstract class AbstractJobService extends JobService {
             return false;
         }
 
-        // Cancel the running execution future.
+        // Cancel the execution future if it hasn't started. Let the running future complete
+        // gracefully.
         ListenableFuture<ExecutionResult> executionFuture = mRunningFuturesMap.get(jobId);
         if (executionFuture != null) {
-            executionFuture.cancel(/* mayInterruptIfRunning= */ true);
+            executionFuture.cancel(/* mayInterruptIfRunning= */ false);
         }
 
         // Execute customized logic if the execution is stopped by the JobScheduler.

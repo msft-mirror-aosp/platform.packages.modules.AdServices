@@ -530,7 +530,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     public void testJoinCustomAudience_devOptionsEnabled() throws RemoteException {
-        DevContext devContextEnabled = DevContext.builder().setDevOptionsEnabled(true).build();
+        DevContext devContextEnabled =
+                DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
         Mockito.lenient()
                 .doReturn(devContextEnabled)
                 .when(mDevContextFilterMock)
@@ -1214,11 +1215,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     public void testAppImportanceTestFails_overrideCustomAudienceThrowsException()
             throws RemoteException {
         when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setCallingAppPackageName("")
-                                .setDevOptionsEnabled(true)
-                                .build());
+                .thenReturn(DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
         when(mCustomAudienceImplMock.getCustomAudienceDao()).thenReturn(mCustomAudienceDaoMock);
         doThrow(new WrongCallingApplicationStateException())
                 .when(mAppImportanceFilterMock)
@@ -1254,7 +1251,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
-                /* appPackageName= */ "",
+                mPackageName,
                 STATUS_BACKGROUND_CALLER);
     }
 
@@ -1264,8 +1261,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         when(mCustomAudienceImplMock.getCustomAudienceDao()).thenReturn(mCustomAudienceDaoMock);
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setCallingAppPackageName(CustomAudienceFixture.VALID_OWNER)
+                        DevContext.builder(CustomAudienceFixture.VALID_OWNER)
                                 .setDevOptionsEnabled(true)
                                 .build());
         mService =
@@ -1334,11 +1330,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     public void testAppImportanceTestFails_removeCustomAudienceOverrideThrowsException()
             throws RemoteException {
         when(mDevContextFilterMock.createDevContext())
-                .thenReturn(
-                        DevContext.builder()
-                                .setCallingAppPackageName("")
-                                .setDevOptionsEnabled(true)
-                                .build());
+                .thenReturn(DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
         when(mCustomAudienceImplMock.getCustomAudienceDao()).thenReturn(mCustomAudienceDaoMock);
         int apiName = AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
         doThrow(new WrongCallingApplicationStateException())
@@ -1363,7 +1355,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 .assertCallerIsInForeground(CustomAudienceFixture.VALID_OWNER, apiName, null);
         verifyErrorResponseCustomAudienceOverrideCallback(
                 STATUS_BACKGROUND_CALLER, ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
-        verifyLoggerMock(apiName, "", STATUS_BACKGROUND_CALLER);
+        verifyLoggerMock(apiName, mPackageName, STATUS_BACKGROUND_CALLER);
     }
 
     @Test
@@ -1372,8 +1364,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         when(mCustomAudienceImplMock.getCustomAudienceDao()).thenReturn(mCustomAudienceDaoMock);
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setCallingAppPackageName(CustomAudienceFixture.VALID_OWNER)
+                        DevContext.builder(CustomAudienceFixture.VALID_OWNER)
                                 .setDevOptionsEnabled(true)
                                 .build());
         int apiName = AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
@@ -1430,8 +1421,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         when(mCustomAudienceImplMock.getCustomAudienceDao()).thenReturn(mCustomAudienceDaoMock);
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setCallingAppPackageName(CustomAudienceFixture.VALID_OWNER)
+                        DevContext.builder(CustomAudienceFixture.VALID_OWNER)
                                 .setDevOptionsEnabled(true)
                                 .build());
         int apiName = AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
@@ -1461,8 +1451,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         when(mCustomAudienceImplMock.getCustomAudienceDao()).thenReturn(mCustomAudienceDaoMock);
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setCallingAppPackageName(CustomAudienceFixture.VALID_OWNER)
+                        DevContext.builder(CustomAudienceFixture.VALID_OWNER)
                                 .setDevOptionsEnabled(true)
                                 .build());
         mService =
@@ -1575,8 +1564,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     public void testAppManifestPermissionNotRequested_overrideCustomAudienceRemoteInfo_fails() {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setCallingAppPackageName(CustomAudienceFixture.VALID_OWNER)
+                        DevContext.builder(CustomAudienceFixture.VALID_OWNER)
                                 .setDevOptionsEnabled(true)
                                 .build());
         doThrow(SecurityException.class)
@@ -1605,8 +1593,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
             testAppManifestPermissionNotRequested_removeCustomAudienceRemoteInfoOverride_fails() {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setCallingAppPackageName(CustomAudienceFixture.VALID_OWNER)
+                        DevContext.builder(CustomAudienceFixture.VALID_OWNER)
                                 .setDevOptionsEnabled(true)
                                 .build());
         int apiName = AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
@@ -1632,8 +1619,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     public void testAppManifestPermissionNotRequested_resetAllCustomAudienceOverrides_fails() {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
-                                .setCallingAppPackageName(CustomAudienceFixture.VALID_OWNER)
+                        DevContext.builder(CustomAudienceFixture.VALID_OWNER)
                                 .setDevOptionsEnabled(true)
                                 .build());
         doThrow(SecurityException.class)

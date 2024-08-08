@@ -114,6 +114,9 @@
 
     <!-- Allow AdServicesApk (PPAPI) to call AdService's system service. -->
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_MANAGER"/>
+    <!-- Permissions are only needed by the shell cmd to allow self calling Common Service. -->
+    <uses-permission android:name="android.permission.MODIFY_ADSERVICES_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_STATE"/>
 
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_AD_ID"/>
     <uses-permission android:name="android.permission.ACCESS_PRIVILEGED_APP_SET_ID"/>

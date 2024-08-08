@@ -18,12 +18,14 @@ package com.android.adservices.shared.testing.mockito;
 import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 
+import org.mockito.internal.util.MockUtil;
 import org.mockito.invocation.InvocationOnMock;
 
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+// TODO(b/306522832): move to side-less side
 /** Helper for {@code Mockito}-related functionalities. */
 public final class MockitoHelper {
 
@@ -59,6 +61,28 @@ public final class MockitoHelper {
                             invocation);
             return invocation.toString();
         }
+    }
+
+    /** Checks if the given object is a Mockito mock. */
+    public static boolean isMock(Object object) {
+        return MockUtil.isMock(object);
+    }
+
+    /** Checks if the given object is a Mockito spy. */
+    public static boolean isSpy(Object object) {
+        return MockUtil.isSpy(object);
+    }
+
+    /**
+     * Gets the object being spied by {@code spy}.
+     *
+     * @throws IllegalArgumentException if {@code spy} is not a Mockito spy.
+     */
+    public static Object getSpiedInstance(Object object) {
+        if (!isSpy(object)) {
+            throw new IllegalArgumentException("not a spy: " + object);
+        }
+        return MockUtil.getMockSettings(object).getSpiedInstance();
     }
 
     private MockitoHelper() {

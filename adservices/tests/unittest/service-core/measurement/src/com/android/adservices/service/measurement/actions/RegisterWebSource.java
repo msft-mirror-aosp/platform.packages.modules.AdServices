@@ -21,7 +21,6 @@ import static com.android.adservices.service.measurement.E2EAbstractTest.getUriC
 import static com.android.adservices.service.measurement.E2EAbstractTest.getUriToResponseHeadersMap;
 import static com.android.adservices.service.measurement.E2EAbstractTest.hasAdIdPermission;
 import static com.android.adservices.service.measurement.E2EAbstractTest.hasArDebugPermission;
-import static com.android.adservices.service.measurement.E2EAbstractTest.hasSourceDebugReportingPermission;
 
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
@@ -43,7 +42,6 @@ public final class RegisterWebSource implements Action {
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
     public final Map<String, List<UriConfig>> mUriConfigsMap;
     public final long mTimestamp;
-    public final boolean mDebugReporting;
     public final boolean mAdIdPermission;
 
     public RegisterWebSource(JSONObject obj) throws JSONException {
@@ -93,7 +91,6 @@ public final class RegisterWebSource implements Action {
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
-        mDebugReporting = hasSourceDebugReportingPermission(obj);
         mAdIdPermission = hasAdIdPermission(obj);
         mUriConfigsMap = getUriConfigsMap(obj);
     }

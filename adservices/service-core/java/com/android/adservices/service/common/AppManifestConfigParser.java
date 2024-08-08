@@ -16,10 +16,15 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.res.XmlResourceParser;
 
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.exception.XmlParseException;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -193,10 +198,14 @@ public class AppManifestConfigParser {
                     break;
 
                 default:
-                    throw new XmlParseException(
-                            "Unknown tag: "
-                                    + parser.getName()
-                                    + " [Tags and attributes are case sensitive]");
+                    LoggerFactory.getLogger()
+                            .w(
+                                    "Unknown tag: "
+                                            + parser.getName()
+                                            + " [Tags and attributes are case sensitive]");
+                    ErrorLogUtil.e(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             }
             parser.next();
         }

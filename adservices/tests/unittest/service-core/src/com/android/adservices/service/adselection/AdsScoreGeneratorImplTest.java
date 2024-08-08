@@ -77,6 +77,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -94,7 +95,6 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.RunAdScoringProcessReportedStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -118,7 +118,6 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
 
 import java.nio.charset.StandardCharsets;
@@ -134,7 +133,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
-public class AdsScoreGeneratorImplTest {
+public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
@@ -143,7 +142,7 @@ public class AdsScoreGeneratorImplTest {
     private final String mTrustedScoringSignalsPathWithDataVersionHeader =
             "/getTrustedScoringSignalsWithDataVersionHeader/";
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-    AdSelectionConfig mAdSelectionConfig;
+    private AdSelectionConfig mAdSelectionConfig;
 
     @Mock private AdSelectionScriptEngine mMockAdSelectionScriptEngine;
     @Mock private AdServicesHttpsClient mMockHttpsClient;
@@ -173,22 +172,17 @@ public class AdsScoreGeneratorImplTest {
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
     private AdSelectionExecutionLogger mAdSelectionExecutionLogger;
     private static final boolean DATA_VERSION_HEADER_STATUS_DISABLED = false;
-    @Mock Clock mAdSelectionExecutionLoggerClock;
+    @Mock private Clock mAdSelectionExecutionLoggerClock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
 
     @Mock private DebugReporting mDebugReporting;
 
     @Captor
-    ArgumentCaptor<RunAdScoringProcessReportedStats>
+    private ArgumentCaptor<RunAdScoringProcessReportedStats>
             mRunAdScoringProcessReportedStatsArgumentCaptor;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-
         mFlags = new AdsScoreGeneratorImplTestFlags(false);
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
@@ -1141,11 +1135,7 @@ public class AdsScoreGeneratorImplTest {
                         .build();
         mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(
                 ImmutableList.of(buyerDecisionOverride));
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(myAppPackageName)
-                        .build();
+        mDevContext = DevContext.builder(myAppPackageName).setDevOptionsEnabled(true).build();
 
         adsWithBid.addAll(contextualBidAds);
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
@@ -1445,11 +1435,7 @@ public class AdsScoreGeneratorImplTest {
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
         // Resetting Generator to use new dev context
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(myAppPackageName)
-                        .build();
+        mDevContext = DevContext.builder(myAppPackageName).setDevOptionsEnabled(true).build();
 
         boolean dataVersionHeaderEnabled = false;
         mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);

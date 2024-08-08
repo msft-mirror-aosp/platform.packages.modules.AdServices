@@ -63,13 +63,11 @@ import android.adservices.adselection.ReportEventRequest;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -109,7 +107,7 @@ import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -119,7 +117,6 @@ import com.google.common.collect.ImmutableList;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -143,7 +140,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
+@RequiresSdkLevelAtLeastS
+public final class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String SHA256 = "SHA-256";
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -392,7 +390,6 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     private static final int BUYER_DESTINATION =
             ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 
-    private Context mContext;
     private Flags mFlags;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
@@ -429,13 +426,9 @@ public class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
     private ArgumentCaptor<PersistAdSelectionResultCalledStats>
             mPersistAdSelectionResultCalledStatsArgumentCaptor;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
         mFlags = new PersistAdSelectionResultRunnerTestFlags();
-        mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();

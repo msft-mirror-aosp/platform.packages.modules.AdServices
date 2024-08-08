@@ -63,7 +63,7 @@ public class TriggerSpecs {
         String FLIP_PROBABILITY = "flip_probability";
         String END_TIMES = "end_times";
         String START_TIME = "start_time";
-        String SUMMARY_WINDOW_OPERATOR = "summary_window_operator";
+        String SUMMARY_OPERATOR = "summary_operator";
         String EVENT_REPORT_WINDOWS = "event_report_windows";
         String SUMMARY_BUCKETS = "summary_buckets";
     }
