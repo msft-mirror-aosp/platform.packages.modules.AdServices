@@ -40,7 +40,6 @@ import android.os.RemoteException;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -217,11 +216,6 @@ public final class AdIdCacheManager {
 
     @VisibleForTesting
     void setAdIdInStorage(@NonNull AdId adId) {
-        // TODO(b/300147424): Remove the flag once the feature is rolled out.
-        if (!FlagsFactory.getFlags().getAdIdCacheEnabled()) {
-            LogUtil.d("Ad Id Cache is not enabled. Set nothing.");
-            return;
-        }
         Objects.requireNonNull(adId);
 
         mReadWriteLock.writeLock().lock();
@@ -243,12 +237,6 @@ public final class AdIdCacheManager {
 
     @VisibleForTesting
     AdId getAdIdInStorage() {
-        // TODO(b/300147424): Remove the flag once the feature is rolled out.
-        if (!FlagsFactory.getFlags().getAdIdCacheEnabled()) {
-            LogUtil.d("Ad Id Cache is not enabled. Return default value.");
-            return UNSET_AD_ID;
-        }
-
         mReadWriteLock.readLock().lock();
         try {
             SharedPreferences sharedPreferences = getSharedPreferences();

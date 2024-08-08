@@ -23,6 +23,7 @@ import com.android.adservices.mockito.AndroidMocker;
 import com.android.adservices.mockito.AndroidMockitoMocker;
 
 import org.junit.Rule;
+import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
@@ -37,8 +38,8 @@ public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
 
     @Mock protected Context mMockContext;
 
-    /** Spy the {@link AdServicesUnitTestCase#sContext} */
-    @Spy protected final Context mSpyContext = sContext;
+    /** Spy the {@link AdServicesUnitTestCase#mContext} */
+    @Spy protected final Context mSpyContext = mContext;
 
     @Rule(order = 10)
     public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
@@ -55,5 +56,12 @@ public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
         public void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos) {
             mAndroidMocker.mockQueryIntentService(pm, resolveInfos);
         }
+    }
+
+    @Test
+    public final void testAdServicesMockitoTestCaseFixtures() throws Exception {
+        checkProhibitedFields(
+                "mMockContext", "mContextMock", "mSpyContext", "mContextSpy", "mockito", "mocker");
+        checkProhibitedStaticFields("sSpyContext", "sContextSpy");
     }
 }

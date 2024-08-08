@@ -18,6 +18,7 @@ package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.common.EchoCommand.CMD_ECHO;
 import static com.android.adservices.service.shell.common.EchoCommand.HELP_ECHO;
+import static com.android.adservices.service.shell.common.EnableAdServicesCommand.CMD_ENABLE_ADSERVICES;
 import static com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand.CMD_IS_ALLOWED_AD_SELECTION_ACCESS;
 import static com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand.HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
 import static com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand.CMD_IS_ALLOWED_ATTRIBUTION_ACCESS;
@@ -28,15 +29,18 @@ import static com.android.adservices.service.shell.common.IsAllowedProtectedSign
 import static com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand.HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
 import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.CMD_IS_ALLOWED_TOPICS_ACCESS;
 import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.adservices.service.shell.common.ResetConsentCommand.CMD_RESET_CONSENT_DATA;
 
 import androidx.annotation.Nullable;
 
 import com.android.adservices.service.shell.common.EchoCommand;
+import com.android.adservices.service.shell.common.EnableAdServicesCommand;
 import com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand;
 import com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand;
 import com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand;
 import com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand;
 import com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand;
+import com.android.adservices.service.shell.common.ResetConsentCommand;
 
 import com.google.common.collect.ImmutableList;
 
@@ -77,6 +81,10 @@ public final class CommonShellCommandFactory implements ShellCommandFactory {
                 return new IsAllowedAttributionAccessCommand();
             case CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS:
                 return new IsAllowedProtectedSignalsAccessCommand();
+            case CMD_ENABLE_ADSERVICES:
+                return new EnableAdServicesCommand();
+            case CMD_RESET_CONSENT_DATA:
+                return new ResetConsentCommand();
             default:
                 return null;
         }
