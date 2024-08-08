@@ -16,9 +16,9 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.DeviceSideDeviceConfigHelper.callWithDeviceConfigPermissions;
-import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
@@ -106,12 +106,6 @@ public final class AdServicesFlagsSetterRule
     /** Factory method that disables all major API kill switches. */
     public static AdServicesFlagsSetterRule forAllApisEnabledTests() {
         return newInstance().enableAllApis();
-    }
-
-    // TODO(b/297085722): pass clearFlags() on forGlobalKillSwitchDisabledTests() by default?
-    /** Factory method that clears all flags then disables the global kill switch. */
-    public static AdServicesFlagsSetterRule forGlobalKillSwitchDisabledOnClearSlateTests() {
-        return withDefaultLogcatTags().clearFlags().setGlobalKillSwitch(false);
     }
 
     /** Factory method for Measurement E2E CTS tests */
