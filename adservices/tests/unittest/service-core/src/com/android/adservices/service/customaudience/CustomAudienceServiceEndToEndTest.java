@@ -80,14 +80,12 @@ import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateInput;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 import android.os.IBinder;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -161,8 +159,6 @@ import java.util.stream.Collectors;
 public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedMockitoTestCase {
     @Rule(order = 11)
     public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-
-    protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_1 =
             CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
@@ -267,17 +263,17 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         mFetchUri = mMockWebServerRule.uriForPath("/fetch");
 
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
 
         SharedStorageDatabase sharedDb =
-                Room.inMemoryDatabaseBuilder(CONTEXT, SharedStorageDatabase.class).build();
+                Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDao = sharedDb.frequencyCapDao();
         AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionServerDatabase.class).build();
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
 
         mCustomAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(
@@ -295,13 +291,13 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         mFledgeAuthorizationFilterSpy =
                 spy(
                         new FledgeAuthorizationFilter(
-                                CONTEXT.getPackageManager(),
+                                mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock));
 
         mService =
                 new CustomAudienceServiceImpl(
-                        CONTEXT,
+                        mContext,
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
                                 mCustomAudienceQuantityChecker,
@@ -317,12 +313,12 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
-                                CONTEXT,
+                                mContext,
                                 mFledgeConsentFilterMock,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
-                                        CONTEXT.getPackageManager(),
+                                        mContext.getPackageManager(),
                                         EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
@@ -375,7 +371,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         mService =
                 new CustomAudienceServiceImpl(
-                        CONTEXT,
+                        mContext,
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
                                 customAudienceQuantityChecker,
@@ -383,7 +379,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED),
                         new FledgeAuthorizationFilter(
-                                CONTEXT.getPackageManager(),
+                                mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock),
                         mConsentManagerMock,
@@ -394,12 +390,12 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
-                                CONTEXT,
+                                mContext,
                                 mFledgeConsentFilterMock,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
-                                        CONTEXT.getPackageManager(),
+                                        mContext.getPackageManager(),
                                         EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
@@ -432,7 +428,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        CONTEXT,
+                        mContext,
                         otherOwnerPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
@@ -455,7 +451,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         VALID_NAME));
         verify(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        CONTEXT,
+                        mContext,
                         otherOwnerPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
@@ -1101,7 +1097,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         mService =
                 new CustomAudienceServiceImpl(
-                        CONTEXT,
+                        mContext,
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
                                 customAudienceQuantityChecker,
@@ -1109,7 +1105,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED),
                         new FledgeAuthorizationFilter(
-                                CONTEXT.getPackageManager(),
+                                mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock),
                         mConsentManagerMock,
@@ -1120,12 +1116,12 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
-                                CONTEXT,
+                                mContext,
                                 mFledgeConsentFilterMock,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
-                                        CONTEXT.getPackageManager(),
+                                        mContext.getPackageManager(),
                                         EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(
@@ -1154,7 +1150,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        CONTEXT,
+                        mContext,
                         otherOwnerPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
@@ -1169,7 +1165,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 callback.getException().getMessage());
         verify(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        CONTEXT,
+                        mContext,
                         otherOwnerPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
@@ -2804,7 +2800,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        CONTEXT,
+                        mContext,
                         MY_APP_PACKAGE_NAME,
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
@@ -2829,7 +2825,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         verify(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        CONTEXT,
+                        mContext,
                         MY_APP_PACKAGE_NAME,
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
@@ -2935,7 +2931,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        CONTEXT,
+                        mContext,
                         incorrectPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
@@ -2964,7 +2960,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
         verify(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        CONTEXT,
+                        mContext,
                         incorrectPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
@@ -3112,7 +3108,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        CONTEXT,
+                        mContext,
                         incorrectPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
@@ -3158,7 +3154,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
         verify(mFledgeAuthorizationFilterSpy)
                 .assertAppDeclaredPermission(
-                        CONTEXT,
+                        mContext,
                         incorrectPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
@@ -3245,7 +3241,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             CustomAudienceServiceImpl customAudienceService =
                     mService =
                             new CustomAudienceServiceImpl(
-                                    CONTEXT,
+                                    mContext,
                                     new CustomAudienceImpl(
                                             mCustomAudienceDao,
                                             mCustomAudienceQuantityCheckerMock,
@@ -3253,7 +3249,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                             CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                             flagsWithLowRateLimit),
                                     new FledgeAuthorizationFilter(
-                                            CONTEXT.getPackageManager(),
+                                            mContext.getPackageManager(),
                                             EnrollmentDao.getInstance(),
                                             mAdServicesLoggerMock),
                                     mConsentManagerMock,
@@ -3264,12 +3260,12 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     flagsWithLowRateLimit,
                                     CallingAppUidSupplierProcessImpl.create(),
                                     new CustomAudienceServiceFilter(
-                                            CONTEXT,
+                                            mContext,
                                             mFledgeConsentFilterMock,
                                             flagsWithLowRateLimit,
                                             mAppImportanceFilter,
                                             new FledgeAuthorizationFilter(
-                                                    CONTEXT.getPackageManager(),
+                                                    mContext.getPackageManager(),
                                                     EnrollmentDao.getInstance(),
                                                     mAdServicesLoggerMock),
                                             new FledgeAllowListsFilter(
@@ -3473,7 +3469,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private void reInitServiceWithFlags(Flags flags) {
         mService =
                 new CustomAudienceServiceImpl(
-                        CONTEXT,
+                        mContext,
                         new CustomAudienceImpl(
                                 mCustomAudienceDao,
                                 mCustomAudienceQuantityChecker,
@@ -3489,12 +3485,12 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
-                                CONTEXT,
+                                mContext,
                                 mFledgeConsentFilterMock,
                                 flags,
                                 mAppImportanceFilter,
                                 new FledgeAuthorizationFilter(
-                                        CONTEXT.getPackageManager(),
+                                        mContext.getPackageManager(),
                                         EnrollmentDao.getInstance(),
                                         mAdServicesLoggerMock),
                                 new FledgeAllowListsFilter(flags, mAdServicesLoggerMock),
