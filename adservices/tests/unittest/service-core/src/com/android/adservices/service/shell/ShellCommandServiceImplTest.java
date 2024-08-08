@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.shell;
 
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.sleepOnly;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -29,7 +30,6 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.shell.IShellCommandCallback;
 import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -317,15 +317,10 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         Thread currentThread = Thread.currentThread();
                         commandThreadRef.set(currentThread);
                         try {
-                            Log.d(
-                                    mTag,
-                                    "Sleeping "
-                                            + currentThread.getName()
-                                            + " forever (or until interrupted...)");
-                            Thread.sleep(Long.MAX_VALUE);
+                            sleepOnly(Long.MAX_VALUE, "Sleeping forever (or until interrupted...)");
                             commandInterruptedCallback.injectResult(false);
                         } catch (InterruptedException e) {
-                            Log.d(mTag, "Little Suzie woke up: " + currentThread.getName());
+                            mLog.v("Little Suzie woke up: %s", currentThread.getName());
                             commandInterruptedCallback.injectResult(true);
                         }
                         return SUCCESSFUL_CMD;
