@@ -39,7 +39,6 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
-import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
@@ -94,8 +93,7 @@ import java.util.stream.Collectors;
 
 @SmallTest
 @RequiresSdkLevelAtLeastS
-public class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+public final class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
     private static final String TAG = "AdSelectionScriptEngineTest";
 
     private static final AdDataArgumentUtil AD_DATA_ARGUMENT_UTIL_WITHOUT_COPIER =

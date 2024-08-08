@@ -17,6 +17,7 @@ package com.android.adservices.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mode.CLEAR_AFTER_TEST_CLASS;
 
+import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -47,13 +48,17 @@ import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
+
+import java.util.Objects;
 
 /**
  * Base class for all unit tests that use {@code ExtendedMockito} - for "regular Mockito" use {@link
@@ -75,8 +80,8 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
 
     @Mock protected Context mMockContext;
 
-    /** Spy the {@link AdServicesUnitTestCase#sContext} */
-    @Spy protected final Context mSpyContext = sContext;
+    /** Spy the {@link AdServicesUnitTestCase#mContext} */
+    @Spy protected final Context mSpyContext = mContext;
 
     // NOTE: must use CLEAR_AFTER_TEST_CLASS by default (defined as a class annotation, so it's used
     // by both ExtendedMockitoInlineCleanerRule and AdServicesExtendedMockitoRule), as some tests
@@ -134,6 +139,29 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         return new AdServicesExtendedMockitoRule.Builder(this).setStrictness(Strictness.LENIENT);
     }
 
+    @Test
+    public final void testAdServicesExtendedMockitoTestCaseFixtures() throws Exception {
+        checkProhibitedFields(
+                "mMockContext",
+                "mContextMock",
+                "mSpyContext",
+                "mContextSpy",
+                "mStaticMockSession",
+                "mMockitoSession",
+                "mockitoSession",
+                "session",
+                "extendedMockito",
+                "errorLogUtilUsageRule",
+                "mockito",
+                "mocker");
+        checkProhibitedStaticFields(
+                "sInlineCleaner",
+                "sSpyContext",
+                "sStaticMockitoSession",
+                "staticMockitoSession",
+                "staticMockSession");
+    }
+
     public static final class Mocker
             implements AndroidMocker,
                     AndroidStaticMocker,
@@ -144,12 +172,16 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         private final AndroidMocker mAndroidMocker = new AndroidMockitoMocker();
         private final SharedMocker mSharedMocker = new SharedMockitoMocker();
         private final AdServicesPragmaticMocker mAdServicesMocker = new AdServicesMockitoMocker();
-        private final AndroidStaticMocker mAndroidStaticMocker;
-        private final AdServicesStaticMocker mAdServicesStaticMocker;
+        @Nullable private final AndroidStaticMocker mAndroidStaticMocker;
+        @Nullable private final AdServicesStaticMocker mAdServicesStaticMocker;
+        @Nullable private final StaticClassChecker mChecker;
 
+        // TODO(b/314969513): make it package protected once ExtendedMockitoExpectations.mocker is
+        // gone.
         // NOTE: should only be used by unit tests of the Mocker interfaces themselves (there's no
         // point of annotation with @VisibleForTesting because this is already a test!
-        Mocker(StaticClassChecker checker) {
+        public Mocker(StaticClassChecker checker) {
+            mChecker = Objects.requireNonNull(checker, "StaticClassChecker cannot be null");
             mAndroidStaticMocker = new AndroidExtendedMockitoMocker(checker);
             mAdServicesStaticMocker = new AdServicesExtendedMockitoMocker(checker);
         }
@@ -158,6 +190,7 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         // point of annotation with @VisibleForTesting because this is already a test!
         Mocker() {
             // Static mockers are null because its only used to test non-static methods
+            mChecker = null;
             mAndroidStaticMocker = null;
             mAdServicesStaticMocker = null;
         }
@@ -248,7 +281,13 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
             mAdServicesMocker.mockAllCobaltLoggingFlags(flags, enabled);
         }
 
-        // AdServicesExtendedMockitoMocker methods
+        @Override
+        public AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
+                Context context, Flags flags) {
+            return mAdServicesMocker.getSpiedAdServicesJobServiceLogger(context, flags);
+        }
+
+        // AdServicesStaticMocker methods
 
         @Override
         public void mockGetFlags(Flags mockedFlags) {
@@ -275,6 +314,11 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         @Override
         public void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl) {
             mAdServicesStaticMocker.mockAdServicesLoggerImpl(mockedAdServicesLoggerImpl);
+        }
+
+        @Override
+        public StaticClassChecker getStaticClassChecker() {
+            return mChecker;
         }
 
         // SharedMocker methods

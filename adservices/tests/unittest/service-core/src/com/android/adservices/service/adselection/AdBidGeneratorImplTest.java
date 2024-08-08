@@ -78,6 +78,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -100,7 +101,6 @@ import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -123,9 +123,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -137,7 +134,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
-public class AdBidGeneratorImplTest {
+public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
     public static final List<Double> BIDS = new ArrayList<>(ImmutableList.of(-10.0, 0.0, 1.0, 5.4));
     public static final List<AdData> ADS =
             AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1);
@@ -210,7 +207,6 @@ public class AdBidGeneratorImplTest {
                                             .setAdWithBid(adWithBid)
                                             .build())
                     .collect(Collectors.toList());
-    @Rule public final MockitoRule rule = MockitoJUnit.rule();
     private static final String FETCH_JAVA_SCRIPT_PATH = "/fetchJavascript/";
     private static final Map<String, Object> TRUSTED_BIDDING_SIGNALS_MAP =
             ImmutableMap.of("max_bid_limit", 20, "ad_type", "retail");
@@ -374,13 +370,8 @@ public class AdBidGeneratorImplTest {
     ArgumentCaptor<RunAdBiddingPerCAProcessReportedStats>
             mRunAdBiddingPerCAProcessReportedStatsArgumentCaptor;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-
         mFlags = new AdBidGeneratorImplTestFlags();
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
@@ -2051,11 +2042,7 @@ public class AdBidGeneratorImplTest {
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
 
         // Setting dev context to allow overrides
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(APP_PACKAGE_NAME)
-                        .build();
+        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
 
         // Resetting adBidGenerator to use the new dev context
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
@@ -2174,11 +2161,7 @@ public class AdBidGeneratorImplTest {
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
 
         // Setting dev context to allow overrides
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(myAppPackageName)
-                        .build();
+        mDevContext = DevContext.builder(myAppPackageName).setDevOptionsEnabled(true).build();
 
         // Resetting adBidGenerator to use the new dev context
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
