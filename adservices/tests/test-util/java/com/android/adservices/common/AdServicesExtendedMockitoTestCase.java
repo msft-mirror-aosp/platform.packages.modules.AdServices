@@ -53,6 +53,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
@@ -136,6 +137,29 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
     protected final AdServicesExtendedMockitoRule.Builder
             newDefaultAdServicesExtendedMockitoRuleBuilder() {
         return new AdServicesExtendedMockitoRule.Builder(this).setStrictness(Strictness.LENIENT);
+    }
+
+    @Test
+    public final void testAdServicesExtendedMockitoTestCaseFixtures() throws Exception {
+        checkProhibitedFields(
+                "mMockContext",
+                "mContextMock",
+                "mSpyContext",
+                "mContextSpy",
+                "mStaticMockSession",
+                "mMockitoSession",
+                "mockitoSession",
+                "session",
+                "extendedMockito",
+                "errorLogUtilUsageRule",
+                "mockito",
+                "mocker");
+        checkProhibitedStaticFields(
+                "sInlineCleaner",
+                "sSpyContext",
+                "sStaticMockitoSession",
+                "staticMockitoSession",
+                "staticMockSession");
     }
 
     public static final class Mocker

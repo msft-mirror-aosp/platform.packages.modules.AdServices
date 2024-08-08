@@ -101,12 +101,11 @@ import org.mockito.Mockito;
 @SpyStatic(UxStatesManager.class)
 @SpyStatic(PackageManagerCompatUtils.class)
 @SpyStatic(SdkLevel.class)
-public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTestCase {
+public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTestCase {
     private static final String UNUSED_AD_ID = "unused_ad_id";
 
     private AdServicesCommonServiceImpl mCommonService;
     @Mock private Flags mFlags;
-    @Mock private Context mContext;
     @Mock private PackageManager mPackageManager;
     @Mock private UxEngine mUxEngine;
     @Mock private UxStatesManager mUxStatesManager;
@@ -116,8 +115,8 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     @Mock private TelephonyManager mTelephonyManager;
     @Mock private AdIdWorker mMockAdIdWorker;
     @Mock private Clock mClock;
-    @Captor ArgumentCaptor<String> mStringArgumentCaptor;
-    @Captor ArgumentCaptor<Integer> mIntegerArgumentCaptor;
+    @Captor private ArgumentCaptor<String> mStringArgumentCaptor;
+    @Captor private ArgumentCaptor<Integer> mIntegerArgumentCaptor;
 
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
@@ -135,7 +134,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     public void setup() {
         mCommonService =
                 new AdServicesCommonServiceImpl(
-                        mContext,
+                        mMockContext,
                         mFlags,
                         mUxEngine,
                         mUxStatesManager,
@@ -159,8 +158,8 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
                                         any(Boolean.class),
                                         any(Boolean.class)));
 
-        doReturn(mSharedPreferences).when(mContext).getSharedPreferences(anyString(), anyInt());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mSharedPreferences).when(mMockContext).getSharedPreferences(anyString(), anyInt());
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
         doReturn(mEditor).when(mSharedPreferences).edit();
         doReturn(mEditor).when(mEditor).putInt(anyString(), anyInt());
         doReturn(true).when(mEditor).commit();
@@ -172,19 +171,19 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         doReturn(Flags.UI_EEA_COUNTRIES).when(mFlags).getUiEeaCountries();
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
-        doReturn(true).when(mUxStatesManager).isEnrolledUser(mContext);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
+        doReturn(true).when(mUxStatesManager).isEnrolledUser(mMockContext);
     }
 
     // For the old entry point logic, we only check the UX flag and user enrollment is irrelevant.
     @Test
     public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV1() throws Exception {
-        doReturn(false).when(mUxStatesManager).isEnrolledUser(mContext);
+        doReturn(false).when(mUxStatesManager).isEnrolledUser(mMockContext);
         doReturn(false).when(mFlags).getEnableAdServicesSystemApi();
         mCommonService =
                 new AdServicesCommonServiceImpl(
-                        mContext,
+                        mMockContext,
                         mFlags,
                         mUxEngine,
                         mUxStatesManager,
@@ -201,13 +200,13 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     // can see the entry point.
     @Test
     public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV2() throws Exception {
-        doReturn(false).when(mUxStatesManager).isEnrolledUser(mContext);
+        doReturn(false).when(mUxStatesManager).isEnrolledUser(mMockContext);
         doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
         doReturn(GA_UX).when(mConsentManager).getUx();
 
         mCommonService =
                 new AdServicesCommonServiceImpl(
-                        mContext,
+                        mMockContext,
                         mFlags,
                         mUxEngine,
                         mUxStatesManager,
@@ -224,7 +223,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         doReturn(false).when(mFlags).getGaUxFeatureEnabled();
         mCommonService =
                 new AdServicesCommonServiceImpl(
-                        mContext,
+                        mMockContext,
                         mFlags,
                         mUxEngine,
                         mUxStatesManager,
@@ -250,7 +249,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         doReturn(false).when(mFlags).getGaUxFeatureEnabled();
         mCommonService =
                 new AdServicesCommonServiceImpl(
-                        mContext,
+                        mMockContext,
                         mFlags,
                         mUxEngine,
                         mUxStatesManager,
@@ -647,7 +646,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
         doReturn(true).when(mFlags).getAdServicesEnabled();
         doReturn(false).when(mFlags).getGlobalKillSwitch();
 
-        doReturn(EXT_SERVICES_APK_PKG_SUFFIX).when(mContext).getPackageName();
+        doReturn(EXT_SERVICES_APK_PKG_SUFFIX).when(mMockContext).getPackageName();
         spyBackCompatInit();
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
@@ -672,7 +671,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
         doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mFlags).getEnableBackCompatInit();
-        doReturn(AD_SERVICES_APK_PKG_SUFFIX).when(mContext).getPackageName();
+        doReturn(AD_SERVICES_APK_PKG_SUFFIX).when(mMockContext).getPackageName();
         spyBackCompatInit();
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
@@ -1009,7 +1008,7 @@ public class AdServicesCommonServiceImplTest extends AdServicesExtendedMockitoTe
     }
 
     private void spyBackCompatInit() {
-        mSpyBackCompatInit = Mockito.spy(new AdServicesBackCompatInit(mContext));
+        mSpyBackCompatInit = Mockito.spy(new AdServicesBackCompatInit(mMockContext));
         ExtendedMockito.doReturn(mSpyBackCompatInit)
                 .when(() -> AdServicesBackCompatInit.getInstance());
     }

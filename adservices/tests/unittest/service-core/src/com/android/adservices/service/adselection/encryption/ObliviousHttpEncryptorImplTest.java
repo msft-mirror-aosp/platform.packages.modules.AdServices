@@ -25,10 +25,7 @@ import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -38,14 +35,13 @@ import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.modules.utils.testing.ExtendedMockitoRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -53,7 +49,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.ExecutorService;
 
-@ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
+@SpyStatic(FlagsFactory.class)
+@RequiresSdkLevelAtLeastS
 public class ObliviousHttpEncryptorImplTest extends AdServicesExtendedMockitoTestCase {
     @Mock private Flags mMockFlags;
 
@@ -68,15 +65,11 @@ public class ObliviousHttpEncryptorImplTest extends AdServicesExtendedMockitoTes
     private ExecutorService mLightweightExecutor;
     private DevContext mDevContext;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() {
-        Context context = ApplicationProvider.getApplicationContext();
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();
         mEncryptionContextDao =
-                Room.inMemoryDatabaseBuilder(context, AdSelectionServerDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionContextDao();
 
