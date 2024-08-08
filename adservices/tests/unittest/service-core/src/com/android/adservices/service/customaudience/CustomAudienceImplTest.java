@@ -29,6 +29,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
@@ -41,20 +42,15 @@ import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.Validator;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Clock;
 import java.time.Duration;
 
-@RunWith(MockitoJUnitRunner.class)
-public class CustomAudienceImplTest {
+public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
 
     private static final double PRIORITY_1 = 1.0;
 
@@ -114,9 +110,6 @@ public class CustomAudienceImplTest {
 
     private CustomAudienceImpl mImpl;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() {
         mImpl =
@@ -156,7 +149,7 @@ public class CustomAudienceImplTest {
         mImpl.joinCustomAudience(
                 VALID_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
-                DevContext.builder().setDevOptionsEnabled(true).build());
+                DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
 
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(

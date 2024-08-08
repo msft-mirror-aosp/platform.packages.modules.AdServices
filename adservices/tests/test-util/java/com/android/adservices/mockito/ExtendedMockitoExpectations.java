@@ -40,6 +40,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
@@ -79,8 +80,8 @@ public final class ExtendedMockitoExpectations {
     // to use the superclasses, they wouldn't need to change the variable name.
 
     // CHECKSTYLE:OFF Generated code
-    public static final AdServicesStaticMocker mocker =
-            new AdServicesExtendedMockitoMocker(new StaticClassChecker() {});
+    public static final AdServicesExtendedMockitoTestCase.Mocker mocker =
+            new AdServicesExtendedMockitoTestCase.Mocker(new StaticClassChecker() {});
 
     // CHECKSTYLE:ON
 
