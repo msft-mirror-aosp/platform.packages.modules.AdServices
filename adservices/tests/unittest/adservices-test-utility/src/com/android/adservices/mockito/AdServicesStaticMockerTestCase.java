@@ -28,7 +28,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobScheduler;
-import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Before;
@@ -52,8 +51,6 @@ public abstract class AdServicesStaticMockerTestCase<T extends AdServicesStaticM
     @Mock private Flags mMockFlags;
 
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
-
-    @Mock private AdServicesJobServiceFactory mMockAdServicesJobServiceFactory;
 
     @Mock private AdServicesLoggerImpl mMockAdServicesLoggerImpl;
 
