@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockJobSchedulingLogger;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.consent.AdServicesApiConsent.GIVEN;
@@ -39,7 +38,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
@@ -70,7 +69,7 @@ import org.mockito.Mock;
 @MockStatic(BackgroundFetchWorker.class)
 @MockStatic(ConsentManager.class)
 @MockStatic(FlagsFactory.class)
-public final class BackgroundFetchJobTest extends AdServicesExtendedMockitoTestCase {
+public final class BackgroundFetchJobTest extends AdServicesJobTestCase {
     private final BackgroundFetchJob mBackgroundFetchJob = new BackgroundFetchJob();
 
     @Mock private BackgroundFetchWorker mMockBackgroundFetchWorker;
