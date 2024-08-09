@@ -343,6 +343,13 @@ public final class DeviceConfigHelper {
 
         /** Clears all flags. */
         public void clear() {
+            // TODO (b/297085722): Remove after aligning on approach for clearing flags in tests.
+            if (true) {
+                throw new UnsupportedOperationException(
+                        "Flags should not be cleared to avoid interference with flag ramp and "
+                                + "AOAO testing!");
+            }
+
             runShellCommand("device_config reset untrusted_clear %s", mNamespace);
 
             // TODO(b/305877958): command above will "delete all settings set by untrusted packages,
