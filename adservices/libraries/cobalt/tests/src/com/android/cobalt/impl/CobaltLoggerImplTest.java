@@ -381,23 +381,12 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_missingMetric_notStoredWithError() throws Exception {
-        // Log data for a metric that doesn't exist, and check it completed with the expected error.
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                mLogger.logOccurrence(
-                                                /* metricId= */ 333,
-                                                /* count= */ 1,
-                                                /* eventCodes= */ ImmutableList.of(1, 2))
-                                        .get());
-        assertThat(exception)
-                .hasCauseThat()
-                .hasMessageThat()
-                .contains("failed to find metric with ID: 333");
-
-        // Check that no report data was added to the DB.
+    public void logOccurrence_metricNotInRegistry_skipped() throws Exception {
+        mLogger.logOccurrence(
+                        /* metricId= */ 9999,
+                        /* count= */ 100,
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
         assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
     }
 
@@ -765,23 +754,12 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logString_missingMetric_notStoredWithError() throws Exception {
-        // Log data for a metric that doesn't exist, and check it completed with the expected error.
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                mLogger.logString(
-                                                /* metricId= */ 333,
-                                                /* stringValue= */ "STRING",
-                                                /* eventCodes= */ ImmutableList.of(1, 2))
-                                        .get());
-        assertThat(exception)
-                .hasCauseThat()
-                .hasMessageThat()
-                .contains("failed to find metric with ID: 333");
-
-        // Check that no report data was added to the DB.
+    public void logString_metricNotInRegistry_skipped() throws Exception {
+        mLogger.logString(
+                        /* metricId= */ 9999,
+                        /* stringValue= */ "STRING",
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
         assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
     }
 

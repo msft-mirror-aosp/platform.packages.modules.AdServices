@@ -497,6 +497,7 @@ import static com.android.adservices.service.Flags.MSMT_ATTRIBUTION_COBALT_LOGGI
 import static com.android.adservices.service.Flags.MSMT_REGISTRATION_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.MSMT_REPORTING_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.Flags.PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
 import static com.android.adservices.service.Flags.PAS_EXTENDED_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.PAS_PRODUCT_METRICS_V1_ENABLED;
 import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
@@ -999,6 +1000,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MSMT_REPORTING_C
 import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
 import static com.android.adservices.service.FlagsConstants.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_PRODUCT_METRICS_V1_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
@@ -5715,6 +5717,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED,
                 DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED,
                 Flags::getRNotificationDefaultConsentFixEnabled);
+    }
+
+    @Test
+    public void testGetPasEncodingJobImprovementsEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED,
+                PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED,
+                Flags::getPasEncodingJobImprovementsEnabled);
     }
 
     private void setMeasurementKillSwitch(boolean value) {

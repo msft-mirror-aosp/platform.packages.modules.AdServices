@@ -5724,6 +5724,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
     }
 
+    /** Protected app signals encoding job performance improvements flag. */
+    @FeatureFlag boolean PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED = false;
+
+    /** Returns whether the PAS encoding job performance improvements are enabled. */
+    default boolean getPasEncodingJobImprovementsEnabled() {
+        return PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////

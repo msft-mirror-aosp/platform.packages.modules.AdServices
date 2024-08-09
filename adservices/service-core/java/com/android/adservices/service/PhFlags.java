@@ -118,6 +118,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPO
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_PRODUCT_METRICS_V1_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
@@ -6966,6 +6967,12 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED,
                 DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED);
+    }
+
+    @Override
+    public boolean getPasEncodingJobImprovementsEnabled() {
+        return getDeviceConfigFlag(
+                KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED, PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers
