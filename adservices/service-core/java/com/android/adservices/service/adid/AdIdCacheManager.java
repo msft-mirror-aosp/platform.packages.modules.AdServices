@@ -40,7 +40,9 @@ import android.os.RemoteException;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -56,6 +58,7 @@ public final class AdIdCacheManager {
     @VisibleForTesting static final String SHARED_PREFS_IAPC = "adservices_PPAPI_IAPC";
     private static final String SHARE_PREFS_CACHED_AD_ID_KEY = "cached_ad_id";
     private static final String SHARE_PREFS_CACHED_LAT_KEY = "cached_lat";
+    private static final String SHARE_PREFS_CACHED_AD_ID_TIME = "cached_ad_id_time";
 
     private static final String UNAUTHORIZED = "Unauthorized caller";
     // A default AdId to indicate the AdId is not set in the cache.
@@ -223,7 +226,8 @@ public final class AdIdCacheManager {
             SharedPreferences.Editor editor = getSharedPreferences().edit();
 
             editor.putString(SHARE_PREFS_CACHED_AD_ID_KEY, adId.getAdId())
-                    .putBoolean(SHARE_PREFS_CACHED_LAT_KEY, adId.isLimitAdTrackingEnabled());
+                    .putBoolean(SHARE_PREFS_CACHED_LAT_KEY, adId.isLimitAdTrackingEnabled())
+                    .putLong(SHARE_PREFS_CACHED_AD_ID_TIME, Clock.getInstance().elapsedRealtime());
 
             if (!editor.commit()) {
                 // Since we are sure that the provider service api has returned, we can safely
@@ -240,6 +244,16 @@ public final class AdIdCacheManager {
         mReadWriteLock.readLock().lock();
         try {
             SharedPreferences sharedPreferences = getSharedPreferences();
+
+            // Check if key in the cache has timed out.
+            long ttl = FlagsFactory.getFlags().getAdIdCacheTtlMs();
+            if (ttl != 0
+                    && isCacheTimeout(
+                            sharedPreferences.getLong(SHARE_PREFS_CACHED_AD_ID_TIME, 0L),
+                            Clock.getInstance().elapsedRealtime(),
+                            ttl)) {
+                return UNSET_AD_ID;
+            }
 
             String adIdString =
                     sharedPreferences.getString(
@@ -306,5 +320,13 @@ public final class AdIdCacheManager {
                 unbindFromService();
             }
         }
+    }
+
+    @VisibleForTesting
+    boolean isCacheTimeout(long formerTime, long currentTime, long ttl) {
+        if (formerTime == 0L) {
+            return true;
+        }
+        return currentTime - formerTime > ttl;
     }
 }

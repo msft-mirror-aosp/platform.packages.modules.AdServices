@@ -7003,4 +7003,10 @@ public final class PhFlags implements Flags {
     static String getSystemPropertyName(String key) {
         return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
     }
+
+    @Override
+    public long getAdIdCacheTtlMs() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS);
+    }
 }
