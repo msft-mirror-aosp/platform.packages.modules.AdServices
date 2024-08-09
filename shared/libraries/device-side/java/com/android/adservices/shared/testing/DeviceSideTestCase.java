@@ -111,10 +111,20 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
 
     @Test
     public final void testDeviceSideTestCaseFixtures() throws Exception {
-        checkProhibitedFields(
-                "mContext", "mPackageName", "mTag", "ravenwood", "sdkLevel", "processLifeGuard");
-        checkProhibitedStaticFields(
-                "sContext", "CONTEXT", "sPackageName", "sRavenWood", "RAVENWOOD_PACKAGE_NAME");
+        assertTestClassHasNoFieldsFromSuperclass(
+                DeviceSideTestCase.class,
+                "mContext",
+                "mPackageName",
+                "mTag",
+                "ravenwood",
+                "sdkLevel",
+                "processLifeGuard",
+                "sContext",
+                "sPackageName",
+                "sRavenWood",
+                "RAVENWOOD_PACKAGE_NAME");
+        assertTestClassHasNoSuchField("CONTEXT", "should use existing sContext instead");
+        assertTestClassHasNoSuchField("context", "should use existing mContext instead");
     }
 
     // TODO(b/335935200): temporary hac^H^H^Hworkaround to set context references before subclasses

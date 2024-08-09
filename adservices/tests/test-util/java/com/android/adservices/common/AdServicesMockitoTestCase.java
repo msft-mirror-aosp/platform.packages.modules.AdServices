@@ -60,8 +60,7 @@ public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
 
     @Test
     public final void testAdServicesMockitoTestCaseFixtures() throws Exception {
-        checkProhibitedFields(
-                "mMockContext", "mContextMock", "mSpyContext", "mContextSpy", "mockito", "mocker");
-        checkProhibitedStaticFields("sSpyContext", "sContextSpy");
+        AdServicesExtendedMockitoTestCase.checkProhibitedMockitoFields(
+                AdServicesMockitoTestCase.class, this);
     }
 }
