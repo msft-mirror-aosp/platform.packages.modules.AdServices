@@ -4357,7 +4357,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE
                         + " = "
                         + getMeasurementEnableEventLevelEpsilonInSource());
-
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS
+                        + " = "
+                        + getMeasurementEnableAggregateValueFilters());
         writer.println(
                 "\t"
                         + FlagsConstants
@@ -6476,6 +6480,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE,
                 MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE);
+    }
+
+    @Override
+    public boolean getMeasurementEnableAggregateValueFilters() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS,
+                MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS);
     }
 
     @Override
