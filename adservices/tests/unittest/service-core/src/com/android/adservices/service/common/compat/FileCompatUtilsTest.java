@@ -19,7 +19,6 @@ package com.android.adservices.service.common.compat;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
@@ -34,7 +33,6 @@ import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -42,17 +40,11 @@ import java.io.File;
 @MockStatic(SdkLevel.class)
 @SpyStatic(Room.class)
 public final class FileCompatUtilsTest extends AdServicesExtendedMockitoTestCase {
-    private Context mContext;
 
     private static final String BASE_FILENAME = "filename.xml";
     private static final String FILENAME_STARTS_WITH_ADSERVICES = "ADSERVICES_filename.xml";
     private static final String ANOTHER_FILENAME_STARTS_WITH_ADSERVICES = "adservicesFilename.xml";
     private static final String ADSERVICES_PREFIX = "adservices_";
-
-    @Before
-    public void setup() {
-        mContext = spy(appContext.get());
-    }
 
     @Test
     public void testShouldPrependAdservices_SMinus() {
@@ -82,14 +74,17 @@ public final class FileCompatUtilsTest extends AdServicesExtendedMockitoTestCase
     public void testRoomDatabaseBuilderHelper_shouldPrependAdservices_SMinus() {
         mockIsAtLeastT(false);
 
-        FileCompatUtils.roomDatabaseBuilderHelper(mContext, CacheDatabase.class, BASE_FILENAME);
+        FileCompatUtils.roomDatabaseBuilderHelper(mSpyContext, CacheDatabase.class, BASE_FILENAME);
 
         ExtendedMockito.verify(
-                () -> Room.databaseBuilder(mContext, CacheDatabase.class, BASE_FILENAME), never());
+                () -> Room.databaseBuilder(mSpyContext, CacheDatabase.class, BASE_FILENAME),
+                never());
         ExtendedMockito.verify(
                 () ->
                         Room.databaseBuilder(
-                                mContext, CacheDatabase.class, ADSERVICES_PREFIX + BASE_FILENAME));
+                                mSpyContext,
+                                CacheDatabase.class,
+                                ADSERVICES_PREFIX + BASE_FILENAME));
     }
 
     @Test
@@ -98,14 +93,16 @@ public final class FileCompatUtilsTest extends AdServicesExtendedMockitoTestCase
 
         RoomDatabase.Builder<CacheDatabase> builder =
                 FileCompatUtils.roomDatabaseBuilderHelper(
-                        mContext, CacheDatabase.class, BASE_FILENAME);
+                        mSpyContext, CacheDatabase.class, BASE_FILENAME);
 
         ExtendedMockito.verify(
-                () -> Room.databaseBuilder(mContext, CacheDatabase.class, BASE_FILENAME));
+                () -> Room.databaseBuilder(mSpyContext, CacheDatabase.class, BASE_FILENAME));
         ExtendedMockito.verify(
                 () ->
                         Room.databaseBuilder(
-                                mContext, CacheDatabase.class, ADSERVICES_PREFIX + BASE_FILENAME),
+                                mSpyContext,
+                                CacheDatabase.class,
+                                ADSERVICES_PREFIX + BASE_FILENAME),
                 never());
     }
 
@@ -113,7 +110,7 @@ public final class FileCompatUtilsTest extends AdServicesExtendedMockitoTestCase
     public void testGetDatabasePathHelper_shouldPrependAdservices_SMinus() {
         mockIsAtLeastT(false);
 
-        File file = FileCompatUtils.getDatabasePathHelper(mContext, BASE_FILENAME);
+        File file = FileCompatUtils.getDatabasePathHelper(mSpyContext, BASE_FILENAME);
         assertThat(file.getName()).isEqualTo(ADSERVICES_PREFIX + BASE_FILENAME);
     }
 
@@ -121,7 +118,7 @@ public final class FileCompatUtilsTest extends AdServicesExtendedMockitoTestCase
     public void testGetDatabasePathHelper_shouldNotPrependAdservices_TPlus() {
         mockIsAtLeastT(true);
 
-        File file = FileCompatUtils.getDatabasePathHelper(mContext, BASE_FILENAME);
+        File file = FileCompatUtils.getDatabasePathHelper(mSpyContext, BASE_FILENAME);
         assertThat(file.getName()).isEqualTo(BASE_FILENAME);
     }
 
@@ -145,8 +142,9 @@ public final class FileCompatUtilsTest extends AdServicesExtendedMockitoTestCase
     public void testGetSharedPreferencesHelper_shouldPrependAdservices_SMinus() {
         mockIsAtLeastT(false);
 
-        FileCompatUtils.getSharedPreferencesHelper(mContext, BASE_FILENAME, Context.MODE_PRIVATE);
-        verify(mContext)
+        FileCompatUtils.getSharedPreferencesHelper(
+                mSpyContext, BASE_FILENAME, Context.MODE_PRIVATE);
+        verify(mSpyContext)
                 .getSharedPreferences(ADSERVICES_PREFIX + BASE_FILENAME, Context.MODE_PRIVATE);
     }
 
@@ -154,8 +152,9 @@ public final class FileCompatUtilsTest extends AdServicesExtendedMockitoTestCase
     public void testGetSharedPreferencesHelper_shouldNotPrependAdservices_TPlus() {
         mockIsAtLeastT(true);
 
-        FileCompatUtils.getSharedPreferencesHelper(mContext, BASE_FILENAME, Context.MODE_PRIVATE);
-        verify(mContext).getSharedPreferences(BASE_FILENAME, Context.MODE_PRIVATE);
+        FileCompatUtils.getSharedPreferencesHelper(
+                mSpyContext, BASE_FILENAME, Context.MODE_PRIVATE);
+        verify(mSpyContext).getSharedPreferences(BASE_FILENAME, Context.MODE_PRIVATE);
     }
 
     private void mockIsAtLeastT(boolean isIt) {

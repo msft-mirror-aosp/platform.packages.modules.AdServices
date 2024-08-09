@@ -45,6 +45,7 @@ final class ClientAppUtils {
     // Client app must use these resource ids for their buttons to be identified in test.
     private static final String INITIALIZE_SDK_BUTTON = "initializeSdkButton";
     private static final String LOAD_AD_BUTTON = "loadAdButton";
+    private static final String CLEAR_AD_CONTAINER_BUTTON = "clearAdContainerButton";
     private static final String RESIZE_AD_CONTAINER_BUTTON = "resizeAdContainerButton";
     private static final long UI_NAVIGATION_WAIT_MS = 1000;
     private static final int UI_WAIT_INITIALIZE_MS = 1000;
@@ -53,6 +54,7 @@ final class ClientAppUtils {
     private static final int UI_RETRIES_WAIT_LOAD_AD = 5;
 
     public static final String AD_LOADED_BUTTON_TEXT = "Load Ad (Ad loaded)";
+    public static final String AD_NOT_LOADED_BUTTON_TEXT = "Load Ad";
 
     /** Returns the command for stopping the client app. */
     public String getStopAppCommand() {
@@ -95,6 +97,17 @@ final class ClientAppUtils {
                 Until.findObject(By.res(mPackageName, LOAD_AD_BUTTON)), UI_NAVIGATION_WAIT_MS);
     }
 
+    /**
+     * Finds the clearAdContainerButton button.
+     *
+     * @return clear ad container button.
+     */
+    public UiObject2 getClearAdContainerButton() {
+        return mUiDevice.wait(
+                Until.findObject(By.res(mPackageName, CLEAR_AD_CONTAINER_BUTTON)),
+                UI_NAVIGATION_WAIT_MS);
+    }
+
     /** Initializes SDK by finding the initializeSdk button and clicking on it. */
     public void initializeSdk() throws InterruptedException {
         UiObject2 initializeSdkButton = getInitializeSdkButton();
@@ -134,6 +147,21 @@ final class ClientAppUtils {
         assertAdLoaded();
     }
 
+    /**
+     * Clears Ad container by finding the clearAdContainer button and clicking on it.
+     *
+     * @throws RuntimeException if load ad button is not found.
+     */
+    public void clearAdContainer() throws InterruptedException {
+        UiObject2 clearAdContainerButton = getClearAdContainerButton();
+        if (clearAdContainerButton != null) {
+            clearAdContainerButton.click();
+        } else {
+            throw new RuntimeException("Did not find 'Clear Ad Container' button.");
+        }
+        assertAdNotLoaded();
+    }
+
     private void assertAdLoaded() throws InterruptedException {
         int retries = 0;
         // wait until Ad Loaded.
@@ -145,6 +173,19 @@ final class ClientAppUtils {
             retries++;
         }
         throw new AssertionError("Ad not loaded");
+    }
+
+    private void assertAdNotLoaded() throws InterruptedException {
+        int retries = 0;
+        // wait until Ad Unloaded.
+        while (retries < UI_RETRIES_WAIT_LOAD_AD) {
+            Thread.sleep(UI_WAIT_LOAD_AD_MS);
+            if (getLoadAdButton().getText().equals(ClientAppUtils.AD_NOT_LOADED_BUTTON_TEXT)) {
+                return;
+            }
+            retries++;
+        }
+        throw new AssertionError("Ad still loaded");
     }
 
     /**

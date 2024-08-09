@@ -75,7 +75,6 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.RemoteException;
 import android.os.SystemClock;
-import android.test.mock.MockContext;
 
 import androidx.test.filters.SmallTest;
 
@@ -164,7 +163,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     @Mock private Flags mMockFlags;
     @Mock private MeasurementImpl mMockMeasurementImpl;
     @Mock private Throttler mMockThrottler;
-    @Mock private MockContext mMockContext;
     @Mock private DevContextFilter mDevContextFilter;
 
     private MeasurementServiceImpl mMeasurementServiceImpl;

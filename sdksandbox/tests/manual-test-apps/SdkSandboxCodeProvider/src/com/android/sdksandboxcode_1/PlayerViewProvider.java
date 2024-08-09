@@ -31,6 +31,8 @@ import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.ui.PlayerView;
 
+import com.android.modules.utils.build.SdkLevel;
+
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -123,9 +125,11 @@ class PlayerViewProvider {
                             .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
                             .build();
 
+            // AudioFocus was broken in 24Q2
+            boolean handleAudioFocus = SdkLevel.isAtLeastV();
             mPlayer =
                     new ExoPlayer.Builder(mContext)
-                            .setAudioAttributes(audioAttributes, true)
+                            .setAudioAttributes(audioAttributes, handleAudioFocus)
                             .build();
             mPlayer.addListener(new PlayerListener(mPlayer, mLogger));
             mPlayer.setPlayWhenReady(mAutoPlay);

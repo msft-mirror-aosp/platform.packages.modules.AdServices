@@ -30,7 +30,7 @@ abstract class CtsTopicsEndToEndTestCase extends AdServicesCtsTestCase {
 
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledOnClearSlateTests()
+        return AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                 .setTopicsKillSwitch(false)
                 .setTopicsOnDeviceClassifierKillSwitch(false)
                 .setFlag(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES, true)

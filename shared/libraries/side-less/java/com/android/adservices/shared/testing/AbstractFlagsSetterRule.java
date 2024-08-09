@@ -97,7 +97,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     private final List<NameValuePair> mOnTestFailureFlags = new ArrayList<>();
     private final List<NameValuePair> mOnTestFailureSystemProperties = new ArrayList<>();
 
-    private final SyncDisabledModeForTest mPreviousSyncDisabledModeForTest;
+    private SyncDisabledModeForTest mPreviousSyncDisabledModeForTest = null;
 
     private boolean mIsRunning;
     private boolean mFlagsClearedByTest;
@@ -137,28 +137,15 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         mDeviceConfig =
                 new DeviceConfigHelper(deviceConfigInterfaceFactory, deviceConfigNamespace, logger);
         mSystemProperties = new SystemPropertiesHelper(systemPropertiesInterface, logger);
-        // TODO(b/294423183): ideally the current mode should be returned by
-        // setSyncDisabledMode(),
-        // but unfortunately getting the current mode is not straightforward due to
-        // different
-        // behaviors:
-        // - T+ provides get_sync_disabled_for_tests
-        // - S provides is_sync_disabled_for_tests
-        // - R doesn't provide anything
-        mPreviousSyncDisabledModeForTest = SyncDisabledModeForTest.NONE;
+        storeSyncDisabledMode();
         // Must set right away to avoid race conditions (for example, backend setting flags before
         // apply() is called)
         setSyncDisabledMode(SyncDisabledModeForTest.PERSISTENT);
 
         mLog.v(
                 "Constructor: mDeviceConfigNamespace=%s,"
-                        + " mDebugFlagPrefix=%s,mDeviceConfig=%s, mSystemProperties=%s,"
-                        + " mPreviousSyncDisabledModeForTest=%s",
-                mDeviceConfigNamespace,
-                mDebugFlagPrefix,
-                mDeviceConfig,
-                mSystemProperties,
-                mPreviousSyncDisabledModeForTest);
+                        + " mDebugFlagPrefix=%s,mDeviceConfig=%s, mSystemProperties=%s",
+                mDeviceConfigNamespace, mDebugFlagPrefix, mDeviceConfig, mSystemProperties);
     }
 
     @Override
@@ -199,13 +186,30 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         String testName = TestHelper.getTestName(description);
         runSafely(cleanUpErrors, () -> resetFlags(testName));
         runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
-        runSafely(cleanUpErrors, () -> setSyncDisabledMode(mPreviousSyncDisabledModeForTest));
+        restoreSyncDisabledMode(cleanUpErrors);
         mIsRunning = false;
+    }
+
+    private void restoreSyncDisabledMode(List<Throwable> cleanUpErrors) {
+        if (mPreviousSyncDisabledModeForTest != null) {
+            mLog.v(
+                    "mPreviousSyncDisabledModeForTest=%s; restoring flag sync mode",
+                    mPreviousSyncDisabledModeForTest);
+            runSafely(cleanUpErrors, () -> setSyncDisabledMode(mPreviousSyncDisabledModeForTest));
+        } else {
+            mLog.v("mPreviousSyncDisabledModeForTest=null; not restoring flag sync mode");
+        }
     }
 
     private void setSyncDisabledMode(SyncDisabledModeForTest mode) {
         runOrCache(
                 "setSyncDisabledMode(" + mode + ")", () -> mDeviceConfig.setSyncDisabledMode(mode));
+    }
+
+    private void storeSyncDisabledMode() {
+        runOrCache(
+                "storeSyncDisabledMode()",
+                () -> mPreviousSyncDisabledModeForTest = mDeviceConfig.getSyncDisabledMode());
     }
 
     @Override

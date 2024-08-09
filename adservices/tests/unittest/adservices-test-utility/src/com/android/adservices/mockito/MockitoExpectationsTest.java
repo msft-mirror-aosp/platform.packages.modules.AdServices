@@ -28,6 +28,10 @@ import com.android.adservices.spe.AdServicesJobServiceLogger;
 import org.junit.Test;
 import org.mockito.Mock;
 
+// NOTE: ErrorProne complains that mock objects should not be called directly, but in this test
+// they need to, as the test verifies that they would return what is set by the mock
+// expectaction methods.
+@SuppressWarnings("DirectInvocationOnMock")
 public final class MockitoExpectationsTest extends AdServicesMockitoTestCase {
 
     @Mock private Flags mMockFlags;
@@ -54,13 +58,12 @@ public final class MockitoExpectationsTest extends AdServicesMockitoTestCase {
                 () -> getSpiedAdServicesJobServiceLogger(/* context= */ null, mMockFlags));
         assertThrows(
                 NullPointerException.class,
-                () -> getSpiedAdServicesJobServiceLogger(mMockContext, /* flags= */ null));
+                () -> getSpiedAdServicesJobServiceLogger(mContext, /* flags= */ null));
     }
 
     @Test
     public void testGetSpiedAdServicesJobServiceLogger() {
-        AdServicesJobServiceLogger spy =
-                getSpiedAdServicesJobServiceLogger(mMockContext, mMockFlags);
+        AdServicesJobServiceLogger spy = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         expect.withMessage("getSpiedAdServicesJobServiceLogger()").that(spy).isNotNull();
 
         spy.recordOnStartJob(42);
