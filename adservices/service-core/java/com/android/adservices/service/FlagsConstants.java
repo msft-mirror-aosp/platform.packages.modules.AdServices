@@ -1610,4 +1610,8 @@ public final class FlagsConstants {
     /** Key for enabling R notification default consent fix. */
     public static final String KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED =
             "r_notification_default_consent_fix_enabled";
+
+    /** Key for the PAS encoding job performance improvements. */
+    public static final String KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED =
+            "pas_encoding_job_improvements_enabled";
 }
