@@ -15,21 +15,11 @@
  */
 package com.android.adservices.mockito;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
 import com.android.adservices.service.Flags;
-import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.adservices.shared.util.Clock;
-import com.android.adservices.spe.AdServicesJobInfo;
-import com.android.adservices.spe.AdServicesJobServiceLogger;
-import com.android.adservices.spe.AdServicesStatsdJobServiceLogger;
 
 import java.util.Objects;
-import java.util.concurrent.Executors;
 
 /** {@link AdServicesPragmaticMocker} implementation that uses {@code Mockito}. */
 public final class AdServicesMockitoMocker extends AbstractMocker
@@ -67,27 +57,6 @@ public final class AdServicesMockitoMocker extends AbstractMocker
         mockGetCobaltLoggingEnabled(flags, enabled);
         mockGetAppNameApiErrorCobaltLoggingEnabled(flags, enabled);
         mockGetAdservicesReleaseStageForCobalt(flags, "DEBUG");
-    }
-
-    @Override
-    public AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
-            Context context, Flags flags) {
-        nonNull(context);
-        nonNull(flags);
-
-        return spy(
-                new AdServicesJobServiceLogger(
-                        context,
-                        Clock.getInstance(),
-                        mock(AdServicesStatsdJobServiceLogger.class),
-                        mock(AdServicesErrorLogger.class),
-                        Executors.newCachedThreadPool(),
-                        AdServicesJobInfo.getJobIdToJobNameMap(),
-                        flags));
-    }
-
-    private static Context nonNull(Context context) {
-        return Objects.requireNonNull(context, "Context cannot be null");
     }
 
     private static Flags nonNull(Flags flags) {

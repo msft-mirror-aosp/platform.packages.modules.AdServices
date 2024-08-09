@@ -48,7 +48,6 @@ import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
-import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.ClassRule;
@@ -279,12 +278,6 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         @Override
         public void mockAllCobaltLoggingFlags(Flags flags, boolean enabled) {
             mAdServicesMocker.mockAllCobaltLoggingFlags(flags, enabled);
-        }
-
-        @Override
-        public AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
-                Context context, Flags flags) {
-            return mAdServicesMocker.getSpiedAdServicesJobServiceLogger(context, flags);
         }
 
         // AdServicesStaticMocker methods
