@@ -40,6 +40,6 @@ public abstract class AdServicesJobTestCase extends AdServicesExtendedMockitoTes
 
     @Test
     public final void testAdServicesJobTestCaseFixtures() throws Exception {
-        checkProhibitedStaticFields("jobMocker");
+        assertTestClassHasNoFieldsFromSuperclass(AdServicesJobTestCase.class, "jobMocker");
     }
 }

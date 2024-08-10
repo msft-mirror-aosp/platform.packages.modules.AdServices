@@ -24,11 +24,11 @@ import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Bundle;
-import android.os.OutcomeReceiver;
 import android.util.Log;
 import android.view.View;
 
-import java.util.concurrent.CompletableFuture;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
+
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -38,32 +38,20 @@ public class AppSetIdSdk extends SandboxedSdkProvider {
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
+
         try {
             AppSetIdManager appSetIdManager = AppSetIdManager.get(getContext());
-
-            CompletableFuture<AppSetId> future = new CompletableFuture<>();
-            OutcomeReceiver<AppSetId, Exception> callback =
-                    new OutcomeReceiver<AppSetId, Exception>() {
-                        @Override
-                        public void onResult(AppSetId result) {
-                            future.complete(result);
-                        }
-
-                        @Override
-                        public void onError(Exception error) {
-                            Log.e(TAG, "SDK Runtime.testAppSetId onError " + error.getMessage());
-                        }
-                    };
-
+            OutcomeReceiverForTests<AppSetId> callback = new OutcomeReceiverForTests<>();
             appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, callback);
 
-            AppSetId resultAppSetId = future.get();
+            AppSetId resultAppSetId = callback.assertResultReceived();
+            String resultAppSetIdString = resultAppSetId.getId();
 
-            if (resultAppSetId.getId() != null) {
+            if (resultAppSetIdString != null && !resultAppSetIdString.isEmpty()) {
                 // Successfully called the getAppSetId
                 Log.d(
                         TAG,
-                        "Successfully called the getAppSetId. resultAppSetId.getId() = "
+                        "Successfully called the getAppSetId. resultAppSetIdString = "
                                 + resultAppSetId.getId());
                 return new SandboxedSdk(new Binder());
             } else {

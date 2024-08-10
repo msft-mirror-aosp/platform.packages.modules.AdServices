@@ -45,7 +45,10 @@ public final class NetworkConnectionHelperTest extends SharedMockitoTestCase {
     public void testIsWifiConnected_whenConnected() {
         mockActiveNetwork(mock(android.net.Network.class));
         mockNetworkCapabilities(
-                mMockNetworkCapabilities, /* transport= */ true, /* capability= */ true);
+                mMockNetworkCapabilities,
+                /* transport= */ true,
+                /* capability= */ true,
+                /* internet= */ false);
 
         assertThat(NetworkConnectionHelper.isWifiConnected(mMockContext)).isTrue();
     }
@@ -60,7 +63,10 @@ public final class NetworkConnectionHelperTest extends SharedMockitoTestCase {
 
         mockActiveNetwork(mock(android.net.Network.class));
         mockNetworkCapabilities(
-                mMockNetworkCapabilities, /* transport= */ false, /* capability= */ false);
+                mMockNetworkCapabilities,
+                /* transport= */ false,
+                /* capability= */ false,
+                /* internet= */ false);
 
         expect.withMessage(
                         "isWifiConnected() when hasTransport() returns false and hasCapability()"
@@ -69,12 +75,61 @@ public final class NetworkConnectionHelperTest extends SharedMockitoTestCase {
                 .isFalse();
 
         mockNetworkCapabilities(
-                mMockNetworkCapabilities, /* transport= */ true, /* capability= */ false);
+                mMockNetworkCapabilities,
+                /* transport= */ true,
+                /* capability= */ false,
+                /* internet= */ false);
 
         expect.withMessage(
                         "isWifiConnected() when hasTransport() returns true and hasCapability()"
                                 + " returns false")
                 .that(NetworkConnectionHelper.isWifiConnected(mMockContext))
+                .isFalse();
+    }
+
+    @Test
+    public void testIsInternetConnected_whenConnected() {
+        mockActiveNetwork(mock(android.net.Network.class));
+        mockNetworkCapabilities(
+                mMockNetworkCapabilities,
+                /* transport= */ true,
+                /* capability= */ true,
+                /* internet= */ true);
+
+        assertThat(NetworkConnectionHelper.isInternetConnected(mMockContext)).isTrue();
+    }
+
+    @Test
+    public void testIsInternetConnected_whenDisconnected() {
+        mockActiveNetwork(null);
+
+        expect.withMessage("isWifiConnected() when getActiveNetwork() is null")
+                .that(NetworkConnectionHelper.isInternetConnected(mMockContext))
+                .isFalse();
+
+        mockActiveNetwork(mock(android.net.Network.class));
+        mockNetworkCapabilities(
+                mMockNetworkCapabilities,
+                /* transport= */ false,
+                /* capability= */ false,
+                /* internet= */ false);
+
+        expect.withMessage(
+                        "isInternetConnected() when hasInternet() returns false and hasCapability()"
+                                + " returns false")
+                .that(NetworkConnectionHelper.isInternetConnected(mMockContext))
+                .isFalse();
+
+        mockNetworkCapabilities(
+                mMockNetworkCapabilities,
+                /* transport= */ true,
+                /* capability= */ false,
+                /* internet= */ true);
+
+        expect.withMessage(
+                        "isWifiConnected() when hasInternet() returns true and hasCapability()"
+                                + " returns false")
+                .that(NetworkConnectionHelper.isInternetConnected(mMockContext))
                 .isFalse();
     }
 
@@ -88,12 +143,17 @@ public final class NetworkConnectionHelperTest extends SharedMockitoTestCase {
     }
 
     private void mockNetworkCapabilities(
-            NetworkCapabilities networkCapabilities, boolean transport, boolean capability) {
+            NetworkCapabilities networkCapabilities,
+            boolean transport,
+            boolean capability,
+            boolean internet) {
         when(mMockConnectivityManager.getNetworkCapabilities(any()))
                 .thenReturn(networkCapabilities);
         when(mMockNetworkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
                 .thenReturn(transport);
         when(mMockNetworkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED))
                 .thenReturn(capability);
+        when(mMockNetworkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET))
+                .thenReturn(internet);
     }
 }
