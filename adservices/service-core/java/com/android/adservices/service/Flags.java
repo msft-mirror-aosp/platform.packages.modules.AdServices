@@ -4934,6 +4934,15 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
     }
 
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS = false;
+
+    /*
+     * Returns whether filtering in Trigger's AGGREGATABLE_VALUES is allowed.
+     */
+    default boolean getMeasurementEnableAggregateValueFilters() {
+        return MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
@@ -5730,6 +5739,28 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether the PAS encoding job performance improvements are enabled. */
     default boolean getPasEncodingJobImprovementsEnabled() {
         return PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * com.android.adservices.service.adid.AdIdCacheManager} cache is timeout.
+     */
+    @ConfigFlag long DEFAULT_ADID_CACHE_TTL_MS = 0;
+
+    /**
+     * Returns {@link com.android.adservices.service.adid.AdIdCacheManager} ttl(time to live) time.
+     * It will be used to expire the cached adid.
+     *
+     * <ul>
+     *   <li>if value is 0, the cache has no ttl.
+     *   <li>otherwise, check the stored time and current time inverval, if larger than the ttl,
+     *       refetch the adid.
+     * </ul>
+     *
+     * Returns ttl of {@link com.android.adservices.service.adid.AdIdCacheManager}.
+     */
+    default long getAdIdCacheTtlMs() {
+        return DEFAULT_ADID_CACHE_TTL_MS;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

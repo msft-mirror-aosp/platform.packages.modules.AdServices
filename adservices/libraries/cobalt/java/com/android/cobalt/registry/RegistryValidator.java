@@ -46,6 +46,7 @@ import com.google.cobalt.StringSketchParameters;
 import com.google.cobalt.SystemProfileField;
 import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.cobalt.WindowSize;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -67,6 +68,18 @@ public final class RegistryValidator {
                             ImmutableSet.of(DE_IDENTIFICATION, SHUFFLED_DIFFERENTIAL_PRIVACY),
                             STRING_COUNTS,
                             ImmutableSet.of(DE_IDENTIFICATION));
+
+    /**
+     * Checks that two metrics have equivalent dimensions and therefore private reports can be
+     * merged.
+     *
+     * @return true if the dimensions are equivalent
+     */
+    public static boolean dimensionsAreEquivalent(
+            Iterable<MetricDimension> dimensions1, Iterable<MetricDimension> dimensions2) {
+        return getMaxEventCodes(dimensions1).equals(getMaxEventCodes(dimensions2))
+                && getEventCodes(dimensions1).equals(getEventCodes(dimensions2));
+    }
 
     /**
      * Checks that an input metric and report combination is valid and supported by the Cobalt
@@ -419,6 +432,25 @@ public final class RegistryValidator {
                 && shuffledDpConfig
                         .getDevicePrivacyDependencySet()
                         .equals(ShuffledDifferentialPrivacyConfig.DevicePrivacyDependencySet.V1);
+    }
+
+    private static ImmutableList<Integer> getMaxEventCodes(Iterable<MetricDimension> dimensions) {
+        ImmutableList.Builder<Integer> maxEventCodes = ImmutableList.builder();
+        for (MetricDimension dimension : dimensions) {
+            maxEventCodes.add(dimension.getMaxEventCode());
+        }
+        return maxEventCodes.build();
+    }
+
+    private static ImmutableList<ImmutableList<Integer>> getEventCodes(
+            Iterable<MetricDimension> dimensions) {
+        ImmutableList.Builder<ImmutableList<Integer>> eventCodes = ImmutableList.builder();
+        for (MetricDimension dimension : dimensions) {
+            // The order of event codes in a dimension doesn't matter.
+            eventCodes.add(ImmutableList.sortedCopyOf(dimension.getEventCodesMap().keySet()));
+        }
+
+        return eventCodes.build();
     }
 
     private static void logValidationFailure(String format, Object... params) {
