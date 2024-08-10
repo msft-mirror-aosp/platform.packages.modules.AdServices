@@ -26,6 +26,7 @@ import android.net.NetworkCapabilities;
 
 /** Helper for device network related functions */
 public final class NetworkConnectionHelper {
+    private static final String TAG = NetworkConnectionHelper.class.getSimpleName();
 
     /** Checks whether the device has an active Wifi connected. */
     // The test using this helper class needs to add the ACCESS_NETWORK_STATE permission.
@@ -39,6 +40,20 @@ public final class NetworkConnectionHelper {
         return networkCapabilities != null
                 && networkCapabilities.hasTransport(TRANSPORT_WIFI)
                 && networkCapabilities.hasCapability(NET_CAPABILITY_VALIDATED);
+    }
+
+    /** Checks whether the device has internet connected */
+    // The test using this helper class needs to add the ACCESS_NETWORK_STATE and
+    // INTERNET permission.
+    @SuppressLint("MissingPermission")
+    public static boolean isInternetConnected(Context context) {
+        ConnectivityManager manager = context.getSystemService(ConnectivityManager.class);
+        NetworkCapabilities networkCapabilities =
+                manager.getNetworkCapabilities(manager.getActiveNetwork());
+
+        return networkCapabilities != null
+                && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
     }
 
     private NetworkConnectionHelper() {
