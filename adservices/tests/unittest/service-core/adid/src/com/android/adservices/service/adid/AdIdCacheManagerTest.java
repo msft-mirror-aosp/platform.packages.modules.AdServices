@@ -24,14 +24,15 @@ import static com.android.adservices.service.adid.AdIdCacheManager.SHARED_PREFS_
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_AD_ID_PROVIDER_NOT_AVAILABLE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.GetAdIdResult;
@@ -82,6 +83,7 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
         deleteIapcSharedPreference();
 
         mAdIdCacheManager = spy(new AdIdCacheManager(mContext));
+        when(mMockFlags.getAdIdCacheTtlMs()).thenReturn(0L);
     }
 
     // Clear the shared preference to isolate the test result from other tests.
@@ -93,7 +95,7 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
     @Test
     public void testGetAdId() throws Exception {
         mAdIdProviderService = createAdIdProviderService(SUCCESS_RESPONSE);
-        doReturn(mAdIdProviderService).when(mAdIdCacheManager).getService();
+        when(mAdIdCacheManager.getService()).thenReturn(mAdIdProviderService);
 
         // First getAdId() call should get AdId from the provider.
         SyncIGetAdIdCallback callback1 = new SyncIGetAdIdCallback();
@@ -136,7 +138,7 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
         actualAdId = new AdId(result.getAdId(), result.isLatEnabled());
         expectedAdId = new AdId(AD_ID_UPDATE, /* limitAdTrackingEnabled= */ true);
 
-        assertWithMessage("The third result is from the Cache (Updated)")
+        expect.withMessage("The third result is from the Cache (Updated)")
                 .that(actualAdId)
                 .isEqualTo(expectedAdId);
         verify(mAdIdCacheManager).getAdIdFromProvider(any(), anyInt(), any());
@@ -147,13 +149,13 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_AD_ID_PROVIDER_NOT_AVAILABLE)
     public void testGetAdIdOnError() throws Exception {
         mAdIdProviderService = createAdIdProviderService(FAILURE_RESPONSE);
-        doReturn(mAdIdProviderService).when(mAdIdCacheManager).getService();
+        when(mAdIdCacheManager.getService()).thenReturn(mAdIdProviderService);
         SyncIGetAdIdCallback callback = new SyncIGetAdIdCallback();
 
         mAdIdCacheManager.getAdId(PACKAGE_NAME, DUMMY_CALLER_UID, callback);
 
         int result = callback.assertFailureReceived();
-        assertThat(result).isEqualTo(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
+        expect.that(result).isEqualTo(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
     }
 
     @Test
@@ -161,7 +163,7 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_AD_ID_PROVIDER_NOT_AVAILABLE)
     public void testGetAdIdOnUnauthorizedError() throws Exception {
         mAdIdProviderService = createAdIdProviderService(UNAUTHORIZED_RESPONSE);
-        doReturn(mAdIdProviderService).when(mAdIdCacheManager).getService();
+        when(mAdIdCacheManager.getService()).thenReturn(mAdIdProviderService);
 
         SyncIGetAdIdCallback callback = new SyncIGetAdIdCallback();
 
@@ -171,7 +173,7 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
         assertWithMessage("result").that(result).isNotNull();
         AdId actualAdId = new AdId(result.getAdId(), result.isLatEnabled());
         AdId expectedAdId = new AdId(AdId.ZERO_OUT, /* limitAdTrackingEnabled= */ true);
-        assertWithMessage("Get AdId Unauthorized failed").that(actualAdId).isEqualTo(expectedAdId);
+        expect.withMessage("Get AdId Unauthorized failed").that(actualAdId).isEqualTo(expectedAdId);
     }
 
     @Test
@@ -185,10 +187,74 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
                 new UpdateAdIdRequest.Builder(adIdUpdate.getAdId())
                         .setLimitAdTrackingEnabled(adIdUpdate.isLimitAdTrackingEnabled())
                         .build());
-        assertWithMessage("getAdIdInStorage()")
+        expect.withMessage("getAdIdInStorage()")
                 .that(mAdIdCacheManager.getAdIdInStorage())
                 .isEqualTo(adIdUpdate);
         verify(mAdIdCacheManager).setAdIdInStorage(adIdUpdate);
+    }
+
+    @Test
+    public void testGetAdId_cacheTtlEnabled() throws Exception {
+        mAdIdProviderService = createAdIdProviderService(SUCCESS_RESPONSE);
+        when(mAdIdCacheManager.getService()).thenReturn(mAdIdProviderService);
+
+        // First getAdId() call should get AdId from the provider.
+        SyncIGetAdIdCallback callback1 = new SyncIGetAdIdCallback();
+
+        mAdIdCacheManager.getAdId(PACKAGE_NAME, DUMMY_CALLER_UID, callback1);
+
+        GetAdIdResult result = callback1.assertResultReceived();
+        AdId actualAdId = new AdId(result.getAdId(), result.isLatEnabled());
+        AdId expectedAdId = new AdId(AD_ID, /* limitAdTrackingEnabled= */ false);
+        assertWithMessage("The first result is from the Provider.")
+                .that(actualAdId)
+                .isEqualTo(expectedAdId);
+
+        // Verify the first call should call the provider to fetch the AdId
+        verify(mAdIdCacheManager).getAdIdFromProvider(PACKAGE_NAME, DUMMY_CALLER_UID, callback1);
+
+        // Second getAdId() call have ttl expired, thus get it from the provider.
+        when(mMockFlags.getAdIdCacheTtlMs()).thenReturn(100L);
+        when(mAdIdCacheManager.isCacheTimeout(anyLong(), anyLong(), anyLong())).thenReturn(true);
+        // Set the cache adid to update adid
+        mAdIdCacheManager.setAdIdInStorage(
+                new AdId(AD_ID_UPDATE, /* limitAdTrackingEnabled= */ true));
+        SyncIGetAdIdCallback callback2 = new SyncIGetAdIdCallback();
+        mAdIdCacheManager.getAdId(PACKAGE_NAME, DUMMY_CALLER_UID, callback2);
+        result = callback2.assertResultReceived();
+        actualAdId = new AdId(result.getAdId(), result.isLatEnabled());
+        // Expected adid should still be the provider ad id
+        assertWithMessage("The second result is from the Cache")
+                .that(actualAdId)
+                .isEqualTo(expectedAdId);
+
+        // Verify the second call should call the provider again to fetch the AdId
+        verify(mAdIdCacheManager).getAdIdFromProvider(PACKAGE_NAME, DUMMY_CALLER_UID, callback2);
+
+        // Make the third getAdId() call from the cache.
+        when(mAdIdCacheManager.isCacheTimeout(anyLong(), anyLong(), anyLong())).thenReturn(false);
+        // Set the cache adid to the updated adid
+        mAdIdCacheManager.setAdIdInStorage(
+                new AdId(AD_ID_UPDATE, /* limitAdTrackingEnabled= */ true));
+        SyncIGetAdIdCallback callback3 = new SyncIGetAdIdCallback();
+
+        mAdIdCacheManager.getAdId(PACKAGE_NAME, DUMMY_CALLER_UID, callback3);
+
+        result = callback3.assertResultReceived();
+        actualAdId = new AdId(result.getAdId(), result.isLatEnabled());
+        expectedAdId = new AdId(AD_ID_UPDATE, /* limitAdTrackingEnabled= */ true);
+
+        expect.withMessage("The third result is from the Cache (Updated)")
+                .that(actualAdId)
+                .isEqualTo(expectedAdId);
+        verify(mAdIdCacheManager, times(2)).getAdIdFromProvider(any(), anyInt(), any());
+    }
+
+    @Test
+    public void testIsCacheTimeout() throws Exception {
+        expect.that(mAdIdCacheManager.isCacheTimeout(0, 100, 100)).isTrue();
+        expect.that(mAdIdCacheManager.isCacheTimeout(10, 100, 100)).isFalse();
+        expect.that(mAdIdCacheManager.isCacheTimeout(10, 100, 80)).isTrue();
     }
 
     private static final class SyncIGetAdIdCallback extends IntFailureSyncCallback<GetAdIdResult>
